@@ -19,6 +19,7 @@ import { Trash2 } from 'lucide-react'
 import { useDeleteSite } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface DangerZoneCardProps {
   projectId: string | null | undefined
@@ -33,6 +34,7 @@ export function DangerZoneCard({
   site,
   onDelete,
 }: DangerZoneCardProps) {
+  const t = useT()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteSiteMutation = useDeleteSite(projectId)
 
@@ -40,12 +42,12 @@ export function DangerZoneCard({
     if (!siteId) return
     deleteSiteMutation.mutate(siteId, {
       onSuccess: () => {
-        toast.success('Site deleted successfully')
+        toast.success(t('Site deleted successfully'))
         setDeleteDialogOpen(false)
         onDelete?.()
       },
       onError: (error: unknown) => {
-        toast.error(getErrorMessage(error, 'Failed to delete site'))
+        toast.error(getErrorMessage(error, t('Failed to delete site')))
       },
     })
   }
@@ -54,14 +56,15 @@ export function DangerZoneCard({
     <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Delete site
+          {t('Delete site')}
         </h3>
       </div>
       <div className="border-t border-destructive/20" />
       <div className="px-6 py-4">
         <p className="text-[13px] text-muted-foreground">
-          Permanently delete this site and all its data. This action cannot be
-          undone.
+          {t(
+            'Permanently delete this site and all its data. This action cannot be undone.',
+          )}
         </p>
 
         {/* Site Info Summary */}
@@ -72,7 +75,7 @@ export function DangerZoneCard({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-foreground truncate">
-                {site.name || 'Unnamed Site'}
+                {site.name || t('Unnamed Site')}
               </p>
               <p className="text-[12px] text-muted-foreground">{site.$id}</p>
             </div>
@@ -89,20 +92,20 @@ export function DangerZoneCard({
               disabled={deleteSiteMutation.isPending}
             >
               <Trash2 className="me-1.5 h-4 w-4" />
-              Delete site
+              {t('Delete site')}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete site</DialogTitle>
+              <DialogTitle>{t('Delete site')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete{' '}
+                {t('Are you sure you want to delete')}{' '}
                 {site && (
                   <span className="font-medium text-foreground">
-                    {site.name || 'this site'}
+                    {site.name || t('this site')}
                   </span>
                 )}{' '}
-                and all its data? This action cannot be undone.
+                {t('and all its data? This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -111,14 +114,14 @@ export function DangerZoneCard({
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={deleteSiteMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={deleteSiteMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>

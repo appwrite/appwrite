@@ -23,6 +23,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PostgresIndexAlgorithmSelector } from './PostgresIndexAlgorithmSelector'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresTableIndexDrawerProps = {
   open: boolean
@@ -65,6 +66,7 @@ export function PostgresTableIndexDrawer({
   tableId,
   onSuccess,
 }: PostgresTableIndexDrawerProps) {
+  const t = useT()
   const { schema } = parsePostgresTableId(tableId)
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const { columns } = usePostgresTableColumns(projectId, databaseId, tableId)
@@ -112,7 +114,7 @@ export function PostgresTableIndexDrawer({
       }
 
       await executeSql.mutateAsync(statements.join(';\n'))
-      toast.success('Index created')
+      toast.success(t('Index created'))
       onOpenChange(false)
       onSuccess()
     } catch (error) {
@@ -124,8 +126,8 @@ export function PostgresTableIndexDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Create index"
-      description="Define the index algorithm, key columns, and optional partial or covering options."
+      title={t('Create index')}
+      description={t('Define the index algorithm, key columns, and optional partial or covering options.')}
       maxWidth="sm:max-w-lg"
     >
       <>
@@ -172,10 +174,10 @@ export function PostgresTableIndexDrawer({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <Label htmlFor="index-unique" className="text-[12px] font-medium">
-                  Unique
+                  {t('Unique')}
                 </Label>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Enforce unique values across indexed columns.
+                  {t('Enforce unique values across indexed columns.')}
                 </p>
               </div>
               <Switch
@@ -189,17 +191,17 @@ export function PostgresTableIndexDrawer({
 
             <div className="space-y-2">
               <Label className="text-[12px] font-medium">
-                Key columns <span className="text-destructive">*</span>
+                {t('Key columns')} <span className="text-destructive">*</span>
               </Label>
               <p className="text-[11px] text-muted-foreground">
-                Select one or more columns in index order.
+                {t('Select one or more columns in index order.')}
                 {formState.algorithm === 'hash'
-                  ? ' Hash indexes support one key column.'
+                  ? ` ${t('Hash indexes support one key column.')}`
                   : null}
               </p>
               {columns.length === 0 ? (
                 <p className="text-[12px] text-muted-foreground">
-                  No columns available.
+                  {t('No columns available.')}
                 </p>
               ) : (
                 <div className="rounded-lg border border-border divide-y divide-border">
@@ -250,7 +252,7 @@ export function PostgresTableIndexDrawer({
 
             <div className="space-y-2">
               <Label htmlFor="index-condition" className="text-[12px] font-medium">
-                Condition
+                {t('Condition')}
               </Label>
               <p className="text-[11px] text-muted-foreground">
                 Partial index predicate inside WHERE (...), for example{' '}
@@ -272,16 +274,15 @@ export function PostgresTableIndexDrawer({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[12px] font-medium">Include columns</Label>
+              <Label className="text-[12px] font-medium">{t('Include columns')}</Label>
               <p className="text-[11px] text-muted-foreground">
-                Covering index columns stored in the index but not used for
-                lookups.
+                {t('Covering index columns stored in the index but not used for lookups.')}
               </p>
               {availableIncludeColumns.length === 0 ? (
                 <p className="text-[12px] text-muted-foreground">
                   {formState.columns.length === columns.length
-                    ? 'All table columns are already key columns.'
-                    : 'Select key columns first.'}
+                    ? t('All table columns are already key columns.')
+                    : t('Select key columns first.')}
                 </p>
               ) : (
                 <div className="rounded-lg border border-border divide-y divide-border">
@@ -312,7 +313,7 @@ export function PostgresTableIndexDrawer({
 
             <div className="space-y-2">
               <Label htmlFor="index-comment" className="text-[12px] font-medium">
-                Comment
+                {t('Comment')}
               </Label>
               <Textarea
                 id="index-comment"
@@ -325,7 +326,7 @@ export function PostgresTableIndexDrawer({
                 }
                 rows={2}
                 className="min-h-[80px] resize-y"
-                placeholder="Describe what this index is for"
+                placeholder={t('Describe what this index is for')}
               />
             </div>
           </div>
@@ -338,7 +339,7 @@ export function PostgresTableIndexDrawer({
                 formState.columns.length === 0
               }
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               type="button"
@@ -346,7 +347,7 @@ export function PostgresTableIndexDrawer({
               onClick={() => onOpenChange(false)}
               disabled={executeSql.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

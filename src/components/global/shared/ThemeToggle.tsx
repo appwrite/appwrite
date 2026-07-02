@@ -2,6 +2,7 @@ import { useTheme } from 'next-themes'
 import { Sun, Moon, Contrast } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type ThemeToggleProps = {
   /** Compact icon group for header toolbar; default includes label for menus. */
@@ -9,6 +10,7 @@ type ThemeToggleProps = {
 }
 
 function ThemeToggleGroup({ className }: { className?: string }) {
+  const t = useT()
   const { theme, setTheme } = useTheme()
 
   return (
@@ -22,21 +24,21 @@ function ThemeToggleGroup({ className }: { className?: string }) {
     >
       <ToggleGroupItem
         value="light"
-        aria-label="Light theme"
+        aria-label={t('Light theme')}
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Sun className="h-4 w-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="dark"
-        aria-label="Dark theme"
+        aria-label={t('Dark theme')}
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Moon className="h-4 w-4" />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="system"
-        aria-label="System theme"
+        aria-label={t('System theme')}
         className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
       >
         <Contrast className="h-4 w-4" />
@@ -46,6 +48,7 @@ function ThemeToggleGroup({ className }: { className?: string }) {
 }
 
 export function ThemeToggle({ variant = 'menu' }: ThemeToggleProps) {
+  const t = useT()
   if (variant === 'header') {
     return (
       <div className="shrink-0">
@@ -56,7 +59,7 @@ export function ThemeToggle({ variant = 'menu' }: ThemeToggleProps) {
 
   return (
     <div className="flex items-center justify-between px-2 py-2">
-      <span className="text-sm text-muted-foreground">Theme</span>
+      <span className="text-sm text-muted-foreground">{t('Theme')}</span>
       <ThemeToggleGroup />
     </div>
   )

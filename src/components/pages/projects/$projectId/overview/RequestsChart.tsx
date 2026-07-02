@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useParams } from '@tanstack/react-router'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import type { OverviewChartTabId } from '@/lib/overview-chart-tabs'
 import { OverviewViewAllUsageLink } from './OverviewViewAllUsageLink'
@@ -186,6 +187,7 @@ const CustomTooltip = ({
   formatValue,
   metric = 'requests',
 }: CustomTooltipProps) => {
+  const t = useT()
   if (active && payload && payload.length) {
     const data = payload[0].payload
     const format = formatValue ?? ((value: number) => value.toLocaleString())
@@ -202,19 +204,19 @@ const CustomTooltip = ({
           </p>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-6">
-              <span className="text-[11px] text-muted-foreground">Inbound</span>
+              <span className="text-[11px] text-muted-foreground">{t('Inbound')}</span>
               <span className="text-[12px] font-medium text-foreground">
                 <FormattedMetricValue value={format(data.inbound)} />
               </span>
             </div>
             <div className="flex items-center justify-between gap-6">
-              <span className="text-[11px] text-muted-foreground">Outbound</span>
+              <span className="text-[11px] text-muted-foreground">{t('Outbound')}</span>
               <span className="text-[12px] font-medium text-foreground">
                 <FormattedMetricValue value={format(data.outbound)} />
               </span>
             </div>
             <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
-              <span className="text-[11px] text-muted-foreground">Total</span>
+              <span className="text-[11px] text-muted-foreground">{t('Total')}</span>
               <span className="text-[12px] font-medium text-foreground">
                 <FormattedMetricValue value={format(data.total)} />
               </span>
@@ -231,7 +233,7 @@ const CustomTooltip = ({
         </p>
         <div className="flex items-center justify-between gap-6">
           <span className="text-[11px] text-muted-foreground">
-            {metric === 'bandwidth' ? 'Bandwidth' : 'Value'}
+            {metric === 'bandwidth' ? t('Bandwidth') : t('Value')}
           </span>
           <span className="text-[12px] font-medium text-foreground">
             <FormattedMetricValue value={format(data.total)} />
@@ -259,6 +261,7 @@ export const RequestsChart = memo(function RequestsChart({
   isPanelVisible = true,
   showViewAllLink = true,
 }: RequestsChartProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
 
   const chartData = chartDataProp
@@ -322,7 +325,7 @@ export const RequestsChart = memo(function RequestsChart({
         <div className="flex min-w-0 items-center gap-1.5">
           {title ? (
             <span className="text-[13px] font-medium text-foreground">
-              {title}
+              {t(title)}
             </span>
           ) : null}
           {metric === 'gbhours' ? (
@@ -340,7 +343,7 @@ export const RequestsChart = memo(function RequestsChart({
                   style={{ backgroundColor: 'var(--chart-2)' }}
                 />
                 <span className="text-[11px] text-muted-foreground">
-                  Inbound
+                  {t('Inbound')}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -349,7 +352,7 @@ export const RequestsChart = memo(function RequestsChart({
                   style={{ backgroundColor: 'var(--chart-brand)' }}
                 />
                 <span className="text-[11px] text-muted-foreground">
-                  Outbound
+                  {t('Outbound')}
                 </span>
               </div>
             </>
@@ -363,8 +366,8 @@ export const RequestsChart = memo(function RequestsChart({
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
           <OverviewChartPanelError
-            title={errorTitle}
-            message={errorMessage}
+            title={t(errorTitle)}
+            message={t(errorMessage)}
             onRetry={onRetry}
           />
         ) : (
@@ -375,11 +378,11 @@ export const RequestsChart = memo(function RequestsChart({
               isSkeleton && 'pointer-events-none',
             )}
             aria-busy={isSkeleton}
-            aria-label={isSkeleton ? 'Loading usage data' : undefined}
+            aria-label={isSkeleton ? t('Loading usage data') : undefined}
           >
             {showEmptyState ? (
               <div className={overviewChartPanelEmptyClass}>
-                No data for this date range
+                {t('No data for this date range')}
               </div>
             ) : null}
             {renderChart ? (

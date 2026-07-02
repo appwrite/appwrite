@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 const MIN_ANIMATION_DURATION = 500
 
@@ -14,6 +15,7 @@ interface RefreshContextValue {
 const RefreshContext = createContext<RefreshContextValue | null>(null)
 
 export function RefreshProvider({ children }: { children: React.ReactNode }) {
+  const t = useT()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const refreshHandlerRef = useRef<(() => Promise<void>) | null>(null)
   const refreshLabelRef = useRef<string>('data')
@@ -46,14 +48,16 @@ export function RefreshProvider({ children }: { children: React.ReactNode }) {
       const elapsed = Date.now() - (refreshStartTimeRef.current || 0)
       const remaining = Math.max(0, MIN_ANIMATION_DURATION - elapsed)
       await new Promise((resolve) => setTimeout(resolve, remaining))
-      toast.success(`${refreshLabelRef.current} refreshed successfully`)
+      toast.success(t(`${refreshLabelRef.current} refreshed successfully`))
     } catch {
-      toast.error(`Failed to refresh ${refreshLabelRef.current.toLowerCase()}`)
+      toast.error(
+        t(`Failed to refresh ${refreshLabelRef.current.toLowerCase()}`),
+      )
     } finally {
       setIsRefreshing(false)
       refreshStartTimeRef.current = null
     }
-  }, [])
+  }, [t])
 
   return (
     <RefreshContext.Provider

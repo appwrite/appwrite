@@ -48,6 +48,7 @@ import { copyResourceAsJson } from '@/lib/utils/context-menu'
 import { generateExecutionAIFixPrompt } from '@/lib/execution-ai-fix-prompt'
 import type { ExecutionRowContextMenuVariant } from '@/components/global/shared/ExecutionRowContextMenu'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 interface ExecutionDetailsDrawerProps {
   open: boolean
@@ -216,6 +217,7 @@ export function ExecutionDetailsDrawer({
   resourceVariant,
   resourceId,
 }: ExecutionDetailsDrawerProps) {
+  const t = useT()
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedJson, setCopiedJson] = useState(false)
@@ -469,7 +471,7 @@ export function ExecutionDetailsDrawer({
             ) : (
               <FileJson className="me-1.5 h-4 w-4" />
             )}
-            Copy as JSON
+            {t('Copy as JSON')}
           </Button>
           {showFixWithAgent && (
             <FixWithAgentDropdown
@@ -517,7 +519,7 @@ export function ExecutionDetailsDrawer({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{copiedLink ? 'Link copied!' : 'Copy link'}</p>
+                <p>{copiedLink ? t('Link copied!') : t('Copy link')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -538,14 +540,14 @@ export function ExecutionDetailsDrawer({
             >
               <AccordionItem value="details" className="border-none">
                 <AccordionTrigger className="text-[16px] font-medium py-2 cursor-pointer hover:no-underline">
-                  Details
+                  {t('Details')}
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 overflow-visible">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 -mx-1.5 px-1.5">
                     {/* Execution ID */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Execution ID
+                        {t('Execution ID')}
                       </p>
                       <CopyableId id={execution.$id} size="sm" />
                     </div>
@@ -554,7 +556,7 @@ export function ExecutionDetailsDrawer({
                     {execution.deploymentId && (
                       <div>
                         <p className="text-[14px] text-muted-foreground mb-2">
-                          Deployment ID
+                          {t('Deployment ID')}
                         </p>
                         <CopyableId id={execution.deploymentId} size="sm" />
                       </div>
@@ -563,7 +565,7 @@ export function ExecutionDetailsDrawer({
                     {/* Method */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Method
+                        {t('Method')}
                       </p>
                       <p className="text-[14px] text-foreground font-medium">
                         {execution.requestMethod?.toUpperCase() || 'N/A'}
@@ -573,7 +575,7 @@ export function ExecutionDetailsDrawer({
                     {/* Hostname */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Hostname
+                        {t('Hostname')}
                       </p>
                       {requestHostname ? (
                         <CopyableId
@@ -591,7 +593,7 @@ export function ExecutionDetailsDrawer({
                     {/* IP address */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        IP address
+                        {t('IP address')}
                       </p>
                       {clientIp ? (
                         <CopyableId
@@ -610,7 +612,7 @@ export function ExecutionDetailsDrawer({
                     {/* Status Code */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Status code
+                        {t('Status code')}
                       </p>
                       {execution.responseStatusCode ? (
                         <Badge variant={statusCodeBadge?.variant || 'outline'}>
@@ -626,21 +628,21 @@ export function ExecutionDetailsDrawer({
                     {/* Status */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Status
+                        {t('Status')}
                       </p>
                       <Badge variant={statusBadge.variant}>
-                        {statusBadge.label}
+                        {t(statusBadge.label)}
                       </Badge>
                     </div>
 
                     {/* Triggered By */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Triggered by
+                        {t('Triggered by')}
                       </p>
                       <p className="text-[14px] text-foreground">
                         {execution.trigger
-                          ? capitalizeFirst(execution.trigger)
+                          ? t(capitalizeFirst(execution.trigger))
                           : 'N/A'}
                       </p>
                     </div>
@@ -648,7 +650,7 @@ export function ExecutionDetailsDrawer({
                     {/* Duration */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Duration
+                        {t('Duration')}
                       </p>
                       <p className="text-[14px] text-foreground font-mono">
                         {durationDisplay}
@@ -658,7 +660,7 @@ export function ExecutionDetailsDrawer({
                     {/* Created */}
                     <div>
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Created
+                        {t('Created')}
                       </p>
                       <DateTooltip date={execution.$createdAt} />
                     </div>
@@ -666,7 +668,7 @@ export function ExecutionDetailsDrawer({
                     {/* Path - Full Width */}
                     <div className="sm:col-span-2 lg:col-span-3">
                       <p className="text-[14px] text-muted-foreground mb-2">
-                        Path
+                        {t('Path')}
                       </p>
                       {execution.requestPath ? (
                         <div className="relative -mx-1 px-1">
@@ -679,7 +681,7 @@ export function ExecutionDetailsDrawer({
                             type="button"
                             onClick={handleCopyPath}
                             className="absolute end-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent transition-colors"
-                            aria-label="Copy path"
+                            aria-label={t('Copy path')}
                           >
                             {copiedPath ? (
                               <Check className="h-4 w-4 text-emerald-500" />

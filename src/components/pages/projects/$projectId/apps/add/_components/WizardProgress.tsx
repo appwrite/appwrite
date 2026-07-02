@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 /** Wizard stages: pick platform - app details & register - connect SDK */
 export type WizardStage = 'platform' | 'details' | 'setup'
@@ -23,6 +24,7 @@ const STEPS: { id: number; title: string; description: string }[] = [
 ]
 
 export function WizardProgress({ stage }: { stage: WizardStage }) {
+  const t = useT()
   const activeIndex =
     stage === 'platform' ? 0 : stage === 'details' ? 1 : 2
 
@@ -62,10 +64,10 @@ export function WizardProgress({ stage }: { stage: WizardStage }) {
                       isCurrent ? 'text-foreground' : 'text-muted-foreground',
                     )}
                   >
-                    {s.title}
+                    {t(s.title)}
                   </p>
                   <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
-                    {s.description}
+                    {t(s.description)}
                   </p>
                 </div>
               </div>

@@ -43,6 +43,7 @@ import {
   pickEncouragementForBand,
 } from '@/lib/onboarding/progress-encouragement'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type OnboardingStepRow = OnboardingConnectStepDef | OnboardingSubStepDef
 
@@ -79,6 +80,7 @@ function OnboardingProductBreakdown({
   className?: string
   connectComplete: boolean
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -86,7 +88,7 @@ function OnboardingProductBreakdown({
         showSkeleton && 'animate-pulse',
         className,
       )}
-      aria-label="Progress by product"
+      aria-label={t('Progress by product')}
     >
       {rows.map((row) => {
         const pct =
@@ -107,7 +109,7 @@ function OnboardingProductBreakdown({
                   locked ? 'text-muted-foreground' : 'text-foreground',
                 )}
               >
-                {row.label}
+                {t(row.label)}
               </span>
               <span className="flex items-center gap-1.5 shrink-0">
                 <span className="text-[10px] tabular-nums text-muted-foreground">
@@ -136,7 +138,7 @@ function OnboardingProductBreakdown({
               <div className="block w-full">{rowInner}</div>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs text-balance">
-              Connect your app first.
+              {t('Connect your app first.')}
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -164,6 +166,7 @@ function OnboardingProgressPanel({
   productBreakdown: OnboardingProductBreakdownRow[]
   connectComplete: boolean
 }) {
+  const t = useT()
   const [breakdownOpen, setBreakdownOpen] = useState(false)
   const c = RING_VB / 2
   const radius = (RING_VB - RING_STROKE) / 2
@@ -265,10 +268,12 @@ function OnboardingProgressPanel({
   const headlineBlock = (
     <>
       <h2 className="text-[13px] font-semibold text-foreground leading-snug">
-        {headline}
+        {t(headline)}
       </h2>
       <p className="text-[11px] text-muted-foreground leading-snug mt-1.5">
-        Connect this project, then complete each product area - one clear action at a time.
+        {t(
+          'Connect this project, then complete each product area - one clear action at a time.',
+        )}
       </p>
     </>
   )
@@ -295,7 +300,7 @@ function OnboardingProgressPanel({
             className="flex w-full cursor-pointer items-center justify-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
             aria-expanded={breakdownOpen}
           >
-            <span>Breakdown</span>
+            <span>{t('Breakdown')}</span>
             <ChevronDown
               className={cn(
                 'size-3.5 shrink-0 transition-transform',
@@ -327,7 +332,7 @@ function OnboardingProgressPanel({
               className="flex w-full cursor-pointer items-center justify-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
               aria-expanded={breakdownOpen}
             >
-              <span>Breakdown</span>
+              <span>{t('Breakdown')}</span>
               <ChevronDown
                 className={cn(
                   'size-3.5 shrink-0 transition-transform',
@@ -353,7 +358,7 @@ function OnboardingProgressPanel({
       <div className="px-4 py-4 sm:px-5 sm:py-4 bg-muted/30">
         <Button variant="outline" size="sm" className="h-9 w-full text-[13px]" asChild>
           <Link to="/projects/$projectId" params={{ projectId }}>
-            Go to dashboard
+            {t('Go to dashboard')}
           </Link>
         </Button>
       </div>
@@ -366,6 +371,7 @@ type ViewProps = {
 }
 
 function StepStatusIcon({ state }: { state: OnboardingStepState }) {
+  const t = useT()
   if (state === 'completed') {
     return (
       <span
@@ -380,7 +386,7 @@ function StepStatusIcon({ state }: { state: OnboardingStepState }) {
     return (
       <span
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/30"
-        title="Skipped"
+        title={t('Skipped')}
         aria-hidden
       >
         <Minus className="h-3.5 w-3.5 text-muted-foreground" />
@@ -418,12 +424,13 @@ function GroupStatusIcon({
 
 /** Shown when a row is navigable but not part of the global progress denominator. */
 function StepStatusNotTrackedIcon() {
+  const t = useT()
   return (
     <span
       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/25"
-      title="Not counted in overall progress"
+      title={t('Not counted in overall progress')}
     >
-      <span className="sr-only">Not counted in overall progress</span>
+      <span className="sr-only">{t('Not counted in overall progress')}</span>
       <span className="text-[11px] font-medium leading-none text-muted-foreground/80" aria-hidden>
          - 
       </span>
@@ -448,8 +455,9 @@ function SubStepRow({
   onSkip?: () => void
   skipPending?: boolean
 }) {
+  const t = useT()
   const fulfilled = state !== 'pending'
-  const ctaLabel = fulfilled ? (step.ctaDone ?? 'Open') : step.cta
+  const ctaLabel = t(fulfilled ? (step.ctaDone ?? 'Open') : step.cta)
 
   return (
     <div
@@ -480,13 +488,13 @@ function SubStepRow({
                 : 'text-foreground',
             )}
           >
-            {step.label}
+            {t(step.label)}
             {state === 'skipped' ? (
-              <span className="sr-only"> (skipped)</span>
+              <span className="sr-only"> ({t('skipped')})</span>
             ) : null}
           </span>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
-            {step.hint}
+            {t(step.hint)}
           </p>
           {isDebugModeOpen && (
             <p className="text-[10px] text-amber-700/90 dark:text-amber-400/90 font-mono leading-snug pt-1">
@@ -505,7 +513,7 @@ function SubStepRow({
             disabled={skipPending}
             onClick={onSkip}
           >
-            Skip
+            {t('Skip')}
           </Button>
         ) : null}
         <Button
@@ -538,6 +546,7 @@ function SubStepRow({
 }
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const { data: snapshotFromHook, isLoading } =
     useProjectOnboardingSnapshot(projectId)
@@ -575,7 +584,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   return (
     <div className="flex flex-col">
-      <ServiceHeader title="Get started" fullWidthBorder />
+      <ServiceHeader title={t('Get started')} fullWidthBorder />
 
       <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-6 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 lg:grid lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:items-start lg:gap-8">
         <aside className="w-full min-w-0 lg:sticky lg:top-4 lg:z-10">
@@ -594,10 +603,10 @@ export function View({ initialData }: ViewProps = {}) {
           <div className={CARD_SHELL}>
           <div className="px-4 py-3 border-b border-border bg-muted/10">
             <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {CONNECT_SECTION.title}
+              {t(CONNECT_SECTION.title)}
             </h2>
             <p className="text-[13px] text-muted-foreground mt-1.5 leading-snug">
-              {CONNECT_SECTION.description}
+              {t(CONNECT_SECTION.description)}
             </p>
           </div>
           <ul className="divide-y divide-border">
@@ -629,7 +638,7 @@ export function View({ initialData }: ViewProps = {}) {
             <section key={category.id} className="mt-10 space-y-3">
               <div className="flex items-start justify-between gap-3 px-1">
                 <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground min-w-0">
-                  {category.label}
+                  {t(category.label)}
                 </h3>
                 {connectComplete && categoryGroupIds.length > 1 ? (
                   <Button
@@ -650,7 +659,7 @@ export function View({ initialData }: ViewProps = {}) {
                         : `Expand all ${category.label} sections`
                     }
                   >
-                    {hasAnyOpen ? 'Collapse all' : 'Expand all'}
+                    {hasAnyOpen ? t('Collapse all') : t('Expand all')}
                   </Button>
                 ) : null}
               </div>
@@ -716,19 +725,19 @@ export function View({ initialData }: ViewProps = {}) {
                             <div className="min-w-0 flex-1 flex flex-col gap-1.5">
                               <span className="flex flex-wrap items-baseline gap-2 min-w-0">
                                 <span className="text-[15px] font-semibold tracking-tight text-foreground leading-snug">
-                                  {group.label}
+                                  {t(group.label)}
                                 </span>
                                 {group.comingSoon ? (
                                   <Badge
                                     variant="info"
                                     className="text-[10px] shrink-0"
                                   >
-                                    Soon
+                                    {t('Soon')}
                                   </Badge>
                                 ) : null}
                               </span>
                               <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-4 m-0">
-                                {group.description}
+                                {t(group.description)}
                               </p>
                             </div>
                             {trackedTotal > 0 ? (
@@ -768,7 +777,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <Tooltip key={group.id}>
                       <TooltipTrigger asChild>{item}</TooltipTrigger>
                       <TooltipContent side="top" className="max-w-xs text-balance">
-                        Connect your app first.
+                        {t('Connect your app first.')}
                       </TooltipContent>
                     </Tooltip>
                   ) : (

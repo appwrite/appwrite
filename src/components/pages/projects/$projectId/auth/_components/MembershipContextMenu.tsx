@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 
 interface MembershipContextMenuProps {
   projectId: string
@@ -56,6 +57,7 @@ export function MembershipContextMenu({
   onOpenMembership,
   onDeleted,
 }: MembershipContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteMutation = useDeleteTeamMembership(projectId, membership.teamId)
@@ -70,12 +72,12 @@ export function MembershipContextMenu({
   const handleDelete = () => {
     deleteMutation.mutate(membership.$id, {
       onSuccess: () => {
-        toast.success('Membership removed')
+        toast.success(t('Membership removed'))
         setDeleteDialogOpen(false)
         onDeleted?.()
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to remove membership')
+        toast.error(error.message || t('Failed to remove membership'))
       },
     })
   }
@@ -87,7 +89,7 @@ export function MembershipContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={() => onOpenMembership?.()}>
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() =>
@@ -98,7 +100,7 @@ export function MembershipContextMenu({
             }
           >
             <ContextMenuIcon icon={Users} />
-            Team
+            {t('Team')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() =>
@@ -109,21 +111,21 @@ export function MembershipContextMenu({
             }
           >
             <ContextMenuIcon icon={User2} />
-            User
+            {t('User')}
           </ContextMenuItem>
           <ContextMenuSeparator />
 
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', membership.$id)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasUserName && (
                 <ContextMenuItem
@@ -132,7 +134,7 @@ export function MembershipContextMenu({
                   }
                 >
                   <ContextMenuIcon icon={User2} />
-                  Copy user name
+                  {t('Copy user name')}
                 </ContextMenuItem>
               )}
               {hasTeamName && (
@@ -142,14 +144,14 @@ export function MembershipContextMenu({
                   }
                 >
                   <ContextMenuIcon icon={Users} />
-                  Copy team name
+                  {t('Copy team name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', membershipHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -157,7 +159,7 @@ export function MembershipContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -165,17 +167,17 @@ export function MembershipContextMenu({
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(membershipHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(membershipHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
 
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -183,10 +185,11 @@ export function MembershipContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Remove from team</DialogTitle>
+            <DialogTitle>{t('Remove from team')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to remove this membership? This action cannot
-              be undone.
+              {t(
+                'Are you sure you want to remove this membership? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -195,14 +198,14 @@ export function MembershipContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Remove
+              {t('Remove')}
             </Button>
           </div>
         </DialogContent>

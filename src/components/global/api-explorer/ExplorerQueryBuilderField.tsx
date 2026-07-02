@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -135,6 +136,7 @@ function ExplorerQueryItemHelper({
   fieldLabel,
   columns,
 }: ExplorerQueryItemHelperProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   return (
@@ -146,7 +148,7 @@ function ExplorerQueryItemHelper({
         className="h-8 shrink-0 px-3 text-[12px] leading-none"
         onClick={() => setOpen(true)}
       >
-        Build
+        {t('Build')}
       </Button>
 
       <ExplorerSingleQueryBuilderDialog
@@ -180,6 +182,7 @@ function ExplorerSingleQueryBuilderDialog({
   columns,
   onApply,
 }: ExplorerSingleQueryBuilderDialogProps) {
+  const t = useT()
   const [columnId, setColumnId] = useState(columns[0]?.id ?? '$id')
   const [operatorKey, setOperatorKey] = useState('equal')
   const [valueInput, setValueInput] = useState('')
@@ -219,9 +222,9 @@ function ExplorerSingleQueryBuilderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,520px)] w-[min(96vw,640px)] flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Build {fieldLabel}</DialogTitle>
+          <DialogTitle>{t('Build')} {fieldLabel}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Add one Appwrite Query condition for this entry.
+            {t('Add one Appwrite Query condition for this entry.')} {/* pragma: allowlist secret */}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -229,14 +232,14 @@ function ExplorerSingleQueryBuilderDialog({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-4 py-3">
               <p className="text-[13px] font-semibold text-foreground">
-                Condition
+                {t('Condition')}
               </p>
             </div>
             <div className="border-t border-border" />
             <div className="grid gap-3 px-4 py-4 sm:grid-cols-3">
               <label className="space-y-1.5">
                 <span className="text-[12px] font-medium text-muted-foreground">
-                  Attribute
+                  {t('Attribute')}
                 </span>
                 <select
                   value={columnId}
@@ -256,7 +259,7 @@ function ExplorerSingleQueryBuilderDialog({
 
               <label className="space-y-1.5">
                 <span className="text-[12px] font-medium text-muted-foreground">
-                  Operator
+                  {t('Operator')}
                 </span>
                 <select
                   value={operatorKey}
@@ -273,7 +276,7 @@ function ExplorerSingleQueryBuilderDialog({
 
               <label className="space-y-1.5">
                 <span className="text-[12px] font-medium text-muted-foreground">
-                  Value
+                  {t('Value')}
                 </span>
                 <input
                   value={valueInput}
@@ -285,8 +288,8 @@ function ExplorerSingleQueryBuilderDialog({
                     ['isNull', 'isNotNull', 'exists', 'notExists'].includes(
                       operatorKey,
                     )
-                      ? 'No value needed'
-                      : 'Enter value'
+                      ? t('No value needed')
+                      : t('Enter value')
                   }
                   className="h-9 w-full rounded-md border border-border bg-background px-3 font-mono text-[13px] disabled:opacity-50"
                 />
@@ -301,10 +304,10 @@ function ExplorerSingleQueryBuilderDialog({
             className="h-9 text-[13px]"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="button" className="h-9 text-[13px]" onClick={handleApply}>
-            Apply query
+            {t('Apply query')}
           </Button>
         </div>
       </DialogContent>

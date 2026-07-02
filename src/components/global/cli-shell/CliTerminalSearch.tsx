@@ -8,6 +8,7 @@ import {
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useT } from '@/lib/i18n/translate'
 import { formatCliTerminalSearchLabel } from '@/lib/cli-shell/cli-terminal-search-label'
 import type { CliTerminalSearchResults } from '@/lib/cli-shell/cli-terminal-search-label'
 
@@ -28,6 +29,7 @@ export function CliTerminalSearch({
   onFindNext,
   onFindPrevious,
 }: CliTerminalSearchProps) {
+  const t = useT()
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -114,9 +116,9 @@ export function CliTerminalSearch({
               onSearch(next, { caseSensitive: false })
             }}
             onKeyDown={handleInputKeyDown}
-            placeholder="Search output"
+            placeholder={t('Search output')}
             className="h-8 min-w-0 flex-1 border-0 bg-transparent px-2 text-[13px] shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
-            aria-label="Search terminal output"
+            aria-label={t('Search terminal output')}
           />
           {query.trim() ? (
             <div className="flex shrink-0 items-center gap-0.5 ps-1">
@@ -124,7 +126,7 @@ export function CliTerminalSearch({
                 className="min-w-[4.5rem] shrink-0 px-1 text-end text-[11px] tabular-nums text-muted-foreground"
                 aria-live="polite"
               >
-                {matchLabel}
+                {t(matchLabel)}
               </span>
               <Button
                 type="button"
@@ -134,8 +136,8 @@ export function CliTerminalSearch({
                 onMouseDown={preventInputBlur}
                 onClick={onFindPrevious}
                 disabled={!hasMatches}
-                title="Previous match"
-                aria-label="Previous match"
+                title={t('Previous match')}
+                aria-label={t('Previous match')}
               >
                 <ChevronUp className="h-3.5 w-3.5" />
               </Button>
@@ -147,8 +149,8 @@ export function CliTerminalSearch({
                 onMouseDown={preventInputBlur}
                 onClick={onFindNext}
                 disabled={!hasMatches}
-                title="Next match"
-                aria-label="Next match"
+                title={t('Next match')}
+                aria-label={t('Next match')}
               >
                 <ChevronDown className="h-3.5 w-3.5" />
               </Button>
@@ -162,8 +164,8 @@ export function CliTerminalSearch({
           className="h-8 w-8 shrink-0 text-muted-foreground"
           onMouseDown={preventInputBlur}
           onClick={handleClose}
-          title="Close search"
-          aria-label="Close search"
+          title={t('Close search')}
+          aria-label={t('Close search')}
         >
           <X className="h-3.5 w-3.5" />
         </Button>

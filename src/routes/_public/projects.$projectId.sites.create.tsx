@@ -18,17 +18,23 @@ import {
   WizardProvider,
   useWizard,
 } from '@/components/pages/projects/$projectId/sites/create/WizardContext'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
+
+function WizardPending() {
+  const t = useT()
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-muted-foreground">{t('Loading wizard...')}</div>
+    </div>
+  )
+}
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create',
 )({
   head: () => ({ meta: [{ title: pageTitle('Create', 'Sites') }] }),
-  pendingComponent: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading wizard...</div>
-    </div>
-  ),
+  pendingComponent: WizardPending,
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 

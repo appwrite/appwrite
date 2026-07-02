@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Link } from '@tanstack/react-router'
+import { useT } from '@/lib/i18n/translate'
 
 interface VerifyEmailProps {
   onResend?: () => void
@@ -19,6 +20,7 @@ export function VerifyEmail({
   redirect,
   status = 'pending',
 }: VerifyEmailProps) {
+  const t = useT()
   return (
     <Card className="overflow-hidden py-0">
       <div className="grid md:grid-cols-2">
@@ -27,13 +29,15 @@ export function VerifyEmail({
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold tracking-tight">
                 {status === 'confirming'
-                  ? 'Verifying your email'
-                  : 'Verify your email'}
+                  ? t('Verifying your email')
+                  : t('Verify your email')}
               </h1>
               <p className="text-sm text-muted-foreground">
                 {status === 'confirming'
-                  ? 'Please wait while we confirm your email address.'
-                  : "We've sent a verification link to your email address. Click the link to verify your account and access the console."}
+                  ? t('Please wait while we confirm your email address.')
+                  : t(
+                      "We've sent a verification link to your email address. Click the link to verify your account and access the console.",
+                    )}
               </p>
             </div>
             {status === 'pending' && (
@@ -47,8 +51,8 @@ export function VerifyEmail({
                       disabled={isResendLoading}
                     >
                       {isResendLoading
-                        ? 'Sending…'
-                        : 'Resend verification email'}
+                        ? t('Sending…')
+                        : t('Resend verification email')}
                     </Button>
                   )}
                   <Link to="/" search={undefined}>
@@ -56,18 +60,18 @@ export function VerifyEmail({
                       variant={onResend ? 'ghost' : 'default'}
                       className="w-full"
                     >
-                      Go to console
+                      {t('Go to console')}
                     </Button>
                   </Link>
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
-                  Already verified?{' '}
+                  {t('Already verified?')}{' '}
                   <Link
                     to="/sign-in"
                     search={redirect ? { redirect } : undefined}
                     className="link-neutral"
                   >
-                    Sign in
+                    {t('Sign in')}
                   </Link>
                 </p>
               </>

@@ -25,6 +25,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { confirmPayment } from '@/lib/utils/stripe'
+import { useT } from '@/lib/i18n/translate'
 
 const ITEMS_PER_PAGE = 5
 
@@ -110,6 +111,7 @@ function extractUrlFromResponse(response: unknown): string | undefined {
 }
 
 export function PaymentHistory() {
+  const t = useT()
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
   const [requestedPage, setRequestedPage] = useState(0)
@@ -129,12 +131,12 @@ export function PaymentHistory() {
 
   const handleAuthorizeInvoice = async (invoice: Invoice) => {
     if (!invoice.clientSecret) {
-      toast.error('This invoice is missing authentication details.')
+      toast.error(t('This invoice is missing authentication details.'))
       return
     }
     try {
       await confirmPayment({ clientSecret: invoice.clientSecret })
-      toast.success('Payment authorized')
+      toast.success(t('Payment authorized'))
       if (orgId) {
         await queryClient.invalidateQueries({
           queryKey: ['invoices', 'organization', orgId],
@@ -145,7 +147,7 @@ export function PaymentHistory() {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to authorize payment',
+        error instanceof Error ? error.message : t('Failed to authorize payment'),
       )
     }
   }
@@ -165,7 +167,7 @@ export function PaymentHistory() {
           return
         }
         toast.error(
-          'No payment method available. Please add a payment method first.',
+          t('No payment method available. Please add a payment method first.'),
         )
         return
       }
@@ -174,7 +176,7 @@ export function PaymentHistory() {
         invoiceId: invoice.$id,
         paymentMethodId,
       })
-      toast.success('Payment retry initiated')
+      toast.success(t('Payment retry initiated'))
       await queryClient.invalidateQueries({
         queryKey: ['invoices', 'organization', orgId],
       })
@@ -183,7 +185,7 @@ export function PaymentHistory() {
       })
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to retry payment',
+        error instanceof Error ? error.message : t('Failed to retry payment'),
       )
     }
   }
@@ -236,12 +238,12 @@ export function PaymentHistory() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment history
+            {t('Payment history')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading invoices...
+            {t('Loading invoices...')}
           </p>
         </div>
       </div>
@@ -253,14 +255,14 @@ export function PaymentHistory() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment history
+            {t('Payment history')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-6">
-          <WarningAlert title="Failed to load invoices">
+          <WarningAlert title={t('Failed to load invoices')}>
             {displayedError instanceof Error
               ? displayedError.message
-              : 'Please try again.'}
+              : t('Please try again.')}
           </WarningAlert>
         </div>
       </div>
@@ -272,13 +274,12 @@ export function PaymentHistory() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment history
+            {t('Payment history')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            No invoices yet. Once you have made a payment, your invoices will
-            appear here.
+            {t('No invoices yet. Once you have made a payment, your invoices will appear here.')}
           </p>
         </div>
       </div>
@@ -289,11 +290,11 @@ export function PaymentHistory() {
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4 flex items-center justify-between">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Payment history
+          {t('Payment history')}
         </h3>
         {requestedPageError && requestedPage !== displayedPage && (
           <WarningAlert className="max-w-sm">
-            Failed to load page {requestedPage + 1}
+            {t('Failed to load page')} {requestedPage + 1}
           </WarningAlert>
         )}
       </div>
@@ -303,16 +304,16 @@ export function PaymentHistory() {
           <thead className="bg-muted/30">
             <tr>
               <th className="px-6 py-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Invoice
+                {t('Invoice')}
               </th>
               <th className="px-6 py-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Due Date
+                {t('Due Date')}
               </th>
               <th className="px-6 py-2.5 text-start text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Status
+                {t('Status')}
               </th>
               <th className="px-6 py-2.5 text-end text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Amount
+                {t('Amount')}
               </th>
               <th className="px-6 py-2.5 text-end text-[11px] font-medium uppercase tracking-wider text-muted-foreground" />
             </tr>
@@ -361,7 +362,7 @@ export function PaymentHistory() {
                     toast.error(
                       error instanceof Error
                         ? error.message
-                        : 'Failed to view invoice',
+                        : t('Failed to view invoice'),
                     )
                   }
                 }}
@@ -412,7 +413,7 @@ export function PaymentHistory() {
                     toast.error(
                       error instanceof Error
                         ? error.message
-                        : 'Failed to download invoice',
+                        : t('Failed to download invoice'),
                     )
                   }
                 }}
@@ -427,12 +428,12 @@ export function PaymentHistory() {
           <p className="text-[12px] text-muted-foreground">
             {totalInvoices > 0 ? (
               <>
-                Showing {displayedPage * ITEMS_PER_PAGE + 1}–
+                {t('Showing')} {displayedPage * ITEMS_PER_PAGE + 1}–
                 {Math.min((displayedPage + 1) * ITEMS_PER_PAGE, totalInvoices)}{' '}
-                of {totalInvoices} invoices
+                {t('of')} {totalInvoices} {t('invoices')}
               </>
             ) : (
-              'No invoices'
+              t('No invoices')
             )}
           </p>
           <div className="flex items-center gap-2">
@@ -442,12 +443,12 @@ export function PaymentHistory() {
               className="h-8 w-8 p-0"
               onClick={handlePrevPage}
               disabled={displayedPage === 0 || isPageTransitioning}
-              aria-label="Go to previous page"
+              aria-label={t('Go to previous page')}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-[12px] text-muted-foreground">
-              Page {displayedPage + 1} of {totalPages}
+              {t('Page')} {displayedPage + 1} {t('of')} {totalPages}
             </span>
             <Button
               variant="outline"
@@ -455,7 +456,7 @@ export function PaymentHistory() {
               className="h-8 w-8 p-0"
               onClick={handleNextPage}
               disabled={displayedPage === totalPages - 1 || isPageTransitioning}
-              aria-label="Go to next page"
+              aria-label={t('Go to next page')}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -485,6 +486,7 @@ function InvoiceRow({
   onViewInvoice,
   onDownloadInvoice,
 }: InvoiceRowProps) {
+  const t = useT()
   const [isViewing, setIsViewing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isAuthorizing, setIsAuthorizing] = useState(false)
@@ -541,7 +543,7 @@ function InvoiceRow({
           className="text-[10px] capitalize shrink-0"
         >
           {invoice.status === 'requires_authentication'
-            ? 'Action required'
+            ? t('Action required')
             : invoice.status}
         </Badge>
       </td>
@@ -556,12 +558,12 @@ function InvoiceRow({
             <Button
               size="sm"
               className="h-8 gap-1.5 px-2.5 text-[12px]"
-              title="Authorize payment"
+              title={t('Authorize payment')}
               onClick={handleAuthorize}
               disabled={!orgId || rowBusy}
             >
               <ShieldCheck className="h-3.5 w-3.5" />
-              {isAuthorizing ? 'Authorizing...' : 'Authorize'}
+              {isAuthorizing ? t('Authorizing...') : t('Authorize')}
             </Button>
           )}
           {onRetryPayment && (
@@ -572,15 +574,15 @@ function InvoiceRow({
               onClick={onRetryPayment}
               disabled={!orgId || rowBusy}
             >
-              {isRetrying ? 'Retrying...' : 'Retry payment'}
+              {isRetrying ? t('Retrying...') : t('Retry payment')}
             </Button>
           )}
           <Button
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-            title="View invoice"
-            aria-label="View invoice"
+            title={t('View invoice')}
+            aria-label={t('View invoice')}
             onClick={handleView}
             disabled={!orgId || rowBusy}
           >
@@ -590,8 +592,8 @@ function InvoiceRow({
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-            title="Download invoice"
-            aria-label="Download invoice"
+            title={t('Download invoice')}
+            aria-label={t('Download invoice')}
             onClick={handleDownload}
             disabled={!orgId || rowBusy}
           >

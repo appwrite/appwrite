@@ -1,4 +1,5 @@
 import { Mail } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -33,12 +34,15 @@ function MockEmailField({
   placeholder: string
   typeDelayMs?: number
 }) {
+  const t = useT()
   const typedText = 'paige@acme.io'
   const cursorDelay = typeDelayMs + typedText.length * 55
 
   return (
     <div className="space-y-1">
-      <label className={cn('text-[11px] font-medium', productBentoIdle.text)}>Email</label>
+      <label className={cn('text-[11px] font-medium', productBentoIdle.text)}>
+        {t('Email')}
+      </label>
       <div className="relative rounded-md border border-border bg-background px-2.5 py-1.5 text-[12px]">
         <span className="text-muted-foreground transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
           {placeholder}
@@ -89,6 +93,7 @@ function OAuthButton({
 }
 
 export function AuthProductVisual() {
+  const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
       <div className="relative mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col">
@@ -105,9 +110,11 @@ export function AuthProductVisual() {
 
           <div className="space-y-3 overflow-hidden p-3">
             <div>
-              <p className={cn('text-[13px] font-semibold', productBentoIdle.text)}>Welcome back</p>
+              <p className={cn('text-[13px] font-semibold', productBentoIdle.text)}>
+                {t('Welcome back')}
+              </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
-                Sign in to your account
+                {t('Sign in to your account')}
               </p>
             </div>
 
@@ -125,7 +132,7 @@ export function AuthProductVisual() {
             <div className="flex items-center gap-2">
               <div className="h-px flex-1 bg-border" />
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                or
+                {t('or')}
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
@@ -139,7 +146,7 @@ export function AuthProductVisual() {
               style={{ transitionDelay: '480ms' }}
             >
               <Mail className={cn('size-3.5 shrink-0', productBentoIdle.brandIcon)} aria-hidden />
-              <span>Send magic link</span>
+              <span>{t('Send magic link')}</span>
             </div>
           </div>
         </div>
@@ -152,7 +159,9 @@ export function AuthProductVisual() {
             <span className="flex size-4 shrink-0 items-center justify-center rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Mail className="size-2.5" aria-hidden />
             </span>
-            <p className="text-[11px] font-medium text-foreground">Check your inbox</p>
+            <p className="text-[11px] font-medium text-foreground">
+              {t('Check your inbox')}
+            </p>
           </div>
         </div>
       </div>

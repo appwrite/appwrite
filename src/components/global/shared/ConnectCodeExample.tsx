@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
+import { useT } from '@/lib/i18n/translate'
 
 const CODE_EXAMPLE_HEADER_LABEL_CLASS =
   'flex h-8 items-center text-[12px] font-medium'
@@ -89,6 +90,7 @@ export function ConnectCodeExample({
   actions,
   headless = false,
 }: ConnectCodeExampleProps) {
+  const t = useT()
   const displayCode = normalizeCodeBlockContent(code)
   const showSelector = Boolean(tabs && tabs.length > 1)
   const selectedTabId = activeTabId ?? tabs?.[0]?.id
@@ -119,7 +121,7 @@ export function ConnectCodeExample({
                   CODE_EXAMPLE_HEADER_LABEL_CLASS,
                   'min-w-[9rem] max-w-full bg-transparent hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent',
                 )}
-                aria-label="Code language"
+                aria-label={t('Code language')}
               >
                 <SelectValue />
               </SelectTrigger>

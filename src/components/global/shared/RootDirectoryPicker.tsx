@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/tooltip'
 import { FolderOpen, Info, ChevronRight, Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
@@ -59,24 +60,25 @@ export function RootDirectoryPicker({
   disabled = false,
   className,
 }: RootDirectoryPickerProps) {
+  const t = useT()
   const queryClient = useQueryClient()
 
   const labelContent = (
     <>
-      {label}
+      {t(label)}
       {labelTooltip && (
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               className="inline-flex ms-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-              aria-label="More info"
+              aria-label={t('More info')}
             >
               <Info className="h-3.5 w-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-[240px] z-[200]">
-            {labelTooltip}
+            {t(labelTooltip)}
           </TooltipContent>
         </Tooltip>
       )}
@@ -300,14 +302,14 @@ export function RootDirectoryPicker({
               className="h-9 text-[13px] shrink-0"
               disabled={disabled}
             >
-                Select
+                {t('Select')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Select root directory</DialogTitle>
+                <DialogTitle>{t('Select root directory')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  {description}
+                  {t(description)}
                 </DialogDescription>
               </DialogHeader>
               <div className="border-t border-border" />
@@ -335,14 +337,14 @@ export function RootDirectoryPicker({
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="button"
                   onClick={handleSelect}
                   disabled={!selectedDir}
                 >
-                  Select
+                  {t('Select')}
                 </Button>
               </div>
             </DialogContent>

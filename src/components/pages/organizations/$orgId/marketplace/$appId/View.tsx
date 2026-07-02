@@ -22,6 +22,7 @@ import { MarketplaceAppBadges } from '../_components/MarketplaceAppBadges'
 import { MarketplaceAppCreators } from '../_components/MarketplaceAppCreators'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 export type MarketplaceCatalogAppInitialData = {
   app: Models.App
@@ -32,6 +33,7 @@ type ViewProps = {
 }
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { organizations } = useOrganizations()
 
@@ -60,7 +62,7 @@ export function View({ initialData }: ViewProps = {}) {
       return startMarketplaceAppInstall(mapped)
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to start installation'))
+      toast.error(getErrorMessage(error, t('Failed to start installation')))
     },
   })
 
@@ -70,8 +72,10 @@ export function View({ initialData }: ViewProps = {}) {
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
           <EmptyState
             icon={Store}
-            title="App not found"
-            description="This app may have been deleted or you do not have access."
+            title={t('App not found')}
+            description={t(
+              'This app may have been deleted or you do not have access.',
+            )}
             variant="card"
           />
         </div>
@@ -102,7 +106,7 @@ export function View({ initialData }: ViewProps = {}) {
               className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground mb-4"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              Marketplace
+              {t('Marketplace')}
             </Link>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -133,9 +137,9 @@ export function View({ initialData }: ViewProps = {}) {
                   </p>
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-[12px] text-muted-foreground">
                     <Badge variant="inactive" className="text-[10px] shrink-0">
-                      {MARKETPLACE_CATEGORY_LABELS[mapped.category]}
+                      {t(MARKETPLACE_CATEGORY_LABELS[mapped.category])}
                     </Badge>
-                    <span>by {mapped.author}</span>
+                    <span>{t('by')} {mapped.author}</span>
                     <span>·</span>
                     <DateTooltip date={mapped.$createdAt} />
                   </div>
@@ -146,7 +150,7 @@ export function View({ initialData }: ViewProps = {}) {
                 disabled={installMutation.isPending}
                 onClick={() => installMutation.mutate()}
               >
-                Install app
+                {t('Install app')}
               </Button>
             </div>
           </div>
@@ -159,7 +163,7 @@ export function View({ initialData }: ViewProps = {}) {
             </p>
             {mapped.clientUri && (
               <p className="text-[13px]">
-                <span className="text-muted-foreground">Homepage: </span>
+                <span className="text-muted-foreground">{t('Homepage:')} </span>
                 <a
                   href={mapped.clientUri}
                   target="_blank"
@@ -172,7 +176,7 @@ export function View({ initialData }: ViewProps = {}) {
             )}
             <div className="space-y-2">
               <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Creators
+                {t('Creators')}
               </h4>
               <MarketplaceAppCreators creators={mapped.creators} />
             </div>

@@ -34,6 +34,7 @@ import {
   readTablesDbRowsListColumnsRawFromPrefs,
   serializeTablesDbRowsListColumnLayout,
 } from '@/lib/user-prefs-keys'
+import { useT } from '@/lib/i18n/translate'
 
 function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   const copy = [...list]
@@ -156,6 +157,7 @@ export function TablesDbRowsColumnsPopover({
   account,
   includeSequenceColumn = true,
 }: TablesDbRowsColumnsPopoverProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [orderedKeys, setOrderedKeys] = useState<string[]>([])
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => new Set())
@@ -471,7 +473,7 @@ export function TablesDbRowsColumnsPopover({
                 variant="outline"
                 size="sm"
                 className="h-9 shrink-0 gap-1.5 px-2.5 text-[13px]"
-                aria-label="Columns"
+                aria-label={t('Columns')}
               >
                 <Columns2 className="h-3.5 w-3.5 shrink-0" />
                 {hasColumnCustomization ? (
@@ -484,7 +486,7 @@ export function TablesDbRowsColumnsPopover({
             </PopoverTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            Show, hide, and reorder table columns
+            {t('Show, hide, and reorder table columns')}
           </TooltipContent>
         </Tooltip>
       <PopoverContent
@@ -498,11 +500,9 @@ export function TablesDbRowsColumnsPopover({
         }}
       >
         <div className="px-4 pt-4 pb-3">
-          <h3 className="text-[15px] font-semibold text-foreground">Columns</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">{t('Columns')}</h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Configure which columns appear in the grid and their order. Drag to
-            reorder; hidden columns stay in place so you can show them where you
-            want.
+            {t('Configure which columns appear in the grid and their order. Drag to reorder; hidden columns stay in place so you can show them where you want.')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -519,10 +519,10 @@ export function TablesDbRowsColumnsPopover({
           }}
         >
           {columnsLoading ? (
-            <p className="text-[13px] text-muted-foreground">Loading…</p>
+            <p className="text-[13px] text-muted-foreground">{t('Loading…')}</p>
           ) : orderedKeys.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
-              Select at least one column.
+              {t('Select at least one column.')}
             </p>
           ) : (
             <div className="space-y-1.5">
@@ -615,7 +615,7 @@ export function TablesDbRowsColumnsPopover({
             onClick={handleReset}
             disabled={isPersisting || columnsLoading || allKeys.length === 0}
           >
-            Reset
+            {t('Reset')}
           </Button>
           <Button
             type="button"
@@ -624,7 +624,7 @@ export function TablesDbRowsColumnsPopover({
             disabled={applyDisabled}
             onClick={() => void handleApply()}
           >
-            Apply
+            {t('Apply')}
           </Button>
         </div>
       </PopoverContent>

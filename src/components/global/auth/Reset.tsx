@@ -15,16 +15,20 @@ import {
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import { useT, type Translator } from '@/lib/i18n/translate'
 
-const resetPasswordSchema = z
-  .object({
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(8, 'Please confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  })
+const createResetPasswordSchema = (t: Translator) =>
+  z
+    .object({
+      password: z.string().min(8, t('Password must be at least 8 characters')),
+      confirmPassword: z.string().min(8, t('Please confirm your password')),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("Passwords don't match"),
+      path: ['confirmPassword'],
+    })
+
+type ResetPasswordValues = z.infer<ReturnType<typeof createResetPasswordSchema>>
 
 interface ResetProps {
   onSubmit: (data: { password: string }) => void
@@ -33,15 +37,16 @@ interface ResetProps {
 }
 
 export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
-  const form = useForm<z.infer<typeof resetPasswordSchema>>({
-    resolver: zodResolver(resetPasswordSchema),
+  const t = useT()
+  const form = useForm<ResetPasswordValues>({
+    resolver: zodResolver(createResetPasswordSchema(t)),
     defaultValues: {
       password: '',
       confirmPassword: '',
     },
   })
 
-  const handleSubmit = (data: z.infer<typeof resetPasswordSchema>) => {
+  const handleSubmit = (data: ResetPasswordValues) => {
     onSubmit({ password: data.password })
   }
 
@@ -53,15 +58,16 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
             <div className="space-y-6">
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  Password reset
+                  {t('Password reset')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Your password has been successfully reset. You can now sign in
-                  with your new password.
+                  {t(
+                    'Your password has been successfully reset. You can now sign in with your new password.',
+                  )}
                 </p>
               </div>
               <Link to="/sign-in">
-                <Button className="w-full">Sign in</Button>
+                <Button className="w-full">{t('Sign in')}</Button>
               </Link>
             </div>
           </div>
@@ -90,10 +96,10 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
             >
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  Reset your password
+                  {t('Reset your password')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Enter your new password below.
+                  {t('Enter your new password below.')}
                 </p>
               </div>
 
@@ -103,7 +109,7 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New Password</FormLabel>
+                      <FormLabel>{t('New Password')}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -117,7 +123,7 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel>{t('Confirm Password')}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -128,13 +134,13 @@ export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                Reset password
+                {t('Reset password')}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Remember your password?{' '}
+                {t('Remember your password?')}{' '}
                 <Link to="/sign-in" className="link-neutral">
-                  Sign in
+                  {t('Sign in')}
                 </Link>
               </p>
             </form>

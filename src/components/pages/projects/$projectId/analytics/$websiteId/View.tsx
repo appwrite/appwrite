@@ -59,6 +59,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import { useT } from '@/lib/i18n/translate'
 
 // Types
 interface VisitorMetric {
@@ -592,6 +593,7 @@ function MetricTab({
   isActive: boolean
   onClick: () => void
 }) {
+  const t = useT()
   // For bounce rate, negative change is good (lower bounce = better)
   const isPositive =
     metric.id === 'bounceRate' ? metric.change < 0 : metric.change > 0
@@ -639,7 +641,7 @@ function MetricTab({
           isActive ? 'text-muted-foreground' : 'text-muted-foreground/70',
         )}
       >
-        {metric.label}
+        {t(metric.label)}
       </span>
       {isActive && (
         <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
@@ -651,6 +653,7 @@ function MetricTab({
 // World Map Component using mapcn
 // Internal component that uses map context
 function MapContent({ data }: { data: LocationData[] }) {
+  const t = useT()
   const { map, isLoaded } = useMap()
 
   // Resize map when it becomes visible or when map loads
@@ -767,7 +770,7 @@ function MapContent({ data }: { data: LocationData[] }) {
                   </span>
                 </div>
                 <div className="mt-1 text-[11px] text-muted-foreground">
-                  {formatNumber(location.visitors)} visitors
+                  {formatNumber(location.visitors)} {t('visitors')}
                 </div>
               </div>
             </MarkerPopup>
@@ -778,7 +781,7 @@ function MapContent({ data }: { data: LocationData[] }) {
       {/* Legend */}
       <div className="absolute bottom-8 start-4 rounded-lg border border-border bg-background/95 px-3 py-2 backdrop-blur-sm">
         <div className="mb-2 text-[11px] font-semibold text-foreground">
-          Visitors
+          {t('Visitors')}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -852,6 +855,7 @@ export function View({
   websiteName = 'Main Marketing Site',
   onBack,
 }: ViewProps) {
+  const t = useT()
   const [activeTab, setActiveTab] = useState('analytics')
   const [activeMetric, setActiveMetric] = useState('unique')
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -985,8 +989,8 @@ export function View({
   }, [techView])
 
   const tabs: Tab[] = [
-    { id: 'analytics', label: 'Analytics' },
-    { id: 'settings', label: 'Settings' },
+    { id: 'analytics', label: t('Analytics') },
+    { id: 'settings', label: t('Settings') },
   ]
 
   const maxLocationVisitors = Math.max(...locationData.map((l) => l.visitors))
@@ -1031,7 +1035,7 @@ export function View({
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   <span className="text-[12px] font-medium text-muted-foreground">
-                    30 active visitors
+                    30 {t('active visitors')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1149,10 +1153,10 @@ export function View({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Traffic composition
+                      {t('Traffic composition')}
                     </h3>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Human visitors vs AI agents and crawlers
+                      {t('Human visitors vs AI agents and crawlers')}
                     </p>
                   </div>
                   <div className="p-4">
@@ -1186,7 +1190,7 @@ export function View({
                                   {item.icon}
                                 </span>
                                 <span className="text-[12px] font-medium text-foreground">
-                                  {item.type}
+                                  {t(item.type)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3">
@@ -1202,7 +1206,7 @@ export function View({
                                         )?.value ?? 0),
                                     ),
                                   )}{' '}
-                                  visits
+                                  {t('visits')}
                                 </span>
                               </div>
                             </div>
@@ -1226,10 +1230,10 @@ export function View({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      AI discovery impact
+                      {t('AI discovery impact')}
                     </h3>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Human sign-ups attributed to AI agent discovery
+                      {t('Human sign-ups attributed to AI agent discovery')}
                     </p>
                   </div>
                   <div className="p-4">
@@ -1247,14 +1251,16 @@ export function View({
                         <span className="font-medium text-foreground">
                           {aiDiscoveryImpact.attributionRate}%
                         </span>{' '}
-                        of human conversions came from users who discovered you
-                        via AI agents
+                        {t(
+                          'of human conversions came from users who discovered you via AI agents',
+                        )}
                       </p>
                       <div className="flex items-center gap-2 rounded-md bg-violet-500/10 px-3 py-2">
                         <Sparkles className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" />
                         <span className="text-[11px] text-muted-foreground">
-                          Optimize docs and key pages for AI visibility to
-                          increase discovery-driven sign-ups
+                          {t(
+                            'Optimize docs and key pages for AI visibility to increase discovery-driven sign-ups',
+                          )}
                         </span>
                       </div>
                     </div>
@@ -1267,10 +1273,10 @@ export function View({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      AI agents
+                      {t('AI agents')}
                     </h3>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Top AI platforms crawling and accessing your site
+                      {t('Top AI platforms crawling and accessing your site')}
                     </p>
                   </div>
                   <div className="p-4">
@@ -1347,7 +1353,7 @@ export function View({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Traffic sources
+                        {t('Traffic sources')}
                       </h3>
                       <Tabs
                         value={sourcesView}
@@ -1362,19 +1368,19 @@ export function View({
                             value="channels"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Channels
+                            {t('Channels')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="sources"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Sources
+                            {t('Sources')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="campaigns"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Campaigns
+                            {t('Campaigns')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1425,7 +1431,7 @@ export function View({
                                     style={{ backgroundColor: channel.color }}
                                   />
                                   <span className="flex-1 truncate text-[12px] font-medium text-foreground">
-                                    {channel.name}
+                                    {t(channel.name)}
                                   </span>
                                   <div className="flex items-center gap-3">
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
@@ -1541,7 +1547,7 @@ export function View({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Pages
+                        {t('Pages')}
                       </h3>
                       <Tabs
                         value={pagesView}
@@ -1554,19 +1560,19 @@ export function View({
                             value="top"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Top Pages
+                            {t('Top Pages')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="entry"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Entry Pages
+                            {t('Entry Pages')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="exit"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Exit Pages
+                            {t('Exit Pages')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1637,12 +1643,12 @@ export function View({
                             >
                               {showAllTopPages ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({topPages.length - 15} more)
+                                  {t('Show more')} ({topPages.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1711,12 +1717,12 @@ export function View({
                             >
                               {showAllEntryPages ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({entryPages.length - 15} more)
+                                  {t('Show more')} ({entryPages.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1785,12 +1791,12 @@ export function View({
                             >
                               {showAllExitPages ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({exitPages.length - 15} more)
+                                  {t('Show more')} ({exitPages.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -1807,7 +1813,7 @@ export function View({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Locations
+                        {t('Locations')}
                       </h3>
                       <Tabs
                         value={locationView}
@@ -1822,25 +1828,25 @@ export function View({
                             value="map"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Map
+                            {t('Map')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="countries"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Countries
+                            {t('Countries')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="regions"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Regions
+                            {t('Regions')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="cities"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Cities
+                            {t('Cities')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -1900,7 +1906,7 @@ export function View({
                                     <div className="flex items-center gap-3">
                                       <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
                                         {formatNumber(location.uniqueVisitors)}{' '}
-                                        unique
+                                        {t('unique')}
                                       </span>
                                       <span className="min-w-[50px] text-end text-[12px] font-semibold tabular-nums text-foreground">
                                         {formatNumber(location.visitors)}
@@ -1923,12 +1929,12 @@ export function View({
                               >
                                 {showAllCountries ? (
                                   <>
-                                    Show less
+                                    {t('Show less')}
                                     <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
-                                    Show more ({locationData.length - 15} more)
+                                    {t('Show more')} ({locationData.length - 15} {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -2000,12 +2006,12 @@ export function View({
                               >
                                 {showAllRegions ? (
                                   <>
-                                    Show less
+                                    {t('Show less')}
                                     <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
-                                    Show more ({regions.length - 15} more)
+                                    {t('Show more')} ({regions.length - 15} {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -2074,12 +2080,12 @@ export function View({
                               >
                                 {showAllCities ? (
                                   <>
-                                    Show less
+                                    {t('Show less')}
                                     <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                   </>
                                 ) : (
                                   <>
-                                    Show more ({cities.length - 15} more)
+                                    {t('Show more')} ({cities.length - 15} {t('more')})
                                     <ChevronDown className="ms-1 h-3 w-3" />
                                   </>
                                 )}
@@ -2097,7 +2103,7 @@ export function View({
                   <div className="border-b border-border px-4 py-2.5">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[13px] font-semibold text-foreground">
-                        Technology
+                        {t('Technology')}
                       </h3>
                       <Tabs
                         value={techView}
@@ -2110,19 +2116,19 @@ export function View({
                             value="browsers"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Browsers
+                            {t('Browsers')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="os"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Operating Systems
+                            {t('Operating Systems')}
                           </TabsTrigger>
                           <TabsTrigger
                             value="devices"
                             className="h-5 px-2.5 text-[11px]"
                           >
-                            Devices
+                            {t('Devices')}
                           </TabsTrigger>
                         </TabsList>
                       </Tabs>
@@ -2193,12 +2199,12 @@ export function View({
                             >
                               {showAllBrowsers ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({browsers.length - 15} more)
+                                  {t('Show more')} ({browsers.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2269,13 +2275,13 @@ export function View({
                             >
                               {showAllOS ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({operatingSystems.length - 15}{' '}
-                                  more)
+                                  {t('Show more')} ({operatingSystems.length - 15}{' '}
+                                  {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2323,7 +2329,7 @@ export function View({
                                     {device.icon}
                                   </span>
                                   <span className="flex-1 truncate text-[12px] font-medium text-foreground">
-                                    {device.type}
+                                    {t(device.type)}
                                   </span>
                                   <div className="flex items-center gap-3">
                                     <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
@@ -2348,12 +2354,12 @@ export function View({
                             >
                               {showAllDevices ? (
                                 <>
-                                  Show less
+                                  {t('Show less')}
                                   <ChevronDown className="ms-1 h-3 w-3 rotate-180" />
                                 </>
                               ) : (
                                 <>
-                                  Show more ({devices.length - 15} more)
+                                  {t('Show more')} ({devices.length - 15} {t('more')})
                                   <ChevronDown className="ms-1 h-3 w-3" />
                                 </>
                               )}
@@ -2372,7 +2378,7 @@ export function View({
                 <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Peak hours
+                      {t('Peak hours')}
                     </h3>
                   </div>
                   <div className="px-4 pt-3 pb-4">
@@ -2385,7 +2391,7 @@ export function View({
                         <ChartContainer
                           config={{
                             visitors: {
-                              label: 'Visitors',
+                              label: t('Visitors'),
                               color: 'var(--chart-brand)',
                             },
                           }}
@@ -2426,7 +2432,8 @@ export function View({
                                   hideLabel
                                   formatter={(value) => (
                                     <span className="text-[12px] font-semibold tabular-nums">
-                                      {formatNumber(value as number)} visitors
+                                      {formatNumber(value as number)}{' '}
+                                      {t('visitors')}
                                     </span>
                                   )}
                                 />
@@ -2449,7 +2456,7 @@ export function View({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Visitor types
+                      {t('Visitor types')}
                     </h3>
                   </div>
                   <div className="p-4">
@@ -2483,7 +2490,7 @@ export function View({
                                   {visitorType.icon}
                                 </span>
                                 <span className="text-[12px] font-medium text-foreground">
-                                  {visitorType.type} visitors
+                                  {t(`${visitorType.type} visitors`)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3">
@@ -2517,15 +2524,14 @@ export function View({
                 <div className="rounded-lg border border-border bg-card">
                   <div className="border-b border-border px-4 py-2.5">
                     <h3 className="text-[13px] font-semibold text-foreground">
-                      Goals
+                      {t('Goals')}
                     </h3>
                   </div>
                   <div className="p-6 text-center">
                     <p className="mb-4 text-[13px] text-muted-foreground">
-                      Measure how often visitors complete specific actions.
-                      Goals allow you to track registrations, button clicks,
-                      form completions, external link clicks, file downloads,
-                      404 error pages and more.
+                      {t(
+                        'Measure how often visitors complete specific actions. Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.',
+                      )}
                     </p>
                     <div className="flex items-center justify-center gap-2">
                       <Button
@@ -2533,10 +2539,10 @@ export function View({
                         size="sm"
                         className="h-8 text-[12px]"
                       >
-                        Hide this report
+                        {t('Hide this report')}
                       </Button>
                       <Button size="sm" className="h-8 text-[12px]">
-                        Set up goals →
+                        {t('Set up goals')} →
                       </Button>
                     </div>
                   </div>
@@ -2549,10 +2555,10 @@ export function View({
             <div className="px-4 py-4 sm:px-6">
               <div className="rounded-xl border border-border bg-card p-5">
                 <h3 className="mb-4 text-[14px] font-medium text-foreground">
-                  Settings
+                  {t('Settings')}
                 </h3>
                 <p className="text-[13px] text-muted-foreground">
-                  Settings content will be displayed here.
+                  {t('Settings content will be displayed here.')}
                 </p>
               </div>
             </div>

@@ -33,6 +33,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Brand secondary palette - 100% baselines (style guide). Each hue uses
@@ -305,6 +306,7 @@ function VolumeTooltip({
   /** When set, this resource is emphasized whenever no stack segment is hovered. */
   activeResourceTypeFilter?: string | null
 }) {
+  const t = useT()
   if (!active || !payload?.length) return null
   const heading =
     typeof label === 'string' || typeof label === 'number'
@@ -342,7 +344,7 @@ function VolumeTooltip({
                   isSelected ? 'text-foreground' : 'text-muted-foreground',
                 )}
               >
-                {p.name}
+                {typeof p.name === 'string' ? t(p.name) : p.name}
               </span>
               <span
                 className={cn(
@@ -356,13 +358,13 @@ function VolumeTooltip({
           )
         })}
         <div className="flex items-center justify-between gap-8 border-t border-border pt-1.5">
-          <span className="text-[11px] text-muted-foreground">Total</span>
+          <span className="text-[11px] text-muted-foreground">{t('Total')}</span>
           <span className="text-[12px] font-medium text-foreground tabular-nums">
             {total.toLocaleString()}
           </span>
         </div>
       </div>
-      <p className="mt-2 text-[10px] text-muted-foreground/50">Mock data</p>
+      <p className="mt-2 text-[10px] text-muted-foreground/50">{t('Mock data')}</p>
     </div>
   )
 }
@@ -497,6 +499,7 @@ export function ActivityLogVolumeChart({
   activeResourceTypeFilter,
   onLegendResourceTypeClick,
 }: ActivityLogVolumeChartProps) {
+  const t = useT()
   const plotBottomFadeId = useId().replace(/:/g, '')
   const [open, setOpen] = useState(true)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -632,7 +635,7 @@ export function ActivityLogVolumeChart({
           )}
         >
           <h3 className="min-w-0 text-[13px] font-medium text-foreground">
-            Volume by resource
+            {t('Volume by resource')}
           </h3>
           <CollapsibleTrigger asChild>
             <Button
@@ -641,7 +644,7 @@ export function ActivityLogVolumeChart({
               size="sm"
               className="h-8 shrink-0 gap-1.5 px-2 text-[12px] text-muted-foreground hover:text-foreground"
               aria-expanded={open}
-              aria-label={open ? 'Hide volume chart' : 'Show volume chart'}
+              aria-label={open ? t('Hide volume chart') : t('Show volume chart')}
             >
               <ChevronDown
                 className={cn(
@@ -649,7 +652,7 @@ export function ActivityLogVolumeChart({
                   open && '-rotate-180',
                 )}
               />
-              {open ? 'Hide' : 'Show'}
+              {open ? t('Hide') : t('Show')}
             </Button>
           </CollapsibleTrigger>
         </div>
@@ -660,7 +663,7 @@ export function ActivityLogVolumeChart({
             <div className="flex-1 text-muted-foreground">
               {chartData.length === 0 ? (
                 <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground">
-                  No data for this date range
+                  {t('No data for this date range')}
                 </div>
               ) : (
                 <div
@@ -796,7 +799,7 @@ export function ActivityLogVolumeChart({
                           : 'text-muted-foreground',
                       )}
                     >
-                      {label}
+                      {t(label)}
                     </span>
                   </>
                 )
@@ -815,7 +818,7 @@ export function ActivityLogVolumeChart({
                     key={key}
                     type="button"
                     aria-pressed={isActive}
-                    aria-label={`Filter activities by ${label}`}
+                    aria-label={`${t('Filter activities by')} ${t(label)}`}
                     onClick={() => onLegendResourceTypeClick?.(key)}
                     className={cn(
                       'flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 transition-colors',

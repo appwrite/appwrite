@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { CreateProjectOAuth2AppInput } from '@/lib/react-query/hooks/project-oauth2-apps'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateProjectOAuth2AppProps {
   open: boolean
@@ -33,6 +34,7 @@ export function CreateProjectOAuth2App({
   onCreate,
   isSubmitting = false,
 }: CreateProjectOAuth2AppProps) {
+  const t = useT()
   const [name, setName] = useState('')
   const [appId, setAppId] = useState('')
   const [redirectUris, setRedirectUris] = useState<string[]>([])
@@ -66,42 +68,43 @@ export function CreateProjectOAuth2App({
       <DialogContent className="sm:max-w-md p-0">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Create OAuth2 app</DialogTitle>
+            <DialogTitle>{t('Create OAuth2 app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Register a client that can authenticate users through this
-              project&apos;s OAuth2 server.
+              {t(
+                "Register a client that can authenticate users through this project's OAuth2 server.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="oauth2-app-name" className="text-[13px]">
-                Name
+                {t('Name')}
               </Label>
               <Input
                 id="oauth2-app-name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="My application"
+                placeholder={t('My application')}
                 className="h-9 text-[13px]"
                 disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="oauth2-app-id" className="text-[13px]">
-                App ID
+                {t('App ID')}
               </Label>
               <Input
                 id="oauth2-app-id"
                 value={appId}
                 onChange={(event) => setAppId(event.target.value)}
-                placeholder="Optional custom ID"
+                placeholder={t('Optional custom ID')}
                 className="h-9 font-mono text-[13px]"
                 disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-[13px]">Redirect URIs</Label>
+              <Label className="text-[13px]">{t('Redirect URIs')}</Label>
               <InputTags
                 value={redirectUris}
                 onChange={setRedirectUris}
@@ -111,24 +114,26 @@ export function CreateProjectOAuth2App({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-[13px]">Client type</Label>
+              <Label className="text-[13px]">{t('Client type')}</Label>
               <Select value={clientType} onValueChange={setClientType}>
                 <SelectTrigger className="h-9 text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="confidential">Confidential</SelectItem>
-                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="confidential">
+                    {t('Confidential')}
+                  </SelectItem>
+                  <SelectItem value="public">{t('Public')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center justify-between gap-4">
               <div>
                 <Label htmlFor="oauth2-app-device-flow" className="text-[13px]">
-                  Device flow
+                  {t('Device flow')}
                 </Label>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  Allow RFC 8628 device authorization for TVs and CLIs.
+                  {t('Allow RFC 8628 device authorization for TVs and CLIs.')}
                 </p>
               </div>
               <Switch
@@ -146,7 +151,7 @@ export function CreateProjectOAuth2App({
               disabled={isSubmitting}
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
@@ -154,7 +159,7 @@ export function CreateProjectOAuth2App({
                 isSubmitting || !name.trim() || redirectUris.length === 0
               }
             >
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>

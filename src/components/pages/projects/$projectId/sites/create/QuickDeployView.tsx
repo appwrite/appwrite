@@ -40,6 +40,7 @@ import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import type { WizardVariable } from './WizardContext'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -80,6 +81,7 @@ export function QuickDeployView({
   outputDirectory: initialOutput,
   envKeys,
 }: QuickDeployViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -163,12 +165,12 @@ export function QuickDeployView({
 
   const handleDeploy = async () => {
     if (!projectId || !siteName || !framework || !repo || !owner) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('Please fill in all required fields'))
       return
     }
 
     if (!domainValid) {
-      toast.error('Please enter a valid domain')
+      toast.error(t('Please enter a valid domain'))
       return
     }
 
@@ -248,7 +250,7 @@ export function QuickDeployView({
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to create site')
+      toast.error(error.message || t('Failed to create site'))
       setIsDeploying(false)
     }
   }
@@ -273,7 +275,7 @@ export function QuickDeployView({
                 {owner}/{repo}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                GitHub Repository
+                {t('GitHub Repository')}
               </p>
             </div>
           </div>
@@ -286,7 +288,7 @@ export function QuickDeployView({
             >
               <a href={repoUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-                View on GitHub
+                {t('View on GitHub')}
               </a>
             </Button>
           )}
@@ -301,7 +303,9 @@ export function QuickDeployView({
               <FrameworkIcon framework={framework} size="sm" />
             </div>
             <div>
-              <p className="text-[12px] text-muted-foreground">Framework</p>
+              <p className="text-[12px] text-muted-foreground">
+                {t('Framework')}
+              </p>
               <p className="text-[13px] font-medium text-foreground">
                 {frameworkInfo.name}
               </p>
@@ -316,21 +320,21 @@ export function QuickDeployView({
   if (!repo || !owner) {
     return (
       <WizardLayout
-        title="Create site"
+        title={t('Create site')}
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
         maxWidth="max-w-[1400px]"
       >
         <div className="rounded-xl border border-border bg-card/50 p-8 text-center">
           <p className="text-[13px] text-muted-foreground mb-4">
-            Repository information is missing from the URL.
+            {t('Repository information is missing from the URL.')}
           </p>
           <Button asChild>
             <Link
               to="/projects/$projectId/sites/create/repositories"
               params={{ projectId: projectId! }}
             >
-              Import from Git
+              {t('Import from Git')}
             </Link>
           </Button>
         </div>
@@ -340,7 +344,7 @@ export function QuickDeployView({
 
   return (
     <WizardLayout
-      title="Create site"
+      title={t('Create site')}
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
       maxWidth="max-w-[1400px]"
@@ -353,7 +357,7 @@ export function QuickDeployView({
             onClick={() => window.history.back()}
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -365,7 +369,7 @@ export function QuickDeployView({
               createSiteMutation.isPending
             }
           >
-            Deploy
+            {t('Deploy')}
           </Button>
         </>
       }
@@ -387,7 +391,7 @@ export function QuickDeployView({
                 rel="noopener noreferrer"
                 className="text-[11px] text-muted-foreground hover:text-foreground"
               >
-                View repository
+                {t('View repository')}
               </a>
             )}
           </div>
@@ -397,38 +401,40 @@ export function QuickDeployView({
       {/* Details section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           {/* Site name */}
           <div className="space-y-2">
             <Label htmlFor="site-name" className="text-[13px]">
-              Site name
+              {t('Site name')}
             </Label>
             <Input
               id="site-name"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
-              placeholder="My awesome site"
+              placeholder={t('My awesome site')}
               className="h-9 text-[13px]"
             />
           </div>
 
           {/* Site ID */}
           <div className="space-y-2">
-            <Label className="text-[13px]">Site ID</Label>
+            <Label className="text-[13px]">{t('Site ID')}</Label>
             <IdInput
               value={siteId}
               onChange={setSiteId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
 
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
-              Framework
+              {t('Framework')}
             </Label>
             <Select
               value={framework}
@@ -446,7 +452,7 @@ export function QuickDeployView({
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
-                <SelectValue placeholder="Select framework" />
+                <SelectValue placeholder={t('Select framework')} />
               </SelectTrigger>
               <SelectContent>
                 {frameworks.map((f) => (
@@ -467,7 +473,7 @@ export function QuickDeployView({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Git configuration
+            {t('Git configuration')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -475,7 +481,7 @@ export function QuickDeployView({
           {/* Root directory */}
           <div className="space-y-2">
             <Label htmlFor="root-directory" className="text-[13px]">
-              Root directory
+              {t('Root directory')}
             </Label>
             <Input
               id="root-directory"
@@ -513,9 +519,11 @@ export function QuickDeployView({
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Domain')}
+          </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Your site will be accessible at this URL
+            {t('Your site will be accessible at this URL')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -528,10 +536,11 @@ export function QuickDeployView({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a
-            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            {t(
+              'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
+            )}{' '}
             <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
-              Learn more →
+              {t('Learn more →')}
             </DocsRouteLink>
           </p>
         </div>

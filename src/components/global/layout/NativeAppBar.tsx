@@ -14,6 +14,7 @@ import {
 import { useKeyboardShortcutsContext } from '@/components/global/providers/KeyboardShortcuts'
 import { useNavigationHistorySafe } from '@/components/global/providers/NavigationHistoryProvider'
 import { useNavigate } from '@tanstack/react-router'
+import { useI18n } from '@/lib/i18n'
 
 /** Width reserved for OS window controls (e.g. traffic lights on macOS) in a native shell */
 const OS_CONTROLS_WIDTH = 72
@@ -26,6 +27,8 @@ export function NativeAppBar() {
   const { openCommandCenter } = useKeyboardShortcutsContext()
   const navigationHistory = useNavigationHistorySafe()
   const navigate = useNavigate()
+  const { catalog } = useI18n()
+  const nativeAppBarCopy = catalog.app.nativeAppBar
   const [historyOpen, setHistoryOpen] = useState(false)
 
   const canGoBack = navigationHistory?.hasInternalHistory() ?? false
@@ -77,13 +80,13 @@ export function NativeAppBar() {
                 onClick={handleBack}
                 disabled={!canGoBack}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
-                aria-label="Back"
+                aria-label={nativeAppBarCopy.back}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Back</p>
+              <p>{nativeAppBarCopy.back}</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -93,13 +96,13 @@ export function NativeAppBar() {
                 onClick={handleForward}
                 disabled={!canGoForward}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
-                aria-label="Forward"
+                aria-label={nativeAppBarCopy.forward}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Forward</p>
+              <p>{nativeAppBarCopy.forward}</p>
             </TooltipContent>
           </Tooltip>
           <Popover open={historyOpen} onOpenChange={setHistoryOpen}>
@@ -110,20 +113,20 @@ export function NativeAppBar() {
                     type="button"
                     disabled={!hasHistory}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
-                    aria-label="History"
+                    aria-label={nativeAppBarCopy.history}
                   >
                     <History className="h-4 w-4" />
                   </button>
                 </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent>
-                <p>History</p>
+                <p>{nativeAppBarCopy.history}</p>
               </TooltipContent>
             </Tooltip>
             <PopoverContent align="start" className="w-72 p-0" sideOffset={4}>
               <div className="border-b border-border px-3 py-2">
                 <p className="text-[12px] font-semibold text-foreground">
-                  Recent pages
+                  {nativeAppBarCopy.recentPages}
                 </p>
               </div>
               <div className="max-h-[240px] overflow-y-auto py-1">
@@ -142,7 +145,7 @@ export function NativeAppBar() {
                   ))
                 ) : (
                   <p className="px-3 py-4 text-[13px] text-muted-foreground">
-                    No recent pages
+                    {nativeAppBarCopy.noRecentPages}
                   </p>
                 )}
               </div>
@@ -158,7 +161,9 @@ export function NativeAppBar() {
           className="flex h-8 w-full max-w-[280px] items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate text-start">Search...</span>
+          <span className="min-w-0 flex-1 truncate text-start">
+            {nativeAppBarCopy.searchPlaceholder}
+          </span>
           <kbd className="ms-auto shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
             ⌘K
           </kbd>

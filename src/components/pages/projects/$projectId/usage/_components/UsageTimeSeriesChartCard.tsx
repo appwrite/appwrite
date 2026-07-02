@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from 'recharts'
 import { AlertCircle } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -115,6 +116,7 @@ export function UsageTimeSeriesChartCard({
   className,
   docsHref,
 }: UsageTimeSeriesChartCardProps) {
+  const t = useT()
   const usageFilters = useOptionalUsageFilters()
   const chartData = useMemo(
     () =>
@@ -149,7 +151,7 @@ export function UsageTimeSeriesChartCard({
         )}
       >
         <div className="min-w-0 flex-1">
-          <h3 className="text-[14px] font-medium text-foreground">{title}</h3>
+          <h3 className="text-[14px] font-medium text-foreground">{t(title)}</h3>
 
           <div className={usageMetricHeaderClass}>
             {isLoading ? (
@@ -160,7 +162,7 @@ export function UsageTimeSeriesChartCard({
                   {formattedTotal}
                 </span>
                 <span className="text-[13px] text-muted-foreground">
-                  {unitLabel}
+                  {t(unitLabel)}
                 </span>
                 {!isError && chartPoints.length > 0 ? (
                   <span
@@ -172,14 +174,14 @@ export function UsageTimeSeriesChartCard({
                       changePercent === 0 && 'text-muted-foreground',
                     )}
                   >
-                    {changeLabel} vs previous period
+                    {changeLabel} {t('vs previous period')}
                   </span>
                 ) : !isLoading ? (
                   <span
                     className="invisible text-[12px] font-medium tabular-nums"
                     aria-hidden
                   >
-                    0% vs previous period
+                    0% {t('vs previous period')}
                   </span>
                 ) : null}
               </>
@@ -195,15 +197,15 @@ export function UsageTimeSeriesChartCard({
               <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
               <div className="max-w-sm">
                 <p className="text-[13px] font-medium text-foreground">
-                  {errorTitle}
+                  {t(errorTitle)}
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {errorMessage}
+                  {t(errorMessage)}
                 </p>
               </div>
               {onRetry ? (
                 <Button variant="outline" size="sm" onClick={onRetry}>
-                  Try again
+                  {t('Try again')}
                 </Button>
               ) : null}
             </div>
@@ -213,7 +215,7 @@ export function UsageTimeSeriesChartCard({
         ) : chartData.length === 0 ? (
           <UsageChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
-              No data for this date range
+              {t('No data for this date range')}
             </div>
           </UsageChartArea>
         ) : (
@@ -269,7 +271,7 @@ export function UsageTimeSeriesChartCard({
                         <p className="text-[13px] font-medium text-foreground">
                           {formatValue(data.value)}{' '}
                           <span className="font-normal text-muted-foreground">
-                            {unitLabel}
+                            {t(unitLabel)}
                           </span>
                         </p>
                       </div>

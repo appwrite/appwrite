@@ -65,6 +65,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
 
@@ -102,6 +103,7 @@ interface BackupsViewProps {
 }
 
 export function BackupsView({ databaseId }: BackupsViewProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const queryClient = useQueryClient()
@@ -190,11 +192,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       if (variables.length === 1) {
         toast.success(
           <div>
-            <b>{variables[0].name || 'Policy'}</b> policy has been created
+            <b>{variables[0].name || t('Policy')}</b>{' '}
+            {t('policy has been created')}
           </div>,
         )
       } else {
-        toast.success('Backup policies have been created')
+        toast.success(t('Backup policies have been created'))
       }
       // Invalidate policies query for this specific database
       queryClient.invalidateQueries({
@@ -208,7 +211,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       setCreatePolicyDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create backup policy')
+      toast.error(error.message || t('Failed to create backup policy'))
     }})
 
   const deletePolicyMutation = useMutation({
@@ -217,7 +220,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       return projectSdk.backups.deletePolicy({ policyId })
     },
     onSuccess: () => {
-      toast.success('Backup policy has been deleted')
+      toast.success(t('Backup policy has been deleted'))
       // Invalidate policies query for this specific database
       queryClient.invalidateQueries({
         queryKey: [
@@ -231,7 +234,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       setSelectedPolicy(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete backup policy')
+      toast.error(error.message || t('Failed to delete backup policy'))
     }})
 
   // Archive mutations
@@ -243,7 +246,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         resourceId: databaseId})
     },
     onSuccess: () => {
-      toast.success('Database backup has started')
+      toast.success(t('Database backup has started'))
       // Invalidate archives query for this specific database (all pages)
       queryClient.invalidateQueries({
         queryKey: [
@@ -256,7 +259,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       setCreateManualBackupDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create backup')
+      toast.error(error.message || t('Failed to create backup'))
     }})
 
   const deleteArchiveMutation = useMutation({
@@ -265,7 +268,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       return projectSdk.backups.deleteArchive({ archiveId })
     },
     onSuccess: () => {
-      toast.success('1 backup deleted')
+      toast.success(t('1 backup deleted'))
       // Invalidate archives query for this specific database (all pages)
       queryClient.invalidateQueries({
         queryKey: [
@@ -279,7 +282,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete backup')
+      toast.error(error.message || t('Failed to delete backup'))
     }})
 
   const bulkDeleteArchivesMutation = useMutation({
@@ -294,7 +297,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     },
     onSuccess: () => {
       toast.success(
-        `Successfully deleted ${selectedBackups.size} backup${selectedBackups.size > 1 ? 's' : ''}`,
+        selectedBackups.size === 1
+          ? t('Backup deleted successfully')
+          : t('Backups deleted successfully'),
       )
       // Invalidate archives query for this specific database (all pages)
       queryClient.invalidateQueries({
@@ -309,7 +314,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       setBulkDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete backups')
+      toast.error(error.message || t('Failed to delete backups'))
     }})
 
   const createRestorationMutation = useMutation({
@@ -323,7 +328,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       return projectSdk.backups.createRestoration(params)
     },
     onSuccess: () => {
-      toast.success('Database restore initiated')
+      toast.success(t('Database restore initiated'))
       // Invalidate archives query to refresh backup status
       queryClient.invalidateQueries({
         queryKey: [
@@ -337,7 +342,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to restore backup')
+      toast.error(error.message || t('Failed to restore backup'))
     }})
 
   // Format backup size
@@ -366,7 +371,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       nextDate.setHours(0, 0, 0, 0)
     } else {
       // For other schedules, return a placeholder
-      return 'Calculating...'
+      return t('Calculating...')
     }
 
     return formatDateTime(nextDate)
@@ -414,27 +419,30 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         <UpgradeCurtain
           isLocked={true}
           orgId={project?.teamId}
-          message="Backups are available on Appwrite Cloud Pro and higher plans."
+          message={t('Backups are available on Appwrite Cloud Pro and higher plans.') /* pragma: allowlist secret */}
         >
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5 text-muted-foreground" />
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Backups
+                  {t('Backups')}
                 </h3>
               </div>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Automated backup policies and manual backups to ensure your data
-                stays safe.
+                {t(
+                  'Automated backup policies and manual backups to ensure your data stays safe.',
+                )}
               </p>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4 min-h-[400px] flex flex-col items-center justify-center">
               <EmptyState
                 icon={Archive}
-                title="Ensure your data stays safe"
-                description="Create backup policies to automate regular and secure data protection for your databases."
+                title={t('Ensure your data stays safe')}
+                description={t(
+                  'Create backup policies to automate regular and secure data protection for your databases.',
+                )}
                 isEmpty={true}
                 iconSize="lg"
               />
@@ -453,7 +461,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Policies
+                {t('Policies')}
               </h3>
               {policies.length > 0 &&
                 backupPoliciesLimit > 0 &&
@@ -479,13 +487,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                       className="h-8 gap-1.5 text-[12px] font-medium"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      Create policy
+                      {t('Create policy')}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">
-                    Policy limit reached. Upgrade to create more.
+                    {t('Policy limit reached. Upgrade to create more.')}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -501,21 +509,25 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 className="h-8 gap-1.5 text-[12px] font-medium"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Create policy
+                {t('Create policy')}
               </Button>
             )}
           </div>
           <div>
             {isPoliciesActuallyLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">Loading policies...</div>
+                <div className="text-muted-foreground">
+                  {t('Loading policies...')}
+                </div>
               </div>
             ) : policies.length === 0 ? (
               <div className="rounded-lg border border-border bg-card py-12 min-h-[280px] flex flex-col items-center justify-center">
                 <EmptyState
                   icon={Archive}
-                  title="Ensure your data stays safe"
-                  description="Create a backup policy to automate regular and secure data protection."
+                  title={t('Ensure your data stays safe')}
+                  description={t(
+                    'Create a backup policy to automate regular and secure data protection.',
+                  )}
                   isEmpty={true}
                   iconSize="lg"
                 />
@@ -526,7 +538,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   className="h-9 text-[13px] mt-4"
                 >
                   <Plus className="me-1.5 h-4 w-4" />
-                  Create policy
+                  {t('Create policy')}
                 </Button>
               </div>
             ) : (
@@ -535,18 +547,18 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   const previousBackup = getPreviousBackup(policy.$id)
                   const scheduleText =
                     policy.schedule === '0 * * * *'
-                      ? 'Runs hourly'
+                      ? t('Runs hourly')
                       : policy.schedule.includes('* * *')
-                        ? 'Runs daily'
-                        : 'Runs on schedule'
+                        ? t('Runs daily')
+                        : t('Runs on schedule')
                   const retentionText =
                     policy.retention === 36500
-                      ? 'Retained forever'
+                      ? t('Retained forever')
                       : policy.retention === 7
-                        ? 'Retained for 1 week'
+                        ? t('Retained for 1 week')
                         : policy.retention === 1
-                          ? 'Retained for 1 day'
-                          : `Retained for ${policy.retention} days`
+                          ? t('Retained for 1 day')
+                          : `${t('Retained for')} ${policy.retention} ${t('days')}`
 
                   return (
                     <div
@@ -557,7 +569,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="text-[14px] font-medium text-foreground">
-                              {policy.name || 'Unnamed Policy'}
+                              {policy.name || t('Unnamed Policy')}
                             </h4>
                           </div>
                           <p className="text-[13px] text-muted-foreground">
@@ -575,7 +587,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 setDeletePolicyDialogOpen(true)
                               }}
                             >
-                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                              <MenuItemContent icon={Trash2}>
+                                {t('Delete')}
+                              </MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -584,7 +598,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                       <div className="grid grid-cols-2 gap-4 text-[13px]">
                         <div>
                           <div className="text-muted-foreground mb-1.5">
-                            Previous
+                            {t('Previous')}
                           </div>
                           <div className="flex items-center gap-1.5">
                             {previousBackup ? (
@@ -596,7 +610,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                               <>
                                 <div className="h-2 w-2 rounded-full bg-muted-foreground shrink-0" />
                                 <span className="text-foreground">
-                                  No backups yet
+                                  {t('No backups yet')}
                                 </span>
                               </>
                             )}
@@ -604,7 +618,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                         </div>
                         <div>
                           <div className="text-muted-foreground mb-1.5">
-                            Next
+                            {t('Next')}
                           </div>
                           <div className="text-foreground">
                             {getNextBackupDate(policy.schedule)}
@@ -624,7 +638,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Backups
+                {t('Backups')}
               </h3>
             </div>
             <Button
@@ -634,20 +648,24 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               className="h-8 gap-1.5 text-[12px] font-medium"
             >
               <Plus className="h-3.5 w-3.5" />
-              Manual backup
+              {t('Manual backup')}
             </Button>
           </div>
           <div>
             {isArchivesActuallyLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">Loading backups...</div>
+                <div className="text-muted-foreground">
+                  {t('Loading backups...')}
+                </div>
               </div>
             ) : archives.length === 0 ? (
               <div className="rounded-lg border border-border bg-card py-12 min-h-[280px] flex flex-col items-center justify-center">
                 <EmptyState
                   icon={Archive}
-                  title="No backups yet"
-                  description="Create a manual backup or set up a policy to get started."
+                  title={t('No backups yet')}
+                  description={t(
+                    'Create a manual backup or set up a policy to get started.',
+                  )}
                   isEmpty={true}
                   iconSize="lg"
                 />
@@ -657,7 +675,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   className="h-9 text-[13px] mt-4"
                 >
                   <Plus className="me-1.5 h-4 w-4" />
-                  Create manual backup
+                  {t('Create manual backup')}
                 </Button>
               </div>
             ) : (
@@ -686,19 +704,19 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                           />
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                          Backup ID
+                          {t('Backup ID')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                          Created
+                          {t('Created')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                          Size
+                          {t('Size')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                          Status
+                          {t('Status')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Policy
+                          {t('Policy')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4"></TableHead>
                       </TableRow>
@@ -760,17 +778,17 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 className="gap-1.5 text-[11px] font-medium"
                               >
                                 <StatusIcon className="h-3 w-3" />
-                                {status.label}
+                                {t(status.label)}
                               </Badge>
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               {policy ? (
                                 <span className="text-[12px] text-foreground">
-                                  {policy.name || 'Unnamed Policy'}
+                                  {policy.name || t('Unnamed Policy')}
                                 </span>
                               ) : (
                                 <span className="text-[12px] text-muted-foreground">
-                                  Manual
+                                  {t('Manual')}
                                 </span>
                               )}
                             </TableCell>
@@ -789,7 +807,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                         }}
                                       >
                                         <MenuItemContent icon={RotateCcw}>
-                                          Restore
+                                          {t('Restore')}
                                         </MenuItemContent>
                                       </DropdownMenuItem>
                                     )}
@@ -799,12 +817,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                           archive.$id,
                                         )
                                         toast.success(
-                                          'Backup ID copied to clipboard',
+                                          t('Backup ID copied to clipboard'),
                                         )
                                       }}
                                     >
                                       <MenuItemContent icon={Copy}>
-                                        Copy ID
+                                        {t('Copy ID')}
                                       </MenuItemContent>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -814,7 +832,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                       }}
                                     >
                                       <MenuItemContent icon={Trash2}>
-                                        Delete
+                                        {t('Delete')}
                                       </MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
@@ -837,7 +855,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
                       showTotal={true}
-                      itemLabel="backups"
+                      itemLabel={t('backups')}
                     />
                   </div>
                 )}
@@ -852,8 +870,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              {selectedBackups.size} backup
-              {selectedBackups.size > 1 ? 's' : ''} selected
+              {selectedBackups.size}{' '}
+              {selectedBackups.size > 1
+                ? t('backups selected')
+                : t('backup selected')}
             </Badge>
             <div className="flex items-center gap-2">
               <Button
@@ -862,7 +882,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 onClick={() => setSelectedBackups(new Set())}
                 className="h-8 text-xs"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -872,7 +892,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 className="h-8 gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -886,14 +906,11 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete backups</DialogTitle>
+            <DialogTitle>{t('Delete backups')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>
-                {selectedBackups.size} backup
-                {selectedBackups.size > 1 ? 's' : ''}
-              </strong>
-              ? This action cannot be undone.
+              {selectedBackups.size > 1
+                ? t('Are you sure you want to delete the selected backups? This action cannot be undone.')
+                : t('Are you sure you want to delete this backup? This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -905,7 +922,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               onClick={() => setBulkDeleteDialogOpen(false)}
               disabled={bulkDeleteArchivesMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -914,7 +931,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               onClick={confirmBulkDelete}
               disabled={bulkDeleteArchivesMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -1015,6 +1032,7 @@ function CreatePolicyDialog({
   databaseId,
   existingPoliciesCount,
   backupPoliciesLimit}: CreatePolicyDialogProps) {
+  const t = useT()
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
   const [customPolicies, setCustomPolicies] = useState<
     Array<{
@@ -1135,11 +1153,11 @@ function CreatePolicyDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create backup policy</DialogTitle>
+          <DialogTitle>{t('Create backup policy')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {supportsCustomPolicies
-              ? 'Choose preset policies or create custom backup schedules.'
-              : 'Your plan only supports the daily preset policy. Upgrade to create custom policies.'}
+              ? t('Choose preset policies or create custom backup schedules.')
+              : t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -1147,7 +1165,7 @@ function CreatePolicyDialog({
         <div className="px-6 pb-4 pt-0 space-y-6">
           {/* Preset Policies */}
           <div className="space-y-3">
-            <Label className="text-[13px]">Preset Policies</Label>
+            <Label className="text-[13px]">{t('Preset Policies')}</Label>
             <div className="space-y-2">
               {supportsCustomPolicies && (
                 <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
@@ -1165,9 +1183,9 @@ function CreatePolicyDialog({
                     }}
                   />
                   <Label htmlFor="hourly" className="flex-1 cursor-pointer">
-                    <div className="font-medium text-[13px]">Hourly</div>
+                    <div className="font-medium text-[13px]">{t('Hourly')}</div>
                     <div className="text-[12px] text-muted-foreground">
-                      Runs every hour, retained for 24 hours
+                      {t('Runs every hour, retained for 24 hours')}
                     </div>
                   </Label>
                 </div>
@@ -1187,9 +1205,9 @@ function CreatePolicyDialog({
                   }}
                 />
                 <Label htmlFor="daily" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-[13px]">Daily</div>
+                  <div className="font-medium text-[13px]">{t('Daily')}</div>
                   <div className="text-[12px] text-muted-foreground">
-                    Runs every day, retained for 7 days
+                    {t('Runs every day, retained for 7 days')}
                   </div>
                 </Label>
               </div>
@@ -1200,7 +1218,7 @@ function CreatePolicyDialog({
           {supportsCustomPolicies && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-[13px]">Custom Policies</Label>
+                <Label className="text-[13px]">{t('Custom Policies')}</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -1219,7 +1237,7 @@ function CreatePolicyDialog({
                   disabled={!canCreateCustom}
                 >
                   <Plus className="me-1.5 h-4 w-4" />
-                  Add custom policy
+                  {t('Add custom policy')}
                 </Button>
               </div>
 
@@ -1228,7 +1246,7 @@ function CreatePolicyDialog({
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-[14px]">
-                        Custom Policy {index + 1}
+                        {t('Custom Policy')} {index + 1}
                       </CardTitle>
                       <Button
                         type="button"
@@ -1246,7 +1264,7 @@ function CreatePolicyDialog({
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[13px]">Frequency</Label>
+                      <Label className="text-[13px]">{t('Frequency')}</Label>
                       <Select
                         value={policy.frequency}
                         onValueChange={(
@@ -1261,17 +1279,17 @@ function CreatePolicyDialog({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="hourly">Hourly</SelectItem>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="hourly">{t('Hourly')}</SelectItem>
+                          <SelectItem value="daily">{t('Daily')}</SelectItem>
+                          <SelectItem value="weekly">{t('Weekly')}</SelectItem>
+                          <SelectItem value="monthly">{t('Monthly')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {policy.frequency !== 'hourly' && (
                       <div className="space-y-2">
-                        <Label className="text-[13px]">Time</Label>
+                        <Label className="text-[13px]">{t('Time')}</Label>
                         <Input
                           type="time"
                           value={policy.time}
@@ -1286,7 +1304,7 @@ function CreatePolicyDialog({
 
                     {policy.frequency === 'weekly' && (
                       <div className="space-y-2">
-                        <Label className="text-[13px]">Day of Week</Label>
+                        <Label className="text-[13px]">{t('Day of Week')}</Label>
                         <Select
                           value={policy.dayOfWeek?.[0]?.toString() || '1'}
                           onValueChange={(value) => {
@@ -1299,13 +1317,13 @@ function CreatePolicyDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">Monday</SelectItem>
-                            <SelectItem value="2">Tuesday</SelectItem>
-                            <SelectItem value="3">Wednesday</SelectItem>
-                            <SelectItem value="4">Thursday</SelectItem>
-                            <SelectItem value="5">Friday</SelectItem>
-                            <SelectItem value="6">Saturday</SelectItem>
-                            <SelectItem value="0">Sunday</SelectItem>
+                            <SelectItem value="1">{t('Monday')}</SelectItem>
+                            <SelectItem value="2">{t('Tuesday')}</SelectItem>
+                            <SelectItem value="3">{t('Wednesday')}</SelectItem>
+                            <SelectItem value="4">{t('Thursday')}</SelectItem>
+                            <SelectItem value="5">{t('Friday')}</SelectItem>
+                            <SelectItem value="6">{t('Saturday')}</SelectItem>
+                            <SelectItem value="0">{t('Sunday')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1313,7 +1331,7 @@ function CreatePolicyDialog({
 
                     {policy.frequency === 'monthly' && (
                       <div className="space-y-2">
-                        <Label className="text-[13px]">Day of Month</Label>
+                        <Label className="text-[13px]">{t('Day of Month')}</Label>
                         <Select
                           value={policy.dayOfMonth || 'first'}
                           onValueChange={(
@@ -1329,19 +1347,19 @@ function CreatePolicyDialog({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="first">
-                              First of month
+                              {t('First of month')}
                             </SelectItem>
                             <SelectItem value="middle">
-                              Middle (15th)
+                              {t('Middle (15th)')}
                             </SelectItem>
-                            <SelectItem value="end">End (28th)</SelectItem>
+                            <SelectItem value="end">{t('End (28th)')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     )}
 
                     <div className="space-y-2">
-                      <Label className="text-[13px]">Retention</Label>
+                      <Label className="text-[13px]">{t('Retention')}</Label>
                       <Select
                         value={policy.retentionUnit}
                         onValueChange={(
@@ -1361,18 +1379,18 @@ function CreatePolicyDialog({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="weeks">Weeks</SelectItem>
-                          <SelectItem value="months">Months</SelectItem>
-                          <SelectItem value="years">Years</SelectItem>
-                          <SelectItem value="forever">Forever</SelectItem>
+                          <SelectItem value="days">{t('Days')}</SelectItem>
+                          <SelectItem value="weeks">{t('Weeks')}</SelectItem>
+                          <SelectItem value="months">{t('Months')}</SelectItem>
+                          <SelectItem value="years">{t('Years')}</SelectItem>
+                          <SelectItem value="forever">{t('Forever')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {policy.retentionUnit !== 'forever' && (
                       <div className="space-y-2">
-                        <Label className="text-[13px]">Number</Label>
+                        <Label className="text-[13px]">{t('Number')}</Label>
                         <Input
                           type="number"
                           min="1"
@@ -1388,7 +1406,7 @@ function CreatePolicyDialog({
                     )}
 
                     <div className="space-y-2">
-                      <Label className="text-[13px]">Policy Name</Label>
+                      <Label className="text-[13px]">{t('Policy Name')}</Label>
                       <Input
                         placeholder={`${policy.frequency} backup`}
                         value={policy.name}
@@ -1412,13 +1430,13 @@ function CreatePolicyDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isLoading || totalPolicies === 0}
           >
-            Create
+            {t('Create')}
           </Button>
         </div>
       </DialogContent>
@@ -1439,14 +1457,16 @@ function CreateManualBackupDialog({
   onOpenChange,
   onSubmit,
   isLoading}: CreateManualBackupDialogProps) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create manual backup</DialogTitle>
+          <DialogTitle>{t('Create manual backup')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Manual backups are <b>retained forever</b> unless manually deleted.
-            Use for major data changes or rollback safeguards.
+            {t(
+              'Manual backups are retained forever unless manually deleted. Use for major data changes or rollback safeguards.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -1455,7 +1475,9 @@ function CreateManualBackupDialog({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
-              <b>Depending on the size of your data, this may take a while.</b>
+              <b>
+                {t('Depending on the size of your data, this may take a while.')}
+              </b>
             </AlertDescription>
           </Alert>
         </div>
@@ -1466,10 +1488,10 @@ function CreateManualBackupDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isLoading}>
-            Create
+            {t('Create')}
           </Button>
         </div>
       </DialogContent>
@@ -1499,6 +1521,7 @@ function RestoreBackupDialog({
   databaseId,
   onSubmit,
   isLoading}: RestoreBackupDialogProps) {
+  const t = useT()
   const [restoreOption, setRestoreOption] = useState<'new' | 'same'>('new')
   const [newDatabaseName, setNewDatabaseName] = useState('')
   const [newDatabaseId, setNewDatabaseId] = useState('')
@@ -1553,7 +1576,7 @@ function RestoreBackupDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
         <DialogHeader className="px-6 pt-6 pb-5 text-start">
-          <DialogTitle>Restore backup</DialogTitle>
+          <DialogTitle>{t('Restore backup')}</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0">
@@ -1561,13 +1584,13 @@ function RestoreBackupDialog({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-5">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Archive snapshot
+                {t('Archive snapshot')}
               </h3>
             </div>
             <div className="border-t border-border" />
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-6 py-4 text-[13px]">
               <div className="flex flex-col gap-0.5">
-                <span className="text-muted-foreground">Created</span>
+                <span className="text-muted-foreground">{t('Created')}</span>
                 <span className="text-foreground">
                   {new Date(backup.$createdAt)
                     .toISOString()
@@ -1576,23 +1599,23 @@ function RestoreBackupDialog({
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-muted-foreground">Size</span>
+                <span className="text-muted-foreground">{t('Size')}</span>
                 <span className="text-foreground">
                   {formatSize(backup.size)}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-muted-foreground">Status</span>
+                <span className="text-muted-foreground">{t('Status')}</span>
                 <Badge
                   variant={backupStatus.badgeVariant}
                   className="gap-1.5 text-[11px] font-medium w-fit"
                 >
                   <StatusIcon className="h-3 w-3" />
-                  {backupStatus.label}
+                  {t(backupStatus.label)}
                 </Badge>
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="text-muted-foreground">Age</span>
+                <span className="text-muted-foreground">{t('Age')}</span>
                 <span className="text-foreground">
                   {formatDistanceToNow(new Date(backup.$createdAt), {
                     addSuffix: true})}
@@ -1603,7 +1626,7 @@ function RestoreBackupDialog({
 
           {/* Restore target - options side by side */}
           <h3 className="text-[15px] font-semibold text-foreground mb-4">
-            Restore target
+            {t('Restore target')}
           </h3>
           <RadioGroup
             value={restoreOption}
@@ -1626,11 +1649,12 @@ function RestoreBackupDialog({
               />
               <div className="min-w-0 flex-1 space-y-2">
                 <span className="text-[13px] font-semibold text-foreground">
-                  New database
+                  {t('New database')}
                 </span>
                 <p className="text-[12px] text-muted-foreground leading-snug">
-                  Create a new database from this archive; source remains
-                  unchanged.
+                  {t(
+                    'Create a new database from this archive; source remains unchanged.',
+                  )}
                 </p>
               </div>
             </Label>
@@ -1651,11 +1675,12 @@ function RestoreBackupDialog({
               />
               <div className="min-w-0 flex-1 space-y-2">
                 <span className="text-[13px] font-semibold text-foreground">
-                  Current database
+                  {t('Current database')}
                 </span>
                 <p className="text-[12px] text-muted-foreground leading-snug">
-                  Overwrite existing data with this backup. This cannot be
-                  undone.
+                  {t(
+                    'Overwrite existing data with this backup. This cannot be undone.',
+                  )}
                 </p>
               </div>
             </Label>
@@ -1666,39 +1691,39 @@ function RestoreBackupDialog({
             <div className="mt-5 rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  New database
+                  {t('New database')}
                 </h3>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-db-name" className="text-[13px]">
-                    Name <span className="text-destructive">*</span>
+                    {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="new-db-name"
-                    placeholder="e.g. production-restore"
+                    placeholder={t('e.g. production-restore')}
                     value={newDatabaseName}
                     onChange={(e) => setNewDatabaseName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-db-id" className="text-[13px]">
-                    ID{' '}
+                    {t('ID')}{' '}
                     <span className="text-muted-foreground font-normal">
-                      (optional)
+                      {t('(optional)')}
                     </span>
                   </Label>
                   <IdInput
                     id="new-db-id"
                     value={newDatabaseId}
                     onChange={(id) => setNewDatabaseId(id || '')}
-                    placeholder="Auto-generated if blank"
+                    placeholder={t('Auto-generated if blank')}
                   />
                   {newDatabaseId === databaseId && (
                     <p className="text-[12px] text-destructive flex items-center gap-1.5">
                       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                      Must differ from the source database ID
+                      {t('Must differ from the source database ID')}
                     </p>
                   )}
                 </div>
@@ -1722,8 +1747,9 @@ function RestoreBackupDialog({
                   htmlFor="confirm-same-db"
                   className="flex-1 cursor-pointer text-[13px] text-foreground"
                 >
-                  I understand that all current database data will be
-                  permanently replaced by this backup.
+                  {t(
+                    'I understand that all current database data will be permanently replaced by this backup.',
+                  )}
                 </Label>
               </div>
             </div>
@@ -1735,10 +1761,10 @@ function RestoreBackupDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading || isDisabled}>
-            Restore
+            {t('Restore')}
           </Button>
         </div>
       </DialogContent>
@@ -1761,15 +1787,16 @@ function DeletePolicyDialog({
   policy,
   onConfirm,
   isLoading}: DeletePolicyDialogProps) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Delete policy</DialogTitle>
+          <DialogTitle>{t('Delete policy')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete the{' '}
-            <strong>{policy.name || 'Unnamed Policy'}</strong> policy? This
-            action cannot be undone.
+            {t('Are you sure you want to delete the policy')}{' '}
+            <strong>{policy.name || t('Unnamed Policy')}</strong>?{' '}
+            {t('This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -1778,7 +1805,7 @@ function DeletePolicyDialog({
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
-              This will also delete all backups associated with this policy.
+              {t('This will also delete all backups associated with this policy.')}
             </AlertDescription>
           </Alert>
         </div>
@@ -1791,7 +1818,7 @@ function DeletePolicyDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -1800,7 +1827,7 @@ function DeletePolicyDialog({
             onClick={onConfirm}
             disabled={isLoading}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>
@@ -1823,15 +1850,16 @@ function DeleteBackupDialog({
   backup,
   onConfirm,
   isLoading}: DeleteBackupDialogProps) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Delete backup</DialogTitle>
+          <DialogTitle>{t('Delete backup')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete the backup from{' '}
-            <strong>{new Date(backup.$createdAt).toLocaleString()}</strong>?
-            This action cannot be undone.
+            {t('Are you sure you want to delete the backup from')}{' '}
+            <strong>{new Date(backup.$createdAt).toLocaleString()}</strong>?{' '}
+            {t('This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -1843,7 +1871,7 @@ function DeleteBackupDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -1852,7 +1880,7 @@ function DeleteBackupDialog({
             onClick={onConfirm}
             disabled={isLoading}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>

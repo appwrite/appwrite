@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router'
 import { Flag } from '@appwrite.io/console'
 import { ChevronRight, Globe } from 'lucide-react'
 import { HostnameFaviconIcon } from '@/components/global/shared/HostnameFaviconIcon'
+import { useT } from '@/lib/i18n/translate'
 import { cn, truncateMiddle } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
@@ -183,6 +184,7 @@ function BreakdownResourceRowLabel({
   route,
   fullTitle,
 }: BreakdownResourceRowLabelProps) {
+  const t = useT()
   const title = fullTitle ?? `${typeLabel} / ${name}`
   const nameClassName =
     'min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary'
@@ -190,7 +192,7 @@ function BreakdownResourceRowLabel({
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
       <span className="shrink-0 text-[11px] text-muted-foreground">
-        {typeLabel}
+        {t(typeLabel)}
       </span>
       <ChevronRight
         className="h-3 w-3 shrink-0 text-muted-foreground/70"
@@ -447,11 +449,12 @@ export function UsageBreakdownListSkeleton({
   rowCount?: number
   showLeadingIcon?: boolean
 }) {
+  const t = useT()
   return (
     <div
       className={overviewTopBreakdownListClass}
       aria-busy="true"
-      aria-label="Loading breakdown"
+      aria-label={t('Loading breakdown')}
     >
       {Array.from({ length: rowCount }).map((_, index) => (
         <UsageBreakdownRowSkeleton

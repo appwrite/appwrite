@@ -22,6 +22,7 @@ import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getSupportHoursInLocalTime } from '@/lib/support'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
@@ -131,6 +132,7 @@ function getMockReportTitle(state: DisplayCloudStatusState) {
 }
 
 export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
+  const t = useT()
   const [supportHours, setSupportHours] = useState(() =>
     getSupportHoursInLocalTime(),
   )
@@ -191,13 +193,13 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
             <Mail className="h-4 w-4 text-primary" />
           </div>
           <div className="flex-1 space-y-1">
-            <h4 className="text-sm font-medium">Contact Support</h4>
+            <h4 className="text-sm font-medium">{t('Contact Support')}</h4>
             <p className="text-xs text-muted-foreground">
               {hasContactSupportOptions
-                ? 'Get help from our support team'
+                ? t('Get help from our support team')
                 : isCloud
-                  ? 'Community and enterprise resources'
-                  : 'Community and enterprise resources for self-hosting'}
+                  ? t('Community and enterprise resources')
+                  : t('Community and enterprise resources for self-hosting')}
             </p>
           </div>
         </div>
@@ -206,7 +208,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
           <div className="mt-4 rounded-lg border border-border bg-muted/20 p-3.5">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-[13px] font-semibold text-foreground tracking-tight">
-                Support hours
+                {t('Support hours')}
               </h3>
               <span
                 className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
@@ -220,11 +222,11 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
                     supportHours.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
                   }`}
                 />
-                {supportHours.isOpen ? 'Online' : 'Offline'}
+                {supportHours.isOpen ? t('Online') : t('Offline')}
               </span>
             </div>
             <p className="text-[12px] text-muted-foreground tabular-nums whitespace-nowrap mt-2">
-              Mon–Fri {supportHours.startLocal} – {supportHours.endLocal}
+              {t('Mon–Fri')} {supportHours.startLocal} – {supportHours.endLocal}
             </p>
             <p className="text-[11px] text-muted-foreground/70 mt-1 font-mono tracking-tight">
               {supportHours.timezone}
@@ -241,22 +243,22 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
                 onClick={() => onNavigateAway?.()}
               >
                 <MessageCircle className="me-1.5 h-4 w-4" />
-                Contact Support
+                {t('Contact Support')}
               </Link>
             </Button>
           ) : (
             <Button className="mt-3 w-full" size="sm" disabled>
               <MessageCircle className="me-1.5 h-4 w-4" />
-              Contact Support
+              {t('Contact Support')}
             </Button>
           )
         ) : features.billing ? (
           <>
             <p className="mt-3 text-xs text-muted-foreground">
-              Upgrade your plan to get email support.
+              {t('Upgrade your plan to get email support.')}
             </p>
             <Button className="mt-2 w-full" size="sm" onClick={handleUpgrade}>
-              Upgrade
+              {t('Upgrade')}
             </Button>
           </>
         ) : null}
@@ -266,7 +268,7 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
 
       <div className="p-4">
         <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {hasContactSupportOptions ? 'More options' : 'Support'}
+          {hasContactSupportOptions ? t('More options') : t('Support')}
         </h4>
 
         <div className="space-y-2">
@@ -281,9 +283,9 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-medium text-foreground">
-                Enterprise & 24/7 support
+                {t('Enterprise & 24/7 support')}
               </p>
-              <p className="text-xs text-muted-foreground">Contact sales</p>
+              <p className="text-xs text-muted-foreground">{t('Contact sales')}</p>
             </div>
             <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           </a>
@@ -299,9 +301,9 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-medium">Discord Community</p>
+              <p className="font-medium">{t('Discord Community')}</p>
               <p className="text-xs text-muted-foreground">
-                Join 24k+ developers
+                {t('Join 24k+ developers')}
               </p>
             </div>
             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
@@ -323,9 +325,9 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-medium">GitHub Issues</p>
+              <p className="font-medium">{t('GitHub Issues')}</p>
               <p className="text-xs text-muted-foreground">
-                Report bugs or request features
+                {t('Report bugs or request features')}
               </p>
             </div>
             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
@@ -353,18 +355,18 @@ export function SupportPanel({ orgId, onNavigateAway }: SupportPanelProps) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-[13px] font-medium text-foreground">
-                    System status
+                    {t('System status')}
                   </p>
                   <Badge
                     variant={statusMeta.badgeVariant}
                     className="text-[10px] shrink-0"
                   >
-                    {statusMeta.badgeLabel}
+                    {t(statusMeta.badgeLabel)}
                   </Badge>
                 </div>
                 {statusDetail ? (
                   <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">
-                    {statusDetail}
+                    {t(statusDetail)}
                   </p>
                 ) : null}
               </div>

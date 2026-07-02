@@ -5,6 +5,7 @@ import { X, Plus } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { DOCS_LINK } from '@/lib/events-editor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 interface EventSelectorProps {
   projectId?: string | null
@@ -19,6 +20,7 @@ export function EventSelector({
   onEventsChange,
   maxEvents = 100,
 }: EventSelectorProps) {
+  const t = useT()
   const [eventDialogOpen, setEventDialogOpen] = useState(false)
 
   const handleCreated = (eventString: string) => {
@@ -44,10 +46,10 @@ export function EventSelector({
     <div className="space-y-4">
       <div>
         <p className="text-[13px] text-muted-foreground mb-2">
-          Set the events that will trigger your webhook. Maximum {maxEvents}{' '}
-          events allowed.{' '}
+          {t('Set the events that will trigger your webhook. Maximum')}{' '}
+          {maxEvents} {t('events allowed.')}{' '}
           <DocsRouteLink className="link-neutral" href={DOCS_LINK}>
-            Learn more
+            {t('Learn more')}
           </DocsRouteLink>
         </p>
         {selectedEvents.length > 0 ? (
@@ -70,7 +72,7 @@ export function EventSelector({
           </div>
         ) : (
           <p className="text-[13px] text-muted-foreground">
-            No events selected
+            {t('No events selected')}
           </p>
         )}
       </div>
@@ -82,14 +84,14 @@ export function EventSelector({
         disabled={selectedEvents.length >= maxEvents}
       >
         <Plus className="me-1.5 h-4 w-4" />
-        Add event
+        {t('Add event')}
       </Button>
 
       <EventEditorModal
         open={eventDialogOpen}
         onOpenChange={setEventDialogOpen}
         onCreated={handleCreated}
-        description="Select events that will trigger your webhook."
+        description={t('Select events that will trigger your webhook.')}
         projectId={projectId}
       />
     </div>

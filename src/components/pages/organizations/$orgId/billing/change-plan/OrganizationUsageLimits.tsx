@@ -12,6 +12,7 @@ import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface OrganizationUsageLimitsProps {
   projects: Models.Project[]
@@ -26,6 +27,7 @@ export const OrganizationUsageLimits = forwardRef<
   { getSelectedProjects: () => string[] },
   OrganizationUsageLimitsProps
 >(({ projects, targetLimit, onRef }, ref) => {
+  const t = useT()
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
     new Set(),
   )
@@ -78,13 +80,14 @@ export const OrganizationUsageLimits = forwardRef<
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Select projects to keep{' '}
+          {t('Select projects to keep')}{' '}
           <span className="text-destructive">*</span>
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          You have {projects.length} projects, but the selected plan allows only{' '}
-          {targetLimit}. Please select {targetLimit} project
-          {targetLimit !== 1 ? 's' : ''} to keep.
+          {t('You have')} {projects.length}{' '}
+          {t('projects, but the selected plan allows only')} {targetLimit}.{' '}
+          {t('Please select')} {targetLimit}{' '}
+          {targetLimit !== 1 ? t('projects') : t('project')} {t('to keep.')}
         </p>
       </div>
 
@@ -92,9 +95,9 @@ export const OrganizationUsageLimits = forwardRef<
 
       <div className="px-6 py-4">
         {!isValid && (
-          <WarningAlert title="Invalid Selection" className="mb-4">
-            Please select exactly {targetLimit} project
-            {targetLimit !== 1 ? 's' : ''}.
+          <WarningAlert title={t('Invalid Selection')} className="mb-4">
+            {t('Please select exactly')} {targetLimit}{' '}
+            {targetLimit !== 1 ? t('projects') : t('project')}.
           </WarningAlert>
         )}
 
@@ -144,7 +147,7 @@ export const OrganizationUsageLimits = forwardRef<
         </div>
 
         <div className="mt-4 text-[12px] text-muted-foreground">
-          Selected: {selectedProjects.size} / {targetLimit}
+          {t('Selected:')} {selectedProjects.size} / {targetLimit}
         </div>
       </div>
     </div>

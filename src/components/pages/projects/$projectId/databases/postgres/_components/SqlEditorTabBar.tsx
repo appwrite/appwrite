@@ -28,6 +28,7 @@ import { ChevronUp, Plus, X } from 'lucide-react'
 import type { SqlEditorTab } from './PostgresSidebarContext'
 import { SqlEditorTabContextMenu } from './SqlEditorTabContextMenu'
 import { getAxisRestrictedDragModifiers, sortableAxisTransform } from '@/lib/dnd-modifiers'
+import { useT } from '@/lib/i18n/translate'
 
 const tabDragModifiers = getAxisRestrictedDragModifiers('horizontal')
 
@@ -169,6 +170,7 @@ export function SqlEditorTabBar({
   headerCollapsed = false,
   onToggleHeaderCollapsed,
 }: SqlEditorTabBarProps) {
+  const t = useT()
   const [activeDragTabId, setActiveDragTabId] = useState<string | null>(null)
   const tabListRef = useRef<HTMLDivElement>(null)
   const canReorder = tabs.length > 1
@@ -224,7 +226,7 @@ export function SqlEditorTabBar({
       size="icon"
       className="mb-1.5 h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
       onClick={onCreateTab}
-      aria-label="New query tab"
+      aria-label={t('New query tab')}
     >
       <Plus className="h-3 w-3" />
     </Button>
@@ -300,7 +302,7 @@ export function SqlEditorTabBar({
                   size="icon"
                   onClick={onToggleHeaderCollapsed}
                   className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-                  aria-label={headerCollapsed ? 'Expand header' : 'Collapse header'}
+                  aria-label={headerCollapsed ? t('Expand header') : t('Collapse header')}
                 >
                   <ChevronUp
                     className={cn(

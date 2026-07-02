@@ -34,6 +34,7 @@ import { Loader2, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { z } from 'zod'
+import { useT } from '@/lib/i18n/translate'
 
 export const marketplaceSearchSchema = z.object({}).passthrough()
 
@@ -51,6 +52,7 @@ function filterApps(apps: MarketplaceApp[], query: string): MarketplaceApp[] {
 }
 
 export function View() {
+  const t = useT()
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
@@ -149,7 +151,7 @@ export function View() {
     try {
       const app = await createAppMutation.mutateAsync(input)
       setCreateDialogOpen(false)
-      toast.success('App created as draft')
+      toast.success(t('App created as draft'))
       if (orgId && app?.$id) {
         navigate({
           to: '/organizations/$orgId/apps/$appId',
@@ -157,7 +159,7 @@ export function View() {
         })
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to create app'))
+      toast.error(getErrorMessage(error, t('Failed to create app')))
     }
   }
 
@@ -192,16 +194,16 @@ export function View() {
     MARKETPLACE_CATEGORY_ORDER.some((c) => categoryCounts[c] > 0)
 
   const emptyTitle = searchActive
-    ? 'No apps match your search'
+    ? t('No apps match your search')
     : activeNavId === 'my-apps'
-      ? 'No apps published yet'
-      : 'No apps in this section'
+      ? t('No apps published yet')
+      : t('No apps in this section')
 
   const emptyDescription = searchActive
-    ? 'Try adjusting or clearing your search.'
+    ? t('Try adjusting or clearing your search.')
     : activeNavId === 'my-apps'
-      ? 'Add your first app to share it with other organizations.'
-      : 'Published apps from other organizations will appear here.'
+      ? t('Add your first app to share it with other organizations.')
+      : t('Published apps from other organizations will appear here.')
 
   const mainContent = () => {
     if (listLoading) {
@@ -217,8 +219,10 @@ export function View() {
         return (
           <EmptyState
             icon={Store}
-            title="Marketplace is empty"
-            description="Apps will appear here when other organizations publish listings."
+            title={t('Marketplace is empty')}
+            description={t(
+              'Apps will appear here when other organizations publish listings.',
+            )}
             variant="card"
           />
         )
@@ -244,7 +248,7 @@ export function View() {
           action={
             activeNavId === 'my-apps' && !searchActive ? (
               <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-                Add app
+                {t('Add app')}
               </Button>
             ) : undefined
           }

@@ -25,6 +25,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { formatActivityEventJson } from '@/components/pages/projects/$projectId/activity/activity-utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface ActivityLogRowContextMenuProps {
   projectId: string
@@ -45,6 +46,7 @@ export function ActivityLogRowContextMenu({
   onOpenDetails,
   children,
 }: ActivityLogRowContextMenuProps) {
+  const t = useT()
   if (!event?.$id) {
     return <>{children}</>
   }
@@ -58,30 +60,30 @@ export function ActivityLogRowContextMenu({
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={() => onOpenDetails()}>
           <ContextMenuIcon icon={LayoutList} />
-          Overview
+          {t('Overview')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem onSelect={() => copyToClipboard('ID', event.$id)}>
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             {hasName && (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Name', event.actorName)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy name
+                {t('Copy name')}
               </ContextMenuItem>
             )}
             <ContextMenuItem onSelect={() => copyToClipboard('Link', eventHref)}>
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -89,18 +91,18 @@ export function ActivityLogRowContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(eventHref)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(eventHref)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

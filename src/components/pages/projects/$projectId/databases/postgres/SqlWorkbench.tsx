@@ -25,6 +25,7 @@ import { PostgresQueryPlanView } from './_components/PostgresQueryPlanView'
 import { SavePostgresQueryDialog } from './_components/SavePostgresQueryDialog'
 import { POSTGRES_SQL_EDITOR_SURFACE_CLASS } from './_components/postgres-chrome'
 import type { SqlEditorTab } from './_components/PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 type SqlWorkbenchProps = {
   projectId: string
@@ -76,6 +77,7 @@ export function SqlWorkbench({
   canSaveTeam,
   children,
 }: SqlWorkbenchProps) {
+  const t = useT()
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false)
   const [canUndo, setCanUndo] = useState(false)
@@ -230,7 +232,7 @@ export function SqlWorkbench({
         >
           <div className="relative z-20 shrink-0 overflow-hidden bg-background">
             <ServiceHeader
-              title="SQL editor"
+              title={t('SQL editor')}
               fullWidthBorder
               fullWidth
               hideTitle={isHeaderCollapsed}
@@ -325,7 +327,7 @@ export function SqlWorkbench({
           header={
             result ? (
               <PostgresQueryResultsMeta
-                title="Query results"
+                title={t('Query results')}
                 rowCount={result.rowCount}
                 durationMs={result.durationMs}
                 truncated={result.truncated}

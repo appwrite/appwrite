@@ -17,6 +17,7 @@ import {
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 export function SiteLayout() {
   return (
@@ -27,6 +28,7 @@ export function SiteLayout() {
 }
 
 function SiteLayoutContent() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
@@ -46,7 +48,7 @@ function SiteLayoutContent() {
 
   const handleFilterClick = () => {
     // TODO: Open filters dialog
-    toast.info('Filters coming soon')
+    toast.info(t('Filters coming soon'))
   }
 
   // Derive active tab from pathname
@@ -73,19 +75,19 @@ function SiteLayoutContent() {
     () => [
       {
         id: 'deployments',
-        label: 'Deployments',
+        label: t('Deployments'),
         to: '/projects/$projectId/sites/$siteId',
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
         id: 'domains',
-        label: 'Domains',
+        label: t('Domains'),
         to: '/projects/$projectId/sites/$siteId/domains',
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
         id: 'logs',
-        label: 'Logs',
+        label: t('Logs'),
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
@@ -93,20 +95,20 @@ function SiteLayoutContent() {
         ? [
             {
               id: 'variables' as const,
-              label: 'Variables',
+              label: t('Variables'),
               to: '/projects/$projectId/sites/$siteId/variables',
               params: { projectId: projectId!, siteId: siteId! },
             },
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/sites/$siteId/settings',
               params: { projectId: projectId!, siteId: siteId! },
             },
           ]
         : []),
     ],
-    [projectId, siteId, showSettingsTab],
+    [projectId, siteId, showSettingsTab, t],
   )
 
   return (
@@ -119,11 +121,11 @@ function SiteLayoutContent() {
               size="sm"
               className="h-7 w-7 p-0"
               onClick={handleBack}
-              aria-label="Back to sites"
+              aria-label={t('Back to sites')}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span className="truncate">{site?.name || 'Site'}</span>
+            <span className="truncate">{site?.name || t('Site')}</span>
             {site?.$id ? (
               <CopyableId id={site.$id} size="xs" className="shrink-0" />
             ) : null}

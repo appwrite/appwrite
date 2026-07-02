@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { submitStartupsApplication } from '@/lib/marketing/growth-forms'
 import {
   STARTUPS_FORM_ID,
@@ -39,6 +40,7 @@ function scrollToForm() {
 }
 
 export function View() {
+  const t = useT()
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
@@ -56,7 +58,7 @@ export function View() {
         }
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
-          Apply now
+          {t('Apply now')}
         </Button>
       </MarketingHeroSection>
 
@@ -73,25 +75,25 @@ export function View() {
           <div className="mt-10 flex flex-col gap-4 rounded-xl border border-border bg-card/45 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="max-w-2xl">
               <h3 className="text-[15px] font-semibold text-foreground">
-                {startupsEligibility.proPlanCallout.title}
+                {t(startupsEligibility.proPlanCallout.title)}
               </h3>
               <p className="mt-2 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-                {startupsEligibility.proPlanCallout.description}
+                {t(startupsEligibility.proPlanCallout.description)}
               </p>
             </div>
             <Button variant="outline" className="w-fit shrink-0" asChild>
               <Link to={startupsEligibility.proPlanCallout.ctaHref}>
-                {startupsEligibility.proPlanCallout.ctaLabel}
+                {t(startupsEligibility.proPlanCallout.ctaLabel)}
               </Link>
             </Button>
           </div>
           <div className="mt-12 border-t border-border pt-10">
             <div className="max-w-2xl">
               <h3 className="text-[15px] font-semibold text-foreground">
-                {startupsEligibility.exclusions.title}
+                {t(startupsEligibility.exclusions.title)}
               </h3>
               <p className="mt-2 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-                {startupsEligibility.exclusions.description}
+                {t(startupsEligibility.exclusions.description)}
               </p>
             </div>
             <div className="mt-8 grid overflow-hidden rounded-xl border border-border bg-card/45 sm:grid-cols-2">
@@ -106,9 +108,9 @@ export function View() {
                     index < 2 && 'sm:border-b sm:border-border',
                   )}
                 >
-                  <h3 className="text-[14px] font-semibold text-foreground">{item.title}</h3>
+                  <h3 className="text-[14px] font-semibold text-foreground">{t(item.title)}</h3>
                   <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
-                    {item.description}
+                    {t(item.description)}
                   </p>
                 </article>
               ))}
@@ -120,8 +122,10 @@ export function View() {
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <MarketingSectionHeading
-            title="Your startups developer toolkit"
-            description="Appwrite offers an all-in-one hosting platform for you to build and deploy your product from a single place."
+            title={t('Your startups developer toolkit')}
+            description={t(
+              'Appwrite offers an all-in-one hosting platform for you to build and deploy your product from a single place.', // pragma: allowlist secret
+            )}
             size="md"
           />
           <MarketingProductPills
@@ -138,8 +142,10 @@ export function View() {
             <MarketingSectionHeading
               align="left"
               size="md"
-              title="Benefits of Appwrite for startups"
-              description="You don't need to have a team of engineers to develop, host, and scale applications. Appwrite gives you everything you need, including built-in security, AI, and open source."
+              title={t('Benefits of Appwrite for startups') /* pragma: allowlist secret */}
+              description={t(
+                "You don't need to have a team of engineers to develop, host, and scale applications. Appwrite gives you everything you need, including built-in security, AI, and open source.", // pragma: allowlist secret
+              )}
             />
             <MarketingFeatureGrid items={startupsPlatformBenefits} columns={2} />
           </div>
@@ -150,7 +156,7 @@ export function View() {
 
       <section className="border-t border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <MarketingSectionHeading title="How to apply" size="md" />
+          <MarketingSectionHeading title={t('How to apply')} size="md" />
           <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/45 lg:grid-cols-3">
             {startupsApplySteps.map((step, index) => (
               <article
@@ -158,20 +164,20 @@ export function View() {
                 className="flex h-full flex-col border-b border-border p-6 last:border-b-0 lg:border-b-0 lg:border-e lg:last:border-e-0"
               >
                 <Badge variant="info" className="w-fit shrink-0 text-[10px]">
-                  Step {index + 1}
+                  {t('Step')} {index + 1}
                 </Badge>
-                <h3 className="mt-4 text-[14px] font-semibold text-foreground">{step.title}</h3>
+                <h3 className="mt-4 text-[14px] font-semibold text-foreground">{t(step.title)}</h3>
                 <p className="mt-2 flex-1 text-[13px] leading-6 text-muted-foreground">
-                  {step.description}
+                  {t(step.description)}
                 </p>
                 {step.href && step.label ? (
                   <Button variant="outline" className="mt-6 w-fit" asChild>
                     {step.external ? (
                       <a href={step.href} target="_blank" rel="noopener noreferrer">
-                        {step.label}
+                        {t(step.label)}
                       </a>
                     ) : (
-                      <a href={step.href}>{step.label}</a>
+                      <a href={step.href}>{t(step.label)}</a>
                     )}
                   </Button>
                 ) : null}
@@ -191,14 +197,14 @@ export function View() {
               <MarketingSectionHeading
                 align="left"
                 size="md"
-                title="Join the Appwrite Startups program"
-                description="Accepted startups receive:"
+                title={t('Join the Appwrite Startups program') /* pragma: allowlist secret */}
+                description={t('Accepted startups receive:')}
               />
               <ul className="mt-6 space-y-3">
                 {startupsFormBullets.map((item) => (
                   <li key={item} className="flex items-center gap-2 text-[13px] text-foreground">
                     <Check className="size-4 shrink-0 text-[var(--brand-cta)]" aria-hidden />
-                    {item}
+                    {t(item)}
                   </li>
                 ))}
               </ul>
@@ -207,7 +213,7 @@ export function View() {
             <div className="rounded-xl border border-border bg-card/50 p-6 sm:p-8">
               <MarketingApplicationForm
                 fields={STARTUPS_FORM_FIELDS}
-                submitLabel="Get Started"
+                submitLabel={t('Get Started')}
                 onSubmit={async (values) => {
                   await submitStartupsApplication({
                     personName: values.personName ?? '',

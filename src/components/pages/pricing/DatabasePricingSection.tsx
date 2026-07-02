@@ -15,6 +15,7 @@ import {
   PRICING_DATABASE_ANCHOR_ID,
 } from '@/lib/pricing/dedicated-databases'
 import { DATABASE_COMPUTE_CREDITS_NOTE } from '@/lib/database-create-pricing'
+import { useT } from '@/lib/i18n/translate'
 import { scrollToComparisonSection } from '@/lib/pricing/comparison-scroll'
 import { getComparisonTableAnchorId } from '@/lib/pricing/comparison-sections'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
@@ -49,6 +50,7 @@ function CompareLink({
 }
 
 export function DatabasePricingSection() {
+  const t = useT()
   return (
     <section
       id={PRICING_DATABASE_ANCHOR_ID}
@@ -57,8 +59,10 @@ export function DatabasePricingSection() {
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <PricingSectionHeading
           align="left"
-          title="Database pricing"
-          description="Choose serverless or dedicated compute for each database. Pay for usage when traffic is variable, or pick a fixed monthly tier when you need reserved resources and predictable costs."
+          title={t('Database pricing')}
+          description={t(
+            'Choose serverless or dedicated compute for each database. Pay for usage when traffic is variable, or pick a fixed monthly tier when you need reserved resources and predictable costs.',
+          )}
           className="max-w-3xl"
         />
 
@@ -73,10 +77,10 @@ export function DatabasePricingSection() {
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className={compareHeadClassName} />
                 <TableHead className={`${compareHeadClassName} text-center`}>
-                  Serverless
+                  {t('Serverless')}
                 </TableHead>
                 <TableHead className={`${compareHeadClassName} text-center`}>
-                  Dedicated
+                  {t('Dedicated')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -87,13 +91,13 @@ export function DatabasePricingSection() {
                   className="hover:bg-transparent border-b border-border last:border-b-0"
                 >
                   <TableCell className="px-4 py-3 align-top text-[13px] font-medium text-foreground sm:px-6">
-                    {row.label}
+                    {t(row.label)}
                   </TableCell>
                   <TableCell className={compareValueCellClassName}>
-                    {row.serverless}
+                    {t(row.serverless)}
                   </TableCell>
                   <TableCell className={compareValueCellClassName}>
-                    {row.dedicated}
+                    {t(row.dedicated)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -101,9 +105,12 @@ export function DatabasePricingSection() {
           </Table>
           <div className="border-t border-border px-4 py-3 sm:px-6">
             <p className="text-[13px] leading-5 text-muted-foreground">
-              {DATABASE_COMPUTE_CREDITS_NOTE} Serverless read/write quotas and overage
-              rates are in{' '}
-              <CompareLink href={`#${databasesCompareAnchorId}`}>Compare plans</CompareLink>.
+              {t(DATABASE_COMPUTE_CREDITS_NOTE)}{' '}
+              {t('Serverless read/write quotas and overage rates are in')}{' '}
+              <CompareLink href={`#${databasesCompareAnchorId}`}>
+                {t('Compare plans')}
+              </CompareLink>
+              .
             </p>
           </div>
         </div>
@@ -111,20 +118,20 @@ export function DatabasePricingSection() {
         <div className="mt-8 overflow-hidden rounded-xl border border-border bg-card/45">
           <div className="border-b border-border px-4 py-3 sm:px-6">
             <h3 className="text-[14px] font-semibold text-foreground">
-              Dedicated compute tiers
+              {t('Dedicated compute tiers')}
             </h3>
           </div>
           <div className="overflow-x-auto">
             <Table withScrollContainer={false} className="w-full min-w-[520px]">
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className={compareHeadClassName}>Tier</TableHead>
-                  <TableHead className={compareHeadClassName}>CPU</TableHead>
-                  <TableHead className={compareHeadClassName}>Memory</TableHead>
+                  <TableHead className={compareHeadClassName}>{t('Tier')}</TableHead>
+                  <TableHead className={compareHeadClassName}>{t('CPU')}</TableHead>
+                  <TableHead className={compareHeadClassName}>{t('Memory')}</TableHead>
                   <TableHead
                     className={`${compareHeadClassName} text-end`}
                   >
-                    Price
+                    {t('Price')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -135,10 +142,10 @@ export function DatabasePricingSection() {
                     className="hover:bg-transparent border-b border-border last:border-b-0"
                   >
                     <TableCell className="px-4 py-3 text-[13px] font-medium text-foreground sm:px-6">
-                      {tier.label}
+                      {t(tier.label)}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-[13px] text-muted-foreground sm:px-6">
-                      {tier.cpu}
+                      {t(tier.cpu)}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-[13px] text-muted-foreground sm:px-6">
                       {tier.memory}

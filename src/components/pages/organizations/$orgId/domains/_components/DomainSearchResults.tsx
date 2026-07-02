@@ -9,6 +9,7 @@ import {
   useDomainSearch,
 } from '@/lib/domains/search'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const DOMAIN_SEARCH_FIELD_CLASS =
   'h-11 ps-10 font-mono text-[14px] tracking-tight bg-muted/30 border-border/80 focus:bg-background'
@@ -55,12 +56,13 @@ function DomainSearchField({
   footer?: ReactNode
   className?: string
 }) {
+  const t = useT()
   const showFooterSlot = footer != null
 
   return (
     <div className={cn('w-full max-w-md space-y-2 text-start', className)}>
       <Label htmlFor={inputId} className="text-[13px]">
-        Domain name
+        {t('Domain name')}
       </Label>
       <div className="relative">
         <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -68,7 +70,7 @@ function DomainSearchField({
           id={inputId}
           value={searchValue}
           onChange={(e) => onSearchValueChange(e.target.value)}
-          placeholder="e.g. mycompany or mycompany.com"
+          placeholder={t('e.g. mycompany or mycompany.com')}
           className={DOMAIN_SEARCH_FIELD_CLASS}
           autoFocus
         />
@@ -95,6 +97,7 @@ export function DomainSearchResults({
   description,
   footer,
 }: DomainSearchResultsProps) {
+  const t = useT()
   const isFocus = variant === 'focus'
   const {
     searchValue,
@@ -192,11 +195,11 @@ export function DomainSearchResults({
             </div>
           ) : baseName.length > 0 && baseName.length < 2 ? (
             <p className={DOMAIN_SEARCH_HELPER_CLASS}>
-              Type at least 2 characters to see suggestions
+              {t('Type at least 2 characters to see suggestions')}
             </p>
           ) : baseName.length >= 2 && error ? (
             <p className="text-[12px] text-destructive">
-              Failed to load domain prices. Please try again.
+              {t('Failed to load domain prices. Please try again.')}
             </p>
           ) : null}
         </div>

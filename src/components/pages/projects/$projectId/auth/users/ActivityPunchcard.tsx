@@ -8,6 +8,7 @@ import {
   getMonth,
 } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +25,7 @@ export function ActivityPunchcard({
   sessions,
   className,
 }: ActivityPunchcardProps) {
+  const t = useT()
   // Get all days in the current year
   const yearStart = startOfYear(new Date())
   const yearEnd = endOfYear(new Date())
@@ -156,9 +158,9 @@ export function ActivityPunchcard({
     const formattedDate = format(date, 'MMM d, yyyy')
 
     if (count === 0) {
-      return `No activity on ${formattedDate}`
+      return `${t('No activity on')} ${formattedDate}`
     }
-    return `${count} session${count === 1 ? '' : 's'} on ${formattedDate}`
+    return `${count} ${count === 1 ? t('session on') : t('sessions on')} ${formattedDate}`
   }
 
   // Calculate total active days
@@ -174,9 +176,11 @@ export function ActivityPunchcard({
       )}
     >
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Activity</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Activity')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Days with activity in {format(new Date(), 'yyyy')}
+          {t('Days with activity in')} {format(new Date(), 'yyyy')}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -185,13 +189,17 @@ export function ActivityPunchcard({
           {/* Stats */}
           <div className="flex items-center gap-6 text-[13px]">
             <div>
-              <span className="text-muted-foreground">Total active days:</span>
+              <span className="text-muted-foreground">
+                {t('Total active days:')}
+              </span>
               <span className="ms-1.5 font-medium text-foreground">
                 {totalActiveDays}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">Total sessions:</span>
+              <span className="text-muted-foreground">
+                {t('Total sessions:')}
+              </span>
               <span className="ms-1.5 font-medium text-foreground">
                 {sessions.length}
               </span>
@@ -215,7 +223,7 @@ export function ActivityPunchcard({
                         index % 2 === 0 ? 'opacity-100' : 'opacity-0',
                       )}
                     >
-                      {index % 2 === 0 ? day : ''}
+                      {index % 2 === 0 ? t(day) : ''}
                     </div>
                   ),
                 )}
@@ -287,7 +295,7 @@ export function ActivityPunchcard({
 
           {/* Legend */}
           <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
-            <span className="text-[12px]">Less</span>
+            <span className="text-[12px]">{t('Less')}</span>
             <div className="flex items-center gap-[0.125rem]">
               <div className="h-[11px] w-[11px] rounded-sm bg-muted border border-border/50" />
               <div className="h-[11px] w-[11px] rounded-sm bg-primary/20 border border-border/50" />
@@ -295,7 +303,7 @@ export function ActivityPunchcard({
               <div className="h-[11px] w-[11px] rounded-sm bg-primary/60 border border-border/50" />
               <div className="h-[11px] w-[11px] rounded-sm bg-primary border border-border/50" />
             </div>
-            <span className="text-[12px]">More</span>
+            <span className="text-[12px]">{t('More')}</span>
           </div>
         </div>
       </div>

@@ -49,6 +49,7 @@ import type { Models } from '@appwrite.io/console'
 import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
 import { PaymentMethodContextMenu } from './PaymentMethodContextMenu'
+import { useT } from '@/lib/i18n/translate'
 
 interface AccountPaymentMethodsProps {
   onAddPaymentMethod?: () => void
@@ -56,6 +57,7 @@ interface AccountPaymentMethodsProps {
 
 export function AccountPaymentMethods({
   onAddPaymentMethod}: AccountPaymentMethodsProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
@@ -146,10 +148,10 @@ export function AccountPaymentMethods({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment methods
+                {t('Payment methods')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
-                Manage your payment methods and billing information.
+                {t('Manage your payment methods and billing information.')}
               </p>
             </div>
           </div>
@@ -157,7 +159,7 @@ export function AccountPaymentMethods({
         <div className="border-t border-border -mx-6" />
         <div className="px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading payment methods...
+            {t('Loading payment methods...')}
           </p>
         </div>
       </div>
@@ -171,10 +173,10 @@ export function AccountPaymentMethods({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment methods
+                {t('Payment methods')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
-                Manage your payment methods and billing information.
+                {t('Manage your payment methods and billing information.')}
               </p>
             </div>
           </div>
@@ -183,8 +185,8 @@ export function AccountPaymentMethods({
         <div className="px-6 py-8 text-center">
           <EmptyState
             icon={CreditCard}
-            title="No payment methods"
-            description="Add a payment method to get started"
+            title={t('No payment methods')}
+            description={t('Add a payment method to get started')}
             isEmpty={true}
             hasFilters={false}
             variant="default"
@@ -196,7 +198,7 @@ export function AccountPaymentMethods({
                 onClick={onAddPaymentMethod}
               >
                 <Plus className="me-1.5 h-4 w-4" />
-                Add payment method
+                {t('Add payment method')}
               </Button>
             </div>
           </EmptyState>
@@ -212,10 +214,10 @@ export function AccountPaymentMethods({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment methods
+                {t('Payment methods')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
-                Manage your payment methods and billing information.
+                {t('Manage your payment methods and billing information.')}
               </p>
             </div>
             <Button
@@ -224,7 +226,7 @@ export function AccountPaymentMethods({
               onClick={onAddPaymentMethod}
             >
               <Plus className="me-1.5 h-4 w-4" />
-              Add payment method
+              {t('Add payment method')}
             </Button>
           </div>
         </div>
@@ -235,21 +237,21 @@ export function AccountPaymentMethods({
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
-                    Card
+                    {t('Card')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                    Cardholder
+                    {t('Cardholder')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                    Expires
+                    {t('Expires')}
                   </TableHead>
                   {hasPaymentError && (
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                      Status
+                      {t('Status')}
                     </TableHead>
                   )}
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Linked To
+                    {t('Linked To')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
                 </TableRow>
@@ -290,7 +292,7 @@ export function AccountPaymentMethods({
                             </p>
                             {method.expiryMonth && method.expiryYear && (
                               <p className="text-[11px] text-muted-foreground mt-0.5">
-                                Expires{' '}
+                                {t('Expires')}{' '}
                                 {formatCardExpiry(
                                   method.expiryMonth,
                                   method.expiryYear,
@@ -328,15 +330,15 @@ export function AccountPaymentMethods({
                               variant="failed"
                               className="text-[10px] shrink-0"
                             >
-                              {method.expired ? 'Expired' : 'Failed'}
+                              {method.expired ? t('Expired') : t('Failed')}
                             </Badge>
                           ) : isExpiringSoon ? (
                             <Badge variant="warning" className="text-[10px] shrink-0">
-                              Expiring soon
+                              {t('Expiring soon')}
                             </Badge>
                           ) : (
                             <Badge variant="active" className="text-[10px] shrink-0">
-                              Active
+                              {t('Active')}
                             </Badge>
                           )}
                         </TableCell>
@@ -351,14 +353,16 @@ export function AccountPaymentMethods({
                                 className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ms-2"
                               >
                                 <LinkIcon className="me-1.5 h-3.5 w-3.5" />
-                                {linkedOrgs.length} organization
-                                {linkedOrgs.length > 1 ? 's' : ''}
+                                {linkedOrgs.length}{' '}
+                                {linkedOrgs.length > 1
+                                  ? t('organizations')
+                                  : t('organization')}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-64" align="start">
                               <div className="space-y-2">
                                 <p className="text-[12px] font-medium text-foreground mb-2">
-                                  Linked Organizations
+                                  {t('Linked Organizations')}
                                 </p>
                                 {linkedOrgs.map((org) => (
                                   <Link
@@ -375,7 +379,7 @@ export function AccountPaymentMethods({
                           </Popover>
                         ) : (
                           <Badge variant="inactive" className="text-[10px] shrink-0">
-                            Not linked
+                            {t('Not linked')}
                           </Badge>
                         )}
                       </TableCell>
@@ -389,14 +393,18 @@ export function AccountPaymentMethods({
                               className="text-[13px]"
                               onClick={() => handleEdit(method)}
                             >
-                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                              <MenuItemContent icon={Pencil}>
+                                {t('Update')}
+                              </MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-[13px]"
                               onClick={() => handleDelete(method)}
                             >
-                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                              <MenuItemContent icon={Trash2}>
+                                {t('Delete')}
+                              </MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

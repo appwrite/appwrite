@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { ArrowRightCircle, X } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
 const BANNER_HIDE_KEY = 'console-banner-hidden'
 const BANNER_HIDE_DURATION = 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
@@ -21,6 +22,8 @@ export function ConsoleBanner() {
   const [mounted, setMounted] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const { theme, resolvedTheme } = useTheme()
+  const { catalog } = useI18n()
+  const consoleBannerCopy = catalog.app.consoleBanner
 
   useEffect(() => {
     setMounted(true)
@@ -66,12 +69,15 @@ export function ConsoleBanner() {
           className="flex flex-1 min-h-0 items-center gap-3 text-start transition-opacity hover:opacity-80 py-1 sm:py-0"
         >
           <div className="flex items-center ps-2.5 py-1.5 shrink-0">
-            <img src={logoSrc} alt="Imagine" className="h-5 w-auto shrink-0" />
+            <img
+              src={logoSrc}
+              alt={consoleBannerCopy.imagineAlt}
+              className="h-5 w-auto shrink-0"
+            />
           </div>
           <span className="text-[13px] text-muted-foreground min-w-0">
             <span className="font-medium text-foreground">Imagine.dev</span>{' '}
-            &nbsp; Turn your ideas into functional products. Vibe coding powered
-            by{' '}
+            &nbsp;{consoleBannerCopy.messagePrefix}{' '}
             <span className="font-medium text-foreground">Appwrite Cloud</span>
           </span>
           <ArrowRightCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-50 hidden sm:block" />
@@ -80,7 +86,7 @@ export function ConsoleBanner() {
           <button
             onClick={handleDismiss}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Dismiss banner"
+            aria-label={consoleBannerCopy.dismiss}
           >
             <X className="h-4 w-4" />
           </button>

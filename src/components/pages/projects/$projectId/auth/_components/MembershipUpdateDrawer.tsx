@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { Plus, X, Trash2, ChevronRight } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export interface MembershipUpdateDrawerProps {
   open: boolean
@@ -40,6 +41,7 @@ export function MembershipUpdateDrawer({
   projectId,
   context,
 }: MembershipUpdateDrawerProps) {
+  const t = useT()
   const teamId = membership?.teamId ?? ''
   const [roles, setRoles] = useState<string[]>([])
   const [roleInput, setRoleInput] = useState('')
@@ -80,11 +82,11 @@ export function MembershipUpdateDrawer({
       { membershipId: membership.$id, roles },
       {
         onSuccess: () => {
-          toast.success('Membership updated')
+          toast.success(t('Membership updated'))
           onOpenChange(false)
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to update membership')
+          toast.error(error.message || t('Failed to update membership'))
         },
       },
     )
@@ -94,12 +96,12 @@ export function MembershipUpdateDrawer({
     if (!membership) return
     deleteMutation.mutate(membership.$id, {
       onSuccess: () => {
-        toast.success('Membership removed')
+        toast.success(t('Membership removed'))
         setDeleteConfirmOpen(false)
         onOpenChange(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to remove membership')
+        toast.error(error.message || t('Failed to remove membership'))
       },
     })
   }
@@ -111,7 +113,7 @@ export function MembershipUpdateDrawer({
       <BaseDrawer
         open={open}
         onOpenChange={handleOpenChange}
-        title="Update membership"
+        title={t('Update membership')}
         maxWidth="sm:max-w-lg"
       >
         <>
@@ -126,14 +128,14 @@ export function MembershipUpdateDrawer({
                     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                       <div className="px-6 py-3">
                         <h3 className="text-[15px] font-semibold text-foreground">
-                          Membership
+                          {t('Membership')}
                         </h3>
                       </div>
                       <div className="border-t border-border" />
                       <div className="px-6 py-3 grid grid-cols-2 gap-x-4 gap-y-3">
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Status
+                            {t('Status')}
                           </p>
                           <div className="mt-0.5 flex flex-col gap-0.5">
                             <Badge
@@ -142,18 +144,18 @@ export function MembershipUpdateDrawer({
                               }
                               className="text-[10px] shrink-0 w-fit"
                             >
-                              {membership.confirm ? 'Active' : 'Pending'}
+                              {membership.confirm ? t('Active') : t('Pending')}
                             </Badge>
                             {!membership.confirm && (
                               <span className="text-[11px] text-muted-foreground">
-                                Invitation not yet accepted
+                                {t('Invitation not yet accepted')}
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Membership ID
+                            {t('Membership ID')}
                           </p>
                           <p className="mt-0.5">
                             <CopyableId id={membership.$id} size="xs" />
@@ -161,7 +163,7 @@ export function MembershipUpdateDrawer({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Created
+                            {t('Created')}
                           </p>
                           <p className="mt-0.5 text-[13px] text-foreground">
                             <DateTooltip date={membership.$createdAt} />
@@ -169,7 +171,7 @@ export function MembershipUpdateDrawer({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Invited
+                            {t('Invited')}
                           </p>
                           <p className="mt-0.5 text-[13px] text-foreground">
                             {membership.invited ? (
@@ -181,7 +183,7 @@ export function MembershipUpdateDrawer({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Joined
+                            {t('Joined')}
                           </p>
                           <p className="mt-0.5 text-[13px] text-foreground">
                             {membership.joined ? (
@@ -193,7 +195,7 @@ export function MembershipUpdateDrawer({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Updated
+                            {t('Updated')}
                           </p>
                           <p className="mt-0.5 text-[13px] text-foreground">
                             <DateTooltip date={membership.$updatedAt} />
@@ -214,10 +216,10 @@ export function MembershipUpdateDrawer({
                         <InitialsAvatar name={membership.teamName} size="md" />
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-medium text-foreground truncate">
-                            {membership.teamName || 'Team'}
+                            {membership.teamName || t('Team')}
                           </p>
                           <p className="text-[12px] text-muted-foreground truncate">
-                            Team
+                            {t('Team')}
                           </p>
                         </div>
                         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -239,10 +241,10 @@ export function MembershipUpdateDrawer({
                           <p className="text-[13px] font-medium text-foreground truncate">
                             {membership.userName ||
                               membership.userEmail ||
-                              'User'}
+                              t('User')}
                           </p>
                           <p className="text-[12px] text-muted-foreground truncate">
-                            User
+                            {t('User')}
                           </p>
                         </div>
                         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -251,7 +253,7 @@ export function MembershipUpdateDrawer({
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="membership-roles">Roles</Label>
+                    <Label htmlFor="membership-roles">{t('Roles')}</Label>
                     <div className="flex gap-2">
                       <Input
                         id="membership-roles"
@@ -263,7 +265,7 @@ export function MembershipUpdateDrawer({
                             handleAddRole()
                           }
                         }}
-                        placeholder="Add role"
+                        placeholder={t('Add role')}
                         autoComplete="off"
                       />
                       <Button
@@ -296,9 +298,9 @@ export function MembershipUpdateDrawer({
                       </div>
                     )}
                     <p className="text-[12px] text-muted-foreground">
-                      Roles are used to manage access permissions.{' '}
+                      {t('Roles are used to manage access permissions.')}{' '}
                       <DocsRouteLink className="link-neutral" href="/docs/advanced/platform/permissions">
-                        Learn more about permissions
+                        {t('Learn more about permissions')}
                       </DocsRouteLink>
                     </p>
                   </div>
@@ -307,14 +309,15 @@ export function MembershipUpdateDrawer({
                   <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden mt-6">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Remove from team
+                        {t('Remove from team')}
                       </h3>
                     </div>
                     <div className="border-t border-destructive/20" />
                     <div className="px-6 py-4">
                       <p className="text-[13px] text-muted-foreground">
-                        Remove this membership. The user will lose access to
-                        this team. This action cannot be undone.
+                        {t(
+                          'Remove this membership. The user will lose access to this team. This action cannot be undone.',
+                        )}
                       </p>
                     </div>
                     <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
@@ -327,7 +330,7 @@ export function MembershipUpdateDrawer({
                         disabled={isPending}
                       >
                         <Trash2 className="me-1.5 h-4 w-4" />
-                        Remove from team
+                        {t('Remove from team')}
                       </Button>
                     </div>
                   </div>
@@ -341,7 +344,7 @@ export function MembershipUpdateDrawer({
                 onClick={handleUpdate}
                 disabled={roles.length === 0 || isPending}
               >
-                Update
+                {t('Update')}
               </Button>
               <Button
                 type="button"
@@ -349,7 +352,7 @@ export function MembershipUpdateDrawer({
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
             </div>
           </div>
@@ -359,21 +362,21 @@ export function MembershipUpdateDrawer({
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Remove from team</DialogTitle>
+            <DialogTitle>{t('Remove from team')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to remove{' '}
+              {t('Are you sure you want to remove')}{' '}
               <strong>
                 {context === 'team'
                   ? membership?.userName ||
                     membership?.userEmail ||
-                    'this member'
+                    t('this member')
                   : membership?.userName ||
                     membership?.userEmail ||
-                    'this user'}
+                    t('this user')}
                 {' · '}
-                {membership?.teamName || 'this team'}
+                {membership?.teamName || t('this team')}
               </strong>
-              ? This action cannot be undone.
+              ? {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -385,7 +388,7 @@ export function MembershipUpdateDrawer({
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="button"
@@ -395,7 +398,7 @@ export function MembershipUpdateDrawer({
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Remove
+              {t('Remove')}
             </Button>
           </div>
         </DialogContent>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -53,6 +54,7 @@ function PipelineRow({
 }
 
 export function SitesProductVisual() {
+  const t = useT()
   const [isHovered, setIsHovered] = useState(false)
   const [buildSeconds, setBuildSeconds] = useState<number | null>(null)
   const [buildComplete, setBuildComplete] = useState(false)
@@ -116,7 +118,9 @@ export function SitesProductVisual() {
             <img src="/icons/github.svg" alt="" className="size-4" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>Push to main</p>
+            <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>
+              {t('Push to main')}
+            </p>
             <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{COMMIT_HASH}</p>
           </div>
           <ArrowRight
@@ -127,7 +131,9 @@ export function SitesProductVisual() {
 
         <div className={cn(productBentoContainer.panel, 'px-3.5 py-3')}>
           <div className="flex items-center justify-between gap-2">
-            <span className={cn('text-[12px] font-medium', productBentoIdle.text)}>Build</span>
+            <span className={cn('text-[12px] font-medium', productBentoIdle.text)}>
+              {t('Build')}
+            </span>
             <div className="flex items-center gap-2">
               <span
                 className={cn(
@@ -158,9 +164,9 @@ export function SitesProductVisual() {
             </span>
             <div className="min-w-0 flex-1 space-y-1">
               <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>
-                Your site has been deployed.
+                {t('Your site has been deployed.')}
               </p>
-              <p className={cn('text-[11px]', productBentoIdle.link)}>Open preview</p>
+              <p className={cn('text-[11px]', productBentoIdle.link)}>{t('Open preview')}</p>
             </div>
           </div>
         </PipelineRow>
@@ -185,7 +191,7 @@ export function SitesProductVisual() {
                   <span className={cn('text-[11px] font-semibold', productBentoIdle.text)}>Appwrite</span>
                 </div>
                 <p className={cn('text-[11px] font-medium leading-tight', productBentoIdle.text)}>
-                  Ship faster with Appwrite
+                  {t('Ship faster with Appwrite')} {/* pragma: allowlist secret */}
                 </p>
                 <div
                   className="h-2 w-full max-w-[11rem] rounded-sm bg-muted-foreground/10"

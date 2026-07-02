@@ -28,6 +28,7 @@ import {
   useSetOrganizationBillingAddress,
   useDeleteOrganizationBillingAddress} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { AddressModal } from '@/components/pages/account/Payments/Address'
 import { OrgBillingAddressContextMenu } from './OrgBillingAddressContextMenu'
 
@@ -53,6 +54,7 @@ interface BillingAddressSectionProps {
 export function BillingAddressSection({
   onEditAddress,
   orgId}: BillingAddressSectionProps) {
+  const t = useT()
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false)
@@ -74,12 +76,12 @@ export function BillingAddressSection({
       await setOrgAddressMutation.mutateAsync({
         organizationId: orgId,
         billingAddressId: addressId})
-      toast.success('Billing address updated')
+      toast.success(t('Billing address updated'))
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to update billing address',
+          : t('Failed to update billing address'),
       )
     }
   }
@@ -90,15 +92,15 @@ export function BillingAddressSection({
       await deleteOrgAddressMutation.mutateAsync({ organizationId: orgId })
       toast.success(
         organization?.name
-          ? `Billing address has been removed from ${organization.name}`
-          : 'Billing address removed',
+          ? `${t('Billing address has been removed from')} ${organization.name}`
+          : t('Billing address removed'),
       )
       setRemoveConfirmOpen(false)
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to remove billing address',
+          : t('Failed to remove billing address'),
       )
     }
   }
@@ -108,12 +110,12 @@ export function BillingAddressSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Billing address
+            {t('Billing address')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading address...
+            {t('Loading address...')}
           </p>
         </div>
       </div>
@@ -133,7 +135,7 @@ export function BillingAddressSection({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4 flex items-center justify-between gap-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Billing address
+              {t('Billing address')}
             </h3>
             <Button
               variant="outline"
@@ -142,7 +144,7 @@ export function BillingAddressSection({
               onClick={handleAddOrCreate}
             >
               <Plus className="h-4 w-4" />
-              Add billing address
+              {t('Add billing address')}
             </Button>
           </div>
           <div className="border-t border-border px-6 py-8">
@@ -150,15 +152,15 @@ export function BillingAddressSection({
               <MapPin className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-[13px] text-muted-foreground text-center mb-1">
-              No billing address on file
+              {t('No billing address on file')}
             </p>
             <p className="text-[13px] text-muted-foreground text-center mb-4">
-              Add a billing address for invoices and tax documents.
+              {t('Add a billing address for invoices and tax documents.')}
             </p>
             {availableAddresses.length > 0 ? (
               <div className="space-y-3 max-w-md mx-auto">
                 <p className="text-[12px] font-medium text-foreground">
-                  Use existing address
+                  {t('Use existing address')}
                 </p>
                 <div className="flex flex-col gap-2">
                   {availableAddresses.map((addr) => (
@@ -172,7 +174,7 @@ export function BillingAddressSection({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[13px] font-medium text-foreground truncate">
-                            {addr.streetAddress || 'Address'}
+                            {addr.streetAddress || t('Address')}
                           </p>
                           {(addr.city || addr.country) && (
                             <p className="text-[12px] text-muted-foreground truncate">
@@ -189,13 +191,13 @@ export function BillingAddressSection({
                         onClick={() => handleLinkAddress(addr.$id)}
                         disabled={setOrgAddressMutation.isPending}
                       >
-                        Use this address
+                        {t('Use this address')}
                       </Button>
                     </div>
                   ))}
                 </div>
                 <p className="text-[12px] font-medium text-foreground pt-1">
-                  Or add a new address
+                  {t('Or add a new address')}
                 </p>
                 <Button
                   variant="outline"
@@ -204,7 +206,7 @@ export function BillingAddressSection({
                   onClick={handleAddOrCreate}
                 >
                   <Plus className="h-4 w-4" />
-                  Add new address
+                  {t('Add new address')}
                 </Button>
               </div>
             ) : (
@@ -216,7 +218,7 @@ export function BillingAddressSection({
                   onClick={handleAddOrCreate}
                 >
                   <Plus className="h-4 w-4" />
-                  Add billing address
+                  {t('Add billing address')}
                 </Button>
               </div>
             )}
@@ -240,7 +242,7 @@ export function BillingAddressSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Billing address
+            {t('Billing address')}
           </h3>
         </div>
 
@@ -283,13 +285,13 @@ export function BillingAddressSection({
                 className="text-[13px]"
                 onClick={() => setEditModalOpen(true)}
               >
-                <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-[13px]">
                   <MenuItemIcon icon={ArrowLeftRight} />
-                  Replace
+                  {t('Replace')}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-52">
                   {(() => {
@@ -302,7 +304,7 @@ export function BillingAddressSection({
                           <>
                             <div className="px-2 py-1.5">
                               <p className="text-[11px] font-medium text-muted-foreground">
-                                Choose existing address
+                                {t('Choose existing address')}
                               </p>
                             </div>
                             {availableAddresses.map((addr) => (
@@ -313,7 +315,7 @@ export function BillingAddressSection({
                               >
                                 <MenuItemContent icon={MapPin}>
                                   <span className="truncate">
-                                    {addr.streetAddress || 'Address'}
+                                    {addr.streetAddress || t('Address')}
                                     {addr.city ? `, ${addr.city}` : ''}
                                   </span>
                                 </MenuItemContent>
@@ -326,7 +328,7 @@ export function BillingAddressSection({
                           className="text-[13px]"
                           onClick={() => setCreateModalOpen(true)}
                         >
-                          <MenuItemContent icon={Plus}>Add</MenuItemContent>
+                          <MenuItemContent icon={Plus}>{t('Add')}</MenuItemContent>
                         </DropdownMenuItem>
                       </>
                     )
@@ -338,7 +340,7 @@ export function BillingAddressSection({
                 className="text-[13px]"
                 onClick={() => setRemoveConfirmOpen(true)}
               >
-                <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
+                <MenuItemContent icon={Trash2}>{t('Remove')}</MenuItemContent>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -365,11 +367,11 @@ export function BillingAddressSection({
       <Dialog open={removeConfirmOpen} onOpenChange={setRemoveConfirmOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Remove billing address</DialogTitle>
+            <DialogTitle>{t('Remove billing address')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to remove the billing address from{' '}
-              <strong>{organization?.name}</strong>? The address will remain on
-              your account; only the link to this organization will be removed.
+              {t('Are you sure you want to remove the billing address from')}{' '}
+              <strong>{organization?.name}</strong>?{' '}
+              {t('The address will remain on your account; only the link to this organization will be removed.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -378,14 +380,14 @@ export function BillingAddressSection({
               onClick={() => setRemoveConfirmOpen(false)}
               disabled={deleteOrgAddressMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => handleRemoveAddress()}
               disabled={deleteOrgAddressMutation.isPending}
             >
-              Remove
+              {t('Remove')}
             </Button>
           </div>
         </DialogContent>

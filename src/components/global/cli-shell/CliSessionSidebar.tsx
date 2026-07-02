@@ -39,6 +39,7 @@ import { Input } from '@/components/ui/input'
 import { getCliShellSplitChildren } from '@/lib/cli-shell/cli-shell-split'
 import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { MAX_CLI_SHELL_SESSION_NAME_LENGTH } from '@/lib/user-prefs-keys'
 import { useCliShell } from './CliShellProvider'
 import { useCliTerminalSessionsLayoutMode } from './CliTerminalLayoutContext'
@@ -98,6 +99,7 @@ function SessionRow({
   onCancelRename,
   dragHandleProps,
 }: SessionRowProps) {
+  const t = useT()
   const isStrip = layout === 'strip'
   const isHighlighted = isNested
     ? isRunning
@@ -128,7 +130,7 @@ function SessionRow({
           type="button"
           ref={dragHandleProps.ref}
           className="flex h-7 w-5 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-muted-foreground opacity-0 transition-opacity hover:bg-muted/60 hover:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
-          aria-label={`Reorder ${session.name}`}
+          aria-label={`${t('Reorder')} ${session.name}`}
           onPointerDown={dragHandleProps.onPointerDown}
           onKeyDown={dragHandleProps.onKeyDown}
           aria-describedby={dragHandleProps['aria-describedby']}
@@ -199,7 +201,7 @@ function SessionRow({
                 'focus-visible:border-0 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring/50 focus-visible:ring-offset-0',
                 isNested && 'text-muted-foreground',
               )}
-              aria-label="Rename terminal session"
+              aria-label={t('Rename terminal session')}
             />
           ) : (
             <span
@@ -228,8 +230,8 @@ function SessionRow({
           event.stopPropagation()
           onSplit()
         }}
-        title="Split terminal"
-        aria-label={`Split ${session.name}`}
+        title={t('Split terminal')}
+        aria-label={`${t('Split')} ${session.name}`}
       >
         <Columns2 className="h-3.5 w-3.5" />
       </Button>
@@ -249,8 +251,8 @@ function SessionRow({
             event.stopPropagation()
             onCloseSplit()
           }}
-          title="Delete terminal"
-          aria-label={`Delete ${session.name}`}
+          title={t('Delete terminal')}
+          aria-label={`${t('Delete')} ${session.name}`}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -269,8 +271,8 @@ function SessionRow({
             event.stopPropagation()
             onRemoveRoot()
           }}
-          title="Delete terminal"
-          aria-label={`Delete ${session.name}`}
+          title={t('Delete terminal')}
+          aria-label={`${t('Delete')} ${session.name}`}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -393,6 +395,7 @@ function SortableRootSessionGroup({
 }
 
 export function CliSessionSidebar() {
+  const t = useT()
   const layout = useCliTerminalSessionsLayoutMode()
   const isStrip = layout === 'strip'
   const {
@@ -572,7 +575,7 @@ export function CliSessionSidebar() {
           ? 'h-11 w-full shrink-0 flex-row border-b border-border'
           : 'h-full w-full flex-col pb-1',
       )}
-      aria-label="Terminal sessions"
+      aria-label={t('Terminal sessions')}
     >
       <div
         className={cn(

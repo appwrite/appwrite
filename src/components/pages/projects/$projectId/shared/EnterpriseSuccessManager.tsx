@@ -1,5 +1,6 @@
 import { Calendar, Mail, MessageSquare, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 
 interface SuccessManager {
   name: string
@@ -30,20 +31,21 @@ const defaultManager: SuccessManager = {
 export function EnterpriseSuccessManager({
   manager = defaultManager,
 }: EnterpriseSuccessManagerProps) {
+  const t = useT()
   return (
     <div className="mt-8 rounded-xl border border-border bg-card/50 overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center gap-2">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Your success team
+            {t('Your success team')}
           </h3>
           <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-300">
-            Custom
+            {t('Custom')}
           </span>
         </div>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          Dedicated support for your organization
+          {t('Dedicated support for your organization')}
         </p>
       </div>
 
@@ -93,7 +95,7 @@ export function EnterpriseSuccessManager({
               rel="noopener noreferrer"
             >
               <Calendar className="h-4 w-4" />
-              Schedule a meeting
+              {t('Schedule a meeting')}
               <ExternalLink className="h-3 w-3 text-muted-foreground" />
             </a>
           </Button>
@@ -119,10 +121,11 @@ export function EnterpriseSuccessManager({
 
         {/* Help Text */}
         <p className="mt-4 text-[12px] text-muted-foreground">
-          Your dedicated Slack channel is monitored during business hours
-          (9am–6pm EST). For urgent issues, please use our{' '}
+          {t(
+            'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our',
+          )}{' '}
           <a href="#" className="link-neutral">
-            priority support portal
+            {t('priority support portal')}
           </a>
           .
         </p>

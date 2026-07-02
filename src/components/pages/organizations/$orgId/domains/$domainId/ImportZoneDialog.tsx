@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Upload } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 interface ImportZoneDialogProps {
   open: boolean
@@ -25,6 +26,7 @@ export function ImportZoneDialog({
   onImport,
   isLoading = false,
 }: ImportZoneDialogProps) {
+  const t = useT()
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,14 +53,14 @@ export function ImportZoneDialog({
 
     // Check file type
     if (!selectedFile.name.endsWith('.txt')) {
-      setError('Please select a .txt file')
+      setError(t('Please select a .txt file'))
       setFile(null)
       return
     }
 
     // Check file size
     if (selectedFile.size > MAX_FILE_SIZE) {
-      setError(`File size must be less than ${MAX_FILE_SIZE / 1000 / 1000}MB`)
+      setError(`${t('File size must be less than')} ${MAX_FILE_SIZE / 1000 / 1000}MB`)
       setFile(null)
       return
     }
@@ -74,7 +76,7 @@ export function ImportZoneDialog({
       const content = await file.text()
       onImport(content)
     } catch {
-      setError('Failed to read file. Please try again.')
+      setError(t('Failed to read file. Please try again.'))
     }
   }
 
@@ -82,10 +84,11 @@ export function ImportZoneDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Import Zone File</DialogTitle>
+          <DialogTitle>{t('Import Zone File')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Upload a DNS zone file (.txt format) to import DNS records. Maximum
-            file size is 5MB.
+            {t(
+              'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -93,7 +96,7 @@ export function ImportZoneDialog({
         <form onSubmit={handleSubmit}>
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
-              <Label htmlFor="zone-file">Zone File</Label>
+              <Label htmlFor="zone-file">{t('Zone File')}</Label>
               <div className="flex items-center gap-2">
                 <input
                   ref={fileInputRef}
@@ -112,7 +115,7 @@ export function ImportZoneDialog({
                   className="gap-1.5"
                 >
                   <Upload className="h-4 w-4" />
-                  Choose File
+                  {t('Choose File')}
                 </Button>
                 {file && (
                   <span className="text-[13px] text-muted-foreground">
@@ -123,8 +126,8 @@ export function ImportZoneDialog({
               {error && <p className="text-[12px] text-destructive">{error}</p>}
               {file && !error && (
                 <p className="text-[12px] text-muted-foreground">
-                  File selected: {file.name} ({(file.size / 1000).toFixed(2)}{' '}
-                  KB)
+                  {t('File selected:')} {file.name} (
+                  {(file.size / 1000).toFixed(2)} KB)
                 </p>
               )}
             </div>
@@ -136,10 +139,10 @@ export function ImportZoneDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !file || !!error}>
-              Import
+              {t('Import')}
             </Button>
           </div>
         </form>

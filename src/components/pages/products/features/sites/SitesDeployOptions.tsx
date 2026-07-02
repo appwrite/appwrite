@@ -1,5 +1,6 @@
 import { GitBranch, Terminal, Upload } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type DeployOption = {
@@ -38,13 +39,14 @@ type SitesDeployOptionsProps = {
 }
 
 function DeployOptionTile({ option, className }: { option: DeployOption; className?: string }) {
+  const t = useT()
   return (
     <div className={cn('p-4 sm:p-5', className)}>
       <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
         <option.icon className="size-3.5 text-muted-foreground" aria-hidden />
       </span>
-      <h3 className="mt-3 text-[14px] font-semibold text-foreground">{option.title}</h3>
-      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{option.description}</p>
+      <h3 className="mt-3 text-[14px] font-semibold text-foreground">{t(option.title)}</h3>
+      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{t(option.description)}</p>
     </div>
   )
 }

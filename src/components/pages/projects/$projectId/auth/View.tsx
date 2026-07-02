@@ -106,6 +106,7 @@ import { MembershipsPolicies } from './policies/Memberships'
 import { EmailsPolicies } from './policies/Emails'
 import { PasswordsPolicies } from './policies/Passwords'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { UserContextMenu } from './_components/UserContextMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
@@ -130,6 +131,7 @@ export function View({
   usersListSearch?: UsersListSearch
   authSocialProvidersInitialData?: AuthOAuth2SettingsInitialData
 } = {}) {
+  const t = useT()
   const { projectId } = useParams({
     strict: false,
   })
@@ -816,13 +818,15 @@ export function View({
         queryKey: ['users', 'project', projectId],
       })
       toast.success(
-        `Successfully deleted ${selectedUsers.size} user${selectedUsers.size > 1 ? 's' : ''}`,
+        selectedUsers.size > 1
+          ? `${selectedUsers.size} ${t('users deleted successfully')}`
+          : t('User deleted successfully'),
       )
       setSelectedUsers(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete users')
+      toast.error(error.message || t('Failed to delete users'))
     },
   })
 
@@ -931,9 +935,9 @@ export function View({
       date.getFullYear() === yesterday.getFullYear()
 
     if (isToday) {
-      return 'Today'
+      return t('Today')
     } else if (isYesterday) {
-      return 'Yesterday'
+      return t('Yesterday')
     } else if (diffDays < 7) {
       return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
     } else if (diffDays < 30) {
@@ -1008,13 +1012,15 @@ export function View({
         queryKey: ['teams', 'project', projectId],
       })
       toast.success(
-        `Successfully deleted ${selectedTeams.size} team${selectedTeams.size > 1 ? 's' : ''}`,
+        selectedTeams.size > 1
+          ? `${selectedTeams.size} ${t('teams deleted successfully')}`
+          : t('Team deleted successfully'),
       )
       setSelectedTeams(new Set())
       setDeleteTeamDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete teams')
+      toast.error(error.message || t('Failed to delete teams'))
     },
   })
 
@@ -1089,13 +1095,13 @@ export function View({
     () => [
       {
         id: 'users',
-        label: 'Users',
+        label: t('Users'),
         to: '/projects/$projectId/auth/',
         params: { projectId: projectId as string },
       },
       {
         id: 'teams',
-        label: 'Teams',
+        label: t('Teams'),
         to: '/projects/$projectId/auth/teams',
         params: { projectId: projectId as string },
       },
@@ -1103,13 +1109,13 @@ export function View({
         ? [
             {
               id: 'policies' as const,
-              label: 'Policies',
+              label: t('Policies'),
               to: '/projects/$projectId/auth/policies/sessions',
               params: { projectId: projectId as string },
             },
             {
               id: 'social-providers' as const,
-              label: 'Social providers',
+              label: t('Social providers'),
               to: '/projects/$projectId/auth/social-providers',
               params: { projectId: projectId as string },
             },
@@ -1117,7 +1123,7 @@ export function View({
               ? [
                   {
                     id: 'oauth2-server' as const,
-                    label: 'OAuth2 server',
+                    label: t('OAuth2 server'),
                     to: '/projects/$projectId/auth/oauth2-server/settings',
                     params: { projectId: projectId as string },
                   },
@@ -1125,20 +1131,20 @@ export function View({
               : []),
             {
               id: 'templates' as const,
-              label: 'Templates',
+              label: t('Templates'),
               to: '/projects/$projectId/auth/templates',
               params: { projectId: projectId as string },
             },
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/auth/settings',
               params: { projectId: projectId as string },
             },
           ]
         : []),
     ],
-    [projectId, showAuthSecuritySettings, showOAuth2Server],
+    [projectId, showAuthSecuritySettings, showOAuth2Server, t],
   )
 
   // Redirect from policies/social-providers/oauth2-server/templates/settings when user lacks permission
@@ -1170,11 +1176,11 @@ export function View({
   const getCreateLabel = () => {
     switch (activeTab) {
       case 'users':
-        return 'Create User'
+        return t('Create User')
       case 'teams':
-        return 'Create Team'
+        return t('Create Team')
       case 'templates':
-        return 'Create Template'
+        return t('Create Template')
       default:
         return undefined
     }
@@ -1189,11 +1195,11 @@ export function View({
   }) => {
     createUserMutation.mutate(userData, {
       onSuccess: () => {
-        toast.success('User created successfully')
+        toast.success(t('User created successfully'))
         setCreateUserDialogOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to create user')
+        toast.error(error.message || t('Failed to create user'))
       },
     })
   }
@@ -1201,11 +1207,11 @@ export function View({
   const handleCreateTeam = (teamData: { teamId?: string; name: string }) => {
     createTeamMutation.mutate(teamData, {
       onSuccess: () => {
-        toast.success('Team created successfully')
+        toast.success(t('Team created successfully'))
         setCreateTeamDialogOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to create team')
+        toast.error(error.message || t('Failed to create team'))
       },
     })
   }
@@ -1226,9 +1232,9 @@ export function View({
         : false
   const createPermissionTooltip =
     noCreatePermission && activeTab === 'users'
-      ? "You don't have permission to create users."
+      ? t("You don't have permission to create users.")
       : noCreatePermission && activeTab === 'teams'
-        ? "You don't have permission to create teams."
+        ? t("You don't have permission to create teams.")
         : undefined
 
   // SMTP alert for templates tab
@@ -1242,19 +1248,19 @@ export function View({
           >
             <AlertCircle className="h-4 w-4 text-amber-500" />
             <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-              SMTP server required
+              {t('SMTP server required')}
             </AlertTitle>
             <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
               <span className="inline">
-                Custom SMTP server is required to edit email templates.{' '}
+                {t('Custom SMTP server is required to edit email templates.')}{' '}
                 <Link
                   to="/projects/$projectId/settings/smtp"
                   params={{ projectId: projectId as string }}
                   className="font-medium underline hover:no-underline inline"
                 >
-                  Set up SMTP server
+                  {t('Set up SMTP server')}
                 </Link>{' '}
-                to customize your email templates.
+                {t('to customize your email templates.')}
               </span>
             </AlertDescription>
           </Alert>
@@ -1284,7 +1290,7 @@ export function View({
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Auth"
+        title={t('Auth')}
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
@@ -1294,7 +1300,9 @@ export function View({
           activeTab === 'settings' ||
           activeTab === 'templates'
             ? undefined
-            : `Search ${activeTab}...`
+            : activeTab === 'teams'
+              ? t('Search teams...')
+              : t('Search users...')
         }
         searchValue={
           activeTab === 'users'
@@ -1412,7 +1420,9 @@ export function View({
           <>
             {showUsersLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">Loading users...</div>
+                <div className="text-muted-foreground">
+                  {t('Loading users...')}
+                </div>
               </div>
             ) : usersViewMode === 'list' ? (
               paginatedUsers.length > 0 ? (
@@ -1431,22 +1441,22 @@ export function View({
                             />
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            User
+                            {t('User')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Contact
+                            {t('Contact')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                            Verification
+                            {t('Verification')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-[80px]">
-                            MFA
+                            {t('MFA')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Joined
+                            {t('Joined')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Last Active
+                            {t('Last Active')}
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1524,7 +1534,7 @@ export function View({
                                       />
                                       <div className="flex-1 min-w-0">
                                         <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
-                                          {user.name || 'No name'}
+                                          {user.name || t('No name')}
                                         </p>
                                         <div className="mt-0.5">
                                           <CopyableId id={user.$id} size="xs" />
@@ -1582,7 +1592,7 @@ export function View({
                                           variant="error"
                                           className="text-[10px] shrink-0"
                                         >
-                                          Blocked
+                                          {t('Blocked')}
                                         </Badge>
                                       ) : (
                                         <>
@@ -1602,15 +1612,14 @@ export function View({
                                                   ) : (
                                                     <XCircle className="h-3 w-3" />
                                                   )}
-                                                  Email
+                                                  {t('Email')}
                                                 </Badge>
                                               </TooltipTrigger>
                                               <TooltipContent>
                                                 <p className="text-xs">
-                                                  Email{' '}
                                                   {emailVerified
-                                                    ? 'verified'
-                                                    : 'unverified'}
+                                                    ? t('Email verified')
+                                                    : t('Email unverified')}
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
@@ -1631,15 +1640,14 @@ export function View({
                                                   ) : (
                                                     <XCircle className="h-3 w-3" />
                                                   )}
-                                                  Phone
+                                                  {t('Phone')}
                                                 </Badge>
                                               </TooltipTrigger>
                                               <TooltipContent>
                                                 <p className="text-xs">
-                                                  Phone{' '}
                                                   {phoneVerified
-                                                    ? 'verified'
-                                                    : 'unverified'}
+                                                    ? t('Phone verified')
+                                                    : t('Phone unverified')}
                                                 </p>
                                               </TooltipContent>
                                             </Tooltip>
@@ -1673,8 +1681,9 @@ export function View({
                                           </TooltipTrigger>
                                           <TooltipContent>
                                             <p className="text-xs">
-                                              Multi-factor authentication
-                                              enabled
+                                              {t(
+                                                'Multi-factor authentication enabled',
+                                              )}
                                             </p>
                                           </TooltipContent>
                                         </Tooltip>
@@ -1687,8 +1696,9 @@ export function View({
                                           </TooltipTrigger>
                                           <TooltipContent>
                                             <p className="text-xs">
-                                              Multi-factor authentication not
-                                              enabled
+                                              {t(
+                                                'Multi-factor authentication not enabled',
+                                              )}
                                             </p>
                                           </TooltipContent>
                                         </Tooltip>
@@ -1726,7 +1736,7 @@ export function View({
                                       </span>
                                     ) : (
                                       <span className="text-[12px] text-muted-foreground/50 italic">
-                                        Never
+                                        {t('Never')}
                                       </span>
                                     )}
                                   </Link>
@@ -1754,14 +1764,16 @@ export function View({
                   title={
                     urlSearch || usersFilterMap.size > 0
                       ? undefined
-                      : 'No users yet'
+                      : t('No users yet')
                   }
                   description={
                     urlSearch
-                      ? `No results for "${urlSearch}". Try a different search.`
+                      ? `${t('No results for')} "${urlSearch}". ${t('Try a different search.')}`
                       : usersFilterMap.size > 0
-                        ? 'No users match your filters.'
-                        : 'Create your first user to get started with authentication'
+                        ? t('No users match your filters.')
+                        : t(
+                            'Create your first user to get started with authentication',
+                          )
                   }
                   isEmpty={!(urlSearch || usersFilterMap.size > 0)}
                   hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
@@ -1804,10 +1816,10 @@ export function View({
                             resourceId={user.$id}
                             avatar={user.name || user.email || ''}
                             status={cardStatus}
-                            statusLabel={verification.label}
+                            statusLabel={t(verification.label)}
                             metadata={[
                               {
-                                label: 'Joined',
+                                label: t('Joined'),
                                 value: (
                                   <DateTooltip
                                     date={user.createdAt}
@@ -1829,14 +1841,16 @@ export function View({
                         title={
                           urlSearch || usersFilterMap.size > 0
                             ? undefined
-                            : 'No users yet'
+                            : t('No users yet')
                         }
                         description={
                           urlSearch
-                            ? `No results for "${urlSearch}". Try a different search.`
+                            ? `${t('No results for')} "${urlSearch}". ${t('Try a different search.')}`
                             : usersFilterMap.size > 0
-                              ? 'No users match your filters.'
-                              : 'Create your first user to get started with authentication'
+                              ? t('No users match your filters.')
+                              : t(
+                                  'Create your first user to get started with authentication',
+                                )
                         }
                         isEmpty={!(urlSearch || usersFilterMap.size > 0)}
                         hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
@@ -1864,8 +1878,10 @@ export function View({
               <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                 <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                   <Badge variant="secondary" className="h-6 px-2.5">
-                    {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}{' '}
-                    selected
+                    {selectedUsers.size}{' '}
+                    {selectedUsers.size > 1
+                      ? t('users selected')
+                      : t('user selected')}
                   </Badge>
                   <div className="flex items-center gap-2">
                     <Button
@@ -1874,7 +1890,7 @@ export function View({
                       onClick={() => setSelectedUsers(new Set())}
                       className="h-8 text-xs"
                     >
-                      Cancel
+                      {t('Cancel')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -1883,7 +1899,7 @@ export function View({
                       disabled={bulkDeleteMutation.isPending}
                       className="h-8 gap-2"
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </div>
                 </div>
@@ -1894,11 +1910,11 @@ export function View({
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <DialogContent className="sm:max-w-md p-0">
                 <DialogHeader className="px-6 pt-6 text-start">
-                  <DialogTitle>Delete Users</DialogTitle>
+                  <DialogTitle>{t('Delete Users')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Are you sure you want to delete {selectedUsers.size} user
-                    {selectedUsers.size > 1 ? 's' : ''}? This action cannot be
-                    undone.
+                    {t('Are you sure you want to delete')} {selectedUsers.size}{' '}
+                    {selectedUsers.size > 1 ? t('users') : t('user')}?{' '}
+                    {t('This action cannot be undone.')}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -1908,14 +1924,14 @@ export function View({
                     onClick={() => setDeleteDialogOpen(false)}
                     disabled={bulkDeleteMutation.isPending}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={confirmBulkDelete}
                     disabled={bulkDeleteMutation.isPending}
                   >
-                    Delete
+                    {t('Delete')}
                   </Button>
                 </div>
               </DialogContent>
@@ -1927,7 +1943,9 @@ export function View({
           <>
             {showTeamsLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">Loading teams...</div>
+                <div className="text-muted-foreground">
+                  {t('Loading teams...')}
+                </div>
               </div>
             ) : teamsViewMode === 'list' ? (
               paginatedTeams.length > 0 ? (
@@ -1946,10 +1964,10 @@ export function View({
                             />
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Team
+                            {t('Team')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Created
+                            {t('Created')}
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -2012,7 +2030,7 @@ export function View({
                                     />
                                     <div className="flex-1 min-w-0">
                                       <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
-                                        {team.name || 'No name'}
+                                        {team.name || t('No name')}
                                       </p>
                                       <div className="mt-0.5">
                                         <CopyableId id={team.id} size="xs" />
@@ -2058,12 +2076,12 @@ export function View({
                   title={
                     teamsUrlSearch || teamsFilterMap.size > 0
                       ? undefined
-                      : 'No teams yet'
+                      : t('No teams yet')
                   }
                   description={
                     teamsUrlSearch || teamsFilterMap.size > 0
                       ? undefined
-                      : 'Create your first team to organize users into groups'
+                      : t('Create your first team to organize users into groups')
                   }
                   isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
                   hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
@@ -2089,7 +2107,7 @@ export function View({
                           avatar={team.name || '-'}
                           metadata={[
                             {
-                              label: 'Created',
+                              label: t('Created'),
                               value: (
                                 <DateTooltip
                                   date={team.createdAt}
@@ -2110,12 +2128,14 @@ export function View({
                         title={
                           teamsUrlSearch || teamsFilterMap.size > 0
                             ? undefined
-                            : 'No teams yet'
+                            : t('No teams yet')
                         }
                         description={
                           teamsUrlSearch || teamsFilterMap.size > 0
                             ? undefined
-                            : 'Create your first team to organize users into groups'
+                            : t(
+                                'Create your first team to organize users into groups',
+                              )
                         }
                         isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
                         hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
@@ -2143,8 +2163,10 @@ export function View({
               <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                 <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                   <Badge variant="secondary" className="h-6 px-2.5">
-                    {selectedTeams.size} team{selectedTeams.size > 1 ? 's' : ''}{' '}
-                    selected
+                    {selectedTeams.size}{' '}
+                    {selectedTeams.size > 1
+                      ? t('teams selected')
+                      : t('team selected')}
                   </Badge>
                   <div className="flex items-center gap-2">
                     <Button
@@ -2153,7 +2175,7 @@ export function View({
                       onClick={() => setSelectedTeams(new Set())}
                       className="h-8 text-xs"
                     >
-                      Cancel
+                      {t('Cancel')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -2162,7 +2184,7 @@ export function View({
                       disabled={bulkDeleteTeamsMutation.isPending}
                       className="h-8 gap-2"
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </div>
                 </div>
@@ -2176,11 +2198,11 @@ export function View({
             >
               <DialogContent className="sm:max-w-md p-0">
                 <DialogHeader className="px-6 pt-6 text-start">
-                  <DialogTitle>Delete Teams</DialogTitle>
+                  <DialogTitle>{t('Delete Teams')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Are you sure you want to delete {selectedTeams.size} team
-                    {selectedTeams.size > 1 ? 's' : ''}? This action cannot be
-                    undone.
+                    {t('Are you sure you want to delete')} {selectedTeams.size}{' '}
+                    {selectedTeams.size > 1 ? t('teams') : t('team')}?{' '}
+                    {t('This action cannot be undone.')}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -2190,14 +2212,14 @@ export function View({
                     onClick={() => setDeleteTeamDialogOpen(false)}
                     disabled={bulkDeleteTeamsMutation.isPending}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={confirmBulkDeleteTeams}
                     disabled={bulkDeleteTeamsMutation.isPending}
                   >
-                    Delete
+                    {t('Delete')}
                   </Button>
                 </div>
               </DialogContent>

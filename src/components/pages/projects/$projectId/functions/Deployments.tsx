@@ -114,6 +114,7 @@ import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -230,6 +231,7 @@ function getVcsProvider(
 }
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
@@ -443,7 +445,7 @@ export function View() {
   )
   const specificationText = specification
     ? `${specification.cpus} CPU, ${specification.memory}MB RAM`
-    : 'Not set'
+    : t('Not set')
 
   // Get VCS provider info
   const vcsProvider = activeDeployment ? getVcsProvider(activeDeployment) : null
@@ -481,13 +483,13 @@ export function View() {
       )
     },
     onSuccess: () => {
-      toast.success('Runtime limits updated successfully')
+      toast.success(t('Runtime limits updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId]})
       setRuntimeLimitsDialogOpen(false)
     },
     onError: (error: unknown) => {
-      toast.error(error.message || 'Failed to update runtime limits')
+      toast.error(error.message || t('Failed to update runtime limits'))
     }})
 
   const handleSaveSpecification = () => {
@@ -516,9 +518,9 @@ export function View() {
         type: DeploymentDownloadType.Source})
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download source code')
+      toast.error(t('Failed to download source code'))
     }
   }
 
@@ -532,9 +534,9 @@ export function View() {
         type: DeploymentDownloadType.Output})
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download build output')
+      toast.error(t('Failed to download build output'))
     }
   }
 
@@ -556,11 +558,11 @@ export function View() {
         queryKey: ['deployments', 'project', projectId, functionId]})
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId]})
-      toast.success('Deployment rebuild started')
+      toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to redeploy')
+      toast.error(error.message || t('Failed to redeploy'))
     }})
 
   // Activate mutation (disabled for active deployment, but included for consistency)
@@ -581,11 +583,11 @@ export function View() {
         queryKey: ['deployments', 'project', projectId, functionId]})
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId]})
-      toast.success('Deployment activated successfully')
+      toast.success(t('Deployment activated successfully'))
       setActivateDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to activate deployment')
+      toast.error(error.message || t('Failed to activate deployment'))
     }})
 
   // Cancel build mutation (stop the build, deployment remains with status canceled)
@@ -607,10 +609,10 @@ export function View() {
         queryKey: ['deployments', 'project', projectId, functionId]})
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId]})
-      toast.success('Build cancelled')
+      toast.success(t('Build cancelled'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel build')
+      toast.error(error.message || t('Failed to cancel build'))
     }})
 
   // Delete mutation for active deployment
@@ -622,7 +624,9 @@ export function View() {
         )
       }
       throw new Error(
-        'Cannot delete the active deployment. Please activate another deployment first.',
+        t(
+          'Cannot delete the active deployment. Please activate another deployment first.',
+        ),
       )
     },
     onSuccess: async () => {
@@ -631,11 +635,11 @@ export function View() {
         queryKey: ['deployments', 'project', projectId, functionId]})
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId]})
-      toast.success('Deployment deleted successfully')
+      toast.success(t('Deployment deleted successfully'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete deployment')
+      toast.error(error.message || t('Failed to delete deployment'))
     }})
 
   // Bulk delete mutation
@@ -649,7 +653,9 @@ export function View() {
       const activeDeploymentId = activeDeployment?.$id
       if (activeDeploymentId && deploymentIds.includes(activeDeploymentId)) {
         throw new Error(
-          'Cannot delete the active deployment. Please activate another deployment first.',
+          t(
+            'Cannot delete the active deployment. Please activate another deployment first.',
+          ),
         )
       }
 
@@ -667,13 +673,13 @@ export function View() {
       await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId]})
       toast.success(
-        `Successfully deleted ${selectedDeployments.size} deployment${selectedDeployments.size > 1 ? 's' : ''}`,
+        `${t('Successfully deleted')} ${selectedDeployments.size} ${selectedDeployments.size > 1 ? t('deployments') : t('deployment')}`,
       )
       setSelectedDeployments(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete deployments')
+      toast.error(error.message || t('Failed to delete deployments'))
     }})
 
   const handleBulkDelete = () => {
@@ -755,7 +761,7 @@ export function View() {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
         <p className="text-[13px] text-muted-foreground">
-          Loading deployments...
+          {t('Loading deployments...')}
         </p>
       </div>
     )
@@ -774,7 +780,7 @@ export function View() {
                 >
                   <Info className="h-4 w-4 text-blue-500 shrink-0" />
                   <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                    <span>Your function is currently being redeployed.</span>
+                    <span>{t('Your function is currently being redeployed.')}</span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -787,7 +793,7 @@ export function View() {
                       }}
                       disabled={cancelBuildMutation.isPending}
                     >
-                      Cancel build
+                      {t('Cancel build')}
                     </Button>
                   </AlertDescription>
                 </Alert>
@@ -800,7 +806,7 @@ export function View() {
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Active deployment
+                  {t('Active deployment')}
                 </h3>
               </div>
               <div className="border-t border-border" />
@@ -809,7 +815,7 @@ export function View() {
                   {/* Deployed */}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Deployed
+                      {t('Deployed')}
                     </div>
                     <div className="text-[13px] text-foreground">
                       <DateTooltip date={activeDeployment.$createdAt} />
@@ -825,7 +831,7 @@ export function View() {
                     ) && (
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Build duration
+                          {t('Build duration')}
                         </div>
                         <div className="text-[13px] text-foreground">
                           {isDeploymentInProgress(activeDeployment.status)
@@ -849,7 +855,7 @@ export function View() {
                   {/* Total size */}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Total size
+                      {t('Total size')}
                     </div>
                     <div className="text-[13px] text-foreground">
                       {formatSize(
@@ -865,7 +871,7 @@ export function View() {
                     activeDeployment.providerRepositoryName && (
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Source
+                          {t('Source')}
                         </div>
                         <div className="flex items-center gap-1.5 text-[13px] text-foreground min-w-0">
                           {vcsProvider.icon}
@@ -894,7 +900,7 @@ export function View() {
                   {/* Runtime */}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Runtime
+                      {t('Runtime')}
                     </div>
                     <div className="flex items-center gap-1.5 text-[13px] text-foreground">
                       <RuntimeIcon runtime={func?.runtime || ''} size="sm" />
@@ -905,7 +911,7 @@ export function View() {
                   {/* Runtime Limits */}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Runtime limits
+                      {t('Runtime limits')}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[13px] text-foreground font-mono">
@@ -915,7 +921,7 @@ export function View() {
                         onClick={() => setRuntimeLimitsDialogOpen(true)}
                         className="text-[11px] text-muted-foreground hover:text-foreground underline cursor-pointer"
                       >
-                        Update
+                        {t('Update')}
                       </button>
                     </div>
                   </div>
@@ -923,7 +929,7 @@ export function View() {
                   {/* Global CDN */}
                   <div>
                     <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>Global CDN</span>
+                      <span>{t('Global CDN')}</span>
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -937,21 +943,19 @@ export function View() {
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs">
                             <p className="text-[12px] font-medium mb-1.5 text-background">
-                              Content Delivery Network
+                              {t('Content Delivery Network')}
                             </p>
                             <p className="text-[11px] text-background/90">
-                              Appwrite's CDN provides global coverage with 120+
-                              points of presence worldwide, reducing latency
-                              through edge caching and content optimization. All
-                              content is delivered over TLS for secure,
-                              encrypted connections.
+                              {t(
+                                "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.", // pragma: allowlist secret
+                              )}
                             </p>
                             <DocsRouteLink
                               href="/docs/products/network/cdn"
                               className="link-neutral text-[11px] mt-1.5 inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              Learn more →
+                              {t('Learn more →')}
                             </DocsRouteLink>
                           </TooltipContent>
                         </Tooltip>
@@ -960,7 +964,7 @@ export function View() {
                     <div className="flex items-center gap-1.5">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                       <span className="text-[13px] font-medium text-foreground">
-                        Connected
+                        {t('Connected')}
                       </span>
                     </div>
                   </div>
@@ -968,7 +972,7 @@ export function View() {
                   {/* DDoS protection */}
                   <div>
                     <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>DDoS protection</span>
+                      <span>{t('DDoS protection')}</span>
                       <TooltipProvider delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -982,21 +986,19 @@ export function View() {
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs">
                             <p className="text-[12px] font-medium mb-1.5 text-background">
-                              DDoS Mitigation
+                              {t('DDoS Mitigation')}
                             </p>
                             <p className="text-[11px] text-background/90">
-                              Appwrite's network includes built-in DDoS
-                              mitigation to protect against distributed
-                              denial-of-service attacks, ensuring uninterrupted
-                              access to your functions and maintaining high
-                              availability even during high traffic loads.
+                              {t(
+                                "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your functions and maintaining high availability even during high traffic loads.", // pragma: allowlist secret
+                              )}
                             </p>
                             <DocsRouteLink
                               href="/docs/products/network"
                               className="link-neutral text-[11px] mt-1.5 inline-block"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              Learn more →
+                              {t('Learn more →')}
                             </DocsRouteLink>
                           </TooltipContent>
                         </Tooltip>
@@ -1005,7 +1007,7 @@ export function View() {
                     <div className="flex items-center gap-1.5">
                       <Shield className="h-4 w-4 text-green-500" />
                       <span className="text-[13px] font-medium text-foreground">
-                        Active
+                        {t('Active')}
                       </span>
                     </div>
                   </div>
@@ -1014,7 +1016,7 @@ export function View() {
                 {/* Domains */}
                 <div className="mt-4 pt-4 border-t border-border">
                   <div className="text-[12px] text-muted-foreground mb-1.5">
-                    Domains
+                    {t('Domains')}
                   </div>
                   {activeDomains.length > 0 ? (
                     <>
@@ -1034,7 +1036,7 @@ export function View() {
                       </div>
                       {hasMoreDomains && (
                         <p className="text-[11px] text-muted-foreground mt-1.5">
-                          +{totalActiveDomains - activeDomains.length} more
+                          +{totalActiveDomains - activeDomains.length} {t('more')}
                         </p>
                       )}
                       <div
@@ -1055,7 +1057,7 @@ export function View() {
                               projectId: projectId!,
                               functionId: functionId!}}
                           >
-                            View all domains
+                            {t('View all domains')}
                             {hasMoreDomains && (
                               <Badge
                                 variant="secondary"
@@ -1079,7 +1081,7 @@ export function View() {
                               projectId: projectId!,
                               functionId: functionId!}}
                           >
-                            Add domain
+                            {t('Add domain')}
                           </Link>
                         </Button>
                       </div>
@@ -1103,7 +1105,7 @@ export function View() {
                             projectId: projectId!,
                             functionId: functionId!}}
                         >
-                          View all domains
+                          {t('View all domains')}
                         </Link>
                       </Button>
                       <span className="text-muted-foreground/60">·</span>
@@ -1119,7 +1121,7 @@ export function View() {
                             projectId: projectId!,
                             functionId: functionId!}}
                         >
-                          Add domain
+                          {t('Add domain')}
                         </Link>
                       </Button>
                     </div>
@@ -1136,13 +1138,13 @@ export function View() {
                       className="h-9 text-[13px]"
                     >
                       <Download className="me-1.5 h-4 w-4" />
-                      Download
+                      {t('Download')}
                       <ChevronDown className="ms-auto sm:ms-1.5 h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      Source code
+                      {t('Source code')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
@@ -1151,11 +1153,13 @@ export function View() {
                       }
                       title={
                         !isDeploymentCompleted(activeDeployment?.status)
-                          ? 'Build output is available after the deployment has completed.'
+                          ? t(
+                              'Build output is available after the deployment has completed.',
+                            )
                           : undefined
                       }
                     >
-                      Build output
+                      {t('Build output')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1167,7 +1171,7 @@ export function View() {
                   className="h-9 text-[13px]"
                 >
                   <RefreshCw className="me-1.5 h-4 w-4" />
-                  Redeploy
+                  {t('Redeploy')}
                 </Button>
                 <Button
                   size="sm"
@@ -1183,7 +1187,7 @@ export function View() {
                   className="h-9 text-[13px]"
                 >
                   <ScrollText className="me-1.5 h-4 w-4" />
-                  Build logs
+                  {t('Build logs')}
                 </Button>
                 <Button
                   size="sm"
@@ -1192,7 +1196,7 @@ export function View() {
                   className="h-9 text-[13px]"
                 >
                   <Play className="me-1.5 h-4 w-4" />
-                  Execute
+                  {t('Execute')}
                 </Button>
               </div>
             </div>
@@ -1206,11 +1210,12 @@ export function View() {
                   <Clock className="h-5 w-5 text-muted-foreground animate-spin" />
                 </div>
                 <p className="mb-1 text-[14px] font-medium text-foreground">
-                  Deployment is still building
+                  {t('Deployment is still building')}
                 </p>
                 <p className="mb-4 text-[13px] text-muted-foreground">
-                  This may take a few minutes. We'll update automatically when
-                  it's ready.
+                  {t(
+                    "This may take a few minutes. We'll update automatically when it's ready.",
+                  )}
                 </p>
                 <Button
                   variant="outline"
@@ -1225,7 +1230,7 @@ export function View() {
                     }
                   }}
                 >
-                  View logs
+                  {t('View logs')}
                 </Button>
               </div>
             </div>
@@ -1239,10 +1244,10 @@ export function View() {
                   <Clock className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <p className="mb-1 text-[14px] font-medium text-foreground">
-                  There is no active deployment
+                  {t('There is no active deployment')}
                 </p>
                 <p className="mb-4 text-[13px] text-muted-foreground">
-                  Create your first deployment to activate this function.
+                  {t('Create your first deployment to activate this function.')}
                 </p>
                 {createDeployment && (
                   <CreateDeploymentDropdown
@@ -1288,7 +1293,7 @@ export function View() {
                         />
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                        Deployment ID
+                        {t('Deployment ID')}
                       </TableHead>
                       <TableHead
                         className={cn(
@@ -1296,22 +1301,22 @@ export function View() {
                           DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
                         )}
                       >
-                        Status
+                        {t('Status')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                        Type
+                        {t('Type')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                        Source
+                        {t('Source')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                        Total Size
+                        {t('Total Size')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                        Duration
+                        {t('Duration')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                        Created
+                        {t('Created')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-end w-[100px]"></TableHead>
                     </TableRow>
@@ -1390,7 +1395,7 @@ export function View() {
                                   className="gap-1.5 text-[11px] font-medium"
                                 >
                                   <CheckCircle2 className="h-3 w-3" />
-                                  Active
+                                  {t('Active')}
                                 </Badge>
                               ) : (
                                 <Badge
@@ -1401,7 +1406,7 @@ export function View() {
                                     const StatusIcon = statusBadge.icon
                                     return <StatusIcon className="h-3 w-3" />
                                   })()}
-                                  {statusBadge.label}
+                                  {t(statusBadge.label)}
                                 </Badge>
                               )}
                             </TableCell>
@@ -1457,7 +1462,7 @@ export function View() {
                                   deployment.type === 'cli'
                                     ? 'CLI'
                                     : deployment.type === 'manual'
-                                      ? 'Manual'
+                                      ? t('Manual')
                                       : deployment.type || 'N/A'
                                 return (
                                   <div className="flex items-center gap-1.5 text-[12px] text-foreground">
@@ -1554,7 +1559,7 @@ export function View() {
                                               </span>
                                               {commitAuthor ? (
                                                 <span className="min-w-0 truncate">
-                                                  {' by '}
+                                                  {` ${t('by')} `}
                                                   {commitAuthorUrl ? (
                                                     <a
                                                       href={commitAuthorUrl}
@@ -1644,7 +1649,9 @@ export function View() {
                                       disabled={deployment.status !== 'ready'}
                                       title={
                                         deployment.status !== 'ready'
-                                          ? 'Build must be ready before activating'
+                                          ? t(
+                                              'Build must be ready before activating',
+                                            )
                                           : undefined
                                       }
                                       onClick={async (e) => {
@@ -1675,16 +1682,16 @@ export function View() {
                                               functionId,
                                             ]})
                                           toast.success(
-                                            'Deployment activated successfully',
+                                            t('Deployment activated successfully'),
                                           )
                                         } catch {
                                           toast.error(
-                                            'Failed to activate deployment',
+                                            t('Failed to activate deployment'),
                                           )
                                         }
                                       }}
                                     >
-                                      <MenuItemContent icon={Play}>Activate</MenuItemContent>
+                                      <MenuItemContent icon={Play}>{t('Activate')}</MenuItemContent>
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem
@@ -1707,15 +1714,15 @@ export function View() {
                                             functionId,
                                           ]})
                                         toast.success(
-                                          'Deployment rebuild started',
+                                          t('Deployment rebuild started'),
                                         )
                                       } catch {
-                                        toast.error('Failed to redeploy')
+                                        toast.error(t('Failed to redeploy'))
                                       }
                                     }}
                                   >
                                     <MenuItemContent icon={RefreshCw}>
-                                      Redeploy
+                                      {t('Redeploy')}
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                   <DropdownMenuSub>
@@ -1724,7 +1731,7 @@ export function View() {
                                       onPointerDown={(e) => e.stopPropagation()}
                                     >
                                       <MenuItemIcon icon={Download} />
-                                      Download
+                                      {t('Download')}
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuSubContent className="z-[200]">
                                       <DropdownMenuItem
@@ -1746,16 +1753,16 @@ export function View() {
                                               (url.includes('?') ? '&' : '?') +
                                               'mode=admin'
                                             window.open(urlWithMode, '_blank')
-                                            toast.success('Download started')
+                                            toast.success(t('Download started'))
                                           } catch {
                                             toast.error(
-                                              'Failed to download source code',
+                                              t('Failed to download source code'),
                                             )
                                           }
                                         }}
                                       >
                                         <MenuItemContent icon={FileCode}>
-                                          Source code
+                                          {t('Source code')}
                                         </MenuItemContent>
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
@@ -1768,7 +1775,9 @@ export function View() {
                                           !isDeploymentCompleted(
                                             deployment.status,
                                           )
-                                            ? 'Build output is available after the deployment has completed.'
+                                            ? t(
+                                                'Build output is available after the deployment has completed.',
+                                              )
                                             : undefined
                                         }
                                         onClick={(e) => {
@@ -1795,16 +1804,16 @@ export function View() {
                                               (url.includes('?') ? '&' : '?') +
                                               'mode=admin'
                                             window.open(urlWithMode, '_blank')
-                                            toast.success('Download started')
+                                            toast.success(t('Download started'))
                                           } catch {
                                             toast.error(
-                                              'Failed to download build output',
+                                              t('Failed to download build output'),
                                             )
                                           }
                                         }}
                                       >
                                         <MenuItemContent icon={Package}>
-                                          Build output
+                                          {t('Build output')}
                                         </MenuItemContent>
                                       </DropdownMenuItem>
                                     </DropdownMenuSubContent>
@@ -1815,11 +1824,15 @@ export function View() {
                                     title={
                                       !canDeleteFromMenu
                                         ? isActive
-                                          ? 'The active deployment cannot be deleted from the list'
+                                          ? t(
+                                              'The active deployment cannot be deleted from the list',
+                                            )
                                           : isDeploymentInProgress(
                                                 deployment.status,
                                               )
-                                            ? 'Wait for the build to finish or cancel it first'
+                                            ? t(
+                                                'Wait for the build to finish or cancel it first',
+                                              )
                                             : undefined
                                         : undefined
                                     }
@@ -1847,18 +1860,18 @@ export function View() {
                                             functionId,
                                           ]})
                                         toast.success(
-                                          'Deployment deleted successfully',
+                                          t('Deployment deleted successfully'),
                                         )
                                       } catch (error) {
                                         toast.error(
                                           error instanceof Error
                                             ? error.message
-                                            : 'Failed to delete deployment',
+                                            : t('Failed to delete deployment'),
                                         )
                                       }
                                     }}
                                   >
-                                    <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                    <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                                   </DropdownMenuItem>
                                   {isDeploymentInProgress(
                                     deployment.status,
@@ -1872,7 +1885,7 @@ export function View() {
                                         setCancelBuildDialogOpen(true)
                                       }}
                                     >
-                                      <MenuItemContent icon={XCircle}>Cancel</MenuItemContent>
+                                      <MenuItemContent icon={XCircle}>{t('Cancel')}</MenuItemContent>
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
@@ -1899,11 +1912,11 @@ export function View() {
           ) : (
             <EmptyState
               icon={Clock}
-              title={filterMap.size > 0 ? undefined : 'No deployments yet'}
+              title={filterMap.size > 0 ? undefined : t('No deployments yet')}
               description={
                 filterMap.size > 0
                   ? undefined
-                  : 'Create your first deployment to get started'
+                  : t('Create your first deployment to get started')
               }
               isEmpty={filterMap.size === 0}
               hasFilters={filterMap.size > 0}
@@ -1916,10 +1929,10 @@ export function View() {
                       <Clock className="h-6 w-6 text-muted-foreground" />
                     </div>
                     <p className="mb-1 text-[14px] font-medium text-foreground">
-                      No deployments yet
+                      {t('No deployments yet')}
                     </p>
                     <p className="mb-4 text-[13px] text-muted-foreground">
-                      Create your first deployment to get started
+                      {t('Create your first deployment to get started')}
                     </p>
                     <CreateDeploymentDropdown
                       onSelectGit={createDeployment.openGitModal}
@@ -1939,8 +1952,9 @@ export function View() {
         <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              {selectedDeployments.size} deployment
-              {selectedDeployments.size > 1 ? 's' : ''} selected
+              {selectedDeployments.size}{' '}
+              {selectedDeployments.size > 1 ? t('deployments') : t('deployment')}{' '}
+              {t('selected')}
             </Badge>
             <div className="flex items-center gap-2">
               <Button
@@ -1949,7 +1963,7 @@ export function View() {
                 onClick={() => setSelectedDeployments(new Set())}
                 className="h-8 text-xs"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -1959,7 +1973,7 @@ export function View() {
                 className="h-8 gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -1974,9 +1988,9 @@ export function View() {
         >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Update Runtime Limits</DialogTitle>
+              <DialogTitle>{t('Update Runtime Limits')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Select the runtime specification for your function
+                {t('Select the runtime specification for your function')}
               </DialogDescription>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -2047,7 +2061,7 @@ export function View() {
                             </div>
                             <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
                               {!isEnabled
-                                ? 'Upgrade to unlock this specification'
+                                ? t('Upgrade to unlock this specification')
                                 : spec.slug}
                             </span>
                           </div>
@@ -2073,7 +2087,7 @@ export function View() {
                 onClick={() => setRuntimeLimitsDialogOpen(false)}
                 disabled={updateSpecificationMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 onClick={handleSaveSpecification}
@@ -2083,7 +2097,7 @@ export function View() {
                   updateSpecificationMutation.isPending
                 }
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </DialogContent>
@@ -2094,14 +2108,14 @@ export function View() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete Deployments</DialogTitle>
+            <DialogTitle>{t('Delete Deployments')}</DialogTitle>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-4">
             <DialogDescription className="text-[13px] mb-4">
-              Are you sure you want to delete {selectedDeployments.size}{' '}
-              deployment{selectedDeployments.size > 1 ? 's' : ''}? This action
-              cannot be undone.
+              {t('Are you sure you want to delete')} {selectedDeployments.size}{' '}
+              {selectedDeployments.size > 1 ? t('deployments') : t('deployment')}?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {displayedDeployments
@@ -2122,14 +2136,14 @@ export function View() {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={bulkDeleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmBulkDelete}
               disabled={bulkDeleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -2143,13 +2157,14 @@ export function View() {
         >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Delete deployment</DialogTitle>
+              <DialogTitle>{t('Delete deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action
-                cannot be undone.
+                {t(
+                  'Are you sure you want to delete this deployment? This action cannot be undone.',
+                )}
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -2159,7 +2174,7 @@ export function View() {
                 onClick={() => setDeleteActiveDialogOpen(false)}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -2167,7 +2182,7 @@ export function View() {
                 disabled={deleteActiveMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>
@@ -2184,9 +2199,9 @@ export function View() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Cancel build</DialogTitle>
+            <DialogTitle>{t('Cancel build')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Stop the current deployment? You can deploy again later.
+              {t('Stop the current deployment? You can deploy again later.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -2216,7 +2231,7 @@ export function View() {
               }}
               className="h-9 text-[13px]"
             >
-              Keep building
+              {t('Keep building')}
             </Button>
             <Button
               variant="destructive"
@@ -2229,7 +2244,7 @@ export function View() {
               }
               className="h-9 text-[13px]"
             >
-              Cancel build
+              {t('Cancel build')}
             </Button>
           </div>
         </DialogContent>
@@ -2240,14 +2255,14 @@ export function View() {
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Redeploy deployment</DialogTitle>
+              <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the
-                current function configuration. The original deployment's code
-                will be preserved and used for the new build.
+                {t(
+                  "This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.",
+                )}
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -2258,7 +2273,7 @@ export function View() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="default"
@@ -2266,7 +2281,7 @@ export function View() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Redeploy
+                {t('Redeploy')}
               </Button>
             </div>
           </DialogContent>
@@ -2278,13 +2293,14 @@ export function View() {
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Activate deployment</DialogTitle>
+              <DialogTitle>{t('Activate deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic
-                will be routed to this deployment once activated.
+                {t(
+                  'This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.',
+                )}
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -2295,7 +2311,7 @@ export function View() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="default"
@@ -2303,7 +2319,7 @@ export function View() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Activate
+                {t('Activate')}
               </Button>
             </div>
           </DialogContent>

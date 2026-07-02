@@ -24,6 +24,7 @@ import {
 import { useUpdatePaymentMethod } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface EditPaymentMethodModalProps {
   open: boolean
@@ -113,6 +114,7 @@ export function EditPaymentMethodModal({
   paymentMethod,
   onSuccess,
 }: EditPaymentMethodModalProps) {
+  const t = useT()
   const [expiryMonth, setExpiryMonth] = useState<string>(
     paymentMethod.expiryMonth?.toString().padStart(2, '0') || '',
   )
@@ -138,13 +140,13 @@ export function EditPaymentMethodModal({
     e.preventDefault()
 
     if (!expiryMonth || !expiryYear) {
-      toast.error('Please select expiration month and year')
+      toast.error(t('Please select expiration month and year'))
       return
     }
 
     // For US cards, state is required
     if (paymentMethod.country === 'US' && !state) {
-      toast.error('Please select a state')
+      toast.error(t('Please select a state'))
       return
     }
 
@@ -160,14 +162,14 @@ export function EditPaymentMethodModal({
         state: finalState,
       })
 
-      toast.success('Payment method updated')
+      toast.success(t('Payment method updated'))
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to update payment method',
+          : t('Failed to update payment method'),
       )
     }
   }
@@ -183,9 +185,9 @@ export function EditPaymentMethodModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Update payment method</DialogTitle>
+          <DialogTitle>{t('Update payment method')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Update the expiration date for this payment method.
+            {t('Update the expiration date for this payment method.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -195,7 +197,7 @@ export function EditPaymentMethodModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="expiry-month" className="text-[13px]">
-                  Month
+                  {t('Month')}
                 </Label>
                 <Select
                   value={expiryMonth}
@@ -220,7 +222,7 @@ export function EditPaymentMethodModal({
 
               <div className="space-y-2">
                 <Label htmlFor="expiry-year" className="text-[13px]">
-                  Year
+                  {t('Year')}
                 </Label>
                 <Select
                   value={expiryYear}
@@ -247,7 +249,7 @@ export function EditPaymentMethodModal({
             {paymentMethod.country === 'US' && (
               <div className="space-y-2">
                 <Label htmlFor="state" className="text-[13px]">
-                  State
+                  {t('State')}
                 </Label>
                 <Select
                   value={state}
@@ -255,7 +257,7 @@ export function EditPaymentMethodModal({
                   disabled={isLoading}
                 >
                   <SelectTrigger id="state" className="h-9 text-[13px]">
-                    <SelectValue placeholder="Select a state" />
+                    <SelectValue placeholder={t('Select a state')} />
                   </SelectTrigger>
                   <SelectContent>
                     {US_STATES.map((stateOption) => (
@@ -279,13 +281,13 @@ export function EditPaymentMethodModal({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isLoading || !hasChanges || !expiryMonth || !expiryYear}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </form>

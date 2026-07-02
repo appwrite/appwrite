@@ -38,6 +38,7 @@ import {
   usePostgresSidebar,
   type SqlEditorTab,
 } from './PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 type SqlEditorTabContextMenuProps = {
   projectId: string
@@ -72,6 +73,7 @@ export function SqlEditorTabContextMenu({
   onCloseTab,
   children,
 }: SqlEditorTabContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const { duplicateQueryTab, closeOtherTabs } = usePostgresSidebar()
 
@@ -151,7 +153,7 @@ export function SqlEditorTabContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             {tableId ? (
@@ -159,38 +161,38 @@ export function SqlEditorTabContextMenu({
                 onSelect={() => void copyToClipboard('ID', tableId)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
               onSelect={() => void copyToClipboard('Name', tableName)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             {tableRowsHref ? (
               <ContextMenuItem
                 onSelect={() => void copyToClipboard('Link', tableRowsHref)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
               onSelect={() => void copyToClipboard('SQL', tab.sql)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy SQL
+              {t('Copy SQL')}
             </ContextMenuItem>
             {!tableId ? (
               <ContextMenuItem onSelect={handleDuplicate}>
                 <ContextMenuIcon icon={Copy} />
-                Duplicate
+                {t('Duplicate')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem onSelect={handleCopyAsJson}>
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -199,11 +201,11 @@ export function SqlEditorTabContextMenu({
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={() => openInNewTab(tableRowsHref)}>
               <ContextMenuIcon icon={ExternalLink} />
-              Open in new tab
+              {t('Open in new tab')}
             </ContextMenuItem>
             <ContextMenuItem onSelect={() => openInNewWindow(tableRowsHref)}>
               <ContextMenuIcon icon={Square} />
-              Open in new window
+              {t('Open in new window')}
             </ContextMenuItem>
           </>
         ) : null}
@@ -213,12 +215,12 @@ export function SqlEditorTabContextMenu({
             {hasOtherTabs ? (
               <ContextMenuItem onSelect={handleCloseOtherTabs}>
                 <ContextMenuIcon icon={X} />
-                Close other tabs
+                {t('Close other tabs')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem onSelect={() => onCloseTab(tab.id)}>
               <ContextMenuIcon icon={X} />
-              Close
+              {t('Close')}
             </ContextMenuItem>
           </>
         ) : null}

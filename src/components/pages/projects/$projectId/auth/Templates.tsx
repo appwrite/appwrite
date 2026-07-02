@@ -54,6 +54,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 // GitHub Circle Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -161,6 +162,7 @@ const EMAIL_TEMPLATE_TYPES = [
 ] as const
 
 export function Templates({ projectId }: TemplatesProps) {
+  const t = useT()
   const { isSmtpEnabled } = useProjectSmtpEnabled(projectId)
   const { data: localeData } = useLocaleCodes()
   const queryClient = useQueryClient()
@@ -313,7 +315,7 @@ export function Templates({ projectId }: TemplatesProps) {
   // Handle update
   const handleUpdate = async () => {
     if (!selectedLocale) {
-      toast.error('Please select a locale')
+      toast.error(t('Please select a locale'))
       return
     }
 
@@ -333,7 +335,7 @@ export function Templates({ projectId }: TemplatesProps) {
         selectedType
 
       toast.success(
-        `Email ${templateTypeLabel} template for ${selectedLocale} updated`,
+        `${t('Email template updated:')} ${t(templateTypeLabel)} (${selectedLocale})`,
       )
 
       // Update base template after successful update
@@ -349,7 +351,7 @@ export function Templates({ projectId }: TemplatesProps) {
       }
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update template',
+        error instanceof Error ? error.message : t('Failed to update template'),
       )
     }
   }
@@ -370,7 +372,7 @@ export function Templates({ projectId }: TemplatesProps) {
         locale: resetLocale,
       })
 
-      toast.success('Email template has been reset')
+      toast.success(t('Email template has been reset'))
 
       // Reload template after reset
       if (resetType === selectedType && resetLocale === selectedLocale) {
@@ -382,7 +384,7 @@ export function Templates({ projectId }: TemplatesProps) {
       setResetLocale(null)
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to reset template',
+        error instanceof Error ? error.message : t('Failed to reset template'),
       )
     }
   }
@@ -394,7 +396,7 @@ export function Templates({ projectId }: TemplatesProps) {
       setCopiedVariable(variable)
       setTimeout(() => setCopiedVariable(null), 2000)
     } catch {
-      toast.error('Failed to copy variable')
+      toast.error(t('Failed to copy variable'))
     }
   }
 
@@ -418,10 +420,10 @@ export function Templates({ projectId }: TemplatesProps) {
           <div className="overflow-hidden rounded-lg border border-border bg-card">
             <div className="border-b border-border px-4 py-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Email templates
+                {t('Email templates')}
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {EMAIL_TEMPLATE_TYPES.length} templates
+                {EMAIL_TEMPLATE_TYPES.length} {t('templates')}
               </p>
             </div>
             <div className="divide-y divide-border">
@@ -449,10 +451,10 @@ export function Templates({ projectId }: TemplatesProps) {
                               : 'text-muted-foreground',
                           )}
                         >
-                          {templateConfig.label}
+                          {t(templateConfig.label)}
                         </div>
                         <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                          {templateConfig.description}
+                          {t(templateConfig.description)}
                         </div>
                       </div>
                     </div>
@@ -496,10 +498,10 @@ export function Templates({ projectId }: TemplatesProps) {
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Reset email template?</DialogTitle>
+            <DialogTitle>{t('Reset email template?')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to reset the email template?{' '}
-              <strong>Default values will be set in all inputs.</strong>
+              {t('Are you sure you want to reset the email template?')}{' '}
+              <strong>{t('Default values will be set in all inputs.')}</strong>
             </DialogDescription>
           </DialogHeader>
 
@@ -509,14 +511,14 @@ export function Templates({ projectId }: TemplatesProps) {
               onClick={() => setResetDialogOpen(false)}
               disabled={resetMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleResetConfirm}
               disabled={resetMutation.isPending}
             >
-              Reset
+              {t('Reset')}
             </Button>
           </div>
         </DialogContent>
@@ -582,6 +584,7 @@ function TemplateEditor({
   copiedVariable,
   variables = [],
 }: TemplateEditorProps) {
+  const t = useT()
   const [localFormData, setLocalFormData] = useState(formData)
   const isRTL = isRTLLocale(locale)
 
@@ -609,10 +612,10 @@ function TemplateEditor({
         <div className="flex flex-col gap-3 @[500px]:flex-row @[500px]:items-start @[500px]:justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-foreground">
-              {templateLabel}
+              {t(templateLabel)}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {templateDescription}
+              {t(templateDescription)}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3 w-full @[500px]:w-auto">
@@ -631,7 +634,9 @@ function TemplateEditor({
           <div className="flex items-center gap-2 min-w-0">
             <GitHubIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">
-              Found a translation issue or want to contribute a new language?
+              {t(
+                'Found a translation issue or want to contribute a new language?',
+              )}
             </p>
           </div>
           <Button
@@ -646,7 +651,7 @@ function TemplateEditor({
               rel="noopener noreferrer"
             >
               <GitHubIcon className="h-3.5 w-3.5" />
-              Submit a PR
+              {t('Submit a PR')}
               <ExternalLink className="h-3 w-3" />
             </a>
           </Button>
@@ -657,22 +662,23 @@ function TemplateEditor({
           </div>
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-xs font-medium text-foreground">
-              Using templates in your app
+              {t('Using templates in your app')}
             </p>
             <p className="text-xs text-muted-foreground">
-              Set the locale using{' '}
+              {t('Set the locale using')}{' '}
               <code className="rounded bg-muted px-1 py-0.5 text-[11px] font-mono">
                 client.setLocale()
               </code>{' '}
-              in SDKs or the{' '}
+              {t('in SDKs or the')}{' '}
               <code className="rounded bg-muted px-1 py-0.5 text-[11px] font-mono">
                 X-Appwrite-Locale
               </code>{' '}
-              HTTP header. Templates are automatically selected based on the
-              user's locale.
+              {t(
+                "HTTP header. Templates are automatically selected based on the user's locale.",
+              )}
             </p>
             <DocsRouteLink className="link-neutral inline-flex items-center gap-1 text-xs" href="/docs/advanced/platform/message-templates">
-              Learn more about message templates
+              {t('Learn more about message templates')}
               <ExternalLink className="h-3 w-3" />
             </DocsRouteLink>
           </div>
@@ -684,10 +690,10 @@ function TemplateEditor({
         <div className="space-y-6">
           {/* Sender Name */}
           <div className="space-y-2">
-            <Label htmlFor="sender-name">Sender name</Label>
+            <Label htmlFor="sender-name">{t('Sender name')}</Label>
             <Input
               id="sender-name"
-              placeholder="Enter sender name"
+              placeholder={t('Enter sender name')}
               value={localFormData.senderName}
               onChange={(e) =>
                 handleLocalFieldChange('senderName', e.target.value)
@@ -699,11 +705,11 @@ function TemplateEditor({
 
           {/* Sender Email */}
           <div className="space-y-2">
-            <Label htmlFor="sender-email">Sender email</Label>
+            <Label htmlFor="sender-email">{t('Sender email')}</Label>
             <Input
               id="sender-email"
               type="email"
-              placeholder="Enter sender email"
+              placeholder={t('Enter sender email')}
               value={localFormData.senderEmail}
               onChange={(e) =>
                 handleLocalFieldChange('senderEmail', e.target.value)
@@ -715,7 +721,7 @@ function TemplateEditor({
 
           {/* Reply To */}
           <div className="space-y-2">
-            <Label htmlFor="reply-to">Reply to</Label>
+            <Label htmlFor="reply-to">{t('Reply to')}</Label>
             <Input
               id="reply-to"
               type="email"
@@ -730,10 +736,10 @@ function TemplateEditor({
 
           {/* Subject */}
           <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
+            <Label htmlFor="subject">{t('Subject')}</Label>
             <Input
               id="subject"
-              placeholder="Enter subject"
+              placeholder={t('Enter subject')}
               value={localFormData.subject}
               onChange={(e) =>
                 handleLocalFieldChange('subject', e.target.value)
@@ -745,17 +751,17 @@ function TemplateEditor({
           {/* Message */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="message">Message</Label>
+              <Label htmlFor="message">{t('Message')}</Label>
               {!isSmtpEnabled && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="text-xs text-muted-foreground">
-                        SMTP required
+                        {t('SMTP required')}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Set up an SMTP server to edit the message body</p>
+                      <p>{t('Set up an SMTP server to edit the message body')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -767,11 +773,12 @@ function TemplateEditor({
               <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3 @[500px]:p-4">
                 <div className="space-y-1">
                   <Label className="text-sm font-medium">
-                    Available Variables
+                    {t('Available Variables')}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Use these variables in your message to insert dynamic
-                    content. Click a variable to copy it.
+                    {t(
+                      'Use these variables in your message to insert dynamic content. Click a variable to copy it.',
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -798,7 +805,7 @@ function TemplateEditor({
                               {copiedVariable === variable ? (
                                 <>
                                   <Check className="me-1.5 h-3.5 w-3.5" />
-                                  Copied
+                                  {t('Copied')}
                                 </>
                               ) : (
                                 <>
@@ -810,7 +817,7 @@ function TemplateEditor({
                           </TooltipTrigger>
                           {description && (
                             <TooltipContent>
-                              <p className="text-xs">{description}</p>
+                              <p className="text-xs">{t(description)}</p>
                             </TooltipContent>
                           )}
                         </Tooltip>
@@ -823,7 +830,7 @@ function TemplateEditor({
 
             <Textarea
               id="message"
-              placeholder="Enter your message"
+              placeholder={t('Enter your message')}
               rows={12}
               value={localFormData.message}
               onChange={(e) =>
@@ -850,12 +857,12 @@ function TemplateEditor({
                       disabled
                       className="w-full pointer-events-none"
                     >
-                      Reset to default
+                      {t('Reset to default')}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Set up SMTP to reset email templates</p>
+                  <p>{t('Set up SMTP to reset email templates')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -866,7 +873,7 @@ function TemplateEditor({
               disabled={isResetting || isUpdating}
               className="w-full @[500px]:w-auto"
             >
-              Reset to default
+              {t('Reset to default')}
             </Button>
           )}
           <Button
@@ -874,7 +881,7 @@ function TemplateEditor({
             disabled={!hasChanges || isUpdating || isResetting}
             className="w-full @[500px]:w-auto"
           >
-            Update template
+            {t('Update template')}
           </Button>
         </div>
       </div>
@@ -891,6 +898,7 @@ function TemplateTypeSelector({
   selectedType,
   onTypeChange,
 }: TemplateTypeSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const selectedConfig = EMAIL_TEMPLATE_TYPES.find(
     (t) => t.type === selectedType,
@@ -909,11 +917,13 @@ function TemplateTypeSelector({
             <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">
-                {selectedConfig?.label ?? 'Select template...'}
+                {selectedConfig?.label
+                  ? t(selectedConfig.label)
+                  : t('Select template...')}
               </span>
               {selectedConfig?.description && (
                 <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                  {selectedConfig.description}
+                  {t(selectedConfig.description)}
                 </span>
               )}
             </div>
@@ -923,9 +933,9 @@ function TemplateTypeSelector({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search templates..." />
+          <CommandInput placeholder={t('Search templates...')} />
           <CommandList>
-            <CommandEmpty>No template found.</CommandEmpty>
+            <CommandEmpty>{t('No template found.')}</CommandEmpty>
             <CommandGroup>
               {EMAIL_TEMPLATE_TYPES.map((templateConfig) => (
                 <CommandItem
@@ -947,10 +957,10 @@ function TemplateTypeSelector({
                   />
                   <div className="min-w-0 flex-1">
                     <span className="text-sm font-medium">
-                      {templateConfig.label}
+                      {t(templateConfig.label)}
                     </span>
                     <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                      {templateConfig.description}
+                      {t(templateConfig.description)}
                     </p>
                   </div>
                 </CommandItem>
@@ -974,6 +984,7 @@ function LocaleSelector({
   localeCodes,
   onLocaleChange,
 }: LocaleSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const selectedLocale = localeCodes.find((l) => l.code === locale)
 
@@ -987,16 +998,16 @@ function LocaleSelector({
           className="w-full min-w-[200px] @[400px]:w-[240px] justify-between"
         >
           <span className="truncate">
-            {selectedLocale ? selectedLocale.name : 'Select language...'}
+            {selectedLocale ? selectedLocale.name : t('Select language...')}
           </span>
           <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] @[400px]:w-[240px] p-0" align="end">
         <Command>
-          <CommandInput placeholder="Search languages..." />
+          <CommandInput placeholder={t('Search languages...')} />
           <CommandList>
-            <CommandEmpty>No language found.</CommandEmpty>
+            <CommandEmpty>{t('No language found.')}</CommandEmpty>
             <CommandGroup>
               {localeCodes.map((localeOption) => (
                 <CommandItem

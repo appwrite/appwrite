@@ -5,6 +5,7 @@ import {
   type PostgresTableTab,
 } from '@/lib/postgres-database-routes'
 import { useMemo } from 'react'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresTableHeaderProps = {
   projectId: string
@@ -41,6 +42,7 @@ export function PostgresTableHeader({
   onSearchChange,
   filterTrigger,
 }: PostgresTableHeaderProps) {
+  const t = useT()
   const { schema, table } = parsePostgresTableId(tableId)
   const nav = useMemo(
     () => postgresNav({ projectId, databaseId }).table({ tableId }),
@@ -49,12 +51,12 @@ export function PostgresTableHeader({
 
   const tabs: Tab[] = useMemo(
     () => [
-      { id: 'rows', label: 'Rows', ...nav.rows() },
-      { id: 'columns', label: 'Columns', ...nav.columns() },
-      { id: 'indexes', label: 'Indexes', ...nav.indexes() },
-      { id: 'settings', label: 'Settings', ...nav.settings() },
+      { id: 'rows', label: t('Rows'), ...nav.rows() },
+      { id: 'columns', label: t('Columns'), ...nav.columns() },
+      { id: 'indexes', label: t('Indexes'), ...nav.indexes() },
+      { id: 'settings', label: t('Settings'), ...nav.settings() },
     ],
-    [nav],
+    [nav, t],
   )
 
   return (

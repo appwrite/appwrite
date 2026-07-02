@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 
@@ -79,6 +80,7 @@ function AcceptInvitePage() {
 }
 
 function AcceptInviteContent() {
+  const t = useT()
   const search = useSearch({ from: '/_auth/join' })
   const navigate = useNavigate()
   const router = useRouter()
@@ -129,7 +131,7 @@ function AcceptInviteContent() {
     },
     onSuccess: async () => {
       setAccepted(true)
-      toast.success('Successfully joined the organization!')
+      toast.success(t('Successfully joined the organization!'))
       await refreshConsoleAccountAfterAuth(queryClient)
       // Invalidate router to refresh auth state
       await router.invalidate()
@@ -146,7 +148,7 @@ function AcceptInviteContent() {
       }, 2000)
     },
     onError: (err: unknown) => {
-      const errorMessage = err?.message || 'Failed to accept invitation'
+      const errorMessage = err?.message || t('Failed to accept invitation')
       setError(errorMessage)
       toast.error(errorMessage)
     },
@@ -170,10 +172,10 @@ function AcceptInviteContent() {
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Welcome to the organization!
+                      {t('Welcome to the organization!')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      You've successfully joined. Redirecting you now...
+                      {t("You've successfully joined. Redirecting you now...")}
                     </p>
                   </div>
                 </div>
@@ -184,7 +186,7 @@ function AcceptInviteContent() {
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Unable to accept invitation
+                      {t('Unable to accept invitation')}
                     </h1>
                     <p className="text-sm text-muted-foreground">{error}</p>
                   </div>
@@ -193,7 +195,7 @@ function AcceptInviteContent() {
                     variant="outline"
                     className="mt-4"
                   >
-                    Go to Sign In
+                    {t('Go to Sign In')}
                   </Button>
                 </div>
               ) : !hasAllParams ? (
@@ -203,11 +205,12 @@ function AcceptInviteContent() {
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Invalid invitation link
+                      {t('Invalid invitation link')}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      This invitation link is missing required parameters.
-                      Please use the link from your invitation email.
+                      {t(
+                        'This invitation link is missing required parameters. Please use the link from your invitation email.',
+                      )}
                     </p>
                   </div>
                   <Button
@@ -215,27 +218,29 @@ function AcceptInviteContent() {
                     variant="outline"
                     className="mt-4"
                   >
-                    Go to Sign In
+                    {t('Go to Sign In')}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Accept invitation
+                      {t('Accept invitation')}
                     </h1>
                     {teamName ? (
                       <p className="text-sm text-muted-foreground">
-                        You've been invited to join{' '}
+                        {t("You've been invited to join")}{' '}
                         <span className="font-medium text-foreground">
                           {teamName}
                         </span>
-                        . Accept the invitation to get started.
+                        {'. '}
+                        {t('Accept the invitation to get started.')}
                       </p>
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        You've been invited to join an organization. Accept the
-                        invitation to get started.
+                        {t(
+                          "You've been invited to join an organization. Accept the invitation to get started.",
+                        )}
                       </p>
                     )}
                   </div>
@@ -246,7 +251,7 @@ function AcceptInviteContent() {
                       disabled={acceptMutation.isPending || !hasAllParams}
                       className="w-full"
                     >
-                      Accept invitation
+                      {t('Accept invitation')}
                     </Button>
                   </div>
                 </div>
@@ -264,19 +269,19 @@ function AcceptInviteContent() {
           </div>
         </Card>
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By accepting this invitation, you agree to our{' '}
+          {t('By accepting this invitation, you agree to our')}{' '}
           <a
             href="#"
             className="link-neutral"
           >
-            Terms of Service
+            {t('Terms of Service')}
           </a>{' '}
-          and{' '}
+          {t('and')}{' '}
           <a
             href="#"
             className="link-neutral"
           >
-            Privacy Policy
+            {t('Privacy Policy')}
           </a>
           .
         </p>

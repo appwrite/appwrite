@@ -30,6 +30,7 @@ import {
   platformLabel,
   providerLabel,
 } from '../_components/platform'
+import { useT } from '@/lib/i18n/translate'
 
 type AppDetailInitialData = {
   app: DistributionApp
@@ -48,6 +49,7 @@ function formatDuration(seconds: number) {
 }
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { projectId, appId } = useParams({ strict: false })
   const navigate = useNavigate()
 
@@ -73,16 +75,18 @@ export function View({ initialData }: ViewProps = {}) {
   if (!app && !appLoading) {
     return (
       <div className="flex flex-col">
-        <ServiceHeader title="Distribution" fullWidthBorder />
+        <ServiceHeader title={t('Distribution')} fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <EmptyState
             icon={Package}
-            title="App not found"
-            description="This distribution app does not exist or has been removed."
+            title={t('App not found')}
+            description={t(
+              'This distribution app does not exist or has been removed.',
+            )}
             variant="card"
             action={
               <Button variant="outline" size="sm" onClick={handleBack}>
-                Back to Distribution
+                {t('Back to Distribution')}
               </Button>
             }
           />
@@ -100,18 +104,18 @@ export function View({ initialData }: ViewProps = {}) {
               variant="ghost"
               size="sm"
               onClick={handleBack}
-              aria-label="Back to Distribution"
+              aria-label={t('Back to Distribution')}
               className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span className="truncate">{app?.name ?? 'App'}</span>
+            <span className="truncate">{app?.name ?? t('App')}</span>
             {app ? (
               <PlatformIcons platforms={app.platforms} className="shrink-0" />
             ) : null}
             {app && !app.enabled ? (
               <Badge variant="inactive" className="text-[10px] shrink-0">
-                Disabled
+                {t('Disabled')}
               </Badge>
             ) : null}
           </span>
@@ -124,13 +128,15 @@ export function View({ initialData }: ViewProps = {}) {
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Configuration
+                {t('Configuration')}
               </h3>
             </div>
             <div className="border-t border-border" />
             <div className="grid gap-4 px-6 py-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Detail label="Framework">{frameworkLabel(app.framework)}</Detail>
-              <Detail label="Platforms">
+              <Detail label={t('Framework')}>
+                {frameworkLabel(app.framework)}
+              </Detail>
+              <Detail label={t('Platforms')}>
                 <span className="flex items-center gap-2">
                   {app.platforms.map((platform) => (
                     <span
@@ -143,15 +149,17 @@ export function View({ initialData }: ViewProps = {}) {
                   ))}
                 </span>
               </Detail>
-              <Detail label="Default track">{app.defaultTrack || '-'}</Detail>
-              <Detail label="Identifier">
+              <Detail label={t('Default track')}>
+                {app.defaultTrack || '-'}
+              </Detail>
+              <Detail label={t('Identifier')}>
                 {app.applicationId ||
                   app.bundleId ||
                   app.packageIdentity ||
                   '-'}
               </Detail>
-              <Detail label="Auto submit">
-                {app.autoSubmit ? 'Enabled' : 'Disabled'}
+              <Detail label={t('Auto submit')}>
+                {app.autoSubmit ? t('Enabled') : t('Disabled')}
               </Detail>
             </div>
           </div>
@@ -159,19 +167,21 @@ export function View({ initialData }: ViewProps = {}) {
 
         <section className="mt-6">
           <h2 className="mb-3 text-[15px] font-semibold text-foreground">
-            Builds
+            {t('Builds')}
           </h2>
           {buildsLoading && builds.length === 0 ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
-                Loading builds...
+                {t('Loading builds...')}
               </p>
             </div>
           ) : builds.length === 0 ? (
             <EmptyState
               icon={Package}
-              title="No builds yet"
-              description="Trigger a build to create an artifact for the stores."
+              title={t('No builds yet')}
+              description={t(
+                'Trigger a build to create an artifact for the stores.',
+              )}
               variant="card"
             />
           ) : (
@@ -180,19 +190,19 @@ export function View({ initialData }: ViewProps = {}) {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Platform
+                      {t('Platform')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Version
+                      {t('Version')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status
+                      {t('Status')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Duration
+                      {t('Duration')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Created
+                      {t('Created')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -243,19 +253,21 @@ export function View({ initialData }: ViewProps = {}) {
 
         <section className="mt-6">
           <h2 className="mb-3 text-[15px] font-semibold text-foreground">
-            Submissions
+            {t('Submissions')}
           </h2>
           {submissionsLoading && submissions.length === 0 ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
-                Loading submissions...
+                {t('Loading submissions...')}
               </p>
             </div>
           ) : submissions.length === 0 ? (
             <EmptyState
               icon={Package}
-              title="No submissions yet"
-              description="Submit a ready build to a store to track its review status here."
+              title={t('No submissions yet')}
+              description={t(
+                'Submit a ready build to a store to track its review status here.',
+              )}
               variant="card"
             />
           ) : (
@@ -264,19 +276,19 @@ export function View({ initialData }: ViewProps = {}) {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Provider
+                      {t('Provider')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Track
+                      {t('Track')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Status
+                      {t('Status')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Release
+                      {t('Release')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Submitted
+                      {t('Submitted')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>

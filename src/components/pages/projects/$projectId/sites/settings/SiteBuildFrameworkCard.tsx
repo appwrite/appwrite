@@ -23,6 +23,7 @@ import {
   buildSiteUpdateParams,
   useSiteFrameworks,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 const codeClassName =
   'rounded bg-muted/80 px-1.5 py-0.5 font-mono text-[12px] text-foreground/90'
@@ -67,6 +68,7 @@ function AdapterOptionCard({
   url?: string
   isSelected: boolean
 }) {
+  const t = useT()
   return (
     <Label
       htmlFor={id}
@@ -81,7 +83,7 @@ function AdapterOptionCard({
       <RadioGroupItem value={value} id={id} className="mt-1 shrink-0" />
       <div className="ms-4 flex-1 min-w-0 pe-2">
         <span className="block text-[15px] font-semibold tracking-tight text-foreground">
-          {label}
+          {t(label)}
         </span>
         <AdapterOptionDescription desc={desc} code={code} />
         {url && (
@@ -92,7 +94,7 @@ function AdapterOptionCard({
             className="mt-3 inline-block text-[13px] link-neutral"
             onClick={(e) => e.stopPropagation()}
           >
-            Learn more
+            {t('Learn more')}
           </a>
         )}
       </div>
@@ -109,13 +111,16 @@ function AdapterOptions({
   adapter: string
   onAdapterChange: (value: 'ssr' | 'static') => void
 }) {
+  const t = useT()
   const ssrCopy = getAdapterCopy(frameworkKey, 'ssr')
   const staticCopy = getAdapterCopy(frameworkKey, 'static')
   return (
     <div>
-      <Label className="text-[13px] font-medium text-foreground">Adapter</Label>
+      <Label className="text-[13px] font-medium text-foreground">
+        {t('Adapter')}
+      </Label>
       <p className="mt-1 text-[13px] text-muted-foreground">
-        Choose how your site is rendered at runtime.
+        {t('Choose how your site is rendered at runtime.')}
       </p>
       <RadioGroup
         value={adapter}
@@ -156,6 +161,7 @@ export function SiteBuildFrameworkCard({
   siteId,
   site,
 }: SiteBuildFrameworkCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: frameworksData } = useSiteFrameworks(projectId)
 
@@ -196,7 +202,7 @@ export function SiteBuildFrameworkCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Framework settings updated successfully')
+      toast.success(t('Framework settings updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -205,13 +211,15 @@ export function SiteBuildFrameworkCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update framework settings'))
+      toast.error(
+        getErrorMessage(error, t('Failed to update framework settings')),
+      )
     },
   })
 
   const handleSave = () => {
     if (!framework) {
-      toast.error('Framework is required')
+      toast.error(t('Framework is required'))
       return
     }
     updateSiteMutation.mutate({
@@ -233,23 +241,25 @@ export function SiteBuildFrameworkCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Framework</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Framework')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Choose your stack, adapter mode, and where build output is written.
+          {t('Choose your stack, adapter mode, and where build output is written.')}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-6">
         <div>
           <Label htmlFor="framework" className="text-[13px]">
-            Framework
+            {t('Framework')}
           </Label>
           <Select value={framework} onValueChange={setFramework}>
             <SelectTrigger
               id="framework"
               className="mt-2 h-9 border-border bg-background text-[13px]"
             >
-              <SelectValue placeholder="Select framework" />
+              <SelectValue placeholder={t('Select framework')} />
             </SelectTrigger>
             <SelectContent>
               {frameworks.map((f) => (
@@ -274,14 +284,14 @@ export function SiteBuildFrameworkCard({
 
         <div>
           <Label htmlFor="output-directory" className="text-[13px]">
-            Output directory
+            {t('Output directory')}
           </Label>
           <Input
             id="output-directory"
             value={outputDirectory}
             onChange={(e) => setOutputDirectory(e.target.value)}
             placeholder={
-              adapterDefaults.outputDirectory || 'Enter output directory'
+              adapterDefaults.outputDirectory || t('Enter output directory')
             }
             className="mt-2 h-9 font-mono text-[13px]"
           />
@@ -290,7 +300,7 @@ export function SiteBuildFrameworkCard({
         {isStaticAdapter ? (
           <div>
             <Label htmlFor="fallback-file" className="text-[13px]">
-              Fallback file
+              {t('Fallback file')}
             </Label>
             <Input
               id="fallback-file"
@@ -300,7 +310,7 @@ export function SiteBuildFrameworkCard({
               className="mt-2 h-9 font-mono text-[13px]"
             />
             <p className="mt-1 text-[12px] text-muted-foreground">
-              File to serve for routes that don&apos;t match any static files
+              {t("File to serve for routes that don't match any static files")}
             </p>
           </div>
         ) : null}
@@ -312,7 +322,7 @@ export function SiteBuildFrameworkCard({
           disabled={!hasChanges || !framework || updateSiteMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

@@ -21,6 +21,7 @@ import {
 import { fetchPaymentMethod } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface OrgPaymentMethodContextMenuProps {
   method: Models.PaymentMethod
@@ -45,6 +46,7 @@ export function OrgPaymentMethodContextMenu({
   onAddPaymentMethod,
   children,
 }: OrgPaymentMethodContextMenuProps) {
+  const t = useT()
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
@@ -52,7 +54,7 @@ export function OrgPaymentMethodContextMenu({
         {!isPrimary && onSetPrimary ? (
           <ContextMenuItem onSelect={() => onSetPrimary(method.$id)}>
             <ContextMenuIcon icon={Star} />
-            Primary
+            {t('Primary')}
           </ContextMenuItem>
         ) : null}
         {((isPrimary && onReplacePrimary) || (!isPrimary && onReplaceBackup)) && (
@@ -61,7 +63,7 @@ export function OrgPaymentMethodContextMenu({
             <ContextMenuSub>
               <ContextMenuSubTrigger>
                 <ContextMenuIcon icon={ArrowLeftRight} />
-                Replace
+                {t('Replace')}
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-56">
                 {availableMethods.map((availableMethod) => (
@@ -84,7 +86,7 @@ export function OrgPaymentMethodContextMenu({
                   onSelect={() => onAddPaymentMethod?.(!isPrimary)}
                 >
                   <ContextMenuIcon icon={Plus} />
-                  Add
+                  {t('Add')}
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
@@ -94,21 +96,21 @@ export function OrgPaymentMethodContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', method.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             {method.name ? (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Name', method.name)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy name
+                {t('Copy name')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
@@ -117,14 +119,14 @@ export function OrgPaymentMethodContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={onRemove}>
           <ContextMenuIcon icon={Trash2} />
-          Remove
+          {t('Remove')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

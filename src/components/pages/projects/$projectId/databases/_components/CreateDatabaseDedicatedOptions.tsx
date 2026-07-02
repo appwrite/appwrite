@@ -10,6 +10,7 @@ import {
   type DedicatedDatabaseCreatePricing,
 } from '@/lib/database-create-pricing'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { useT } from '@/lib/i18n/translate'
 
 type CreateDatabaseDedicatedOptionsProps = {
   basePriceUsd: number
@@ -35,6 +36,7 @@ export function CreateDatabaseDedicatedOptions({
   pitrEnabled,
   onPitrEnabledChange,
 }: CreateDatabaseDedicatedOptionsProps) {
+  const t = useT()
   const replicaOption = getReplicaOption(replicaCount)
   const replicaAddonUsd = calculateDedicatedDatabaseMonthlyCost({
     basePriceUsd,
@@ -66,11 +68,10 @@ export function CreateDatabaseDedicatedOptions({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h2 className="text-[15px] font-semibold text-foreground">
-              Read replicas
+              {t('Read replicas')}
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-              Add read-only instances to scale query traffic and improve
-              failover resilience alongside your primary database.
+              {t('Add read-only instances to scale query traffic and improve failover resilience alongside your primary database.')}
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
               Each replica is billed at {haReplicaRatePercent}% of your compute
@@ -88,14 +89,14 @@ export function CreateDatabaseDedicatedOptions({
                     htmlFor="db-replica-count"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Replica count
+                    {t('Replica count')}
                   </Label>
                   <span className="text-[12px] text-muted-foreground">
-                    {replicaOption.label} · 0–{MAX_DEDICATED_DB_HA_REPLICA_COUNT}
+                    {t(replicaOption.label)} · 0–{MAX_DEDICATED_DB_HA_REPLICA_COUNT}
                   </span>
                 </div>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  {replicaOption.description}
+                  {t(replicaOption.description)}
                 </p>
               </div>
 
@@ -104,7 +105,7 @@ export function CreateDatabaseDedicatedOptions({
                   id="db-replica-count"
                   className="flex items-center gap-1.5"
                   role="group"
-                  aria-label="Replica count"
+                  aria-label={t('Replica count')}
                 >
                   <Button
                     type="button"
@@ -113,7 +114,7 @@ export function CreateDatabaseDedicatedOptions({
                     className="size-8"
                     onClick={decrementReplicas}
                     disabled={replicaCount <= 0}
-                    aria-label="Decrease replica count"
+                    aria-label={t('Decrease replica count')}
                     data-analytics-track="manual"
                   >
                     <Minus className="size-3.5" />
@@ -132,7 +133,7 @@ export function CreateDatabaseDedicatedOptions({
                     className="size-8"
                     onClick={incrementReplicas}
                     disabled={replicaCount >= MAX_DEDICATED_DB_HA_REPLICA_COUNT}
-                    aria-label="Increase replica count"
+                    aria-label={t('Increase replica count')}
                     data-analytics-track="manual"
                   >
                     <Plus className="size-3.5" />
@@ -147,8 +148,7 @@ export function CreateDatabaseDedicatedOptions({
             {replicaCount >= MAX_DEDICATED_DB_HA_REPLICA_COUNT && (
               <div className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/30 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
-                  You have reached the maximum self-serve replica count. Contact
-                  sales if you need a custom high availability configuration.
+                  {t('You have reached the maximum self-serve replica count. Contact sales if you need a custom high availability configuration.')}
                 </p>
                 <Button
                   variant="outline"
@@ -161,7 +161,7 @@ export function CreateDatabaseDedicatedOptions({
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Contact sales
+                    {t('Contact sales')}
                   </a>
                 </Button>
               </div>
@@ -174,12 +174,10 @@ export function CreateDatabaseDedicatedOptions({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h2 className="text-[15px] font-semibold text-foreground">
-              Point-in-time recovery (PITR)
+              {t('Point-in-time recovery (PITR)')}
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-              Restore your database to a specific moment in time, beyond the
-              latest scheduled backup. Useful for recovering from accidental
-              deletes, failed migrations, or bad writes.
+              {t('Restore your database to a specific moment in time, beyond the latest scheduled backup. Useful for recovering from accidental deletes, failed migrations, or bad writes.')}
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
               Billed at {pitrRatePercent}% of your compute tier per month when
@@ -195,7 +193,7 @@ export function CreateDatabaseDedicatedOptions({
                 htmlFor="db-pitr"
                 className="text-[13px] font-medium text-foreground"
               >
-                Enable PITR
+                {t('Enable PITR')}
               </Label>
               <div className="flex shrink-0 flex-col items-end gap-2">
                 <Switch

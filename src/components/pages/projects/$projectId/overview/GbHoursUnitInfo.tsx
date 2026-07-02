@@ -1,5 +1,6 @@
 import { Info } from 'lucide-react'
 import { GB_HOURS_UNIT_TOOLTIP } from '@/lib/usage/format-metric'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -19,6 +20,7 @@ export function GbHoursUnitInfo({
   iconClassName,
   nested = false,
 }: GbHoursUnitInfoProps) {
+  const t = useT()
   const triggerClassName = cn(
     'inline-flex shrink-0 text-muted-foreground transition-colors hover:text-foreground',
     className,
@@ -32,7 +34,7 @@ export function GbHoursUnitInfo({
             className={triggerClassName}
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
-            aria-label="About GBH"
+            aria-label={t('About GBH')}
             role="img"
           >
             <Info className={cn('h-3 w-3', iconClassName)} />
@@ -43,7 +45,7 @@ export function GbHoursUnitInfo({
             className={triggerClassName}
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
-            aria-label="About GBH"
+            aria-label={t('About GBH')}
           >
             <Info className={cn('h-3 w-3', iconClassName)} />
           </button>
@@ -53,7 +55,7 @@ export function GbHoursUnitInfo({
         side="top"
         className="max-w-xs text-[12px] leading-relaxed"
       >
-        <p>{GB_HOURS_UNIT_TOOLTIP}</p>
+        <p>{t(GB_HOURS_UNIT_TOOLTIP)}</p>
       </TooltipContent>
     </Tooltip>
   )

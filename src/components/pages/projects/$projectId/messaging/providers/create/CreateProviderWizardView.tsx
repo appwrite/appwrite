@@ -25,6 +25,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
@@ -448,6 +449,7 @@ function isFieldFilled(field: ProviderField, value: unknown): boolean {
 }
 
 export function CreateProviderWizardView() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -489,14 +491,14 @@ export function CreateProviderWizardView() {
       await queryClient.refetchQueries({
         queryKey: ['providers', 'project', pid],
       })
-      toast.success(`${selected?.name} provider created`)
+      toast.success(`${t('Provider')} ${selected?.name} ${t('created successfully')}`)
       navigate({
         to: '/projects/$projectId/messaging/providers/$providerId',
         params: { projectId: pid, providerId: provider.$id },
       })
     },
     onError: (e: Error) =>
-      toast.error(getErrorMessage(e) || 'Could not create provider'),
+      toast.error(getErrorMessage(e) || t('Could not create provider')),
   })
 
   const handlePickProvider = (p: ProviderConfig) => {
@@ -517,8 +519,8 @@ export function CreateProviderWizardView() {
     selected.fields.every((f) => isFieldFilled(f, values[f.key]))
 
   const title = selected && step === 'configure'
-    ? `Configure ${selected.name}`
-    : 'Add provider'
+    ? `${t('Configure')} ${selected.name}`
+    : t('Add provider')
 
   const footer =
     step === 'configure' && selected ? (
@@ -528,7 +530,7 @@ export function CreateProviderWizardView() {
           disabled={!canSubmit}
           onClick={() => mutation.mutate()}
         >
-          Create provider
+          {t('Create provider')}
         </Button>
       </div>
     ) : undefined
@@ -568,6 +570,7 @@ function ProviderPicker({
   grouped: Record<ProviderType, ProviderConfig[]>
   onPick: (p: ProviderConfig) => void
 }) {
+  const t = useT()
   return (
     <div className="space-y-10">
       {(['email', 'sms', 'push'] as ProviderType[]).map((type) => {
@@ -577,7 +580,7 @@ function ProviderPicker({
             <div className="mb-4 flex items-center gap-2">
               <TypeIcon className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {TYPE_LABEL[type]}
+                {t(TYPE_LABEL[type])}
               </h2>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -599,6 +602,7 @@ function ProviderCard({
   provider: ProviderConfig
   onPick: (p: ProviderConfig) => void
 }) {
+  const t = useT()
   const TypeIcon = TYPE_ICON[provider.type]
   return (
     <button
@@ -626,7 +630,7 @@ function ProviderCard({
           {provider.name}
         </p>
         <p className="text-[12px] text-muted-foreground truncate">
-          {provider.description}
+          {t(provider.description)}
         </p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 group-hover:text-foreground" />
@@ -666,15 +670,16 @@ function FieldRenderer({
   value: unknown
   onChange: (value: unknown) => void
 }) {
+  const t = useT()
   const id = `provider-field-${field.key}`
 
   if (field.type === 'switch') {
     return (
       <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
         <div className="min-w-0 space-y-0.5">
-          <Label htmlFor={id}>{field.label}</Label>
+          <Label htmlFor={id}>{t(field.label)}</Label>
           {field.helper && (
-            <p className="text-[12px] text-muted-foreground">{field.helper}</p>
+            <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
           )}
         </div>
         <Switch
@@ -692,7 +697,7 @@ function FieldRenderer({
     return (
       <div className="space-y-2">
         <Label htmlFor={id}>
-          {field.label}
+          {t(field.label)}
           {field.required && <RequiredMark />}
         </Label>
         <Select value={stringValue} onValueChange={(v) => onChange(v)}>
@@ -702,13 +707,13 @@ function FieldRenderer({
           <SelectContent>
             {(field.options ?? []).map((o) => (
               <SelectItem key={o.value} value={o.value}>
-                {o.label}
+                {t(o.label)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         {field.helper && (
-          <p className="text-[12px] text-muted-foreground">{field.helper}</p>
+          <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
         )}
       </div>
     )
@@ -718,7 +723,7 @@ function FieldRenderer({
     return (
       <div className="space-y-2">
         <Label htmlFor={id}>
-          {field.label}
+          {t(field.label)}
           {field.required && <RequiredMark />}
         </Label>
         <Textarea
@@ -729,7 +734,7 @@ function FieldRenderer({
           className="min-h-[140px] font-mono text-[12px]"
         />
         {field.helper && (
-          <p className="text-[12px] text-muted-foreground">{field.helper}</p>
+          <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
         )}
       </div>
     )
@@ -738,7 +743,7 @@ function FieldRenderer({
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>
-        {field.label}
+        {t(field.label)}
         {field.required && <RequiredMark />}
       </Label>
       <Input
@@ -757,7 +762,7 @@ function FieldRenderer({
         placeholder={field.placeholder}
       />
       {field.helper && (
-        <p className="text-[12px] text-muted-foreground">{field.helper}</p>
+        <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
       )}
     </div>
   )

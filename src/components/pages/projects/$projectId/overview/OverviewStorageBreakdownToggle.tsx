@@ -3,6 +3,7 @@ import {
   OVERVIEW_STORAGE_BREAKDOWN_OPTIONS,
   type OverviewStorageBreakdownType,
 } from '@/lib/usage/storage-usage'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const TOGGLE_ITEM_CLASS =
@@ -19,6 +20,7 @@ export function OverviewStorageBreakdownToggle({
   onValueChange,
   className,
 }: OverviewStorageBreakdownToggleProps) {
+  const t = useT()
   const optionCount = OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.length
 
   return (
@@ -41,7 +43,7 @@ export function OverviewStorageBreakdownToggle({
         'grid h-8 w-full min-w-0 grid-cols-3 gap-0 rounded-md',
         className,
       )}
-      aria-label="Storage breakdown type"
+      aria-label={t('Storage breakdown type')}
     >
       {OVERVIEW_STORAGE_BREAKDOWN_OPTIONS.map((option, index) => {
         const isFirst = index === 0
@@ -59,7 +61,7 @@ export function OverviewStorageBreakdownToggle({
               !isFirst && '!border-s-0',
             )}
           >
-            {option.label}
+            {t(option.label)}
           </ToggleGroupItem>
         )
       })}

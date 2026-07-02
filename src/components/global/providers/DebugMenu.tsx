@@ -107,6 +107,7 @@ import {
   writeDebugMenuPosition,
   type DebugMenuPosition,
 } from '@/lib/debug-menu-position'
+import { useI18n } from '@/lib/i18n'
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
 
@@ -651,6 +652,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
+  const { catalog } = useI18n()
+  const languageCopy = catalog.app.debugMenu.language
   const { profileId, features } = useConsoleProfile()
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
@@ -913,6 +916,49 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         setDebugOverride('pageDirection', option.value)
       },
       active: overrides.pageDirection === option.value,
+      icon: <Languages className="h-3 w-3" />,
+    }))
+
+    const languageDescription =
+      overrides.language === 'auto'
+        ? languageCopy.activeAuto
+        : overrides.language === 'he'
+          ? languageCopy.activeHebrew
+          : languageCopy.activeEnglish
+
+    const languageOptions: MenuItem[] = (
+      [
+        {
+          label: languageCopy.autoLabel,
+          value: 'auto' as const,
+          description: languageCopy.autoDescription,
+        },
+        {
+          label: languageCopy.englishLabel,
+          value: 'en' as const,
+          description: languageCopy.englishDescription,
+        },
+        {
+          label: languageCopy.hebrewLabel,
+          value: 'he' as const,
+          description: languageCopy.hebrewDescription,
+        },
+      ] as const
+    ).map((option) => ({
+      label: option.label,
+      description: option.description,
+      onClick: () => {
+        setOverrides((prev) => ({
+          ...prev,
+          language: option.value,
+          ...(option.value === 'he' ? { pageDirection: 'rtl' as const } : {}),
+        }))
+        setDebugOverride('language', option.value)
+        if (option.value === 'he') {
+          setDebugOverride('pageDirection', 'rtl')
+        }
+      },
+      active: overrides.language === option.value,
       icon: <Languages className="h-3 w-3" />,
     }))
 
@@ -1260,6 +1306,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             description: pageDirectionDescription,
             icon: <Languages className="h-3 w-3" />,
             submenu: pageDirectionOptions,
+          },
+          {
+            label: languageCopy.label,
+            description: languageDescription,
+            icon: <Languages className="h-3 w-3" />,
+            submenu: languageOptions,
           },
           {
             label: 'User & team prefs',
@@ -1709,6 +1761,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     setFavicon,
     addMockBanner,
     clearAllBanners,
+    languageCopy,
   ])
 
   const currentSubmenu = useMemo(

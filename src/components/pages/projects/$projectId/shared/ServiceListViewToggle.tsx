@@ -2,6 +2,7 @@ import { LayoutGrid, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { ServiceListViewMode } from '@/lib/user-prefs-keys'
+import { useT } from '@/lib/i18n/translate'
 
 type ServiceListViewToggleProps = {
   viewMode: ServiceListViewMode
@@ -12,6 +13,7 @@ export function ServiceListViewToggle({
   viewMode,
   onViewModeChange,
 }: ServiceListViewToggleProps) {
+  const t = useT()
   const buttonClassName = (selected: boolean) =>
     cn(
       'h-7 w-7 p-0',
@@ -28,7 +30,7 @@ export function ServiceListViewToggle({
         type="button"
         className={buttonClassName(viewMode === 'list')}
         onClick={() => onViewModeChange('list')}
-        aria-label="List view"
+        aria-label={t('List view')}
         aria-pressed={viewMode === 'list'}
       >
         <List className="h-4 w-4" />
@@ -39,7 +41,7 @@ export function ServiceListViewToggle({
         type="button"
         className={buttonClassName(viewMode === 'grid')}
         onClick={() => onViewModeChange('grid')}
-        aria-label="Grid view"
+        aria-label={t('Grid view')}
         aria-pressed={viewMode === 'grid'}
       >
         <LayoutGrid className="h-4 w-4" />

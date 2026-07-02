@@ -13,6 +13,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 interface NameCardProps {
   projectId: string | null | undefined
@@ -21,6 +22,7 @@ interface NameCardProps {
 }
 
 export function NameCard({ projectId, siteId, site }: NameCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
 
@@ -40,7 +42,7 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Site name updated successfully')
+      toast.success(t('Site name updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -49,13 +51,13 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update site name'))
+      toast.error(getErrorMessage(error, t('Failed to update site name')))
     },
   })
 
   const handleSave = () => {
     if (!name.trim()) {
-      toast.error('Site name is required')
+      toast.error(t('Site name is required'))
       return
     }
     updateSiteMutation.mutate({ name })
@@ -66,9 +68,11 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Name')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Site name used for identification
+          {t('Site name used for identification')}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -76,7 +80,7 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Enter site name"
+          placeholder={t('Enter site name')}
           className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
         />
       </div>
@@ -87,7 +91,7 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
           disabled={!hasChanges || !name.trim() || updateSiteMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

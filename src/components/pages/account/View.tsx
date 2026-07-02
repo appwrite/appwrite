@@ -17,6 +17,7 @@ import { SettingsLayoutShell } from '@/components/global/shared/settings-search/
 import { ACCOUNT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/account-settings-cards'
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
+import { useT } from '@/lib/i18n/translate'
 import { AccountGeneral } from './General'
 import { AccountSecurity } from './Security'
 import { AccountSessions } from './Sessions'
@@ -40,6 +41,7 @@ export function View() {
   const navigate = useNavigate()
   const { account, signOut } = useAuth()
   const { features } = useConsoleProfile()
+  const t = useT()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [commandCenterInitialSubPage, setCommandCenterInitialSubPage] =
     useState<string | null>(null)
@@ -66,21 +68,21 @@ export function View() {
     const items = [
       {
         id: 'overview',
-        label: 'General',
+        label: t('General'),
         to: '/account',
         icon: Settings,
         keywords: ['general', 'overview', 'profile', 'name', 'email', 'delete'],
       },
       {
         id: 'security',
-        label: 'Security',
+        label: t('Security'),
         to: '/account/security',
         icon: Shield,
         keywords: ['password', 'mfa', '2fa', 'identities', 'oauth'],
       },
       {
         id: 'sessions',
-        label: 'Sessions',
+        label: t('Sessions'),
         to: '/account/sessions',
         icon: Monitor,
         keywords: ['sessions', 'devices', 'logout', 'revoke'],
@@ -89,14 +91,14 @@ export function View() {
         ? [
             {
               id: 'payment-methods',
-              label: 'Payment methods',
+              label: t('Payment methods'),
               to: '/account/payment-methods',
               icon: CreditCard,
               keywords: ['card', 'credit card', 'stripe', 'payment method'],
             },
             {
               id: 'billing-addresses',
-              label: 'Billing addresses',
+              label: t('Billing addresses'),
               to: '/account/billing-addresses',
               icon: MapPin,
               keywords: ['address', 'country', 'city', 'postal', 'zip'],
@@ -106,7 +108,7 @@ export function View() {
     ]
 
     return items
-  }, [features.billing])
+  }, [features.billing, t])
 
   const accountSettingsCardIndex = useMemo(() => {
     return ACCOUNT_SETTINGS_CARD_INDEX.filter((entry) => {
@@ -173,7 +175,7 @@ export function View() {
         containerClassName="account-layout-container"
       >
         <ServiceHeader
-          title={account?.name || account?.email || 'Account'}
+          title={account?.name || account?.email || t('Account')}
           fullWidthBorder
           titleRightContent={
             <button
@@ -184,7 +186,7 @@ export function View() {
               className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {t('Logout')}
             </button>
           }
         />

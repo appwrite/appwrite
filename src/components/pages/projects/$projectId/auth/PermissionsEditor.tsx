@@ -43,6 +43,7 @@ import { useProjectUsers, useProjectTeams } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { useT } from '@/lib/i18n/translate'
 
 export type PermissionsEditorHandle = {
   getPermissions: () => string[]
@@ -221,22 +222,29 @@ interface RoleDisplayProps {
 }
 
 function RoleDisplay({ role, projectId }: RoleDisplayProps) {
+  const t = useT()
   // Special roles
   if (role === 'any') {
-    return <span className="text-[13px] font-medium text-foreground">Any</span>
+    return (
+      <span className="text-[13px] font-medium text-foreground">
+        {t('Any')}
+      </span>
+    )
   }
 
   if (role === 'guests') {
     return (
       <span className="text-[13px] font-medium text-foreground">
-        All guests
+        {t('All guests')}
       </span>
     )
   }
 
   if (role === 'users') {
     return (
-      <span className="text-[13px] font-medium text-foreground">All users</span>
+      <span className="text-[13px] font-medium text-foreground">
+        {t('All users')}
+      </span>
     )
   }
 
@@ -287,6 +295,7 @@ interface UserRoleDisplayProps {
 }
 
 function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
+  const t = useT()
   const { users } = useProjectUsers(projectId || null, 0, 100, '')
   const user = users.find((u) => u.$id === userId)
 
@@ -316,7 +325,7 @@ function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
             {displayName}
           </span>
           <Badge variant="info" className="text-[10px] shrink-0">
-            User
+            {t('User')}
           </Badge>
         </div>
         {userId && (
@@ -337,8 +346,9 @@ interface TeamRoleDisplayProps {
 }
 
 function TeamRoleDisplay({ teamId, projectId }: TeamRoleDisplayProps) {
+  const t = useT()
   const { teams } = useProjectTeams(projectId || null, 0, 100, '')
-  const team = teams.find((t) => t.id === teamId)
+  const team = teams.find((item) => item.id === teamId)
 
   const displayName = team?.name || teamId
 
@@ -353,7 +363,7 @@ function TeamRoleDisplay({ teamId, projectId }: TeamRoleDisplayProps) {
             {displayName}
           </span>
           <Badge variant="info" className="text-[10px] shrink-0">
-            Team
+            {t('Team')}
           </Badge>
         </div>
         {teamId && (
@@ -372,6 +382,7 @@ interface LabelRoleDisplayProps {
 }
 
 function LabelRoleDisplay({ labelName }: LabelRoleDisplayProps) {
+  const t = useT()
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="size-6 shrink-0 rounded-full bg-muted flex items-center justify-center">
@@ -383,7 +394,7 @@ function LabelRoleDisplay({ labelName }: LabelRoleDisplayProps) {
             {labelName}
           </span>
           <Badge variant="info" className="text-[10px] shrink-0">
-            Label
+            {t('Label')}
           </Badge>
         </div>
       </div>
@@ -399,6 +410,7 @@ interface CustomRoleDisplayProps {
 }
 
 function CustomRoleDisplay({ role }: CustomRoleDisplayProps) {
+  const t = useT()
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="size-6 shrink-0 rounded-full bg-muted flex items-center justify-center">
@@ -410,7 +422,7 @@ function CustomRoleDisplay({ role }: CustomRoleDisplayProps) {
             {role}
           </span>
           <Badge variant="info" className="text-[10px] shrink-0">
-            Custom
+            {t('Custom')}
           </Badge>
         </div>
       </div>
@@ -436,6 +448,7 @@ function UserSelectionModal({
   projectId,
   existingRoles,
 }: UserSelectionModalProps) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
@@ -483,9 +496,9 @@ function UserSelectionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Select Users</DialogTitle>
+          <DialogTitle>{t('Select Users')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose one or more users to add permissions for.
+            {t('Choose one or more users to add permissions for.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -493,7 +506,7 @@ function UserSelectionModal({
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <Input
-              placeholder="Search users by name, email, or ID..."
+              placeholder={t('Search users by name, email, or ID...')}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -504,7 +517,7 @@ function UserSelectionModal({
             <div className="max-h-[300px] overflow-y-auto space-y-1">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
-                  Loading users...
+                  {t('Loading users...')}
                 </div>
               ) : users.length === 0 ? (
                 <EmptyState
@@ -582,10 +595,11 @@ function UserSelectionModal({
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={selectedUserIds.size === 0}>
-            Add {selectedUserIds.size > 0 ? `(${selectedUserIds.size})` : ''}
+            {t('Add')}{' '}
+            {selectedUserIds.size > 0 ? `(${selectedUserIds.size})` : ''}
           </Button>
         </div>
       </DialogContent>
@@ -611,6 +625,7 @@ function TeamSelectionModal({
   projectId,
   existingRoles,
 }: TeamSelectionModalProps) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
@@ -658,9 +673,9 @@ function TeamSelectionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Select Teams</DialogTitle>
+          <DialogTitle>{t('Select Teams')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose one or more teams to add permissions for.
+            {t('Choose one or more teams to add permissions for.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -668,7 +683,7 @@ function TeamSelectionModal({
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <Input
-              placeholder="Search teams by name or ID..."
+              placeholder={t('Search teams by name or ID...')}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -679,7 +694,7 @@ function TeamSelectionModal({
             <div className="max-h-[300px] overflow-y-auto space-y-1">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
-                  Loading teams...
+                  {t('Loading teams...')}
                 </div>
               ) : teams.length === 0 ? (
                 <EmptyState
@@ -738,10 +753,11 @@ function TeamSelectionModal({
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={selectedTeamIds.size === 0}>
-            Add {selectedTeamIds.size > 0 ? `(${selectedTeamIds.size})` : ''}
+            {t('Add')}{' '}
+            {selectedTeamIds.size > 0 ? `(${selectedTeamIds.size})` : ''}
           </Button>
         </div>
       </DialogContent>
@@ -759,6 +775,7 @@ interface LabelInputModalProps {
 }
 
 function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
+  const t = useT()
   const [labelName, setLabelName] = useState('')
 
   const handleAdd = () => {
@@ -778,9 +795,9 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add Label</DialogTitle>
+          <DialogTitle>{t('Add Label')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Enter a label name to create a label-based permission.
+            {t('Enter a label name to create a label-based permission.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -788,10 +805,10 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="label-name">Label Name</Label>
+              <Label htmlFor="label-name">{t('Label Name')}</Label>
               <Input
                 id="label-name"
-                placeholder="e.g., premium, admin, moderator"
+                placeholder={t('e.g., premium, admin, moderator')}
                 value={labelName}
                 onChange={(e) => setLabelName(e.target.value)}
                 onKeyDown={(e) => {
@@ -806,10 +823,10 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={!labelName.trim()}>
-            Add
+            {t('Add')}
           </Button>
         </div>
       </DialogContent>
@@ -842,6 +859,7 @@ function CustomRoleInputModal({
   onOpenChange,
   onAdd,
 }: CustomRoleInputModalProps) {
+  const t = useT()
   const [role, setRole] = useState('')
   const trimmed = role.trim()
   const isValid = isValidPermissionFormat(trimmed)
@@ -864,13 +882,13 @@ function CustomRoleInputModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add by role string</DialogTitle>
+          <DialogTitle>{t('Add by role string')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Grant access using a user or team ID. Use{' '}
+            {t('Grant access using a user or team ID. Use')}{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               user:[USER_ID]
             </code>{' '}
-            or{' '}
+            {t('or')}{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               team:[TEAM_ID]/[ROLE]
             </code>
@@ -882,7 +900,7 @@ function CustomRoleInputModal({
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-role">Permission string</Label>
+              <Label htmlFor="custom-role">{t('Permission string')}</Label>
               <Input
                 id="custom-role"
                 placeholder="user:USER_ID or team:TEAM_ID/ROLE"
@@ -897,11 +915,11 @@ function CustomRoleInputModal({
               />
               {showFormatError && (
                 <p className="text-[12px] text-destructive flex items-center gap-1.5">
-                  <span>Use format</span>
+                  <span>{t('Use format')}</span>
                   <code className="rounded bg-destructive/10 px-1 py-0.5">
                     user:USER_ID
                   </code>
-                  <span>or</span>
+                  <span>{t('or')}</span>
                   <code className="rounded bg-destructive/10 px-1 py-0.5">
                     team:TEAM_ID/ROLE
                   </code>
@@ -913,10 +931,10 @@ function CustomRoleInputModal({
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={!isValid}>
-            Add
+            {t('Add')}
           </Button>
         </div>
       </DialogContent>
@@ -943,6 +961,7 @@ export const PermissionsEditor = forwardRef<
   },
   ref,
 ) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = projectIdProp || (params.projectId as string | undefined)
   const permissionMode = useMemo(
@@ -1276,8 +1295,8 @@ export const PermissionsEditor = forwardRef<
           )}
         >
           {executeOnly
-            ? 'Add roles to choose who can execute'
-            : 'Add a role to get started'}
+            ? t('Add roles to choose who can execute')
+            : t('Add a role to get started')}
         </p>
 
         {/* Modals */}
@@ -1331,7 +1350,7 @@ export const PermissionsEditor = forwardRef<
                 size="icon"
                 className={cn(compact ? 'size-7' : 'size-8', 'shrink-0')}
                 onClick={() => handleRemoveRole(role)}
-                aria-label={`Remove ${role} from execute list`}
+                aria-label={`${t('Remove')} ${role} ${t('from execute list')}`}
               >
                 <X className={compact ? 'size-3.5' : 'size-4'} />
               </Button>
@@ -1386,35 +1405,35 @@ export const PermissionsEditor = forwardRef<
               <TableHead
                 className={cn(d.pad, d.head, d.roleMin)}
               >
-                Role
+                {t('Role')}
               </TableHead>
               {withCreate && (
                 <TableHead
                   className={cn(d.pad, d.head, 'text-center', d.actMin)}
                 >
-                  Create
+                  {t('Create')}
                 </TableHead>
               )}
               <TableHead
                 className={cn(d.pad, d.head, 'text-center', d.actMin)}
               >
-                Read
+                {t('Read')}
               </TableHead>
               <TableHead
                 className={cn(d.pad, d.head, 'text-center', d.actMin)}
               >
-                Update
+                {t('Update')}
               </TableHead>
               <TableHead
                 className={cn(d.pad, d.head, 'text-center', d.actMin)}
               >
-                Delete
+                {t('Delete')}
               </TableHead>
               {withWrite && (
                 <TableHead
                   className={cn(d.pad, d.head, 'text-center', d.actMin)}
                 >
-                  Write
+                  {t('Write')}
                 </TableHead>
               )}
               <TableHead
@@ -1441,7 +1460,7 @@ export const PermissionsEditor = forwardRef<
                             checked === true,
                           )
                         }
-                        aria-label={`Create permission for ${role}`}
+                        aria-label={`${t('Create permission for')} ${role}`}
                       />
                     </TableCell>
                   )}
@@ -1451,7 +1470,7 @@ export const PermissionsEditor = forwardRef<
                       onCheckedChange={(checked) =>
                         handlePermissionChange(role, 'read', checked === true)
                       }
-                      aria-label={`Read permission for ${role}`}
+                      aria-label={`${t('Read permission for')} ${role}`}
                     />
                   </TableCell>
                   <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
@@ -1460,7 +1479,7 @@ export const PermissionsEditor = forwardRef<
                       onCheckedChange={(checked) =>
                         handlePermissionChange(role, 'update', checked === true)
                       }
-                      aria-label={`Update permission for ${role}`}
+                      aria-label={`${t('Update permission for')} ${role}`}
                     />
                   </TableCell>
                   <TableCell className={cn(d.pad, d.actMin, 'text-center')}>
@@ -1469,7 +1488,7 @@ export const PermissionsEditor = forwardRef<
                       onCheckedChange={(checked) =>
                         handlePermissionChange(role, 'delete', checked === true)
                       }
-                      aria-label={`Delete permission for ${role}`}
+                      aria-label={`${t('Delete permission for')} ${role}`}
                     />
                   </TableCell>
                   {withWrite && (
@@ -1479,7 +1498,7 @@ export const PermissionsEditor = forwardRef<
                         onCheckedChange={(checked) =>
                           handlePermissionChange(role, 'write', checked === true)
                         }
-                        aria-label={`Write permission for ${role}`}
+                        aria-label={`${t('Write permission for')} ${role}`}
                       />
                     </TableCell>
                   )}
@@ -1489,7 +1508,7 @@ export const PermissionsEditor = forwardRef<
                       size="icon"
                       className={d.rmBtn}
                       onClick={() => handleRemoveRole(role)}
-                      aria-label={`Remove ${role} permissions`}
+                      aria-label={`${t('Remove')} ${role} ${t('permissions')}`}
                     >
                       <X className={d.rmIcon} />
                     </Button>
@@ -1567,6 +1586,7 @@ function AddRoleDropdown({
   hasUsers,
   emptyState = false,
 }: AddRoleDropdownProps) {
+  const t = useT()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -1575,14 +1595,14 @@ function AddRoleDropdown({
             variant="secondary"
             size="icon"
             className="size-10"
-            aria-label="Add role"
+            aria-label={t('Add role')}
           >
             <Plus className="size-4" />
           </Button>
         ) : (
           <Button variant="secondary" size="sm">
             <Plus className="size-4 me-1.5" />
-            Add role
+            {t('Add role')}
           </Button>
         )}
       </DropdownMenuTrigger>
@@ -1591,37 +1611,37 @@ function AddRoleDropdown({
           onClick={() => onAddSpecialRole('any')}
           disabled={hasAny}
         >
-          <span>Any</span>
+          <span>{t('Any')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onAddSpecialRole('guests')}
           disabled={hasGuests}
         >
-          <span>All guests</span>
+          <span>{t('All guests')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onAddSpecialRole('users')}
           disabled={hasUsers}
         >
-          <span>All users</span>
+          <span>{t('All users')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onOpenUserModal}>
           <User className="size-4 me-2" />
-          <span>Select users</span>
+          <span>{t('Select users')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onOpenTeamModal}>
           <Building2 className="size-4 me-2" />
-          <span>Select teams</span>
+          <span>{t('Select teams')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onOpenLabelModal}>
           <Tag className="size-4 me-2" />
-          <span>Label</span>
+          <span>{t('Label')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onOpenCustomModal}>
           <Code className="size-4 me-2" />
-          <span>Custom</span>
+          <span>{t('Custom')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 function getSiteFramework(site: Models.Site) {
   return (
@@ -31,6 +32,7 @@ export function SitesListPreviewCell({
   isLoaded,
   onLoad,
 }: SitesListPreviewCellProps) {
+  const t = useT()
   const preview = (
     <div className="relative h-[52px] w-[92px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
       {screenshotUrl ? (
@@ -44,7 +46,7 @@ export function SitesListPreviewCell({
           <img
             key={screenshotKey}
             src={screenshotUrl}
-            alt={`${site.name || 'Site'} preview`}
+            alt={`${site.name || t('Site')} ${t('preview')}`}
             onLoad={onLoad}
             className={cn(
               'h-full w-full object-cover object-top transition-opacity duration-300',
@@ -70,7 +72,7 @@ export function SitesListPreviewCell({
         <Tooltip>
           <TooltipTrigger asChild>{preview}</TooltipTrigger>
           <TooltipContent side="right" className="text-[12px]">
-            Preview not available
+            {t('Preview not available')}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

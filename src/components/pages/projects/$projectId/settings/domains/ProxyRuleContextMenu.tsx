@@ -30,6 +30,7 @@ import {
 } from '@/lib/utils/context-menu'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface ProxyRuleContextMenuProps {
   projectId: string
@@ -52,6 +53,7 @@ export function ProxyRuleContextMenu({
   onDelete,
   children,
 }: ProxyRuleContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const domainUrl = `https://${rule.domain}`
   const apex = getApexDomain(rule.domain)
@@ -76,13 +78,13 @@ export function ProxyRuleContextMenu({
         {rule.status !== 'verified' && (
           <ContextMenuItem onSelect={() => onViewLogs(rule)}>
             <ContextMenuIcon icon={FileText} />
-            View logs
+            {t('View logs')}
           </ContextMenuItem>
         )}
         {canRetry && (
           <ContextMenuItem onSelect={() => onRetry(rule)}>
             <ContextMenuIcon icon={RefreshCw} />
-            Retry
+            {t('Retry')}
           </ContextMenuItem>
         )}
         <ContextMenuItem
@@ -90,30 +92,30 @@ export function ProxyRuleContextMenu({
           disabled={!canOpenDnsRecords}
         >
           <ContextMenuIcon icon={Globe} />
-          DNS Records
+          {t('DNS Records')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem onSelect={() => copyToClipboard('ID', rule.$id)}>
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Domain', rule.domain)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy domain
+              {t('Copy domain')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Link', domainUrl)}
             >
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -123,23 +125,23 @@ export function ProxyRuleContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(domainUrl)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(domainUrl)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => onDelete(rule)}>
           <ContextMenuIcon icon={Trash2} />
-          Delete
+          {t('Delete')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

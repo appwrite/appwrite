@@ -8,6 +8,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteRuntimeTimeoutCardProps {
   projectId: string | null | undefined
@@ -20,6 +21,7 @@ export function SiteRuntimeTimeoutCard({
   siteId,
   site,
 }: SiteRuntimeTimeoutCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [requestTimeout, setRequestTimeout] = useState(15)
 
@@ -37,7 +39,7 @@ export function SiteRuntimeTimeoutCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Request timeout updated successfully')
+      toast.success(t('Request timeout updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -46,13 +48,13 @@ export function SiteRuntimeTimeoutCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update request timeout'))
+      toast.error(getErrorMessage(error, t('Failed to update request timeout')))
     },
   })
 
   const handleSave = () => {
     if (requestTimeout < 1 || requestTimeout > 30) {
-      toast.error('Timeout must be between 1 and 30 seconds')
+      toast.error(t('Timeout must be between 1 and 30 seconds'))
       return
     }
     updateSiteMutation.mutate({ timeout: requestTimeout })
@@ -64,19 +66,20 @@ export function SiteRuntimeTimeoutCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Timeout</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Timeout')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Upper bound on how long a single request may run before the platform
-          stops it. Use a higher value for slow SSR or data-heavy pages; use a
-          lower value to fail fast when something hangs. Allowed range is 1–30
-          seconds.
+          {t(
+            'Upper bound on how long a single request may run before the platform stops it. Use a higher value for slow SSR or data-heavy pages; use a lower value to fail fast when something hangs. Allowed range is 1–30 seconds.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <div className="space-y-2">
           <Label htmlFor="site-request-timeout" className="text-[13px]">
-            Seconds per request
+            {t('Seconds per request')}
           </Label>
           <Input
             id="site-request-timeout"
@@ -98,7 +101,7 @@ export function SiteRuntimeTimeoutCard({
           }
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

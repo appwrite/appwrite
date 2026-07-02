@@ -6,6 +6,7 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { useT } from '@/lib/i18n/translate'
 
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
 const CONTACT_SALES_URL =
@@ -13,6 +14,7 @@ const CONTACT_SALES_URL =
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
 export function ComplianceTab() {
+  const t = useT()
   const cards: SettingsCardItem[] = [
     {
       id: 'dpa',
@@ -24,24 +26,31 @@ export function ComplianceTab() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Data processing agreement (DPA)
+              {t('Data processing agreement (DPA)')}
             </h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              A DPA is a legally binding document that outlines how {COMPANY_NAME}{' '}
-              processes personal data on your behalf. It's required for GDPR
-              compliance when handling EU residents' data.
+              {t(
+                'A DPA is a legally binding document that outlines how',
+              )}{' '}
+              {COMPANY_NAME}{' '}
+              {t(
+                "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.",
+              )}
             </p>
             <div className="flex items-start gap-3 mt-3">
               <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-[13px] text-muted-foreground">
-                Download the DPA, review it with your legal team, sign it, and
-                send a copy to{' '}
+                {t(
+                  'Download the DPA, review it with your legal team, sign it, and send a copy to',
+                )}{' '}
                 <span className="font-medium text-foreground">{LEGAL_EMAIL}</span>
-                . We'll countersign and return a fully executed copy within 5
-                business days.
+                .{' '}
+                {t(
+                  "We'll countersign and return a fully executed copy within 5 business days.",
+                )}
               </p>
             </div>
           </div>
@@ -54,7 +63,7 @@ export function ComplianceTab() {
                 window.open('/legal/dpa.pdf', '_blank', 'noopener,noreferrer')
               }}
             >
-              Download DPA
+              {t('Download DPA')}
             </Button>
           </div>
         </div>
@@ -70,25 +79,25 @@ export function ComplianceTab() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Business associate agreement (BAA)
+              {t('Business associate agreement (BAA)')}
             </h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              A BAA is required under HIPAA when a service provider handles
-              Protected Health Information (PHI) on behalf of a covered entity. If
-              your application processes, stores, or transmits health-related data
-              of US patients, you'll need a BAA in place.
+              {t(
+                "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.",
+              )}
             </p>
             <div className="flex items-start gap-3 mt-3">
               <ShieldCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-[13px] text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  Who needs this:
+                  {t('Who needs this:')}
                 </span>{' '}
-                Healthcare providers, health plans, healthcare clearinghouses, and
-                their business associates building HIPAA-compliant applications.
+                {t(
+                  'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.',
+                )}
               </p>
             </div>
           </div>
@@ -101,7 +110,7 @@ export function ComplianceTab() {
                 window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
               }}
             >
-              Contact sales
+              {t('Contact sales')}
             </Button>
           </div>
         </div>
@@ -120,30 +129,33 @@ export function ComplianceTab() {
           <div className="px-6 py-4">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
-                SOC 2 type II report
+                {t('SOC 2 type II report')}
               </h3>
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                Enterprise
+                {t('Enterprise')}
               </span>
             </div>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              SOC 2 Type II is an auditing standard that verifies a service
-              provider's security controls over an extended period. It
-              demonstrates that {COMPANY_NAME} maintains rigorous security
-              practices for data protection, availability, and confidentiality.
+              {t(
+                "SOC 2 Type II is an auditing standard that verifies a service provider's security controls over an extended period. It demonstrates that",
+              )}{' '}
+              {COMPANY_NAME}{' '}
+              {t(
+                'maintains rigorous security practices for data protection, availability, and confidentiality.',
+              )}
             </p>
             <div className="flex items-start gap-3 mt-3">
               <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-[13px] text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  Why it matters:
+                  {t('Why it matters:')}
                 </span>{' '}
-                Many enterprise customers and regulated industries require SOC 2
-                compliance from their vendors. Access to our SOC 2 report is
-                available on Enterprise plans.
+                {t(
+                  'Many enterprise customers and regulated industries require SOC 2 compliance from their vendors. Access to our SOC 2 report is available on Enterprise plans.',
+                )}
               </p>
             </div>
           </div>
@@ -156,7 +168,7 @@ export function ComplianceTab() {
                 window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
               }}
             >
-              Contact sales
+              {t('Contact sales')}
             </Button>
           </div>
         </div>

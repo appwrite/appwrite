@@ -1,6 +1,7 @@
 import { Globe, Lock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 function MockHeaderRow({ name, value }: { name: string; value: string }) {
   return (
@@ -12,12 +13,13 @@ function MockHeaderRow({ name, value }: { name: string; value: string }) {
 }
 
 export function FunctionsHttpVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'domains', label: 'Domains', active: true },
-        { id: 'settings', label: 'Settings' },
+        { id: 'overview', label: t('Overview') },
+        { id: 'domains', label: t('Domains'), active: true },
+        { id: 'settings', label: t('Settings') },
       ]}
     >
       <div className="space-y-4">
@@ -27,9 +29,9 @@ export function FunctionsHttpVisual() {
               <Globe className="size-4 text-muted-foreground" aria-hidden />
             </span>
             <div>
-              <p className="text-[13px] font-semibold text-foreground">Function domain</p>
+              <p className="text-[13px] font-semibold text-foreground">{t('Function domain')}</p>
               <p className="mt-0.5 text-[12px] text-muted-foreground">
-                Sync HTTP for APIs and webhooks.
+                {t('Sync HTTP for APIs and webhooks.')}
               </p>
             </div>
           </div>
@@ -40,7 +42,7 @@ export function FunctionsHttpVisual() {
 
         <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Generated domain
+            {t('Generated domain')}
           </p>
           <p className="mt-1 truncate font-mono text-[11px] text-foreground">
             https://65f1a2b3.appwrite.run
@@ -50,7 +52,7 @@ export function FunctionsHttpVisual() {
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Request
+              {t('Request')}
             </p>
             <span className="rounded-md bg-muted/50 px-2 py-0.5 font-mono text-[10px] text-foreground">
               POST /
@@ -68,7 +70,7 @@ export function FunctionsHttpVisual() {
         <div className="flex items-start gap-2 rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
           <Lock className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Pass a user JWT so Server SDKs inside the function respect Auth permissions.
+            {t('Pass a user JWT so Server SDKs inside the function respect Auth permissions.')}
           </p>
         </div>
       </div>

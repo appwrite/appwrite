@@ -2,6 +2,7 @@ import { LayoutTemplate, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const TEMPLATE_CARDS = [
   {
@@ -35,29 +36,30 @@ const TEMPLATE_CARDS = [
 ] as const
 
 export function FunctionsTemplatesVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'functions', label: 'Functions' },
-        { id: 'templates', label: 'Templates', active: true },
+        { id: 'functions', label: t('Functions') },
+        { id: 'templates', label: t('Templates'), active: true },
       ]}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Function templates</p>
+            <p className="text-[13px] font-semibold text-foreground">{t('Function templates')}</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Pre-built integrations to skip boilerplate.
+              {t('Pre-built integrations to skip boilerplate.')}
             </p>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            Catalog
+            {t('Catalog')}
           </Badge>
         </div>
 
         <div className="flex items-center gap-2 rounded-lg border border-border bg-background/80 px-3 py-2">
           <Search className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="text-[11px] text-muted-foreground">Search templates…</span>
+          <span className="text-[11px] text-muted-foreground">{t('Search templates…')}</span>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
@@ -72,12 +74,12 @@ export function FunctionsTemplatesVisual() {
                   <LayoutTemplate className="size-3.5 text-muted-foreground" aria-hidden />
                 </span>
                 <Badge variant="info" className="shrink-0 text-[10px]">
-                  {template.useCase}
+                  {t(template.useCase)}
                 </Badge>
               </div>
-              <p className="mt-2 text-[12px] font-semibold text-foreground">{template.name}</p>
+              <p className="mt-2 text-[12px] font-semibold text-foreground">{t(template.name)}</p>
               <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                {template.description}
+                {t(template.description)}
               </p>
               <div className="mt-2 flex items-center gap-1.5">
                 <LanguageIcon language={template.runtime} size="sm" />

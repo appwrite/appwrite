@@ -52,6 +52,7 @@ import {
   type DedicatedDbBillingSpecGroup,
 } from '@/lib/billing/project-breakdown-resources'
 import { databaseSpecificationsQueryOptions } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * PlanSummary Component
@@ -74,6 +75,7 @@ interface PlanSummaryProps {
 }
 
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
+  const t = useT()
   const [expanded, setExpanded] = useState(true) // Default to expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
@@ -463,12 +465,12 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
       return {
         projectId: project.$id,
-        projectName: project.name || 'Unknown Project',
+        projectName: project.name || t('Unknown Project'),
         categories: groupBillingProjectResources(resources),
         total: projectTotal,
       }
     })
-  }, [aggregation, plan, dedicatedDbBillingSpecLookup])
+  }, [aggregation, plan, dedicatedDbBillingSpecLookup, t])
 
   // Total projects: from API resources when available (paginated response), else current page length
   const totalProjects = useMemo(() => {
@@ -497,7 +499,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading plan details...
+            {t('Loading plan details...')}
           </p>
         </div>
       </div>
@@ -512,7 +514,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
-                {planName} plan
+                {planName} {t('plan')}
               </h3>
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                 {billingCycleLabel}
@@ -520,11 +522,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             </div>
             {totalAmount > 0 && nextPaymentDate && (
               <p className="text-[12px] text-muted-foreground mt-1">
-                Next payment of{' '}
+                {t('Next payment of')}{' '}
                 <span className="font-medium text-foreground">
                   {formatCurrency(totalAmount)}
                 </span>{' '}
-                will occur on{' '}
+                {t('will occur on')}{' '}
                 <span className="font-medium text-foreground">
                   {formatDate(nextPaymentDate, {
                     month: 'short',
@@ -538,7 +540,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           </div>
           <div className="text-end shrink-0 flex items-end">
             <p className="text-[11px] text-muted-foreground italic">
-              Estimate, subject to change based on usage
+              {t('Estimate, subject to change based on usage')}
             </p>
           </div>
         </div>
@@ -548,7 +550,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       {billingCycle && (
         <div className="border-t border-border px-6 py-3 bg-muted/30">
           <div className="flex items-center justify-between text-[12px]">
-            <span className="text-muted-foreground">Current billing cycle</span>
+            <span className="text-muted-foreground">{t('Current billing cycle')}</span>
             <span className="font-medium text-foreground">
               (
               {formatDate(billingCycle.start, {
@@ -569,7 +571,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           onClick={() => setExpanded(!expanded)}
           className="flex w-full items-center justify-between px-6 py-3 text-[13px] text-muted-foreground hover:bg-accent/50 transition-colors"
         >
-          <span>View charges breakdown</span>
+          <span>{t('View charges breakdown')}</span>
           {expanded ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -588,7 +590,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           <div className="border-t border-border px-6 py-4 space-y-4">
             {/* Base Plan Row */}
             <div className="flex items-center justify-between text-[13px]">
-              <span className="text-foreground">{planName} plan (base)</span>
+              <span className="text-foreground">{planName} {t('plan (base)')}</span>
               <span className="font-medium text-foreground">
                 {formatCurrency(basePlanPrice)}
               </span>
@@ -598,7 +600,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {additionalMembersCost > 0 && (
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-foreground flex items-center gap-2">
-                  Additional members
+                  {t('Additional members')}
                   {additionalMembersCount > 0 && (
                     <Badge
                       variant="info"
@@ -618,7 +620,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {additionalProjectsCount > 0 && (
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-foreground flex items-center gap-2">
-                  Additional projects
+                  {t('Additional projects')}
                   <Badge
                     variant="info"
                     className="h-4 px-1.5 text-[10px] font-medium shrink-0"
@@ -635,7 +637,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {/* Credits Applied */}
             {creditsApplied > 0 && (
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">Credits applied</span>
+                <span className="text-muted-foreground">{t('Credits applied')}</span>
                 <span className="font-medium text-foreground text-green-600 dark:text-green-400">
                   -{formatCurrency(creditsApplied)}
                 </span>
@@ -646,7 +648,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {projectBreakdowns.length > 0 && (
               <div className="space-y-2">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Project breakdown
+                  {t('Project breakdown')}
                 </div>
                 <div className="space-y-1">
                   {displayedBreakdowns.map((project) => (
@@ -698,7 +700,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                               params={{ projectId: project.projectId }}
                               className="flex items-center gap-1 text-[11px] link-neutral mt-2"
                             >
-                              Usage details
+                              {t('Usage details')}
                               <ExternalLink className="h-3 w-3" />
                             </Link>
                           )}
@@ -729,7 +731,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                       }}
                       onPageSizeChange={() => {}}
                       showPageSizeSelector={false}
-                      itemLabel="projects"
+                      itemLabel={t('projects')}
                       className="flex-wrap"
                     />
                   </div>
@@ -739,7 +741,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
             {/* Total */}
             <div className="flex items-center justify-between border-t border-border pt-3 text-[13px]">
-              <span className="font-medium text-foreground">Total</span>
+              <span className="font-medium text-foreground">{t('Total')}</span>
               <span className="font-semibold text-foreground">
                 {formatCurrency(totalAmount)}
               </span>
@@ -759,7 +761,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 onClick={onChangePlan}
               >
                 <ArrowUpCircle className="h-4 w-4" />
-                Upgrade
+                {t('Upgrade')}
               </Button>
             ) : (
               <Button
@@ -769,7 +771,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 onClick={onChangePlan}
               >
                 <ArrowLeftRight className="h-4 w-4" />
-                Change plan
+                {t('Change plan')}
               </Button>
             )}
           </div>
@@ -790,6 +792,7 @@ function BillingProjectResourceCategorySection({
     typeof buildDedicatedDbBillingSpecLookup
   >
 }) {
+  const t = useT()
   if (category.id === 'dedicated-databases') {
     const { specGroups, ungrouped } = groupDedicatedDbBillingResources(
       category.resources,
@@ -800,7 +803,7 @@ function BillingProjectResourceCategorySection({
     return (
       <div className="py-3 first:pt-0 last:pb-0">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pb-1.5">
-          {category.label}
+          {t(category.label)}
         </p>
         <div className="space-y-2">
           {specGroups.map((group) => (
@@ -823,7 +826,7 @@ function BillingProjectResourceCategorySection({
   return (
     <div className="py-3 first:pt-0 last:pb-0">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground pb-1.5">
-        {category.label}
+        {t(category.label)}
       </p>
       <div className="space-y-1">
         {category.resources.map((resource) => (
@@ -842,6 +845,7 @@ function BillingDedicatedDbSpecGroup({
 }: {
   group: DedicatedDbBillingSpecGroup
 }) {
+  const t = useT()
   const hasMultipleItems = group.items.length > 1
 
   if (!hasMultipleItems && group.items.length === 1) {
@@ -885,10 +889,10 @@ function BillingDedicatedDbSpecGroup({
       <div className="px-3 py-1.5 border-b border-border/50">
         <div className="flex items-center justify-end gap-4">
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[88px] text-end">
-            Usage
+            {t('Usage')}
           </span>
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground min-w-[70px] text-end">
-            Cost
+            {t('Cost')}
           </span>
         </div>
       </div>
@@ -953,6 +957,7 @@ function BillingProjectResourceRow({
 }: {
   resource: BillingProjectResourceItem
 }) {
+  const t = useT()
   const usagePercentage =
     resource.limit && resource.limit > 0
       ? Math.min(100, (resource.usage / resource.limit) * 100)
@@ -963,7 +968,7 @@ function BillingProjectResourceRow({
   const limitFormatted =
     resource.limit !== null
       ? formatResourceLimit(resource.limit, resource.formatType)
-      : 'Unlimited'
+      : t('Unlimited')
 
   const usageContent = resource.usageDescription ? (
     <TooltipProvider>
@@ -996,7 +1001,7 @@ function BillingProjectResourceRow({
     <div className="py-1.5">
       <div className="flex items-center gap-6">
         <span className="text-[12px] font-medium text-foreground w-[140px] shrink-0">
-          {resource.name}
+          {t(resource.name)}
         </span>
 
         <div className="w-[120px] shrink-0">
@@ -1016,7 +1021,7 @@ function BillingProjectResourceRow({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-[12px]">
-                    {usagePercentage.toFixed(1)}% used
+                    {usagePercentage.toFixed(1)}% {t('used')}
                   </p>
                 </TooltipContent>
               </Tooltip>

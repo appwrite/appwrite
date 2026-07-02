@@ -32,6 +32,7 @@ import {
   postgresTableId,
 } from '@/lib/postgres-database-routes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresTablePropertiesPanelProps = {
   databaseId: string
@@ -42,6 +43,7 @@ export function PostgresTablePropertiesPanel({
   databaseId,
   tableId,
 }: PostgresTablePropertiesPanelProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const { schema, table } = parsePostgresTableId(tableId)
@@ -76,7 +78,7 @@ export function PostgresTablePropertiesPanel({
     if (!trimmed || trimmed === table) return
     try {
       await executeSql.mutateAsync(buildPostgresRenameTableSql(tableId, trimmed))
-      toast.success('Table renamed')
+      toast.success(t('Table renamed'))
       const nextTableId = postgresTableId(schema, trimmed)
       navigate({
         ...postgresNav({ projectId, databaseId })
@@ -92,7 +94,7 @@ export function PostgresTablePropertiesPanel({
   const handleUpdateComment = async () => {
     try {
       await executeSql.mutateAsync(buildPostgresTableCommentSql(tableId, comment))
-      toast.success('Comment updated')
+      toast.success(t('Comment updated'))
       await refetch()
     } catch (error) {
       toast.error(getErrorMessage(error) ?? 'Failed to update comment')
@@ -102,7 +104,7 @@ export function PostgresTablePropertiesPanel({
   const handleDelete = async () => {
     try {
       await executeSql.mutateAsync(buildPostgresDropTableSql(tableId))
-      toast.success('Table deleted')
+      toast.success(t('Table deleted'))
       setDeleteDialogOpen(false)
       navigate({
         ...postgresNav({ projectId, databaseId }).sql(),
@@ -125,7 +127,7 @@ export function PostgresTablePropertiesPanel({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Table properties
+            {t('Table properties')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             Overview of this table in the {schema} schema.
@@ -135,13 +137,13 @@ export function PostgresTablePropertiesPanel({
         <div className="px-6 py-4 grid gap-4 sm:grid-cols-2">
           <div>
             <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Schema
+              {t('Schema')}
             </p>
             <p className="mt-1 text-[13px]">{schema}</p>
           </div>
           <div>
             <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Type
+              {t('Type')}
             </p>
             <p className="mt-1 text-[13px]">
               {isLoading ? 'Loading…' : (tableInfo?.table_type ?? '-')}
@@ -149,7 +151,7 @@ export function PostgresTablePropertiesPanel({
           </div>
           <div>
             <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Estimated rows
+              {t('Estimated rows')}
             </p>
             <p className="mt-1 text-[13px]">
               {isLoading ? 'Loading…' : rowEstimate}
@@ -157,7 +159,7 @@ export function PostgresTablePropertiesPanel({
           </div>
           <div>
             <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Total size
+              {t('Total size')}
             </p>
             <p className="mt-1 text-[13px]">
               {isLoading
@@ -173,7 +175,7 @@ export function PostgresTablePropertiesPanel({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Rename table
+                {t('Rename table')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
                 Change the table name within the {schema} schema.
@@ -182,7 +184,7 @@ export function PostgresTablePropertiesPanel({
             <div className="border-t border-border" />
             <div className="px-6 py-4 space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="postgres-table-name">Table name</Label>
+                <Label htmlFor="postgres-table-name">{t('Table name')}</Label>
                 <Input
                   id="postgres-table-name"
                   value={tableName}
@@ -202,7 +204,7 @@ export function PostgresTablePropertiesPanel({
                 }
                 onClick={() => void handleUpdateName()}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -210,10 +212,10 @@ export function PostgresTablePropertiesPanel({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Comment
+                {t('Comment')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Add a description for this table.
+                {t('Add a description for this table.')}
               </p>
             </div>
             <div className="border-t border-border" />
@@ -223,7 +225,7 @@ export function PostgresTablePropertiesPanel({
                 onChange={(event) => setComment(event.target.value)}
                 rows={3}
                 className="text-[13px] resize-none"
-                placeholder="Optional table comment"
+                placeholder={t('Optional table comment')}
               />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -233,7 +235,7 @@ export function PostgresTablePropertiesPanel({
                 disabled={executeSql.isPending}
                 onClick={() => void handleUpdateComment()}
               >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -241,7 +243,7 @@ export function PostgresTablePropertiesPanel({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Delete table
+                {t('Delete table')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
                 Permanently delete {schema}.{table} and all of its data. This
@@ -256,7 +258,7 @@ export function PostgresTablePropertiesPanel({
                 className="h-9 text-[13px]"
                 onClick={() => setDeleteDialogOpen(true)}
               >
-                Delete table
+                {t('Delete table')}
               </Button>
             </div>
           </div>
@@ -266,7 +268,7 @@ export function PostgresTablePropertiesPanel({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete table</DialogTitle>
+            <DialogTitle>{t('Delete table')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}
               <strong>
@@ -282,14 +284,14 @@ export function PostgresTablePropertiesPanel({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={executeSql.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleDelete()}
               disabled={executeSql.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

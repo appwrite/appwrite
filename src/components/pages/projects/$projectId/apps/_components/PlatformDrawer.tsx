@@ -25,6 +25,7 @@ import { toast } from 'sonner'
 import { Trash2, ExternalLink } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 interface PlatformDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -40,6 +41,7 @@ export function PlatformDrawer({
   platform,
   onSuccess,
 }: PlatformDrawerProps) {
+  const t = useT()
   const platformId = platform?.$id ?? null
   const { platform: fullPlatform, isLoading: platformLoading } =
     useProjectPlatform(projectId, platformId)
@@ -82,7 +84,7 @@ export function PlatformDrawer({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('Name is required')
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -101,12 +103,12 @@ export function PlatformDrawer({
       },
       {
         onSuccess: () => {
-          toast.success('App updated successfully')
+          toast.success(t('App updated successfully'))
           handleOpenChange(false)
           onSuccess?.()
         },
         onError: (error: Error) => {
-          toast.error(getErrorMessage(error) || 'Failed to update app')
+          toast.error(getErrorMessage(error) || t('Failed to update app'))
         },
       },
     )
@@ -116,13 +118,13 @@ export function PlatformDrawer({
     if (!platformId) return
     deleteMutation.mutate(platformId, {
       onSuccess: () => {
-        toast.success('App deleted successfully')
+        toast.success(t('App deleted successfully'))
         setDeleteConfirmOpen(false)
         handleOpenChange(false)
         onSuccess?.()
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete app')
+        toast.error(getErrorMessage(error) || t('Failed to delete app'))
       },
     })
   }
@@ -143,7 +145,7 @@ export function PlatformDrawer({
       <BaseDrawer
         open={open}
         onOpenChange={handleOpenChange}
-        title="Update app"
+        title={t('Update app')}
         maxWidth="sm:max-w-lg"
       >
         <>
@@ -167,11 +169,11 @@ export function PlatformDrawer({
                         htmlFor="platform-name"
                         className="text-[12px] font-medium"
                       >
-                        Name <span className="text-destructive">*</span>
+                        {t('Name')} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="platform-name"
-                        placeholder="App name"
+                        placeholder={t('App name')}
                         value={name}
                         onChange={(e) => {
                           setName(e.target.value)
@@ -190,7 +192,7 @@ export function PlatformDrawer({
 
                     <div className="space-y-2">
                       <Label className="text-[12px] font-medium text-muted-foreground">
-                        Type
+                        {t('Type')}
                       </Label>
                       <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
                         <PlatformIcon platform={platformType} size="sm" />
@@ -206,7 +208,7 @@ export function PlatformDrawer({
                           htmlFor="platform-hostname"
                           className="text-[12px] font-medium"
                         >
-                          Hostname
+                          {t('Hostname')}
                         </Label>
                         <Input
                           id="platform-hostname"
@@ -216,19 +218,19 @@ export function PlatformDrawer({
                           disabled={isPending}
                         />
                         <p className="text-[12px] text-muted-foreground">
-                          The domain your app makes requests from. Use{' '}
+                          {t('The domain your app makes requests from. Use')}{' '}
                           <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
                             localhost
                           </code>{' '}
-                          for development (no port or protocol). Add a separate
-                          platform for each origin (e.g. localhost and
-                          production).
+                          {t(
+                            'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).',
+                          )}
                         </p>
                         <BlogPageAnchor
                           href="/blog/post/cors-error"
                           className="inline-flex items-center gap-1 link-neutral text-[12px]"
                         >
-                          Troubleshoot CORS errors
+                          {t('Troubleshoot CORS errors')}
                           <ExternalLink className="h-3 w-3 shrink-0" />
                         </BlogPageAnchor>
                       </div>
@@ -242,14 +244,14 @@ export function PlatformDrawer({
                         >
                           {displayPlatform &&
                           'bundleIdentifier' in displayPlatform
-                            ? 'Bundle ID'
+                            ? t('Bundle ID')
                             : displayPlatform &&
                                 'applicationId' in displayPlatform
-                              ? 'Application ID'
+                              ? t('Application ID')
                               : displayPlatform &&
                                   'packageIdentifierName' in displayPlatform
-                                ? 'Package identifier'
-                                : 'Package name'}
+                                ? t('Package identifier')
+                                : t('Package name')}
                         </Label>
                         <Input
                           id="platform-key"
@@ -264,14 +266,15 @@ export function PlatformDrawer({
                     <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden mt-6">
                       <div className="px-6 py-4">
                         <h3 className="text-[15px] font-semibold text-foreground">
-                          Delete app
+                          {t('Delete app')}
                         </h3>
                       </div>
                       <div className="border-t border-destructive/20" />
                       <div className="px-6 py-4">
                         <p className="text-[13px] text-muted-foreground">
-                          Remove this app from the project. This action cannot
-                          be undone.
+                          {t(
+                            'Remove this app from the project. This action cannot be undone.',
+                          )}
                         </p>
                       </div>
                       <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
@@ -284,7 +287,7 @@ export function PlatformDrawer({
                           disabled={isPending}
                         >
                           <Trash2 className="me-1.5 h-4 w-4" />
-                          Delete app
+                          {t('Delete app')}
                         </Button>
                       </div>
                     </div>
@@ -295,7 +298,7 @@ export function PlatformDrawer({
 
             <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
               <Button type="submit" disabled={isPending || platformLoading}>
-                Update
+                {t('Update')}
               </Button>
               <Button
                 type="button"
@@ -303,7 +306,7 @@ export function PlatformDrawer({
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
             </div>
           </form>
@@ -316,11 +319,11 @@ export function PlatformDrawer({
           overlayClassName="z-[130]"
         >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete app</DialogTitle>
+            <DialogTitle>{t('Delete app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>{displayPlatform?.name || 'this app'}</strong>? This
-              action cannot be undone.
+              {t('Are you sure you want to delete')}{' '}
+              <strong>{displayPlatform?.name || t('this app')}</strong>?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -332,7 +335,7 @@ export function PlatformDrawer({
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="button"
@@ -342,7 +345,7 @@ export function PlatformDrawer({
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

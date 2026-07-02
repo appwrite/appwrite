@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Validates Appwrite database ID: 1–36 chars, alphanumeric, underscore, hyphen, period.
@@ -45,6 +46,7 @@ export function CreateDatabase({
   backupsEnabled,
   orgId,
 }: CreateDatabaseProps) {
+  const t = useT()
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [name, setName] = useState(DEFAULT_NEW_DATABASE_NAME)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -76,7 +78,7 @@ export function CreateDatabase({
     const newErrors: Record<string, string> = {}
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('Name is required')
     }
 
     if (
@@ -84,8 +86,9 @@ export function CreateDatabase({
       databaseId.length > 0 &&
       !validateDatabaseId(databaseId)
     ) {
-      newErrors.databaseId =
-        'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
+      newErrors.databaseId = t(
+        'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.',
+      )
     }
 
     setErrors(newErrors)
@@ -109,9 +112,11 @@ export function CreateDatabase({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create database</DialogTitle>
+          <DialogTitle>{t('Create database')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new database to store and organize your data in tables.
+            {t(
+              'Create a new database to store and organize your data in tables.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -120,12 +125,12 @@ export function CreateDatabase({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter database name"
+                placeholder={t('Enter database name')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -142,14 +147,14 @@ export function CreateDatabase({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="database-id">Database ID</Label>
+              <Label htmlFor="database-id">{t('Database ID')}</Label>
               <IdInput
                 id="database-id"
                 value={databaseId}
                 onChange={setDatabaseId}
                 maxLength={36}
                 disabled={isLoading}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
               />
               {errors.databaseId && (
                 <p className="text-[12px] text-destructive">
@@ -165,11 +170,12 @@ export function CreateDatabase({
               >
                 <AlertCircle className="h-4 w-4 text-amber-500" />
                 <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                  Backups not enabled
+                  {t('Backups not enabled')}
                 </AlertTitle>
                 <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                  This database will not be backed up on your current plan.{' '}
-                  <UpgradePlanLink orgId={orgId} /> to enable automated backups.
+                  {t('This database will not be backed up on your current plan.')}{' '}
+                  <UpgradePlanLink orgId={orgId} />{' '}
+                  {t('to enable automated backups.')}
                 </AlertDescription>
               </Alert>
             )}
@@ -182,10 +188,10 @@ export function CreateDatabase({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim()}>
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>

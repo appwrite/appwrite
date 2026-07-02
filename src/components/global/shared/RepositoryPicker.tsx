@@ -26,6 +26,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Search, Lock, Plus, RefreshCw } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 
@@ -111,6 +112,7 @@ export function RepositoryPicker({
   isFetching: isFetchingProp,
   className,
 }: RepositoryPickerProps) {
+  const t = useT()
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
@@ -180,7 +182,7 @@ export function RepositoryPicker({
                 id="repo-picker-installation"
                 className="w-[180px] shrink-0 h-9 text-[13px]"
               >
-                <SelectValue placeholder="Select organization">
+                <SelectValue placeholder={t('Select organization')}>
                   {selectedInstallation && (
                     <span className="flex items-center gap-2">
                       <ProviderIcon
@@ -212,7 +214,7 @@ export function RepositoryPicker({
                     className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                   >
                     <Plus className="h-3 w-3" />
-                    Add account
+                    {t('Add account')}
                   </a>
                 </div>
               </SelectContent>
@@ -223,7 +225,7 @@ export function RepositoryPicker({
                 id="repo-picker-search"
                 value={repoSearch}
                 onChange={(e) => setRepoSearch(e.target.value)}
-                placeholder="Search repositories..."
+                placeholder={t('Search repositories...')}
                 className="h-9 ps-9 text-[13px]"
               />
             </div>
@@ -237,7 +239,7 @@ export function RepositoryPicker({
                 onRefetch?.()
               }}
               disabled={isFetching}
-              aria-label="Refresh repositories"
+              aria-label={t('Refresh repositories')}
             >
               <RefreshCw
                 className={cn('h-4 w-4', isFetching && 'animate-spin')}
@@ -258,7 +260,7 @@ export function RepositoryPicker({
               id="repo-picker-installation"
               className="w-full h-9 text-[13px]"
             >
-              <SelectValue placeholder="Select organization" />
+              <SelectValue placeholder={t('Select organization')} />
             </SelectTrigger>
             <SelectContent>
               {installations.map((inst) => (
@@ -278,7 +280,7 @@ export function RepositoryPicker({
                   className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                 >
                   <Plus className="h-3 w-3" />
-                  Add account
+                  {t('Add account')}
                 </a>
               </div>
             </SelectContent>
@@ -382,13 +384,13 @@ export function RepositoryPicker({
                                 onRepositorySelect(repo)
                               }}
                             >
-                              Connect
+                              {t('Connect')}
                             </Button>
                           )}
                           {mode === 'connect' &&
                             (isSelected ? (
                               <span className="text-[12px] font-medium text-primary shrink-0">
-                                Selected
+                                {t('Selected')}
                               </span>
                             ) : (
                               <Button
@@ -400,7 +402,7 @@ export function RepositoryPicker({
                                   onRepositorySelect(repo)
                                 }}
                               >
-                                Connect
+                                {t('Connect')}
                               </Button>
                             ))}
                         </div>
@@ -411,11 +413,11 @@ export function RepositoryPicker({
               ) : (
                 <div className="py-8 px-4 text-center">
                   <EmptyState
-                    title="No repositories found"
+                    title={t('No repositories found')}
                     description={
                       debouncedRepoSearch
-                        ? 'Try a different search term or installation'
-                        : 'No repositories available for this installation'
+                        ? t('Try a different search term or installation')
+                        : t('No repositories available for this installation')
                     }
                     className="py-0"
                   />
@@ -436,14 +438,14 @@ export function RepositoryPicker({
 
             {/* Missing repos / permissions note - compact one-liner */}
             <p className="text-[12px] text-muted-foreground">
-              Can't find a repository?{' '}
+              {t("Can't find a repository?")}{' '}
               <a
                 href={getGitHubAuthUrl}
                 className="link-neutral"
               >
-                Update GitHub permissions
+                {t('Update GitHub permissions')}
               </a>{' '}
-              to include more repos.
+              {t('to include more repos.')}
             </p>
           </>
         )}

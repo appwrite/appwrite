@@ -66,6 +66,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { CreateDomainDialog } from './CreateDomain'
 import { RetryVerification } from './RetryVerification'
 import { DomainContextMenu } from './_components/DomainContextMenu'
@@ -94,6 +95,7 @@ type DomainsListSearch = {
 }
 
 export function View() {
+  const t = useT()
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -428,7 +430,7 @@ export function View() {
     isAtLimit: isDomainLimitReached,
   } = useOrganizationDomainsPlanLimit(orgId)
   const domainLimitTooltip = isDomainLimitReached
-    ? `Your current plan includes up to ${domainsLimit} domains.`
+    ? `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`
     : undefined
 
   useEffect(() => {
@@ -463,13 +465,13 @@ export function View() {
         queryKey: ['domains', 'organization', orgId],
       })
       toast.success(
-        `Successfully deleted ${selectedDomains.size} domain${selectedDomains.size > 1 ? 's' : ''}`,
+        `${t('Successfully deleted')} ${selectedDomains.size} ${selectedDomains.size > 1 ? t('domains') : t('domain')}`,
       )
       setSelectedDomains(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete domains')
+      toast.error(getErrorMessage(error) || t('Failed to delete domains'))
     },
   })
 
@@ -522,7 +524,9 @@ export function View() {
   const handleCreateDomain = async (domain: string) => {
     if (!orgId) return
     if (isDomainLimitReached) {
-      toast.error(`Your current plan includes up to ${domainsLimit} domains.`)
+      toast.error(
+        `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
+      )
       return
     }
     setIsCreateDomainSubmitting(true)
@@ -540,7 +544,7 @@ export function View() {
           DNS_RECORDS_DEFAULT_SORT_ORDER,
         ),
       )
-      toast.success(`${createdDomain.domain} has been created`)
+      toast.success(`${createdDomain.domain} ${t('has been created')}`)
       await navigate({
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId: orgId!, domainId },
@@ -560,9 +564,11 @@ export function View() {
       onSuccess: (domain) => {
         const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
         if (isVerified) {
-          toast.success('Domain verification successful')
+          toast.success(t('Domain verification successful'))
         } else {
-          toast.success('Nameservers updated. Please wait for DNS propagation.')
+          toast.success(
+            t('Nameservers updated. Please wait for DNS propagation.'),
+          )
         }
         setRetryDialogOpen(false)
         setSelectedDomain(null)
@@ -580,14 +586,14 @@ export function View() {
       return {
         status: 'verified' as const,
         icon: CheckCircle2,
-        label: 'Verified',
+        label: t('Verified'),
         className: 'text-green-600 dark:text-green-500',
       }
     }
     return {
       status: 'unverified' as const,
       icon: AlertCircle,
-      label: 'Unverified',
+      label: t('Unverified'),
       className: 'text-yellow-600 dark:text-yellow-500',
     }
   }
@@ -600,7 +606,7 @@ export function View() {
           <div className="relative w-64">
             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search domains..."
+              placeholder={t('Search domains...')}
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
@@ -660,7 +666,7 @@ export function View() {
                     className="h-9 gap-1.5 text-[13px] font-medium"
                   >
                     <ArrowLeftRight className="h-4 w-4" />
-                    Transfer in
+                    {t('Transfer in')}
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -685,7 +691,7 @@ export function View() {
                     className="h-9 gap-1.5 text-[13px] font-medium"
                   >
                     <ShoppingCart className="h-4 w-4" />
-                    Buy domain
+                    {t('Buy domain')}
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -705,7 +711,7 @@ export function View() {
                     className="h-9 gap-1.5 text-[13px] font-medium"
                   >
                     <Plus className="h-4 w-4" />
-                    Add domain
+                    {t('Add domain')}
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -723,7 +729,7 @@ export function View() {
         {showLoading ? (
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="text-[13px] text-muted-foreground">
-              Loading domains...
+              {t('Loading domains...')}
             </p>
           </div>
         ) : paginatedDomains.length > 0 ? (
@@ -741,7 +747,9 @@ export function View() {
                     ? 'success'
                     : 'warning'
                 const cardStatusLabel = transferInProgress
-                  ? transferBadge?.label ?? 'Transfer in progress'
+                  ? transferBadge
+                    ? t(transferBadge.label)
+                    : t('Transfer in progress')
                   : verification.label
                 return (
                   <DomainContextMenu
@@ -762,7 +770,7 @@ export function View() {
                         statusLabel={cardStatusLabel}
                         metadata={[
                           {
-                            label: 'Nameservers',
+                            label: t('Nameservers'),
                             value: (
                               <span className="text-[11px] font-medium text-muted-foreground">
                                 {domain.nameservers || '-'}
@@ -770,7 +778,7 @@ export function View() {
                             ),
                           },
                           {
-                            label: 'Created',
+                            label: t('Created'),
                             value: (
                               <DateTooltip
                                 date={domain.$createdAt}
@@ -793,15 +801,15 @@ export function View() {
                 pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel="domains"
+                itemLabel={t('domains')}
               />
             )}
           </>
         ) : (
           <EmptyState
             icon={Globe}
-            title="No domains yet"
-            description="Create your first domain to get started"
+            title={t('No domains yet')}
+            description={t('Create your first domain to get started')}
             isEmpty={!(urlSearch || filterMap.size > 0)}
             hasFilters={!!(urlSearch || filterMap.size > 0)}
             variant="card"
@@ -813,8 +821,9 @@ export function View() {
           <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedDomains.size} domain
-                {selectedDomains.size > 1 ? 's' : ''} selected
+                {selectedDomains.size}{' '}
+                {selectedDomains.size > 1 ? t('domains') : t('domain')}{' '}
+                {t('selected')}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -823,7 +832,7 @@ export function View() {
                   onClick={() => setSelectedDomains(new Set())}
                   className="h-8 text-xs"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -832,7 +841,7 @@ export function View() {
                   disabled={bulkDeleteMutation.isPending}
                   className="h-8 gap-2"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -844,12 +853,14 @@ export function View() {
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
               <DialogTitle>
-                Delete Domain{selectedDomains.size > 1 ? 's' : ''}
+                {selectedDomains.size > 1
+                  ? t('Delete Domains')
+                  : t('Delete Domain')}
               </DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedDomains.size} domain
-                {selectedDomains.size > 1 ? 's' : ''}? This action cannot be
-                undone.
+                {t('Are you sure you want to delete')} {selectedDomains.size}{' '}
+                {selectedDomains.size > 1 ? t('domains') : t('domain')}?{' '}
+                {t('This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
 
@@ -859,14 +870,14 @@ export function View() {
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmBulkDelete}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>

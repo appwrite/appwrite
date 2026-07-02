@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { X, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 
 interface WizardLayoutProps {
@@ -126,6 +127,7 @@ export function WizardLayout({
   skipInitialFieldFocus = false,
   initialFocusKey,
 }: WizardLayoutProps) {
+  const t = useT()
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
   const smartGoBack = useSmartNavigation({ fallbackPath })
@@ -267,7 +269,7 @@ export function WizardLayout({
                     size="sm"
                     onClick={handleBack}
                     className="h-8 w-8 p-0 shrink-0"
-                    aria-label={backButtonLabel}
+                    aria-label={t(backButtonLabel)}
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
@@ -280,13 +282,13 @@ export function WizardLayout({
                       typeof title !== 'string' && 'flex items-center gap-2',
                     )}
                   >
-                    {title}
+                    {typeof title === 'string' ? t(title) : title}
                   </h1>
                   {description && (
                     <div className="mt-0.5">
                       {typeof description === 'string' ? (
                         <p className="text-[12px] text-muted-foreground truncate">
-                          {description}
+                          {t(description)}
                         </p>
                       ) : (
                         description
@@ -307,7 +309,7 @@ export function WizardLayout({
                   size="sm"
                   onClick={handleClose}
                   className="h-8 w-8 p-0"
-                  aria-label="Close wizard"
+                  aria-label={t('Close wizard')}
                 >
                   <X className="h-4 w-4" />
                 </Button>

@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresConnectionsHeaderLimitProps = {
   projectId: string
@@ -35,6 +36,7 @@ export function PostgresConnectionsHeaderLimit({
   projectId,
   databaseId,
 }: PostgresConnectionsHeaderLimitProps) {
+  const t = useT()
   const { database } = usePostgresDatabase(projectId, databaseId)
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
   const { connections, isLoading } = usePostgresActiveConnections(
@@ -79,7 +81,7 @@ export function PostgresConnectionsHeaderLimit({
         ? `This compute tier allows up to ${maxConnections} client connections.`
         : `${clientConnectionCount} of ${maxConnections} client connections are in use on this tier.`
       : isServerlessLimit
-        ? 'This database uses a serverless connection pool. There is no fixed per-instance limit.'
+        ? t('This database uses a serverless connection pool. There is no fixed per-instance limit.')
         : `Connection limit for this compute tier: ${connectionsLimitLabel}.`
 
   const inlineLabel =

@@ -25,6 +25,7 @@ import {
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { cn } from '@/lib/utils'
 import { useMemo } from 'react'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresSpecificationCardProps = {
   projectId: string
@@ -111,6 +112,7 @@ export function PostgresSpecificationCard({
   projectId,
   databaseId,
 }: PostgresSpecificationCardProps) {
+  const t = useT()
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
@@ -178,7 +180,7 @@ export function PostgresSpecificationCard({
       size="sm"
       className="h-7 w-full rounded-none text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
     >
-      <Link {...nav.settings()}>Upgrade compute</Link>
+      <Link {...nav.settings()}>{t('Upgrade compute')}</Link>
     </Button>
   ) : showPlanUpgrade ? (
     <Button
@@ -189,12 +191,12 @@ export function PostgresSpecificationCard({
     >
       {billingEnabled && project?.teamId ? (
         <Link to="/upgrade" search={{ orgId: project.teamId }}>
-          Upgrade plan
+          {t('Upgrade plan')}
         </Link>
       ) : billingEnabled ? (
-        <Link to="/upgrade">Upgrade plan</Link>
+        <Link to="/upgrade">{t('Upgrade plan')}</Link>
       ) : (
-        <span>Upgrade plan</span>
+        <span>{t('Upgrade plan')}</span>
       )}
     </Button>
   ) : !canUpgrade && nextEnabledSpec ? (
@@ -208,13 +210,13 @@ export function PostgresSpecificationCard({
               className="h-7 w-full rounded-none text-[11px] font-medium"
               disabled
             >
-              Upgrade compute
+              {t('Upgrade compute')}
             </Button>
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <p className="text-[13px]">
-            You don&apos;t have permission to change database settings.
+            {t("You don't have permission to change database settings.")}
           </p>
         </TooltipContent>
       </Tooltip>
@@ -226,7 +228,7 @@ export function PostgresSpecificationCard({
       <div className="overflow-hidden rounded-xl border border-border bg-card/50">
         <div className="px-3 py-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Compute tier
+            {t('Compute tier')}
           </p>
           <p className="mt-0.5 truncate text-[13px] font-semibold leading-tight text-foreground">
             {specLabel}
@@ -236,8 +238,8 @@ export function PostgresSpecificationCard({
         <div className="border-t border-border">
           <div className="grid grid-cols-3 divide-x divide-border">
             <SpecMetric label="CPU" value={cpuLabel} />
-            <SpecMetric label="Memory" value={memoryLabel} />
-            <SpecMetric label="Storage" value={storageLabel} />
+            <SpecMetric label={t('Memory')} value={memoryLabel} />
+            <SpecMetric label={t('Storage')} value={storageLabel} />
           </div>
         </div>
 

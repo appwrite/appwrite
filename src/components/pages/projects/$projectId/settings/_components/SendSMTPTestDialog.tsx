@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { InputTags } from '@/components/ui/input-tags'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useTestSMTP, type SmtpUpdateData } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 const MAX_TEST_EMAILS = 10
 
@@ -35,6 +36,7 @@ export function SendSMTPTestDialog({
   defaultRecipientEmail,
   onSent,
 }: SendSMTPTestDialogProps) {
+  const t = useT()
   const testSMTPMutation = useTestSMTP(projectId)
   const [phase, setPhase] = useState<DialogPhase>('form')
   const [emails, setEmails] = useState<string[]>([])
@@ -70,7 +72,7 @@ export function SendSMTPTestDialog({
       onSent?.()
     } catch (error: unknown) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to send test email',
+        error instanceof Error ? error.message : t('Failed to send test email'),
       )
       setPhase('error')
     }
@@ -84,10 +86,9 @@ export function SendSMTPTestDialog({
         className="sm:max-w-md p-0"
 >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Send test email</DialogTitle>
+          <DialogTitle>{t('Send test email')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Verify your SMTP configuration by sending a test email to one or more
-            recipients.
+            {t('Verify your SMTP configuration by sending a test email to one or more recipients.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -95,7 +96,7 @@ export function SendSMTPTestDialog({
         <div className="px-6 pb-4 pt-0">
           {phase === 'form' ? (
             <div className="space-y-2">
-              <Label htmlFor="smtp-test-recipients">Recipients</Label>
+              <Label htmlFor="smtp-test-recipients">{t('Recipients')}</Label>
               <InputTags
                 value={emails}
                 onChange={handleEmailsChange}
@@ -103,11 +104,10 @@ export function SendSMTPTestDialog({
                 placeholder="email@example.com"
               />
               <p className="text-[12px] text-muted-foreground">
-                Press Enter, Space, or comma to add each address. You can paste
-                multiple addresses separated by commas or spaces. Up to{' '}
-                {MAX_TEST_EMAILS} recipients.
+                {t('Press Enter, Space, or comma to add each address. You can paste multiple addresses separated by commas or spaces. Up to')}{' '}
+                {MAX_TEST_EMAILS} {t('recipients.')}
                 {emails.length >= MAX_TEST_EMAILS
-                  ? ' Maximum recipients reached.'
+                  ? ` ${t('Maximum recipients reached.')}`
                   : null}
               </p>
             </div>
@@ -117,7 +117,7 @@ export function SendSMTPTestDialog({
             <div className="flex flex-col items-center justify-center gap-3 py-4">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               <p className="text-[13px] text-muted-foreground text-center">
-                Sending test email…
+                {t('Sending test email…')}
               </p>
             </div>
           ) : null}
@@ -126,8 +126,8 @@ export function SendSMTPTestDialog({
             <div className="flex flex-col items-center gap-3 text-center">
               <CheckCircle2 className="h-10 w-10 text-green-600" />
               <p className="text-[13px] text-foreground">
-                Test email sent to {emails.length}{' '}
-                {emails.length === 1 ? 'recipient' : 'recipients'}.
+                {t('Test email sent to')} {emails.length}{' '}
+                {emails.length === 1 ? t('recipient') : t('recipients')}.
               </p>
               <ul className="w-full text-start text-[12px] text-muted-foreground space-y-1">
                 {emails.map((email) => (
@@ -163,7 +163,7 @@ export function SendSMTPTestDialog({
                 {isSending ? (
                   <Loader2 className="me-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
                 ) : null}
-                Send
+                {t('Send')}
               </Button>
               <Button
                 type="button"
@@ -173,7 +173,7 @@ export function SendSMTPTestDialog({
                 onClick={() => handleOpenChange(false)}
                 disabled={isSending}
 >
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           ) : null}
@@ -185,7 +185,7 @@ export function SendSMTPTestDialog({
               className="h-9 text-[13px]"
               onClick={() => handleOpenChange(false)}
 >
-              Close
+              {t('Close')}
             </Button>
           ) : null}
 
@@ -197,7 +197,7 @@ export function SendSMTPTestDialog({
                 className="h-9 text-[13px]"
                 onClick={() => setPhase('form')}
 >
-                Try again
+                {t('Try again')}
               </Button>
               <Button
                 type="button"
@@ -206,7 +206,7 @@ export function SendSMTPTestDialog({
                 className="h-9 text-[13px]"
                 onClick={() => handleOpenChange(false)}
 >
-                Close
+                {t('Close')}
               </Button>
             </>
           ) : null}

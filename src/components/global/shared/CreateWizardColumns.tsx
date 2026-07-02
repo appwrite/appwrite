@@ -5,6 +5,7 @@
 
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 export function CreateWizardLeftColumn({
   title,
@@ -13,10 +14,11 @@ export function CreateWizardLeftColumn({
   title: string
   children: React.ReactNode
 }) {
+  const t = useT()
   return (
     <div className="lg:col-span-2 flex min-h-0 flex-col overflow-hidden">
       <h2 className="mb-4 shrink-0 text-[14px] font-semibold text-foreground">
-        {title}
+        {t(title)}
       </h2>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
     </div>
@@ -37,9 +39,10 @@ export function CreateWizardRightColumn({
   }
   children: React.ReactNode
 }) {
+  const t = useT()
   return (
     <div className="flex min-h-0 flex-col overflow-hidden lg:col-span-3">
-      <h2 className="mb-4 shrink-0 text-[14px] font-semibold text-foreground">{title}</h2>
+      <h2 className="mb-4 shrink-0 text-[14px] font-semibold text-foreground">{t(title)}</h2>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {search ? (
           <div className="mb-4 shrink-0">
@@ -48,7 +51,7 @@ export function CreateWizardRightColumn({
               <Input
                 value={search.value}
                 onChange={(e) => search.onChange(e.target.value)}
-                placeholder={search.placeholder ?? 'Search templates...'}
+                placeholder={t(search.placeholder ?? 'Search templates...')}
                 className="h-9 ps-9 text-[13px]"
               />
             </div>

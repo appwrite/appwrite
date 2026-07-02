@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   formatPostgresQueryDurationMs,
 } from '@/lib/postgres-sql'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresQueryResultsMetaProps = {
   title: string
@@ -18,6 +19,7 @@ export function PostgresQueryResultsMeta({
   durationMs,
   truncated,
 }: PostgresQueryResultsMetaProps) {
+  const t = useT()
   const formattedCount = rowCount.toLocaleString()
   const countText = `${formattedCount} ${countLabel}${rowCount === 1 ? '' : 's'}`
   return (
@@ -49,7 +51,7 @@ export function PostgresQueryResultsMeta({
             variant="warning"
             className="text-[10px]"
           >
-            Truncated
+            {t('Truncated')}
           </Badge>
         ) : null}
       </div>

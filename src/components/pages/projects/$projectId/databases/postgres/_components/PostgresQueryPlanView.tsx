@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { PostgresQueryResultsMeta } from './PostgresQueryResultsMeta'
 import { SqlWorkbenchPanelEmptyState } from './SqlWorkbenchPanelEmptyState'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresQueryPlanViewProps = {
   explanation: DedicatedDatabaseQueryExplanation | null
@@ -144,6 +145,7 @@ export function PostgresQueryPlanView({
   loadingLabel = 'Explaining query…',
   className,
 }: PostgresQueryPlanViewProps) {
+  const t = useT()
   const [viewMode, setViewMode] = useState<PlanViewMode>('visual')
 
   const planNodes = useMemo(
@@ -170,7 +172,7 @@ export function PostgresQueryPlanView({
       <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <PostgresQueryResultsMeta
-            title="Query plan"
+            title={t('Query plan')}
             rowCount={nodeCount}
             countLabel="step"
           />
@@ -187,10 +189,10 @@ export function PostgresQueryPlanView({
             className="shrink-0"
           >
             <ToggleGroupItem value="visual" className="h-8 px-3 text-[12px]">
-              Visual
+              {t('Visual')}
             </ToggleGroupItem>
             <ToggleGroupItem value="raw" className="h-8 px-3 text-[12px]">
-              Raw
+              {t('Raw')}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>

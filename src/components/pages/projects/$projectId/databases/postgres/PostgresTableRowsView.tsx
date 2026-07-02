@@ -30,6 +30,7 @@ import {
 } from '@/lib/postgres-row-sql'
 import type { PostgresRowIdentity } from '@/lib/postgres-row-sql'
 import { postgresNav } from '@/lib/postgres-database-routes'
+import { useT } from '@/lib/i18n/translate'
 
 export type PostgresTableRowsViewProps = {
   databaseId: string
@@ -40,6 +41,7 @@ export function PostgresTableRowsView({
   databaseId,
   tableId,
 }: PostgresTableRowsViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
   const location = useLocation()
@@ -334,10 +336,10 @@ export function PostgresTableRowsView({
   const emptyContent = hasActiveFilters ? (
     <div className="text-center">
       <p className="text-[13px] font-medium text-foreground">
-        No records match your filters
+        {t('No records match your filters')}
       </p>
       <p className="mt-1 text-[13px] text-muted-foreground">
-        Try adjusting or clearing filters.
+        {t('Try adjusting or clearing filters.')}
       </p>
     </div>
   ) : (

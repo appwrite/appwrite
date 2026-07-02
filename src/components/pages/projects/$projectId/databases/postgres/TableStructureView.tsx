@@ -13,6 +13,7 @@ import { usePostgresTableHeaderSlot } from './_components/PostgresTableHeaderSlo
 import { PostgresTableColumnsPanel } from './_components/PostgresTableColumnsPanel'
 import { PostgresTableIndexesPanel } from './_components/PostgresTableIndexesPanel'
 import { PostgresTablePropertiesPanel } from './_components/PostgresTablePropertiesPanel'
+import { useT } from '@/lib/i18n/translate'
 export type TableStructureViewProps = {
   databaseId: string
   tableId: string
@@ -38,6 +39,7 @@ export function TableStructureContent({
   tableId,
   activeTab,
 }: TableStructureViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -67,8 +69,8 @@ export function TableStructureContent({
         ? {
             searchPlaceholder:
               activeTab === 'columns'
-                ? 'Search columns...'
-                : 'Search indexes...',
+                ? t('Search columns...')
+                : t('Search indexes...'),
             searchValue,
             onSearchChange: setSearchValue,
           }
@@ -77,12 +79,12 @@ export function TableStructureContent({
     if (activeTab === 'columns') {
       return {
         ...searchProps,
-        createLabel: canWrite ? 'Add column' : undefined,
+        createLabel: canWrite ? t('Add column') : undefined,
         onCreate: canWrite ? () => setColumnCreateOpen(true) : undefined,
         createDisabled: !canWrite,
         createDisabledTooltip: canWrite
           ? undefined
-          : "You don't have permission to modify table structure.",
+          : t("You don't have permission to modify table structure."),
         showRefresh: true,
         onRefresh: () => void refetchColumns(),
         isRefreshing: columnsFetching,
@@ -91,12 +93,12 @@ export function TableStructureContent({
     if (activeTab === 'indexes') {
       return {
         ...searchProps,
-        createLabel: canWrite ? 'Create index' : undefined,
+        createLabel: canWrite ? t('Create index') : undefined,
         onCreate: canWrite ? () => setIndexCreateOpen(true) : undefined,
         createDisabled: !canWrite,
         createDisabledTooltip: canWrite
           ? undefined
-          : "You don't have permission to modify table structure.",
+          : t("You don't have permission to modify table structure."),
         showRefresh: true,
         onRefresh: () => void refetchIndexes(),
         isRefreshing: indexesFetching,
@@ -111,6 +113,7 @@ export function TableStructureContent({
     refetchColumns,
     refetchIndexes,
     searchValue,
+    t,
   ])
 
   usePostgresTableHeaderSlot(headerProps)

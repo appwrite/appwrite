@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useBackupPolicies } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const NO_BACKUP_POLICIES_TOOLTIP =
   'No backup policies configured. Create a policy to automate backups.'
@@ -51,6 +52,7 @@ export function DatabaseBackupsNavLink({
   to,
   params,
 }: DatabaseBackupsNavLinkProps) {
+  const t = useT()
   const { data: policiesData, isLoading } = useBackupPolicies(
     projectId,
     databaseId,
@@ -61,7 +63,7 @@ export function DatabaseBackupsNavLink({
   return (
     <Link to={to} params={params} className={className}>
       <Archive className="h-3.5 w-3.5 shrink-0" />
-      <span className={cn('min-w-0', labelClassName)}>Backups</span>
+      <span className={cn('min-w-0', labelClassName)}>{t('Backups')}</span>
       {showWarning && <NoBackupPoliciesWarningIcon />}
     </Link>
   )

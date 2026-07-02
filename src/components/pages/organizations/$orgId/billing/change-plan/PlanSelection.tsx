@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL || CONTACT_ENTERPRISE_URL
@@ -75,6 +76,7 @@ export function PlanSelection({
   isCreateMode = false,
   variant = 'card',
 }: PlanSelectionProps) {
+  const t = useT()
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
   const availablePlans =
     plans && typeof plans === 'object' ? Object.entries(plans) : []
@@ -132,21 +134,21 @@ export function PlanSelection({
       <div className="px-6 py-5 grid gap-6 sm:grid-cols-2">
         <div>
           <p className="text-[13px] font-medium text-foreground">
-            Who should reach out
+            {t('Who should reach out')}
           </p>
           <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc ps-4">
             {ENTERPRISE_WHO_SHOULD_REACH_OUT.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item}>{t(item)}</li>
             ))}
           </ul>
         </div>
         <div>
           <p className="text-[13px] font-medium text-foreground">
-            When to reach out
+            {t('When to reach out')}
           </p>
           <ul className="mt-2 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-disc ps-4">
             {ENTERPRISE_WHEN_TO_REACH_OUT.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item}>{t(item)}</li>
             ))}
           </ul>
         </div>
@@ -166,7 +168,7 @@ export function PlanSelection({
         target="_blank"
         rel="noopener noreferrer"
 >
-        Contact sales
+        {t('Contact sales')}
       </a>
     </Button>
   )
@@ -184,7 +186,7 @@ export function PlanSelection({
               Enterprise
             </span>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              {ENTERPRISE_COLLAPSED_HINT}
+              {t(ENTERPRISE_COLLAPSED_HINT)}
             </p>
           </div>
           {contactSalesButton}
@@ -194,7 +196,7 @@ export function PlanSelection({
       <CollapsibleContent>
         <div className="border-t border-border px-6 py-4">
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            {ENTERPRISE_INTRO}
+            {t(ENTERPRISE_INTRO)}
           </p>
         </div>
         {enterpriseDetails}
@@ -206,7 +208,7 @@ export function PlanSelection({
           className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-6 py-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
 >
           <span>
-            {enterpriseOpen ? 'Show less' : 'Learn more'}
+            {enterpriseOpen ? t('Show less') : t('Learn more')}
           </span>
           <ChevronDown
             className={cn(
@@ -231,12 +233,12 @@ export function PlanSelection({
                   variant="info"
                   className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
 >
-                  Current plan
+                  {t('Current plan')}
                 </Badge>
               )}
             </div>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              {ENTERPRISE_INTRO}
+              {t(ENTERPRISE_INTRO)}
             </p>
           </div>
           {contactSalesButton}
@@ -252,10 +254,9 @@ export function PlanSelection({
       {!selfService && (
         <Alert className="mb-4">
           <Info className="h-4 w-4" />
-          <AlertTitle>Plan Changes Restricted</AlertTitle>
+          <AlertTitle>{t('Plan Changes Restricted')}</AlertTitle>
           <AlertDescription className="mt-2">
-            Plan changes are not available for self-service. Please contact
-            support to change your plan.
+            {t('Plan changes are not available for self-service. Please contact support to change your plan.')}
           </AlertDescription>
         </Alert>
       )}
@@ -279,7 +280,7 @@ export function PlanSelection({
             // API uses 'desc' not 'description'
             const description = planData?.desc || planData?.description
             const planDescription = hasFreePlanConflict(planTier)
-              ? FREE_PLAN_CONFLICT_DESCRIPTION
+              ? t(FREE_PLAN_CONFLICT_DESCRIPTION)
               : description
             const isSelected = selectedPlan === planTier
             const isRecommendedPlan =
@@ -342,7 +343,7 @@ export function PlanSelection({
                           variant="success"
                           className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
 >
-                          Recommended
+                          {t('Recommended')}
                         </Badge>
                       )}
                       {isCurrent && (
@@ -350,7 +351,7 @@ export function PlanSelection({
                           variant="info"
                           className="text-[10px] font-medium px-2 py-0.5 h-5 shrink-0"
 >
-                          Current plan
+                          {t('Current plan')}
                         </Badge>
                       )}
                     </div>
@@ -363,7 +364,7 @@ export function PlanSelection({
 
                     <div className="text-[13px] font-medium text-foreground">
                       {price > 0 ? (
-                        <span>${price.toFixed(2)} per month</span>
+                        <span>${price.toFixed(2)} {t('per month')}</span>
                       ) : (
                         <span>$0.00</span>
                       )}
@@ -386,7 +387,7 @@ export function PlanSelection({
             asChild
 >
             <MarketingSiteLink href="/pricing">
-              View detailed pricing
+              {t('View detailed pricing')}
               <ExternalLink className="ms-1.5 h-3.5 w-3.5" />
             </MarketingSiteLink>
           </Button>
@@ -403,10 +404,10 @@ export function PlanSelection({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Select a plan
+          {t('Select a plan')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Choose the plan that best fits your needs.
+          {t('Choose the plan that best fits your needs.')}
         </p>
       </div>
 

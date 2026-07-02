@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
   useKeyboardShortcut,
@@ -276,6 +277,7 @@ export function CommandCenter({
   initialSubPage,
   onInitialSubPageConsumed,
 }: CommandCenterProps) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [pages, setPages] = useState<string[]>([])
   const [searchScope, setSearchScope] = useState<ResourceScope | null>(null)
@@ -1423,7 +1425,7 @@ export function CommandCenter({
     return tabs.filter((tab) => tab.title.toLowerCase().includes(query))
   }, [postgresSqlEditorActions?.tabs, search])
 
-  const dialogTitle =
+  const dialogTitle = t(
     currentPage === 'shortcuts'
       ? 'Keyboard shortcuts'
       : currentPage === 'docs'
@@ -1436,19 +1438,22 @@ export function CommandCenter({
               ? 'Execute function'
               : currentPage === 'sql-tabs' && context === 'project'
                 ? 'Go to query tab'
-                : 'Command center'
+                : 'Command center',
+  )
 
-  const placeholder = searchScope
-    ? `Search ${searchScope}...`
-    : currentPage === 'sql-tabs'
-      ? 'Search query tabs…'
-      : context === 'docs'
-      ? 'Search commands and documentation pages…'
-      : context === 'org'
-        ? 'Search projects, settings, members…'
-        : context === 'account'
-          ? 'Search account, sessions, security…'
-          : 'Search anything - pages, tabs, settings, resources…'
+  const placeholder = t(
+    searchScope
+      ? `Search ${searchScope}...`
+      : currentPage === 'sql-tabs'
+        ? 'Search query tabs…'
+        : context === 'docs'
+          ? 'Search commands and documentation pages…'
+          : context === 'org'
+            ? 'Search projects, settings, members…'
+            : context === 'account'
+              ? 'Search account, sessions, security…'
+              : 'Search anything - pages, tabs, settings, resources…',
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1515,10 +1520,10 @@ export function CommandCenter({
                 onClick={() => setPages([])}
                 className="ms-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
               >
-                ← Back
+                ← {t('Back')}
               </button>
               <CommandInput
-                placeholder="Select function to execute..."
+                placeholder={t('Select function to execute...')}
                 value={search}
                 onValueChange={setSearch}
                 className="h-14 border-0 text-foreground placeholder:text-muted-foreground"
@@ -1536,10 +1541,10 @@ export function CommandCenter({
               className={cn('p-2', commandCenterListHeightClass(isMobile))}
             >
               <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
-                No functions found.
+                {t('No functions found.')}
               </CommandEmpty>
               <CommandGroup
-                heading="Functions"
+                heading={t('Functions')}
                 className="text-muted-foreground"
               >
                 {projectFunctions && projectFunctions.length > 0 ? (
@@ -1567,13 +1572,15 @@ export function CommandCenter({
                           'bg-muted text-muted-foreground',
                         )}
                       >
-                        Function
+                        {t('Function')}
                       </span>
                     </CommandItem>
                   ))
                 ) : (
                   <div className="px-3 py-2.5 text-[13px] text-muted-foreground">
-                    {functionsLoading ? 'Loading...' : 'No functions found'}
+                    {functionsLoading
+                      ? t('Loading...')
+                      : t('No functions found')}
                   </div>
                 )}
               </CommandGroup>
@@ -1589,10 +1596,10 @@ export function CommandCenter({
                 onClick={() => setPages([])}
                 className="ms-3 flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
               >
-                ← Back
+                ← {t('Back')}
               </button>
               <CommandInput
-                placeholder="Search query tabs…"
+                placeholder={t('Search query tabs…')}
                 value={search}
                 onValueChange={setSearch}
                 className="h-14 border-0 text-foreground placeholder:text-muted-foreground"
@@ -1610,9 +1617,12 @@ export function CommandCenter({
               className={cn('p-2', commandCenterListHeightClass(isMobile))}
             >
               <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
-                No query tabs found.
+                {t('No query tabs found.')}
               </CommandEmpty>
-              <CommandGroup heading="Query tabs" className="text-muted-foreground">
+              <CommandGroup
+                heading={t('Query tabs')}
+                className="text-muted-foreground"
+              >
                 {sqlTabPickerItems.length > 0 ? (
                   sqlTabPickerItems.map((tab) => {
                     const allTabs = postgresSqlEditorActions?.tabs ?? []
@@ -1642,7 +1652,9 @@ export function CommandCenter({
                         <div className="flex-1 min-w-0">
                           <p className="truncate text-[13px] font-medium">{tab.title}</p>
                           <p className="text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
-                            {tabIndex >= 0 ? `Tab ${tabIndex + 1}` : 'Query tab'}
+                            {tabIndex >= 0
+                              ? `${t('Tab')} ${tabIndex + 1}`
+                              : t('Query tab')}
                           </p>
                         </div>
                         {shortcutLabel ? (
@@ -1655,7 +1667,7 @@ export function CommandCenter({
                   })
                 ) : (
                   <div className="px-3 py-2.5 text-[13px] text-muted-foreground">
-                    No query tabs found
+                    {t('No query tabs found')}
                   </div>
                 )}
               </CommandGroup>
@@ -1673,7 +1685,7 @@ export function CommandCenter({
                   variant="secondary"
                   className="shrink-0 flex items-center gap-1.5 h-6 px-2 text-[11px] font-medium"
                 >
-                  <span className="capitalize">{searchScope}</span>
+                  <span className="capitalize">{t(searchScope)}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
@@ -1681,7 +1693,7 @@ export function CommandCenter({
                       setSearch('')
                     }}
                     className="ms-0.5 rounded-sm hover:bg-accent/80 p-0.5 -me-0.5"
-                    aria-label="Remove scope"
+                    aria-label={t('Remove scope')}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -1711,10 +1723,10 @@ export function CommandCenter({
                 (search.trim() || searchScope) && (
                   <div className="py-6 text-center text-[13px] text-muted-foreground">
                     {searchScope && isScopeLoading
-                      ? `Searching ${searchScope}…`
+                      ? `${t('Searching')} ${t(searchScope)}…`
                       : shouldRunUnifiedResourceSearch && unifiedResourceLoading
-                        ? 'Searching resources…'
-                        : 'No results found.'}
+                        ? t('Searching resources…')
+                        : t('No results found.')}
                   </div>
                 )}
 
@@ -1724,7 +1736,7 @@ export function CommandCenter({
                     <CommandSeparator className="my-2 bg-border" />
                   )}
                   <CommandGroup
-                    heading={group.label}
+                    heading={t(group.label)}
                     className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-muted-foreground"
                   >
                     {group.commands.map((cmd) => {
@@ -1742,11 +1754,11 @@ export function CommandCenter({
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <p className="truncate text-[13px] font-medium">
-                              {cmd.label}
+                              {t(cmd.label)}
                             </p>
                             {cmd.description && (
                               <p className="truncate text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
-                                {cmd.description}
+                                {t(cmd.description)}
                               </p>
                             )}
                           </div>
@@ -1769,7 +1781,7 @@ export function CommandCenter({
                                 'bg-muted text-muted-foreground',
                               )}
                             >
-                              {PROJECT_RESOURCE_KIND_LABELS[cmd.resourceKind]}
+                              {t(PROJECT_RESOURCE_KIND_LABELS[cmd.resourceKind])}
                             </span>
                           )}
                         </CommandItem>

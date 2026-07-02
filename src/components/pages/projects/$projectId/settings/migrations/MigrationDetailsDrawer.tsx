@@ -22,6 +22,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { parseStatusCounters, type StatusCounter } from './migrationProgress'
+import { useT } from '@/lib/i18n/translate'
 
 interface MigrationDetailsDrawerProps {
   open: boolean
@@ -143,6 +144,7 @@ export function MigrationDetailsDrawer({
   onOpenChange,
   migration,
 }: MigrationDetailsDrawerProps) {
+  const t = useT()
   const statusCountersMap = useMemo(
     () => parseStatusCounters(migration),
     [migration],
@@ -212,8 +214,8 @@ export function MigrationDetailsDrawer({
 
   const title =
     migration.status === 'failed'
-      ? 'Resolve migration issues'
-      : 'Migration details'
+      ? t('Resolve migration issues')
+      : t('Migration details')
 
   const MAX_ERRORS_IN_DETAILS = 3
   const displayedErrors = parsedErrors.slice(0, MAX_ERRORS_IN_DETAILS)
@@ -246,10 +248,10 @@ export function MigrationDetailsDrawer({
               >
                 <TabsList className="w-full grid grid-cols-2 h-9">
                   <TabsTrigger value="details" className="text-[13px]">
-                    Details
+                    {t('Details')}
                   </TabsTrigger>
                   <TabsTrigger value="logs" className="text-[13px]">
-                    Logs
+                    {t('Logs')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -261,14 +263,14 @@ export function MigrationDetailsDrawer({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-3">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Overview
+                        {t('Overview')}
                       </h3>
                     </div>
                     <div className="border-t border-border" />
                     <div className="px-6 py-3 grid grid-cols-2 gap-x-4 gap-y-3">
                       <div className="min-w-0">
                         <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                          Created
+                          {t('Created')}
                         </p>
                         <p className="mt-0.5 text-[13px] text-foreground">
                           <DateTooltip
@@ -279,7 +281,7 @@ export function MigrationDetailsDrawer({
                       </div>
                       <div className="min-w-0">
                         <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                          Source
+                          {t('Source')}
                         </p>
                         <p className="mt-0.5 text-[13px] text-muted-foreground">
                           {migration.source}
@@ -295,16 +297,16 @@ export function MigrationDetailsDrawer({
                           <div className="border-t border-border" />
                           <div className="px-6 py-3">
                             <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                              Summary
+                              {t('Summary')}
                             </p>
                             <p className="mt-0.5 text-[13px] text-muted-foreground">
                               {countSummary.succeeded > 0 && (
                                 <span>
                                   {countSummary.succeeded}{' '}
                                   {countSummary.succeeded === 1
-                                    ? 'item'
-                                    : 'items'}{' '}
-                                  succeeded
+                                    ? t('item')
+                                    : t('items')}{' '}
+                                  {t('succeeded')}
                                   {(countSummary.failed > 0 ||
                                     countSummary.skipped > 0 ||
                                     countSummary.warning > 0) &&
@@ -314,8 +316,8 @@ export function MigrationDetailsDrawer({
                               {countSummary.failed > 0 && (
                                 <span>
                                   {countSummary.failed}{' '}
-                                  {countSummary.failed === 1 ? 'item' : 'items'}{' '}
-                                  failed
+                                  {countSummary.failed === 1 ? t('item') : t('items')}{' '}
+                                  {t('failed')}
                                   {(countSummary.skipped > 0 ||
                                     countSummary.warning > 0) &&
                                     ', '}
@@ -323,12 +325,12 @@ export function MigrationDetailsDrawer({
                               )}
                               {countSummary.skipped > 0 && (
                                 <span>
-                                  {countSummary.skipped} skipped
+                                  {countSummary.skipped} {t('skipped')}
                                   {countSummary.warning > 0 && ', '}
                                 </span>
                               )}
                               {countSummary.warning > 0 && (
-                                <span>{countSummary.warning} warning</span>
+                                <span>{countSummary.warning} {t('warning')}</span>
                               )}
                             </p>
                           </div>
@@ -340,7 +342,7 @@ export function MigrationDetailsDrawer({
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-3">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Status
+                        {t('Status')}
                       </h3>
                     </div>
                     <div className="border-t border-border" />
@@ -393,7 +395,7 @@ export function MigrationDetailsDrawer({
                                   </p>
                                   <p className="text-[12px] text-muted-foreground">
                                     {succeeded} / {total}{' '}
-                                    {total === 1 ? 'item' : 'items'}
+                                    {total === 1 ? t('item') : t('items')}
                                   </p>
                                 </div>
                                 <Badge
@@ -408,7 +410,7 @@ export function MigrationDetailsDrawer({
                         </div>
                       ) : (
                         <p className="text-[13px] text-muted-foreground">
-                          No status data yet
+                          {t('No status data yet')}
                         </p>
                       )}
                     </div>
@@ -418,11 +420,12 @@ export function MigrationDetailsDrawer({
                     <Alert className="border-red-500/30 bg-red-500/5">
                       <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                       <AlertTitle className="text-red-600 dark:text-red-400">
-                        Migration errors
+                        {t('Migration errors')}
                       </AlertTitle>
                       <AlertDescription className="text-foreground">
-                        Some entities failed to migrate. Check status counts
-                        above.
+                        {t(
+                          'Some entities failed to migrate. Check status counts above.',
+                        )}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -433,8 +436,8 @@ export function MigrationDetailsDrawer({
                         <AlertCircle className="h-4 w-4 translate-y-0.5 shrink-0 text-red-600 dark:text-red-400" />
                         <p className="font-medium tracking-tight text-sm text-red-600 dark:text-red-400">
                           {parsedErrors.length}{' '}
-                          {parsedErrors.length === 1 ? 'error' : 'errors'}{' '}
-                          recorded
+                          {parsedErrors.length === 1 ? t('error') : t('errors')}{' '}
+                          {t('recorded')}
                         </p>
                       </div>
                       <ul
@@ -463,8 +466,8 @@ export function MigrationDetailsDrawer({
                       {hasMoreErrors && (
                         <div className="mt-2 shrink-0 border-t border-red-500/20 pt-2">
                           <p className="text-[12px] text-muted-foreground">
-                            Showing first {MAX_ERRORS_IN_DETAILS} of{' '}
-                            {parsedErrors.length} errors.
+                            {t('Showing first')} {MAX_ERRORS_IN_DETAILS}{' '}
+                            {t('of')} {parsedErrors.length} {t('errors.')}
                           </p>
                           <Button
                             variant="link"
@@ -472,7 +475,7 @@ export function MigrationDetailsDrawer({
                             className="h-auto p-0 text-[12px] text-foreground underline underline-offset-2 hover:no-underline focus-visible:ring-2 focus-visible:ring-ring"
                             onClick={() => setActiveTab('logs')}
                           >
-                            View full list in Logs
+                            {t('View full list in Logs')}
                           </Button>
                         </div>
                       )}

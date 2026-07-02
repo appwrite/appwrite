@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresRowEditDrawerProps = {
   open: boolean
@@ -66,6 +67,7 @@ function PostgresRowNullOverlay({
   onCheckedChange: (checked: boolean) => void
   className?: string
 }) {
+  const t = useT()
   const id = `postgres-row-field-${columnName}-null`
   return (
     <div
@@ -86,7 +88,7 @@ function PostgresRowNullOverlay({
           htmlFor={id}
           className="cursor-pointer select-none text-[11px] text-muted-foreground"
         >
-          Null
+          {t('Null')}
         </label>
       </div>
     </div>
@@ -105,6 +107,7 @@ export function PostgresRowEditDrawer({
   focusedField,
   canWrite = true,
 }: PostgresRowEditDrawerProps) {
+  const t = useT()
   const isCreate = row == null
   const [draft, setDraft] = useState<Record<string, PostgresRowFieldDraft>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -197,14 +200,14 @@ export function PostgresRowEditDrawer({
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
-      toast.error('Fix validation errors before saving.')
+      toast.error(t('Fix validation errors before saving.'))
       return
     }
 
     try {
       if (isCreate) {
         await createMutation.mutateAsync(values)
-        toast.success('Row created')
+        toast.success(t('Row created'))
       } else if (identity) {
         const changes: Record<string, RowCellValue> = {}
         for (const column of editableColumns) {
@@ -220,7 +223,7 @@ export function PostgresRowEditDrawer({
           return
         }
         await updateMutation.mutateAsync({ identity, changes })
-        toast.success('Row updated')
+        toast.success(t('Row updated'))
       }
       onOpenChange(false)
     } catch (error) {
@@ -234,11 +237,11 @@ export function PostgresRowEditDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={isCreate ? 'Create row' : 'Update row'}
+      title={isCreate ? t('Create row') : t('Update row')}
       description={
         isCreate
-          ? 'Add a new row. Nullable columns can be left empty or set to null.'
-          : 'Update row values. Nullable columns can be cleared or set to null.'
+          ? t('Add a new row. Nullable columns can be left empty or set to null.')
+          : t('Update row values. Nullable columns can be cleared or set to null.')
       }
       maxWidth="sm:max-w-xl"
       disableAutoFocus
@@ -249,7 +252,7 @@ export function PostgresRowEditDrawer({
           <div className="flex-1 overflow-y-auto px-6 pb-4 pt-4 space-y-4">
             <div className="space-y-3">
               <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Row data
+                {t('Row data')}
               </h4>
               <div className="space-y-4">
                 {editableColumns.map((column) => {
@@ -279,7 +282,7 @@ export function PostgresRowEditDrawer({
                         {required ? (
                           <span
                             className="ms-0.5 text-[12px] font-semibold text-destructive"
-                            aria-label="Required field"
+                            aria-label={t('Required field')}
                           >
                             *
                           </span>
@@ -438,7 +441,7 @@ export function PostgresRowEditDrawer({
               onClick={() => onOpenChange(false)}
               disabled={isSaving}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </div>

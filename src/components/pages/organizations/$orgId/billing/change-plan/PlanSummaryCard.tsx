@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { getBillingPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import { useT } from '@/lib/i18n/translate'
 
 interface PlanSummaryCardProps {
   selectedPlan: BillingPlanTier | null
@@ -29,6 +30,7 @@ export function PlanSummaryCard({
   budgetEnabled,
   onBudgetToggle,
 }: PlanSummaryCardProps) {
+  const t = useT()
   // Calculate billing cycle days (default to 30)
   const billingCycleDays = 30
 
@@ -68,7 +70,7 @@ export function PlanSummaryCard({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Loading summary...
+            {t('Loading summary...')}
           </p>
         </div>
       </div>
@@ -80,7 +82,7 @@ export function PlanSummaryCard({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Select a plan to see summary
+            {t('Select a plan to see summary')}
           </p>
         </div>
       </div>
@@ -93,7 +95,7 @@ export function PlanSummaryCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Summary</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t('Summary')}</h3>
       </div>
 
       <div className="border-t border-border" />
@@ -101,7 +103,7 @@ export function PlanSummaryCard({
       <div className="px-6 py-4 space-y-4">
         {/* Plan Charge */}
         <div className="flex items-center justify-between text-[13px]">
-          <span className="text-muted-foreground">{planName} plan</span>
+          <span className="text-muted-foreground">{planName} {t('plan')}</span>
           <span className="font-medium text-foreground">
             {formatCurrency(planPrice, currency)}
           </span>
@@ -130,7 +132,7 @@ export function PlanSummaryCard({
         <div className="pt-2 border-t border-border">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-semibold text-foreground">
-              Total due
+              {t('Total due')}
             </span>
             <span className="text-[15px] font-semibold text-foreground">
               {formatCurrency(totalDue, currency)}
@@ -141,15 +143,15 @@ export function PlanSummaryCard({
         {/* Billing Statement */}
         <div className="pt-2">
           <p className="text-[13px] text-muted-foreground">
-            You'll pay{' '}
+            {t("You'll pay")}{' '}
             <span className="font-semibold text-foreground">
               {formatCurrency(totalDue, currency)}
             </span>{' '}
-            now. Then you'll be charged{' '}
+            {t("now. Then you'll be charged")}{' '}
             <span className="font-semibold text-foreground">
               {formatCurrency(totalDue, currency)}
             </span>{' '}
-            every {billingCycleDays} days.
+            {t('every')} {billingCycleDays} {t('days')}.
           </p>
         </div>
 
@@ -161,7 +163,7 @@ export function PlanSummaryCard({
                 htmlFor="budget-cap"
                 className="text-[13px] font-medium cursor-pointer"
               >
-                Enable budget cap
+                {t('Enable budget cap')}
               </Label>
               <TooltipProvider>
                 <Tooltip>
@@ -175,8 +177,7 @@ export function PlanSummaryCard({
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-[12px]">
-                      Enable budget cap to prevent unexpected charges from
-                      additional usage beyond your plan limits.
+                      {t('Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits.')}
                     </p>
                   </TooltipContent>
                 </Tooltip>

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useT } from '@/lib/i18n/translate'
 
 type SchedulePreset =
   | 'disabled'
@@ -357,6 +358,7 @@ export function CronScheduleEditor({
   onChange,
   disabled,
 }: CronScheduleEditorProps) {
+  const t = useT()
   const [mode, setMode] = useState<'preset' | 'advanced'>('preset')
   const [preset, setPreset] = useState<SchedulePreset>('disabled')
   const [customCron, setCustomCron] = useState('')
@@ -479,7 +481,7 @@ export function CronScheduleEditor({
             )}
           >
             <Clock className="h-3.5 w-3.5" />
-            Preset
+            {t('Preset')}
           </button>
           <button
             type="button"
@@ -494,7 +496,7 @@ export function CronScheduleEditor({
             )}
           >
             <Code className="h-3.5 w-3.5" />
-            Advanced
+            {t('Advanced')}
           </button>
         </div>
       </div>
@@ -507,7 +509,7 @@ export function CronScheduleEditor({
               htmlFor="schedule-preset"
               className="text-[13px] font-medium"
             >
-              Schedule preset
+              {t('Schedule preset')}
             </Label>
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
@@ -522,18 +524,18 @@ export function CronScheduleEditor({
                   )}
                   disabled={disabled}
                 >
-                  {getPresetDisplayLabel(preset || 'disabled')}
+                  {t(getPresetDisplayLabel(preset || 'disabled'))}
                   <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-0" align="start">
                 <Command>
                   <CommandInput
-                    placeholder="Search presets..."
+                    placeholder={t('Search presets...')}
                     className="h-9"
                   />
                   <CommandList>
-                    <CommandEmpty>No preset found.</CommandEmpty>
+                    <CommandEmpty>{t('No preset found.')}</CommandEmpty>
 
                     {/* Disabled */}
                     <CommandGroup>
@@ -547,17 +549,17 @@ export function CronScheduleEditor({
                       >
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[13px] font-medium">
-                            Disabled
+                            {t('Disabled')}
                           </span>
                           <span className="text-[11px] text-muted-foreground leading-tight">
-                            Function will not run on a schedule
+                            {t('Function will not run on a schedule')}
                           </span>
                         </div>
                       </CommandItem>
                     </CommandGroup>
 
                     {/* Frequent */}
-                    <CommandGroup heading="Frequent">
+                    <CommandGroup heading={t('Frequent')}>
                       {getPresetsByCategory('frequent').map((presetOption) => (
                         <CommandItem
                           key={presetOption.value}
@@ -570,10 +572,10 @@ export function CronScheduleEditor({
                         >
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[13px] font-medium">
-                              {presetOption.label}
+                              {t(presetOption.label)}
                             </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} •{' '}
+                              {t(presetOption.description)} •{' '}
                               <span className="font-mono">
                                 {presetOption.cron}
                               </span>
@@ -584,7 +586,7 @@ export function CronScheduleEditor({
                     </CommandGroup>
 
                     {/* Daily */}
-                    <CommandGroup heading="Daily">
+                    <CommandGroup heading={t('Daily')}>
                       {getPresetsByCategory('daily').map((presetOption) => (
                         <CommandItem
                           key={presetOption.value}
@@ -597,10 +599,10 @@ export function CronScheduleEditor({
                         >
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[13px] font-medium">
-                              {presetOption.label}
+                              {t(presetOption.label)}
                             </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} •{' '}
+                              {t(presetOption.description)} •{' '}
                               <span className="font-mono">
                                 {presetOption.cron}
                               </span>
@@ -611,7 +613,7 @@ export function CronScheduleEditor({
                     </CommandGroup>
 
                     {/* Weekly */}
-                    <CommandGroup heading="Weekly">
+                    <CommandGroup heading={t('Weekly')}>
                       {getPresetsByCategory('weekly').map((presetOption) => (
                         <CommandItem
                           key={presetOption.value}
@@ -624,10 +626,10 @@ export function CronScheduleEditor({
                         >
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[13px] font-medium">
-                              {presetOption.label}
+                              {t(presetOption.label)}
                             </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} •{' '}
+                              {t(presetOption.description)} •{' '}
                               <span className="font-mono">
                                 {presetOption.cron}
                               </span>
@@ -638,7 +640,7 @@ export function CronScheduleEditor({
                     </CommandGroup>
 
                     {/* Monthly */}
-                    <CommandGroup heading="Monthly">
+                    <CommandGroup heading={t('Monthly')}>
                       {getPresetsByCategory('monthly').map((presetOption) => (
                         <CommandItem
                           key={presetOption.value}
@@ -651,10 +653,10 @@ export function CronScheduleEditor({
                         >
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[13px] font-medium">
-                              {presetOption.label}
+                              {t(presetOption.label)}
                             </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} •{' '}
+                              {t(presetOption.description)} •{' '}
                               <span className="font-mono">
                                 {presetOption.cron}
                               </span>
@@ -675,7 +677,7 @@ export function CronScheduleEditor({
       {mode === 'advanced' && (
         <div className="space-y-2">
           <Label htmlFor="cron-expression" className="text-[13px] font-medium">
-            Cron expression
+            {t('Cron expression')}
           </Label>
           <Input
             id="cron-expression"
@@ -690,8 +692,9 @@ export function CronScheduleEditor({
             disabled={disabled}
           />
           <p className="text-[12px] text-muted-foreground">
-            Format: minute hour day month weekday (e.g., "0 0 * * *" for daily
-            at midnight)
+            {t(
+              'Format: minute hour day month weekday (e.g., "0 0 * * *" for daily at midnight)',
+            )}
           </p>
         </div>
       )}
@@ -702,11 +705,11 @@ export function CronScheduleEditor({
           <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3.5 py-2">
             <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Schedule preview
+              {t('Schedule preview')}
             </span>
           </div>
           <p className="px-3.5 py-3 text-[13px] font-medium leading-relaxed text-foreground">
-            {formattedSchedule}
+            {t(formattedSchedule)}
           </p>
         </div>
       )}
@@ -714,7 +717,7 @@ export function CronScheduleEditor({
         <Alert variant="destructive" className="transition-all duration-200">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-[12px]">
-            {validation.error || 'Invalid cron expression'}
+            {validation.error ? t(validation.error) : t('Invalid cron expression')}
           </AlertDescription>
         </Alert>
       )}

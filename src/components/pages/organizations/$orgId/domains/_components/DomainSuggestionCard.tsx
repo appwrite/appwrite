@@ -7,6 +7,7 @@ import {
   type DomainSuggestion,
 } from '@/lib/domains/search'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const DOMAIN_CARD_PRICE_BLOCK_MIN_H = 'min-h-[4.25rem]'
 
@@ -27,6 +28,7 @@ export function DomainSuggestionCard({
   disabledReason,
   actionLabel = 'Add',
 }: DomainSuggestionCardProps) {
+  const t = useT()
   const {
     full,
     tld,
@@ -73,12 +75,12 @@ export function DomainSuggestionCard({
       disabled={!canSelect}
       aria-label={
         taken
-          ? `${full} is taken`
+          ? `${full} ${t('is taken')}`
           : disabled && disabledReason === 'limit'
-            ? 'Domain limit reached'
+            ? t('Domain limit reached')
             : canSelect
-              ? `Select ${full}`
-              : `Loading price for ${full}`
+              ? `${t('Select')} ${full}`
+              : `${t('Loading price for')} ${full}`
       }
       onClick={() => {
         if (canSelect && onSelect) onSelect(full)
@@ -120,7 +122,7 @@ export function DomainSuggestionCard({
             variant="info"
             className="ms-auto shrink-0 px-1.5 py-0 text-[10px] font-medium"
           >
-            Premium
+            {t('Premium')}
           </Badge>
         ) : null}
       </div>
@@ -136,7 +138,7 @@ export function DomainSuggestionCard({
             taken ? (
               <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
                 <XCircle className="h-3.5 w-3.5 shrink-0" />
-                Taken
+                {t('Taken')}
               </span>
             ) : (
               <>
@@ -153,12 +155,12 @@ export function DomainSuggestionCard({
                   </span>
                 ) : (
                   <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                    {premium ? 'Contact for price' : '-'}
+                    {premium ? t('Contact for price') : '-'}
                   </span>
                 )}
                 {renewalPrice != null && renewalPrice > 0 ? (
                   <span className="truncate text-[11px] leading-snug text-muted-foreground tabular-nums animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                    Renewal{' '}
+                    {t('Renewal')}{' '}
                     <span className="font-mono font-medium text-foreground/90">
                       $
                       {renewalPrice.toLocaleString('en-US', {
@@ -191,7 +193,7 @@ export function DomainSuggestionCard({
                 !canSelect && 'opacity-50 group-hover:text-muted-foreground',
               )}
             >
-              {actionLabel}
+              {t(actionLabel)}
               <ArrowRight className="h-3.5 w-3.5" />
             </span>
           </div>

@@ -39,6 +39,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 export type TeamContextMenuTeam = {
   id: string
@@ -56,6 +57,7 @@ export function TeamContextMenu({
   team,
   children,
 }: TeamContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -66,11 +68,11 @@ export function TeamContextMenu({
       await queryClient.refetchQueries({
         queryKey: ['teams', 'project', projectId],
       })
-      toast.success('Team deleted')
+      toast.success(t('Team deleted'))
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete team')
+      toast.error(error.message || t('Failed to delete team'))
     },
   })
 
@@ -100,36 +102,36 @@ export function TeamContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={() => navigateToTab('overview')}>
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('members')}>
             <ContextMenuIcon icon={Users} />
-            Memberships
+            {t('Memberships')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => copyToClipboard('ID', team.id)}>
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', team.name)}
                 >
                   <ContextMenuIcon icon={Users} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', teamHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -137,23 +139,23 @@ export function TeamContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(teamHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(teamHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -161,10 +163,11 @@ export function TeamContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete team</DialogTitle>
+            <DialogTitle>{t('Delete team')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this team? This action cannot be
-              undone.
+              {t(
+                'Are you sure you want to delete this team? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -173,14 +176,14 @@ export function TeamContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

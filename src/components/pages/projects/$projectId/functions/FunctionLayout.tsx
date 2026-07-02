@@ -17,6 +17,7 @@ import {
   RefreshProvider,
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
+import { useT } from '@/lib/i18n/translate'
 
 export function FunctionLayout() {
   return (
@@ -27,6 +28,7 @@ export function FunctionLayout() {
 }
 
 function FunctionLayoutContent() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
@@ -78,7 +80,7 @@ function FunctionLayoutContent() {
     () => [
       {
         id: 'deployments',
-        label: 'Deployments',
+        label: t('Deployments'),
         to: '/projects/$projectId/functions/$functionId',
         params: {
           projectId: projectId as string,
@@ -87,7 +89,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'domains',
-        label: 'Domains',
+        label: t('Domains'),
         to: '/projects/$projectId/functions/$functionId/domains',
         params: {
           projectId: projectId as string,
@@ -96,7 +98,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'executions',
-        label: 'Executions',
+        label: t('Executions'),
         to: '/projects/$projectId/functions/$functionId/executions',
         params: {
           projectId: projectId as string,
@@ -105,7 +107,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'variables',
-        label: 'Variables',
+        label: t('Variables'),
         to: '/projects/$projectId/functions/$functionId/variables',
         params: {
           projectId: projectId as string,
@@ -114,7 +116,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'security',
-        label: 'Security',
+        label: t('Security'),
         to: '/projects/$projectId/functions/$functionId/security',
         params: {
           projectId: projectId as string,
@@ -123,7 +125,7 @@ function FunctionLayoutContent() {
       },
       {
         id: 'settings',
-        label: 'Settings',
+        label: t('Settings'),
         to: '/projects/$projectId/functions/$functionId/settings',
         params: {
           projectId: projectId as string,
@@ -131,7 +133,7 @@ function FunctionLayoutContent() {
         },
       },
     ],
-    [projectId, functionId],
+    [projectId, functionId, t],
   )
 
   const handleDomainsSearchChange = (value: string) => {
@@ -147,38 +149,38 @@ function FunctionLayoutContent() {
 
   const handleCreateDeployment = () => {
     // TODO: Open create deployment dialog
-    toast.info('Deployment creation coming soon')
+    toast.info(t('Deployment creation coming soon'))
   }
 
   const handleCreateExecution = () => {
     if (!func?.deploymentId) {
       toast.error(
-        'Execution cannot be created because there is no active deployment',
+        t('Execution cannot be created because there is no active deployment'),
       )
       return
     }
     // TODO: Open execution creation modal
-    toast.info('Execution creation coming soon')
+    toast.info(t('Execution creation coming soon'))
   }
 
   const handleFilterClick = () => {
     // TODO: Open filters dialog
-    toast.info('Filters coming soon')
+    toast.info(t('Filters coming soon'))
   }
 
   const handleAddDomain = () => {
     // TODO: Open add domain dialog
-    toast.info('Add domain functionality coming soon')
+    toast.info(t('Add domain functionality coming soon'))
   }
 
   if (isLoading) {
     return (
       <div className="flex flex-col">
-        <ServiceHeader title="Loading..." fullWidthBorder />
+        <ServiceHeader title={t('Loading...')} fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="text-[13px] text-muted-foreground">
-              Loading function...
+              {t('Loading function...')}
             </p>
           </div>
         </div>
@@ -189,12 +191,13 @@ function FunctionLayoutContent() {
   if (!func) {
     return (
       <div className="flex flex-col">
-        <ServiceHeader title="Function not found" fullWidthBorder />
+        <ServiceHeader title={t('Function not found')} fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <p className="mb-4 text-[13px] text-muted-foreground">
-              The function you're looking for doesn't exist or you don't have
-              access to it.
+              {t(
+                "The function you're looking for doesn't exist or you don't have access to it.",
+              )}
             </p>
             <Button variant="outline" asChild>
               <Link
@@ -202,7 +205,7 @@ function FunctionLayoutContent() {
                 params={{ projectId: projectId! }}
               >
                 <ArrowLeft className="me-1.5 h-4 w-4" />
-                Back to Functions
+                {t('Back to Functions')}
               </Link>
             </Button>
           </div>
@@ -222,20 +225,21 @@ function FunctionLayoutContent() {
           >
             <AlertCircle className="h-4 w-4 text-amber-500" />
             <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-              Function is disabled
+              {t('Function is disabled')}
             </AlertTitle>
             <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
               <span className="inline">
-                This function is disabled and not accessible to end users
-                through the API. Console actions remain available.{' '}
+                {t(
+                  'This function is disabled and not accessible to end users through the API. Console actions remain available.',
+                )}{' '}
                 <Link
                   to="/projects/$projectId/functions/$functionId/settings"
                   params={{ projectId: projectId!, functionId: functionId! }}
                   className="font-medium underline hover:no-underline inline"
                 >
-                  Enable it in the Settings tab
+                  {t('Enable it in the Settings tab')}
                 </Link>{' '}
-                to make it available to end users.
+                {t('to make it available to end users.')}
               </span>
             </AlertDescription>
           </Alert>
@@ -256,13 +260,13 @@ function FunctionLayoutContent() {
             <div className="flex flex-1 items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                  Settings changes are not live yet
+                  {t('Settings changes are not live yet')}
                 </AlertTitle>
                 <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                   <span className="inline">
-                    You've updated function settings, but they won't take effect
-                    until you redeploy. The current deployment is still running
-                    with the previous settings.
+                    {t(
+                      "You've updated function settings, but they won't take effect until you redeploy. The current deployment is still running with the previous settings.",
+                    )}
                   </span>
                 </AlertDescription>
               </div>
@@ -270,10 +274,10 @@ function FunctionLayoutContent() {
                 size="sm"
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                 onClick={() => {
-                  toast.info('Redeploy functionality coming soon')
+                  toast.info(t('Redeploy functionality coming soon'))
                 }}
               >
-                Redeploy
+                {t('Redeploy')}
               </Button>
             </div>
           </Alert>
@@ -291,7 +295,7 @@ function FunctionLayoutContent() {
               size="sm"
               asChild
               className="h-7 w-7 p-0"
-              aria-label="Back to functions"
+              aria-label={t('Back to functions')}
             >
               <Link
                 to="/projects/$projectId/functions"
@@ -300,7 +304,7 @@ function FunctionLayoutContent() {
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <span className="truncate">{func.name || 'Unnamed Function'}</span>
+            <span className="truncate">{func.name || t('Unnamed Function')}</span>
             <CopyableId id={func.$id} size="xs" className="shrink-0" />
           </div>
         }
@@ -308,7 +312,7 @@ function FunctionLayoutContent() {
         activeTab={activeTab}
         fullWidthBorder
         searchPlaceholder={
-          activeTab === 'domains' ? 'Search domain...' : undefined
+          activeTab === 'domains' ? t('Search domain...') : undefined
         }
         searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
         onSearchChange={
@@ -325,11 +329,11 @@ function FunctionLayoutContent() {
         isRefreshing={isRefreshing}
         createLabel={
           activeTab === 'deployments'
-            ? 'Create deployment'
+            ? t('Create deployment')
             : activeTab === 'executions'
-              ? 'Create execution'
+              ? t('Create execution')
               : activeTab === 'domains'
-                ? 'Add domain'
+                ? t('Add domain')
                 : undefined
         }
         onCreate={

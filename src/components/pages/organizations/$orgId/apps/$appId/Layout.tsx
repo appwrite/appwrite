@@ -14,6 +14,7 @@ import {
 } from '@/lib/org-apps/nav'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
 import { MarketplaceAppBadges } from '../../marketplace/_components/MarketplaceAppBadges'
+import { useT } from '@/lib/i18n/translate'
 
 export type OrgAppLayoutInitialData = {
   app: import('@appwrite.io/console').Models.App
@@ -24,6 +25,7 @@ type LayoutProps = {
 }
 
 export function Layout({ initialData }: LayoutProps = {}) {
+  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
@@ -65,8 +67,10 @@ export function Layout({ initialData }: LayoutProps = {}) {
       >
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
           <EmptyState
-            title="App not found"
-            description="This app may have been deleted or you do not have access."
+            title={t('App not found')}
+            description={t(
+              'This app may have been deleted or you do not have access.',
+            )}
             variant="card"
           />
         </div>
@@ -109,7 +113,7 @@ export function Layout({ initialData }: LayoutProps = {}) {
                 size="sm"
                 className="h-7 w-7 p-0"
                 onClick={handleBack}
-                aria-label="Back to OAuth apps"
+                aria-label={t('Back to OAuth apps')}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -142,9 +146,9 @@ export function Layout({ initialData }: LayoutProps = {}) {
                   })
                 }
               }}
-              searchPlaceholder="Search app settings"
-              mobileNavAriaLabel="App settings sections"
-              desktopNavAriaLabel="App settings"
+              searchPlaceholder={t('Search app settings')}
+              mobileNavAriaLabel={t('App settings sections')}
+              desktopNavAriaLabel={t('App settings')}
             >
               <Outlet />
             </SettingsLayoutShell>

@@ -56,6 +56,7 @@ import {
   isDeploymentCompleted,
   isDeploymentInProgress,
 } from '@/lib/utils/deployment-status'
+import { useT } from '@/lib/i18n/translate'
 
 export type DeploymentListRowContextMenuDeployment = Pick<
   Models.Deployment,
@@ -81,6 +82,7 @@ export function DeploymentListRowContextMenu({
   children,
   onRequestCancelBuild,
 }: DeploymentListRowContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -155,9 +157,9 @@ export function DeploymentListRowContextMenu({
             })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download source code')
+      toast.error(t('Failed to download source code'))
     }
   }
 
@@ -179,9 +181,9 @@ export function DeploymentListRowContextMenu({
             })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download build output')
+      toast.error(t('Failed to download build output'))
     }
   }
 
@@ -195,11 +197,13 @@ export function DeploymentListRowContextMenu({
         await deleteSiteDeployment(projectId, resourceId, deployment.$id)
         invalidateAfterSiteMutation()
       }
-      toast.success('Deployment deleted successfully')
+      toast.success(t('Deployment deleted successfully'))
       setDeleteDialogOpen(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to delete deployment',
+        error instanceof Error
+          ? error.message
+          : t('Failed to delete deployment'),
       )
     } finally {
       setDeletePending(false)
@@ -213,50 +217,52 @@ export function DeploymentListRowContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={navigateToDeploymentOverview}>
             <ContextMenuIcon icon={LayoutList} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Download} />
-              Download
+              {t('Download')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={handleDownloadSource}>
                 <ContextMenuIcon icon={FileCode} />
-                Source code
+                {t('Source code')}
               </ContextMenuItem>
               <ContextMenuItem
                 disabled={!canDownloadBuild}
                 title={
                   !canDownloadBuild
-                    ? 'Build output is available after the deployment has completed.'
+                    ? t(
+                        'Build output is available after the deployment has completed.',
+                      )
                     : undefined
                 }
                 onSelect={handleDownloadBuild}
               >
                 <ContextMenuIcon icon={Package} />
-                Build output
+                {t('Build output')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', deployment.$id)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', deploymentHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -276,18 +282,18 @@ export function DeploymentListRowContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(deploymentHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(deploymentHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           {canActivate && (
@@ -318,14 +324,14 @@ export function DeploymentListRowContextMenu({
                     })
                     invalidateAfterSiteMutation()
                   }
-                  toast.success('Deployment activated successfully')
+                  toast.success(t('Deployment activated successfully'))
                 } catch {
-                  toast.error('Failed to activate deployment')
+                  toast.error(t('Failed to activate deployment'))
                 }
               }}
             >
               <ContextMenuIcon icon={Play} />
-              Activate
+              {t('Activate')}
             </ContextMenuItem>
           )}
           <ContextMenuItem
@@ -352,21 +358,21 @@ export function DeploymentListRowContextMenu({
                   })
                   invalidateAfterSiteMutation()
                 }
-                toast.success('Deployment rebuild started')
+                toast.success(t('Deployment rebuild started'))
               } catch {
-                toast.error('Failed to redeploy')
+                toast.error(t('Failed to redeploy'))
               }
             }}
           >
             <ContextMenuIcon icon={RefreshCw} />
-            Redeploy
+            {t('Redeploy')}
           </ContextMenuItem>
           {inProgress && (
             <ContextMenuItem
               onSelect={() => onRequestCancelBuild(deployment.$id)}
             >
               <ContextMenuIcon icon={XCircle} />
-              Cancel
+              {t('Cancel')}
             </ContextMenuItem>
           )}
           <ContextMenuSeparator />
@@ -375,9 +381,9 @@ export function DeploymentListRowContextMenu({
             title={
               !canDeleteFromMenu
                 ? isActive
-                  ? 'The active deployment cannot be deleted from the list'
+                  ? t('The active deployment cannot be deleted from the list')
                   : inProgress
-                    ? 'Wait for the build to finish or cancel it first'
+                    ? t('Wait for the build to finish or cancel it first')
                     : undefined
                 : undefined
             }
@@ -387,7 +393,7 @@ export function DeploymentListRowContextMenu({
             }}
           >
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -395,10 +401,11 @@ export function DeploymentListRowContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete deployment</DialogTitle>
+            <DialogTitle>{t('Delete deployment')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this deployment? This action
-              cannot be undone.
+              {t(
+                'Are you sure you want to delete this deployment? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -408,14 +415,14 @@ export function DeploymentListRowContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deletePending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={deletePending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

@@ -34,6 +34,7 @@ import {
   type ScopeEditorRow,
 } from '@/lib/console-project-scopes'
 import { Loader2, MoreHorizontal, Search } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 interface ScopeEditorProps {
   value: string[]
@@ -46,6 +47,7 @@ export function ScopeEditor({
   onChange,
   disabled = false,
 }: ScopeEditorProps) {
+  const t = useT()
   const isCloud = isCloudEnvironment()
   const { features } = useConsoleProfile()
   const { data: scopeList, isLoading, isError, error } = useConsoleProjectScopes()
@@ -244,7 +246,7 @@ export function ScopeEditor({
     return (
       <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-[13px]">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading scopes…
+        {t('Loading scopes…')}
       </div>
     )
   }
@@ -252,7 +254,7 @@ export function ScopeEditor({
   if (isError) {
     return (
       <p className="text-[13px] text-destructive">
-        {error instanceof Error ? error.message : 'Failed to load scopes'}
+        {error instanceof Error ? error.message : t('Failed to load scopes')}
       </p>
     )
   }
@@ -260,7 +262,7 @@ export function ScopeEditor({
   if (availableScopes.length === 0) {
     return (
       <p className="text-[13px] text-muted-foreground">
-        No API key scopes are available from the server.
+        {t('No API key scopes are available from the server.')}
       </p>
     )
   }
@@ -273,7 +275,7 @@ export function ScopeEditor({
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search scopes…"
+            placeholder={t('Search scopes…')}
             className="h-9 ps-9 text-[13px]"
             disabled={disabled}
           />
@@ -287,7 +289,7 @@ export function ScopeEditor({
             onClick={handleSelectAll}
             disabled={disabled || filteredScopes.length === 0}
           >
-            {isFiltering ? 'Select shown' : 'Select all'}
+            {isFiltering ? t('Select shown') : t('Select all')}
           </Button>
           <Separator orientation="vertical" className="h-3" />
           <Button
@@ -298,7 +300,7 @@ export function ScopeEditor({
             onClick={handleDeselectAll}
             disabled={disabled || filteredScopes.length === 0}
           >
-            {isFiltering ? 'Clear shown' : 'Deselect all'}
+            {isFiltering ? t('Clear shown') : t('Deselect all')}
           </Button>
         </div>
       </div>
@@ -306,8 +308,8 @@ export function ScopeEditor({
       {isFiltering ? (
         <p className="text-[12px] text-muted-foreground">
           {filteredScopes.length === 0
-            ? 'No scopes match your search.'
-            : `Showing ${filteredScopes.length} of ${availableScopes.length} scopes.`}
+            ? t('No scopes match your search.')
+            : `${t('Showing')} ${filteredScopes.length} ${t('of')} ${availableScopes.length} ${t('scopes.')}`}
         </p>
       ) : null}
 
@@ -354,11 +356,11 @@ export function ScopeEditor({
                       <div className="flex min-w-0 items-center gap-3">
                         <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate text-[13px] font-medium text-foreground">
-                          {category}
+                          {t(category)}
                         </span>
                       </div>
                       <Badge variant="secondary" className="shrink-0 text-[12px]">
-                        {selectedCount} {selectedCount === 1 ? 'Scope' : 'Scopes'}
+                        {selectedCount} {selectedCount === 1 ? t('Scope') : t('Scopes')}
                       </Badge>
                     </div>
                   </AccordionRowTrigger>
@@ -389,12 +391,12 @@ export function ScopeEditor({
                               <span>{scopeDef.scope}</span>
                               {scopeDef.deprecated ? (
                                 <Badge variant="warning" className="text-[10px] shrink-0">
-                                  Deprecated
+                                  {t('Deprecated')}
                                 </Badge>
                               ) : null}
                             </div>
                             <div className="text-[12px] text-muted-foreground">
-                              {scopeDef.description}
+                              {t(scopeDef.description)}
                             </div>
                           </div>
                         </label>

@@ -1,4 +1,5 @@
 import { SheetClose } from '@/components/ui/sheet'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { MARKETING_SOCIAL_STATS } from '@/lib/marketing/social-stats'
 
@@ -25,6 +26,7 @@ export function MarketingGitHubStarsLink({
   className,
   mobile = false,
 }: MarketingGitHubStarsLinkProps) {
+  const t = useT()
   const { link, stat } = MARKETING_SOCIAL_STATS.github
 
   const anchor = (
@@ -32,7 +34,7 @@ export function MarketingGitHubStarsLink({
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`Appwrite on GitHub, ${stat} stars`}
+      aria-label={`${t('Appwrite on GitHub')}, ${stat} ${t('stars')}` /* pragma: allowlist secret */}
       className={cn(
         mobile
           ? 'flex h-10 w-full items-center justify-start gap-1.5 rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'

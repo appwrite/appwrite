@@ -13,33 +13,36 @@ import type { DomainSelectionQuote } from '@/lib/domains/search'
 import { domainsHero } from '@/lib/domains/marketing-content'
 import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
 import { trackEvent } from '@/lib/analytics'
+import { useT } from '@/lib/i18n/translate'
 
 type DomainsViewProps = {
   initialSearch?: string
 }
 
 function DomainsAuthFooter() {
+  const t = useT()
   return (
     <p>
       <Link
         {...buildSignUpForDomainPath()}
         className="link-neutral"
       >
-        Create an account
+        {t('Create an account')}
       </Link>{' '}
-      or{' '}
+      {t('or')}{' '}
       <Link
         {...buildSignInForDomainPath()}
         className="link-neutral"
       >
-        sign in
+        {t('sign in')}
       </Link>{' '}
-      to register and connect your domain.
+      {t('to register and connect your domain.')}
     </p>
   )
 }
 
 export function View({ initialSearch = '' }: DomainsViewProps) {
+  const t = useT()
   const navigate = useNavigate()
   const {
     account: accountUnknown,
@@ -110,10 +113,10 @@ export function View({ initialSearch = '' }: DomainsViewProps) {
           variant="focus"
           initialSearch={initialSearch}
           onSelectDomain={handleSelectDomain}
-          actionLabel="Continue"
+          actionLabel={t('Continue')}
           inputId="marketing-domain-search"
-          title={domainsHero.title}
-          description={domainsHero.description}
+          title={t(domainsHero.title)}
+          description={t(domainsHero.description)}
           footer={showAuthFooter ? <DomainsAuthFooter /> : undefined}
         />
       </div>

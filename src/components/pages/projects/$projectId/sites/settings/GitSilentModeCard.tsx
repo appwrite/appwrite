@@ -8,6 +8,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 interface GitSilentModeCardProps {
   projectId: string | null | undefined
@@ -20,6 +21,7 @@ export function GitSilentModeCard({
   siteId,
   site,
 }: GitSilentModeCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [silentMode, setSilentMode] = useState(site.providerSilentMode ?? false)
 
@@ -35,7 +37,7 @@ export function GitSilentModeCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Repository settings updated successfully')
+      toast.success(t('Repository settings updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -45,7 +47,7 @@ export function GitSilentModeCard({
     },
     onError: (error: unknown) => {
       toast.error(
-        getErrorMessage(error, 'Failed to update repository settings'),
+        getErrorMessage(error, t('Failed to update repository settings')),
       )
     },
   })
@@ -57,7 +59,7 @@ export function GitSilentModeCard({
 
   const handleSave = () => {
     if (!hasChanges) {
-      toast.info('No changes to save')
+      toast.info(t('No changes to save'))
       return
     }
     updateSiteMutation.mutate({ providerSilentMode: silentMode })
@@ -66,19 +68,20 @@ export function GitSilentModeCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Silent mode</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Silent mode')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Control whether Appwrite posts automated comments on commits in your
-          connected GitHub repository (for example deployment notes on pull
-          requests). Deployments, checks, and builds are unchanged-only optional
-          commit comments are skipped when silent mode is on.
+          {t(
+            'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.', // pragma: allowlist secret
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="site-git-silent-mode" className="text-[13px]">
-            Disable automated commit comments
+            {t('Disable automated commit comments')}
           </Label>
           <Switch
             id="site-git-silent-mode"
@@ -95,7 +98,7 @@ export function GitSilentModeCard({
           disabled={!hasChanges || updateSiteMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

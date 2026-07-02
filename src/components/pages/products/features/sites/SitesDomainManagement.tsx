@@ -1,5 +1,5 @@
 import { Globe, Lock, ShoppingCart } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const DOMAIN_CAPABILITIES = [
@@ -34,13 +34,14 @@ function CapabilityTile({
   item: (typeof DOMAIN_CAPABILITIES)[number]
   className?: string
 }) {
+  const t = useT()
   return (
     <div className={cn('p-4 sm:p-5', className)}>
       <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
         <item.icon className="size-3.5 text-muted-foreground" aria-hidden />
       </span>
-      <h3 className="mt-3 text-[14px] font-semibold text-foreground">{item.title}</h3>
-      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{item.description}</p>
+      <h3 className="mt-3 text-[14px] font-semibold text-foreground">{t(item.title)}</h3>
+      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{t(item.description)}</p>
     </div>
   )
 }

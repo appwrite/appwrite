@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { MockProviderTile } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const POPULAR_PROVIDERS = [
   { id: 'google', name: 'Google', icon: '/icons/google.svg', enabled: true },
@@ -22,6 +23,7 @@ const MORE_PROVIDERS = [
 ] as const
 
 export function AuthOAuthVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
@@ -33,19 +35,21 @@ export function AuthOAuthVisual() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Social providers</p>
+            <p className="text-[13px] font-semibold text-foreground">
+              {t('Social providers')}
+            </p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Enable OAuth 2 sign-in for external accounts.
+              {t('Enable OAuth 2 sign-in for external accounts.')}
             </p>
           </div>
           <Badge variant="info" className="text-[10px] shrink-0">
-            30+ providers
+            {t('30+ providers')}
           </Badge>
         </div>
 
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Popular
+            {t('Popular')}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {POPULAR_PROVIDERS.map((provider, index) => (
@@ -62,7 +66,7 @@ export function AuthOAuthVisual() {
 
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            More providers
+            {t('More providers')}
           </p>
           <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
             {MORE_PROVIDERS.map((provider) => (
@@ -79,7 +83,7 @@ export function AuthOAuthVisual() {
 
         <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2.5 text-center">
           <p className="text-[11px] text-muted-foreground">
-            One-click signup via GitHub, Google, Apple, and more.
+            {t('One-click signup via GitHub, Google, Apple, and more.')}
           </p>
         </div>
       </div>

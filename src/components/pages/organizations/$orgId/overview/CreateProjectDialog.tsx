@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateProjectDialogProps {
   open: boolean
@@ -49,6 +50,7 @@ export function CreateProjectDialog({
   organizationPlan: organizationPlanProp,
   currentProjectsCount = 0,
 }: CreateProjectDialogProps) {
+  const t = useT()
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
@@ -143,9 +145,9 @@ export function CreateProjectDialog({
 
     const trimmedName = name.trim()
     if (!trimmedName) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('Name is required')
     } else if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
-      newErrors.name = `Name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`
+      newErrors.name = `${t('Name must be no longer than')} ${PROJECT_NAME_MAX_LENGTH} ${t('characters')}`
     }
 
     setErrors(newErrors)
@@ -160,12 +162,12 @@ export function CreateProjectDialog({
     }
 
     if (!teamId) {
-      toast.error('Team ID is required')
+      toast.error(t('Team ID is required'))
       return
     }
 
     if (supportsMultiRegion && !selectedRegion) {
-      toast.error('Please select a region')
+      toast.error(t('Please select a region'))
       return
     }
 
@@ -176,7 +178,7 @@ export function CreateProjectDialog({
         region: supportsMultiRegion ? (selectedRegion ?? undefined) : undefined,
       })
 
-      toast.success('Project created successfully')
+      toast.success(t('Project created successfully'))
       handleOpenChange(false)
 
       // Navigate to the new project
@@ -187,7 +189,7 @@ export function CreateProjectDialog({
         })
       }
     } catch (error: unknown) {
-      toast.error(error?.message || 'Failed to create project')
+      toast.error(error?.message || t('Failed to create project'))
     }
   }
 
@@ -195,9 +197,9 @@ export function CreateProjectDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create project</DialogTitle>
+          <DialogTitle>{t('Create project')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new project in your organization.
+            {t('Create a new project in your organization.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -206,12 +208,12 @@ export function CreateProjectDialog({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter project name"
+                placeholder={t('Enter project name')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -230,14 +232,14 @@ export function CreateProjectDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="project-id">Project ID</Label>
+              <Label htmlFor="project-id">{t('Project ID')}</Label>
               <IdInput
                 id="project-id"
                 value={projectId}
                 onChange={setProjectId}
                 maxLength={36}
                 disabled={createProjectMutation.isPending}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
               />
             </div>
 
@@ -245,7 +247,7 @@ export function CreateProjectDialog({
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                  Region
+                  {t('Region')}
                   <span className="text-destructive">*</span>
                 </Label>
                 {regionsLoading ? (
@@ -253,12 +255,12 @@ export function CreateProjectDialog({
                 ) : regionsError ? (
                   <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-center">
                     <p className="text-[13px] text-destructive mb-1">
-                      Failed to load regions
+                      {t('Failed to load regions')}
                     </p>
                     <p className="text-[12px] text-muted-foreground">
                       {regionsError instanceof Error
                         ? regionsError.message
-                        : 'Unknown error'}
+                        : t('Unknown error')}
                     </p>
                   </div>
                 ) : regions.length > 0 ? (
@@ -268,13 +270,13 @@ export function CreateProjectDialog({
                     disabled={createProjectMutation.isPending}
                   >
                     <SelectTrigger className="h-9 w-full text-[13px]">
-                      <SelectValue placeholder="Select a region">
+                      <SelectValue placeholder={t('Select a region')}>
                         {selectedRegion
                           ? (() => {
                               const region = regions.find(
                                 (r: unknown) => r.$id === selectedRegion,
                               )
-                              if (!region) return 'Select a region'
+                              if (!region) return t('Select a region')
                               const flagCode = region.flag || ''
                               const regionName =
                                 region.name || region.$id || 'Unknown'
@@ -304,7 +306,7 @@ export function CreateProjectDialog({
                                 </div>
                               )
                             })()
-                          : 'Select a region'}
+                          : t('Select a region')}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -358,7 +360,7 @@ export function CreateProjectDialog({
                                 </span>
                                 {isComingSoon && (
                                   <span className="text-[11px] text-muted-foreground">
-                                    Coming soon
+                                    {t('Coming soon')}
                                   </span>
                                 )}
                               </div>
@@ -371,7 +373,7 @@ export function CreateProjectDialog({
                 ) : (
                   <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
                     <p className="text-[13px] text-muted-foreground">
-                      No regions available
+                      {t('No regions available')}
                     </p>
                   </div>
                 )}
@@ -394,7 +396,7 @@ export function CreateProjectDialog({
               onClick={() => handleOpenChange(false)}
               disabled={createProjectMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
@@ -406,7 +408,7 @@ export function CreateProjectDialog({
                 (supportsMultiRegion && !selectedRegion)
               }
             >
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>

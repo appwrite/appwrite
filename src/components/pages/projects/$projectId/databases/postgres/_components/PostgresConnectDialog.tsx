@@ -55,6 +55,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { PostgresCopyableField } from './PostgresCopyableField'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const POSTGRES_DOCS_URL = '/docs/products/databases'
 const CONNECT_TAB_CONTENT_HEIGHT = 'h-[400px]'
@@ -99,12 +100,12 @@ function ConnectDialogSkeleton() {
   )
 }
 
-async function copyText(label: string, value: string) {
+async function copyText(successMessage: string, value: string, errorMessage: string) {
   try {
     await navigator.clipboard.writeText(value)
-    toast.success(`${label} copied`)
+    toast.success(successMessage)
   } catch {
-    toast.error('Failed to copy')
+    toast.error(errorMessage)
   }
 }
 
@@ -127,6 +128,7 @@ function PostgresConnectDetails({
   snippets,
   onClose,
 }: PostgresConnectDetailsProps) {
+  const t = useT()
   const nav = postgresNav({ projectId, databaseId })
 
   const databaseName =
@@ -134,25 +136,26 @@ function PostgresConnectDetails({
 
   const handleCopyAll = async () => {
     await copyText(
-      'Credentials',
+      t('Credentials copied'),
       buildPostgresCopyAllText(credentials, endpointInfo),
+      t('Failed to copy'),
     )
   }
 
   const handleCopyEnv = async () => {
     if (!snippets?.env) return
-    await copyText('.env entry', snippets.env)
+    await copyText(t('.env entry copied'), snippets.env, t('Failed to copy'))
   }
 
   return (
     <div className="-m-1 flex h-full flex-col gap-4 overflow-y-auto p-1">
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
         <PostgresCopyableField
-          label="Host"
+          label={t('Host')}
           value={credentials.host || database.hostname || ''}
         />
         <PostgresCopyableField
-          label="Port"
+          label={t('Port')}
           value={
             credentials.port
               ? String(credentials.port)
@@ -164,18 +167,18 @@ function PostgresConnectDetails({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <PostgresCopyableField
-          label="Username"
+          label={t('Username')}
           value={credentials.username}
         />
         <PostgresCopyableField
-          label="Password"
+          label={t('Password')}
           value={credentials.password}
           masked
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {databaseName ? (
-          <PostgresCopyableField label="Database" value={databaseName} />
+          <PostgresCopyableField label={t('Database')} value={databaseName} />
         ) : null}
         <PostgresCopyableField
           label="SSL"
@@ -191,7 +194,7 @@ function PostgresConnectDetails({
             className="font-medium text-foreground underline-offset-4 hover:underline"
             onClick={onClose}
           >
-            Settings
+            {t('Settings')}
           </Link>
           .
         </p>
@@ -205,7 +208,7 @@ function PostgresConnectDetails({
           onClick={() => void handleCopyEnv()}
           disabled={!snippets?.env}
         >
-          Copy .env
+          {t('Copy .env')}
         </Button>
         <Button
           type="button"
@@ -214,7 +217,7 @@ function PostgresConnectDetails({
           className="h-9 text-[13px]"
           onClick={() => void handleCopyAll()}
         >
-          Copy all
+          {t('Copy all')}
         </Button>
       </div>
     </div>
@@ -226,6 +229,7 @@ type PostgresConnectDsnProps = {
 }
 
 function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
+  const t = useT()
   const maskedConnectionString = credentials.connectionString
     ? maskPostgresConnectionStringPassword(
         credentials.connectionString,
@@ -236,7 +240,7 @@ function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
   if (!credentials.connectionString) {
     return (
       <div className="flex h-full items-center justify-center text-[13px] text-muted-foreground">
-        Connection string unavailable.
+        {t('Connection string unavailable.')}
       </div>
     )
   }
@@ -245,8 +249,7 @@ function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center gap-1.5">
         <p className="text-[13px] text-muted-foreground">
-          PostgreSQL connection URI for clients that accept a single connection
-          string.
+          {t('PostgreSQL connection URI for clients that accept a single connection string.')}
         </p>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
@@ -255,7 +258,7 @@ function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
                 type="button"
                 className="inline-flex shrink-0 items-center justify-center"
                 onClick={(event) => event.stopPropagation()}
-                aria-label="What is a DSN?"
+                aria-label={t('What is a DSN?')}
               >
                 <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
               </button>
@@ -287,8 +290,7 @@ function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
       <div className="flex shrink-0 items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-2.5 py-2">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-200/90">
-          Treat this URI like a password. Do not commit it to source control or
-          share it publicly.
+          {t('Treat this URI like a password. Do not commit it to source control or share it publicly.')}
         </p>
       </div>
     </div>
@@ -358,6 +360,7 @@ function PostgresConnectPsql({
   context,
   copyContent,
 }: PostgresConnectPsqlProps) {
+  const t = useT()
   const [activeSection, setActiveSection] =
     useState<PostgresPsqlSnippetPart>('uri')
   const displayCode = buildPostgresPsqlSnippetPartDisplayCode(
@@ -369,8 +372,7 @@ function PostgresConnectPsql({
     <div className="flex h-full flex-col gap-3">
       <div className="flex shrink-0 items-start gap-1.5">
         <p className="text-[13px] leading-relaxed text-muted-foreground">
-          psql is the official PostgreSQL command-line client. Use it to run SQL,
-          inspect schemas, and explore your database from the terminal.
+          {t('psql is the official PostgreSQL command-line client. Use it to run SQL, inspect schemas, and explore your database from the terminal.')}
         </p>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
@@ -379,7 +381,7 @@ function PostgresConnectPsql({
                 type="button"
                 className="inline-flex shrink-0 items-center justify-center"
                 onClick={(event) => event.stopPropagation()}
-                aria-label="What is psql?"
+                aria-label={t('What is psql?')}
               >
                 <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
               </button>
@@ -443,6 +445,7 @@ export function PostgresConnectDialog({
   projectId,
   databaseId,
 }: PostgresConnectDialogProps) {
+  const t = useT()
   const [methodTab, setMethodTab] = useState<PostgresConnectTab>('details')
 
   const { database, isLoading: databaseLoading } = usePostgresDatabase(
@@ -490,9 +493,9 @@ export function PostgresConnectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,800px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Credentials</DialogTitle>
+          <DialogTitle>{t('Credentials')}</DialogTitle>
           <DialogDescription className="mt-2 text-[13px]">
-            Credentials and connection strings for external clients, ORMs, and CLI tools.
+            {t('Credentials and connection strings for external clients, ORMs, and CLI tools.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -504,7 +507,7 @@ export function PostgresConnectDialog({
           <div className="shrink-0 px-6 py-4">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to load credentials</AlertTitle>
+              <AlertTitle>{t('Failed to load credentials')}</AlertTitle>
               <AlertDescription className="text-[13px]">
                 {credentialsErrorMessage}
               </AlertDescription>
@@ -516,7 +519,7 @@ export function PostgresConnectDialog({
                 onClick={() => void refetchCredentials()}
               >
                 <RefreshCw className="h-3.5 w-3.5 shrink-0" />
-                Retry
+                {t('Retry')}
               </Button>
             </Alert>
           </div>
@@ -665,7 +668,7 @@ export function PostgresConnectDialog({
               asChild
             >
               <DocsRouteLink href={POSTGRES_DOCS_URL}>
-                Docs
+                {t('Docs')}
                 <ExternalLink className="h-3.5 w-3.5 shrink-0" />
               </DocsRouteLink>
             </Button>
@@ -675,7 +678,7 @@ export function PostgresConnectDialog({
               className="h-9 text-[13px]"
               onClick={() => onOpenChange(false)}
             >
-              Done
+              {t('Done')}
             </Button>
           </div>
         </div>

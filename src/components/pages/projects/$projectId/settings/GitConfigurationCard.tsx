@@ -47,6 +47,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import { GitInstallationContextMenu } from './GitInstallationContextMenu'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -80,6 +81,7 @@ export function GitConfigurationCard({
   getGitHubAuthUrl,
   isSelfHosted = false,
   isVcsEnabled = true}: GitConfigurationCardProps) {
+  const t = useT()
   const { data: installationsData, isLoading } = useVcsInstallations(
     projectId,
     page,
@@ -150,12 +152,12 @@ export function GitConfigurationCard({
     try {
       await deleteMutation.mutateAsync(selectedInstallation.$id)
       toast.success(
-        `${selectedInstallation.organization} has been disconnected from this project`,
+        `${selectedInstallation.organization} ${t('has been disconnected from this project')}`,
       )
       setDisconnectModalOpen(false)
       setSelectedInstallation(null)
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to disconnect installation'))
+      toast.error(getErrorMessage(error, t('Failed to disconnect installation')))
     }
   }
 
@@ -184,24 +186,23 @@ export function GitConfigurationCard({
       <div className="rounded-xl border border-dashed border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Git configuration
+            {t('Git configuration')}
           </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
-            Add a Git installation to your project so you can connect
-            repositories later through your function or site settings.
+            {t('Add a Git installation to your project so you can connect repositories later through your function or site settings.')}
           </p>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
               <GitHubIcon className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="mb-1 text-[14px] font-medium text-foreground">
-              No installation was added to the project yet
+              {t('No installation was added to the project yet')}
             </p>
             <p className="mb-4 text-[13px] text-muted-foreground">
-              Add an installation to connect repositories
+              {t('Add an installation to connect repositories')}
             </p>
             <Button
               variant="secondary"
@@ -211,7 +212,7 @@ export function GitConfigurationCard({
             >
               <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
                 <GitHubIcon className="me-1.5 h-4 w-4" />
-                Connect to GitHub
+                {t('Connect to GitHub')}
               </a>
             </Button>
           </div>
@@ -226,7 +227,7 @@ export function GitConfigurationCard({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Git configuration
+            {t('Git configuration')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -234,10 +235,9 @@ export function GitConfigurationCard({
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
-              <strong>Installing Git on a self-hosted instance</strong>
+              <strong>{t('Installing Git on a self-hosted instance')}</strong>
               <br />
-              Before installing Git in a locally hosted Appwrite project, ensure
-              your environment variables are configured.{' '}
+              {t('Before installing Git in a locally hosted Appwrite project, ensure your environment variables are configured.')}{' '} {/* pragma: allowlist secret */}
               <Button
                 variant="link"
                 size="sm"
@@ -245,7 +245,7 @@ export function GitConfigurationCard({
                 asChild
               >
                 <DocsRouteLink href="/docs/advanced/self-hosting/configuration/version-control">
-                  Learn more
+                  {t('Learn more')}
                 </DocsRouteLink>
               </Button>
             </AlertDescription>
@@ -261,7 +261,7 @@ export function GitConfigurationCard({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Git configuration
+            {t('Git configuration')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -270,8 +270,7 @@ export function GitConfigurationCard({
             {/* Left side - Description */}
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
-                Add a Git installation to your project so you can connect
-                repositories later through your function or site settings.
+                {t('Add a Git installation to your project so you can connect repositories later through your function or site settings.')}
               </p>
             </div>
 
@@ -283,7 +282,7 @@ export function GitConfigurationCard({
                 </div>
               ) : installations.length === 0 ? (
                 <div className="text-center py-8 text-[13px] text-muted-foreground">
-                  No installations found
+                  {t('No installations found')}
                 </div>
               ) : (
                 <>
@@ -292,13 +291,13 @@ export function GitConfigurationCard({
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border">
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
-                            Owner
+                            {t('Owner')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
-                            Created
+                            {t('Created')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
-                            Updated
+                            {t('Updated')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></TableHead>
                         </TableRow>
@@ -358,7 +357,7 @@ export function GitConfigurationCard({
                                         className={menuItemRowClassName}
                                       >
                                         <MenuItemContent icon={Settings}>
-                                          Configure
+                                          {t('Configure')}
                                         </MenuItemContent>
                                       </a>
                                     </DropdownMenuItem>
@@ -368,7 +367,7 @@ export function GitConfigurationCard({
                                       }
                                     >
                                       <MenuItemContent icon={Unplug}>
-                                        Disconnect
+                                        {t('Disconnect')}
                                       </MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
@@ -391,7 +390,7 @@ export function GitConfigurationCard({
                         pageSizeOptions={[limit]}
                         onPageChange={(newPage) => onPageChange(newPage - 1)}
                         onPageSizeChange={() => {}}
-                        itemLabel="installations"
+                        itemLabel={t('installations')}
                       />
                     </div>
                   )}
@@ -409,7 +408,7 @@ export function GitConfigurationCard({
           >
             <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
               <Plus className="me-1.5 h-4 w-4" />
-              Add installation
+              {t('Add installation')}
             </a>
           </Button>
         </div>
@@ -419,11 +418,11 @@ export function GitConfigurationCard({
       <Dialog open={disconnectModalOpen} onOpenChange={setDisconnectModalOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Disconnect installation</DialogTitle>
+            <DialogTitle>{t('Disconnect installation')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {affectedFunctions?.total === 0 && affectedSites?.total === 0
-                ? 'Are you sure you want to disconnect this git installation?'
-                : 'Are you sure you want to disconnect this git installation? This will affect future deployments to the following sites and functions:'}
+                ? t('Are you sure you want to disconnect this git installation?')
+                : t('Are you sure you want to disconnect this git installation? This will affect future deployments to the following sites and functions:')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -439,7 +438,7 @@ export function GitConfigurationCard({
                 {affectedSites && affectedSites.total > 0 && (
                   <div className="mb-4">
                     <p className="text-[12px] font-medium text-foreground mb-2">
-                      Sites
+                      {t('Sites')}
                     </p>
                     <div className="space-y-2">
                       {affectedSites.sites.map((site) => (
@@ -453,7 +452,7 @@ export function GitConfigurationCard({
                               {site.name}
                             </p>
                             <p className="text-[12px] text-muted-foreground">
-                              Last deployed:{' '}
+                              {t('Last deployed:')}{' '}
                               <DateTooltip date={site.$updatedAt} />
                             </p>
                           </div>
@@ -466,7 +465,7 @@ export function GitConfigurationCard({
                 {affectedFunctions && affectedFunctions.total > 0 && (
                   <div>
                     <p className="text-[12px] font-medium text-foreground mb-2">
-                      Functions
+                      {t('Functions')}
                     </p>
                     <div className="space-y-2">
                       {affectedFunctions.functions.map((func) => (
@@ -480,7 +479,7 @@ export function GitConfigurationCard({
                               {func.name}
                             </p>
                             <p className="text-[12px] text-muted-foreground">
-                              Last deployed:{' '}
+                              {t('Last deployed:')}{' '}
                               <DateTooltip date={func.$updatedAt} />
                             </p>
                           </div>
@@ -503,7 +502,7 @@ export function GitConfigurationCard({
               }}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -512,7 +511,7 @@ export function GitConfigurationCard({
               onClick={handleDisconnect}
               disabled={deleteMutation.isPending}
             >
-              Disconnect
+              {t('Disconnect')}
             </Button>
           </div>
         </DialogContent>

@@ -31,8 +31,10 @@ import {
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 export function BillingTab() {
+  const t = useT()
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const orgId = params.orgId as string | undefined
@@ -81,7 +83,7 @@ export function BillingTab() {
 
       if (!paymentMethodId) {
         toast.error(
-          'No payment method available. Please add a payment method first.',
+          t('No payment method available. Please add a payment method first.'),
         )
         return
       }
@@ -92,10 +94,10 @@ export function BillingTab() {
         paymentMethodId,
       })
 
-      toast.success('Payment retry initiated')
+      toast.success(t('Payment retry initiated'))
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to retry payment',
+        error instanceof Error ? error.message : t('Failed to retry payment'),
       )
     }
   }
@@ -142,19 +144,21 @@ export function BillingTab() {
             <WarningAlert
               title={
                 orgBillingReadonly
-                  ? 'Payment failed - organization in read-only mode'
-                  : 'Payment failed'
+                  ? t('Payment failed - organization in read-only mode')
+                  : t('Payment failed')
               }
             >
               {orgBillingReadonly && (
                 <p className="mb-2 font-medium text-red-600 dark:text-red-400">
-                  Changes to projects and services are limited until the
-                  outstanding invoice is paid. Complete payment to restore full
-                  access.
+                  {t(
+                    'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.',
+                  )}
                 </p>
               )}
               {failedInvoice.lastError ||
-                'Your last payment attempt failed. Please update your payment method and try again.'}
+                t(
+                  'Your last payment attempt failed. Please update your payment method and try again.',
+                )}
               <div className="mt-3">
                 <Button
                   size="sm"
@@ -162,7 +166,7 @@ export function BillingTab() {
                   onClick={handleRetryPayment}
                   disabled={retryPaymentMutation.isPending}
                 >
-                  Try again
+                  {t('Try again')}
                 </Button>
               </div>
             </WarningAlert>
@@ -178,10 +182,10 @@ export function BillingTab() {
             keywords: ['expired', 'declined', 'failed card', 'backup'],
           },
           node: (
-            <WarningAlert title="Payment method failed" icon={CreditCard}>
-              Your default payment method has failed and you don't have a backup
-              method. Please add a new payment method to continue using our
-              services.
+            <WarningAlert title={t('Payment method failed')} icon={CreditCard}>
+              {t(
+                "Your default payment method has failed and you don't have a backup method. Please add a new payment method to continue using our services.",
+              )}
             </WarningAlert>
           ),
         })
@@ -197,10 +201,11 @@ export function BillingTab() {
           node: (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Plan downgrade scheduled</AlertTitle>
+              <AlertTitle>{t('Plan downgrade scheduled')}</AlertTitle>
               <AlertDescription className="mt-2">
-                Your plan will change at the end of your current billing period.
-                You'll keep access to your current plan features until then.
+                {t(
+                  "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.",
+                )}
               </AlertDescription>
             </Alert>
           ),
@@ -316,6 +321,7 @@ export function BillingTab() {
     failedInvoice,
     retryPaymentMutation.isPending,
     orgId,
+    t,
   ])
 
   return (

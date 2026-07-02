@@ -9,6 +9,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type MessagingProviderItem = {
@@ -125,18 +126,19 @@ function ChannelTile({
   tile: MessagingChannelTile
   className?: string
 }) {
+  const t = useT()
   return (
     <div className={cn('p-4 sm:p-5', className)}>
       <ChannelTileIcon icon={tile.icon} />
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <h3 className="text-[14px] font-semibold text-foreground">{tile.title}</h3>
+        <h3 className="text-[14px] font-semibold text-foreground">{t(tile.title)}</h3>
         {tile.comingSoon ? (
           <Badge variant="warning" className="text-[10px] shrink-0">
-            Coming soon
+            {t('Coming soon')}
           </Badge>
         ) : null}
       </div>
-      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{tile.description}</p>
+      <p className="mt-1.5 text-[13px] leading-5 text-muted-foreground">{t(tile.description)}</p>
       {tile.providers.length > 0 ? (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {tile.providers.map((provider) => (

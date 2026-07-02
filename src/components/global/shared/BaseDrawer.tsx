@@ -10,6 +10,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export interface BaseDrawerProps {
   open: boolean
@@ -39,6 +40,7 @@ export function BaseDrawer({
   side = 'right',
   disableAutoFocus = false,
 }: BaseDrawerProps) {
+  const t = useT()
   const contentRef = React.useRef<HTMLDivElement>(null)
 
   const blurActiveElement = React.useCallback(() => {
@@ -166,12 +168,12 @@ export function BaseDrawer({
               {headerLeading}
               {title && (
                 <SheetTitle className="text-[15px] m-0 leading-none font-semibold">
-                  {title}
+                  {t(title)}
                 </SheetTitle>
               )}
             </div>
             <SheetDescription className="sr-only">
-              {description || title || 'Drawer'}
+              {description ? t(description) : title ? t(title) : t('Drawer')}
             </SheetDescription>
             <div className="flex items-center gap-2 shrink-0">
               {headerActions}
@@ -181,7 +183,7 @@ export function BaseDrawer({
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 cursor-pointer"
-                  aria-label="Close"
+                  aria-label={t('Close')}
                 >
                   <X className="h-4 w-4" />
                 </Button>

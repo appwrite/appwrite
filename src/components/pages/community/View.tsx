@@ -31,6 +31,7 @@ import {
   communityShowcase,
 } from '@/lib/community/content'
 import { MARKETING_SOCIAL_STATS } from '@/lib/marketing/social-stats'
+import { useT } from '@/lib/i18n/translate'
 
 type ViewProps = {
   issues: CommunityGitHubIssue[]
@@ -80,29 +81,34 @@ const COMMUNITY_PLATFORM_CARDS = [
     label: 'Discord',
     href: MARKETING_SOCIAL_STATS.discord.link,
     icon: '/icons/discord-simple.svg',
-    stat: `${MARKETING_SOCIAL_STATS.discord.stat} members`,
+    stat: MARKETING_SOCIAL_STATS.discord.stat,
+    statLabel: 'members',
   },
   {
     label: 'X',
     href: MARKETING_SOCIAL_STATS.twitter.link,
     icon: '/icons/x.svg',
-    stat: `${MARKETING_SOCIAL_STATS.twitter.stat} followers`,
+    stat: MARKETING_SOCIAL_STATS.twitter.stat,
+    statLabel: 'followers',
   },
   {
     label: 'GitHub',
     href: MARKETING_SOCIAL_STATS.github.link,
     icon: '/icons/github-circle.svg',
-    stat: `${MARKETING_SOCIAL_STATS.github.stat} stargazers`,
+    stat: MARKETING_SOCIAL_STATS.github.stat,
+    statLabel: 'stargazers',
   },
   {
     label: 'YouTube',
     href: MARKETING_SOCIAL_STATS.youtube.link,
     icon: '/icons/youtube.svg',
-    stat: `${MARKETING_SOCIAL_STATS.youtube.stat} subscribers`,
+    stat: MARKETING_SOCIAL_STATS.youtube.stat,
+    statLabel: 'subscribers',
   },
 ] as const
 
 export function View({ issues }: ViewProps) {
+  const t = useT()
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
@@ -117,7 +123,7 @@ export function View({ issues }: ViewProps) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Join our Discord
+            {t('Join our Discord')}
           </a>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
@@ -152,7 +158,7 @@ export function View({ issues }: ViewProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              View all contributors
+              {t('View all contributors')}
             </a>
           </Button>
         </div>
@@ -171,10 +177,10 @@ export function View({ issues }: ViewProps) {
             <div className={marketingSplitLayoutClassName({ className: 'p-6 sm:p-8' })}>
               <div>
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  {communityGetInvolved.issuesTitle}
+                  {t(communityGetInvolved.issuesTitle)}
                 </h3>
                 <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
-                  {communityGetInvolved.issuesDescription}
+                  {t(communityGetInvolved.issuesDescription)}
                 </p>
                 <Button variant="outline" className="mt-6" asChild>
                   <a
@@ -183,7 +189,7 @@ export function View({ issues }: ViewProps) {
                     rel="noopener noreferrer"
                   >
                     <Github className="me-1.5 h-4 w-4" />
-                    View all Open Issues
+                    {t('View all Open Issues')}
                   </a>
                 </Button>
               </div>
@@ -193,10 +199,10 @@ export function View({ issues }: ViewProps) {
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border">
                       <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Issue #
+                        {t('Issue #')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Title
+                        {t('Title')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -238,7 +244,7 @@ export function View({ issues }: ViewProps) {
 
           <MarketingInvolvementCards
             className="mt-12"
-            title="Other ways to help"
+            title={t('Other ways to help')}
             items={communityHelpCards.map((card) => ({
               ...card,
               external: false,
@@ -257,7 +263,7 @@ export function View({ issues }: ViewProps) {
           <div className="mt-8 flex justify-center">
             <Button variant="outline" asChild>
               <a href={communityShowcase.href} target="_blank" rel="noopener noreferrer">
-                View all projects
+                {t('View all projects')}
               </a>
             </Button>
           </div>
@@ -282,7 +288,7 @@ export function View({ issues }: ViewProps) {
                   <div className="p-5">
                     <h3 className="text-[14px] font-semibold text-foreground">{project.title}</h3>
                     <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
-                      {project.description}
+                      {t(project.description)}
                     </p>
                   </div>
                 </a>
@@ -312,7 +318,7 @@ export function View({ issues }: ViewProps) {
                   >
                     <SocialIconMask icon={platform.icon} label={platform.label} />
                     <p className="mt-auto font-aeonik-pro text-[18px] text-foreground">
-                      {platform.stat}
+                      {platform.stat} {t(platform.statLabel)}
                     </p>
                   </a>
                 </li>
@@ -325,7 +331,7 @@ export function View({ issues }: ViewProps) {
       <MarketingCtaSection title={communityCta.title}>
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
           <Link to="/sign-up" search={{ redirect: '/' }}>
-            Get started
+            {t('Get started')}
           </Link>
         </Button>
       </MarketingCtaSection>

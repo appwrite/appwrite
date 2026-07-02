@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
@@ -44,10 +45,11 @@ export function UsageMetricCardFooter({
   description: string
   docsHref?: string
 }) {
+  const t = useT()
   return (
     <div className="mt-auto shrink-0 border-t border-border bg-muted/30 px-4 py-3">
       <p className="text-[12px] leading-relaxed text-muted-foreground">
-        {description}
+        {t(description)}
         {docsHref ? (
           <>
             {' '}
@@ -55,7 +57,7 @@ export function UsageMetricCardFooter({
               href={docsHref}
               className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
             >
-              Learn more
+              {t('Learn more')}
             </DocsRouteLink>
           </>
         ) : null}
@@ -65,9 +67,10 @@ export function UsageMetricCardFooter({
 }
 
 export function UsageBreakdownListEmptyOverlay() {
+  const t = useT()
   return (
     <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
-      No data for this date range
+      {t('No data for this date range')}
     </div>
   )
 }
@@ -81,12 +84,13 @@ export function UsageBreakdownListError({
   message: string
   onRetry?: () => void
 }) {
+  const t = useT()
   return (
     <div className={overviewTopBreakdownListClass}>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 py-6 text-center">
         <OverviewChartPanelError
-          title={title}
-          message={message}
+          title={t(title)}
+          message={t(message)}
           onRetry={onRetry}
         />
       </div>
@@ -142,6 +146,7 @@ export function UsageBreakdownCard({
   embedded = false,
   className,
 }: UsageBreakdownCardProps) {
+  const t = useT()
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
   const showServiceIcons = dimension === 'service'
@@ -173,7 +178,7 @@ export function UsageBreakdownCard({
               embedded ? 'text-[13px]' : 'text-[14px]',
             )}
           >
-            {title}
+            {t(title)}
           </h3>
           {titleAddon}
         </div>
@@ -183,7 +188,7 @@ export function UsageBreakdownCard({
             className="shrink-0 cursor-pointer text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             onClick={onShowMore}
           >
-            Show more
+            {t('Show more')}
           </button>
         ) : null}
       </div>

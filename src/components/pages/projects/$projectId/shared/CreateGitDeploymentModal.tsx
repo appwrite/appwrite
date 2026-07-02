@@ -32,6 +32,7 @@ import {
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { useT } from '@/lib/i18n/translate'
 
 export type CreateGitDeploymentResourceType = 'function' | 'site'
 
@@ -60,6 +61,7 @@ export function CreateGitDeploymentModal({
   resource,
   onSuccess,
 }: CreateGitDeploymentModalProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const hasLinkedRepo = Boolean(
     resource.installationId && resource.providerRepositoryId,
@@ -178,29 +180,33 @@ export function CreateGitDeploymentModal({
       }
       if (activate) {
         toast.success(
-          'Deployment is in progress. It will be automatically activated after build step completes.',
+          t(
+            'Deployment is in progress. It will be automatically activated after build step completes.',
+          ),
         )
       } else {
         toast.success(
-          'Deployment is in progress. You can activate it after build step completes.',
+          t(
+            'Deployment is in progress. You can activate it after build step completes.',
+          ),
         )
       }
       onOpenChange(false)
       onSuccess?.()
     },
     onError: (err: Error) => {
-      toast.error(err?.message ?? 'Failed to create deployment')
+      toast.error(err?.message ?? t('Failed to create deployment'))
     },
   })
 
   const handleSubmit = () => {
     if (!hasLinkedRepo && (!selectedInstallationId || !selectedRepositoryId)) {
-      toast.error('Please select an installation and repository')
+      toast.error(t('Please select an installation and repository'))
       return
     }
     const ref = branch?.trim() || 'main'
     if (!ref) {
-      toast.error('Please select a branch')
+      toast.error(t('Please select a branch'))
       return
     }
     linkRepoThenDeployMutation.mutate()
@@ -238,18 +244,22 @@ export function CreateGitDeploymentModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Create git deployment</DialogTitle>
+          <DialogTitle>{t('Create git deployment')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {showRepoPicker
-              ? 'Select a repository to deploy from. You can change it later in settings.'
-              : 'Choose the production branch and whether to activate the deployment after the build completes.'}
+              ? t(
+                  'Select a repository to deploy from. You can change it later in settings.',
+                )
+              : t(
+                  'Choose the production branch and whether to activate the deployment after the build completes.',
+                )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0 space-y-4">
           {showRepoPicker ? (
             <div>
-              <Label className="text-[13px]">Repository</Label>
+              <Label className="text-[13px]">{t('Repository')}</Label>
               <RepositoryPicker
                 projectId={projectId}
                 getGitHubAuthUrl={getGitHubAuthUrl}
@@ -274,7 +284,8 @@ export function CreateGitDeploymentModal({
                   </p>
                   {repository.pushedAt && (
                     <p className="text-[12px] text-muted-foreground mt-1">
-                      Last updated <DateTooltip date={repository.pushedAt} />
+                      {t('Last updated')}{' '}
+                      <DateTooltip date={repository.pushedAt} />
                     </p>
                   )}
                   {repository.url && (
@@ -284,7 +295,7 @@ export function CreateGitDeploymentModal({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 link-neutral text-[12px] mt-1"
                     >
-                      Open <ExternalLink className="h-3 w-3" />
+                      {t('Open')} <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
                 </div>
@@ -292,11 +303,12 @@ export function CreateGitDeploymentModal({
               {!hasLinkedRepo && selectedRepositoryId && (
                 <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
                   <p className="text-[13px] font-medium text-foreground truncate">
-                    {selectedRepoDisplayName ?? 'Repository'}
+                    {selectedRepoDisplayName ?? t('Repository')}
                   </p>
                   {selectedRepoPushedAt && (
                     <p className="text-[12px] text-muted-foreground mt-1">
-                      Last updated <DateTooltip date={selectedRepoPushedAt} />
+                      {t('Last updated')}{' '}
+                      <DateTooltip date={selectedRepoPushedAt} />
                     </p>
                   )}
                   <Button
@@ -307,7 +319,7 @@ export function CreateGitDeploymentModal({
                     onClick={handleBackToRepoPicker}
                   >
                     <ArrowLeft className="h-3 w-3 me-1" />
-                    Change repository
+                    {t('Change repository')}
                   </Button>
                 </div>
               )}
@@ -317,8 +329,8 @@ export function CreateGitDeploymentModal({
                 providerRepositoryId={providerRepositoryId}
                 value={branch}
                 onChange={setBranch}
-                label="Production branch"
-                placeholder="Select branch"
+                label={t('Production branch')}
+                placeholder={t('Select branch')}
               />
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -330,14 +342,14 @@ export function CreateGitDeploymentModal({
                   htmlFor="activate-after-build"
                   className="text-[13px] font-normal cursor-pointer"
                 >
-                  Activate deployment after build
+                  {t('Activate deployment after build')}
                 </Label>
               </div>
               <DocsRouteLink
                 href={docsUrl}
                 className="inline-flex items-center gap-1 link-neutral text-[12px]"
               >
-                Deployment docs <ExternalLink className="h-3 w-3" />
+                {t('Deployment docs')} <ExternalLink className="h-3 w-3" />
               </DocsRouteLink>
             </>
           )}
@@ -353,7 +365,7 @@ export function CreateGitDeploymentModal({
                   className="h-9 text-[13px] me-auto sm:me-0 sm:order-first"
                 >
                   <ArrowLeft className="h-3.5 w-3.5 me-1.5" />
-                  Back
+                  {t('Back')}
                 </Button>
               )}
               <Button
@@ -362,14 +374,14 @@ export function CreateGitDeploymentModal({
                 disabled={isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={isPending || !branch?.trim()}
                 className="h-9 text-[13px]"
               >
-                Create deployment
+                {t('Create deployment')}
               </Button>
             </>
           )}
@@ -379,7 +391,7 @@ export function CreateGitDeploymentModal({
               onClick={() => onOpenChange(false)}
               className="h-9 text-[13px] ms-auto"
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           )}
         </div>

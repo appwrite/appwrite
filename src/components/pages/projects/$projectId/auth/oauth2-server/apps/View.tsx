@@ -29,12 +29,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { CreateProjectOAuth2App } from './_components/CreateProjectOAuth2App'
+import { useT } from '@/lib/i18n/translate'
 
 interface OAuth2ServerAppsViewProps {
   projectId: string
 }
 
 export function View({ projectId }: OAuth2ServerAppsViewProps) {
+  const t = useT()
   const { project } = useProject(projectId)
   const { apps, isLoading, isFetching } = useProjectOAuth2Apps(
     projectId,
@@ -64,9 +66,9 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     try {
       await createMutation.mutateAsync(input)
       setCreateOpen(false)
-      toast.success('OAuth2 app created')
+      toast.success(t('OAuth2 app created'))
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to create OAuth2 app'))
+      toast.error(getErrorMessage(error, t('Failed to create OAuth2 app')))
     }
   }
 
@@ -74,10 +76,10 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     if (!deleteTarget) return
     try {
       await deleteMutation.mutateAsync(deleteTarget.id)
-      toast.success('OAuth2 app deleted')
+      toast.success(t('OAuth2 app deleted'))
       setDeleteTarget(null)
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to delete OAuth2 app'))
+      toast.error(getErrorMessage(error, t('Failed to delete OAuth2 app')))
     }
   }
 
@@ -93,25 +95,30 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="max-w-xl">
-          <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
+          <h2 className="text-[15px] font-semibold text-foreground">
+            {t('Apps')}
+          </h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            OAuth2 clients registered against this project. These apps
-            authenticate users through your project&apos;s authorization server.
+            {t(
+              "OAuth2 clients registered against this project. These apps authenticate users through your project's authorization server.",
+            )}
           </p>
         </div>
         <Button size="sm" className="h-9 shrink-0" onClick={() => setCreateOpen(true)}>
           <Plus className="me-1.5 h-3.5 w-3.5" />
-          Create app
+          {t('Create app')}
         </Button>
       </div>
 
       {sortedApps.length === 0 ? (
         <EmptyState
-          title="No OAuth2 apps"
-          description="Create an app to register redirect URIs and issue client credentials for this project."
+          title={t('No OAuth2 apps')}
+          description={t(
+            'Create an app to register redirect URIs and issue client credentials for this project.',
+          )}
           action={
             <Button size="sm" onClick={() => setCreateOpen(true)}>
-              Create app
+              {t('Create app')}
             </Button>
           }
           variant="card"
@@ -127,19 +134,19 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Name
+                  {t('Name')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Client ID
+                  {t('Client ID')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Type
+                  {t('Type')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Redirect URIs
+                  {t('Redirect URIs')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Created
+                  {t('Created')}
                 </TableHead>
                 <TableHead className="w-[100px] px-4 py-3 text-end" />
               </TableRow>
@@ -154,7 +161,7 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
                         variant={app.enabled ? 'success' : 'secondary'}
                         className="text-[10px] shrink-0"
                       >
-                        {app.enabled ? 'Enabled' : 'Disabled'}
+                        {app.enabled ? t('Enabled') : t('Disabled')}
                       </Badge>
                     </div>
                   </TableCell>
@@ -204,22 +211,22 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete OAuth2 app</DialogTitle>
+            <DialogTitle>{t('Delete OAuth2 app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Delete {deleteTarget?.name}? Active tokens for this client will stop
-              working.
+              {t('Delete')} {deleteTarget?.name}?{' '}
+              {t('Active tokens for this client will stop working.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border px-6 py-4 bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               disabled={deleteMutation.isPending}
               onClick={handleDelete}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

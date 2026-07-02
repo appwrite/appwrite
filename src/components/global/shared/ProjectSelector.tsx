@@ -14,6 +14,7 @@ import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { activeProjectsQueryOptions } from '@/lib/react-query/hooks'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 const DEFAULT_PROJECT_LIMIT = 15
@@ -52,6 +53,7 @@ export function ProjectSelector({
   contentClassName,
   disabled = false,
 }: ProjectSelectorProps) {
+  const t = useT()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -81,7 +83,7 @@ export function ProjectSelector({
 
       return {
         value: project.$id,
-        label: paused ? `${name} (Paused)` : name,
+        label: paused ? `${name} ${t('(Paused)')}` : name,
         searchText: project.name,
         description:
           showApiKeysCount && apiKeysCount > 0
@@ -89,7 +91,7 @@ export function ProjectSelector({
             : undefined,
       }
     })
-  }, [data?.projects, showApiKeysCount])
+  }, [data?.projects, showApiKeysCount, t])
 
   const handleSelectProject = (projectId: string) => {
     const link = getProjectLink?.(projectId)
@@ -105,9 +107,9 @@ export function ProjectSelector({
       value=""
       onValueChange={handleSelectProject}
       items={items}
-      placeholder={placeholder}
-      searchPlaceholder="Search projects…"
-      emptyMessage={isFetching ? '' : 'No projects found'}
+      placeholder={t(placeholder)}
+      searchPlaceholder={t('Search projects…')}
+      emptyMessage={isFetching ? '' : t('No projects found')}
       disabled={disabled || !orgTeamId}
       triggerClassName={triggerClassName}
       contentClassName={contentClassName}

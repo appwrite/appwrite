@@ -36,6 +36,7 @@ import {
   useProjectTables,
   useDatabaseCsvMigrations,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 /** resourceId format is "databaseId:tableId" */
@@ -73,6 +74,7 @@ function getMigrationStatusBadge(status: string): {
 }
 
 export function ExportImportView({ databaseId }: ExportImportViewProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const dbKind = params.dbKind as string
@@ -199,7 +201,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     return (
       <div className={shellClassName}>
         <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="text-muted-foreground">{t('Loading...')}</div>
         </div>
       </div>
     )
@@ -210,8 +212,10 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
       <div className={shellClassName}>
         <EmptyState
           icon={FileDown}
-          title="No export or import requests yet"
-          description="When you export a table to CSV or import data from a CSV file, those requests will be listed here."
+          title={t('No export or import requests yet')}
+          description={t(
+            'When you export a table to CSV or import data from a CSV file, those requests will be listed here.',
+          )}
           isEmpty={true}
           variant="card"
         />
@@ -226,16 +230,16 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                Type
+                {t('Type')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
-                Table
+                {t('Table')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[130px]">
-                Status
+                {t('Status')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                Updated
+                {t('Updated')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4" />
             </TableRow>
@@ -269,7 +273,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                         ) : (
                           <FileUp className="h-3 w-3 shrink-0" />
                         )}
-                        {isExport ? 'Export' : 'Import'}
+                        {isExport ? t('Export') : t('Import')}
                       </span>
                     </Badge>
                   </TableCell>
@@ -295,7 +299,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                               isSpinner && 'animate-spin',
                             )}
                           />
-                          {statusBadge.label}
+                          {t(statusBadge.label)}
                         </Badge>
                       )
                     })()}
@@ -315,7 +319,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                         onClick={() => window.open(downloadUrl, '_blank')}
                       >
                         <Download className="h-3.5 w-3.5" />
-                        Download
+                        {t('Download')}
                       </Button>
                     ) : (
                       <span className="text-[12px] text-muted-foreground">
@@ -336,7 +340,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
         pageSizeOptions={[12, 18, 36, 72]}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
-        itemLabel="requests"
+        itemLabel={t('requests')}
       />
     </div>
   )

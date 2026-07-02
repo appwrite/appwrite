@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Slider } from '@/components/ui/slider'
+import { useT } from '@/lib/i18n/translate'
 
 interface SampleDataModalProps {
   open: boolean
@@ -22,6 +23,7 @@ export function SampleDataModal({
   onConfirm,
   isLoading = false,
 }: SampleDataModalProps) {
+  const t = useT()
   const [rowCount, setRowCount] = useState(25)
 
   const handleConfirm = () => {
@@ -42,10 +44,9 @@ export function SampleDataModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Generate Sample Data</DialogTitle>
+          <DialogTitle>{t('Generate Sample Data')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select the number of rows to generate. Sample data will be created
-            based on your table's column types and constraints.
+            {t("Select the number of rows to generate. Sample data will be created based on your table's column types and constraints.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -53,7 +54,7 @@ export function SampleDataModal({
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Number of rows</span>
+                <span className="text-muted-foreground">{t('Number of rows')}</span>
                 <span className="font-medium">{rowCount}</span>
               </div>
               <Slider
@@ -74,10 +75,10 @@ export function SampleDataModal({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleConfirm} disabled={isLoading}>
-            Create
+            {t('Create')}
           </Button>
         </div>
       </DialogContent>

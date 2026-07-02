@@ -8,6 +8,7 @@ import {
   PlatformKindIcon,
   getSelectionSummary,
 } from './selected-platform-meta'
+import { useT } from '@/lib/i18n/translate'
 
 type Props = {
   kind: AddAppKind
@@ -29,6 +30,7 @@ export function SelectedPlatformCard({
   onChange,
   disabled,
 }: Props) {
+  const t = useT()
   const { kindLabel, secondary } = getSelectionSummary(kind, variant, framework)
 
   return (
@@ -64,7 +66,7 @@ export function SelectedPlatformCard({
           onClick={onChange}
           disabled={disabled}
         >
-          Change
+          {t('Change')}
         </Button>
       </div>
     </div>

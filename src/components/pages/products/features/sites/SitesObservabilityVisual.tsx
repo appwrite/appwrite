@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import {
   createUsageChartAxisTickFormatter,
   formatCompactBytes,
@@ -26,6 +27,7 @@ import {
   type UsageChartAxisFormat,
 } from '@/lib/usage/format-metric'
 import { USAGE_CHART_Y_AXIS_WIDTH } from '@/components/pages/projects/$projectId/overview/chart-panel'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type MetricId = 'requests' | 'bandwidth' | 'builds' | 'compute'
@@ -263,6 +265,7 @@ function statusBadgeVariant(status: number) {
 }
 
 function UsagePanel() {
+  const t = useT()
   const [activeMetric, setActiveMetric] = useState<MetricId>('requests')
   const metric = useMemo(
     () => METRICS.find((item) => item.id === activeMetric) ?? METRICS[0],
@@ -287,7 +290,7 @@ function UsagePanel() {
                     : 'border-transparent bg-transparent hover:bg-muted/20',
                 )}
               >
-                <p className="text-[10px] font-medium text-muted-foreground">{item.label}</p>
+                <p className="text-[10px] font-medium text-muted-foreground">{t(item.label)}</p>
                 <p className="text-[12px] font-semibold leading-tight text-foreground">
                   {item.formatTotal(item.periodTotal)}
                 </p>
@@ -299,7 +302,7 @@ function UsagePanel() {
 
       <div className="min-w-0 px-3 pb-4 pt-2 sm:px-4">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-[10px] text-muted-foreground">Last 30 days</p>
+          <p className="text-[10px] text-muted-foreground">{t('Last 30 days')}</p>
         </div>
         <TrafficUsageChart
           bars={metric.bars}
@@ -310,12 +313,12 @@ function UsagePanel() {
 
         <div className="mt-3 border-t border-border pt-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {metric.breakdownTitle}
+            {t(metric.breakdownTitle)}
           </p>
           <div className="space-y-2">
             {metric.breakdown.map((row) => (
               <div key={row.label} className="flex items-center gap-2 text-[10px]">
-                <span className="w-20 shrink-0 truncate font-mono text-foreground">{row.label}</span>
+                <span className="w-20 shrink-0 truncate font-mono text-foreground">{t(row.label)}</span>
                 <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-muted/50">
                   <div
                     className="h-full rounded-full bg-[var(--chart-brand)]/70 transition-[width] duration-300"
@@ -333,6 +336,7 @@ function UsagePanel() {
 }
 
 function LogsPanel() {
+  const t = useT()
   const selected = SITE_LOGS.find((log) => log.selected) ?? SITE_LOGS[0]
   const details = LOG_DETAILS[selected.id]
 
@@ -343,16 +347,16 @@ function LogsPanel() {
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Status
+                {t('Status')}
               </TableHead>
               <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Method
+                {t('Method')}
               </TableHead>
               <TableHead className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Path
+                {t('Path')}
               </TableHead>
               <TableHead className="px-3 py-2 pe-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Time
+                {t('Time')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -388,7 +392,7 @@ function LogsPanel() {
       <div className="border-t border-border bg-muted/10 p-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Request details
+            {t('Request details')}
           </p>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant={statusBadgeVariant(selected.status)} className="text-[10px]">
@@ -402,27 +406,27 @@ function LogsPanel() {
 
         <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
           <div>
-            <dt className="text-muted-foreground">Path</dt>
+            <dt className="text-muted-foreground">{t('Path')}</dt>
             <dd className="mt-0.5 truncate font-mono text-foreground">{selected.path}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Duration</dt>
+            <dt className="text-muted-foreground">{t('Duration')}</dt>
             <dd className="mt-0.5 font-medium text-foreground">{selected.duration}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Region</dt>
-            <dd className="mt-0.5 font-medium text-foreground">{details.region}</dd>
+            <dt className="text-muted-foreground">{t('Region')}</dt>
+            <dd className="mt-0.5 font-medium text-foreground">{t(details.region)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Cache</dt>
+            <dt className="text-muted-foreground">{t('Cache')}</dt>
             <dd className="mt-0.5 font-medium text-foreground">
-              {selected.status === 304 ? 'Hit' : selected.status === 200 ? 'Miss' : 'N/A'}
+              {selected.status === 304 ? t('Hit') : selected.status === 200 ? t('Miss') : t('N/A')}
             </dd>
           </div>
         </dl>
 
         <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          SSR output
+          {t('SSR output')}
         </p>
         <pre className="mt-1.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-foreground">
           {details.output}
@@ -443,15 +447,16 @@ function SectionLabel({ children }: { children: ReactNode }) {
 }
 
 export function SitesObservabilityVisual() {
+  const t = useT()
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/45">
       <div className="grid min-h-[24rem] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="min-w-0 border-b border-border lg:border-b-0 lg:border-e">
-          <SectionLabel>Traffic</SectionLabel>
+          <SectionLabel>{t('Traffic')}</SectionLabel>
           <UsagePanel />
         </div>
         <div className="min-w-0">
-          <SectionLabel>Request logs</SectionLabel>
+          <SectionLabel>{t('Request logs')}</SectionLabel>
           <LogsPanel />
         </div>
       </div>

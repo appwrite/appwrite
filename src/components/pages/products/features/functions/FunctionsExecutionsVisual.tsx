@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const SCROLL_FADE_MASK_CLASS =
@@ -103,6 +104,7 @@ function triggerLabel(trigger: (typeof EXECUTIONS)[number]['trigger']) {
 }
 
 export function FunctionsExecutionsVisual() {
+  const t = useT()
   const [logsSearch, setLogsSearch] = useState('')
   const selected = EXECUTIONS.find((execution) => execution.selected) ?? EXECUTIONS[0]
 
@@ -115,9 +117,9 @@ export function FunctionsExecutionsVisual() {
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'executions', label: 'Executions', active: true },
-        { id: 'settings', label: 'Settings' },
+        { id: 'overview', label: t('Overview') },
+        { id: 'executions', label: t('Executions'), active: true },
+        { id: 'settings', label: t('Settings') },
       ]}
       contentClassName="p-0"
     >
@@ -129,22 +131,22 @@ export function FunctionsExecutionsVisual() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 ps-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
-                      Execution ID
+                      {t('Execution ID')}
                     </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
-                      Status
+                      {t('Status')}
                     </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
-                      Trigger
+                      {t('Trigger')}
                     </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
-                      Method
+                      {t('Method')}
                     </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:text-[11px]">
-                      Duration
+                      {t('Duration')}
                     </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-card/45 px-3 py-2.5 pe-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border sm:px-4 sm:text-[11px]">
-                      Created
+                      {t('Created')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -164,12 +166,12 @@ export function FunctionsExecutionsVisual() {
                       </TableCell>
                       <TableCell className="px-3 py-2.5">
                         <Badge variant="completed" className="text-[10px]">
-                          Completed
+                          {t('Completed')}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-3 py-2.5">
                         <Badge variant="outline" className="text-[10px]">
-                          {triggerLabel(execution.trigger)}
+                          {t(triggerLabel(execution.trigger))}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-3 py-2.5 font-mono text-[10px] text-foreground sm:text-[11px]">
@@ -179,7 +181,7 @@ export function FunctionsExecutionsVisual() {
                         {execution.duration}
                       </TableCell>
                       <TableCell className="px-3 py-2.5 pe-4 text-[10px] text-muted-foreground sm:px-4 sm:text-[11px]">
-                        {execution.created}
+                        {t(execution.created)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -193,7 +195,7 @@ export function FunctionsExecutionsVisual() {
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Execution details
+                {t('Execution details')}
               </p>
               <p className="mt-0.5 truncate font-mono text-[12px] font-medium text-foreground">
                 {selected.id}
@@ -201,7 +203,7 @@ export function FunctionsExecutionsVisual() {
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant="completed" className="text-[10px]">
-                Completed
+                {t('Completed')}
               </Badge>
               <Badge variant="success" className="text-[10px]">
                 200
@@ -211,21 +213,21 @@ export function FunctionsExecutionsVisual() {
 
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
             <div>
-              <dt className="text-muted-foreground">Trigger</dt>
+              <dt className="text-muted-foreground">{t('Trigger')}</dt>
               <dd className="mt-0.5 font-medium text-foreground">
-                {triggerLabel(selected.trigger)}
+                {t(triggerLabel(selected.trigger))}
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Duration</dt>
+              <dt className="text-muted-foreground">{t('Duration')}</dt>
               <dd className="mt-0.5 font-medium text-foreground">{selected.duration}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Method</dt>
+              <dt className="text-muted-foreground">{t('Method')}</dt>
               <dd className="mt-0.5 font-mono text-foreground">{selected.method}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Path</dt>
+              <dt className="text-muted-foreground">{t('Path')}</dt>
               <dd className="mt-0.5 truncate font-mono text-foreground">{selected.path}</dd>
             </div>
           </dl>
@@ -233,16 +235,16 @@ export function FunctionsExecutionsVisual() {
           <Tabs defaultValue="logs" className="mt-4 min-h-0 flex-1 gap-3">
             <TabsList className="grid h-8 w-full grid-cols-4">
               <TabsTrigger value="logs" className="text-[11px]">
-                Logs
+                {t('Logs')}
               </TabsTrigger>
               <TabsTrigger value="errors" className="text-[11px]">
-                Errors
+                {t('Errors')}
               </TabsTrigger>
               <TabsTrigger value="headers" className="text-[11px]">
-                Headers
+                {t('Headers')}
               </TabsTrigger>
               <TabsTrigger value="body" className="text-[11px]">
-                Body
+                {t('Body')}
               </TabsTrigger>
             </TabsList>
 
@@ -251,7 +253,7 @@ export function FunctionsExecutionsVisual() {
                 <div className="relative mb-2">
                   <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search logs..."
+                    placeholder={t('Search logs...')}
                     value={logsSearch}
                     onChange={(event) => setLogsSearch(event.target.value)}
                     className="h-8 ps-8 text-[12px]"
@@ -259,7 +261,7 @@ export function FunctionsExecutionsVisual() {
                 </div>
                 <div className="rounded-md border border-border bg-muted/15 p-3">
                   <pre className="whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed text-foreground sm:text-[11px]">
-                    {displayedLogs || 'No matching log lines.'}
+                    {displayedLogs || t('No matching log lines.')}
                   </pre>
                 </div>
               </div>
@@ -267,20 +269,20 @@ export function FunctionsExecutionsVisual() {
 
             <TabsContent value="errors" className="mt-0">
               <div className="rounded-lg border border-border bg-card p-3">
-                <code className="text-[11px] text-muted-foreground">No errors found.</code>
+                <code className="text-[11px] text-muted-foreground">{t('No errors found.')}</code>
               </div>
             </TabsContent>
 
             <TabsContent value="headers" className="mt-0">
               <div className="rounded-lg border border-border bg-card p-3">
-                <code className="text-[11px] text-muted-foreground">No headers found.</code>
+                <code className="text-[11px] text-muted-foreground">{t('No headers found.')}</code>
               </div>
             </TabsContent>
 
             <TabsContent value="body" className="mt-0">
               <div className="rounded-lg border border-border bg-card p-3">
                 <code className="text-[11px] text-muted-foreground">
-                  Response bodies are not stored by default.
+                  {t('Response bodies are not stored by default.')}
                 </code>
               </div>
             </TabsContent>

@@ -7,6 +7,7 @@
 import { useMemo, useRef, useState, useEffect, memo } from 'react'
 import { X, Download, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 import { useCsvExportMigrations } from '@/lib/react-query/hooks'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 import type { Models } from '@appwrite.io/console'
@@ -31,10 +32,11 @@ const ExportStatusHeader = memo(function ExportStatusHeader({
 }: {
   status: string
 }) {
+  const t = useT()
   const isPendingOrProcessing = status === 'pending' || status === 'processing'
   const isCompleted = status === 'completed'
   const isFailed = status === 'failed'
-  const label = statusToLabel(status)
+  const label = t(statusToLabel(status))
   return (
     <div className="flex items-center gap-2 mb-1">
       {isPendingOrProcessing ? (
@@ -78,6 +80,7 @@ interface CsvExportBoxProps {
 }
 
 export function CsvExportBox({ projectId }: CsvExportBoxProps) {
+  const t = useT()
   const { sessionExportIds, dismissedExportIds, dismissExport } =
     useSessionMigrations(projectId)
   const { migrations } = useCsvExportMigrations(projectId, sessionExportIds)
@@ -134,11 +137,11 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
             : (displayedCounts[m.$id] ?? liveCount)
         const statusLine =
           rowCount !== null && rowCount > 0
-            ? `${rowCount.toLocaleString()} rows exported`
+            ? `${rowCount.toLocaleString()} ${t('rows exported')}`
             : m.status === 'pending'
-              ? 'Preparing export...'
+              ? t('Preparing export...')
               : m.status === 'processing'
-                ? 'Exporting...'
+                ? t('Exporting...')
                 : null
         return (
           <div
@@ -164,7 +167,7 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
                       onClick={() => window.open(url, '_blank')}
                     >
                       <Download className="h-3 w-3 me-1" />
-                      Download
+                      {t('Download')}
                     </Button>
                   ) : null}
                 </div>
@@ -174,7 +177,7 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
                 size="sm"
                 className="h-6 w-6 p-0 shrink-0"
                 onClick={() => dismissExport(projectId, m.$id)}
-                aria-label="Dismiss"
+                aria-label={t('Dismiss')}
               >
                 <X className="h-3.5 w-3.5" />
               </Button>

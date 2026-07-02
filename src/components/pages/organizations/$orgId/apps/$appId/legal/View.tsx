@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
 import { trimOrEmpty, useOrgAppUpdate } from '../_components/useOrgAppUpdate'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   if (!app || !orgId) return null
@@ -29,15 +31,15 @@ export function View() {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Legal</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t('Legal')}</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Policy links shown on the OAuth2 consent screen.
+          {t('Policy links shown on the OAuth2 consent screen.')}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="app-legal-privacy">Privacy policy</Label>
+          <Label htmlFor="app-legal-privacy">{t('Privacy policy')}</Label>
           <Input
             id="app-legal-privacy"
             value={privacyPolicyUrl}
@@ -46,7 +48,7 @@ export function View() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-legal-terms">Terms of service</Label>
+          <Label htmlFor="app-legal-terms">{t('Terms of service')}</Label>
           <Input
             id="app-legal-terms"
             value={termsUrl}
@@ -55,7 +57,7 @@ export function View() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="app-legal-deletion">Data deletion</Label>
+          <Label htmlFor="app-legal-deletion">{t('Data deletion')}</Label>
           <Input
             id="app-legal-deletion"
             value={dataDeletionUrl}
@@ -77,7 +79,7 @@ export function View() {
             })
           }
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

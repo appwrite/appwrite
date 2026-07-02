@@ -59,6 +59,7 @@ import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -83,6 +84,7 @@ export function RepositoryConfigView({
   installationId: installationIdFromUrl,
   providerRepositoryId: providerRepositoryIdFromUrl,
 }: RepositoryConfigViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -191,13 +193,15 @@ export function RepositoryConfigView({
       }
     },
     onError: () => {
-      toast.error('Could not detect framework. Select one manually.')
+      toast.error(t('Could not detect framework. Select one manually.'))
     },
   })
 
   const runFrameworkDetection = useCallback(() => {
     if (!projectId || !installationId || !providerRepositoryId) {
-      toast.error('Repository not connected. Go back and select a repository.')
+      toast.error(
+        t('Repository not connected. Go back and select a repository.'),
+      )
       return
     }
     detectFrameworkMutation.mutate({
@@ -211,6 +215,7 @@ export function RepositoryConfigView({
     providerRepositoryId,
     rootDirectory,
     detectFrameworkMutation,
+    t,
   ])
 
   // Run VCS framework detection when we have URL params (repo selected) or root directory changes
@@ -255,12 +260,12 @@ export function RepositoryConfigView({
 
   const handleDeploy = async () => {
     if (!projectId || !siteName || !framework) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('Please fill in all required fields'))
       return
     }
 
     if (!domainValid) {
-      toast.error('Please enter a valid domain')
+      toast.error(t('Please enter a valid domain'))
       return
     }
 
@@ -339,7 +344,7 @@ export function RepositoryConfigView({
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to create site')
+      toast.error(error.message || t('Failed to create site'))
       setIsDeploying(false)
     }
   }
@@ -370,7 +375,7 @@ export function RepositoryConfigView({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-[13px] font-semibold text-foreground truncate">
-                {frameworkInfo?.name || 'Repository'}
+                {frameworkInfo?.name || t('Repository')}
               </h3>
               {repository?.private ? (
                 <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -386,7 +391,7 @@ export function RepositoryConfigView({
                 <>
                   <span className="mx-1.5">·</span>
                   <span>
-                    Updated <DateTooltip date={repository.pushedAt} />
+                    {t('Updated')} <DateTooltip date={repository.pushedAt} />
                   </span>
                 </>
               )}
@@ -410,7 +415,7 @@ export function RepositoryConfigView({
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <GitBranch className="h-3.5 w-3.5" />
-            Branch
+            {t('Branch')}
           </span>
           <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">
             {branch || repository?.defaultBranch || 'main'}
@@ -419,7 +424,7 @@ export function RepositoryConfigView({
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <FolderOpen className="h-3.5 w-3.5" />
-            Root directory
+            {t('Root directory')}
           </span>
           <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
             {rootDirectory || './'}
@@ -429,7 +434,7 @@ export function RepositoryConfigView({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Layers className="h-3.5 w-3.5" />
-              Framework
+              {t('Framework')}
             </span>
             <span className="flex items-center gap-1.5 text-[12px] text-foreground">
               <FrameworkIcon framework={framework} size="sm" />
@@ -443,10 +448,10 @@ export function RepositoryConfigView({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Key className="h-3.5 w-3.5" />
-              Variables
+              {t('Variables')}
             </span>
             <span className="text-[12px] text-foreground">
-              {variables.length} configured
+              {variables.length} {t('configured')}
             </span>
           </div>
         )}
@@ -457,7 +462,7 @@ export function RepositoryConfigView({
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[11px] text-muted-foreground">
-            Ready to deploy
+            {t('Ready to deploy')}
           </span>
         </div>
       </div>
@@ -466,9 +471,9 @@ export function RepositoryConfigView({
 
   return (
     <WizardLayout
-      title="Create site"
+      title={t('Create site')}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
       maxWidth="max-w-[1400px]"
@@ -481,7 +486,7 @@ export function RepositoryConfigView({
             onClick={() => window.history.back()}
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -493,7 +498,7 @@ export function RepositoryConfigView({
               createSiteMutation.isPending
             }
           >
-            Deploy
+            {t('Deploy')}
           </Button>
         </>
       }
@@ -514,7 +519,7 @@ export function RepositoryConfigView({
                 {repoOwner}/{repoName}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                GitHub Repository
+                {t('GitHub Repository')}
               </p>
             </div>
           </div>
@@ -528,7 +533,7 @@ export function RepositoryConfigView({
               to="/projects/$projectId/sites/create/repositories"
               params={{ projectId: projectId! }}
             >
-              Change
+              {t('Change')}
             </Link>
           </Button>
         </div>
@@ -537,44 +542,46 @@ export function RepositoryConfigView({
       {/* Details section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           {/* Site name */}
           <div className="space-y-2">
             <Label htmlFor="site-name" className="text-[13px]">
-              Site name
+              {t('Site name')}
             </Label>
             <Input
               id="site-name"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
-              placeholder="My awesome site"
+              placeholder={t('My awesome site')}
               className="h-9 text-[13px]"
             />
           </div>
 
           {/* Site ID */}
           <div className="space-y-2">
-            <Label className="text-[13px]">Site ID</Label>
+            <Label className="text-[13px]">{t('Site ID')}</Label>
             <IdInput
               value={siteId}
               onChange={setSiteId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
 
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
-              Framework
+              {t('Framework')}
             </Label>
             {detectFrameworkMutation.isPending ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 <span className="text-[13px] text-muted-foreground">
-                  Detecting framework...
+                  {t('Detecting framework...')}
                 </span>
               </div>
             ) : (
@@ -595,7 +602,7 @@ export function RepositoryConfigView({
                   }}
                 >
                   <SelectTrigger className="h-9 text-[13px] flex-1 min-w-0">
-                    <SelectValue placeholder="Select framework" />
+                    <SelectValue placeholder={t('Select framework')} />
                   </SelectTrigger>
                   <SelectContent>
                     {frameworks.map((f) => (
@@ -617,7 +624,7 @@ export function RepositoryConfigView({
                     onClick={runFrameworkDetection}
                     disabled={detectFrameworkMutation.isPending}
                   >
-                    Detect
+                    {t('Detect')}
                   </Button>
                 )}
               </div>
@@ -629,9 +636,11 @@ export function RepositoryConfigView({
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Domain')}
+          </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Your site will be accessible at this URL
+            {t('Your site will be accessible at this URL')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -644,10 +653,11 @@ export function RepositoryConfigView({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a
-            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            {t(
+              'Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.', // pragma: allowlist secret
+            )}{' '}
             <DocsRouteLink className="link-neutral font-medium" href="/docs/products/sites/domains">
-              Learn more →
+              {t('Learn more →')}
             </DocsRouteLink>
           </p>
         </div>
@@ -662,7 +672,7 @@ export function RepositoryConfigView({
         <AccordionItem value="repository" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
             <span className="text-[15px] font-semibold text-foreground">
-              Repository
+              {t('Repository')}
             </span>
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
@@ -674,8 +684,10 @@ export function RepositoryConfigView({
                 providerRepositoryId={providerRepositoryId}
                 value={branch}
                 onChange={setBranch}
-                label="Branch"
-                labelTooltip="Production branch for the repo linked to the site. Successful deployments from this branch get activated automatically."
+                label={t('Branch')}
+                labelTooltip={t(
+                  'Production branch for the repo linked to the site. Successful deployments from this branch get activated automatically.',
+                )}
               />
 
               {/* Root directory */}
@@ -686,19 +698,21 @@ export function RepositoryConfigView({
                 branch={branch || 'main'}
                 value={rootDirectory}
                 onChange={setRootDirectory}
-                label="Root directory"
-                labelTooltip="Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web)."
-                description="Choose the directory containing your site code"
+                label={t('Root directory')}
+                labelTooltip={t(
+                  'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).',
+                )}
+                description={t('Choose the directory containing your site code')}
               />
 
               {/* Silent mode */}
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="silent-mode" className="text-[13px]">
-                    Silent mode
+                    {t('Silent mode')}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    Disable automated comments on repository commits
+                    {t('Disable automated comments on repository commits')}
                   </p>
                 </div>
                 <Switch

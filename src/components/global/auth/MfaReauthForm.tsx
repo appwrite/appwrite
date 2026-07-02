@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/input-otp'
 import { Mail, Smartphone } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 type MfaFactorsWithRecovery = Models.MfaFactors & { recoveryCode?: boolean }
 
@@ -262,6 +263,7 @@ function getFactorDescription(challengeType: AuthenticationFactor | null) {
 }
 
 export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
+  const t = useT()
   const {
     effectiveFactors,
     enabledMainFactors,
@@ -286,18 +288,18 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
     <div className="space-y-4">
       {!isChallengeReady && (
         <p className="text-[13px] text-muted-foreground">
-          Preparing verification...
+          {t('Preparing verification...')}
         </p>
       )}
       {challengeType && (
         <div className="space-y-3">
           <Label htmlFor="mfa-reauth-code">
             {challengeType === AuthenticationFactor.Recoverycode
-              ? 'Recovery code'
-              : 'Verification code'}
+              ? t('Recovery code')
+              : t('Verification code')}
           </Label>
           <p className="text-[13px] text-muted-foreground">
-            {getFactorDescription(challengeType)}
+            {t(getFactorDescription(challengeType))}
           </p>
           {challengeType === AuthenticationFactor.Recoverycode ? (
             <Input
@@ -305,7 +307,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter recovery code"
+              placeholder={t('Enter recovery code')}
               disabled={disabled || !isChallengeReady}
               autoFocus
               className="font-mono text-[13px]"
@@ -341,7 +343,9 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
+              <span className="bg-background px-2 text-muted-foreground">
+                {t('or')}
+              </span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -356,7 +360,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   disabled={disabled}
                 >
                   <Smartphone className="me-1.5 h-4 w-4" />
-                  Authenticator app
+                  {t('Authenticator app')}
                 </Button>
               )}
             {effectiveFactors.email &&
@@ -370,7 +374,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   disabled={disabled}
                 >
                   <Mail className="me-1.5 h-4 w-4" />
-                  Email verification
+                  {t('Email verification')}
                 </Button>
               )}
             {effectiveFactors.phone &&
@@ -384,7 +388,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   disabled={disabled}
                 >
                   <Smartphone className="me-1.5 h-4 w-4" />
-                  Phone verification
+                  {t('Phone verification')}
                 </Button>
               )}
             {effectiveFactors.recoveryCode &&
@@ -399,7 +403,7 @@ export function MfaReauthForm({ reauth }: MfaReauthFormProps) {
                   }
                   disabled={disabled}
                 >
-                  Use recovery code
+                  {t('Use recovery code')}
                 </Button>
               )}
           </div>

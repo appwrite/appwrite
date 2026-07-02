@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateUserDrawerProps {
   open: boolean
@@ -24,6 +25,7 @@ export function CreateUserDrawer({
   onCreate,
   isLoading = false,
 }: CreateUserDrawerProps) {
+  const t = useT()
   const [userId, setUserId] = useState<string | undefined>(undefined)
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -63,7 +65,7 @@ export function CreateUserDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title="Create User"
+      title={t('Create User')}
       maxWidth="sm:max-w-lg"
     >
       <>
@@ -74,23 +76,23 @@ export function CreateUserDrawer({
             <div className="px-6 py-6">
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="user-id">User ID</Label>
+                  <Label htmlFor="user-id">{t('User ID')}</Label>
                   <IdInput
                     id="user-id"
                     value={userId}
                     onChange={setUserId}
                     maxLength={36}
                     disabled={isLoading}
-                    placeholder="Leave blank to auto-generate"
+                    placeholder={t('Leave blank to auto-generate')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">{t('Name')}</Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder={t('John Doe')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isLoading}
@@ -98,7 +100,7 @@ export function CreateUserDrawer({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('Email')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -110,7 +112,7 @@ export function CreateUserDrawer({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t('Phone')}</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -120,24 +122,26 @@ export function CreateUserDrawer({
                     disabled={isLoading}
                   />
                   <p className="text-[12px] text-muted-foreground">
-                    Format with a leading '+' and country code, e.g.,
-                    +16175551212
+                    {t(
+                      "Format with a leading '+' and country code, e.g., +16175551212",
+                    )}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('Password')}</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="At least 8 characters"
+                    placeholder={t('At least 8 characters')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                   />
                   <p className="text-[12px] text-muted-foreground">
-                    Optional. If not provided, user will need to set password
-                    via recovery.
+                    {t(
+                      'Optional. If not provided, user will need to set password via recovery.',
+                    )}
                   </p>
                 </div>
               </div>
@@ -146,7 +150,7 @@ export function CreateUserDrawer({
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button type="submit" disabled={isLoading}>
-              Create User
+              {t('Create User')}
             </Button>
             <Button
               type="button"
@@ -154,7 +158,7 @@ export function CreateUserDrawer({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

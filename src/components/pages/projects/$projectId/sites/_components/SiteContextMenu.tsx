@@ -42,6 +42,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 export type SiteContextMenuSite = {
   $id: string
@@ -59,6 +60,7 @@ export function SiteContextMenu({
   site,
   children,
 }: SiteContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteMutation = useDeleteSite(projectId)
@@ -85,11 +87,11 @@ export function SiteContextMenu({
   const handleConfirmDelete = () => {
     deleteMutation.mutate(site.$id, {
       onSuccess: () => {
-        toast.success('Site deleted')
+        toast.success(t('Site deleted'))
         setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete site')
+        toast.error(getErrorMessage(error) || t('Failed to delete site'))
       },
     })
   }
@@ -103,48 +105,48 @@ export function SiteContextMenu({
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={() => navigateToTab('deployments')}>
             <ContextMenuIcon icon={FolderGit} />
-            Deployments
+            {t('Deployments')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('domains')}>
             <ContextMenuIcon icon={Globe} />
-            Domains
+            {t('Domains')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('logs')}>
             <ContextMenuIcon icon={ScrollText} />
-            Logs
+            {t('Logs')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('variables')}>
             <ContextMenuIcon icon={Variable} />
-            Variables
+            {t('Variables')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => navigateToTab('settings')}>
             <ContextMenuIcon icon={Settings} />
-            Settings
+            {t('Settings')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => copyToClipboard('ID', site.$id)}>
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', site.name)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', siteHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -154,23 +156,23 @@ export function SiteContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(siteHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(siteHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -178,10 +180,11 @@ export function SiteContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete site</DialogTitle>
+            <DialogTitle>{t('Delete site')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this site? This action cannot be
-              undone.
+              {t(
+                'Are you sure you want to delete this site? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -190,14 +193,14 @@ export function SiteContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

@@ -14,6 +14,7 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const HTTP_METHODS = [
   { value: ExecutionMethod.GET, label: 'GET' },
@@ -95,11 +96,12 @@ export function CreateExecutionDrawer({
   func,
   onSuccess,
 }: CreateExecutionDrawerProps) {
+  const t = useT()
   return (
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Create execution"
+      title={t('Create execution')}
       maxWidth="sm:max-w-lg"
       disableAutoFocus
     >
@@ -128,6 +130,7 @@ function CreateExecutionDrawerForm({
   onOpenChange,
   onSuccess,
 }: CreateExecutionDrawerFormProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
@@ -156,7 +159,7 @@ function CreateExecutionDrawerForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!projectId) {
-      toast.error('Project ID is required')
+      toast.error(t('Project ID is required'))
       return
     }
 
@@ -189,7 +192,7 @@ function CreateExecutionDrawerForm({
       onSuccess?.(execution.$id)
 
       if (isAsync) {
-        toast.success('Async execution created')
+        toast.success(t('Async execution created'))
         onOpenChange(false)
         return
       }
@@ -200,11 +203,11 @@ function CreateExecutionDrawerForm({
       if (!res.ok) {
         toast.error(
           execution.errors?.trim() ||
-            `Execution finished with status ${execution.status}`,
+            `${t('Execution finished with status')} ${execution.status}`,
         )
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Request failed'
+      const message = err instanceof Error ? err.message : t('Request failed')
       setResponse({
         status: 0,
         statusText: 'Error',
@@ -251,8 +254,9 @@ function CreateExecutionDrawerForm({
             <div className="px-6 py-6 space-y-6">
               {!func?.deploymentId && (
                 <p className="text-[13px] text-amber-600 dark:text-amber-400">
-                  No active deployment. Deploy the function first to run
-                  executions.
+                  {t(
+                    'No active deployment. Deploy the function first to run executions.',
+                  )}
                 </p>
               )}
 
@@ -260,7 +264,7 @@ function CreateExecutionDrawerForm({
                 <div className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 items-end">
                   <div className="space-y-2 min-w-0">
                     <Label htmlFor="create-exec-method" className="text-[13px]">
-                      Method
+                      {t('Method')}
                     </Label>
                     <select
                       id="create-exec-method"
@@ -280,7 +284,7 @@ function CreateExecutionDrawerForm({
                   </div>
                   <div className="space-y-2 min-w-0">
                     <Label htmlFor="create-exec-path" className="text-[13px]">
-                      Path
+                      {t('Path')}
                     </Label>
                     <Input
                       id="create-exec-path"
@@ -295,17 +299,20 @@ function CreateExecutionDrawerForm({
 
                 <div className="border-t border-border pt-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[14px] font-medium">Headers</span>
+                    <span className="text-[14px] font-medium">
+                      {t('Headers')}
+                    </span>
                     <Badge
                       variant="secondary"
                       className="text-[11px] font-normal"
                     >
-                      Optional
+                      {t('Optional')}
                     </Badge>
                   </div>
                   <p className="text-[13px] text-muted-foreground mb-3">
-                    Provide essential metadata to define the content type,
-                    authentication details, and the expected response format.
+                    {t(
+                      'Provide essential metadata to define the content type, authentication details, and the expected response format.',
+                    )}
                   </p>
                   <div className="space-y-3">
                     <datalist id="header-keys-suggestions">
@@ -325,7 +332,7 @@ function CreateExecutionDrawerForm({
                             updateHeader(row.id, { key: e.target.value })
                           }
                           list="header-keys-suggestions"
-                          placeholder="Header name"
+                          placeholder={t('Header name')}
                           className="h-9 text-[13px] w-[180px] shrink-0"
                         />
                         <Input
@@ -334,7 +341,7 @@ function CreateExecutionDrawerForm({
                           onChange={(e) =>
                             updateHeader(row.id, { value: e.target.value })
                           }
-                          placeholder="Enter value"
+                          placeholder={t('Enter value')}
                           className="h-9 text-[13px] flex-1 min-w-[120px]"
                         />
                         <Button
@@ -344,7 +351,7 @@ function CreateExecutionDrawerForm({
                           disabled={fieldsDisabled}
                           className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-foreground"
                           onClick={() => removeHeader(row.id)}
-                          aria-label="Remove header"
+                          aria-label={t('Remove header')}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -359,30 +366,31 @@ function CreateExecutionDrawerForm({
                       onClick={addHeader}
                     >
                       <Plus className="me-1.5 h-3.5 w-3.5" />
-                      Add header
+                      {t('Add header')}
                     </Button>
                   </div>
                 </div>
 
                 <div className="border-t border-border pt-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[14px] font-medium">Body</span>
+                    <span className="text-[14px] font-medium">{t('Body')}</span>
                     <Badge
                       variant="secondary"
                       className="text-[11px] font-normal"
                     >
-                      Optional
+                      {t('Optional')}
                     </Badge>
                   </div>
                   <p className="text-[13px] text-muted-foreground mb-3">
-                    Provide the request body to include the main data you want
-                    to send to the server.
+                    {t(
+                      'Provide the request body to include the main data you want to send to the server.',
+                    )}
                   </p>
                   <Textarea
                     value={body}
                     disabled={fieldsDisabled}
                     onChange={(e) => setBody(e.target.value)}
-                    placeholder="Enter request body here..."
+                    placeholder={t('Enter request body here...')}
                     className="min-h-[100px] text-[13px] font-mono resize-y"
                     rows={4}
                   />
@@ -395,11 +403,12 @@ function CreateExecutionDrawerForm({
                         htmlFor="create-exec-async"
                         className="text-[14px] font-medium"
                       >
-                        Async execution
+                        {t('Async execution')}
                       </Label>
                       <p className="text-[13px] text-muted-foreground mt-1">
-                        Return immediately and run in the background. View the
-                        response on the executions tab when it completes.
+                        {t(
+                          'Return immediately and run in the background. View the response on the executions tab when it completes.',
+                        )}
                       </p>
                     </div>
                     <Switch
@@ -421,7 +430,9 @@ function CreateExecutionDrawerForm({
           {response && !isAsync && (
             <div className="flex-shrink-0 border-t border-border bg-muted/30 overflow-hidden">
               <div className="px-6 py-3 border-b border-border">
-                <span className="text-[13px] font-medium">Response</span>
+                <span className="text-[13px] font-medium">
+                  {t('Response')}
+                </span>
                 <Badge
                   variant={response.ok ? 'default' : 'destructive'}
                   className="ms-2 text-[11px]"
@@ -432,7 +443,7 @@ function CreateExecutionDrawerForm({
               <div className="max-h-[200px] overflow-y-auto">
                 <div className="px-6 py-3 border-b border-border">
                   <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Headers
+                    {t('Headers')}
                   </p>
                   <div className="space-y-1">
                     {response.headers.map((h) => (
@@ -448,19 +459,19 @@ function CreateExecutionDrawerForm({
                     ))}
                     {response.headers.length === 0 && (
                       <p className="text-[12px] text-muted-foreground">
-                        No headers
+                        {t('No headers')}
                       </p>
                     )}
                   </div>
                 </div>
                 <div className="px-6 py-3">
                   <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Body
+                    {t('Body')}
                   </p>
                   <pre className="text-[12px] font-mono whitespace-pre-wrap break-words bg-background/50 rounded border border-border p-3 overflow-x-auto">
                     {response.body
                       ? formatResponseBody(response.body)
-                      : '(empty)'}
+                      : t('(empty)')}
                   </pre>
                 </div>
               </div>
@@ -471,14 +482,14 @@ function CreateExecutionDrawerForm({
         <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button type="submit" disabled={!canExecute || isExecuting}>
             <Play className="me-1.5 h-4 w-4" />
-            Execute
+            {t('Execute')}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
         </div>
       </form>

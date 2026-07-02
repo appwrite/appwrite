@@ -35,6 +35,7 @@ import {
   useLocale,
 } from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface ReplaceAddressModalProps {
   open: boolean
@@ -53,6 +54,7 @@ export function ReplaceAddressModal({
   currentAddressId,
   onSuccess,
 }: ReplaceAddressModalProps) {
+  const t = useT()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [country, setCountry] = useState('')
   const [streetAddress, setStreetAddress] = useState('')
@@ -90,7 +92,7 @@ export function ReplaceAddressModal({
     try {
       if (selectedId === NEW_ADDRESS_VALUE) {
         if (!country || !streetAddress || !city || !state) {
-          toast.error('Please fill in all required fields')
+          toast.error(t('Please fill in all required fields'))
           return
         }
         const newAddress = await createAddressMutation.mutateAsync({
@@ -106,14 +108,14 @@ export function ReplaceAddressModal({
           billingAddressId: newAddress.$id,
         })
         toast.success(
-          'Billing address has been created and set for your organization',
+          t('Billing address has been created and set for your organization'),
         )
       } else if (selectedId && selectedId !== currentAddressId) {
         await setOrgAddressMutation.mutateAsync({
           organizationId,
           billingAddressId: selectedId,
         })
-        toast.success('Your billing address has been updated')
+        toast.success(t('Your billing address has been updated'))
       }
 
       onOpenChange(false)
@@ -122,7 +124,7 @@ export function ReplaceAddressModal({
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to update billing address',
+          : t('Failed to update billing address'),
       )
     }
   }
@@ -142,9 +144,9 @@ export function ReplaceAddressModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Replace billing address</DialogTitle>
+          <DialogTitle>{t('Replace billing address')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Replace the existing billing address for your organization.
+            {t('Replace the existing billing address for your organization.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -191,7 +193,7 @@ export function ReplaceAddressModal({
                         <p className="text-muted-foreground">{addr.country}</p>
                         {addr.$id === currentAddressId && (
                           <span className="text-[12px] text-muted-foreground mt-1 inline-block">
-                            Current
+                            {t('Current')}
                           </span>
                         )}
                       </div>
@@ -204,14 +206,14 @@ export function ReplaceAddressModal({
                       className="mt-0.5"
                     />
                     <span className="text-[13px] font-medium">
-                      Add a new billing address
+                      {t('Add a new billing address')}
                     </span>
                   </label>
                 </RadioGroup>
               </>
             ) : (
               <p className="text-[13px] text-muted-foreground py-2">
-                There are no billing addresses on your account. Add one below.
+                {t('There are no billing addresses on your account. Add one below.')}
               </p>
             )}
 
@@ -219,7 +221,7 @@ export function ReplaceAddressModal({
               <div className="space-y-4 pt-2 border-t border-border">
                 <div className="space-y-2">
                   <Label htmlFor="replace-country" className="text-[13px]">
-                    Country <span className="text-red-500">*</span>
+                    {t('Country')} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={country}
@@ -230,7 +232,7 @@ export function ReplaceAddressModal({
                       id="replace-country"
                       className="h-9 text-[13px]"
                     >
-                      <SelectValue placeholder="Select a country" />
+                      <SelectValue placeholder={t('Select a country')} />
                     </SelectTrigger>
                     <SelectContent>
                       {countries.map((c) => (
@@ -243,26 +245,26 @@ export function ReplaceAddressModal({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="replace-street" className="text-[13px]">
-                    Street address <span className="text-red-500">*</span>
+                    {t('Street address')} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="replace-street"
                     value={streetAddress}
                     onChange={(e) => setStreetAddress(e.target.value)}
-                    placeholder="Enter street address"
+                    placeholder={t('Enter street address')}
                     className="h-9 text-[13px]"
                     disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="replace-line2" className="text-[13px]">
-                    Address line 2
+                    {t('Address line 2')}
                   </Label>
                   <Input
                     id="replace-line2"
                     value={addressLine2}
                     onChange={(e) => setAddressLine2(e.target.value)}
-                    placeholder="Unit, floor, etc."
+                    placeholder={t('Unit, floor, etc.')}
                     className="h-9 text-[13px]"
                     disabled={isLoading}
                   />
@@ -270,26 +272,26 @@ export function ReplaceAddressModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="replace-city" className="text-[13px]">
-                      City <span className="text-red-500">*</span>
+                      {t('City')} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="replace-city"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="City"
+                      placeholder={t('City')}
                       className="h-9 text-[13px]"
                       disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="replace-state" className="text-[13px]">
-                      State <span className="text-red-500">*</span>
+                      {t('State')} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="replace-state"
                       value={state}
                       onChange={(e) => setState(e.target.value)}
-                      placeholder="State"
+                      placeholder={t('State')}
                       className="h-9 text-[13px]"
                       disabled={isLoading}
                     />
@@ -297,13 +299,13 @@ export function ReplaceAddressModal({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="replace-postal" className="text-[13px]">
-                    Postal code
+                    {t('Postal code')}
                   </Label>
                   <Input
                     id="replace-postal"
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="Postal code"
+                    placeholder={t('Postal code')}
                     className="h-9 text-[13px]"
                     disabled={isLoading}
                   />
@@ -319,10 +321,10 @@ export function ReplaceAddressModal({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !canSubmit}>
-              Save
+              {t('Save')}
             </Button>
           </div>
         </form>

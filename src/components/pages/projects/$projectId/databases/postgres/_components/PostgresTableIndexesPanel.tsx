@@ -41,6 +41,7 @@ import {
 import { Key, Trash2 } from 'lucide-react'
 import { PostgresTableIndexDrawer } from './PostgresTableIndexDrawer'
 import { PostgresIndexContextMenu } from './PostgresIndexContextMenu'
+import { useT } from '@/lib/i18n/translate'
 import {
   matchesPostgresLocalSearch,
   parsePostgresIndexColumnsFromDefinition,
@@ -73,6 +74,7 @@ export function PostgresTableIndexesPanel({
   search = '',
   createDialogOpen: createDialogOpenProp,
   onCreateDialogOpenChange}: PostgresTableIndexesPanelProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { schema } = parsePostgresTableId(tableId)
   const { project } = useProject(projectId)
@@ -103,7 +105,7 @@ export function PostgresTableIndexesPanel({
       await executeSql.mutateAsync(
         buildPostgresDropIndexSql(schema, indexToDelete),
       )
-      toast.success('Index deleted')
+      toast.success(t('Index deleted'))
       setDeleteDialogOpen(false)
       setIndexToDelete(null)
       await refetch()
@@ -141,7 +143,7 @@ export function PostgresTableIndexesPanel({
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-[13px] text-muted-foreground">
-          Loading indexes…
+          {t('Loading indexes…')}
         </div>
       </div>
     )
@@ -151,10 +153,10 @@ export function PostgresTableIndexesPanel({
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
         <p className="text-[15px] font-medium text-foreground">
-          No indexes match your search
+          {t('No indexes match your search')}
         </p>
         <p className="mt-2 max-w-sm text-[13px] text-muted-foreground">
-          Try adjusting or clearing your search.
+          {t('Try adjusting or clearing your search.')}
         </p>
       </div>
     )
@@ -165,10 +167,10 @@ export function PostgresTableIndexesPanel({
       <>
         <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
           <p className="text-[15px] font-medium text-foreground">
-            No indexes
+            {t('No indexes')}
           </p>
           <p className="mt-2 max-w-sm text-[13px] text-muted-foreground">
-            Create an index to improve query performance on this table.
+            {t('Create an index to improve query performance on this table.')}
           </p>
           {canWrite ? (
             <Button
@@ -176,7 +178,7 @@ export function PostgresTableIndexesPanel({
               className="mt-4 h-9"
               onClick={() => setDialogOpen(true)}
             >
-              Create index
+              {t('Create index')}
             </Button>
           ) : null}
         </div>
@@ -206,7 +208,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Key
+                    {t('Key')}
                   </span>
                 </th>
                 <th
@@ -216,7 +218,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Algorithm
+                    {t('Algorithm')}
                   </span>
                 </th>
                 <th
@@ -226,7 +228,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Unique
+                    {t('Unique')}
                   </span>
                 </th>
                 <th
@@ -236,7 +238,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Columns
+                    {t('Columns')}
                   </span>
                 </th>
                 <th
@@ -246,7 +248,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Condition
+                    {t('Condition')}
                   </span>
                 </th>
                 <th
@@ -256,7 +258,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Include
+                    {t('Include')}
                   </span>
                 </th>
                 <th
@@ -266,7 +268,7 @@ export function PostgresTableIndexesPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Comment
+                    {t('Comment')}
                   </span>
                 </th>
                 <th
@@ -323,7 +325,7 @@ export function PostgresTableIndexesPanel({
                         </code>
                         {isPrimary ? (
                           <Badge variant="info" className="text-[10px] shrink-0">
-                            Primary key
+                            {t('Primary key')}
                           </Badge>
                         ) : null}
                       </div>
@@ -421,7 +423,7 @@ export function PostgresTableIndexesPanel({
                                 setDeleteDialogOpen(true)
                               }}
                             >
-                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                              <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -448,7 +450,7 @@ export function PostgresTableIndexesPanel({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete index</DialogTitle>
+            <DialogTitle>{t('Delete index')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}
               <strong>{indexToDelete}</strong>? This action cannot be undone.
@@ -460,14 +462,14 @@ export function PostgresTableIndexesPanel({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={executeSql.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleDelete()}
               disabled={executeSql.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

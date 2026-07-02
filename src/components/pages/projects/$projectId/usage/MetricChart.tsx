@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
   createCompactCountAxisTickFormatter,
@@ -34,6 +35,7 @@ interface UsageMetricChartProps {
 }
 
 export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
+  const t = useT()
   // Transform time series data for recharts
   const chartData = useMemo(() => {
     return metric.timeSeries.map((point) => ({
@@ -69,7 +71,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
   const formattedValue = formatMetricValue(metric.currentValue, metric.unit)
   const formattedQuota = metric.quota
     ? formatMetricValue(metric.quota, metric.unit)
-    : 'Unlimited'
+    : t('Unlimited')
 
   return (
     <div
@@ -82,7 +84,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
       <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
           <h3 className="text-[14px] font-medium text-foreground">
-            {metric.name}
+            {t(metric.name)}
           </h3>
 
           {/* Current value and quota */}
@@ -111,7 +113,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
               />
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">
-                  {usagePercentage.toFixed(1)}% used
+                  {usagePercentage.toFixed(1)}% {t('used')}
                 </span>
                 {usageStatus !== 'normal' && (
                   <span
@@ -123,8 +125,8 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
                   >
                     <AlertTriangle className="h-3 w-3" />
                     {usageStatus === 'critical'
-                      ? 'Approaching limit'
-                      : 'High usage'}
+                      ? t('Approaching limit')
+                      : t('High usage')}
                   </span>
                 )}
               </div>
@@ -175,7 +177,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
                       <p className="text-[13px] font-medium text-foreground">
                         {formatMetricValue(data.value, metric.unit)}{' '}
                         <span className="text-muted-foreground font-normal">
-                          {metric.unit}
+                          {t(metric.unit)}
                         </span>
                       </p>
                     </div>
@@ -198,7 +200,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
       {/* Description */}
       <div className="border-t border-border bg-muted/30 px-4 py-3">
         <p className="text-[12px] leading-relaxed text-muted-foreground">
-          {metric.description}
+          {t(metric.description)}
         </p>
       </div>
     </div>

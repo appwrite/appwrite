@@ -44,6 +44,7 @@ import {
 
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -81,6 +82,7 @@ function formatDeliveryErrors(
 }
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({
     strict: false,
   })
@@ -277,10 +279,10 @@ export function View() {
         : !canWriteProviders(access, features)
   const createPermissionTooltip = noCreatePermission
     ? activeTab === 'messages'
-      ? "You don't have permission to create messages."
+      ? t("You don't have permission to create messages.") // pragma: allowlist secret
       : activeTab === 'topics'
-        ? "You don't have permission to create topics."
-        : "You don't have permission to create providers."
+        ? t("You don't have permission to create topics.")
+        : t("You don't have permission to create providers.")
     : undefined
 
   // Clear selection when navigating or searching
@@ -341,13 +343,13 @@ export function View() {
         ],
       })
       toast.success(
-        `Successfully deleted ${selectedItems.size} ${activeTab.slice(0, -1)}${selectedItems.size > 1 ? 's' : ''}`,
+        `${t('Successfully deleted')} ${selectedItems.size} ${selectedItems.size > 1 ? t(activeTab) : t(activeTab.slice(0, -1))}`,
       )
       setSelectedItems(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete items')
+      toast.error(getErrorMessage(error) || t('Failed to delete items'))
     },
   })
 
@@ -402,24 +404,24 @@ export function View() {
     () => [
       {
         id: 'messages',
-        label: 'Messages',
+        label: t('Messages'), // pragma: allowlist secret
         to: '/projects/$projectId/messaging/',
         params: { projectId: projectId as string },
       },
       {
         id: 'topics',
-        label: 'Topics',
+        label: t('Topics'),
         to: '/projects/$projectId/messaging/topics',
         params: { projectId: projectId as string },
       },
       {
         id: 'providers',
-        label: 'Providers',
+        label: t('Providers'),
         to: '/projects/$projectId/messaging/providers',
         params: { projectId: projectId as string },
       },
     ],
-    [projectId],
+    [projectId, t],
   )
 
   // Get message type icon
@@ -438,7 +440,7 @@ export function View() {
     if (status === 'sent') {
       return (
         <Badge variant="success" className="text-[10px] shrink-0">
-          Sent
+          {t('Sent')}
         </Badge>
       )
     }
@@ -447,7 +449,7 @@ export function View() {
         <div className="flex items-center gap-2">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
           <Badge variant="processing" className="text-[10px] shrink-0">
-            Processing
+            {t('Processing')}
           </Badge>
         </div>
       )
@@ -457,7 +459,7 @@ export function View() {
       return (
         <div className="flex items-center gap-2">
           <Badge variant="error" className="text-[10px] shrink-0">
-            Failed
+            {t('Failed')}
           </Badge>
           {lines.length > 0 && (
             <Button
@@ -469,7 +471,7 @@ export function View() {
                 setDeliveryErrorLines(lines)
               }}
             >
-              Details
+              {t('Details')}
             </Button>
           )}
         </div>
@@ -478,14 +480,14 @@ export function View() {
     if (status === 'draft') {
       return (
         <Badge variant="info" className="text-[10px] shrink-0">
-          Draft
+          {t('Draft')}
         </Badge>
       )
     }
     if (status === 'scheduled') {
       return (
         <Badge variant="warning" className="text-[10px] shrink-0">
-          Scheduled
+          {t('Scheduled')}
         </Badge>
       )
     }
@@ -507,21 +509,21 @@ export function View() {
     if (message.providerType === 'email' && message.data?.subject) {
       return message.data.subject
     }
-    return 'No content'
+    return t('No content')
   }
 
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Messaging"
+        title={t('Messaging')}
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
           activeTab === 'messages'
-            ? 'Search messages...'
+            ? t('Search messages...') // pragma: allowlist secret
             : activeTab === 'topics'
-              ? 'Search topics...'
-              : 'Search providers...'
+              ? t('Search topics...')
+              : t('Search providers...')
         }
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
@@ -558,55 +560,55 @@ export function View() {
                       {activeTab === 'messages' ? (
                         <>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Message ID
+                            {t('Message ID')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Message
+                            {t('Message')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Type
+                            {t('Type')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Status
+                            {t('Status')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Scheduled at
+                            {t('Scheduled at')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Delivered at
+                            {t('Delivered at')}
                           </TableHead>
                         </>
                       ) : activeTab === 'topics' ? (
                         <>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Topic ID
+                            {t('Topic ID')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Name
+                            {t('Name')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Subscribers
+                            {t('Subscribers')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                            Created
+                            {t('Created')}
                           </TableHead>
                         </>
                       ) : (
                         <>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Provider ID
+                            {t('Provider ID')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Provider
+                            {t('Provider')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Type
+                            {t('Type')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Enabled
+                            {t('Enabled')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Name
+                            {t('Name')}
                           </TableHead>
                         </>
                       )}
@@ -968,14 +970,14 @@ export function View() {
                                       variant="success"
                                       className="text-[10px] shrink-0"
                                     >
-                                      Enabled
+                                      {t('Enabled')}
                                     </Badge>
                                   ) : (
                                     <Badge
                                       variant="inactive"
                                       className="text-[10px] shrink-0"
                                     >
-                                      Disabled
+                                      {t('Disabled')}
                                     </Badge>
                                   )}
                                 </TableCell>
@@ -1008,7 +1010,7 @@ export function View() {
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel={activeTab}
+                itemLabel={t(activeTab)}
               />
             </>
           ) : (
@@ -1018,19 +1020,19 @@ export function View() {
                 searchValue
                   ? undefined
                   : activeTab === 'messages'
-                    ? 'No messages yet'
+                    ? t('No messages yet') // pragma: allowlist secret
                     : activeTab === 'topics'
-                      ? 'No topics yet'
-                      : 'No providers yet'
+                      ? t('No topics yet')
+                      : t('No providers yet')
               }
               description={
                 searchValue
                   ? undefined
                   : activeTab === 'messages'
-                    ? 'Create your first message to start sending notifications'
+                    ? t('Create your first message to start sending notifications')
                     : activeTab === 'topics'
-                      ? 'Create your first topic to organize subscribers'
-                      : 'Create your first provider to send messages'
+                      ? t('Create your first topic to organize subscribers')
+                      : t('Create your first provider to send messages') // pragma: allowlist secret
               }
               isEmpty={!searchValue}
               hasFilters={!!searchValue}
@@ -1043,8 +1045,11 @@ export function View() {
           <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="info" className="h-6 shrink-0 px-2.5 text-[10px]">
-                {selectedItems.size} {activeTab.slice(0, -1)}
-                {selectedItems.size > 1 ? 's' : ''} selected
+                {selectedItems.size}{' '}
+                {selectedItems.size > 1
+                  ? t(activeTab)
+                  : t(activeTab.slice(0, -1))}{' '}
+                {t('selected')}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -1053,7 +1058,7 @@ export function View() {
                   onClick={() => setSelectedItems(new Set())}
                   className="h-8 text-xs"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1062,7 +1067,7 @@ export function View() {
                   disabled={bulkDeleteMutation.isPending}
                   className="h-8 gap-2"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -1073,12 +1078,13 @@ export function View() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete {activeTab}</DialogTitle>
+              <DialogTitle>{t('Delete')} {t(activeTab)}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedItems.size}{' '}
-                {activeTab.slice(0, -1)}
-                {selectedItems.size > 1 ? 's' : ''}? This action cannot be
-                undone.
+                {t('Are you sure you want to delete')} {selectedItems.size}{' '}
+                {selectedItems.size > 1
+                  ? t(activeTab)
+                  : t(activeTab.slice(0, -1))}
+                ? {t('This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
 
@@ -1088,14 +1094,14 @@ export function View() {
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmBulkDelete}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>
@@ -1107,9 +1113,9 @@ export function View() {
         >
           <DialogContent className="sm:max-w-lg p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Message error</DialogTitle>
+              <DialogTitle>{t('Message error')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                The message failed to deliver. See the details below.
+                {t('The message failed to deliver. See the details below.')}
               </DialogDescription>
             </DialogHeader>
             <div className="border-t border-border" />
@@ -1120,7 +1126,7 @@ export function View() {
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
               <Button variant="outline" onClick={() => setDeliveryErrorLines(null)}>
-                Close
+                {t('Close')}
               </Button>
             </div>
           </DialogContent>

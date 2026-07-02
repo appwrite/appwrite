@@ -1,5 +1,6 @@
 import { Check, Radio } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -51,6 +52,7 @@ function PeerCursor({
 }
 
 function PresenceBar() {
+  const t = useT()
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex -space-x-1.5">
@@ -69,7 +71,7 @@ function PresenceBar() {
           <span className={cn('relative inline-flex size-2 rounded-full bg-muted-foreground transition-colors duration-300 group-hover:bg-emerald-500')} />
         </span>
         <p className={cn('text-[11px] font-medium sm:text-[12px]', productBentoIdle.text)}>
-          3 online
+          3 {t('online')}
         </p>
       </div>
     </div>
@@ -77,6 +79,7 @@ function PresenceBar() {
 }
 
 export function RealtimeProductVisual() {
+  const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
       <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
@@ -84,10 +87,10 @@ export function RealtimeProductVisual() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
-                Shared doc
+                {t('Shared doc')}
               </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-[12px]">
-                Collaborate on the same page in real time
+                {t('Collaborate on the same page in real time')}
               </p>
             </div>
             <span className="relative mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-background">
@@ -115,16 +118,16 @@ export function RealtimeProductVisual() {
               />
 
               <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">
-                Launch plan
+                {t('Launch plan')}
               </p>
 
               <div className="relative mt-2 rounded-md px-2 py-1.5">
                 <p className={cn('relative min-h-[1.25rem] text-[12px] font-semibold leading-snug sm:text-[13px]', productBentoIdle.text)}>
                   <span className="transition-opacity duration-500 ease-out delay-500 group-hover:opacity-0 motion-reduce:delay-0 motion-reduce:group-hover:opacity-100">
-                    Launch landing page
+                    {t('Launch landing page')}
                   </span>
                   <span className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-out delay-700 group-hover:opacity-100 motion-reduce:static motion-reduce:delay-0 motion-reduce:opacity-100">
-                    Launch homepage v2
+                    {t('Launch homepage v2')}
                   </span>
                 </p>
               </div>
@@ -143,20 +146,20 @@ export function RealtimeProductVisual() {
                     />
                   </span>
                   <span className="text-[11px] text-muted-foreground transition-[color,text-decoration-color] duration-500 ease-out delay-500 group-hover:text-muted-foreground group-hover:line-through motion-reduce:delay-0 sm:text-[12px]">
-                    Draft hero copy
+                    {t('Draft hero copy')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 px-2 py-1">
                   <span className="size-3.5 shrink-0 rounded border border-border/80 bg-background" />
                   <span className="text-[11px] text-muted-foreground sm:text-[12px]">
-                    Ship pricing section
+                    {t('Ship pricing section')}
                   </span>
                 </div>
               </div>
             </div>
 
             <p className="mt-2.5 text-center text-[10px] text-muted-foreground sm:text-[11px]">
-              Edits sync instantly for everyone in the doc
+              {t('Edits sync instantly for everyone in the doc')}
             </p>
         </div>
       </div>

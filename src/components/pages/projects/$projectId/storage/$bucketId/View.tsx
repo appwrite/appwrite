@@ -131,6 +131,7 @@ import {
   type StorageFilesListResizableColumnWidthKey,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
+import { useT } from '@/lib/i18n/translate'
 
 const STORAGE_FILES_STACKED_COL_STYLES: Record<
   StorageFilesListColumnWidthKey,
@@ -153,6 +154,7 @@ function dataTransferHasFileList(dataTransfer: DataTransfer | null): boolean {
 }
 
 export function View() {
+  const t = useT()
   const { projectId, bucketId } = useParams({
     strict: false,
   })
@@ -544,7 +546,7 @@ export function View() {
     const base: Tab[] = [
       {
         id: 'files',
-        label: 'Files',
+        label: t('Files'),
         to: '/projects/$projectId/storage/$bucketId',
         params: {
           projectId: projectId as string,
@@ -555,7 +557,7 @@ export function View() {
         ? [
             {
               id: 'security' as const,
-              label: 'Security',
+              label: t('Security'),
               to: '/projects/$projectId/storage/$bucketId/security',
               params: {
                 projectId: projectId as string,
@@ -564,7 +566,7 @@ export function View() {
             },
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/storage/$bucketId/settings',
               params: {
                 projectId: projectId as string,
@@ -575,7 +577,7 @@ export function View() {
         : []),
     ]
     return base
-  }, [projectId, bucketId, showSecuritySettings])
+  }, [projectId, bucketId, showSecuritySettings, t])
 
   // Redirect from security/settings when user lacks permission
   useEffect(() => {
@@ -803,7 +805,9 @@ export function View() {
         queryKey: Dependencies.FILES,
       })
       toast.success(
-        `Successfully deleted ${selectedFiles.size} file${selectedFiles.size > 1 ? 's' : ''}`,
+        selectedFiles.size > 1
+          ? `${t('Successfully deleted')} ${selectedFiles.size} ${t('files')}`
+          : `${t('Successfully deleted')} ${selectedFiles.size} ${t('file')}`,
       )
       setSelectedFiles(new Set())
       setDeleteDialogOpen(false)
@@ -819,7 +823,7 @@ export function View() {
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete files')
+      toast.error(getErrorMessage(error) || t('Failed to delete files'))
     },
   })
 
@@ -1382,17 +1386,17 @@ export function View() {
               <CopyableId id={displayBucket.$id} size="xs" className="shrink-0" />
             </div>
           ) : (
-            'Bucket'
+            t('Bucket')
           )
         }
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'files' ? 'Search files...' : undefined
+          activeTab === 'files' ? t('Search files...') : undefined
         }
         searchValue={activeTab === 'files' ? searchInput : ''}
         onSearchChange={activeTab === 'files' ? handleSearchChange : undefined}
-        createLabel={activeTab === 'files' ? 'Create file' : undefined}
+        createLabel={activeTab === 'files' ? t('Create file') : undefined}
         onCreate={
           activeTab === 'files'
             ? () => setUploadFileDialogOpen(true)
@@ -1462,20 +1466,21 @@ export function View() {
                 >
                   <AlertCircle className="h-4 w-4 text-amber-500" />
                   <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                    Bucket is disabled
+                    {t('Bucket is disabled')}
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                     <span className="inline">
-                      This bucket is disabled and not accessible to end users
-                      through the API. Console actions remain available.{' '}
+                      {t(
+                        'This bucket is disabled and not accessible to end users through the API. Console actions remain available.',
+                      )}{' '}
                       <Link
                         to="/projects/$projectId/storage/$bucketId/settings"
                         params={{ projectId: projectId!, bucketId: bucketId! }}
                         className="font-medium underline hover:no-underline inline"
                       >
-                        Enable it in the Settings tab
+                        {t('Enable it in the Settings tab')}
                       </Link>{' '}
-                      to make it available to end users.
+                      {t('to make it available to end users.')}
                     </span>
                   </AlertDescription>
                 </Alert>
@@ -1508,10 +1513,10 @@ export function View() {
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
                     <p className="text-[13px] font-medium leading-snug text-foreground">
-                      Drop files to upload
+                      {t('Drop files to upload')}
                     </p>
                     <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                      Review and upload in the dialog that opens next.
+                      {t('Review and upload in the dialog that opens next.')}
                     </p>
                   </div>
                 </div>
@@ -1519,7 +1524,9 @@ export function View() {
             ) : null}
             {showFilesLoading ? (
               <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-12">
-                <p className="text-[13px] text-muted-foreground">Loading files…</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {t('Loading files…')}
+                </p>
               </div>
             ) : files.length === 0 ? (
               <div className="relative flex min-h-0 min-w-0 flex-1 flex-col border-t border-border bg-muted/20">
@@ -1528,13 +1535,17 @@ export function View() {
                     icon={FileText}
                     title={
                       urlSearch?.trim() || filterMap.size > 0
-                        ? 'No files match your filters'
-                        : 'No files yet'
+                        ? t('No files match your filters')
+                        : t('No files yet')
                     }
                     description={
                       urlSearch?.trim() || filterMap.size > 0
-                        ? 'Try adjusting or clearing filters. You can also drop files anywhere here to upload new ones.'
-                        : 'Drag and drop files anywhere in this view, or use Create file in the header to upload your first file.'
+                        ? t(
+                            'Try adjusting or clearing filters. You can also drop files anywhere here to upload new ones.',
+                          )
+                        : t(
+                            'Drag and drop files anywhere in this view, or use Create file in the header to upload your first file.',
+                          )
                     }
                     isEmpty={!urlSearch?.trim() && filterMap.size === 0}
                     hasFilters={!!urlSearch?.trim() || filterMap.size > 0}
@@ -2125,7 +2136,7 @@ export function View() {
                                         variant="secondary"
                                         className="shrink-0 text-[10px] font-medium"
                                       >
-                                        Pending
+                                        {t('Pending')}
                                       </Badge>
                                     ) : null}
                                   </div>
@@ -2201,7 +2212,7 @@ export function View() {
                                     />
                                   ) : (
                                     <span className="text-[12px] text-foreground/60">
-                                      N/A
+                                      {t('N/A')}
                                     </span>
                                   )}
                                 </td>
@@ -2231,7 +2242,7 @@ export function View() {
                                     />
                                   ) : (
                                     <span className="text-[12px] text-foreground/60">
-                                      N/A
+                                      {t('N/A')}
                                     </span>
                                   )}
                                 </td>
@@ -2283,7 +2294,7 @@ export function View() {
                               }
                             }}
                             type="button"
-                            aria-label={`Resize ${col} column width`}
+                            aria-label={`${t('Resize')} ${col} ${t('column width')}`}
                             aria-orientation="vertical"
                             role="separator"
                             tabIndex={0}
@@ -2318,7 +2329,7 @@ export function View() {
                           pageSizeOptions={[10, 25, 50, 100]}
                           onPageChange={handlePageChange}
                           onPageSizeChange={handlePageSizeChange}
-                          itemLabel="files"
+                          itemLabel={t('files')}
                           className="h-full min-h-0 border-0 mt-0 py-0"
                         />
                       </div>
@@ -2352,7 +2363,7 @@ export function View() {
                   {splitFilesTable ? (
                     <button
                       type="button"
-                      aria-label="Resize file table and preview"
+                      aria-label={t('Resize file table and preview')}
                       aria-orientation="vertical"
                       role="separator"
                       tabIndex={0}
@@ -2406,8 +2417,10 @@ export function View() {
                   <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
                     <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
                       <Badge variant="secondary" className="h-6 px-2.5">
-                        {selectedFiles.size} file
-                        {selectedFiles.size > 1 ? 's' : ''} selected
+                        {selectedFiles.size}{' '}
+                        {selectedFiles.size > 1
+                          ? t('files selected')
+                          : t('file selected')}
                       </Badge>
                       <div className="flex items-center gap-2">
                         <Button
@@ -2416,7 +2429,7 @@ export function View() {
                           onClick={() => setSelectedFiles(new Set())}
                           className="h-8 text-xs"
                         >
-                          Cancel
+                          {t('Cancel')}
                         </Button>
                         <Button
                           variant="destructive"
@@ -2425,7 +2438,7 @@ export function View() {
                           disabled={bulkDeleteMutation.isPending}
                           className="h-8 gap-2"
                         >
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </div>
                     </div>
@@ -2438,11 +2451,12 @@ export function View() {
                 >
                   <DialogContent className="sm:max-w-md p-0">
                     <DialogHeader className="px-6 pt-6 text-start">
-                      <DialogTitle>Delete Files</DialogTitle>
+                      <DialogTitle>{t('Delete Files')}</DialogTitle>
                       <DialogDescription className="mt-2 text-[13px]">
-                        Are you sure you want to delete {selectedFiles.size} file
-                        {selectedFiles.size > 1 ? 's' : ''}? This action cannot be
-                        undone.
+                        {t('Are you sure you want to delete')}{' '}
+                        {selectedFiles.size}{' '}
+                        {selectedFiles.size > 1 ? t('files') : t('file')}?{' '}
+                        {t('This action cannot be undone.')}
                       </DialogDescription>
                     </DialogHeader>
 
@@ -2452,14 +2466,14 @@ export function View() {
                         onClick={() => setDeleteDialogOpen(false)}
                         disabled={bulkDeleteMutation.isPending}
                       >
-                        Cancel
+                        {t('Cancel')}
                       </Button>
                       <Button
                         variant="destructive"
                         onClick={confirmBulkDelete}
                         disabled={bulkDeleteMutation.isPending}
                       >
-                        Delete
+                        {t('Delete')}
                       </Button>
                     </div>
                   </DialogContent>

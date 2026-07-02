@@ -7,8 +7,10 @@ import {
 import { NameCard } from './NameCard'
 import { SiteDetailsCard } from './SiteDetailsCard'
 import { DangerZoneCard } from './DangerZoneCard'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { data: site, isLoading: siteLoading } = useProjectSite(
@@ -26,7 +28,9 @@ export function View() {
   if (siteLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }

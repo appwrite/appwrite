@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useDeleteDomain } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 interface DeleteDomainDialogProps {
@@ -27,6 +28,7 @@ export function DeleteDomainDialog({
   rule,
   onDeleteSuccess,
 }: DeleteDomainDialogProps) {
+  const t = useT()
   const deleteDomainMutation = useDeleteDomain(projectId, region)
 
   const handleDelete = async () => {
@@ -34,7 +36,7 @@ export function DeleteDomainDialog({
       await deleteDomainMutation.mutateAsync(rule.$id)
       onDeleteSuccess()
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to delete domain')
+      toast.error(error.message || t('Failed to delete domain'))
     }
   }
 
@@ -42,10 +44,9 @@ export function DeleteDomainDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Delete domain</DialogTitle>
+          <DialogTitle>{t('Delete domain')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete this domain? This action cannot be
-            undone.
+            {t('Are you sure you want to delete this domain? This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -58,7 +59,7 @@ export function DeleteDomainDialog({
             onClick={() => onOpenChange(false)}
             disabled={deleteDomainMutation.isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -68,7 +69,7 @@ export function DeleteDomainDialog({
             onClick={handleDelete}
             disabled={deleteDomainMutation.isPending}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>

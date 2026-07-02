@@ -23,8 +23,10 @@ import {
   educationKickstart,
   educationSteps,
 } from '@/lib/education/content'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
@@ -36,7 +38,7 @@ export function View() {
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
           <Link to="/sign-up" search={{ redirect: '/' }}>
-            Sign up now
+            {t('Sign up now')}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
@@ -69,7 +71,7 @@ export function View() {
               />
               <div className="mt-5 space-y-4 text-[14px] leading-7 text-muted-foreground">
                 {educationKickstart.paragraphs.map((paragraph) => (
-                  <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+                  <p key={paragraph.slice(0, 24)}>{t(paragraph)}</p>
                 ))}
               </div>
             </div>
@@ -87,7 +89,7 @@ export function View() {
 
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <MarketingSectionHeading title="Get started today" size="md" />
+          <MarketingSectionHeading title={t('Get started today')} size="md" />
           <div className="mt-10 grid overflow-hidden rounded-xl border border-border bg-card/45 lg:grid-cols-3">
             {educationSteps.map((step, index) => (
               <article
@@ -95,20 +97,20 @@ export function View() {
                 className="flex h-full flex-col border-b border-border p-6 last:border-b-0 lg:border-b-0 lg:border-e lg:last:border-e-0"
               >
                 <Badge variant="info" className="w-fit text-[10px] shrink-0">
-                  Step {index + 1}
+                  {t('Step')} {index + 1}
                 </Badge>
-                <h3 className="mt-4 text-[14px] font-semibold text-foreground">{step.title}</h3>
+                <h3 className="mt-4 text-[14px] font-semibold text-foreground">{t(step.title)}</h3>
                 <p className="mt-2 flex-1 text-[13px] leading-6 text-muted-foreground">
-                  {step.description}
+                  {t(step.description)}
                 </p>
                 <Button variant="outline" className="mt-6 w-fit" asChild>
                   {step.external ? (
                     <a href={step.href} target="_blank" rel="noopener noreferrer">
-                      {step.label}
+                      {t(step.label)}
                     </a>
                   ) : (
                     <Link to={step.href} search={{ redirect: '/' }}>
-                      {step.label}
+                      {t(step.label)}
                     </Link>
                   )}
                 </Button>
@@ -130,7 +132,7 @@ export function View() {
               />
               <Button variant="outline" className="mt-6" asChild>
                 <MarketingSiteLink href={educationCommunity.discordUrl}>
-                  Join Discord
+                  {t('Join Discord')}
                 </MarketingSiteLink>
               </Button>
             </div>
@@ -144,7 +146,7 @@ export function View() {
       <MarketingCtaSection title={educationCta.title} description={educationCta.description}>
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
           <Link to="/sign-up" search={{ redirect: '/' }}>
-            Sign up
+            {t('Sign up')}
           </Link>
         </Button>
       </MarketingCtaSection>

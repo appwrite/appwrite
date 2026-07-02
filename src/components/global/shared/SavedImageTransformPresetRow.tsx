@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { SavedImageTransformPreset } from '@/lib/user-prefs-keys'
 
 export type SavedImageTransformPresetRowProps = {
@@ -47,6 +48,7 @@ export function SavedImageTransformPresetRow({
   deleteDisabled,
   onRenameCommit,
 }: SavedImageTransformPresetRowProps) {
+  const t = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.name)
   const skipBlurCommitRef = useRef(false)
@@ -125,7 +127,7 @@ export function SavedImageTransformPresetRow({
         editing
           ? undefined
           : canEdit
-            ? `${item.name}, drag to reorder`
+            ? `${item.name}, ${t('drag to reorder')}`
             : item.name
       }
     >
@@ -159,7 +161,7 @@ export function SavedImageTransformPresetRow({
           }}
           className="h-7 min-w-0 flex-1 text-[13px]"
           maxLength={NAME_MAX}
-          aria-label="Saved preset name"
+          aria-label={t('Saved preset name')}
           onClick={(ev) => ev.stopPropagation()}
         />
       ) : (
@@ -174,7 +176,7 @@ export function SavedImageTransformPresetRow({
             <button
               type="button"
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Rename saved preset"
+              aria-label={t('Rename saved preset')}
               onClick={(e) => {
                 e.stopPropagation()
                 startEditing()
@@ -184,7 +186,7 @@ export function SavedImageTransformPresetRow({
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" sideOffset={4} className="z-[10070]">
-            Rename
+            {t('Rename')}
           </TooltipContent>
         </Tooltip>
       ) : editing ? (
@@ -205,7 +207,7 @@ export function SavedImageTransformPresetRow({
           onApply()
         }}
       >
-        Apply
+        {t('Apply')}
       </Button>
 
       {canEdit ? (
@@ -217,7 +219,7 @@ export function SavedImageTransformPresetRow({
           }}
           disabled={deleteDisabled}
           className="shrink-0 cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
-          aria-label="Delete saved preset"
+          aria-label={t('Delete saved preset')}
         >
           {deleteBusy ? (
             <Loader2 className="h-3 w-3 animate-spin" />

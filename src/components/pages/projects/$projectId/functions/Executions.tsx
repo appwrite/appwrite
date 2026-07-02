@@ -8,6 +8,7 @@ import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.executions'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
 import { queryParamToMap } from '@/lib/table-filters'
+import { useT } from '@/lib/i18n/translate'
 
 const EXECUTIONS_PER_PAGE = 25
 
@@ -43,6 +44,7 @@ export function getStatusCodeBadge(statusCode: number) {
 }
 
 export function View() {
+  const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -164,11 +166,11 @@ export function View() {
         projectId={projectId}
         resourceVariant="function"
         resourceId={functionId}
-        emptyStateTitle={hasFilters ? undefined : 'No executions yet'}
+        emptyStateTitle={hasFilters ? undefined : t('No executions yet')}
         emptyStateDescription={
           hasFilters
             ? undefined
-            : 'Executions will appear here when your function runs.'
+            : t('Executions will appear here when your function runs.')
         }
         hasFilters={hasFilters}
         itemLabel="executions"

@@ -20,6 +20,7 @@ import { DateRange } from 'react-day-picker'
 import { useRealtimeChannels } from '@/lib/react-query/hooks/realtime'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Hash } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 interface RealtimeChannelsProps {
   projectId: string | null | undefined
@@ -28,6 +29,7 @@ interface RealtimeChannelsProps {
 const CHANNELS_PER_PAGE = 25
 
 export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
+  const t = useT()
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     // Default to last 7 days
     const to = new Date()
@@ -85,7 +87,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
       {isLoading && (!channels || channels.length === 0) ? (
         <div className="flex h-64 items-center justify-center px-4 sm:px-6">
           <p className="text-[13px] text-muted-foreground">
-            Loading channels...
+            {t('Loading channels...')}
           </p>
         </div>
       ) : channels && channels.length > 0 ? (
@@ -94,19 +96,19 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[300px] ps-6 sm:ps-8">
-                  Channel
+                  {t('Channel')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                  Type
+                  {t('Type')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                  Subscribers
+                  {t('Subscribers')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                  Messages
+                  {t('Messages')} {/* pragma: allowlist secret */}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  Last Activity
+                  {t('Last Activity')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -147,7 +149,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
                       />
                     ) : (
                       <span className="text-[12px] text-muted-foreground/50 italic">
-                        Never
+                        {t('Never')}
                       </span>
                     )}
                   </TableCell>
@@ -163,7 +165,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
-              itemLabel="channels"
+              itemLabel={t('channels')}
               className="py-2"
             />
           </div>
@@ -172,11 +174,13 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
         <div className="px-4 py-12 sm:px-6">
           <EmptyState
             icon={Hash}
-            title="No channels found"
+            title={t('No channels found')}
             description={
               dateRange
                 ? undefined
-                : 'Active realtime channels will appear here when they are created'
+                : t(
+                    'Active realtime channels will appear here when they are created',
+                  )
             }
             isEmpty={!dateRange}
             hasFilters={!!dateRange}

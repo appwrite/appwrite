@@ -87,6 +87,7 @@ import {
 } from './transform-image-wizard-snippets'
 import { TransformImageDesignOverlay } from './TransformImageDesignOverlay'
 import { TransformImagePresetsPopover } from './TransformImagePresetsPopover'
+import { useT } from '@/lib/i18n/translate'
 
 type TransformWizardCanvasMode = 'edit' | 'compare'
 
@@ -134,6 +135,7 @@ function NullablePxInput({
   min: number
   max: number
 }) {
+  const t = useT()
   const isNull = value === null
   return (
     <div className="relative">
@@ -184,7 +186,7 @@ function NullablePxInput({
             htmlFor={`${id}-null`}
             className="cursor-pointer select-none text-[11px] text-muted-foreground"
           >
-            Null
+            {t('Null')}
           </label>
         </div>
       </div>
@@ -233,6 +235,7 @@ function HexColorField({
   allowClear?: boolean
   helperText?: string
 }) {
+  const t = useT()
   const pickerValue = useMemo(() => hexToColorInputValue(value), [value])
   return (
     <div className="space-y-2">
@@ -251,7 +254,7 @@ function HexColorField({
             className="h-7 shrink-0 px-2 text-[11px] text-muted-foreground"
             onClick={() => onChange('')}
           >
-            Clear
+            {t('Clear')}
           </Button>
         ) : null}
       </div>
@@ -267,7 +270,7 @@ function HexColorField({
           )}
           value={pickerValue}
           onChange={(e) => onChange(pickerToStoredHex(e.target.value))}
-          aria-label={`${label} color picker`}
+          aria-label={`${label} ${t('color picker')}`}
         />
         <Input
           id={`${id}-hex`}
@@ -453,6 +456,7 @@ export function TransformImageWizard({
   originalSizeBytes = 0,
   initialPreviewRequestWidthPx,
 }: TransformImageWizardProps) {
+  const t = useT()
   const previewDefaults: StorageInspectorPreviewDefaults = useMemo(
     () => ({
       originalSizeBytes,
@@ -646,8 +650,8 @@ export function TransformImageWizard({
     recordUndoPoint()
     const next = defaultImageTransformState({ preferAvif, ...previewDefaults })
     setState(next)
-    toast.message('All parameters reset to defaults')
-  }, [preferAvif, previewDefaults, recordUndoPoint])
+    toast.message(t('All parameters reset to defaults'))
+  }, [preferAvif, previewDefaults, recordUndoPoint, t])
 
   const resetSizeSection = useCallback(() => {
     recordUndoPoint()
@@ -655,8 +659,8 @@ export function TransformImageWizard({
       ...s,
       ...resetImageTransformSizeSection(preferAvif, previewDefaults),
     }))
-    toast.message('Size & crop reset')
-  }, [preferAvif, previewDefaults, recordUndoPoint])
+    toast.message(t('Size & crop reset'))
+  }, [preferAvif, previewDefaults, recordUndoPoint, t])
 
   const resetQualitySection = useCallback(() => {
     recordUndoPoint()
@@ -664,8 +668,8 @@ export function TransformImageWizard({
       ...s,
       ...resetImageTransformQualitySection(preferAvif, previewDefaults),
     }))
-    toast.message('Quality & format reset')
-  }, [preferAvif, previewDefaults, recordUndoPoint])
+    toast.message(t('Quality & format reset'))
+  }, [preferAvif, previewDefaults, recordUndoPoint, t])
 
   const resetStyleSection = useCallback(() => {
     recordUndoPoint()
@@ -673,13 +677,13 @@ export function TransformImageWizard({
       ...s,
       ...resetImageTransformStyleSection(preferAvif, previewDefaults),
     }))
-    toast.message('Style & effects reset')
-  }, [preferAvif, previewDefaults, recordUndoPoint])
+    toast.message(t('Style & effects reset'))
+  }, [preferAvif, previewDefaults, recordUndoPoint, t])
 
   const copyPreviewUrl = useCallback(() => {
     void navigator.clipboard.writeText(shareablePreviewUrl)
-    toast.success('Preview URL copied')
-  }, [shareablePreviewUrl])
+    toast.success(t('Preview URL copied'))
+  }, [shareablePreviewUrl, t])
 
   const openPreviewInNewTab = useCallback(() => {
     window.open(previewUrl, '_blank', 'noopener,noreferrer')
@@ -693,7 +697,7 @@ export function TransformImageWizard({
         cache: 'no-store',
       })
       if (!res.ok) {
-        toast.error(`Could not download preview (${res.status})`)
+        toast.error(`${t('Could not download preview')} (${res.status})`)
         return
       }
       const blob = await res.blob()
@@ -708,13 +712,13 @@ export function TransformImageWizard({
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(objectUrl)
-      toast.success('Preview downloaded')
+      toast.success(t('Preview downloaded'))
     } catch (e) {
       toast.error(getErrorMessage(e))
     } finally {
       setPreviewDownloadBusy(false)
     }
-  }, [fileName, previewUrl, state.output])
+  }, [fileName, previewUrl, state.output, t])
 
   const projectApiEndpoint = getProjectApiEndpoint(projectId)
 
@@ -734,9 +738,9 @@ export function TransformImageWizard({
   const copyActiveCode = useCallback(async () => {
     await navigator.clipboard.writeText(activeCodeSnippet)
     setCopiedSdk(true)
-    toast.success('Copied')
+    toast.success(t('Copied'))
     window.setTimeout(() => setCopiedSdk(false), 2000)
-  }, [activeCodeSnippet])
+  }, [activeCodeSnippet, t])
 
   const handleCodeTabChange = useCallback((v: string) => {
     setCodeTab(v as TransformImageCodeSdkId)
@@ -820,7 +824,7 @@ export function TransformImageWizard({
 
   return (
     <WizardLayout
-      title={fileName.trim() || 'Transform image'}
+      title={fileName.trim() || t('Transform image')}
       headerBottom={
         <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-muted/30 px-4 py-2 shadow-none">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -834,13 +838,13 @@ export function TransformImageWizard({
                   value="design"
                   className="text-[13px] shadow-none data-[state=active]:shadow-none"
                 >
-                  Design
+                  {t('Design')}
                 </TabsTrigger>
                 <TabsTrigger
                   value="code"
                   className="text-[13px] shadow-none data-[state=active]:shadow-none"
                 >
-                  Code
+                  {t('Code')}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -853,11 +857,11 @@ export function TransformImageWizard({
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               disabled={!canUndo}
               onClick={undo}
-              aria-label="Undo"
-              title="Undo (⌘Z)"
+              aria-label={t('Undo')}
+              title={`${t('Undo')} (⌘Z)`}
             >
               <Undo2 className="h-3.5 w-3.5" />
-              Undo
+              {t('Undo')}
             </Button>
             <Button
               type="button"
@@ -866,11 +870,11 @@ export function TransformImageWizard({
               className="h-8 gap-1.5 px-2.5 text-[12px]"
               disabled={!canRedo}
               onClick={redo}
-              aria-label="Redo"
-              title="Redo (⌘⇧Z)"
+              aria-label={t('Redo')}
+              title={`${t('Redo')} (⌘⇧Z)`}
             >
               <Redo2 className="h-3.5 w-3.5" />
-              Redo
+              {t('Redo')}
             </Button>
             <Button
               type="button"
@@ -880,7 +884,7 @@ export function TransformImageWizard({
               onClick={resetAllToDefaults}
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              Reset all
+              {t('Reset all')}
             </Button>
             {mainView === 'design' ? (
               <TransformImagePresetsPopover
@@ -925,7 +929,7 @@ export function TransformImageWizard({
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                 </PreviewReductionRing>
                 <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
-                  Measuring preview size…
+                  {t('Measuring preview size…')}
                 </p>
               </>
             )}
@@ -941,7 +945,7 @@ export function TransformImageWizard({
                   </span>
                 </PreviewReductionRing>
                 <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
-                  Preview size unavailable · original{' '}
+                  {t('Preview size unavailable · original')}{' '}
                   <span className="font-medium tabular-nums text-foreground">
                     {formatBytes(originalSizeBytes)}
                   </span>
@@ -1002,7 +1006,7 @@ export function TransformImageWizard({
                     </span>
                     <span className="text-muted-foreground">
                       {' '}
-                      · {sizeComparison.pctOfOriginal}% of original
+                      · {sizeComparison.pctOfOriginal}% {t('of original')}
                     </span>
                     {sizeComparison.delta < 0 ? (
                       <>
@@ -1011,7 +1015,7 @@ export function TransformImageWizard({
                           variant="warning"
                           className="ms-0.5 inline h-4 align-middle px-1 py-0 text-[9px]"
                         >
-                          Larger payload
+                          {t('Larger payload')}
                         </Badge>
                       </>
                     ) : null}
@@ -1033,7 +1037,7 @@ export function TransformImageWizard({
               ) : (
                 <Download className="me-1.5 h-3.5 w-3.5" />
               )}
-              Download
+              {t('Download')}
             </Button>
             <Button
               type="button"
@@ -1042,7 +1046,7 @@ export function TransformImageWizard({
               onClick={copyPreviewUrl}
             >
               <Copy className="me-1.5 h-3.5 w-3.5" />
-              Copy URL
+              {t('Copy URL')}
             </Button>
             <Button
               type="button"
@@ -1051,7 +1055,7 @@ export function TransformImageWizard({
               onClick={openPreviewInNewTab}
             >
               <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-              Open
+              {t('Open')}
             </Button>
           </div>
         </div>
@@ -1068,7 +1072,9 @@ export function TransformImageWizard({
                     {...bindCanvas}
                     tabIndex={-1}
                     role="application"
-                    aria-label="Pan and zoom preview. Use the scroll wheel to zoom, drag to pan. Keys: + or = zoom in, - zoom out, 0 reset."
+                    aria-label={t(
+                      'Pan and zoom preview. Use the scroll wheel to zoom, drag to pan. Keys: + or = zoom in, - zoom out, 0 reset.',
+                    )}
                     onKeyDown={handleCanvasKeyDown}
                     className={cn(
                       'absolute inset-0 overflow-hidden select-none outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
@@ -1110,7 +1116,7 @@ export function TransformImageWizard({
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={zoomIn}
                         disabled={zoomInDisabled}
-                        aria-label="Zoom in"
+                        aria-label={t('Zoom in')}
                       >
                         <ZoomIn className="h-4 w-4" />
                       </Button>
@@ -1126,7 +1132,7 @@ export function TransformImageWizard({
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={zoomOut}
                         disabled={zoomOutDisabled}
-                        aria-label="Zoom out"
+                        aria-label={t('Zoom out')}
                       >
                         <ZoomOut className="h-4 w-4" />
                       </Button>
@@ -1136,7 +1142,7 @@ export function TransformImageWizard({
                         size="sm"
                         className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
                         onClick={resetView}
-                        aria-label="Reset pan and zoom"
+                        aria-label={t('Reset pan and zoom')}
                       >
                         <Maximize2 className="h-4 w-4" />
                       </Button>
@@ -1153,19 +1159,19 @@ export function TransformImageWizard({
                         variant="outline"
                         size="sm"
                         className="rounded-md border border-border bg-card/95 p-0.5 shadow-none backdrop-blur-sm"
-                        aria-label="Design canvas mode"
+                        aria-label={t('Design canvas mode')}
                       >
                         <ToggleGroupItem
                           value="edit"
                           className="h-8 px-3 text-[12px] data-[state=on]:bg-muted"
                         >
-                          Edit
+                          {t('Edit')}
                         </ToggleGroupItem>
                         <ToggleGroupItem
                           value="compare"
                           className="h-8 px-3 text-[12px] data-[state=on]:bg-muted"
                         >
-                          Compare
+                          {t('Compare')}
                         </ToggleGroupItem>
                       </ToggleGroup>
                     </div>
@@ -1194,7 +1200,7 @@ export function TransformImageWizard({
                     <Select value={codeTab} onValueChange={handleCodeTabChange}>
                       <SelectTrigger
                         className="h-8 w-[min(200px,calc(100vw-8rem))] shrink-0 border-border bg-card/95 text-[12px] shadow-none backdrop-blur-sm"
-                        aria-label="SDK example"
+                        aria-label={t('SDK example')}
                       >
                         <SelectValue placeholder="SDK" />
                       </SelectTrigger>
@@ -1219,7 +1225,7 @@ export function TransformImageWizard({
                       size="sm"
                       className="h-8 w-8 shrink-0 border-border bg-card/95 p-0 shadow-none backdrop-blur-sm me-2"
                       onClick={copyActiveCode}
-                      aria-label={copiedSdk ? 'Copied' : 'Copy code example'}
+                      aria-label={copiedSdk ? t('Copied') : t('Copy code example')}
                     >
                       {copiedSdk ? (
                         <Check className="h-3.5 w-3.5 text-emerald-600" />
@@ -1249,7 +1255,7 @@ export function TransformImageWizard({
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 pe-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
-                      Size & crop
+                      {t('Size & crop')}
                     </span>
                     <Button
                       type="button"
@@ -1259,9 +1265,9 @@ export function TransformImageWizard({
                         'h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground',
                         !sizeSectionDirty && 'invisible pointer-events-none',
                       )}
-                      aria-label="Reset size and crop"
+                      aria-label={t('Reset size and crop')}
                       title={
-                        sizeSectionDirty ? 'Reset size and crop' : undefined
+                        sizeSectionDirty ? t('Reset size and crop') : undefined
                       }
                       tabIndex={sizeSectionDirty ? 0 : -1}
                       aria-hidden={!sizeSectionDirty}
@@ -1287,7 +1293,7 @@ export function TransformImageWizard({
                         htmlFor="transform-width"
                         className="text-[12px] text-muted-foreground"
                       >
-                        Width (px)
+                        {t('Width (px)')}
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
                         {state.width === null ? '-' : state.width}
@@ -1323,7 +1329,7 @@ export function TransformImageWizard({
                         htmlFor="transform-height"
                         className="text-[12px] text-muted-foreground"
                       >
-                        Height (px)
+                        {t('Height (px)')}
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
                         {state.height === null ? '-' : state.height}
@@ -1354,14 +1360,14 @@ export function TransformImageWizard({
                     />
                   </div>
                   <p className="text-[11px] leading-snug text-muted-foreground">
-                    Null width or height omits that dimension from the preview
-                    URL so the API derives sizing (often from the other side). A
-                    number is an explicit pixel target.
+                    {t(
+                      'Null width or height omits that dimension from the preview URL so the API derives sizing (often from the other side). A number is an explicit pixel target.',
+                    )}
                   </p>
                   <div className="min-w-0 space-y-2">
                     <div className="flex items-center gap-2">
                       <Label className="shrink-0 text-[12px] text-muted-foreground">
-                        Gravity
+                        {t('Gravity')}
                       </Label>
                       <span
                         className="ms-auto min-w-0 shrink-0 whitespace-nowrap text-end font-mono text-[10px] leading-none tracking-wide text-muted-foreground"
@@ -1374,7 +1380,7 @@ export function TransformImageWizard({
                     <div
                       className="w-full max-w-[11.5rem] rounded-lg border border-border bg-muted/25 p-px shadow-inner dark:bg-muted/15"
                       role="group"
-                      aria-label="Crop gravity"
+                      aria-label={t('Crop gravity')}
                     >
                       <div className="grid grid-cols-3 gap-px bg-border/70">
                         {TRANSFORM_IMAGE_GRAVITY_GRID_ROWS.flatMap((row, ri) =>
@@ -1439,7 +1445,7 @@ export function TransformImageWizard({
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 pe-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
-                      Quality & format
+                      {t('Quality & format')}
                     </span>
                     <Button
                       type="button"
@@ -1449,10 +1455,10 @@ export function TransformImageWizard({
                         'h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground',
                         !qualitySectionDirty && 'invisible pointer-events-none',
                       )}
-                      aria-label="Reset quality and format"
+                      aria-label={t('Reset quality and format')}
                       title={
                         qualitySectionDirty
-                          ? 'Reset quality and format'
+                          ? t('Reset quality and format')
                           : undefined
                       }
                       tabIndex={qualitySectionDirty ? 0 : -1}
@@ -1476,7 +1482,7 @@ export function TransformImageWizard({
                   <div className="space-y-2">
                     <div className="flex justify-between gap-2">
                       <Label className="text-[12px] text-muted-foreground">
-                        Quality
+                        {t('Quality')}
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
                         {state.quality}
@@ -1497,7 +1503,7 @@ export function TransformImageWizard({
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[12px] text-muted-foreground">
-                      Output format
+                      {t('Output format')}
                     </Label>
                     <Select
                       value={state.output ?? 'original'}
@@ -1509,11 +1515,11 @@ export function TransformImageWizard({
                       }
                     >
                       <SelectTrigger className="h-9 text-[13px]">
-                        <SelectValue placeholder="Original" />
+                        <SelectValue placeholder={t('Original')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="original" className="text-[13px]">
-                          Original (no conversion)
+                          {t('Original (no conversion)')}
                         </SelectItem>
                         {OUTPUT_FORMAT_LABELS.map(({ value, label }) => (
                           <SelectItem
@@ -1538,7 +1544,7 @@ export function TransformImageWizard({
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 pe-1">
                     <span className="min-w-0 flex-1 truncate py-0.5">
-                      Style & effects
+                      {t('Style & effects')}
                     </span>
                     <Button
                       type="button"
@@ -1548,10 +1554,10 @@ export function TransformImageWizard({
                         'h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground',
                         !styleSectionDirty && 'invisible pointer-events-none',
                       )}
-                      aria-label="Reset style and effects"
+                      aria-label={t('Reset style and effects')}
                       title={
                         styleSectionDirty
-                          ? 'Reset style and effects'
+                          ? t('Reset style and effects')
                           : undefined
                       }
                       tabIndex={styleSectionDirty ? 0 : -1}
@@ -1575,7 +1581,7 @@ export function TransformImageWizard({
                   <div className="space-y-2">
                     <div className="flex justify-between gap-2">
                       <Label className="text-[12px] text-muted-foreground">
-                        Opacity
+                        {t('Opacity')}
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
                         {Math.round(state.opacity * 100)}%
@@ -1594,8 +1600,9 @@ export function TransformImageWizard({
                       }
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      The preview reflects opacity when the output format
-                      supports transparency.
+                      {t(
+                        'The preview reflects opacity when the output format supports transparency.',
+                      )}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -1604,7 +1611,7 @@ export function TransformImageWizard({
                         htmlFor="transform-rotation"
                         className="text-[12px] text-muted-foreground"
                       >
-                        Rotation (degrees)
+                        {t('Rotation (degrees)')}
                       </Label>
                       <span className="text-[12px] tabular-nums text-foreground">
                         {state.rotation}°
@@ -1660,7 +1667,7 @@ export function TransformImageWizard({
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[12px] text-muted-foreground">
-                      Border width (px)
+                      {t('Border width (px)')}
                     </Label>
                     <Input
                       type="number"
@@ -1681,17 +1688,17 @@ export function TransformImageWizard({
                   </div>
                   <HexColorField
                     id="transform-border-color"
-                    label="Border color"
+                    label={t('Border color')}
                     value={state.borderColor}
                     onChange={(borderColor) =>
                       setState((s) => ({ ...s, borderColor }))
                     }
                     allowClear
-                    helperText="Picker or hex (no #). Up to 12 API chars. Clear to omit."
+                    helperText={t('Picker or hex (no #). Up to 12 API chars. Clear to omit.')}
                   />
                   <div className="space-y-2">
                     <Label className="text-[12px] text-muted-foreground">
-                      Border radius (px)
+                      {t('Border radius (px)')}
                     </Label>
                     <Input
                       type="number"
@@ -1712,13 +1719,13 @@ export function TransformImageWizard({
                   </div>
                   <HexColorField
                     id="transform-background"
-                    label="Background"
+                    label={t('Background')}
                     value={state.background}
                     onChange={(background) =>
                       setState((s) => ({ ...s, background }))
                     }
                     allowClear
-                    helperText="Clear when unused (e.g. transparent PNG)."
+                    helperText={t('Clear when unused (e.g. transparent PNG).')}
                   />
                 </AccordionContent>
               </AccordionItem>

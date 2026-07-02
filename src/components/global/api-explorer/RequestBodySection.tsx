@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -45,6 +46,7 @@ export function RequestBodySection({
   allFormValues,
   method,
 }: RequestBodySectionProps) {
+  const t = useT()
   const switchToJson = () => {
     onJsonValueChange(serializeBodyFromForm(fields, formValues))
     onInputModeChange('json')
@@ -55,7 +57,7 @@ export function RequestBodySection({
       onFormValuesChange(parseBodyToFormValues(fields, jsonValue))
       onInputModeChange('form')
     } catch {
-      toast.error('Invalid JSON. Fix the payload before switching to form view.')
+      toast.error(t('Invalid JSON. Fix the payload before switching to form view.'))
     }
   }
 
@@ -68,7 +70,7 @@ export function RequestBodySection({
         className="h-6 px-2.5 text-[11px] font-medium"
         onClick={switchToForm}
       >
-        Form
+        {t('Form')}
       </Button>
       <Button
         type="button"
@@ -98,7 +100,7 @@ export function RequestBodySection({
         />
       ) : (
         <p className="px-4 py-3 font-mono text-[13px] text-muted-foreground/70">
-          No body fields for this endpoint.
+          {t('No body fields for this endpoint.')}
         </p>
       )
     ) : (
@@ -115,7 +117,7 @@ export function RequestBodySection({
   if (embedded) {
     return (
       <RequestBuilderSection
-        title={title}
+        title={t(title)}
         action={showJsonToggle ? modeToggle : undefined}
         showTopBorder={showTopBorder}
       >
@@ -127,7 +129,7 @@ export function RequestBodySection({
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-background">
       <RequestBuilderSection
-        title={title}
+        title={t(title)}
         action={showJsonToggle ? modeToggle : undefined}
       >
         {content}

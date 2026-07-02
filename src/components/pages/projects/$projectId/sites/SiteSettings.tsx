@@ -11,8 +11,10 @@ import { SiteRuntimeTimeoutCard } from './settings/SiteRuntimeTimeoutCard'
 import { SiteRuntimeLoggingCard } from './settings/SiteRuntimeLoggingCard'
 import { SiteRuntimeSpecificationCard } from './settings/SiteRuntimeSpecificationCard'
 import { DangerZoneCard } from './settings/DangerZoneCard'
+import { useT } from '@/lib/i18n/translate'
 
 export function SiteSettingsView() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
 
@@ -35,7 +37,9 @@ export function SiteSettingsView() {
   if (siteLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading settings...')}
+        </p>
       </div>
     )
   }

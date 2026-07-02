@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -164,6 +165,7 @@ function ExplorerPermissionsItemHelper({
   executeOnly,
   projectId,
 }: ExplorerPermissionsItemHelperProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [editorKey, setEditorKey] = useState(0)
   const [sessionPermissions, setSessionPermissions] = useState<string[]>([])
@@ -191,7 +193,7 @@ function ExplorerPermissionsItemHelper({
         className="h-8 shrink-0 px-3 text-[12px] leading-none"
         onClick={openDialog}
       >
-        Build
+        {t('Build')}
       </Button>
 
       <Dialog
@@ -204,10 +206,11 @@ function ExplorerPermissionsItemHelper({
       >
         <DialogContent className="flex max-h-[min(90dvh,720px)] w-[min(96vw,720px)] flex-col gap-0 overflow-hidden p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Build permission</DialogTitle>
+            <DialogTitle>{t('Build permission')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Build a permission string for this entry. Changes apply when you
-              click Done.
+              {t(
+                'Build a permission string for this entry. Changes apply when you click Done.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -234,7 +237,7 @@ function ExplorerPermissionsItemHelper({
               className="h-9 text-[13px]"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="button"
@@ -242,7 +245,7 @@ function ExplorerPermissionsItemHelper({
               className="h-9 text-[13px]"
               onClick={handleDone}
             >
-              Done
+              {t('Done')}
             </Button>
           </div>
         </DialogContent>

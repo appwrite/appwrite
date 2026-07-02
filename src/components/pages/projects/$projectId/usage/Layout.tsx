@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectMessagingUsageQueries, refetchProjectWebhooksUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries, refetchProjectStorageUsageQueries } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import {
   Zap,
   Users,
@@ -106,6 +107,7 @@ function UsageCategoryNavLink({
   category,
   isActive,
 }: UsageCategoryNavLinkProps) {
+  const t = useT()
   const Icon = iconMap[category.icon] || Zap
   const hasWarning = category.metrics.some((metric) => {
     const percentage = getUsagePercentage(metric.currentValue, metric.quota)
@@ -129,7 +131,7 @@ function UsageCategoryNavLink({
         ) : null}
       </div>
       <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>
-        {category.label}
+        {t(category.label)}
       </span>
     </Link>
   )
@@ -143,7 +145,8 @@ interface CategoryNavigationProps {
 }
 
 function UsageNavGroupHeading({ label }: { label: string }) {
-  return <p className={SECONDARY_SIDEBAR_GROUP_HEADING_CLASS}>{label}</p>
+  const t = useT()
+  return <p className={SECONDARY_SIDEBAR_GROUP_HEADING_CLASS}>{t(label)}</p>
 }
 
 function CategoryNavigation({
@@ -152,11 +155,12 @@ function CategoryNavigation({
   activeCategoryId,
   className,
 }: CategoryNavigationProps) {
+  const t = useT()
   return (
     <nav
       className={cn('flex flex-col gap-5', className)}
       role="navigation"
-      aria-label="Usage categories"
+      aria-label={t('Usage categories')}
     >
       {navGroups.map((group) => (
         <div key={group.id} className="space-y-0.5">
@@ -188,6 +192,7 @@ function MobileCategoryDrawer({
   navGroups,
   activeCategoryId,
 }: MobileCategoryDrawerProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const { pageDirection } = useDebugOverrides()
@@ -201,7 +206,9 @@ function MobileCategoryDrawer({
   }, [location.pathname])
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId)
-  const activeLabel = activeCategory?.label ?? 'Select category'
+  const activeLabel = activeCategory?.label
+    ? t(activeCategory.label)
+    : t('Select category')
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -220,7 +227,7 @@ function MobileCategoryDrawer({
       <SheetContent side="left" className="w-[280px] p-0">
         <SheetHeader className="border-b border-border px-4 py-4">
           <SheetTitle className="text-start text-[15px]">
-            Usage Categories
+            {t('Usage Categories')}
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100dvh-65px)]" dir={pageDirection}>
@@ -274,6 +281,7 @@ interface UsageErrorStateProps {
 }
 
 function UsageErrorState({ onRetry }: UsageErrorStateProps) {
+  const t = useT()
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="max-w-md text-center">
@@ -281,15 +289,14 @@ function UsageErrorState({ onRetry }: UsageErrorStateProps) {
           <AlertTriangle className="h-6 w-6 text-destructive" />
         </div>
         <h2 className="mb-2 text-[16px] font-semibold text-foreground">
-          Failed to load usage data
+          {t('Failed to load usage data')}
         </h2>
         <p className="mb-4 text-[13px] text-muted-foreground">
-          We couldn't retrieve your usage metrics. This might be a temporary
-          issue. Please try again.
+          {t("We couldn't retrieve your usage metrics. This might be a temporary issue. Please try again.")}
         </p>
         <Button onClick={onRetry} variant="outline" className="gap-2">
           <RefreshCw className="h-4 w-4" />
-          Retry
+          {t('Retry')}
         </Button>
       </div>
     </div>
@@ -297,11 +304,12 @@ function UsageErrorState({ onRetry }: UsageErrorStateProps) {
 }
 
 function UsageEmptyState() {
+  const t = useT()
   return (
     <EmptyState
       icon={Database}
-      title="No usage data available"
-      description="Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started."
+      title={t('No usage data available')}
+      description={t('Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started.')}
       isEmpty={true}
       variant="centered"
     />
@@ -329,6 +337,7 @@ function UsageLayoutContent({
   plan = 'pro',
   className,
 }: UsageLayoutProps) {
+  const t = useT()
   const location = useLocation()
   const categoryId = resolveUsageCategoryId(
     getUsageCategoryIdFromPathname(location.pathname),
@@ -454,7 +463,7 @@ function UsageLayoutContent({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
               <h1 className="text-[17px] font-semibold text-foreground">
-                Usage
+                {t('Usage')}
               </h1>
               <UsageHistoricDataNote className="min-w-0" />
             </div>
@@ -492,7 +501,7 @@ function UsageLayoutContent({
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Refresh</TooltipContent>
+                  <TooltipContent>{t('Refresh')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -530,10 +539,10 @@ function UsageLayoutContent({
               <>
                 <div className="mb-6">
                   <h2 className="text-[16px] font-semibold text-foreground">
-                    {activeCategoryData.label}
+                    {t(activeCategoryData.label)}
                   </h2>
                   <p className="mt-1 text-[13px] text-muted-foreground">
-                    {activeCategoryData.description}
+                    {t(activeCategoryData.description)}
                   </p>
                 </div>
 

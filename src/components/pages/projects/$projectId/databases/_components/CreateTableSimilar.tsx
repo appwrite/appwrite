@@ -19,6 +19,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 function validateTableId(id: string): boolean {
   if (!id || id.length === 0) return true
@@ -44,7 +45,8 @@ export function CreateTableSimilar({
   sourceTable,
   onCreated,
 }: CreateTableSimilarProps) {
-  const defaultName = `Copy of ${sourceTable.name ?? sourceTable.$id}`
+  const t = useT()
+  const defaultName = `${t('Copy of')} ${sourceTable.name ?? sourceTable.$id}`
   const [name, setName] = useState(defaultName)
   const [tableId, setTableId] = useState<string | undefined>(undefined)
   const [copyStructure, setCopyStructure] = useState(true)
@@ -65,12 +67,12 @@ export function CreateTableSimilar({
 
   useEffect(() => {
     if (open) {
-      setName(`Copy of ${sourceTable.name ?? sourceTable.$id}`)
+      setName(`${t('Copy of')} ${sourceTable.name ?? sourceTable.$id}`)
       setTableId(undefined)
       setCopyStructure(true)
       setErrors({})
     }
-  }, [open, sourceTable.$id, sourceTable.name])
+  }, [open, sourceTable.$id, sourceTable.name, t])
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isSubmitting) {
@@ -80,10 +82,11 @@ export function CreateTableSimilar({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
-    if (!name.trim()) newErrors.name = 'Name is required'
+    if (!name.trim()) newErrors.name = t('Name is required')
     if (tableId && tableId.length > 0 && !validateTableId(tableId)) {
-      newErrors.tableId =
-        'Table ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
+      newErrors.tableId = t(
+        'Table ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.',
+      )
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -112,11 +115,11 @@ export function CreateTableSimilar({
           indexes,
         },
       )
-      toast.success(`${newTable.name} has been created`)
+      toast.success(`${newTable.name} ${t('has been created')}`)
       onOpenChange(false)
       await onCreated?.(newTable.$id)
     } catch (err) {
-      toast.error(getErrorMessage(err) ?? 'Failed to create table')
+      toast.error(getErrorMessage(err) ?? t('Failed to create table'))
     } finally {
       setIsSubmitting(false)
     }
@@ -127,11 +130,10 @@ export function CreateTableSimilar({
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
           <DialogTitle>
-            Duplicate structure: "{sourceTable.name ?? sourceTable.$id}"
+            {t('Duplicate structure:')} "{sourceTable.name ?? sourceTable.$id}"
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new table with the same column structure as the source
-            table.
+            {t('Create a new table with the same column structure as the source table.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -140,12 +142,12 @@ export function CreateTableSimilar({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter table name"
+                placeholder={t('Enter table name')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -160,14 +162,14 @@ export function CreateTableSimilar({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="table-id">Table ID</Label>
+              <Label htmlFor="table-id">{t('Table ID')}</Label>
               <IdInput
                 id="table-id"
                 value={tableId}
                 onChange={setTableId}
                 maxLength={36}
                 disabled={isSubmitting}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
               />
               {errors.tableId && (
                 <p className="text-[12px] text-destructive">{errors.tableId}</p>
@@ -187,7 +189,7 @@ export function CreateTableSimilar({
                   htmlFor="copy-structure"
                   className="text-[13px] font-normal cursor-pointer"
                 >
-                  Copy column and index structure
+                  {t('Copy column and index structure')}
                 </Label>
                 <p
                   className="text-[12px] text-muted-foreground mt-0.5 min-h-[1.25rem] flex items-center gap-1.5"
@@ -196,15 +198,15 @@ export function CreateTableSimilar({
                   {structureLoading ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-                      <span>Loading structure…</span>
+                      <span>{t('Loading structure…')}</span>
                     </>
                   ) : structure?.columns?.length != null &&
                     structure.columns.length > 0 ? (
                     <span>
-                      {structure.columns.length} columns
+                      {structure.columns.length} {t('columns')}
                       {structure.indexes?.length != null &&
                       structure.indexes.length > 0
-                        ? `, ${structure.indexes.length} indexes`
+                        ? `, ${structure.indexes.length} ${t('indexes')}`
                         : ''}
                     </span>
                   ) : null}
@@ -220,10 +222,10 @@ export function CreateTableSimilar({
               onClick={() => handleOpenChange(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting || !name.trim()}>
-              {isSubmitting ? 'Creating…' : 'Create'}
+              {isSubmitting ? t('Creating…') : t('Create')}
             </Button>
           </div>
         </form>

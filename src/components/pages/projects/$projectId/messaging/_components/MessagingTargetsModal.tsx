@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import {
   MESSAGING_TARGET_PICKER_PAGE_SIZE,
   messagingTargetPickerUsersQueryOptions,
@@ -65,6 +66,7 @@ export function MessagingTargetsModal({
   initialSelectedById,
   onConfirm,
 }: MessagingTargetsModalProps) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -178,7 +180,7 @@ export function MessagingTargetsModal({
 
         <div className="px-6 pb-4 pt-0 flex-1 min-h-0 flex flex-col gap-4">
           <Input
-            placeholder="Search by name, email, phone or ID…"
+            placeholder={t('Search by name, email, phone or ID…')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -190,7 +192,7 @@ export function MessagingTargetsModal({
           <div className="flex-1 min-h-0 overflow-y-auto space-y-2">
             {isLoading ? (
               <div className="text-center py-8 text-sm text-muted-foreground">
-                Loading users…
+                {t('Loading users…')}
               </div>
             ) : usersWithTargets.length === 0 ? (
               <EmptyState
@@ -260,7 +262,7 @@ export function MessagingTargetsModal({
                                 variant="info"
                                 className="text-[10px] shrink-0"
                               >
-                                {providerLabel(target.providerType)}
+                                {t(providerLabel(target.providerType))}
                               </Badge>
                               <span className="text-[13px] text-foreground break-all">
                                 {target.providerType === 'push'
@@ -287,16 +289,16 @@ export function MessagingTargetsModal({
               onPageChange={setPage}
               onPageSizeChange={() => {}}
               showPageSizeSelector={false}
-              itemLabel="users"
+              itemLabel={t('users')}
             />
           ) : null}
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
-          <Button onClick={handleConfirm}>Save selection</Button>
+          <Button onClick={handleConfirm}>{t('Save selection')}</Button>
         </div>
       </DialogContent>
     </Dialog>

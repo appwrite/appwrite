@@ -40,8 +40,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useNavigate } from '@tanstack/react-router'
+import { useT } from '@/lib/i18n/translate'
 
 export function BucketSettings() {
+  const t = useT()
   const { projectId, bucketId } = useParams({
     strict: false,
   })
@@ -64,6 +66,7 @@ export function BucketSettings() {
   // Get max file size from plan object (fileSize is in MB, -1 means unlimited)
   const maxFileSizeByPlan = useMemo(() => {
     if (!organizationPlan) return null
+
     const fileSize = organizationPlan?.fileSize
 
     // -1 means unlimited
@@ -137,7 +140,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success('Bucket name has been updated')
+      toast.success(t('Bucket name has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -167,7 +170,9 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success(`Bucket has been ${enabled ? 'enabled' : 'disabled'}`)
+      toast.success(
+        enabled ? t('Bucket has been enabled') : t('Bucket has been disabled'),
+      )
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -202,7 +207,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success('Compression setting has been updated')
+      toast.success(t('Compression setting has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -231,7 +236,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success('Maximum file size has been updated')
+      toast.success(t('Maximum file size has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -260,7 +265,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success('Allowed file extensions have been updated')
+      toast.success(t('Allowed file extensions have been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -283,7 +288,7 @@ export function BucketSettings() {
       const lists = getCachedBucketListsFromQueryClient(queryClient, projectId)
       const nextBucketId = pickNextBucketIdAfterDelete(lists, deletedId)
       await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })
-      toast.success('Bucket has been deleted')
+      toast.success(t('Bucket has been deleted'))
       if (nextBucketId) {
         navigate({
           to: '/projects/$projectId/storage/$bucketId',
@@ -320,7 +325,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success('Encryption setting has been updated')
+      toast.success(t('Encryption setting has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -352,7 +357,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success('Image transformations setting has been updated')
+      toast.success(t('Image transformations setting has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -405,7 +410,7 @@ export function BucketSettings() {
   ): string => {
     if (!value) return ''
     const names: Record<'none' | 'gzip' | 'zstd', string> = {
-      none: 'None',
+      none: t('None'),
       gzip: 'Gzip',
       zstd: 'Zstd',
     }
@@ -442,18 +447,18 @@ export function BucketSettings() {
     if (fileSizeInBytes === 0) return null // 0 means unlimited, which is allowed
     if (fileSizeInBytes > maxFileSizeByPlan) {
       return {
-        message: `Maximum file size cannot exceed ${formatBytes(maxFileSizeByPlan)} for your plan`,
+        message: `${t('Maximum file size cannot exceed')} ${formatBytes(maxFileSizeByPlan)} ${t('for your plan')}`,
         showUpgrade: true,
       }
     }
     return null
-  }, [fileSizeInBytes, maxFileSizeByPlan])
+  }, [fileSizeInBytes, maxFileSizeByPlan, t])
 
   const handleMaximumFileSizeUpdate = () => {
     if (fileSizeInBytes !== bucket?.maximumFileSize) {
       // Validate against plan limit
       if (fileSizeError) {
-        toast.error(fileSizeError.message || 'File size exceeds plan limit')
+        toast.error(fileSizeError.message || t('File size exceeds plan limit'))
         return
       }
       updateMaximumFileSizeMutation.mutate(fileSizeInBytes)
@@ -541,7 +546,9 @@ export function BucketSettings() {
   if (!bucket) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Bucket not found</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Bucket not found')}
+        </p>
       </div>
     )
   }
@@ -552,18 +559,21 @@ export function BucketSettings() {
         {/* Update Bucket Name */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Name')}
+            </h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              Update your bucket's display name. This will be visible to all
-              organization members.
+              {t(
+                "Update your bucket's display name. This will be visible to all organization members.",
+              )}
             </p>
             <Input
               value={bucketName}
               onChange={(e) => setBucketName(e.target.value)}
-              placeholder="Bucket name"
+              placeholder={t('Bucket name')}
               className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
             />
           </div>
@@ -578,7 +588,7 @@ export function BucketSettings() {
               }
               onClick={handleNameUpdate}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -601,19 +611,19 @@ export function BucketSettings() {
                   disabled={updateEnabledMutation.isPending}
                 />
                 <Label htmlFor="toggle" className="text-[13px] text-foreground">
-                  {enabled ? 'Enabled' : 'Disabled'}
+                  {enabled ? t('Enabled') : t('Disabled')}
                 </Label>
               </div>
             </div>
             <div className="mt-4 space-y-1">
               <p className="text-[13px] text-muted-foreground">
-                Bucket ID:{' '}
+                {t('Bucket ID:')}{' '}
                 <span className="ms-1.5">
                   <CopyableId id={bucket.$id} size="sm" />
                 </span>
               </p>
               <p className="text-[13px] text-muted-foreground">
-                Created:{' '}
+                {t('Created:')}{' '}
                 <DateTooltip
                   date={new Date(bucket.$createdAt)}
                   showFormattedDate
@@ -621,7 +631,7 @@ export function BucketSettings() {
                 />
               </p>
               <p className="text-[13px] text-muted-foreground">
-                Last updated:{' '}
+                {t('Last updated:')}{' '}
                 <DateTooltip
                   date={new Date(bucket.$updatedAt)}
                   showFormattedDate
@@ -643,7 +653,7 @@ export function BucketSettings() {
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -652,12 +662,12 @@ export function BucketSettings() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Encryption
+              {t('Encryption')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Encrypt files stored in this bucket. For file size above 20MB
-              encryption is skipped even if it's enabled. This change will only
-              apply to new files uploaded after the update.
+              {t(
+                "Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.",
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -668,10 +678,10 @@ export function BucketSettings() {
                   htmlFor="encryption"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  Enabled
+                  {t('Enabled')}
                 </Label>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  Encrypt files stored in this bucket
+                  {t('Encrypt files stored in this bucket')}
                 </p>
               </div>
               <Switch
@@ -692,7 +702,7 @@ export function BucketSettings() {
               }
               onClick={handleEncryptionUpdate}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -737,10 +747,10 @@ export function BucketSettings() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Image transformations
+              {t('Image transformations')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Enable image transformation features for files in this bucket.
+              {t('Enable image transformation features for files in this bucket.')}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -751,10 +761,10 @@ export function BucketSettings() {
                   htmlFor="transformations"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  Enabled
+                  {t('Enabled')}
                 </Label>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  Enable image transformation features
+                  {t('Enable image transformation features')}
                 </p>
               </div>
               <Switch
@@ -775,7 +785,7 @@ export function BucketSettings() {
               }
               onClick={handleTransformationsUpdate}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -784,13 +794,12 @@ export function BucketSettings() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Compression
+              {t('Compression')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Choose a compression algorithm for files in this bucket.
-              Compression reduces file sizes, lowering storage costs and
-              bandwidth usage while improving transfer speeds. This change will
-              only apply to new files uploaded after the update.
+              {t(
+                'Choose a compression algorithm for files in this bucket. Compression reduces file sizes, lowering storage costs and bandwidth usage while improving transfer speeds. This change will only apply to new files uploaded after the update.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -801,7 +810,7 @@ export function BucketSettings() {
                   htmlFor="compression"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  Algorithm
+                  {t('Algorithm')}
                 </Label>
                 <Select
                   value={compression || undefined}
@@ -811,16 +820,16 @@ export function BucketSettings() {
                   disabled={updateCompressionMutation.isPending}
                 >
                   <SelectTrigger id="compression" className="mt-1.5 max-w-sm">
-                    <SelectValue placeholder="Select algorithm">
+                    <SelectValue placeholder={t('Select algorithm')}>
                       {getCompressionDisplayName(compression)}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none" className="items-start py-2">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">None</span>
+                        <span className="font-medium">{t('None')}</span>
                         <span className="text-[11px] text-muted-foreground">
-                          No compression applied. Files are stored as-is.
+                          {t('No compression applied. Files are stored as-is.')}
                         </span>
                       </div>
                     </SelectItem>
@@ -828,7 +837,7 @@ export function BucketSettings() {
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Gzip</span>
                         <span className="text-[11px] text-muted-foreground">
-                          Good balance between compression ratio and speed.
+                          {t('Good balance between compression ratio and speed.')}
                         </span>
                       </div>
                     </SelectItem>
@@ -836,7 +845,7 @@ export function BucketSettings() {
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Zstd</span>
                         <span className="text-[11px] text-muted-foreground">
-                          Excellent compression ratios with fast decompression.
+                          {t('Excellent compression ratios with fast decompression.')}
                         </span>
                       </div>
                     </SelectItem>
@@ -863,7 +872,7 @@ export function BucketSettings() {
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -872,14 +881,14 @@ export function BucketSettings() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Maximum file size
+              {t('Maximum file size')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Set the maximum file size allowed.{' '}
+              {t('Set the maximum file size allowed.')}{' '}
               {maxFileSizeByPlan !== null ? (
                 <>
-                  Maximum allowed value is {formatBytes(maxFileSizeByPlan)} for
-                  your plan.{' '}
+                  {t('Maximum allowed value is')} {formatBytes(maxFileSizeByPlan)}{' '}
+                  {t('for your plan.')}{' '}
                   <Button
                     variant="link"
                     size="sm"
@@ -891,13 +900,13 @@ export function BucketSettings() {
                       })
                     }}
                   >
-                    Upgrade
+                    {t('Upgrade')}
                   </Button>{' '}
-                  to increase the limit. Set to 0 to use your plan's maximum
-                  limit ({formatBytes(maxFileSizeByPlan)}).
+                  {t("to increase the limit. Set to 0 to use your plan's maximum limit")}{' '}
+                  ({formatBytes(maxFileSizeByPlan)}).
                 </>
               ) : (
-                'No limit for your plan. Set to 0 for unlimited.'
+                t('No limit for your plan. Set to 0 for unlimited.')
               )}
             </p>
           </div>
@@ -909,7 +918,7 @@ export function BucketSettings() {
                   htmlFor="max-file-size"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  Size
+                  {t('Size')}
                 </Label>
                 <Input
                   id="max-file-size"
@@ -926,7 +935,7 @@ export function BucketSettings() {
                     }
                   }}
                   max={maxFileSizeInCurrentUnit}
-                  placeholder="0 for unlimited"
+                  placeholder={t('0 for unlimited')}
                   disabled={updateMaximumFileSizeMutation.isPending}
                 />
               </div>
@@ -935,7 +944,7 @@ export function BucketSettings() {
                   htmlFor="file-size-unit"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  Unit
+                  {t('Unit')}
                 </Label>
                 <Select
                   value={fileSizeUnit}
@@ -962,7 +971,7 @@ export function BucketSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bytes">Bytes</SelectItem>
+                    <SelectItem value="bytes">{t('Bytes')}</SelectItem>
                     <SelectItem value="KB">KB</SelectItem>
                     <SelectItem value="MB">MB</SelectItem>
                     <SelectItem value="GB">GB</SelectItem>
@@ -988,15 +997,15 @@ export function BucketSettings() {
                         })
                       }}
                     >
-                      Upgrade
+                      {t('Upgrade')}
                     </Button>
                   )}
                 </div>
               ) : (
                 <p className="text-[12px] text-muted-foreground">
                   {bucket.maximumFileSize > 0
-                    ? `Current: ${formatBytes(bucket.maximumFileSize)}`
-                    : 'Unlimited'}
+                    ? `${t('Current:')} ${formatBytes(bucket.maximumFileSize)}`
+                    : t('Unlimited')}
                 </p>
               )}
             </div>
@@ -1013,7 +1022,7 @@ export function BucketSettings() {
               }
               onClick={handleMaximumFileSizeUpdate}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -1022,12 +1031,12 @@ export function BucketSettings() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Allowed file extensions
+              {t('Allowed file extensions')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Restrict file uploads to specific file extensions. Maximum of 100
-              extensions are allowed, each 64 characters long. Leave empty to
-              allow all.
+              {t(
+                'Restrict file uploads to specific file extensions. Maximum of 100 extensions are allowed, each 64 characters long. Leave empty to allow all.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -1038,10 +1047,10 @@ export function BucketSettings() {
                   htmlFor="allowed-extensions"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  File extensions
+                  {t('File extensions')}
                 </Label>
                 <p className="text-[12px] text-muted-foreground mt-0.5 mb-2">
-                  Type and press Enter or comma to add extensions
+                  {t('Type and press Enter or comma to add extensions')}
                 </p>
                 <div className="relative max-w-md">
                   <div
@@ -1079,7 +1088,7 @@ export function BucketSettings() {
                       onKeyDown={handleExtensionInputKeyDown}
                       placeholder={
                         allowedFileExtensions.length === 0
-                          ? 'Enter extension (e.g., jpg)'
+                          ? t('Enter extension (e.g., jpg)')
                           : ''
                       }
                       className="flex-1 min-w-[120px] bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
@@ -1127,7 +1136,7 @@ export function BucketSettings() {
               }
               onClick={handleAllowedExtensionsUpdate}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -1136,11 +1145,12 @@ export function BucketSettings() {
         <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Delete bucket
+              {t('Delete bucket')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Permanently delete this bucket and all its files. This action
-              cannot be undone.
+              {t(
+                'Permanently delete this bucket and all its files. This action cannot be undone.',
+              )}
             </p>
           </div>
           <div className="border-t border-red-500/20" />
@@ -1154,7 +1164,7 @@ export function BucketSettings() {
                   {bucket.name}
                 </p>
                 <p className="text-[12px] text-muted-foreground">
-                  Last updated:{' '}
+                  {t('Last updated:')}{' '}
                   <DateTooltip
                     date={new Date(bucket.$updatedAt)}
                     showFormattedDate
@@ -1172,16 +1182,18 @@ export function BucketSettings() {
                   size="sm"
                   className="h-9 text-[13px]"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md p-0">
                 <DialogHeader className="px-6 pt-6 text-start">
-                  <DialogTitle>Delete bucket</DialogTitle>
+                  <DialogTitle>{t('Delete bucket')}</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Are you sure you want to delete{' '}
-                    <strong>{bucket.name}</strong>? This will permanently delete
-                    the bucket and all its files. This action cannot be undone.
+                    {t('Are you sure you want to delete')}{' '}
+                    <strong>{bucket.name}</strong>?{' '}
+                    {t(
+                      'This will permanently delete the bucket and all its files. This action cannot be undone.',
+                    )}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="border-t border-border" />
@@ -1192,7 +1204,7 @@ export function BucketSettings() {
                         htmlFor="delete-confirmation"
                         className="text-[13px] font-medium text-foreground"
                       >
-                        Type the bucket name to confirm
+                        {t('Type the bucket name to confirm')}
                       </Label>
                       <Input
                         id="delete-confirmation"
@@ -1215,7 +1227,7 @@ export function BucketSettings() {
                     }}
                     disabled={deleteBucketMutation.isPending}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -1231,7 +1243,7 @@ export function BucketSettings() {
                       }
                     }}
                   >
-                    Delete
+                    {t('Delete')}
                   </Button>
                 </div>
               </DialogContent>

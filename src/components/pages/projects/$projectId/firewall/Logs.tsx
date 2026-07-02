@@ -29,6 +29,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { mockFirewallLogs, type FirewallLog } from '@/lib/utils/mock-data'
+import { useT } from '@/lib/i18n/translate'
 
 interface LogsTabProps {
   projectId: string
@@ -36,6 +37,7 @@ interface LogsTabProps {
 }
 
 export function LogsTab({ searchValue }: LogsTabProps) {
+  const t = useT()
   const [logs, setLogs] = useState<FirewallLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filterAction, setFilterAction] = useState<string>('all')
@@ -140,22 +142,22 @@ export function LogsTab({ searchValue }: LogsTabProps) {
       <div className="mb-4 flex items-center gap-3">
         <Select value={filterAction} onValueChange={setFilterAction}>
           <SelectTrigger className="w-[140px] h-9">
-            <SelectValue placeholder="All actions" />
+            <SelectValue placeholder={t('All actions')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All actions</SelectItem>
-            <SelectItem value="block">Blocked</SelectItem>
-            <SelectItem value="allow">Allowed</SelectItem>
-            <SelectItem value="challenge">Challenged</SelectItem>
+            <SelectItem value="all">{t('All actions')}</SelectItem>
+            <SelectItem value="block">{t('Blocked')}</SelectItem>
+            <SelectItem value="allow">{t('Allowed')}</SelectItem>
+            <SelectItem value="challenge">{t('Challenged')}</SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={filterRule} onValueChange={setFilterRule}>
           <SelectTrigger className="w-[200px] h-9">
-            <SelectValue placeholder="All rules" />
+            <SelectValue placeholder={t('All rules')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All rules</SelectItem>
+            <SelectItem value="all">{t('All rules')}</SelectItem>
             {uniqueRules.map((rule) => (
               <SelectItem key={rule.id} value={rule.id}>
                 {rule.name}
@@ -178,7 +180,7 @@ export function LogsTab({ searchValue }: LogsTabProps) {
             }}
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
+            {t('Refresh')}
           </Button>
           <Button
             variant="outline"
@@ -218,7 +220,7 @@ export function LogsTab({ searchValue }: LogsTabProps) {
             }}
           >
             <Download className="h-3.5 w-3.5" />
-            Export
+            {t('Export')}
           </Button>
         </div>
       </div>
@@ -226,11 +228,13 @@ export function LogsTab({ searchValue }: LogsTabProps) {
       {filteredLogs.length === 0 ? (
         <EmptyState
           icon={Search}
-          title="No logs found"
+          title={t('No logs found')}
           description={
             searchValue || filterAction !== 'all' || filterRule !== 'all'
               ? undefined
-              : 'Firewall logs will appear here once rules start processing requests'
+              : t(
+                  'Firewall logs will appear here once rules start processing requests',
+                )
           }
           isEmpty={
             !searchValue && filterAction === 'all' && filterRule === 'all'
@@ -246,28 +250,28 @@ export function LogsTab({ searchValue }: LogsTabProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]">
-                  Action
+                  {t('Action')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Timestamp
+                  {t('Timestamp')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  IP Address
+                  {t('IP Address')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Path
+                  {t('Path')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Method
+                  {t('Method')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Status
+                  {t('Status')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Rule
+                  {t('Rule')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Country
+                  {t('Country')}
                 </TableHead>
               </TableRow>
             </TableHeader>

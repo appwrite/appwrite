@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Key, Server, ShieldUser, Ghost } from '@/lib/icons'
 import { isRegularUserType } from '@/components/pages/projects/$projectId/activity/activity-utils'
+import { useT } from '@/lib/i18n/translate'
 
 const avatarFrame =
   'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/50 shadow-sm'
@@ -22,6 +23,7 @@ export function UserTypeAvatar({
   /** Merged with the frame; e.g. `shadow-none` for the activity table actor column. */
   className?: string
 }) {
+  const t = useT()
   if (isRegularUserType(actorType)) {
     return (
       <InitialsAvatar
@@ -66,8 +68,8 @@ export function UserTypeAvatar({
   return (
     <div
       className={cn(avatarFrame, tone, className)}
-      aria-label={label}
-      title={label}
+      aria-label={t(label)}
+      title={t(label)}
     >
       {icon}
     </div>

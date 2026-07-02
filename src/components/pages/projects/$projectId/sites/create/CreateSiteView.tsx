@@ -42,6 +42,7 @@ import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
@@ -132,6 +133,7 @@ function RepositorySkeleton({
 }
 
 export function CreateSiteView() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { installations, updateFormData, setCurrentPath } = useWizard()
@@ -282,14 +284,14 @@ export function CreateSiteView() {
 
   return (
     <WizardLayout
-      title="Create site"
+      title={t('Create site')}
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
       useSidebar={false}
       maxWidth="max-w-[1400px]"
     >
       <div className="grid gap-12 lg:grid-cols-5">
-        <CreateWizardLeftColumn title="Import repository">
+        <CreateWizardLeftColumn title={t('Import repository')}>
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="flex justify-center mb-3">
@@ -298,15 +300,15 @@ export function CreateSiteView() {
                 </div>
               </div>
               <h3 className="text-[13px] font-medium text-foreground mb-1">
-                Connect Git provider
+                {t('Connect Git provider')}
               </h3>
               <p className="text-[11px] text-muted-foreground mb-3">
-                Import repositories for automatic deployments
+                {t('Import repositories for automatic deployments')}
               </p>
               <Button size="sm" asChild>
                 <a href={getGitHubAuthUrl}>
                   <GitHubIcon className="me-1.5 h-3.5 w-3.5" />
-                  Connect GitHub
+                  {t('Connect GitHub')}
                 </a>
               </Button>
             </div>
@@ -322,7 +324,7 @@ export function CreateSiteView() {
                   }}
                 >
                   <SelectTrigger className="w-[180px] h-9 text-[13px]">
-                    <SelectValue placeholder="Select organization">
+                    <SelectValue placeholder={t('Select organization')}>
                       {selectedInstallation && (
                         <span className="flex items-center gap-2">
                           <ProviderIcon
@@ -357,7 +359,7 @@ export function CreateSiteView() {
                         className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                       >
                         <Plus className="h-3 w-3" />
-                        Add account
+                        {t('Add account')}
                       </a>
                     </div>
                   </SelectContent>
@@ -368,7 +370,7 @@ export function CreateSiteView() {
                   <Input
                     value={repoSearch}
                     onChange={(e) => setRepoSearch(e.target.value)}
-                    placeholder="Search..."
+                    placeholder={t('Search...')}
                     className="h-9 ps-9 text-[13px]"
                   />
                 </div>
@@ -442,7 +444,7 @@ export function CreateSiteView() {
                           className="h-7 text-[12px] shrink-0"
                           onClick={() => handleSelectRepository(repo)}
                         >
-                          Connect
+                          {t('Connect')}
                         </Button>
                       </div>
                     ))}
@@ -451,8 +453,8 @@ export function CreateSiteView() {
                   <div className="py-8 text-center">
                     <p className="text-[12px] text-muted-foreground">
                       {repoSearch
-                        ? 'No repositories found'
-                        : 'No repositories available'}
+                        ? t('No repositories found')
+                        : t('No repositories available')}
                     </p>
                   </div>
                 )}
@@ -469,26 +471,26 @@ export function CreateSiteView() {
               {/* Help note for missing repos */}
               <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
                 <p className="text-[14px] font-semibold text-foreground leading-tight mb-1.5">
-                  Can't find a repository?
+                  {t("Can't find a repository?")}
                 </p>
                 <p className="text-[12px] text-muted-foreground leading-snug mb-3">
-                  If you selected specific repositories during setup, you may
-                  need to update your GitHub permissions to include additional
-                  ones.
+                  {t(
+                    'If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.',
+                  )}
                 </p>
                 <a
                   href={getGitHubAuthUrl}
                   className="inline-flex items-center gap-1.5 text-[12px] link-neutral"
                 >
                   <GitHubIcon className="h-3.5 w-3.5" />
-                  Update GitHub permissions
+                  {t('Update GitHub permissions')}
                 </a>
               </div>
             </div>
           )}
         </CreateWizardLeftColumn>
 
-        <CreateWizardRightColumn title="Clone template">
+        <CreateWizardRightColumn title={t('Clone template')}>
           {projectId ? (
             <SiteTemplateGallery
               projectId={projectId}
@@ -503,13 +505,15 @@ export function CreateSiteView() {
       {/* Manual upload footnote */}
       <div className="mt-6 pt-6 border-t border-border">
         <p className="text-[12px] text-muted-foreground">
-          Want to deploy without connecting a repository or using a template?{' '}
+          {t(
+            'Want to deploy without connecting a repository or using a template?',
+          )}{' '}
           <Link
             to="/projects/$projectId/sites/create/manual"
             params={{ projectId: projectId! }}
             className="link-neutral"
           >
-            Upload your website manually
+            {t('Upload your website manually')}
           </Link>
         </p>
       </div>

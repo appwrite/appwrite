@@ -30,6 +30,7 @@ import {
   footerShowSocialIcons,
   footerShowTrustBadge,
 } from '@/components/global/layout/footer-container'
+import { useI18n } from '@/lib/i18n'
 
 type FooterLink = {
   label: string
@@ -82,125 +83,128 @@ function productFooterLink(
   }
 }
 
-function getExpandedFooterGroups(marketing: boolean): readonly ExpandedFooterGroup[] {
+function getExpandedFooterGroups(
+  marketing: boolean,
+  footerCopy: ReturnType<typeof useI18n>['catalog']['app']['footer'],
+): readonly ExpandedFooterGroup[] {
   return [
   {
-    title: 'Quick starts',
+    title: footerCopy.groups.quickStarts,
     links: [
-      docsFooterLink('Web', '/docs/quick-starts/web', marketing),
-      docsFooterLink('Next.js', '/docs/quick-starts/nextjs', marketing),
-      docsFooterLink('React', '/docs/quick-starts/react', marketing),
-      docsFooterLink('Vue.js', '/docs/quick-starts/vue', marketing),
-      docsFooterLink('Nuxt', '/docs/quick-starts/nuxt', marketing),
-      docsFooterLink('SvelteKit', '/docs/quick-starts/sveltekit', marketing),
-      docsFooterLink('Refine', '/docs/quick-starts/refine', marketing),
-      docsFooterLink('Angular', '/docs/quick-starts/angular', marketing),
-      docsFooterLink('React Native', '/docs/quick-starts/react-native', marketing),
-      docsFooterLink('Flutter', '/docs/quick-starts/flutter', marketing),
-      docsFooterLink('Apple', '/docs/quick-starts/apple', marketing),
-      docsFooterLink('Android', '/docs/quick-starts/android', marketing),
-      docsFooterLink('Qwik', '/docs/quick-starts/qwik', marketing),
-      docsFooterLink('Astro', '/docs/quick-starts/astro', marketing),
-      docsFooterLink('Solid', '/docs/quick-starts/solid', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.web, '/docs/quick-starts/web', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.nextjs, '/docs/quick-starts/nextjs', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.react, '/docs/quick-starts/react', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.vue, '/docs/quick-starts/vue', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.nuxt, '/docs/quick-starts/nuxt', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.svelteKit, '/docs/quick-starts/sveltekit', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.refine, '/docs/quick-starts/refine', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.angular, '/docs/quick-starts/angular', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.reactNative, '/docs/quick-starts/react-native', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.flutter, '/docs/quick-starts/flutter', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.apple, '/docs/quick-starts/apple', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.android, '/docs/quick-starts/android', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.qwik, '/docs/quick-starts/qwik', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.astro, '/docs/quick-starts/astro', marketing),
+      docsFooterLink(footerCopy.expanded.quickStarts.solid, '/docs/quick-starts/solid', marketing),
     ],
   },
   {
-    title: 'Products',
+    title: footerCopy.groups.products,
     links: [
-      productFooterLink('Auth', '/products/auth', marketing),
-      productFooterLink('Databases', '/products/databases', marketing),
-      productFooterLink('Storage', '/products/storage', marketing),
-      productFooterLink('Functions', '/products/functions', marketing),
-      productFooterLink('Messaging', '/products/messaging', marketing),
-      docsFooterLink('Realtime', '/docs/apis/realtime', marketing),
-      productFooterLink('Hosting', '/products/sites', marketing),
-      docsFooterLink('Network', '/docs/products/network', marketing),
+      productFooterLink(footerCopy.expanded.products.auth, '/products/auth', marketing),
+      productFooterLink(footerCopy.expanded.products.databases, '/products/databases', marketing),
+      productFooterLink(footerCopy.expanded.products.storage, '/products/storage', marketing),
+      productFooterLink(footerCopy.expanded.products.functions, '/products/functions', marketing),
+      productFooterLink(footerCopy.expanded.products.messaging, '/products/messaging', marketing),
+      docsFooterLink(footerCopy.expanded.products.realtime, '/docs/apis/realtime', marketing),
+      productFooterLink(footerCopy.expanded.products.hosting, '/products/sites', marketing),
+      docsFooterLink(footerCopy.expanded.products.network, '/docs/products/network', marketing),
     ],
   },
   {
-    title: 'Learn',
+    title: footerCopy.groups.learn,
     links: [
-      { label: 'Blog', href: getBlogPageUrl('/blog', marketing), external: isBlogPageExternal(marketing) },
+      { label: footerCopy.expanded.learn.blog, href: getBlogPageUrl('/blog', marketing), external: isBlogPageExternal(marketing) },
       {
-        label: 'Docs',
+        label: footerCopy.expanded.learn.docs,
         href: getMarketingPageUrl('/docs', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      { label: 'Integrations', href: getMarketingPageUrl('/integrations', marketing), external: isMarketingPageExternal(marketing) },
-      { label: 'Community', href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
-      { label: 'Init', href: '/init', external: false },
-      { label: 'Threads', href: getMarketingPageUrl('/threads', marketing), external: isMarketingPageExternal(marketing) },
-      { label: 'Changelog', href: getMarketingPageUrl('/changelog', marketing), external: isMarketingPageExternal(marketing) },
-      { label: 'Roadmap', href: 'https://github.com/appwrite/appwrite/projects', external: true },
-      { label: 'Source code', href: 'https://github.com/appwrite/appwrite', external: true },
-      { label: 'Arena', href: 'https://arena.appwrite.io/', external: true },
-      { label: 'Tech news', href: 'https://refetch.io/', external: true },
+      { label: footerCopy.expanded.learn.integrations, href: getMarketingPageUrl('/integrations', marketing), external: isMarketingPageExternal(marketing) },
+      { label: footerCopy.expanded.learn.community, href: getMarketingPageUrl('/community', marketing), external: isMarketingPageExternal(marketing) },
+      { label: footerCopy.expanded.learn.init, href: '/init', external: false },
+      { label: footerCopy.expanded.learn.threads, href: getMarketingPageUrl('/threads', marketing), external: isMarketingPageExternal(marketing) },
+      { label: footerCopy.expanded.learn.changelog, href: getMarketingPageUrl('/changelog', marketing), external: isMarketingPageExternal(marketing) },
+      { label: footerCopy.expanded.learn.roadmap, href: 'https://github.com/appwrite/appwrite/projects', external: true }, // pragma: allowlist secret
+      { label: footerCopy.expanded.learn.sourceCode, href: 'https://github.com/appwrite/appwrite', external: true }, // pragma: allowlist secret
+      { label: footerCopy.expanded.learn.arena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
+      { label: footerCopy.expanded.learn.techNews, href: 'https://refetch.io/', external: true },
     ],
   },
   {
-    title: 'Programs',
+    title: footerCopy.groups.programs,
     links: [
       {
-        label: 'Startups',
+        label: footerCopy.expanded.programs.startups,
         href: getMarketingPageUrl('/startups', marketing),
         external: isMarketingPageExternal(marketing),
       },
       {
-        label: 'Education',
+        label: footerCopy.expanded.programs.education,
         href: getMarketingPageUrl('/education', marketing),
         external: isMarketingPageExternal(marketing),
       },
       {
-        label: 'Partners',
+        label: footerCopy.expanded.programs.partners,
         href: getMarketingPageUrl('/partners', marketing),
         external: isMarketingPageExternal(marketing),
       },
       {
-        label: 'Enterprise',
+        label: footerCopy.expanded.programs.enterprise,
         href: getMarketingPageUrl('/enterprise', marketing),
         external: isMarketingPageExternal(marketing),
       },
     ],
   },
   {
-    title: 'About',
+    title: footerCopy.groups.about,
     links: [
       {
-        label: 'Company',
+        label: footerCopy.expanded.about.company,
         href: getMarketingPageUrl('/company', marketing),
         external: isMarketingPageExternal(marketing),
       },
       {
-        label: 'Pricing',
+        label: footerCopy.expanded.about.pricing,
         href: getMarketingPageUrl('/pricing', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      { label: 'Careers', href: 'https://appwrite.careers', external: true },
-      { label: 'Store', href: 'https://store.appwrite.io/', external: true },
+      { label: footerCopy.expanded.about.careers, href: 'https://appwrite.careers', external: true }, // pragma: allowlist secret
+      { label: footerCopy.links.store, href: 'https://store.appwrite.io/', external: true }, // pragma: allowlist secret
       {
-        label: 'Contact us',
+        label: footerCopy.expanded.about.contactUs,
         href: getMarketingPageUrl('/enterprise', marketing),
         external: isMarketingPageExternal(marketing),
       },
       {
-        label: 'Assets',
+        label: footerCopy.expanded.about.assets,
         href: getMarketingPageUrl('/assets', marketing),
         external: isMarketingPageExternal(marketing),
       },
-      docsFooterLink('Security', '/docs/advanced/security', marketing),
+      docsFooterLink(footerCopy.expanded.about.security, '/docs/advanced/security', marketing),
     ],
   },
   {
-    title: 'Compare',
+    title: footerCopy.groups.compare,
     links: [
-      blogFooterLink('Appwrite vs. Supabase', 'appwrite-compared-to-supabase', marketing),
-      blogFooterLink('Appwrite vs. Firebase', 'open-source-firebase-alternative', marketing),
-      blogFooterLink('Appwrite vs. Neon', 'appwrite-vs-neon-ai-backends', marketing),
-      blogFooterLink('Appwrite vs. Vercel', 'open-source-vercel-alternative', marketing),
-      blogFooterLink('Appwrite vs. Netlify', 'open-source-netlify-alternative', marketing),
-      blogFooterLink('Appwrite vs. Cloudinary', 'appwrite-vs-cloudinary', marketing),
-      blogFooterLink('Appwrite vs. Auth0', 'appwrite-vs-auth0', marketing),
-      blogFooterLink('Backend as a service (BaaS)', 'backend-as-a-service', marketing),
+      blogFooterLink(footerCopy.expanded.compare.vsSupabase, 'appwrite-compared-to-supabase', marketing), // pragma: allowlist secret
+      blogFooterLink(footerCopy.expanded.compare.vsFirebase, 'open-source-firebase-alternative', marketing),
+      blogFooterLink(footerCopy.expanded.compare.vsNeon, 'appwrite-vs-neon-ai-backends', marketing), // pragma: allowlist secret
+      blogFooterLink(footerCopy.expanded.compare.vsVercel, 'open-source-vercel-alternative', marketing),
+      blogFooterLink(footerCopy.expanded.compare.vsNetlify, 'open-source-netlify-alternative', marketing),
+      blogFooterLink(footerCopy.expanded.compare.vsCloudinary, 'appwrite-vs-cloudinary', marketing), // pragma: allowlist secret
+      blogFooterLink(footerCopy.expanded.compare.vsAuth0, 'appwrite-vs-auth0', marketing), // pragma: allowlist secret
+      blogFooterLink(footerCopy.expanded.compare.baas, 'backend-as-a-service', marketing),
     ],
   },
 ] as const
@@ -244,23 +248,28 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
 export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
+  const { catalog } = useI18n()
+  const footerCopy = catalog.app.footer
   const cookieConsent = useOptionalCookieConsent()
   const isLegacyTheme = useIsLegacyTheme()
   const cloudStatusEnabled = isCloud && features.systemStatus
-  const expandedFooterGroups = getExpandedFooterGroups(features.marketing)
+  const expandedFooterGroups = getExpandedFooterGroups(
+    features.marketing,
+    footerCopy,
+  )
 
   const resourceLinks = [
     {
-      label: 'Docs',
+      label: footerCopy.links.docs,
       href: getMarketingPageUrl('/docs', features.marketing),
       external: isMarketingPageExternal(features.marketing),
     },
-    { label: 'Store', href: 'https://store.appwrite.io/', external: true },
+    { label: footerCopy.links.store, href: 'https://store.appwrite.io/', external: true }, // pragma: allowlist secret
     ...(cloudStatusEnabled
       ? [
           {
-            label: 'Status' as const,
-            href: 'https://status.appwrite.online',
+            label: footerCopy.links.status,
+            href: 'https://status.appwrite.online', // pragma: allowlist secret
             external: true,
           },
         ]
@@ -272,33 +281,33 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
 
   const socialLinks = [
     {
-      label: 'GitHub',
-      href: 'https://github.com/appwrite',
+      label: footerCopy.social.github,
+      href: 'https://github.com/appwrite', // pragma: allowlist secret
       icon: '/icons/github.svg',
     },
-    { label: 'X', href: 'https://x.com/appwrite', icon: '/icons/x.svg' },
+    { label: footerCopy.social.x, href: 'https://x.com/appwrite', icon: '/icons/x.svg' }, // pragma: allowlist secret
     {
-      label: 'YouTube',
-      href: 'https://youtube.com/@appwrite',
+      label: footerCopy.social.youtube,
+      href: 'https://youtube.com/@appwrite', // pragma: allowlist secret
       icon: '/icons/youtube.svg',
     },
     {
-      label: 'LinkedIn',
-      href: 'https://www.linkedin.com/company/appwrite/',
+      label: footerCopy.social.linkedIn,
+      href: 'https://www.linkedin.com/company/appwrite/', // pragma: allowlist secret
       icon: '/icons/linkedin.svg',
     },
     {
-      label: 'Instagram',
-      href: 'https://www.instagram.com/appwrite.io/',
+      label: footerCopy.social.instagram,
+      href: 'https://www.instagram.com/appwrite.io/', // pragma: allowlist secret
       icon: '/icons/instagram.svg',
     },
     {
-      label: 'Discord',
+      label: footerCopy.social.discord,
       href: '/discord',
       icon: '/icons/discord-simple.svg',
     },
     {
-      label: 'daily.dev Squad',
+      label: footerCopy.social.dailyDevSquad,
       href: 'https://apwr.dev/dailydev',
       icon: '/icons/daily-dev.svg',
     },
@@ -398,7 +407,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
               aria-hidden
             />
             <span className="whitespace-nowrap font-medium">
-              SOC 2 Type II Certified
+              {footerCopy.links.soc2}
             </span>
           </a>
 
@@ -429,7 +438,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                   onClick={() => cookieConsent?.openPreferences()}
                   className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
-                  Cookie settings
+                  {footerCopy.links.cookieSettings}
                 </button>
               </>
             ) : null}
@@ -438,7 +447,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
           <div className={cn('h-4 w-px shrink-0 bg-border', footerShowSeparatorMd)} />
 
           <span className="whitespace-nowrap py-1.5 pe-0 ps-2.5 text-[13px] text-muted-foreground">
-            © {currentYear} Appwrite
+            © {currentYear} {footerCopy.links.copyrightBrand}
           </span>
         </div>
       </div>

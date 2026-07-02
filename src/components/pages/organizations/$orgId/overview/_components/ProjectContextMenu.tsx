@@ -49,6 +49,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 type ProjectContextMenuProject = {
   $id: string
@@ -82,6 +83,7 @@ export function ProjectContextMenu({
   isPinPending = false,
   children,
 }: ProjectContextMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -122,11 +124,11 @@ export function ProjectContextMenu({
         await onProjectDeleted(project.$id)
       }
 
-      toast.success(`${project.name || 'Project'} has been deleted`)
+      toast.success(`${project.name || t('Project')} ${t('has been deleted')}`)
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, 'Failed to delete project'))
+      toast.error(getErrorMessage(error, t('Failed to delete project')))
     },
   })
 
@@ -145,7 +147,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={LayoutDashboard} />
-            Overview
+            {t('Overview')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -153,7 +155,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={Users} />
-            Auth
+            {t('Auth')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -161,7 +163,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={Database} />
-            Databases
+            {t('Databases')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -172,7 +174,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={Folder} />
-            Storage
+            {t('Storage')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -180,7 +182,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={Zap} />
-            Functions
+            {t('Functions')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -188,7 +190,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={MessageSquare} />
-            Messaging
+            {t('Messaging')}
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -196,7 +198,7 @@ export function ProjectContextMenu({
             }}
           >
             <ContextMenuIcon icon={Globe} />
-            Sites
+            {t('Sites')}
           </ContextMenuItem>
           {showSettingsTab && (
             <ContextMenuItem
@@ -205,7 +207,7 @@ export function ProjectContextMenu({
               }}
             >
               <ContextMenuIcon icon={Settings} />
-              Settings
+              {t('Settings')}
             </ContextMenuItem>
           )}
           {canPinProjects && (isPinned || canPinMore) ? (
@@ -216,7 +218,7 @@ export function ProjectContextMenu({
                 onSelect={() => onPinProject?.(project.$id)}
               >
                 <ContextMenuIcon icon={isPinned ? PinOff : Pin} />
-                {isPinned ? 'Unpin' : 'Pin'}
+                {isPinned ? t('Unpin') : t('Pin')}
               </ContextMenuItem>
             </>
           ) : null}
@@ -224,34 +226,34 @@ export function ProjectContextMenu({
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', project.$id)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Endpoint', projectEndpoint)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy endpoint
+                {t('Copy endpoint')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', project.name)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Link', projectHref)}
               >
                 <ContextMenuIcon icon={Link2} />
-                Copy link
+                {t('Copy link')}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() =>
@@ -259,25 +261,25 @@ export function ProjectContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => openInNewTab(projectHref)}>
             <ContextMenuIcon icon={ExternalLink} />
-            Open in new tab
+            {t('Open in new tab')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => openInNewWindow(projectHref)}>
             <ContextMenuIcon icon={Square} />
-            Open in new window
+            {t('Open in new window')}
           </ContextMenuItem>
           {canDeleteProject && (
             <>
               <ContextMenuSeparator />
               <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
                 <ContextMenuIcon icon={Trash2} />
-                Delete
+                {t('Delete')}
               </ContextMenuItem>
             </>
           )}
@@ -287,10 +289,11 @@ export function ProjectContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete project</DialogTitle>
+            <DialogTitle>{t('Delete project')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this project? This action cannot
-              be undone.
+              {t(
+                'Are you sure you want to delete this project? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -299,14 +302,14 @@ export function ProjectContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

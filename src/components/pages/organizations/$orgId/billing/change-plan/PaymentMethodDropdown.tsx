@@ -10,6 +10,7 @@ import { Plus, Ticket } from 'lucide-react'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import type { Models } from '@appwrite.io/console'
 import { formatPaymentMethodSummary } from '../utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface PaymentMethodDropdownProps {
   paymentMethods: Models.PaymentMethod[]
@@ -27,6 +28,7 @@ export function PaymentMethodDropdown({
   onAddPaymentMethod,
   onAddCredits,
 }: PaymentMethodDropdownProps) {
+  const t = useT()
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = paymentMethods.filter((pm) => pm.last4)
 
@@ -45,7 +47,7 @@ export function PaymentMethodDropdown({
       {/* Payment Method Dropdown */}
       <div>
         <label className="text-[13px] font-medium text-foreground mb-2 block">
-          Payment method
+          {t('Payment method')}
         </label>
         {completedPaymentMethods.length > 0 ? (
           <Select
@@ -53,7 +55,7 @@ export function PaymentMethodDropdown({
             onValueChange={onPaymentMethodSelect}
           >
             <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-              <SelectValue placeholder="Select payment method">
+              <SelectValue placeholder={t('Select payment method')}>
                 {selectedPaymentMethodId
                   ? (() => {
                       const method = completedPaymentMethods.find(
@@ -76,7 +78,7 @@ export function PaymentMethodDropdown({
           </Select>
         ) : (
           <div className="rounded-md border border-border bg-background px-3 py-2 text-[13px] text-muted-foreground">
-            No payment methods available
+            {t('No payment methods available')}
           </div>
         )}
       </div>
@@ -90,7 +92,7 @@ export function PaymentMethodDropdown({
           onClick={onAddPaymentMethod}
         >
           <Plus className="me-1.5 h-4 w-4" />
-          Add payment method
+          {t('Add payment method')}
         </Button>
         {onAddCredits ? (
           <Button
@@ -100,7 +102,7 @@ export function PaymentMethodDropdown({
             onClick={onAddCredits}
           >
             <Ticket className="me-1.5 h-4 w-4" />
-            Add credits
+            {t('Add credits')}
           </Button>
         ) : null}
       </div>

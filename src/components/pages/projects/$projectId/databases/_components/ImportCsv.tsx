@@ -43,6 +43,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const STORAGE_DOCS_URL = '/docs/products/storage'
 
@@ -75,6 +76,7 @@ export function ImportCsv({
   onOpenChange,
   onSuccess,
 }: ImportCsvProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const bucketUploadInputRef = useRef<HTMLInputElement>(null)
@@ -255,12 +257,12 @@ export function ImportCsv({
     const csv =
       name.endsWith('.csv') || f.type === 'text/csv' || f.type === 'text/plain'
     if (!csv) {
-      toast.error('Only CSV files can be imported')
+      toast.error(t('Only CSV files can be imported'))
       return
     }
     setFile(f)
     setSelectedStorageFile(null)
-  }, [])
+  }, [t])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -293,7 +295,7 @@ export function ImportCsv({
         internalFile: true,
       })
       if (migration?.$id) addImportId(projectId, migration.$id)
-      toast.success('CSV import started')
+      toast.success(t('CSV import started'))
       reset()
       onOpenChange(false)
       onSuccess?.()
@@ -320,7 +322,7 @@ export function ImportCsv({
       onSuccess?.()
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Failed to start CSV import'
+        err instanceof Error ? err.message : t('Failed to start CSV import')
       toast.error(message)
     }
   }
@@ -340,9 +342,9 @@ export function ImportCsv({
       await queryClient.refetchQueries({
         queryKey: ['files', 'project', projectId, 'bucket', displayedBucketId],
       })
-      toast.success('File uploaded')
+      toast.success(t('File uploaded'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(err instanceof Error ? err.message : t('Upload failed'))
     } finally {
       setBucketUploading(false)
     }
@@ -367,10 +369,11 @@ export function ImportCsv({
         style={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       >
         <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
-          <DialogTitle>Import CSV</DialogTitle>
+          <DialogTitle>{t('Import CSV')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose a CSV file from your device or from a storage bucket. Only
-            CSV files can be imported.
+            {t(
+              'Choose a CSV file from your device or from a storage bucket. Only CSV files can be imported.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -394,13 +397,13 @@ export function ImportCsv({
                 )}
               >
                 <HardDrive className="h-4 w-4 shrink-0" />
-                <span className="truncate">Local file</span>
+                <span className="truncate">{t('Local file')}</span>
               </button>
             </div>
             <div className="border-t border-border my-1" />
             <div className="px-3 py-1.5">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Buckets
+                {t('Buckets')}
               </p>
             </div>
             <div className="flex-1 overflow-y-auto py-1">
@@ -427,7 +430,7 @@ export function ImportCsv({
               ))}
               {buckets.length === 0 && (
                 <p className="px-3 py-2 text-[12px] text-muted-foreground">
-                  No buckets
+                  {t('No buckets')}
                 </p>
               )}
             </div>
@@ -437,7 +440,7 @@ export function ImportCsv({
           <div className="flex-1 flex flex-col min-w-0 min-h-0">
             {!selectedSource && (
               <div className="flex-1 flex items-center justify-center text-[13px] text-muted-foreground">
-                Select a source to continue
+                {t('Select a source to continue')}
               </div>
             )}
 
@@ -464,7 +467,7 @@ export function ImportCsv({
                 >
                   <FileUp className="mx-auto h-10 w-10 text-muted-foreground" />
                   <p className="mt-3 text-[13px] font-medium text-foreground">
-                    Drag and drop a CSV file here, or choose from your computer
+                    {t('Drag and drop a CSV file here, or choose from your computer')}
                   </p>
                   <Button
                     type="button"
@@ -474,11 +477,11 @@ export function ImportCsv({
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isPending}
                   >
-                    Choose file
+                    {t('Choose file')}
                   </Button>
                   {file && (
                     <p className="mt-3 text-[12px] text-muted-foreground">
-                      Selected: {file.name} ({formatBytes(file.size)})
+                      {t('Selected:')} {file.name} ({formatBytes(file.size)})
                     </p>
                   )}
                 </div>
@@ -492,7 +495,7 @@ export function ImportCsv({
                     <>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[13px] font-medium text-foreground">
-                          {bucket?.name ?? 'Bucket'}
+                          {bucket?.name ?? t('Bucket')}
                         </span>
                         <CopyableId
                           id={displayedBucketId}
@@ -504,7 +507,7 @@ export function ImportCsv({
                         <div className="relative flex-1 min-w-0">
                           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
-                            placeholder="Search files"
+                            placeholder={t('Search files')}
                             value={storageSearch}
                             onChange={(e) =>
                               setStorageSearch(e.target.value.trim())
@@ -552,7 +555,7 @@ export function ImportCsv({
                             className="cursor-pointer flex items-center gap-1.5"
                           >
                             <Upload className="h-3.5 w-3.5" />
-                            Upload
+                            {t('Upload')}
                           </label>
                         </Button>
                         <input
@@ -574,7 +577,7 @@ export function ImportCsv({
                     <div className="overflow-y-auto p-4 min-h-0 flex-1 max-h-[360px]">
                       {displayedFilesLoading && files.length === 0 ? (
                         <div className="flex flex-1 items-center justify-center py-12 text-[13px] text-muted-foreground">
-                          Loading files…
+                          {t('Loading files…')}
                         </div>
                       ) : files.length === 0 && filesTotal === 0 ? (
                         <EmptyState variant="card" className="py-12">
@@ -584,18 +587,18 @@ export function ImportCsv({
                             </div>
                             <p className="mb-1 text-[14px] font-medium text-foreground">
                               {storageSearch
-                                ? 'No CSV files match your search'
-                                : 'No CSV files in this bucket'}
+                                ? t('No CSV files match your search')
+                                : t('No CSV files in this bucket')}
                             </p>
                             <p className="mb-4 text-[13px] text-muted-foreground">
                               {storageSearch
-                                ? 'Try a different search or upload a CSV file.'
-                                : 'Upload a CSV file to this bucket or choose another bucket.'}
+                                ? t('Try a different search or upload a CSV file.')
+                                : t('Upload a CSV file to this bucket or choose another bucket.')}
                             </p>
                             <div className="flex gap-2">
                               <Button variant="outline" size="sm" asChild>
                                 <DocsRouteLink href={STORAGE_DOCS_URL}>
-                                  Documentation
+                                  {t('Documentation')}
                                 </DocsRouteLink>
                               </Button>
                               <Button
@@ -607,7 +610,7 @@ export function ImportCsv({
                                   htmlFor="import-csv-bucket-upload"
                                   className="cursor-pointer"
                                 >
-                                  Upload file
+                                  {t('Upload file')}
                                 </label>
                               </Button>
                             </div>
@@ -660,7 +663,7 @@ export function ImportCsv({
                             pageSizeOptions={[10, 25, 50, 100]}
                             onPageChange={handleStoragePageChange}
                             onPageSizeChange={handleStoragePageSizeChange}
-                            itemLabel="files"
+                            itemLabel={t('files')}
                             className="mt-4"
                           />
                         </>
@@ -708,7 +711,7 @@ export function ImportCsv({
                             pageSizeOptions={[10, 25, 50, 100]}
                             onPageChange={handleStoragePageChange}
                             onPageSizeChange={handleStoragePageSizeChange}
-                            itemLabel="files"
+                            itemLabel={t('files')}
                             className="mt-4"
                           />
                         </>
@@ -727,10 +730,10 @@ export function ImportCsv({
             onClick={() => handleOpenChange(false)}
             disabled={isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleImport} disabled={!canImport}>
-            Import
+            {t('Import')}
           </Button>
         </div>
       </DialogContent>

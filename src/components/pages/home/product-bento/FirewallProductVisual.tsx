@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -91,6 +92,7 @@ const REQUEST_TONE_CLASS = {
 } as const
 
 function ActionBadge({ action }: { action: FirewallAction }) {
+  const t = useT()
   const { label, Icon } = ACTION_CONFIG[action]
 
   return (
@@ -102,12 +104,13 @@ function ActionBadge({ action }: { action: FirewallAction }) {
       )}
     >
       <Icon className="size-2.5" aria-hidden />
-      {label}
+      {t(label)}
     </Badge>
   )
 }
 
 function TrafficFlowStrip() {
+  const t = useT()
   return (
     <div className="overflow-hidden rounded-md border border-border/70 bg-muted/8 px-2.5 py-2">
       <div className="relative h-5">
@@ -138,7 +141,7 @@ function TrafficFlowStrip() {
         className="mt-1.5 text-center text-[9px] text-muted-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100 sm:text-[10px]"
         style={{ transitionDelay: '120ms' }}
       >
-        Requests evaluated against active rules
+        {t('Requests evaluated against active rules')}
       </p>
     </div>
   )
@@ -159,6 +162,7 @@ function FirewallRuleRow({
   index: number
   highlightOnHover?: boolean
 }) {
+  const t = useT()
   const ActionIcon = ACTION_CONFIG[action].Icon
 
   return (
@@ -198,7 +202,7 @@ function FirewallRuleRow({
       />
       <div className="min-w-0 flex-1">
         <p className={cn('truncate text-[11px] font-medium sm:text-[12px]', productBentoIdle.text)}>
-          {name}
+          {t(name)}
         </p>
         <p className="truncate font-mono text-[10px] text-muted-foreground sm:text-[11px]">
           {condition}
@@ -210,6 +214,7 @@ function FirewallRuleRow({
 }
 
 export function FirewallProductVisual() {
+  const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
       <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
@@ -217,10 +222,10 @@ export function FirewallProductVisual() {
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
-                Traffic rules
+                {t('Traffic rules')}
               </p>
               <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-[12px]">
-                Filter requests before they reach your APIs
+                {t('Filter requests before they reach your APIs')}
               </p>
             </div>
             <span className="relative mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-background">
@@ -246,7 +251,7 @@ export function FirewallProductVisual() {
                     {stat.value}
                   </p>
                   <p className="text-[9px] font-medium text-muted-foreground sm:text-[10px]">
-                    {stat.label}
+                    {t(stat.label)}
                   </p>
                 </div>
               ))}

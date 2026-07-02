@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type UpgradePlanLinkProps = {
   orgId?: string | null
@@ -18,23 +19,25 @@ export function UpgradePlanLink({
   children = 'Upgrade your plan',
   className,
 }: UpgradePlanLinkProps) {
+  const t = useT()
   const linkClassName = cn('link-neutral', className)
+  const content = typeof children === 'string' ? t(children) : children
 
   if (!getActiveProfileFeatures().billing) {
-    return <span className={linkClassName}>{children}</span>
+    return <span className={linkClassName}>{content}</span>
   }
 
   if (orgId) {
     return (
       <Link to="/upgrade" search={{ orgId }} className={linkClassName}>
-        {children}
+        {content}
       </Link>
     )
   }
 
   return (
     <Link to="/upgrade" className={linkClassName}>
-      {children}
+      {content}
     </Link>
   )
 }

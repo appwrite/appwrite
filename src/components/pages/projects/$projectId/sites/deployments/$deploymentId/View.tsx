@@ -10,8 +10,10 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { DeploymentDetailView } from '@/components/global/shared/DeploymentDetailView'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { projectId, siteId, deploymentId } = useParams({ strict: false })
 
   const { data: deployment, isLoading } = useSiteDeployment(
@@ -50,9 +52,9 @@ export function View() {
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download source code')
+      toast.error(t('Failed to download source code'))
     }
   }
 
@@ -70,9 +72,9 @@ export function View() {
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download build output')
+      toast.error(t('Failed to download build output'))
     }
   }
 

@@ -20,6 +20,7 @@ import {
 } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 
 const NAV_TRIGGER_CLASS =
   'inline-flex h-9 cursor-pointer items-center gap-1 rounded-md px-2.5 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground'
@@ -29,6 +30,93 @@ type MarketingProductsNavPanelProps = {
   onNavigate?: () => void
   compact?: boolean
   closeSheet?: boolean
+}
+
+type ProductNamesCopy = {
+  auth: string
+  databases: string
+  storage: string
+  functions: string
+  messaging: string
+  sites: string
+}
+
+type ProductNavigationItemsCopy = {
+  authTagline: string
+  databasesTagline: string
+  storageTagline: string
+  functionsTagline: string
+  messagingTagline: string
+  sitesTagline: string
+  realtimeName: string
+  realtimeTagline: string
+  domainsName: string
+  domainsTagline: string
+  firewallName: string
+  firewallTagline: string
+  advisorName: string
+  advisorTagline: string
+}
+
+type ProductNavigationCategoriesCopy = {
+  build: string
+  deploy: string
+  protect: string
+}
+
+type ProductNavigationCopy = {
+  triggerLabel: string
+  desktopTitle: string
+  desktopSubtitle: string
+  viewOverview: string
+  categories: ProductNavigationCategoriesCopy
+  items: ProductNavigationItemsCopy
+}
+
+function getLocalizedCategoryLabel(
+  categoryId: 'build' | 'deploy' | 'protect',
+  categoriesCopy: ProductNavigationCategoriesCopy,
+): string {
+  if (categoryId === 'build') return categoriesCopy.build
+  if (categoryId === 'deploy') return categoriesCopy.deploy
+  return categoriesCopy.protect
+}
+
+function getLocalizedProductNavItemName(
+  navItemId: ProductNavItemId,
+  fallbackName: string,
+  productNamesCopy: ProductNamesCopy,
+  navigationItemsCopy: ProductNavigationItemsCopy,
+): string {
+  if (navItemId === 'auth') return productNamesCopy.auth
+  if (navItemId === 'databases') return productNamesCopy.databases
+  if (navItemId === 'storage') return productNamesCopy.storage
+  if (navItemId === 'functions') return productNamesCopy.functions
+  if (navItemId === 'messaging') return productNamesCopy.messaging
+  if (navItemId === 'sites') return productNamesCopy.sites
+  if (navItemId === 'realtime') return navigationItemsCopy.realtimeName
+  if (navItemId === 'domains') return navigationItemsCopy.domainsName
+  if (navItemId === 'firewall') return navigationItemsCopy.firewallName
+  if (navItemId === 'advisor') return navigationItemsCopy.advisorName
+  return fallbackName
+}
+
+function getLocalizedProductNavItemTagline(
+  navItemId: ProductNavItemId,
+  fallbackTagline: string,
+  navigationItemsCopy: ProductNavigationItemsCopy,
+): string {
+  if (navItemId === 'auth') return navigationItemsCopy.authTagline
+  if (navItemId === 'databases') return navigationItemsCopy.databasesTagline
+  if (navItemId === 'storage') return navigationItemsCopy.storageTagline
+  if (navItemId === 'functions') return navigationItemsCopy.functionsTagline
+  if (navItemId === 'messaging') return navigationItemsCopy.messagingTagline
+  if (navItemId === 'sites') return navigationItemsCopy.sitesTagline
+  if (navItemId === 'realtime') return navigationItemsCopy.realtimeTagline
+  if (navItemId === 'domains') return navigationItemsCopy.domainsTagline
+  if (navItemId === 'firewall') return navigationItemsCopy.firewallTagline
+  if (navItemId === 'advisor') return navigationItemsCopy.advisorTagline
+  return fallbackTagline
 }
 
 function getActiveNavItemId(pathname: string): ProductNavItemId | undefined {
@@ -61,17 +149,32 @@ function ProductNavLink({
   navItemId,
   isActive,
   onNavigate,
+  productNamesCopy,
+  navigationItemsCopy,
   variant = 'default',
   closeSheet = false,
 }: {
   navItemId: ProductNavItemId
   isActive: boolean
   onNavigate?: () => void
+  productNamesCopy: ProductNamesCopy
+  navigationItemsCopy: ProductNavigationItemsCopy
   variant?: 'default' | 'compact' | 'dense'
   closeSheet?: boolean
 }) {
   const item = PRODUCT_NAV_REGISTRY[navItemId]
   const Icon = item.icon
+  const localizedName = getLocalizedProductNavItemName(
+    navItemId,
+    item.name,
+    productNamesCopy,
+    navigationItemsCopy,
+  )
+  const localizedTagline = getLocalizedProductNavItemTagline(
+    navItemId,
+    item.tagline,
+    navigationItemsCopy,
+  )
   const isDense = variant === 'dense'
   const isCompact = variant === 'compact'
 
@@ -112,7 +215,7 @@ function ProductNavLink({
             isDense ? 'text-[12px]' : 'text-[13px]',
           )}
         >
-          {item.name}
+          {localizedName}
         </span>
         <span
           className={cn(
@@ -124,7 +227,7 @@ function ProductNavLink({
                 : 'mt-0.5 text-[12px] leading-5',
           )}
         >
-          {item.tagline}
+          {localizedTagline}
         </span>
       </span>
 
@@ -149,6 +252,8 @@ function ProductsNavCategorySection({
   navItemIds,
   activeNavItemId,
   onNavigate,
+  productNamesCopy,
+  navigationItemsCopy,
   variant = 'dense',
   closeSheet = false,
 }: {
@@ -156,6 +261,8 @@ function ProductsNavCategorySection({
   navItemIds: readonly ProductNavItemId[]
   activeNavItemId?: ProductNavItemId
   onNavigate?: () => void
+  productNamesCopy: ProductNamesCopy
+  navigationItemsCopy: ProductNavigationItemsCopy
   variant?: 'dense' | 'compact'
   closeSheet?: boolean
 }) {
@@ -177,6 +284,8 @@ function ProductsNavCategorySection({
             navItemId={navItemId}
             isActive={navItemId === activeNavItemId}
             onNavigate={onNavigate}
+            productNamesCopy={productNamesCopy}
+            navigationItemsCopy={navigationItemsCopy}
             variant={variant}
             closeSheet={closeSheet}
           />
@@ -189,16 +298,22 @@ function ProductsNavCategorySection({
 function DesktopProductsNavPanel({
   activeNavItemId,
   onNavigate,
+  productNamesCopy,
+  navigationCopy,
 }: {
   activeNavItemId?: ProductNavItemId
   onNavigate?: () => void
+  productNamesCopy: ProductNamesCopy
+  navigationCopy: ProductNavigationCopy
 }) {
   return (
     <div className="text-start">
       <div className="flex items-baseline justify-between gap-4 border-b border-border bg-muted/15 px-4 py-2.5">
-        <p className="shrink-0 text-start text-[13px] font-semibold text-foreground">Platform products</p>
+        <p className="shrink-0 text-start text-[13px] font-semibold text-foreground">
+          {navigationCopy.desktopTitle}
+        </p>
         <p className="min-w-0 truncate text-start text-[11px] text-muted-foreground">
-          Build, deploy, and scale on one backend platform
+          {navigationCopy.desktopSubtitle}
         </p>
       </div>
 
@@ -206,10 +321,12 @@ function DesktopProductsNavPanel({
         {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
           <ProductsNavCategorySection
             key={category.id}
-            label={category.label}
+            label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
             navItemIds={category.productIds}
             activeNavItemId={activeNavItemId}
             onNavigate={onNavigate}
+            productNamesCopy={productNamesCopy}
+            navigationItemsCopy={navigationCopy.items}
           />
         ))}
       </div>
@@ -220,7 +337,7 @@ function DesktopProductsNavPanel({
           onClick={onNavigate}
           className="inline-flex cursor-pointer items-center gap-1.5 text-start text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          View platform overview
+          {navigationCopy.viewOverview}
           <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden />
         </Link>
       </div>
@@ -230,9 +347,13 @@ function DesktopProductsNavPanel({
 
 function MobileProductsNavPanel({
   activeNavItemId,
+  productNamesCopy,
+  navigationCopy,
   closeSheet,
 }: {
   activeNavItemId?: ProductNavItemId
+  productNamesCopy: ProductNamesCopy
+  navigationCopy: ProductNavigationCopy
   closeSheet?: boolean
 }) {
   return (
@@ -240,9 +361,11 @@ function MobileProductsNavPanel({
       {MARKETING_PRODUCT_NAV_CATEGORIES.map((category) => (
         <ProductsNavCategorySection
           key={category.id}
-          label={category.label}
+          label={getLocalizedCategoryLabel(category.id, navigationCopy.categories)}
           navItemIds={category.productIds}
           activeNavItemId={activeNavItemId}
+          productNamesCopy={productNamesCopy}
+          navigationItemsCopy={navigationCopy.items}
           variant="compact"
           closeSheet={closeSheet}
         />
@@ -255,7 +378,7 @@ function MobileProductsNavPanel({
               to="/home"
               className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              View platform overview
+              {navigationCopy.viewOverview}
               <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden />
             </Link>
           </SheetClose>
@@ -271,10 +394,16 @@ export function MarketingProductsNavPanel({
   compact = false,
   closeSheet = false,
 }: MarketingProductsNavPanelProps) {
+  const { catalog } = useI18n()
+  const productNamesCopy = catalog.website.products.productNames
+  const navigationCopy = catalog.website.products.navigation
+
   if (compact) {
     return (
       <MobileProductsNavPanel
         activeNavItemId={activeNavItemId}
+        productNamesCopy={productNamesCopy}
+        navigationCopy={navigationCopy}
         closeSheet={closeSheet}
       />
     )
@@ -284,11 +413,15 @@ export function MarketingProductsNavPanel({
     <DesktopProductsNavPanel
       activeNavItemId={activeNavItemId}
       onNavigate={onNavigate}
+      productNamesCopy={productNamesCopy}
+      navigationCopy={navigationCopy}
     />
   )
 }
 
 export function MarketingProductsNavPopover() {
+  const { catalog } = useI18n()
+  const navigationCopy = catalog.website.products.navigation
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
   const activeNavItemId = useMemo(() => getActiveNavItemId(pathname), [pathname])
@@ -302,7 +435,7 @@ export function MarketingProductsNavPopover() {
           aria-expanded={open}
           aria-haspopup="dialog"
         >
-          Products
+          {navigationCopy.triggerLabel}
           <ChevronDown
             className={cn('size-3.5 transition-transform duration-200', open && 'rotate-180')}
             aria-hidden
@@ -324,6 +457,8 @@ export function MarketingProductsNavPopover() {
 }
 
 export function MarketingProductsMobileNav() {
+  const { catalog } = useI18n()
+  const navigationCopy = catalog.website.products.navigation
   const { pathname } = useLocation()
   const activeNavItemId = useMemo(() => getActiveNavItemId(pathname), [pathname])
 
@@ -331,7 +466,7 @@ export function MarketingProductsMobileNav() {
     <Accordion type="single" collapsible className="px-1">
       <AccordionItem value="products" className="border-none">
         <AccordionTrigger className="flex h-10 w-full items-center justify-between rounded-md px-3 py-0 text-start text-[13px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground hover:no-underline [&[data-state=open]]:bg-accent [&[data-state=open]]:text-foreground">
-          Products
+          {navigationCopy.triggerLabel}
         </AccordionTrigger>
         <AccordionContent className="pb-2 pt-1">
           <MarketingProductsNavPanel
@@ -346,5 +481,5 @@ export function MarketingProductsMobileNav() {
 }
 
 export function isMarketingProductsNavItem(item: { menu?: string; label: string }) {
-  return item.menu === 'products' || item.label === 'Products'
+  return item.menu === 'products' || item.label === 'Products' || item.label === 'מוצרים'
 }

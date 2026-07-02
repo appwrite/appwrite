@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ArrowUp, Heart, Eye, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { ImagineIcon } from './Icon'
 
 // Richer prompts for each suggestion
@@ -61,6 +62,7 @@ const communityProjects = [
 ]
 
 export function View() {
+  const t = useT()
   const [prompt, setPrompt] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -135,13 +137,14 @@ export function View() {
 
         {/* Heading */}
         <h1 className="mb-2 text-center text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-          Build something real
+          {t('Build something real')}
         </h1>
 
         {/* Description */}
         <p className="mx-auto mb-5 max-w-md text-center text-[13px] text-muted-foreground">
-          Turn your ideas into functional products with the most complete AI
-          builder ever made.
+          {t(
+            'Turn your ideas into functional products with the most complete AI builder ever made.',
+          )}
         </p>
 
         {/* Prompt Input Card - More compact */}
@@ -152,7 +155,7 @@ export function View() {
               value={prompt}
               onChange={(e) => !isTyping && setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Describe what you want to build..."
+              placeholder={t('Describe what you want to build...')}
               className="min-h-[80px] w-full resize-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
               rows={3}
             />
@@ -168,7 +171,7 @@ export function View() {
                   ? 'bg-foreground text-background hover:bg-foreground/90'
                   : 'bg-muted text-muted-foreground',
               )}
-              aria-label="Send message"
+              aria-label={t('Send message')}
             >
               <ArrowUp className="h-3.5 w-3.5" />
             </Button>
@@ -188,7 +191,7 @@ export function View() {
                     : 'hover:bg-accent hover:text-foreground',
                 )}
               >
-                {chip}
+                {t(chip)}
               </button>
             ))}
           </div>
@@ -202,7 +205,7 @@ export function View() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-colors hover:bg-foreground/90"
           >
-            Visit Imagine.dev
+            {t('Visit Imagine.dev')}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
           <a
@@ -211,7 +214,7 @@ export function View() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Sign in
+            {t('Sign in')}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
           <a
@@ -220,7 +223,7 @@ export function View() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/50 px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Sign up
+            {t('Sign up')}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
@@ -230,10 +233,10 @@ export function View() {
       <div className="mx-auto mt-10 w-full max-w-4xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-medium text-foreground">
-            Community projects
+            {t('Community projects')}
           </h2>
           <button className="text-[12px] text-muted-foreground transition-colors hover:text-foreground">
-            View all
+            {t('View all')}
           </button>
         </div>
 
@@ -256,15 +259,15 @@ export function View() {
               {/* Project Info */}
               <div className="p-2.5">
                 <h3 className="text-[13px] font-medium text-foreground">
-                  {project.title}
+                  {t(project.title)}
                 </h3>
                 <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-                  {project.description}
+                  {t(project.description)}
                 </p>
 
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground">
-                    by {project.author}
+                    {t('by')} {project.author}
                   </span>
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                     <span className="flex items-center gap-0.5">

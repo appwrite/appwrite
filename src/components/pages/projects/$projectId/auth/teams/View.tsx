@@ -6,10 +6,12 @@ import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { TeamOverview } from './Overview'
 import { TeamMembers } from './Members'
 import { useTeam } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { Button } from '@/components/ui/button'
 
 export function View() {
+  const t = useT()
   const { projectId, teamId } = useParams({
     strict: false,
   })
@@ -45,7 +47,7 @@ export function View() {
     () => [
       {
         id: 'overview',
-        label: 'Overview',
+        label: t('Overview'),
         to: '/projects/$projectId/auth/teams/$teamId',
         params: {
           projectId: projectId as string,
@@ -54,7 +56,7 @@ export function View() {
       },
       {
         id: 'members',
-        label: 'Memberships',
+        label: t('Memberships'),
         to: '/projects/$projectId/auth/teams/$teamId/members',
         params: {
           projectId: projectId as string,
@@ -62,7 +64,7 @@ export function View() {
         },
       },
     ],
-    [projectId, teamId],
+    [projectId, teamId, t],
   )
 
   const [membersSearchValue, setMembersSearchValue] = useState('')
@@ -82,16 +84,16 @@ export function View() {
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Missing project ID or team ID
+            {t('Missing project ID or team ID')}
           </p>
           {!projectId && (
             <p className="text-[12px] text-muted-foreground mt-2">
-              Project ID is required
+              {t('Project ID is required')}
             </p>
           )}
           {!teamId && (
             <p className="text-[12px] text-muted-foreground mt-2">
-              Team ID is required
+              {t('Team ID is required')}
             </p>
           )}
         </div>
@@ -112,10 +114,12 @@ export function View() {
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
           <p className="text-[13px] text-destructive mb-2">
-            Error loading team
+            {t('Error loading team')}
           </p>
           <p className="text-[12px] text-muted-foreground">
-            {teamError instanceof Error ? teamError.message : 'Unknown error'}
+            {teamError instanceof Error
+              ? teamError.message
+              : t('Unknown error')}
           </p>
         </div>
       </div>
@@ -126,10 +130,12 @@ export function View() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Team not found</p>
+          <p className="text-[13px] text-muted-foreground">
+            {t('Team not found')}
+          </p>
           {projectId && teamId && (
             <p className="text-[12px] text-muted-foreground mt-2">
-              Project: {projectId}, Team: {teamId}
+              {t('Project')}: {projectId}, {t('Team')}: {teamId}
             </p>
           )}
         </div>
@@ -150,20 +156,20 @@ export function View() {
             projectId={projectId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to teams',
+              'aria-label': t('Back to teams'),
             }}
           />
         }
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'members' ? 'Search members...' : undefined
+          activeTab === 'members' ? t('Search members...') : undefined
         }
         searchValue={activeTab === 'members' ? membersSearchValue : undefined}
         onSearchChange={
           activeTab === 'members' ? setMembersSearchValue : undefined
         }
-        createLabel={activeTab === 'members' ? 'Add member' : undefined}
+        createLabel={activeTab === 'members' ? t('Add member') : undefined}
         onCreate={
           activeTab === 'members'
             ? () => setCreateMembershipDialogOpen(true)

@@ -10,6 +10,7 @@ import {
   type HomeCustomerLogo,
 } from '@/lib/home/customer-logos'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { HomeSoftLights } from './HomeSoftLights'
 
@@ -100,6 +101,7 @@ function useLogoGridColumns() {
 }
 
 function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
+  const t = useT()
   const gridRef = useRef<HTMLDivElement>(null)
   const columns = useLogoGridColumns()
   const logosPerPage = columns * LOGO_GRID_ROWS
@@ -150,7 +152,7 @@ function CustomerLogoGrid({ logos }: { logos: HomeCustomerLogo[] }) {
         'relative z-[1] col-span-6 mt-3 grid min-h-[2.75rem] grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:mt-4 lg:min-h-[3.5rem] lg:grid-cols-subgrid lg:gap-x-8 lg:gap-y-5',
         !prefersReducedMotion && 'motion-reduce:animate-none animate-in fade-in duration-500',
       )}
-      aria-label="More customers"
+      aria-label={t('More customers')}
       aria-live="polite"
     >
       {visibleBatch.map((logo) => (
@@ -176,6 +178,7 @@ function CaseStudyPanelContent({
   study: HomeCaseStudy
   revealed?: boolean
 }) {
+  const t = useT()
   const initials = study.name
     .split(' ')
     .map((part) => part[0])
@@ -226,7 +229,7 @@ function CaseStudyPanelContent({
           transitionDelay: revealed ? '90ms' : '0ms',
         }}
       >
-        {study.headline}
+        {t(study.headline)}
       </h3>
 
       <div
@@ -242,7 +245,7 @@ function CaseStudyPanelContent({
         <CaseStudyDottedSeparator />
 
         <blockquote className="max-w-2xl text-[13px] leading-6 text-foreground sm:text-[14px] sm:leading-7">
-          &ldquo;{study.blurb}&rdquo;
+          &ldquo;{t(study.blurb)}&rdquo;
         </blockquote>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -254,7 +257,7 @@ function CaseStudyPanelContent({
             <p className="min-w-0 text-[13px] leading-5 text-foreground">
               <span className="font-medium">{study.name}</span>
               <span className="text-muted-foreground">
-                , {study.title} @ {study.company}
+                , {t(study.title)} @ {study.company}
               </span>
             </p>
           </div>
@@ -263,7 +266,7 @@ function CaseStudyPanelContent({
             href={study.storyUrl}
             className="group link-neutral inline-flex shrink-0 items-center gap-1.5 text-[13px]"
           >
-            Read customer story
+            {t('Read customer story')}
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
           </BlogPageAnchor>
         </div>
@@ -428,6 +431,7 @@ function CaseStudyCard({
 }
 
 export function TestimonialsSection() {
+  const t = useT()
   const [mounted, setMounted] = useState(false)
   const [visibleStudies, setVisibleStudies] = useState<HomeCaseStudy[]>([])
   const [gridLogos, setGridLogos] = useState<HomeCustomerLogo[]>([])
@@ -465,12 +469,13 @@ export function TestimonialsSection() {
       <div className="relative z-[1] mx-auto w-full max-w-7xl px-4 sm:px-6">
         <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-12">
           <h2 className="font-aeonik-pro text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-            Loved by teams building in production
+            {t('Loved by teams building in production')}
             <span className="text-[var(--brand-cta)]">_</span>
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
-            From fast-moving startups to global enterprises, developers ship faster
-            with Appwrite.
+            {t(
+              'From fast-moving startups to global enterprises, developers ship faster with Appwrite.', // pragma: allowlist secret
+            )}
           </p>
         </div>
 
@@ -478,7 +483,7 @@ export function TestimonialsSection() {
           <div className="lg:grid lg:grid-cols-6 lg:gap-4">
             <div
               role="tablist"
-              aria-label="Customer stories"
+              aria-label={t('Customer stories')}
               onKeyDown={handleTabListKeyDown}
               className="relative z-[1] col-span-6 flex w-full touch-pan-y flex-col max-lg:gap-0 overscroll-y-auto lg:min-h-[467px] lg:flex-row lg:items-stretch lg:gap-4"
             >
@@ -499,7 +504,7 @@ export function TestimonialsSection() {
                 href="/blog/category/customer-stories"
                 className="link-neutral inline-flex items-center gap-1.5 text-[13px]"
               >
-                Read our case studies
+                {t('Read our case studies')}
                 <ArrowRight className="size-3.5" />
               </BlogPageAnchor>
             </div>

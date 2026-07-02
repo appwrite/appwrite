@@ -24,6 +24,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -243,6 +244,7 @@ export type VariablesSettingsCardProps =
   | VariablesSettingsCardWizardProps
 
 export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
+  const t = useT()
   const isWizard = isWizardProps(props)
   const {
     emptyTitle = 'No environment variables yet',
@@ -331,7 +333,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     try {
       return JSON.parse(content)
     } catch {
-      throw new Error('Invalid JSON format')
+      throw new Error(t('Invalid JSON format'))
     }
   }
 
@@ -353,16 +355,18 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     if (!onWizardChange) return
     for (const pair of createPairs) {
       if (!pair.key.trim()) {
-        toast.error('All variable keys are required')
+        toast.error(t('All variable keys are required'))
         return
       }
       if (wizardVariables.some((v) => v.key === pair.key.trim())) {
-        toast.error(`Variable ${pair.key.trim()} already exists`)
+        toast.error(
+          `${t('Variable')} ${pair.key.trim()} ${t('already exists')}`,
+        )
         return
       }
       if (pair.value.length > 8192) {
         toast.error(
-          `Variable ${pair.key.trim()} is longer than 8192 allowed characters`,
+          `${t('Variable')} ${pair.key.trim()} ${t('is longer than 8192 allowed characters')}`,
         )
         return
       }
@@ -444,7 +448,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       onWizardChange([...secretVars, ...newVars])
       setShowEditorModal(false)
     } catch (error: unknown) {
-      setEditorError(getErrorMessage(error, 'Invalid format'))
+      setEditorError(getErrorMessage(error, t('Invalid format')))
     }
   }
 
@@ -468,12 +472,12 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     if (!createMutation) return
     for (const pair of createPairs) {
       if (!pair.key.trim()) {
-        toast.error('All variable keys are required')
+        toast.error(t('All variable keys are required'))
         return
       }
       if (pair.value.length > 8192) {
         toast.error(
-          `Variable ${pair.key} is longer than 8192 allowed characters`,
+          `${t('Variable')} ${pair.key} ${t('is longer than 8192 allowed characters')}`,
         )
         return
       }
@@ -491,19 +495,19 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
             }),
           ),
       )
-      toast.success(`${scopeLabel} variable has been created.`)
+      toast.success(t(`${scopeLabel} variable has been created.`))
       setShowCreateModal(false)
       setCreatePairs([{ key: '', value: '' }])
       setCreateSecret(false)
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to create variable'))
+      toast.error(getErrorMessage(error, t('Failed to create variable')))
     }
   }
 
   const handleUpdate = async () => {
     if (isWizard || !updateMutation || !selectedVar) return
     if (updateValue.length > 8192) {
-      toast.error(`Variable value is longer than 8192 allowed characters`)
+      toast.error(t('Variable value is longer than 8192 allowed characters'))
       return
     }
 
@@ -514,12 +518,12 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         value: updateValue,
         secret: selectedVar.secret || false,
       })
-      toast.success(`${scopeLabel} variable has been updated.`)
+      toast.success(t(`${scopeLabel} variable has been updated.`))
       setShowUpdateModal(false)
       setSelectedVar(null)
       setUpdateValue('')
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to update variable'))
+      toast.error(getErrorMessage(error, t('Failed to update variable')))
     }
   }
 
@@ -528,11 +532,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     setDeleteError('')
     try {
       await deleteMutation.mutateAsync(selectedVar.$id)
-      toast.success(`${scopeLabel} variable has been deleted.`)
+      toast.success(t(`${scopeLabel} variable has been deleted.`))
       setShowDeleteModal(false)
       setSelectedVar(null)
     } catch (error: unknown) {
-      setDeleteError(getErrorMessage(error, 'Failed to delete variable'))
+      setDeleteError(getErrorMessage(error, t('Failed to delete variable')))
     }
   }
 
@@ -545,11 +549,13 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         value: selectedVar.value || '',
         secret: true,
       })
-      toast.success(`${scopeLabel} variable has been marked as secret.`)
+      toast.success(t(`${scopeLabel} variable has been marked as secret.`))
       setShowSecretModal(false)
       setSelectedVar(null)
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to mark variable as secret'))
+      toast.error(
+        getErrorMessage(error, t('Failed to mark variable as secret')),
+      )
     }
   }
 
@@ -557,7 +563,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
     if (isWizard) return
     if (!createMutation || !updateMutation) return
     if (!importFile) {
-      setImportError('No file selected')
+      setImportError(t('No file selected'))
       return
     }
     setImportError('')
@@ -565,13 +571,13 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       const text = await importFile.text()
       const parsed = parseEnvFile(text)
       if (Object.keys(parsed).length === 0) {
-        setImportError('No variables found')
+        setImportError(t('No variables found'))
         return
       }
       for (const [key, value] of Object.entries(parsed)) {
         if (value.length > 8192) {
           setImportError(
-            `Variable ${key} is longer than 8192 allowed characters`,
+            `${t('Variable')} ${key} ${t('is longer than 8192 allowed characters')}`,
           )
           return
         }
@@ -605,12 +611,12 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       }
 
       await Promise.all(promises)
-      toast.success('Variables have been uploaded.')
+      toast.success(t('Variables have been uploaded.'))
       setShowImportModal(false)
       setImportFile(null)
       setImportSecret(false)
     } catch (error: unknown) {
-      setImportError(getErrorMessage(error, 'Failed to import variables'))
+      setImportError(getErrorMessage(error, t('Failed to import variables')))
     }
   }
 
@@ -630,7 +636,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       for (const [key, value] of Object.entries(parsed)) {
         if (value.length > 8192) {
           setEditorError(
-            `Variable ${key} is longer than 8192 allowed characters`,
+            `${t('Variable')} ${key} ${t('is longer than 8192 allowed characters')}`,
           )
           return
         }
@@ -679,11 +685,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         ...deletePromises,
         ...createPromises,
       ])
-      toast.success('Variables have been updated.')
+      toast.success(t('Variables have been updated.'))
       setShowEditorModal(false)
       setEditorContent('')
     } catch (error: unknown) {
-      setEditorError(getErrorMessage(error, 'Failed to save variables'))
+      setEditorError(getErrorMessage(error, t('Failed to save variables')))
     }
   }
 
@@ -708,9 +714,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(editorContent)
-      toast.success('Copied to clipboard')
+      toast.success(t('Copied to clipboard'))
     } catch {
-      toast.error('Failed to copy to clipboard')
+      toast.error(t('Failed to copy to clipboard'))
     }
   }
 
@@ -797,7 +803,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
         )}
       >
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t(title)}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className={cn('px-6 py-4', !isWizard && '@container')}>
@@ -807,7 +815,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
             {description ? (
               <div className="@[600px]:w-64 shrink-0">
                 <p className="text-[13px] text-muted-foreground">
-                  {description}
+                  {t(description)}
                 </p>
               </div>
             ) : null}
@@ -831,7 +839,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                     disabled={actionsDisabled}
                   >
                     <Code className="me-1.5 h-4 w-4" />
-                    Editor
+                    {t('Editor')}
                   </Button>
                   <Button
                     variant="outline"
@@ -845,7 +853,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                     disabled={actionsDisabled}
                   >
                     <Upload className="me-1.5 h-4 w-4" />
-                    Import .env
+                    {t('Import .env')}
                   </Button>
                 </div>
                 <Button
@@ -856,7 +864,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   disabled={actionsDisabled}
                 >
                   <Plus className="me-1.5 h-4 w-4" />
-                  Create variable
+                  {t('Create variable')}
                 </Button>
               </div>
 
@@ -879,10 +887,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border">
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
-                            Key
+                            {t('Key')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
-                            Value
+                            {t('Value')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]" />
                         </TableRow>
@@ -913,7 +921,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                       {showSecrets.has(w.key) ? (
                                         <>
                                           <code className="text-[12px] font-mono text-muted-foreground">
-                                            {w.value || '(empty)'}
+                                            {w.value || t('(empty)')}
                                           </code>
                                           <Button
                                             type="button"
@@ -935,7 +943,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                             variant="secondary"
                                             className="text-[12px]"
                                           >
-                                            Secret
+                                            {t('Secret')}
                                           </Badge>
                                           <Button
                                             type="button"
@@ -955,7 +963,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                     </div>
                                   ) : (
                                     <code className="text-[12px] font-mono text-muted-foreground">
-                                      {w.value || '(empty)'}
+                                      {w.value || t('(empty)')}
                                     </code>
                                   )}
                                 </TableCell>
@@ -980,7 +988,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                           <MenuItemContent
                                             icon={w.secret ? Eye : Lock}
                                           >
-                                            {w.secret ? 'Unmark secret' : 'Secret'}
+                                            {w.secret
+                                              ? t('Unmark secret')
+                                              : t('Secret')}
                                           </MenuItemContent>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
@@ -989,7 +999,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                           }
                                         >
                                           <MenuItemContent icon={Trash2}>
-                                            Delete
+                                            {t('Delete')}
                                           </MenuItemContent>
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
@@ -1039,7 +1049,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                         <button
                                           type="button"
                                           className="inline-flex shrink-0 text-amber-600 hover:text-amber-700 cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                          aria-label="Same name as a project variable"
+                                          aria-label={t(
+                                            'Same name as a project variable',
+                                          )}
                                         >
                                           <AlertTriangle className="h-3.5 w-3.5" />
                                         </button>
@@ -1048,8 +1060,10 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                         side="top"
                                         className="max-w-[280px] text-[12px]"
                                       >
-                                        {duplicateProjectKeyTooltip ??
-                                          defaultDuplicateProjectKeyTooltip}
+                                        {t(
+                                          duplicateProjectKeyTooltip ??
+                                            defaultDuplicateProjectKeyTooltip,
+                                        )}
                                       </TooltipContent>
                                     </Tooltip>
                                   )}
@@ -1058,7 +1072,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                       variant="secondary"
                                       className="text-[11px]"
                                     >
-                                      {badge}
+                                      {t(badge)}
                                     </Badge>
                                   )}
                                 </div>
@@ -1069,7 +1083,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                     variant="secondary"
                                     className="text-[12px]"
                                   >
-                                    Secret
+                                    {t('Secret')}
                                   </Badge>
                                 ) : (
                                   <CopyableText
@@ -1095,7 +1109,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                         }}
                                       >
                                         <MenuItemContent icon={Pencil}>
-                                          Update
+                                          {t('Update')}
                                         </MenuItemContent>
                                       </DropdownMenuItem>
                                       {!record.secret && (
@@ -1106,7 +1120,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                           }}
                                         >
                                           <MenuItemContent icon={Lock}>
-                                            Secret
+                                            {t('Secret')}
                                           </MenuItemContent>
                                         </DropdownMenuItem>
                                       )}
@@ -1117,7 +1131,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                                         }}
                                       >
                                         <MenuItemContent icon={Trash2}>
-                                          Delete
+                                          {t('Delete')}
                                         </MenuItemContent>
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -1164,10 +1178,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
           }}
         >
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Create variable</DialogTitle>
+            <DialogTitle>{t('Create variable')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Add one or more environment variables. You can add multiple
-              variables at once.
+              {t(
+                'Add one or more environment variables. You can add multiple variables at once.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1180,7 +1195,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 >
                   <div className="flex items-center justify-between">
                     <Label className="text-[13px] font-medium">
-                      Variable {index + 1}
+                      {t('Variable')} {index + 1}
                     </Label>
                     {createPairs.length > 1 && (
                       <Button
@@ -1203,7 +1218,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`key-${index}`} className="text-[12px]">
-                      Key <span className="text-destructive">*</span>
+                      {t('Key')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id={`key-${index}`}
@@ -1224,7 +1239,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`value-${index}`} className="text-[12px]">
-                      Value <span className="text-destructive">*</span>
+                      {t('Value')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id={`value-${index}`}
@@ -1235,7 +1250,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                         newPairs[index].value = e.target.value
                         setCreatePairs(newPairs)
                       }}
-                      placeholder="Enter value"
+                      placeholder={t('Enter value')}
                       className="font-mono text-[13px]"
                     />
                   </div>
@@ -1251,7 +1266,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 disabled={!createPairs[createPairs.length - 1]?.key}
               >
                 <Plus className="me-1.5 h-4 w-4" />
-                Add variable
+                {t('Add variable')}
               </Button>
 
               <div className="flex items-center space-x-2 pt-2">
@@ -1264,12 +1279,13 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   htmlFor="create-secret"
                   className="text-[13px] cursor-pointer"
                 >
-                  Secret
+                  {t('Secret')}
                 </Label>
               </div>
               <p className="text-[12px] text-muted-foreground -mt-2">
-                If selected, you and your team won't be able to read the values
-                after creation.
+                {t(
+                  "If selected, you and your team won't be able to read the values after creation.",
+                )}
               </p>
             </div>
           </div>
@@ -1281,7 +1297,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               onClick={() => setShowCreateModal(false)}
               disabled={createMutation?.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               size="sm"
@@ -1293,7 +1309,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 createPairs.some((p) => p.value.length > 8192)
               }
             >
-              Create
+              {t('Create')}
             </Button>
           </div>
         </DialogContent>
@@ -1310,9 +1326,9 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Update variable</DialogTitle>
+            <DialogTitle>{t('Update variable')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Update the value of this variable. The key cannot be changed.
+              {t('Update the value of this variable. The key cannot be changed.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1320,7 +1336,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="update-key" className="text-[13px]">
-                  Key
+                  {t('Key')}
                 </Label>
                 <Input
                   id="update-key"
@@ -1331,14 +1347,14 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="update-value" className="text-[13px]">
-                  Value <span className="text-destructive">*</span>
+                  {t('Value')} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="update-value"
                   type="password"
                   value={updateValue}
                   onChange={(e) => setUpdateValue(e.target.value)}
-                  placeholder="Enter value"
+                  placeholder={t('Enter value')}
                   className="font-mono text-[13px]"
                 />
               </div>
@@ -1355,7 +1371,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               }}
               disabled={updateMutation?.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               size="sm"
@@ -1367,7 +1383,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 updateValue.length > 8192
               }
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </DialogContent>
@@ -1379,10 +1395,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete variable</DialogTitle>
+            <DialogTitle>{t('Delete variable')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this variable? This action cannot
-              be undone.
+              {t(
+                'Are you sure you want to delete this variable? This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           {deleteError && (
@@ -1400,7 +1417,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               onClick={() => setShowDeleteModal(false)}
               disabled={deleteMutation?.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1409,7 +1426,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               onClick={handleDelete}
               disabled={deleteMutation?.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -1421,10 +1438,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       <Dialog open={showSecretModal} onOpenChange={setShowSecretModal}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Mark as secret</DialogTitle>
+            <DialogTitle>{t('Mark as secret')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Once marked as secret, you and your team won't be able to read
-              this variable's value. This action cannot be undone.
+              {t(
+                "Once marked as secret, you and your team won't be able to read this variable's value. This action cannot be undone.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1435,7 +1453,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               onClick={() => setShowSecretModal(false)}
               disabled={updateMutation?.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1444,7 +1462,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
               onClick={handleMarkSecret}
               disabled={updateMutation?.isPending}
             >
-              Mark as secret
+              {t('Mark as secret')}
             </Button>
           </div>
         </DialogContent>
@@ -1456,10 +1474,11 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
       <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Import .env file</DialogTitle>
+            <DialogTitle>{t('Import .env file')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Upload a .env file to import variables. Existing variables with
-              the same key will be updated.
+              {t(
+                'Upload a .env file to import variables. Existing variables with the same key will be updated.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1467,7 +1486,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="import-file" className="text-[13px]">
-                  File
+                  {t('File')}
                 </Label>
                 <Input
                   id="import-file"
@@ -1490,7 +1509,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                   htmlFor="import-secret"
                   className="text-[13px] cursor-pointer"
                 >
-                  Mark all as secret
+                  {t('Mark all as secret')}
                 </Label>
               </div>
               {importError && (
@@ -1510,7 +1529,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 createMutation?.isPending || updateMutation?.isPending
               }
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               size="sm"
@@ -1522,7 +1541,7 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 updateMutation?.isPending
               }
             >
-              Import
+              {t('Import')}
             </Button>
           </div>
         </DialogContent>

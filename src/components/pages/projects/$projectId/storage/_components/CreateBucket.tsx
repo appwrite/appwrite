@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateBucketProps {
   open: boolean
@@ -24,6 +25,7 @@ export function CreateBucket({
   onCreate,
   isLoading = false,
 }: CreateBucketProps) {
+  const t = useT()
   const [bucketId, setBucketId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -53,7 +55,7 @@ export function CreateBucket({
     const newErrors: Record<string, string> = {}
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t('Name is required')
     }
 
     setErrors(newErrors)
@@ -77,9 +79,9 @@ export function CreateBucket({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create bucket</DialogTitle>
+          <DialogTitle>{t('Create bucket')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new storage bucket to organize your files.
+            {t('Create a new storage bucket to organize your files.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -88,12 +90,12 @@ export function CreateBucket({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter bucket name"
+                placeholder={t('Enter bucket name')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -110,14 +112,14 @@ export function CreateBucket({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bucket-id">Bucket ID</Label>
+              <Label htmlFor="bucket-id">{t('Bucket ID')}</Label>
               <IdInput
                 id="bucket-id"
                 value={bucketId}
                 onChange={setBucketId}
                 maxLength={36}
                 disabled={isLoading}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
               />
             </div>
           </div>
@@ -129,10 +131,10 @@ export function CreateBucket({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim()}>
-              Create
+              {t('Create')}
             </Button>
           </div>
         </form>

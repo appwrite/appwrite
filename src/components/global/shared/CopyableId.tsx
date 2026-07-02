@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Copy, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type CopyableIdSize = 'xs' | 'sm' | 'md'
 type CopyableIdVariant = 'badge' | 'inline'
@@ -63,8 +64,9 @@ export function CopyableId({
   copyToastLabel,
   copyLabel,
 }: CopyableIdProps) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
-  const shown = copyLabel ?? displayText ?? id
+  const shown = copyLabel ? t(copyLabel) : (displayText ?? id)
   const copyOnHover = showCopyOnHover ?? variant === 'inline'
   const nativeTitle = copyLabel
     ? id
@@ -77,7 +79,7 @@ export function CopyableId({
     e.preventDefault()
     navigator.clipboard.writeText(id)
     if (copyToastLabel) {
-      toast.success(`${copyToastLabel} copied`)
+      toast.success(`${t(copyToastLabel)} ${t('copied')}`)
     }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)

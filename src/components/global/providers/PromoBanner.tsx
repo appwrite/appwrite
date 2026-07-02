@@ -9,6 +9,7 @@ import {
 import { X, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 
 export interface PromoBannerItem {
   id: string
@@ -30,6 +31,7 @@ function PromoBannerComponent({
   onDismiss,
   onDismissAll,
 }: PromoBannerProps) {
+  const t = useT()
   const [expandedIndex, setExpandedIndex] = useState(0)
   const { features } = useConsoleProfile()
 
@@ -112,10 +114,10 @@ function PromoBannerComponent({
                 {/* Content area */}
                 <div className="p-4">
                   <h4 className="text-[15px] font-semibold text-foreground">
-                    {banner.title}
+                    {t(banner.title)}
                   </h4>
                   <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-                    {banner.description}
+                    {t(banner.description)}
                   </p>
 
                   {/* CTA Button */}
@@ -129,7 +131,7 @@ function PromoBannerComponent({
                         }
                       }}
                     >
-                      {banner.ctaText}
+                      {t(banner.ctaText)}
                     </button>
                   )}
                 </div>
@@ -163,7 +165,7 @@ function PromoBannerComponent({
             ))}
             {filteredBanners.length > 3 && (
               <span className="ms-1.5 text-[11px] text-muted-foreground">
-                +{filteredBanners.length - 3} more
+                +{filteredBanners.length - 3} {t('more')}
               </span>
             )}
           </div>
@@ -171,7 +173,7 @@ function PromoBannerComponent({
             onClick={onDismissAll}
             className="text-[12px] text-muted-foreground transition-colors hover:text-foreground"
           >
-            Dismiss all
+            {t('Dismiss all')}
           </button>
         </div>
       )}

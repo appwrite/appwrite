@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 function parseTooltipDate(date: string | Date): Date | null {
   const dateObj = typeof date === 'string' ? new Date(date) : date
@@ -43,11 +44,14 @@ export function DateTooltip({
   liveUpdateMs = 30_000,
   disableTooltip = false,
 }: DateTooltipProps) {
+  const t = useT()
   const dateObj = parseTooltipDate(date)
 
   if (!dateObj) {
     return (
-      <span className={cn('text-muted-foreground', className)}>Unknown</span>
+      <span className={cn('text-muted-foreground', className)}>
+        {t('Unknown')}
+      </span>
     )
   }
 
@@ -71,6 +75,7 @@ function DateTooltipContent({
   liveUpdateMs = 30_000,
   disableTooltip = false,
 }: DateTooltipContentProps) {
+  const t = useT()
   const [nowMs, setNowMs] = useState(() => Date.now())
 
   useEffect(() => {
@@ -98,7 +103,7 @@ function DateTooltipContent({
 
   // Simple relative time for display
   const getSimpleRelativeTime = (): string => {
-    if (diffSeconds < 60) return 'Just now'
+    if (diffSeconds < 60) return t('Just now')
 
     // Find the most appropriate unit to display, skipping zero values
     let timeStr: string
@@ -306,7 +311,7 @@ function DateTooltipContent({
                 {localTime}
               </span>
               <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                Local
+                {t('Local')}
               </span>
               <span
                 className="ms-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"

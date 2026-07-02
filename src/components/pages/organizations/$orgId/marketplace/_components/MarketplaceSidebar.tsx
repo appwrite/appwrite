@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceSidebarProps = {
   navGroups: MarketplaceNavGroup[]
@@ -38,11 +39,12 @@ function SidebarSearch({
   value: string
   onChange: (value: string) => void
 }) {
+  const t = useT()
   return (
     <div className="relative w-full mb-2">
       <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <Input
-        placeholder="Search apps..."
+        placeholder={t('Search apps...')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
@@ -55,7 +57,7 @@ function SidebarSearch({
           type="button"
           onClick={() => onChange('')}
           className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded p-0.5"
-          aria-label="Clear search"
+          aria-label={t('Clear search')}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -108,12 +110,13 @@ function NavGroupsList({
   MarketplaceSidebarProps,
   'navGroups' | 'activeNavId' | 'onNavChange' | 'getItemCount'
 >) {
+  const t = useT()
   return (
     <div className="flex flex-col gap-5 pt-3">
       {navGroups.map((group) => (
         <div key={group.id}>
           <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {group.label}
+            {t(group.label)}
           </p>
           <div className="flex flex-col gap-0.5">
             {group.items.map((item) => (
@@ -122,7 +125,7 @@ function NavGroupsList({
                 isActive={activeNavId === item.id}
                 onClick={() => onNavChange(item.id)}
                 icon={item.icon}
-                label={item.label}
+                label={t(item.label)}
                 count={getItemCount?.(item.id)}
               />
             ))}
@@ -137,6 +140,7 @@ function SidebarLinks({
   links,
   onLinkAction,
 }: Pick<MarketplaceSidebarProps, 'links' | 'onLinkAction'>) {
+  const t = useT()
   return (
     <div className="mt-2 flex flex-col gap-0.5 border-t border-border pt-4">
       {links.map((link) => {
@@ -158,7 +162,7 @@ function SidebarLinks({
               className={className}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {link.label}
+              {t(link.label)}
             </a>
           )
         }
@@ -171,7 +175,7 @@ function SidebarLinks({
             onClick={() => onLinkAction?.(link)}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {link.label}
+            {t(link.label)}
           </button>
         )
       })}
@@ -191,9 +195,10 @@ export function MarketplaceSidebar({
   onLinkAction,
   children,
 }: MarketplaceSidebarProps) {
+  const t = useT()
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
-      <div className="lg:hidden space-y-2" aria-label="Marketplace section">
+      <div className="lg:hidden space-y-2" aria-label={t('Marketplace section')}>
         <SidebarSearch value={searchValue} onChange={onSearchChange} />
         <Select
           value={activeNavId}
@@ -206,7 +211,7 @@ export function MarketplaceSidebar({
             {navGroups.map((group) => (
               <SelectGroup key={group.id}>
                 <SelectLabel className="text-[11px] uppercase tracking-wider">
-                  {group.label}
+                  {t(group.label)}
                 </SelectLabel>
                 {group.items.map((item) => (
                   <SelectItem
@@ -216,7 +221,7 @@ export function MarketplaceSidebar({
                   >
                     <span className="flex items-center gap-2">
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {item.label}
+                      {t(item.label)}
                     </span>
                   </SelectItem>
                 ))}
@@ -231,7 +236,7 @@ export function MarketplaceSidebar({
 
       <nav
         className="hidden lg:flex sticky top-4 w-52 shrink-0 flex-col self-start"
-        aria-label="Marketplace navigation"
+        aria-label={t('Marketplace navigation')}
       >
         <SidebarSearch value={searchValue} onChange={onSearchChange} />
         <NavGroupsList
@@ -247,11 +252,11 @@ export function MarketplaceSidebar({
         {activeItem && (
           <div className="mb-6">
             <h2 className="text-[15px] font-semibold text-foreground">
-              {activeItem.label}
+              {t(activeItem.label)}
             </h2>
             {activeItem.description && (
               <p className="text-[13px] text-muted-foreground mt-1">
-                {activeItem.description}
+                {t(activeItem.description)}
               </p>
             )}
           </div>

@@ -79,6 +79,7 @@ import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
+import { useT } from '@/lib/i18n/translate'
 
 // Copyable Input Component
 interface CopyableInputProps {
@@ -88,6 +89,7 @@ interface CopyableInputProps {
 }
 
 function CopyableInput({ value, label, className }: CopyableInputProps) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -109,7 +111,7 @@ function CopyableInput({ value, label, className }: CopyableInputProps) {
         type="button"
         onClick={handleCopy}
         className="absolute end-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent transition-colors"
-        aria-label={`Copy ${label}`}
+        aria-label={`${t('Copy')} ${label}`}
       >
         {copied ? (
           <Check className="h-4 w-4 text-emerald-500" />
@@ -195,6 +197,7 @@ interface ProjectSettingsOverviewProps {
 export function ProjectSettingsOverview({
   projectId,
 }: ProjectSettingsOverviewProps) {
+  const t = useT()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
   const navigate = useNavigate()
@@ -287,19 +290,19 @@ export function ProjectSettingsOverview({
     const searchParams = search as { alert?: string }
     const alert = searchParams?.alert
     if (alert === 'installation-created') {
-      toast.success('Git installation has imported to your project')
+      toast.success(t('Git installation has imported to your project'))
       navigate({
         search: removeAlertSearchParam as never,
         replace: true,
       })
     } else if (alert === 'installation-updated') {
-      toast.success('Git installation has been successfully updated')
+      toast.success(t('Git installation has been successfully updated'))
       navigate({
         search: removeAlertSearchParam as never,
         replace: true,
       })
     }
-  }, [search, navigate])
+  }, [search, navigate, t])
 
   // Get project endpoint (centralized in SDK)
   const projectEndpoint = useMemo(
@@ -367,13 +370,13 @@ export function ProjectSettingsOverview({
         trimmedName.length > PROJECT_NAME_MAX_LENGTH
       ) {
         throw new Error(
-          `Name must be between 1 and ${PROJECT_NAME_MAX_LENGTH} characters`,
+          `${t('Name must be between 1 and')} ${PROJECT_NAME_MAX_LENGTH} ${t('characters')}`,
         )
       }
       await updateConsoleProject({ projectId, name: trimmedName })
     },
     onSuccess: async () => {
-      toast.success('Project name has been updated')
+      toast.success(t('Project name has been updated'))
       await queryClient.refetchQueries({
         queryKey: [Dependencies.PROJECT, projectId],
         exact: true,
@@ -383,7 +386,7 @@ export function ProjectSettingsOverview({
       // Track analytics: Submit.ProjectUpdateName
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, 'Failed to update project name'))
+      toast.error(getErrorMessage(error, t('Failed to update project name')))
     },
   })
 
@@ -414,7 +417,7 @@ export function ProjectSettingsOverview({
       const serviceLabel =
         PROJECT_SERVICES.find((item) => item.id === service)?.label ?? service
       toast.success(
-        `${serviceLabel} service has been ${status ? 'enabled' : 'disabled'}`,
+        `${t(serviceLabel)} ${status ? t('service has been enabled') : t('service has been disabled')}`,
       )
 
       setServicesFromProjectResponse(response)
@@ -427,7 +430,7 @@ export function ProjectSettingsOverview({
       // Track analytics: Submit.ProjectService
     },
     onError: (error: Error, variables) => {
-      toast.error(getErrorMessage(error, 'Failed to update service'))
+      toast.error(getErrorMessage(error, t('Failed to update service')))
       // Revert switch state
       setServices((prev) => ({
         ...prev,
@@ -454,7 +457,7 @@ export function ProjectSettingsOverview({
     onSuccess: (data) => {
       const { response, status } = data
       toast.success(
-        `All services for ${project?.name || 'project'} has been ${status ? 'enabled' : 'disabled'}.`,
+        `${t('All services for')} ${project?.name || t('project')} ${status ? t('have been enabled.') : t('have been disabled.')}`,
       )
 
       if (response) {
@@ -463,7 +466,7 @@ export function ProjectSettingsOverview({
       // Track analytics: Submit.ProjectService
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, 'Failed to update services'))
+      toast.error(getErrorMessage(error, t('Failed to update services')))
     },
   })
 
@@ -492,13 +495,15 @@ export function ProjectSettingsOverview({
       }
 
       toast.success(
-        `${protocolConfig?.label || 'Protocol'} protocol has been ${
-          variables.status ? 'enabled' : 'disabled'
+        `${protocolConfig?.label || t('Protocol')} ${
+          variables.status
+            ? t('protocol has been enabled')
+            : t('protocol has been disabled')
         }`,
       )
     },
     onError: (error: Error, variables) => {
-      toast.error(getErrorMessage(error, 'Failed to update protocol'))
+      toast.error(getErrorMessage(error, t('Failed to update protocol')))
       setProtocols((prev) => ({
         ...prev,
         [variables.protocol]: !variables.status,
@@ -533,13 +538,13 @@ export function ProjectSettingsOverview({
         patchCachedProtocol(protocol.id, status)
       }
       toast.success(
-        `All protocols for ${project?.name || 'project'} have been ${
-          status ? 'enabled.' : 'disabled.'
+        `${t('All protocols for')} ${project?.name || t('project')} ${
+          status ? t('have been enabled.') : t('have been disabled.')
         }`,
       )
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, 'Failed to update protocols'))
+      toast.error(getErrorMessage(error, t('Failed to update protocols')))
     },
     onSettled: () => {
       setProtocolDialogOpen(false)
@@ -561,10 +566,10 @@ export function ProjectSettingsOverview({
         'console',
       ]) as { teams?: Models.Team[] } | undefined
       const org = orgsData?.teams?.find((t) => t.$id === teamId)
-      const orgName = org?.name || 'Organization'
+      const orgName = org?.name || t('Organization')
 
       toast.success(
-        `${project?.name || 'Project'} has been transferred to ${orgName}`,
+        `${project?.name || t('Project')} ${t('has been transferred to')} ${orgName}`,
       )
 
       // Refetch project query to refresh project data (teamId changed)
@@ -603,7 +608,7 @@ export function ProjectSettingsOverview({
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, 'Failed to transfer project'))
+      toast.error(getErrorMessage(error, t('Failed to transfer project')))
     },
   })
 
@@ -613,7 +618,7 @@ export function ProjectSettingsOverview({
       await deleteProject(projectId, project?.region)
     },
     onSuccess: async () => {
-      toast.success(`${project?.name || 'Project'} has been deleted`)
+      toast.success(`${project?.name || t('Project')} ${t('has been deleted')}`)
       // Track analytics: Submit.ProjectDelete
       const orgId = project?.teamId
       if (orgId) {
@@ -631,7 +636,7 @@ export function ProjectSettingsOverview({
       }
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error, 'Failed to delete project'))
+      toast.error(getErrorMessage(error, t('Failed to delete project')))
     },
   })
 
@@ -744,7 +749,7 @@ export function ProjectSettingsOverview({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            Project not found
+            {t('Project not found')}
           </p>
         </div>
       </div>
@@ -760,7 +765,7 @@ export function ProjectSettingsOverview({
           className="rounded-xl border border-border bg-card/50 overflow-hidden"
         >
           <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+            <h3 className="text-[15px] font-semibold text-foreground">{t('Name')}</h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
@@ -768,13 +773,13 @@ export function ProjectSettingsOverview({
               htmlFor="name"
               className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
             >
-              Name
+              {t('Name')}
             </Label>
             <Input
               id="name"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              placeholder="Enter name"
+              placeholder={t('Enter name')}
               maxLength={PROJECT_NAME_MAX_LENGTH}
               className="mt-2 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
             />
@@ -802,7 +807,7 @@ export function ProjectSettingsOverview({
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -815,7 +820,7 @@ export function ProjectSettingsOverview({
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            API credentials
+            {t('API credentials')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -823,23 +828,22 @@ export function ProjectSettingsOverview({
           <div className="flex gap-6 @[600px]:flex-row flex-col">
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
-                Access Appwrite services using this project's API Endpoint and
-                Project ID.
+                {t("Access Appwrite services using this project's API Endpoint and Project ID.")} {/* pragma: allowlist secret */}
               </p>
             </div>
             <div className="flex-1 min-w-0">
               <div className="space-y-4">
                 <div>
                   <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                    Project ID
+                    {t('Project ID')}
                   </Label>
-                  <CopyableInput value={project.$id} label="Project ID" />
+                  <CopyableInput value={project.$id} label={t('Project ID')} />
                 </div>
                 <div>
                   <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                    API Endpoint
+                    {t('API Endpoint')}
                   </Label>
-                  <CopyableInput value={projectEndpoint} label="API Endpoint" />
+                  <CopyableInput value={projectEndpoint} label={t('API Endpoint')} />
                 </div>
               </div>
             </div>
@@ -852,7 +856,7 @@ export function ProjectSettingsOverview({
             className="h-9 text-[13px]"
             onClick={handleViewApiKeys}
           >
-            View API keys
+            {t('View API keys')}
           </Button>
         </div>
       </div>
@@ -864,7 +868,7 @@ export function ProjectSettingsOverview({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Protocols
+                {t('Protocols')}
               </h3>
             </div>
             <div className="border-t border-border" />
@@ -872,8 +876,7 @@ export function ProjectSettingsOverview({
               <div className="flex gap-6 @[600px]:flex-row flex-col">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    Protocol settings control access through REST, GraphQL, and
-                    WebSocket APIs independently from service-level access.
+                    {t('Protocol settings control access through REST, GraphQL, and WebSocket APIs independently from service-level access.')}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -885,7 +888,7 @@ export function ProjectSettingsOverview({
                       disabled={anyProtocolUpdating || allProtocolsEnabled}
                       onClick={() => openProtocolBulkDialog(true)}
                     >
-                      Enable all
+                      {t('Enable all')}
                     </Button>
                     <Separator orientation="vertical" className="h-4" />
                     <Button
@@ -895,7 +898,7 @@ export function ProjectSettingsOverview({
                       disabled={anyProtocolUpdating || allProtocolsDisabled}
                       onClick={() => openProtocolBulkDialog(false)}
                     >
-                      Disable all
+                      {t('Disable all')}
                     </Button>
                   </div>
 
@@ -924,7 +927,7 @@ export function ProjectSettingsOverview({
                                   {protocol.label}
                                 </Label>
                                 <p className="mt-1 text-[12px] text-muted-foreground">
-                                  {protocol.description}
+                                  {t(protocol.description)}
                                 </p>
                               </div>
                             </div>
@@ -961,7 +964,7 @@ export function ProjectSettingsOverview({
           >
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Services
+                {t('Services')}
               </h3>
             </div>
             <div className="border-t border-border" />
@@ -969,9 +972,7 @@ export function ProjectSettingsOverview({
               <div className="flex gap-6 @[600px]:flex-row flex-col">
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
-                    Choose services you wish to enable or disable for the client
-                    API. When disabled, the services are not accessible to
-                    client SDKs but remain accessible to server SDKs.
+                    {t('Choose services you wish to enable or disable for the client API. When disabled, the services are not accessible to client SDKs but remain accessible to server SDKs.')}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -988,7 +989,7 @@ export function ProjectSettingsOverview({
                         handleBulkServiceUpdate(true)
                       }}
                     >
-                      Enable all
+                      {t('Enable all')}
                     </Button>
                     <Separator orientation="vertical" className="h-4" />
                     <Button
@@ -1002,7 +1003,7 @@ export function ProjectSettingsOverview({
                         handleBulkServiceUpdate(false)
                       }}
                     >
-                      Disable all
+                      {t('Disable all')}
                     </Button>
                   </div>
 
@@ -1028,7 +1029,7 @@ export function ProjectSettingsOverview({
                                 htmlFor={service.id}
                                 className="text-[13px] font-medium text-foreground cursor-pointer"
                               >
-                                {service.label}
+                                {t(service.label)}
                               </Label>
                             </div>
                             <div className="flex items-center gap-2">
@@ -1097,13 +1098,13 @@ export function ProjectSettingsOverview({
               <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>
                   {protocolBulkStatus
-                    ? 'Enable all protocols'
-                    : 'Disable all protocols'}
+                    ? t('Enable all protocols')
+                    : t('Disable all protocols')}
                 </DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
                   {protocolBulkStatus
-                    ? 'All project protocols will be enabled.'
-                    : 'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.'}
+                    ? t('All project protocols will be enabled.')
+                    : t('Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1115,7 +1116,7 @@ export function ProjectSettingsOverview({
                   onClick={() => setProtocolDialogOpen(false)}
                   disabled={updateAllProtocolsMutation.isPending}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   type="button"
@@ -1131,7 +1132,7 @@ export function ProjectSettingsOverview({
                     updateAllProtocolsMutation.isPending
                   }
                 >
-                  {protocolBulkStatus ? 'Enable all' : 'Disable all'}
+                  {protocolBulkStatus ? t('Enable all') : t('Disable all')}
                 </Button>
               </div>
             </DialogContent>
@@ -1162,6 +1163,7 @@ function ChangeOrganizationSection({
   onOrgChange,
   onTransfer,
 }: ChangeOrganizationSectionProps) {
+  const t = useT()
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const hasNoTargetOrgs = !organizationsLoading && organizations.length === 0
   const isMoveDisabled =
@@ -1178,21 +1180,19 @@ function ChangeOrganizationSection({
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Transfer project
+            {t('Transfer project')}
           </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
-            To transfer this project, you must be a member of both the current
-            and target organization. Select a destination below.
+            {t('To transfer this project, you must be a member of both the current and target organization. Select a destination below.')}
           </p>
           {hasNoTargetOrgs && (
             <Alert className="mb-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-[13px]">
-                You do not have any organizations you can transfer this project
-                to. Create or join another organization to transfer.
+                {t('You do not have any organizations you can transfer this project to. Create or join another organization to transfer.')}
               </AlertDescription>
             </Alert>
           )}
@@ -1200,7 +1200,7 @@ function ChangeOrganizationSection({
             htmlFor="organization"
             className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
           >
-            Move to
+            {t('Move to')}
           </Label>
           <Select
             value={selectedOrgId}
@@ -1211,8 +1211,8 @@ function ChangeOrganizationSection({
               <SelectValue
                 placeholder={
                   organizationsLoading
-                    ? 'Loading organizations...'
-                    : 'Select destination'
+                    ? t('Loading organizations...')
+                    : t('Select destination')
                 }
               />
             </SelectTrigger>
@@ -1220,8 +1220,8 @@ function ChangeOrganizationSection({
               {organizations.length === 0 ? (
                 <div className="px-2 py-1.5 text-[13px] text-muted-foreground">
                   {organizationsLoading
-                    ? 'Loading...'
-                    : 'No other organizations available'}
+                    ? t('Loading...')
+                    : t('No other organizations available')}
                 </div>
               ) : (
                 organizations.map((org) => (
@@ -1245,16 +1245,16 @@ function ChangeOrganizationSection({
                       disabled
                       onClick={() => setTransferDialogOpen(true)}
                     >
-                      Transfer project
+                      {t('Transfer project')}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   {hasNoTargetOrgs
-                    ? 'You do not have any organizations you can transfer this project to.'
+                    ? t('You do not have any organizations you can transfer this project to.')
                     : !selectedOrgId || selectedOrgId === project.teamId
-                      ? 'Select a different organization to transfer to.'
-                      : 'Transfer this project to the selected organization'}
+                      ? t('Select a different organization to transfer to.')
+                      : t('Transfer this project to the selected organization')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -1264,7 +1264,7 @@ function ChangeOrganizationSection({
               className="h-9 text-[13px]"
               onClick={() => setTransferDialogOpen(true)}
             >
-              Transfer project
+              {t('Transfer project')}
             </Button>
           )}
         </div>
@@ -1275,7 +1275,7 @@ function ChangeOrganizationSection({
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>
-              Transfer project{' '}
+              {t('Transfer project')}{' '}
               <span
                 title={getProjectNameDisplayTitle(project.name) ?? project.name}
               >
@@ -1283,7 +1283,7 @@ function ChangeOrganizationSection({
               </span>
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Consider the following before transferring your project:
+              {t('Consider the following before transferring your project:')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1294,11 +1294,10 @@ function ChangeOrganizationSection({
               </div>
               <div>
                 <p className="text-[13px] font-medium text-foreground">
-                  Permissions
+                  {t('Permissions')}
                 </p>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  Depending on your role in the target organization, your level
-                  of access may change after transfer.
+                  {t('Depending on your role in the target organization, your level of access may change after transfer.')}
                 </p>
               </div>
             </div>
@@ -1308,12 +1307,10 @@ function ChangeOrganizationSection({
               </div>
               <div>
                 <p className="text-[13px] font-medium text-foreground">
-                  Access
+                  {t('Access')}
                 </p>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  Members who are not part of the destination organization will
-                  lose access and must be invited to the new organization to
-                  regain access.
+                  {t('Members who are not part of the destination organization will lose access and must be invited to the new organization to regain access.')}
                 </p>
               </div>
             </div>
@@ -1323,12 +1320,10 @@ function ChangeOrganizationSection({
               </div>
               <div>
                 <p className="text-[13px] font-medium text-foreground">
-                  Features and usage
+                  {t('Features and usage')}
                 </p>
                 <p className="text-[12px] text-muted-foreground mt-0.5">
-                  The target organization’s pricing plan may limit features or
-                  usage (e.g. executions, storage, or team size) for this
-                  project.
+                  {t('The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.')}
                 </p>
               </div>
             </div>
@@ -1340,7 +1335,7 @@ function ChangeOrganizationSection({
               className="h-9 text-[13px]"
               onClick={() => setTransferDialogOpen(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               size="sm"
@@ -1353,7 +1348,7 @@ function ChangeOrganizationSection({
                 }
               }}
             >
-              Transfer project
+              {t('Transfer project')}
             </Button>
           </div>
         </DialogContent>
@@ -1382,6 +1377,7 @@ function DeleteProjectSection({
   onDeleteDialogOpenChange,
   onDelete,
 }: DeleteProjectSectionProps) {
+  const t = useT()
   return (
     <>
       <div
@@ -1390,14 +1386,13 @@ function DeleteProjectSection({
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Delete project
+            {t('Delete project')}
           </h3>
         </div>
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Permanently delete this project and all associated data. This action
-            cannot be undone.
+            {t('Permanently delete this project and all associated data. This action cannot be undone.')}
           </p>
 
           {/* Project Info Summary */}
@@ -1413,7 +1408,7 @@ function DeleteProjectSection({
                 </p>
                 {supportsMultiRegion && project.region && (
                   <p className="text-[12px] text-muted-foreground">
-                    Region: {project.region}
+                    {t('Region:')} {project.region}
                   </p>
                 )}
               </div>
@@ -1431,14 +1426,14 @@ function DeleteProjectSection({
                 size="sm"
                 className="h-9 text-[13px]"
               >
-                Delete project
+                {t('Delete project')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Delete Project</DialogTitle>
+                <DialogTitle>{t('Delete Project')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete{' '}
+                  {t('Are you sure you want to delete')}{' '}
                   {project && (
                     <span
                       className="font-medium text-foreground"
@@ -1447,8 +1442,7 @@ function DeleteProjectSection({
                       {formatProjectNameForDisplay(project.name)}
                     </span>
                   )}{' '}
-                  and all its databases, functions, and files? This action
-                  cannot be undone.
+                  {t('and all its databases, functions, and files? This action cannot be undone.')}
                 </DialogDescription>
               </DialogHeader>
               <div className="border-t border-border" />
@@ -1469,7 +1463,7 @@ function DeleteProjectSection({
                         </p>
                         {supportsMultiRegion && project.region && (
                           <p className="text-[11px] text-muted-foreground">
-                            Region: {project.region}
+                            {t('Region:')} {project.region}
                           </p>
                         )}
                       </div>
@@ -1477,18 +1471,18 @@ function DeleteProjectSection({
                   )}
                 </div>
                 <label className="text-[13px] text-muted-foreground">
-                  Type{' '}
+                  {t('Type')}{' '}
                   {project && (
                     <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
                       {project.name}
                     </span>
                   )}{' '}
-                  to confirm
+                  {t('to confirm')}
                 </label>
                 <Input
                   value={deleteConfirmation}
                   onChange={(e) => onDeleteConfirmationChange(e.target.value)}
-                  placeholder="Enter project name"
+                  placeholder={t('Enter project name')}
                   className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
                   autoFocus
                 />
@@ -1503,7 +1497,7 @@ function DeleteProjectSection({
                     onDeleteConfirmationChange('')
                   }}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1519,7 +1513,7 @@ function DeleteProjectSection({
                     }
                   }}
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </DialogContent>

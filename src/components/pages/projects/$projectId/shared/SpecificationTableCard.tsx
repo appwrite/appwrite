@@ -14,6 +14,7 @@ import {
   isSpecificationAllowedInPlan,
   type SpecificationWithPlan,
 } from '@/lib/specifications'
+import { useT } from '@/lib/i18n/translate'
 
 export type SpecificationTableRow = SpecificationWithPlan & {
   slug?: string
@@ -47,6 +48,7 @@ export function SpecificationTableCard({
   onSave,
   footerNote,
 }: SpecificationTableCardProps) {
+  const t = useT()
   const radioGroupId = useId()
   const rows = specs.filter((s) => s.slug && String(s.slug).trim() !== '')
   const radioName = `spec-${scope}-${radioGroupId}`
@@ -64,16 +66,16 @@ export function SpecificationTableCard({
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="w-[44px] px-4 py-3" />
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Identifier
+                {t('Identifier')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                 vCPU
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Memory
+                {t('Memory')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Availability
+                {t('Availability')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -104,7 +106,7 @@ export function SpecificationTableCard({
                       checked={selected}
                       disabled={!allowed}
                       onChange={() => allowed && onSelectedSlugChange(slug)}
-                      aria-label={`Select specification ${slug}`}
+                      aria-label={`${t('Select specification')} ${slug}`}
                     />
                   </TableCell>
                   <TableCell className="px-4 py-3">
@@ -125,11 +127,11 @@ export function SpecificationTableCard({
                   <TableCell className="px-4 py-3">
                     {allowed ? (
                       <Badge variant="success" className="text-[10px] shrink-0">
-                        Available
+                        {t('Available')}
                       </Badge>
                     ) : (
                       <Badge variant="warning" className="text-[10px] shrink-0">
-                        Plan limit
+                        {t('Plan limit')}
                       </Badge>
                     )}
                   </TableCell>
@@ -149,7 +151,7 @@ export function SpecificationTableCard({
           disabled={!hasChanges || isSaving}
           onClick={onSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

@@ -43,6 +43,7 @@ import {
 import { CheckCircle2, Copy, Pencil, Trash2 } from 'lucide-react'
 import { PostgresTableColumnDrawer } from './PostgresTableColumnDrawer'
 import { PostgresColumnContextMenu } from './PostgresColumnContextMenu'
+import { useT } from '@/lib/i18n/translate'
 import {
   getPostgresColumnTypeColor,
   matchesPostgresLocalSearch,
@@ -65,6 +66,7 @@ export function PostgresTableColumnsPanel({
   search = '',
   createDialogOpen: createDialogOpenProp,
   onCreateDialogOpenChange}: PostgresTableColumnsPanelProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -114,7 +116,7 @@ export function PostgresTableColumnsPanel({
       await executeSql.mutateAsync(
         buildPostgresDropColumnSql(tableId, columnToDelete),
       )
-      toast.success('Column deleted')
+      toast.success(t('Column deleted'))
       setDeleteDialogOpen(false)
       setColumnToDelete(null)
       await refetch()
@@ -149,7 +151,7 @@ export function PostgresTableColumnsPanel({
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-[13px] text-muted-foreground">
-          Loading columns…
+          {t('Loading columns…')}
         </div>
       </div>
     )
@@ -159,10 +161,10 @@ export function PostgresTableColumnsPanel({
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
         <p className="text-[15px] font-medium text-foreground">
-          No columns match your search
+          {t('No columns match your search')}
         </p>
         <p className="mt-2 max-w-sm text-[13px] text-muted-foreground">
-          Try adjusting or clearing your search.
+          {t('Try adjusting or clearing your search.')}
         </p>
       </div>
     )
@@ -173,14 +175,14 @@ export function PostgresTableColumnsPanel({
       <>
         <div className="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
           <p className="text-[15px] font-medium text-foreground">
-            No columns
+            {t('No columns')}
           </p>
           <p className="mt-2 max-w-sm text-[13px] text-muted-foreground">
             Add your first column to define this table&apos;s structure.
           </p>
           {canWrite ? (
             <Button size="sm" className="mt-4 h-9" onClick={handleCreate}>
-              Add column
+              {t('Add column')}
             </Button>
           ) : null}
         </div>
@@ -213,7 +215,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Key
+                    {t('Key')}
                   </span>
                 </th>
                 <th
@@ -223,7 +225,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Type
+                    {t('Type')}
                   </span>
                 </th>
                 <th
@@ -233,7 +235,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Required
+                    {t('Required')}
                   </span>
                 </th>
                 <th
@@ -243,7 +245,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Default
+                    {t('Default')}
                   </span>
                 </th>
                 <th
@@ -253,7 +255,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Check
+                    {t('Check')}
                   </span>
                 </th>
                 <th
@@ -263,7 +265,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Foreign key
+                    {t('Foreign key')}
                   </span>
                 </th>
                 <th
@@ -273,7 +275,7 @@ export function PostgresTableColumnsPanel({
                   )}
                 >
                   <span className="text-[12px] font-medium text-foreground">
-                    Comment
+                    {t('Comment')}
                   </span>
                 </th>
                 <th
@@ -333,7 +335,7 @@ export function PostgresTableColumnsPanel({
                                 void navigator.clipboard.writeText(
                                   column.column_name,
                                 )
-                                toast.success('Column name copied')
+                                toast.success(t('Column name copied'))
                               }}
                               className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
                             >
@@ -341,12 +343,12 @@ export function PostgresTableColumnsPanel({
                             </button>
                           </TooltipTrigger>
                           <TooltipContent side="top">
-                            <p>Copy column name</p>
+                            <p>{t('Copy column name')}</p>
                           </TooltipContent>
                         </Tooltip>
                         {primary ? (
                           <Badge variant="info" className="text-[10px] shrink-0">
-                            Primary key
+                            {t('Primary key')}
                           </Badge>
                         ) : null}
                       </div>
@@ -439,7 +441,7 @@ export function PostgresTableColumnsPanel({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleEdit(column)}>
-                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                              <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => {
@@ -447,7 +449,7 @@ export function PostgresTableColumnsPanel({
                                 setDeleteDialogOpen(true)
                               }}
                             >
-                              <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                              <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -458,7 +460,7 @@ export function PostgresTableColumnsPanel({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleEdit(column)}>
-                              <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                              <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -488,7 +490,7 @@ export function PostgresTableColumnsPanel({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete column</DialogTitle>
+            <DialogTitle>{t('Delete column')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}
               <strong>{columnToDelete}</strong>? This action cannot be undone.
@@ -500,14 +502,14 @@ export function PostgresTableColumnsPanel({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={executeSql.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => void handleDelete()}
               disabled={executeSql.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

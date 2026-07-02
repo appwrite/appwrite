@@ -15,6 +15,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { formatBytes } from '@/lib/utils/mock-data'
 import type { UploadItem } from '@/lib/upload-queue/types'
 
@@ -35,6 +36,7 @@ export function UploadProgress({
   embedded = false,
   className,
 }: UploadProgressProps) {
+  const t = useT()
   // Show pending, uploading, and completed; hide cancelled
   const displayUploads = uploads.filter((u) => u.status !== 'cancelled')
 
@@ -104,7 +106,7 @@ export function UploadProgress({
                         search={{ file: upload.fileId }}
                         className="inline-flex items-center gap-1 text-[12px] link-neutral"
                       >
-                        View file
+                        {t('View file')}
                         <ExternalLink className="h-3 w-3" />
                       </Link>
                     )}
@@ -123,7 +125,7 @@ export function UploadProgress({
                   onClick={() =>
                     isActive ? onCancel?.(upload.id) : onDismiss?.(upload.id)
                   }
-                  aria-label={isActive ? 'Cancel upload' : 'Dismiss'}
+                  aria-label={isActive ? t('Cancel upload') : t('Dismiss')}
                 >
                   <X className="h-3.5 w-3.5" />
                 </Button>

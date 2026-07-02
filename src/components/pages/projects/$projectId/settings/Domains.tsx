@@ -34,6 +34,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
+import { useT } from '@/lib/i18n/translate'
 import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
@@ -48,6 +49,7 @@ interface DomainsProps {
 export function Domains({
   projectId,
   searchValue: searchValueProp = ''}: DomainsProps) {
+  const t = useT()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
@@ -88,12 +90,12 @@ export function Domains({
         className="text-[10px] shrink-0 gap-1.5"
         title={
           status === 'verifying'
-            ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
+            ? t('SSL certificate is being issued. This usually takes a couple of minutes.')
             : undefined
         }
       >
         {status === 'verifying' && <Loader2 className="h-3 w-3 animate-spin" />}
-        {config.label}
+        {t(config.label)}
       </Badge>
     )
   }
@@ -150,11 +152,11 @@ export function Domains({
       ) : paginatedRules.length === 0 ? (
         <EmptyState
           icon={ExternalLink}
-          title={searchValueProp ? undefined : 'No domains yet'}
+          title={searchValueProp ? undefined : t('No domains yet')}
           description={
             searchValueProp
               ? undefined
-              : 'Add a custom domain to serve your Appwrite API on your own domain'
+              : t('Add a custom domain to serve your Appwrite API on your own domain') // pragma: allowlist secret
           }
           isEmpty={!searchValueProp}
           hasFilters={!!searchValueProp}
@@ -167,13 +169,13 @@ export function Domains({
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Domain
+                    {t('Domain')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Status
+                    {t('Status')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Created
+                    {t('Created')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
                 </TableRow>
@@ -212,7 +214,7 @@ export function Domains({
                               className="h-auto p-0 text-[13px]"
                               onClick={() => handleViewLogs(rule)}
                             >
-                              View logs
+                              {t('View logs')}
                             </Button>
                           )}
                           {canRetry(rule.status) && (
@@ -222,7 +224,7 @@ export function Domains({
                               className="h-auto p-0 text-[13px]"
                               onClick={() => handleRetry(rule)}
                             >
-                              Retry
+                              {t('Retry')}
                             </Button>
                           )}
                         </div>
@@ -244,14 +246,14 @@ export function Domains({
                                 <DropdownMenuItem
                                   onClick={() => handleViewLogs(rule)}
                                 >
-                                  <MenuItemContent icon={FileText}>Logs</MenuItemContent>
+                                  <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
                               {canRetry(rule.status) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
-                                  <MenuItemContent icon={RefreshCw}>Retry</MenuItemContent>
+                                  <MenuItemContent icon={RefreshCw}>{t('Retry')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
@@ -277,12 +279,12 @@ export function Domains({
                                   )
                                 }
                               >
-                                <MenuItemContent icon={Globe}>Records</MenuItemContent>
+                                <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(rule)}
                               >
-                                <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -306,7 +308,7 @@ export function Domains({
                 setPageSize(size)
                 setCurrentPage(1)
               }}
-              itemLabel="domains"
+              itemLabel={t('domains')}
             />
           )}
         </>
@@ -332,7 +334,7 @@ export function Domains({
                   : undefined})
             }}
             onVerifySuccess={() => {
-              toast.success('Domain verified successfully')
+              toast.success(t('Domain verified successfully'))
               setVerifyDomainOpen(false)
               setSelectedRule(null)
             }}
@@ -346,7 +348,7 @@ export function Domains({
             rule={selectedRule}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
-              toast.success('Verification in progress')
+              toast.success(t('Verification in progress'))
               setRetryDomainOpen(false)
               setSelectedRule(null)
             }}
@@ -365,7 +367,7 @@ export function Domains({
             region={region}
             rule={selectedRule}
             onDeleteSuccess={() => {
-              toast.success('Domain has been deleted')
+              toast.success(t('Domain has been deleted'))
               setDeleteDomainOpen(false)
               setSelectedRule(null)
             }}

@@ -9,12 +9,14 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useT } from '@/lib/i18n/translate'
 
 type EmailsProps = {
   projectId: string
 }
 
 export function EmailsPolicies({ projectId }: EmailsProps) {
+  const t = useT()
   const security = useAuthSecuritySnapshot(projectId)
 
   const cards: SettingsCardItem[] = [
@@ -72,5 +74,7 @@ export function EmailsPolicies({ projectId }: EmailsProps) {
     },
   ]
 
-  return <SettingsCardsList cards={cards} emptyMessage="No matching policies" />
+  return (
+    <SettingsCardsList cards={cards} emptyMessage={t('No matching policies')} />
+  )
 }

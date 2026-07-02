@@ -4,6 +4,7 @@
  */
 
 import { Filter } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import type {
   CompactFilterKey,
@@ -75,6 +76,7 @@ export function FiltersPopover({
   defaultSortParam,
   onReset,
 }: FiltersPopoverProps) {
+  const t = useT()
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
@@ -88,7 +90,7 @@ export function FiltersPopover({
           )}
         >
           <Filter className="h-3.5 w-3.5 shrink-0" />
-          <span className={serviceHeaderFiltersLabel}>Filters</span>
+          <span className={serviceHeaderFiltersLabel}>{t('Filters')}</span>
           {filterMap.size > 0 ? (
             <ToolbarCountBadge
               count={filterMap.size}

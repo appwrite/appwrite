@@ -13,6 +13,7 @@ import {
   isSpreadsheetCellValueTrimmed,
 } from '@/lib/spreadsheet-cell-formatting'
 import { copyToClipboard } from '@/lib/utils/context-menu'
+import { useT } from '@/lib/i18n/translate'
 
 type SpreadsheetCellContextMenuProps = {
   value: unknown
@@ -31,6 +32,7 @@ export function SpreadsheetCellContextMenu({
   onViewFullValue,
   children,
 }: SpreadsheetCellContextMenuProps) {
+  const t = useT()
   const showViewFullValue =
     !isNull && (isSpreadsheetCellValueTrimmed(full, display) || full.length > 50)
 
@@ -44,14 +46,14 @@ export function SpreadsheetCellContextMenu({
           }
         >
           <ContextMenuIcon icon={Copy} />
-          Copy value
+          {t('Copy value')}
         </ContextMenuItem>
         {showViewFullValue ? (
           <>
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={onViewFullValue}>
               <ContextMenuIcon icon={Expand} />
-              View full value
+              {t('View full value')}
             </ContextMenuItem>
           </>
         ) : null}

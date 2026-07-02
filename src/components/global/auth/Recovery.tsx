@@ -16,10 +16,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
+import { useT, type Translator } from '@/lib/i18n/translate'
 
-const recoverySchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-})
+const createRecoverySchema = (t: Translator) =>
+  z.object({
+    email: z.string().email(t('Please enter a valid email address')),
+  })
+
+type RecoveryValues = z.infer<ReturnType<typeof createRecoverySchema>>
 
 interface RecoveryProps {
   onSubmit: (data: { email: string }) => void
@@ -34,14 +38,15 @@ export function Recovery({
   isSuccess,
   initialEmail,
 }: RecoveryProps) {
-  const form = useForm<z.infer<typeof recoverySchema>>({
-    resolver: zodResolver(recoverySchema),
+  const t = useT()
+  const form = useForm<RecoveryValues>({
+    resolver: zodResolver(createRecoverySchema(t)),
     defaultValues: {
       email: initialEmail || '',
     },
   })
 
-  const handleSubmit = (data: z.infer<typeof recoverySchema>) => {
+  const handleSubmit = (data: RecoveryValues) => {
     onSubmit(data)
   }
 
@@ -53,15 +58,15 @@ export function Recovery({
             <div className="space-y-6">
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  Check your email
+                  {t('Check your email')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  We've sent a password recovery link to your email address.
+                  {t("We've sent a password recovery link to your email address.")}
                 </p>
               </div>
               <Link to="/sign-in">
                 <Button variant="outline" className="w-full">
-                  Back to sign in
+                  {t('Back to sign in')}
                 </Button>
               </Link>
             </div>
@@ -91,11 +96,12 @@ export function Recovery({
             >
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  Reset your password
+                  {t('Reset your password')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Enter your email address and we'll send you a link to reset
-                  your password.
+                  {t(
+                    "Enter your email address and we'll send you a link to reset your password.",
+                  )}
                 </p>
               </div>
 
@@ -105,7 +111,7 @@ export function Recovery({
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t('Email')}</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -114,7 +120,7 @@ export function Recovery({
                         />
                       </FormControl>
                       <FormDescription>
-                        We'll send a recovery link to this email address.
+                        {t("We'll send a recovery link to this email address.")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -123,13 +129,13 @@ export function Recovery({
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                Send recovery link
+                {t('Send recovery link')}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                Remember your password?{' '}
+                {t('Remember your password?')}{' '}
                 <Link to="/sign-in" className="link-neutral">
-                  Sign in
+                  {t('Sign in')}
                 </Link>
               </p>
             </form>

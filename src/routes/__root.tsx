@@ -64,6 +64,7 @@ import {
 } from '@/lib/utils/page-title'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
+import { I18nProvider } from '@/lib/i18n'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -397,62 +398,64 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <PlausibleRouteTracker />
         <ContextualDocumentTitle />
         <ClientThemeProvider>
-          <PageDirectionProvider>
-          <CookieConsentProvider>
-            <NavigationHistoryProvider>
-            {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
-            {!skipStaticLoader ? (
-              <FullscreenLoader
-                isVisible={clientMounted ? isLoaderVisible : true}
-                statusBanner={clientMounted ? statusBanner : undefined}
-              />
-            ) : null}
-            <SentryContextProvider>
-              <DebugModeProvider>
-                <ConsoleRightPaneProvider>
-                  {features.aiAssistant ? (
-                    <AIChatProvider>
-                      <DocsPreviewProvider>
-                        <PromoBannerProvider>
-                          <div className="flex w-full min-w-0 overflow-hidden root-container">
-                            <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                              {children}
-                            </div>
-                            <ConsoleRightPane />
-                          </div>
-                          <ClientOnly>
-                            <DebugMenu />
-                          </ClientOnly>
-                        </PromoBannerProvider>
-                      </DocsPreviewProvider>
-                    </AIChatProvider>
-                  ) : (
-                    <DocsPreviewProvider>
-                      <PromoBannerProvider>
-                        <div className="flex w-full min-w-0 overflow-hidden root-container">
-                          <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                            {children}
-                          </div>
-                          <ConsoleRightPane />
-                        </div>
-                        <ClientOnly>
-                          <DebugMenu />
-                        </ClientOnly>
-                      </PromoBannerProvider>
-                    </DocsPreviewProvider>
-                  )}
-                </ConsoleRightPaneProvider>
-              </DebugModeProvider>
-            </SentryContextProvider>
-            <ClientOnly>
-              <Toaster />
-            </ClientOnly>
-            <ClientOnly>
-              {!isProjectRoute(location.pathname) && <GlobalUploadProgress />}
-            </ClientOnly>
-            </NavigationHistoryProvider>
-          </CookieConsentProvider>
-          </PageDirectionProvider>
+          <I18nProvider>
+            <PageDirectionProvider>
+              <CookieConsentProvider>
+                <NavigationHistoryProvider>
+                  {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
+                  {!skipStaticLoader ? (
+                    <FullscreenLoader
+                      isVisible={clientMounted ? isLoaderVisible : true}
+                      statusBanner={clientMounted ? statusBanner : undefined}
+                    />
+                  ) : null}
+                  <SentryContextProvider>
+                    <DebugModeProvider>
+                      <ConsoleRightPaneProvider>
+                        {features.aiAssistant ? (
+                          <AIChatProvider>
+                            <DocsPreviewProvider>
+                              <PromoBannerProvider>
+                                <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                  <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                    {children}
+                                  </div>
+                                  <ConsoleRightPane />
+                                </div>
+                                <ClientOnly>
+                                  <DebugMenu />
+                                </ClientOnly>
+                              </PromoBannerProvider>
+                            </DocsPreviewProvider>
+                          </AIChatProvider>
+                        ) : (
+                          <DocsPreviewProvider>
+                            <PromoBannerProvider>
+                              <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                  {children}
+                                </div>
+                                <ConsoleRightPane />
+                              </div>
+                              <ClientOnly>
+                                <DebugMenu />
+                              </ClientOnly>
+                            </PromoBannerProvider>
+                          </DocsPreviewProvider>
+                        )}
+                      </ConsoleRightPaneProvider>
+                    </DebugModeProvider>
+                  </SentryContextProvider>
+                  <ClientOnly>
+                    <Toaster />
+                  </ClientOnly>
+                  <ClientOnly>
+                    {!isProjectRoute(location.pathname) && <GlobalUploadProgress />}
+                  </ClientOnly>
+                </NavigationHistoryProvider>
+              </CookieConsentProvider>
+            </PageDirectionProvider>
+          </I18nProvider>
         </ClientThemeProvider>
         <Scripts />
       </body>

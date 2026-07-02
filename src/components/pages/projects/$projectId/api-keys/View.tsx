@@ -16,6 +16,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { canCreateKey } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import type { ApiKey } from '../shared/ApiKeysList'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -59,6 +60,7 @@ type ViewProps = {
 }
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { projectId } = useParams({
     strict: false,
   })
@@ -116,7 +118,7 @@ export function View({ initialData }: ViewProps = {}) {
   }) => {
     createMutation.mutate(data, {
       onSuccess: (createdKey) => {
-        toast.success('API key created successfully')
+        toast.success(t('API key created successfully'))
         if (createdKey?.secret) {
           setCreatedKeySecret(createdKey.secret)
           // Keep drawer open so user can copy the key
@@ -125,7 +127,7 @@ export function View({ initialData }: ViewProps = {}) {
         }
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to create API key')
+        toast.error(getErrorMessage(error) || t('Failed to create API key'))
       },
     })
   }
@@ -149,12 +151,12 @@ export function View({ initialData }: ViewProps = {}) {
       },
       {
         onSuccess: () => {
-          toast.success('API key updated successfully')
+          toast.success(t('API key updated successfully'))
           setUpdateDrawerOpen(false)
           setSelectedKeyId(null)
         },
         onError: (error: Error) => {
-          toast.error(getErrorMessage(error) || 'Failed to update API key')
+          toast.error(getErrorMessage(error) || t('Failed to update API key'))
         },
       },
     )
@@ -170,12 +172,12 @@ export function View({ initialData }: ViewProps = {}) {
 
     deleteMutation.mutate(selectedKeyId, {
       onSuccess: () => {
-        toast.success('API key deleted successfully')
+        toast.success(t('API key deleted successfully'))
         setDeleteDialogOpen(false)
         setSelectedKeyId(null)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete API key')
+        toast.error(getErrorMessage(error) || t('Failed to delete API key'))
       },
     })
   }
@@ -217,16 +219,16 @@ export function View({ initialData }: ViewProps = {}) {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="API keys"
-        searchPlaceholder="Search API keys..."
+        title={t('API keys')}
+        searchPlaceholder={t('Search API keys...')}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        createLabel="Create API key"
+        createLabel={t('Create API key')}
         onCreate={() => setCreateDrawerOpen(true)}
         createDisabled={noCreatePermission}
         createDisabledTooltip={
           noCreatePermission
-            ? "You don't have permission to create API keys."
+            ? t("You don't have permission to create API keys.")
             : undefined
         }
         showFilters={false}
@@ -268,18 +270,18 @@ export function View({ initialData }: ViewProps = {}) {
                   <Key className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  No API keys created
+                  {t('No API keys created')}
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Create an API key to authenticate your applications and access
-                  Appwrite services. API keys provide secure access to your
-                  project resources.
+                  {t(
+                    'Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.', // pragma: allowlist secret
+                  )}
                 </p>
                 <div className="w-full">
                   <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                     <div className="h-px flex-1 bg-border" />
                     <span className="font-medium text-foreground/80">
-                      Create API key for your language
+                      {t('Create API key for your language')}
                     </span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
@@ -295,7 +297,7 @@ export function View({ initialData }: ViewProps = {}) {
                         disabled={noCreatePermission}
                         title={
                           noCreatePermission
-                            ? "You don't have permission to create API keys."
+                            ? t("You don't have permission to create API keys.")
                             : undefined
                         }
                       >
@@ -313,8 +315,8 @@ export function View({ initialData }: ViewProps = {}) {
               variant="card"
               isEmpty={false}
               hasFilters={true}
-              title="No API keys match your search"
-              description="Try a different search term."
+              title={t('No API keys match your search')}
+              description={t('Try a different search term.')}
             />
           )
         ) : (
@@ -366,10 +368,10 @@ export function View({ initialData }: ViewProps = {}) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete API key</DialogTitle>
+            <DialogTitle>{t('Delete API key')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete "{selectedKey?.name}"? This action
-              cannot be undone.
+              {t('Are you sure you want to delete')} "{selectedKey?.name}"?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -379,14 +381,14 @@ export function View({ initialData }: ViewProps = {}) {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

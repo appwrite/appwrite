@@ -13,8 +13,10 @@ import { PlanLimitWarning } from '../../shared/PlanLimitWarning'
 import { TableViewResizableLayout } from '../../databases/_components/TableViewResizableLayout'
 import { BucketsSidebar } from './BucketsSidebar'
 import { MobileBucketSelector } from './MobileBucketSelector'
+import { useT } from '@/lib/i18n/translate'
 
 function StorageBucketsPlanLimitBanner() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -44,7 +46,7 @@ function StorageBucketsPlanLimitBanner() {
         planName: organizationPlan?.name ?? null,
         planId: organizationPlan?.$id,
       })}
-      resourceName="buckets"
+      resourceName={t('buckets')}
       orgId={project.teamId}
     />
   )

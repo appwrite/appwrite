@@ -37,6 +37,7 @@ import {
   TableRow} from '@/components/ui/table'
 
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -74,6 +75,7 @@ export function View({
   initialSubscribers?: TopicSubscribersInitialData
   initialTopic?: Models.Topic
 } = {}) {
+  const t = useT()
   const { projectId, topicId } = useParams({
     strict: false})
   const navigate = useNavigate()
@@ -99,7 +101,7 @@ export function View({
   const showSettingsTab = canShowTopicSettingsTab(access, features)
   const canManageSubscribers = canWriteTopics(access, features)
   const subscribersPermissionTooltip = !canManageSubscribers
-    ? "You don't have permission to manage topic subscribers."
+    ? t("You don't have permission to manage topic subscribers.")
     : undefined
 
   const [searchValue, setSearchValue] = useState('')
@@ -226,12 +228,12 @@ export function View({
       await queryClient.refetchQueries({
         queryKey: ['subscribers', 'project', projectId, 'topic', topicId]})
       toast.success(
-        `${targetIds.length} subscriber${targetIds.length !== 1 ? 's' : ''} added`,
+        `${targetIds.length} ${targetIds.length !== 1 ? t('subscribers') : t('subscriber')} ${t('added')}`,
       )
       setAddTargetsOpen(false)
     },
     onError: (e: Error) => {
-      toast.error(getErrorMessage(e) || 'Failed to add subscribers')
+      toast.error(getErrorMessage(e) || t('Failed to add subscribers'))
     }})
 
   const deleteSubscriberMutation = useMutation({
@@ -247,11 +249,11 @@ export function View({
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['subscribers', 'project', projectId, 'topic', topicId]})
-      toast.success('Subscriber removed')
+      toast.success(t('Subscriber removed'))
       setSubscriberPendingDelete(null)
     },
     onError: (e: Error) => {
-      toast.error(getErrorMessage(e) || 'Failed to remove subscriber')
+      toast.error(getErrorMessage(e) || t('Failed to remove subscriber'))
     }})
 
   const subscriberLogPageReq = subscriberLogRequestedPage - 1
@@ -324,7 +326,7 @@ export function View({
     () => [
       {
         id: 'subscribers',
-        label: 'Subscribers',
+        label: t('Subscribers'),
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: {
           projectId: projectId as string,
@@ -333,7 +335,7 @@ export function View({
         ? [
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/messaging/topics/$topicId/settings',
               params: {
                 projectId: projectId as string,
@@ -341,7 +343,7 @@ export function View({
           ]
         : []),
     ],
-    [projectId, topicId, showSettingsTab],
+    [projectId, topicId, showSettingsTab, t],
   )
 
   useEffect(() => {
@@ -365,7 +367,7 @@ export function View({
     return (
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Topic not found</p>
+          <p className="text-[13px] text-muted-foreground">{t('Topic not found')}</p>
         </div>
       </div>
     )
@@ -405,13 +407,13 @@ export function View({
             projectId={projectId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to topics'}}
+              'aria-label': t('Back to topics')}}
           />
         }
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'subscribers' ? 'Search subscribers...' : undefined
+          activeTab === 'subscribers' ? t('Search subscribers...') : undefined
         }
         searchValue={activeTab === 'subscribers' ? searchValue : undefined}
         onSearchChange={
@@ -423,7 +425,7 @@ export function View({
               }
             : undefined
         }
-        createLabel={activeTab === 'subscribers' ? 'Add subscriber' : undefined}
+        createLabel={activeTab === 'subscribers' ? t('Add subscriber') : undefined}
         onCreate={
           activeTab === 'subscribers'
             ? () => setAddTargetsOpen(true)
@@ -444,7 +446,7 @@ export function View({
             {showSubscribersFullLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
-                  Loading subscribers...
+                  {t('Loading subscribers...')}
                 </p>
               </div>
             ) : subscribers.length > 0 ? (
@@ -454,22 +456,22 @@ export function View({
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Subscriber ID
+                          {t('Subscriber ID')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Name
+                          {t('Name')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Target ID
+                          {t('Target ID')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Target
+                          {t('Target')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Type
+                          {t('Type')}
                         </TableHead>
                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                          Created
+                          {t('Created')}
                         </TableHead>
                         <TableHead className="px-4 py-3 w-[52px]" />
                       </TableRow>
@@ -531,7 +533,7 @@ export function View({
                             <TableCell className="px-4 py-3 text-end">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <RowActionsMenuTrigger aria-label="Subscriber actions" />
+                                  <RowActionsMenuTrigger aria-label={t('Subscriber actions')} />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
@@ -540,7 +542,7 @@ export function View({
                                     }
                                   >
                                     <MenuItemContent icon={ScrollText}>
-                                      Logs
+                                      {t('Logs')}
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
@@ -551,7 +553,7 @@ export function View({
                                     }
                                   >
                                     <MenuItemContent icon={Trash2}>
-                                      Remove
+                                      {t('Remove')}
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -571,14 +573,14 @@ export function View({
                   pageSizeOptions={[10, 25, 50, 100]}
                   onPageChange={handlePageChange}
                   onPageSizeChange={handlePageSizeChange}
-                  itemLabel="subscribers"
+                  itemLabel={t('subscribers')}
                 />
               </>
             ) : (
               <EmptyState
                 icon={Hash}
-                title="No subscribers yet"
-                description="Add subscribers to this topic to start sending messages"
+                title={t('No subscribers yet')}
+                description={t('Add subscribers to this topic to start sending messages') /* pragma: allowlist secret */}
                 isEmpty={!debouncedSearch}
                 hasFilters={!!debouncedSearch}
                 variant="card"
@@ -591,8 +593,8 @@ export function View({
       <MessagingTargetsModal
         open={addTargetsOpen}
         onOpenChange={setAddTargetsOpen}
-        title="Add subscribers"
-        description="Select user targets to subscribe to this topic. Targets already subscribed are skipped."
+        title={t('Add subscribers')}
+        description={t('Select user targets to subscribe to this topic. Targets already subscribed are skipped.')}
         projectId={projectId}
         initialSelectedById={{} as Record<string, Models.Target | undefined>}
         onConfirm={(selectedById) => {
@@ -600,7 +602,7 @@ export function View({
             (id) => !existingSubscriberTargetIds.has(id),
           )
           if (newTargetIds.length === 0) {
-            toast.info('No new targets selected (or all are already subscribed)')
+            toast.info(t('No new targets selected (or all are already subscribed)'))
             return
           }
           addSubscribersMutation.mutate(newTargetIds)
@@ -615,9 +617,9 @@ export function View({
       >
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Subscriber logs</DialogTitle>
+            <DialogTitle>{t('Subscriber logs')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Audit log events for subscriber{' '}
+              {t('Audit log events for subscriber')}{' '}
               {subscriberLogFor ? (
                 <CopyableId id={subscriberLogFor.$id} size="xs" />
               ) : null}
@@ -628,13 +630,13 @@ export function View({
           <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-4">
             {subscriberLogFullLoading ? (
               <p className="text-[13px] text-muted-foreground py-6 text-center">
-                Loading logs…
+                {t('Loading logs…')}
               </p>
             ) : (
               <>
                 <MessagingLogsTable
                   logs={subscriberLogRows}
-                  emptyLabel="No log entries for this subscriber."
+                  emptyLabel={t('No log entries for this subscriber.')}
                 />
                 <Pagination
                   className="py-1"
@@ -645,7 +647,7 @@ export function View({
                   onPageChange={setSubscriberLogRequestedPage}
                   onPageSizeChange={() => {}}
                   showPageSizeSelector={false}
-                  itemLabel="entries"
+                  itemLabel={t('entries')}
                 />
               </>
             )}
@@ -655,7 +657,7 @@ export function View({
               variant="outline"
               onClick={() => setSubscriberLogFor(null)}
             >
-              Close
+              {t('Close')}
             </Button>
           </div>
         </DialogContent>
@@ -669,15 +671,16 @@ export function View({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove subscriber?</AlertDialogTitle>
+            <AlertDialogTitle>{t('Remove subscriber?')}</AlertDialogTitle>
             <AlertDialogDescription className="text-[13px]">
-              This subscriber will be removed from the topic. You can add them
-              again later.
+              {t(
+                'This subscriber will be removed from the topic. You can add them again later.',
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteSubscriberMutation.isPending}>
-              Cancel
+              {t('Cancel')}
             </AlertDialogCancel>
             <Button
               disabled={
@@ -689,7 +692,7 @@ export function View({
                 }
               }}
             >
-              Remove
+              {t('Remove')}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

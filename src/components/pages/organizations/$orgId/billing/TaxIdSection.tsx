@@ -6,6 +6,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * TaxIdSection Component
@@ -28,6 +29,7 @@ interface TaxIdSectionProps {
 }
 
 export function TaxIdSection({ orgId }: TaxIdSectionProps) {
+  const t = useT()
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const updateTaxIdMutation = useUpdateOrganizationTaxId()
   const [taxId, setTaxId] = useState('')
@@ -57,11 +59,11 @@ export function TaxIdSection({ orgId }: TaxIdSectionProps) {
         organizationId: orgId,
         billingTaxId: taxId.trim() || undefined,
       })
-      toast.success('Tax ID updated')
+      toast.success(t('Tax ID updated'))
       setHasChanges(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update tax ID',
+        error instanceof Error ? error.message : t('Failed to update tax ID'),
       )
     }
   }
@@ -70,10 +72,10 @@ export function TaxIdSection({ orgId }: TaxIdSectionProps) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Tax ID</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">{t('Tax ID')}</h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading...</p>
+          <p className="text-[13px] text-muted-foreground">{t('Loading...')}</p>
         </div>
       </div>
     )
@@ -82,14 +84,14 @@ export function TaxIdSection({ orgId }: TaxIdSectionProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Tax ID</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t('Tax ID')}</h3>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <Input
           value={taxId}
           onChange={(e) => handleTaxIdChange(e.target.value)}
-          placeholder="Enter tax ID (e.g., VAT, GST, EIN)"
+          placeholder={t('Enter tax ID (e.g., VAT, GST, EIN)')}
           className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
         />
       </div>
@@ -100,7 +102,7 @@ export function TaxIdSection({ orgId }: TaxIdSectionProps) {
           onClick={handleUpdate}
           disabled={!hasChanges || updateTaxIdMutation.isPending}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

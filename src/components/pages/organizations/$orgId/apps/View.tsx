@@ -14,8 +14,10 @@ import type { CreateMarketplaceAppInput } from '../marketplace/_components/Creat
 import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { organizations } = useOrganizations()
@@ -49,7 +51,7 @@ export function View() {
     try {
       const app = await createAppMutation.mutateAsync(input)
       setCreateDialogOpen(false)
-      toast.success('App created as draft')
+      toast.success(t('App created as draft'))
       if (orgId && app?.$id) {
         navigate({
           to: '/organizations/$orgId/apps/$appId',
@@ -57,7 +59,7 @@ export function View() {
         })
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to create app'))
+      toast.error(getErrorMessage(error, t('Failed to create app')))
     }
   }
 
@@ -73,25 +75,25 @@ export function View() {
     <div>
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
+          <h2 className="text-[15px] font-semibold text-foreground">{t('Apps')}</h2>
           <p className="text-[13px] text-muted-foreground mt-1">
-            OAuth2 apps published by your organization to the marketplace.
+            {t('OAuth2 apps published by your organization to the marketplace.')}
           </p>
         </div>
         <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="me-1.5 h-3.5 w-3.5" />
-          Add app
+          {t('Add app')}
         </Button>
       </div>
 
       {apps.length === 0 ? (
         <EmptyState
           icon={Package}
-          title="No apps yet"
-          description="Create an app to share it with other organizations on the marketplace."
+          title={t('No apps yet')}
+          description={t('Create an app to share it with other organizations on the marketplace.')}
           action={
             <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-              Add app
+              {t('Add app')}
             </Button>
           }
           variant="card"

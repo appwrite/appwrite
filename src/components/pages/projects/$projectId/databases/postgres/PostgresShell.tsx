@@ -11,12 +11,14 @@ import { PostgresConnectDialogProvider } from './_components/PostgresConnectDial
 import { PostgresDatabaseHeader } from './_components/PostgresDatabaseHeader'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
+import { useT } from '@/lib/i18n/translate'
 
 export type PostgresShellProps = {
   children: ReactNode
 }
 
 export function PostgresShell({ children }: PostgresShellProps) {
+  const t = useT()
   const { projectId, databaseId, tableId } = useParams({
     strict: false,
   }) as {
@@ -38,7 +40,7 @@ export function PostgresShell({ children }: PostgresShellProps) {
   if (databaseLoading && !database) {
     return (
       <div className="flex flex-1 items-center justify-center py-16 text-[13px] text-muted-foreground">
-        Loading database...
+        {t('Loading database...')}
       </div>
     )
   }
@@ -48,11 +50,11 @@ export function PostgresShell({ children }: PostgresShellProps) {
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Database not found</AlertTitle>
+          <AlertTitle>{t('Database not found')}</AlertTitle>
           <AlertDescription className="text-[13px]">
             {databaseError
               ? getErrorMessage(databaseError)
-              : 'This dedicated database could not be loaded.'}
+              : t('This dedicated database could not be loaded.')}
           </AlertDescription>
         </Alert>
       </div>

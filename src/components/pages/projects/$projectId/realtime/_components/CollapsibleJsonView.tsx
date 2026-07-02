@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type JsonValue =
   | null
@@ -45,21 +46,22 @@ function renderPrimitive(value: JsonValue): string {
 }
 
 function JsonCopyButton({ content }: { content: string }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(() => {
     void navigator.clipboard.writeText(content)
     setCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     window.setTimeout(() => setCopied(false), 2000)
-  }, [content])
+  }, [content, t])
 
   return (
     <button
       type="button"
       onClick={handleCopy}
       className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-      aria-label="Copy JSON"
+      aria-label={t('Copy JSON')}
     >
       {copied ? (
         <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -79,6 +81,7 @@ function CollapseToggle({
   onToggle: () => void
   label: string
 }) {
+  const t = useT()
   return (
     <button
       type="button"
@@ -87,7 +90,7 @@ function CollapseToggle({
         onToggle()
       }}
       className="me-1 inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-      aria-label={collapsed ? `Expand ${label}` : `Collapse ${label}`}
+      aria-label={collapsed ? `${t('Expand')} ${label}` : `${t('Collapse')} ${label}`}
       aria-expanded={!collapsed}
     >
       <ChevronRight

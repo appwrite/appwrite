@@ -42,6 +42,7 @@ import {
   queryPreviewLabel,
   usePostgresSidebar,
 } from './PostgresSidebarContext'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresQueriesSidebarPanelProps = {
   projectId: string
@@ -112,6 +113,7 @@ function SavedQueryScopeToggle({
   savedQueryLevel: PostgresSavedQueryLevel
   onChange: (level: PostgresSavedQueryLevel) => void
 }) {
+  const t = useT()
   return (
     <ToggleGroup
       type="single"
@@ -123,19 +125,19 @@ function SavedQueryScopeToggle({
         }
       }}
       className="w-full"
-      aria-label="Saved query scope"
+      aria-label={t('Saved query scope')}
     >
       <ToggleGroupItem
         value="user"
         className="h-9 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
       >
-        For me
+        {t('For me')}
       </ToggleGroupItem>
       <ToggleGroupItem
         value="team"
         className="h-9 flex-1 text-[12px] font-medium data-[state=on]:bg-background data-[state=on]:text-foreground"
       >
-        For team
+        {t('For team')}
       </ToggleGroupItem>
     </ToggleGroup>
   )
@@ -145,6 +147,7 @@ export function PostgresQueriesSidebarPanel({
   projectId,
   databaseId,
 }: PostgresQueriesSidebarPanelProps) {
+  const t = useT()
   const { account } = useAuth()
   const { project } = useProject(projectId)
   const teamId = project?.teamId ?? null
@@ -198,7 +201,7 @@ export function PostgresQueriesSidebarPanel({
     setDeletingKey(key)
     try {
       await deleteSavedQuery(id, level)
-      toast.success('Query deleted')
+      toast.success(t('Query deleted'))
     } catch (error) {
       toast.error(getErrorMessage(error))
     } finally {
@@ -237,9 +240,9 @@ export function PostgresQueriesSidebarPanel({
               type="text"
               value={querySearch}
               onChange={(event) => setQuerySearch(event.target.value)}
-              placeholder="Search queries"
+              placeholder={t('Search queries')}
               className="h-8 ps-8 pe-8 text-[13px]"
-              aria-label="Search queries"
+              aria-label={t('Search queries')}
             />
             {querySearch ? (
               <Button
@@ -247,7 +250,7 @@ export function PostgresQueriesSidebarPanel({
                 variant="ghost"
                 size="icon"
                 className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
-                aria-label="Clear query search"
+                aria-label={t('Clear query search')}
                 onClick={() => setQuerySearch('')}
               >
                 <X className="h-3.5 w-3.5" />
@@ -263,20 +266,20 @@ export function PostgresQueriesSidebarPanel({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 shrink-0"
-                      aria-label="Sort queries"
+                      aria-label={t('Sort queries')}
                     >
                       <ArrowUpDown className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  Sort queries
+                  {t('Sort queries')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Sort queries
+                {t('Sort queries')}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup
@@ -290,7 +293,7 @@ export function PostgresQueriesSidebarPanel({
               >
                 {POSTGRES_SAVED_QUERIES_SORT_OPTIONS.map((option) => (
                   <DropdownMenuRadioItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>
@@ -304,10 +307,10 @@ export function PostgresQueriesSidebarPanel({
         ) : (
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
             {hasActiveSearch
-              ? 'No queries match your search.'
+              ? t('No queries match your search.')
               : savedQueryLevel === 'team'
-                ? 'No team queries yet.'
-                : 'No saved queries yet.'}
+                ? t('No team queries yet.')
+                : t('No saved queries yet.')}
           </p>
         )}
       </div>

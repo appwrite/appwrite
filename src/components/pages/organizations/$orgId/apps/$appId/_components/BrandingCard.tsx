@@ -10,6 +10,7 @@ import {
   useOrgAppUpdate,
 } from './useOrgAppUpdate'
 import { AppLogoFilePicker } from '../../_components/AppLogoFilePicker'
+import { useT } from '@/lib/i18n/translate'
 
 type BrandingCardProps = {
   orgId: string
@@ -17,6 +18,7 @@ type BrandingCardProps = {
 }
 
 export function BrandingCard({ orgId, app }: BrandingCardProps) {
+  const t = useT()
   const { submit, isUpdating } = useOrgAppUpdate(orgId, app)
   const [clientUri, setClientUri] = useState(app.clientUri ?? '')
   const [logoUri, setLogoUri] = useState(app.logoUri ?? '')
@@ -31,15 +33,15 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Branding</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t('Branding')}</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          URLs shown on the OAuth2 consent screen.
+          {t('URLs shown on the OAuth2 consent screen.')}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="app-branding-homepage">Homepage URL</Label>
+          <Label htmlFor="app-branding-homepage">{t('Homepage URL')}</Label>
           <Input
             id="app-branding-homepage"
             value={clientUri}
@@ -48,7 +50,7 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Logo</Label>
+          <Label>{t('Logo')}</Label>
           <AppLogoFilePicker
             teamId={orgId}
             value={logoUri}
@@ -57,11 +59,11 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Image URLs</Label>
+          <Label>{t('Image URLs')}</Label>
           <InputTags
             value={images}
             onChange={setImages}
-            placeholder="Add image URL and press Enter"
+            placeholder={t('Add image URL and press Enter')}
           />
         </div>
       </div>
@@ -78,7 +80,7 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
             })
           }
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

@@ -152,6 +152,7 @@ import {
   DATABASE_TAB_TO_OVERVIEW,
   type WorkspaceProps,
 } from '../workspace-types'
+import { useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'tablesdb' as const satisfies DatabaseRouteKind
 const SHOW_GRID_DEBUG_TOOLS = true
@@ -162,6 +163,7 @@ export function Workspace({
   activeTab,
   databaseTab,
 }: WorkspaceProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const navigate = useNavigate()
@@ -854,7 +856,7 @@ export function Workspace({
   if (isActuallyLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('Loading...')}</div>
       </div>
     )
   }
@@ -864,10 +866,10 @@ export function Workspace({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            Database not found
+            {t('Database not found')}
           </p>
           <Button variant="link" onClick={handleBackToDatabases}>
-            Back to databases
+            {t('Back to databases')}
           </Button>
         </div>
       </div>
@@ -882,7 +884,7 @@ export function Workspace({
             {dbLabels.containerSingularTitle} not found
           </p>
           <Button variant="link" onClick={handleBackToDatabase}>
-            Back to database
+            {t('Back to database')}
           </Button>
         </div>
       </div>
@@ -898,12 +900,12 @@ export function Workspace({
           <button
             onClick={handleBackToDatabases}
             className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label="Back to databases"
+            aria-label={t('Back to databases')}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="text-[13px] font-medium text-foreground">
-            Databases
+            {t('Databases')}
           </span>
         </div>
         <div className="flex min-w-0 items-center gap-2 px-2 py-2">
@@ -1012,7 +1014,7 @@ export function Workspace({
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    Sort by attribute and direction
+                    {t('Sort by attribute and direction')}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1040,22 +1042,22 @@ export function Workspace({
                   }}
                 >
                   <DropdownMenuRadioItem value="name-asc">
-                    Name (A → Z)
+                    {t('Name (A → Z)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="name-desc">
-                    Name (Z → A)
+                    {t('Name (Z → A)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$createdAt-asc">
-                    Created (oldest first)
+                    {t('Created (oldest first)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$createdAt-desc">
-                    Created (newest first)
+                    {t('Created (newest first)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$updatedAt-asc">
-                    Updated (oldest first)
+                    {t('Updated (oldest first)')}
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="$updatedAt-desc">
-                    Updated (newest first)
+                    {t('Updated (newest first)')}
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -1099,7 +1101,7 @@ export function Workspace({
         <div className="min-h-0 flex-1 overflow-y-auto">
           {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
             <div className="p-2 text-center text-[12px] text-muted-foreground">
-              Loading…
+              {t('Loading…')}
             </div>
           ) : (
             <div className="space-y-0.5 px-2.5 py-2.5">
@@ -1190,7 +1192,7 @@ export function Workspace({
                   setSidebarTablesRequestedPage((p) => Math.max(1, p - 1))
                 }
                 disabled={sidebarTablesDisplayedPage <= 1}
-                aria-label="Previous page"
+                aria-label={t('Previous page')}
               >
                 <ChevronLeft className="h-3 w-3" />
               </Button>
@@ -1203,7 +1205,7 @@ export function Workspace({
                   sidebarTablesDisplayedPage >=
                   Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
                 }
-                aria-label="Next page"
+                aria-label={t('Next page')}
               >
                 <ChevronRight className="h-3 w-3" />
               </Button>
@@ -1223,7 +1225,7 @@ export function Workspace({
           )}
         >
           <Network className="h-3.5 w-3.5 shrink-0" />
-          <span>Visualizer</span>
+          <span>{t('Visualizer')}</span>
         </Link>
         {features.usageStats && (
           <Link
@@ -1235,7 +1237,7 @@ export function Workspace({
             )}
           >
             <Activity className="h-3.5 w-3.5 shrink-0" />
-            <span>Monitor</span>
+            <span>{t('Monitor')}</span>
           </Link>
         )}
         {!noCreateDbPermission && (
@@ -1248,7 +1250,7 @@ export function Workspace({
             )}
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span>Security</span>
+            <span>{t('Security')}</span>
           </Link>
         )}
         {features.databaseInsights && (
@@ -1261,7 +1263,7 @@ export function Workspace({
             )}
           >
             <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span>Insights</span>
+            <span>{t('Insights')}</span>
           </Link>
         )}
         {features.databaseBackups && (
@@ -1286,7 +1288,7 @@ export function Workspace({
           )}
         >
           <Download className="h-3.5 w-3.5 shrink-0" />
-          <span>Export / Import</span>
+          <span>{t('Export / Import')}</span>
         </Link>
         {!noCreateDbPermission && (
           <Link
@@ -1298,7 +1300,7 @@ export function Workspace({
             )}
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span>Settings</span>
+            <span>{t('Settings')}</span>
           </Link>
         )}
       </div>
@@ -1345,7 +1347,7 @@ export function Workspace({
         createDisabledTooltip={
           !isDatabaseLevelView
             ? activeTab === 'indexes' && !canCreateIndex
-              ? 'Add at least one non-relationship column to create indexes.'
+              ? t('Add at least one non-relationship column to create indexes.')
               : createPermissionTooltip
             : undefined
         }
@@ -1561,15 +1563,15 @@ export function Workspace({
                   >
                     <Lightbulb className="h-3.5 w-3.5 shrink-0 @[640px]:me-1.5" />
                     <span className="hidden @[640px]:inline">
-                      Suggest indexes
+                      {t('Suggest indexes')}
                     </span>
                   </Button>
                 </span>
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 {!canCreateIndex
-                  ? 'Add at least one non-relationship column to suggest indexes.'
-                  : 'Suggest indexes'}
+                  ? t('Add at least one non-relationship column to suggest indexes.')
+                  : t('Suggest indexes')}
               </TooltipContent>
             </Tooltip>
           ) : undefined
@@ -1759,12 +1761,11 @@ export function Workspace({
                   >
                     <AlertCircle className="h-4 w-4 text-amber-500" />
                     <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                      Database is disabled
+                      {t('Database is disabled')}
                     </AlertTitle>
                     <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                       <span className="inline">
-                        This database is disabled and not accessible to end
-                        users through the API. Console actions remain available.{' '}
+                        {t('This database is disabled and not accessible to end users through the API. Console actions remain available.')}{' '}
                         <Link
                           to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
                           params={{
@@ -1774,7 +1775,7 @@ export function Workspace({
                           }}
                           className="font-medium underline hover:no-underline inline"
                         >
-                          Enable it in the Settings tab
+                          {t('Enable it in the Settings tab')}
                         </Link>{' '}
                         to make it available to end users.
                       </span>
@@ -1813,7 +1814,7 @@ export function Workspace({
                           })}
                           className="font-medium underline hover:no-underline inline"
                         >
-                          Enable it in the Settings tab
+                          {t('Enable it in the Settings tab')}
                         </Link>{' '}
                         to access its data and functionality.
                       </span>

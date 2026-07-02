@@ -39,6 +39,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useT } from '@/lib/i18n/translate'
 
 type DatabaseWithBackup = {
   $id: string
@@ -90,6 +91,7 @@ export function ProductDatabasesSection({
   viewMode,
   regionSupported = true,
 }: ProductDatabasesSectionProps) {
+  const t = useT()
   const Icon = sectionIcon(backend)
 
   if (!regionSupported) {
@@ -98,7 +100,7 @@ export function ProductDatabasesSection({
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
           <Badge variant="info" className="text-[10px] shrink-0">
-            Beta
+            {t('Beta')}
           </Badge>
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">{description}</p>
@@ -126,6 +128,7 @@ function ProductDatabasesSectionContent({
   description,
   viewMode,
 }: Omit<ProductDatabasesSectionProps, 'regionSupported'>) {
+  const t = useT()
   const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
@@ -155,7 +158,7 @@ function ProductDatabasesSectionContent({
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
         <Badge variant="info" className="text-[10px] shrink-0">
-          Beta
+          {t('Beta')}
         </Badge>
         <p className="w-full text-[13px] text-muted-foreground">{description}</p>
       </div>
@@ -182,7 +185,7 @@ function ProductDatabasesSectionContent({
             onClick={() => void refetch()}
             disabled={isFetching}
           >
-            Try again
+            {t('Try again')}
           </Button>
         </div>
       ) : viewMode === 'list' ? (
@@ -202,7 +205,7 @@ function ProductDatabasesSectionContent({
                     onClick={() => void refetch()}
                     disabled={isFetching}
                   >
-                    Try again
+                    {t('Try again')}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -212,21 +215,21 @@ function ProductDatabasesSectionContent({
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Database
+                      {t('Database')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                      Status
+                      {t('Status')}
                     </TableHead>
                     {features.databaseBackups && (
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                        Backups
+                        {t('Backups')}
                       </TableHead>
                     )}
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Created
+                      {t('Created')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                      Updated
+                      {t('Updated')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -260,14 +263,14 @@ function ProductDatabasesSectionContent({
                               variant="error"
                               className="text-[11px] font-medium border px-2 py-0.5"
                             >
-                              Disabled
+                              {t('Disabled')}
                             </Badge>
                           ) : (
                             <Badge
                               variant="success"
                               className="text-[11px] font-medium border px-2 py-0.5"
                             >
-                              Enabled
+                              {t('Enabled')}
                             </Badge>
                           )}
                         </div>
@@ -291,7 +294,7 @@ function ProductDatabasesSectionContent({
                                 className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
                               >
                                 <AlertCircle className="h-3 w-3" />
-                                None
+                                {t('None')}
                               </Badge>
                             )}
                           </div>
@@ -344,7 +347,7 @@ function ProductDatabasesSectionContent({
                   onClick={() => void refetch()}
                   disabled={isFetching}
                 >
-                  Try again
+                  {t('Try again')}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -373,7 +376,7 @@ function ProductDatabasesSectionContent({
                     icon={Icon}
                     iconColor="bg-muted text-muted-foreground"
                     status={db.enabled === false ? 'error' : undefined}
-                    statusLabel={db.enabled === false ? 'Disabled' : undefined}
+                    statusLabel={db.enabled === false ? t('Disabled') : undefined}
                     metadata={
                       features.databaseBackups
                         ? [
@@ -393,7 +396,7 @@ function ProductDatabasesSectionContent({
                                   variant="warning"
                                   className="gap-1.5 text-[11px] font-medium"
                                 >
-                                  No backup policies
+                                  {t('No backup policies')}
                                 </Badge>
                               ),
                             },

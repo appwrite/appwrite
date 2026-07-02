@@ -28,6 +28,7 @@ import {
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useResendMembershipInvite } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 import type { TeamMember } from '@/lib/utils/mock-data'
 
 interface OrgMemberContextMenuProps {
@@ -47,6 +48,7 @@ export function OrgMemberContextMenu({
   onRemove,
   children,
 }: OrgMemberContextMenuProps) {
+  const t = useT()
   const resendInviteMutation = useResendMembershipInvite(orgId)
 
   const membershipId = member.membershipId || member.$id
@@ -69,10 +71,10 @@ export function OrgMemberContextMenu({
       },
       {
         onSuccess: () => {
-          toast.success('Invitation resent successfully')
+          toast.success(t('Invitation resent successfully'))
         },
         onError: (error: Error) => {
-          toast.error(error.message || 'Failed to resend invitation')
+          toast.error(error.message || t('Failed to resend invitation'))
         },
       },
     )
@@ -89,7 +91,7 @@ export function OrgMemberContextMenu({
               onSelect={handleResend}
             >
               <ContextMenuIcon icon={Mail} />
-              Resend
+              {t('Resend')}
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -98,7 +100,7 @@ export function OrgMemberContextMenu({
           <>
             <ContextMenuItem onSelect={onUpdate}>
               <ContextMenuIcon icon={UserCog} />
-              Update
+              {t('Update')}
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -107,34 +109,34 @@ export function OrgMemberContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', membershipId)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             {hasName && (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Name', member.userName)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy name
+                {t('Copy name')}
               </ContextMenuItem>
             )}
             <ContextMenuItem
               onSelect={() => copyToClipboard('Link', membersHref)}
             >
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => void copyResourceAsJson(() => member)}
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -142,11 +144,11 @@ export function OrgMemberContextMenu({
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(membersHref)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(membersHref)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
 
         {canManageMembers && onRemove && (
@@ -154,7 +156,7 @@ export function OrgMemberContextMenu({
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={onRemove}>
               <ContextMenuIcon icon={Trash2} />
-              {isPending ? 'Cancel invitation' : 'Remove'}
+              {isPending ? t('Cancel invitation') : t('Remove')}
             </ContextMenuItem>
           </>
         )}

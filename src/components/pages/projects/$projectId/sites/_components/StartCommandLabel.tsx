@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export const START_COMMAND_FIELD_TOOLTIP =
   'Shell command that starts your SSR app after deploy (for example, npm run start). If left empty, your framework default is used. This field is optional.'
@@ -23,21 +24,25 @@ export function StartCommandLabel({
   trailing,
   className,
 }: StartCommandLabelProps) {
+  const t = useT()
   const label = (
     <Label
       htmlFor={htmlFor}
       className={cn('text-[13px] flex w-full items-center gap-1.5', className)}
     >
       <span>
-        Start command
-        <span className="font-normal text-muted-foreground"> (optional)</span>
+        {t('Start command')}
+        <span className="font-normal text-muted-foreground">
+          {' '}
+          {t('(optional)')}
+        </span>
       </span>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             type="button"
             className="inline-flex text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-            aria-label="About start command (optional)"
+            aria-label={t('About start command (optional)')}
           >
             <Info className="h-3.5 w-3.5" />
           </button>
@@ -46,7 +51,7 @@ export function StartCommandLabel({
           side="top"
           className="max-w-[260px] z-[200] text-[12px]"
         >
-          {START_COMMAND_FIELD_TOOLTIP}
+          {t(START_COMMAND_FIELD_TOOLTIP)}
         </TooltipContent>
       </Tooltip>
     </Label>

@@ -8,6 +8,7 @@ import {
   type SettingsCardIndexEntry,
 } from '@/lib/settings-search'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -59,11 +60,12 @@ function SettingsSearchInput({
   onChange: (value: string) => void
   placeholder: string
 }) {
+  const t = useT()
   return (
     <div className="relative w-full mb-2">
       <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
       <Input
-        placeholder={placeholder}
+        placeholder={t(placeholder)}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
@@ -76,7 +78,7 @@ function SettingsSearchInput({
           type="button"
           onClick={() => onChange('')}
           className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded p-0.5"
-          aria-label="Clear search"
+          aria-label={t('Clear search')}
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -96,6 +98,7 @@ function SettingsLayoutShellContent({
   desktopNavAriaLabel = 'Settings navigation',
   navWidthClassName = SETTINGS_LAYOUT_NAV_WIDTH_CLASS,
 }: Omit<SettingsLayoutShellProps, 'searchQuery' | 'onSearchQueryChange'>) {
+  const t = useT()
   const { query, setQuery } = useSettingsSearch()
   const q = query.trim().toLowerCase()
 
@@ -154,7 +157,7 @@ function SettingsLayoutShellContent({
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:gap-8">
-      <div className="lg:hidden space-y-2" aria-label={mobileNavAriaLabel}>
+      <div className="lg:hidden space-y-2" aria-label={t(mobileNavAriaLabel)}>
         <SettingsSearchInput
           value={query}
           onChange={setQuery}
@@ -176,7 +179,7 @@ function SettingsLayoutShellContent({
               >
                 <span className="flex items-center gap-2">
                   <item.icon className="h-4 w-4 shrink-0" />
-                  {item.label}
+                  {t(item.label)}
                 </span>
               </SelectItem>
             ))}
@@ -189,7 +192,7 @@ function SettingsLayoutShellContent({
           'hidden lg:flex sticky top-4 shrink-0 flex-col gap-2 self-start',
           navWidthClassName,
         )}
-        aria-label={desktopNavAriaLabel}
+        aria-label={t(desktopNavAriaLabel)}
       >
         <SettingsSearchInput
           value={query}
@@ -206,7 +209,7 @@ function SettingsLayoutShellContent({
               className={navLinkClassName(item.id, activeSectionId === item.id)}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              {t(item.label)}
             </Link>
           )
         })}

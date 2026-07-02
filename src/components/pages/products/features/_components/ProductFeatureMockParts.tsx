@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 export function MockSwitchRow({
@@ -20,6 +21,7 @@ export function MockSwitchRow({
   className?: string
   highlightOnHover?: boolean
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -36,9 +38,9 @@ export function MockSwitchRow({
           </span>
         ) : null}
         <div className="min-w-0">
-          <p className="text-[12px] font-medium text-foreground">{label}</p>
+          <p className="text-[12px] font-medium text-foreground">{t(label)}</p>
           {description ? (
-            <p className="mt-0.5 text-[11px] leading-5 text-muted-foreground">{description}</p>
+            <p className="mt-0.5 text-[11px] leading-5 text-muted-foreground">{t(description)}</p>
           ) : null}
         </div>
       </div>
@@ -101,6 +103,7 @@ export function MockMemberRow({
   role: string
   delayMs?: number
 }) {
+  const t = useT()
   const roleVariant =
     role === 'Owner' ? 'info' : role === 'Developer' ? 'success' : 'inactive'
 
@@ -122,7 +125,7 @@ export function MockMemberRow({
         </div>
       </div>
       <Badge variant={roleVariant} className="shrink-0 text-[10px]">
-        {role}
+        {t(role)}
       </Badge>
     </div>
   )
@@ -150,10 +153,11 @@ export function MockPermissionChip({
 }
 
 export function MockStatPill({ label, value }: { label: string; value: string }) {
+  const t = useT()
   return (
     <div className="rounded-lg border border-border bg-background/80 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-[13px] font-semibold text-foreground">{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t(label)}</p>
+      <p className="mt-0.5 text-[13px] font-semibold text-foreground">{t(value)}</p>
     </div>
   )
 }
@@ -169,6 +173,7 @@ export function MockPolicyCard({
   footer: ReactNode
   className?: string
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -177,8 +182,8 @@ export function MockPolicyCard({
       )}
     >
       <div className="px-4 py-3">
-        <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
-        <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{description}</p>
+        <h3 className="text-[13px] font-semibold text-foreground">{t(title)}</h3>
+        <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{t(description)}</p>
       </div>
       <div className="border-t border-border bg-muted/15 px-4 py-3">{footer}</div>
     </div>

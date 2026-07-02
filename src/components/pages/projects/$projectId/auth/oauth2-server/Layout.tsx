@@ -4,6 +4,7 @@ import { KeyRound, Settings } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { View as OAuth2ServerSettingsView } from './settings/View'
 import { View as OAuth2ServerAppsView } from './apps/View'
+import { useT } from '@/lib/i18n/translate'
 
 const OAUTH2_SERVER_NAV_ITEMS = [
   {
@@ -39,6 +40,7 @@ interface OAuth2ServerLayoutProps {
 }
 
 export function OAuth2ServerLayout({ projectId }: OAuth2ServerLayoutProps) {
+  const t = useT()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -51,9 +53,11 @@ export function OAuth2ServerLayout({ projectId }: OAuth2ServerLayoutProps) {
     () =>
       OAUTH2_SERVER_NAV_ITEMS.map((item) => ({
         ...item,
+        label: t(item.label),
+        keywords: [...item.keywords],
         params: { projectId },
       })),
-    [projectId],
+    [projectId, t],
   )
 
   return (
@@ -70,9 +74,9 @@ export function OAuth2ServerLayout({ projectId }: OAuth2ServerLayoutProps) {
           })
         }
       }}
-      searchPlaceholder="Search OAuth2 server..."
-      mobileNavAriaLabel="OAuth2 server section"
-      desktopNavAriaLabel="OAuth2 server navigation"
+      searchPlaceholder={t('Search OAuth2 server...')}
+      mobileNavAriaLabel={t('OAuth2 server section')}
+      desktopNavAriaLabel={t('OAuth2 server navigation')}
     >
       {subTab === 'apps' ? (
         <OAuth2ServerAppsView projectId={projectId} />

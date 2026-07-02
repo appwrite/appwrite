@@ -8,6 +8,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
 import { SMALL_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useT } from '@/lib/i18n/translate'
 
 interface FunctionVariablesCardProps {
   projectId: string | null | undefined
@@ -18,6 +19,7 @@ export function FunctionVariablesCard({
   projectId,
   functionId,
 }: FunctionVariablesCardProps) {
+  const t = useT()
   const [page, setPage] = useState(0)
   const [limit, setLimit] = useState(SMALL_PAGE_SIZE)
 
@@ -40,8 +42,10 @@ export function FunctionVariablesCard({
 
   return (
     <VariablesSettingsCard
-      title="Variables"
-      description="Set the environment variables or secret keys that will be passed to this function."
+      title={t('Variables')}
+      description={t(
+        'Set the environment variables or secret keys that will be passed to this function.',
+      )}
       variables={variables}
       total={total}
       isLoading={isLoading}

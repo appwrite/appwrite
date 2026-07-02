@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { Syn } from '@/components/pages/home/product-bento/MockSyntax'
+import { useT } from '@/lib/i18n/translate'
 
 const FRAMEWORKS = [
   { id: 'nextjs', label: 'Next.js', icon: '/icons/nextjs.svg' },
@@ -10,6 +11,7 @@ const FRAMEWORKS = [
 ] as const
 
 export function AuthSsrVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame title="Server-side session" eyebrow="SSR">
       <div className="space-y-4">
@@ -59,7 +61,7 @@ export function AuthSsrVisual() {
 
         <div className="flex flex-wrap items-center gap-2 opacity-80 transition-opacity duration-500 group-hover/visual:opacity-100 motion-reduce:opacity-100">
           <Badge variant="success" className="text-[10px]">
-            Session verified
+            {t('Session verified')}
           </Badge>
           <span className="rounded-md border border-border bg-background/80 px-2 py-1 font-mono text-[10px] text-muted-foreground">
             Set-Cookie: a_session_...

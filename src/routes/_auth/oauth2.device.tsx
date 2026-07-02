@@ -15,6 +15,7 @@ import {
   type OAuth2Flow,
 } from '@/components/global/auth/OAuth2ConsentCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = (
@@ -40,6 +41,7 @@ function normalizeUserCode(value: string): string {
 const DEVICE_FLOW: OAuth2Flow = 'device'
 
 function OAuth2DevicePage() {
+  const t = useT()
   const navigate = useNavigate()
   const search = Route.useSearch()
   const [phase, setPhase] = useState<Phase>('loading')
@@ -82,10 +84,12 @@ function OAuth2DevicePage() {
         e.type === 'oauth2_invalid_user_code'
       ) {
         setError(
-          'That code is invalid or has expired. Check your device and try again.',
+          t(
+            'That code is invalid or has expired. Check your device and try again.',
+          ),
         )
       } else {
-        setError(getErrorMessage(e, 'Could not verify that code.'))
+        setError(getErrorMessage(e, t('Could not verify that code.')))
       }
       setPhase('enter-code')
     },
@@ -177,19 +181,21 @@ function OAuth2DevicePage() {
                 <div className="space-y-1">
                   <h1 className="text-xl font-semibold tracking-tight">
                     {hasPrefilledCode
-                      ? 'Confirm your code'
-                      : 'Connect a device'}
+                      ? t('Confirm your code')
+                      : t('Connect a device')}
                   </h1>
                   <p className="text-muted-foreground text-sm">
                     {hasPrefilledCode
-                      ? 'Make sure this matches the code shown on your device, then continue.'
-                      : 'Enter the code shown on your device to continue.'}
+                      ? t(
+                          'Make sure this matches the code shown on your device, then continue.',
+                        )
+                      : t('Enter the code shown on your device to continue.')}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="user-code">Device code</Label>
+                <Label htmlFor="user-code">{t('Device code')}</Label>
                 <Input
                   id="user-code"
                   value={code}
@@ -216,13 +222,13 @@ function OAuth2DevicePage() {
                   className="w-full"
                   disabled={code.length === 0 || submitMutation.isPending}
                 >
-                  {submitMutation.isPending ? 'Verifying…' : 'Continue'}
+                  {submitMutation.isPending ? t('Verifying…') : t('Continue')}
                 </Button>
               </div>
 
               {account && (
                 <p className="text-muted-foreground text-center text-xs">
-                  Signed in as{' '}
+                  {t('Signed in as')}{' '}
                   <span className="font-medium">
                     {account.email || account.name}
                   </span>
@@ -252,11 +258,12 @@ function OAuth2DevicePage() {
                 <CheckCircle2 className="size-6 text-emerald-500" />
               </div>
               <h1 className="text-xl font-semibold tracking-tight">
-                Device connected
+                {t('Device connected')}
               </h1>
               <p className="text-muted-foreground text-sm">
-                You've authorized {app?.name ?? 'the application'}. You can
-                return to your device — it will continue automatically.
+                {t("You've authorized")} {app?.name ?? t('the application')}
+                {'. '}
+                {t('You can return to your device, it will continue automatically.')}
               </p>
             </div>
           </Card>
@@ -269,10 +276,10 @@ function OAuth2DevicePage() {
                 <XCircle className="text-muted-foreground size-6" />
               </div>
               <h1 className="text-xl font-semibold tracking-tight">
-                Request cancelled
+                {t('Request cancelled')}
               </h1>
               <p className="text-muted-foreground text-sm">
-                No access was granted. You can close this page.
+                {t('No access was granted. You can close this page.')}
               </p>
             </div>
           </Card>

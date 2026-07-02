@@ -67,6 +67,7 @@ import { OnboardingCard } from './OnboardingCard'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { useI18n } from '@/lib/i18n'
 
 interface NavItem {
   id: string
@@ -81,85 +82,128 @@ interface NavCategory {
   items: NavItem[]
 }
 
-const getNavItems = (projectId: string) => {
+interface SidebarCopy {
+  sections: {
+    connect: string
+    build: string
+    deploy: string
+    observe: string
+    protect: string
+  }
+  items: {
+    overview: string
+    apps: string
+    apiKeys: string
+    explorer: string
+    auth: string
+    databases: string
+    storage: string
+    functions: string
+    messaging: string
+    sites: string
+    distribution: string
+    activity: string
+    realtime: string
+    logs: string
+    usage: string
+    analytics: string
+    errors: string
+    firewall: string
+    advisor: string
+    settings: string
+  }
+  badges: {
+    soon: string
+  }
+  accessibility: {
+    mainNavigation: string
+    mobileNavigation: string
+    closeNavigation: string
+    expandSidebar: string
+    collapseSidebar: string
+    comingSoonSuffix: string
+  }
+}
+
+const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
   const overviewItem: NavItem = {
     id: 'overview',
-    label: 'Overview',
+    label: sidebarCopy.items.overview,
     icon: LayoutDashboard,
     path: `/projects/${projectId}`,
   }
 
   const navCategories: NavCategory[] = [
     {
-      label: 'Connect',
+      label: sidebarCopy.sections.connect,
       items: [
         {
           id: 'apps',
-          label: 'Apps',
+          label: sidebarCopy.items.apps,
           icon: Plug,
           path: `/projects/${projectId}/apps`,
         },
         {
           id: 'api-keys',
-          label: 'API Keys',
+          label: sidebarCopy.items.apiKeys,
           icon: Key,
           path: `/projects/${projectId}/api-keys`,
         },
         {
           id: 'explorer',
-          label: 'Explorer',
+          label: sidebarCopy.items.explorer,
           icon: ListTree,
           path: `/projects/${projectId}/explorer`,
         },
       ],
     },
     {
-      label: 'Build',
+      label: sidebarCopy.sections.build,
       items: [
         {
           id: 'auth',
-          label: 'Auth',
+          label: sidebarCopy.items.auth,
           icon: Users,
           path: `/projects/${projectId}/auth`,
         },
         {
           id: 'databases',
-          label: 'Databases',
+          label: sidebarCopy.items.databases,
           icon: Database,
           path: `/projects/${projectId}/databases`,
         },
         {
           id: 'storage',
-          label: 'Storage',
+          label: sidebarCopy.items.storage,
           icon: Folder,
           path: `/projects/${projectId}/storage/-`,
         },
         {
           id: 'functions',
-          label: 'Functions',
+          label: sidebarCopy.items.functions,
           icon: Zap,
           path: `/projects/${projectId}/functions`,
         },
         {
           id: 'messaging',
-          label: 'Messaging',
+          label: sidebarCopy.items.messaging,
           icon: MessageSquare,
           path: `/projects/${projectId}/messaging`,
         },
       ],
     },
     {
-      label: 'Deploy',
+      label: sidebarCopy.sections.deploy,
       items: [
         {
           id: 'sites',
-          label: 'Sites',
+          label: sidebarCopy.items.sites,
           icon: Globe,
           path: `/projects/${projectId}/sites`,
         },
         {
           id: 'stores',
-          label: 'Distribution',
+          label: sidebarCopy.items.distribution,
           icon: Package,
           path: `/projects/${projectId}/stores`,
           comingSoon: true,
@@ -167,43 +211,43 @@ const getNavItems = (projectId: string) => {
       ],
     },
     {
-      label: 'Observe',
+      label: sidebarCopy.sections.observe,
       items: [
         {
           id: 'activity',
-          label: 'Activity',
+          label: sidebarCopy.items.activity,
           icon: Activity,
           path: `/projects/${projectId}/activity`,
         },
         {
           id: 'realtime',
-          label: 'Realtime',
+          label: sidebarCopy.items.realtime,
           icon: Radio,
           path: `/projects/${projectId}/realtime`,
         },
         {
           id: 'logs',
-          label: 'Logs',
+          label: sidebarCopy.items.logs,
           icon: FileText,
           path: `/projects/${projectId}/logs`,
           comingSoon: true,
         },
         {
           id: 'usage',
-          label: 'Usage',
+          label: sidebarCopy.items.usage,
           icon: BarChart3,
           path: `/projects/${projectId}/usage`,
         },
         {
           id: 'analytics',
-          label: 'Analytics',
+          label: sidebarCopy.items.analytics,
           icon: BarChart2,
           path: `/projects/${projectId}/analytics`,
           comingSoon: true,
         },
         {
           id: 'errors',
-          label: 'Errors',
+          label: sidebarCopy.items.errors,
           icon: AlertTriangle,
           path: `/projects/${projectId}/errors`,
           comingSoon: true,
@@ -211,18 +255,18 @@ const getNavItems = (projectId: string) => {
       ],
     },
     {
-      label: 'Protect',
+      label: sidebarCopy.sections.protect,
       items: [
         {
           id: 'firewall',
-          label: 'Firewall',
+          label: sidebarCopy.items.firewall,
           icon: Shield,
           path: `/projects/${projectId}/firewall`,
           comingSoon: true,
         },
         {
           id: 'advisor',
-          label: 'Advisor',
+          label: sidebarCopy.items.advisor,
           icon: ScanSearch,
           path: `/projects/${projectId}/advisor`,
           comingSoon: true,
@@ -233,7 +277,7 @@ const getNavItems = (projectId: string) => {
 
   const settingsItem: NavItem = {
     id: 'settings',
-    label: 'Settings',
+    label: sidebarCopy.items.settings,
     icon: Settings,
     path: `/projects/${projectId}/settings`,
   }
@@ -257,6 +301,8 @@ export function ConsoleSidebar({
   className,
 }: ConsoleSidebarProps) {
   const { account } = useAuth()
+  const { catalog } = useI18n()
+  const sidebarCopy = catalog.app.sidebar
   const accountWithPrefs = account as
     | { prefs?: Record<string, unknown> }
     | undefined
@@ -270,10 +316,10 @@ export function ConsoleSidebar({
     project?.teamId,
   )
 
-  const { overviewItem, settingsItem } = getNavItems(projectId)
+  const { overviewItem, settingsItem } = getNavItems(projectId, sidebarCopy)
 
   const visibleCategories = useMemo(() => {
-    const { navCategories: categories } = getNavItems(projectId)
+    const { navCategories: categories } = getNavItems(projectId, sidebarCopy)
     return categories
       .map((cat) => ({
         ...cat,
@@ -289,7 +335,7 @@ export function ConsoleSidebar({
         }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features, access])
+  }, [projectId, isDebugModeOpen, features, access, sidebarCopy])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).
@@ -401,7 +447,7 @@ export function ConsoleSidebar({
           )}
           {(!collapsed || isMobile) && (
             <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Soon
+              {sidebarCopy.badges.soon}
             </span>
           )}
         </span>
@@ -413,7 +459,9 @@ export function ConsoleSidebar({
             <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
               <p>{item.label}</p>
-              <span className="ms-1 text-muted-foreground">(Coming Soon)</span>
+              <span className="ms-1 text-muted-foreground">
+                {sidebarCopy.accessibility.comingSoonSuffix}
+              </span>
             </TooltipContent>
           </Tooltip>
         )
@@ -502,7 +550,7 @@ export function ConsoleSidebar({
             className="flex-1 space-y-6 overflow-y-auto px-3 py-4"
             onKeyDown={handleKeyDown}
             role="navigation"
-            aria-label="Main navigation"
+            aria-label={sidebarCopy.accessibility.mainNavigation}
           >
             {/* Onboarding Card - only owners and developers */}
             {showGetStarted && (
@@ -541,7 +589,11 @@ export function ConsoleSidebar({
             'absolute end-0 top-1/2 z-10 flex h-6 w-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             SIDEBAR_EDGE_TOGGLE_OVERFLOW,
           )}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={
+            collapsed
+              ? sidebarCopy.accessibility.expandSidebar
+              : sidebarCopy.accessibility.collapseSidebar
+          }
         >
           <ChevronLeft
             className={cn(
@@ -562,7 +614,7 @@ export function ConsoleSidebar({
         )}
         role="dialog"
         aria-modal="true"
-        aria-label="Mobile navigation"
+        aria-label={sidebarCopy.accessibility.mobileNavigation}
         inert={!mobileOpen ? true : undefined}
       >
         {/* Mobile Header */}
@@ -575,7 +627,7 @@ export function ConsoleSidebar({
           <button
             onClick={onMobileClose}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Close navigation"
+            aria-label={sidebarCopy.accessibility.closeNavigation}
           >
             <X className="h-5 w-5" />
           </button>
@@ -590,7 +642,7 @@ export function ConsoleSidebar({
         <nav
           className="flex-1 space-y-6 overflow-y-auto px-4 py-2"
           role="navigation"
-          aria-label="Mobile navigation"
+          aria-label={sidebarCopy.accessibility.mobileNavigation}
         >
           {/* Onboarding Card - only owners and developers */}
           {showGetStarted && (

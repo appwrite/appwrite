@@ -10,8 +10,10 @@ import {
   trimOrEmpty,
   useOrgAppUpdate,
 } from '../_components/useOrgAppUpdate'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   if (!app || !orgId) return null
@@ -28,15 +30,15 @@ export function View() {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Support</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t('Support')}</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          How users can get help with your app during OAuth2 consent.
+          {t('How users can get help with your app during OAuth2 consent.')}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="app-support-url">Support page</Label>
+          <Label htmlFor="app-support-url">{t('Support page')}</Label>
           <Input
             id="app-support-url"
             value={supportUrl}
@@ -45,13 +47,13 @@ export function View() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Contact emails</Label>
+          <Label>{t('Contact emails')}</Label>
           <InputTags
             value={contacts}
             onChange={setContacts}
             validateEmail
             splitOnComma
-            placeholder="Add email and press Enter"
+            placeholder={t('Add email and press Enter')}
           />
         </div>
       </div>
@@ -67,7 +69,7 @@ export function View() {
             })
           }
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

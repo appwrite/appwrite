@@ -15,6 +15,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { MigrationDetailsDrawer } from './migrations/MigrationDetailsDrawer'
 import { MigrationContextMenu } from './migrations/MigrationContextMenu'
@@ -35,6 +36,7 @@ interface MigrationsProps {
 }
 
 export function Migrations({ projectId, initialData }: MigrationsProps) {
+  const t = useT()
   const { project } = useProject(projectId)
   const region = project?.region
 
@@ -87,7 +89,7 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
         {Icon && (
           <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />
         )}
-        {config.label}
+        {t(config.label)}
       </Badge>
     )
   }
@@ -119,8 +121,8 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
       ) : effectiveMigrations.length === 0 ? (
         <EmptyState
           icon={ArrowRightLeft}
-          title="No migrations yet"
-          description="Import data from another platform or export your project data"
+          title={t('No migrations yet')}
+          description={t('Import data from another platform or export your project data')}
           isEmpty={true}
           variant="card"
         />
@@ -130,22 +132,22 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Migration ID
+                  {t('Migration ID')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Date
+                  {t('Date')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Source
+                  {t('Source')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Destination
+                  {t('Destination')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Status
+                  {t('Status')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Progress
+                  {t('Progress')}
                 </TableHead>
               </TableRow>
             </TableHeader>

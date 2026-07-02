@@ -25,6 +25,7 @@ import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { getQueryFilterColumnsForMethod } from '@/lib/api-explorer/field-helpers'
 import type { ApiExplorerMethod } from '@/lib/api-explorer/types'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { ExplorerPermissionsField } from './ExplorerPermissionsField'
 import { ExplorerQueryBuilderField } from './ExplorerQueryBuilderField'
 import { ExplorerArrayItemInputs, ExplorerArrayAddControl } from './ExplorerArrayItemInputs'
@@ -132,6 +133,7 @@ export function RequestFormFieldInput({
   formValues,
   method,
 }: RequestFormFieldInputProps) {
+  const t = useT()
   const inputId = `${idPrefix}-${field.name}`
   const hasHelperField = Boolean(field.helper)
   const isHelperArrayField =
@@ -196,6 +198,7 @@ export function RequestFormFieldInput({
               formValues,
               method,
               true,
+              t,
             )}
           </ValueCell>
         </div>
@@ -212,6 +215,7 @@ export function RequestFormFieldInput({
                 formValues,
                 method,
                 false,
+                t,
               )}
             </ValueCell>
           </div>
@@ -231,6 +235,7 @@ export function RequestFormFieldInput({
                 projectId,
                 formValues,
                 method,
+                t,
               )}
             </div>
           </div>
@@ -244,7 +249,7 @@ export function RequestFormFieldInput({
         )}
       >
         {field.required ? (
-          <span className={REQUEST_BUILDER_REQUIRED}>Required</span>
+          <span className={REQUEST_BUILDER_REQUIRED}>{t('Required')}</span>
         ) : null}
       </div>
     </div>
@@ -324,6 +329,7 @@ function renderValueControl(
   formValues?: Record<string, FormValue>,
   method?: ApiExplorerMethod,
   combinedHelperArrayLayout = false,
+  translate: (text: string) => string = (text) => text,
 ) {
   if (field.helper?.type === 'permissions') {
     return (
@@ -465,7 +471,7 @@ function renderValueControl(
             id={inputId}
             className="block px-4 font-mono text-[13px] text-muted-foreground/45"
           >
-            No object
+            {translate('No object')}
           </span>
         )
       }
@@ -616,6 +622,7 @@ function renderHelperControl(
   projectId?: string,
   formValues?: Record<string, FormValue>,
   method?: ApiExplorerMethod,
+  translate: (text: string) => string = (text) => text,
 ) {
   if (field.helper?.type === 'permissions') {
     return (
@@ -665,7 +672,7 @@ function renderHelperControl(
           className="h-8 text-[12px]"
           onClick={() => onChange(ID.unique())}
         >
-          Generate
+          {translate('Generate')}
         </Button>
       )
 
@@ -686,7 +693,7 @@ function renderHelperControl(
             className={REQUEST_BUILDER_HELPER_LINK}
             onClick={() => onChange('{}')}
           >
-            Add object
+            {translate('Add object')}
           </button>
         )
       }
@@ -734,6 +741,7 @@ function ExplorerFileHelper({
   value: File | null
   onChange: (value: FormValue) => void
 }) {
+  const t = useT()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleChooseFile = () => {
@@ -768,7 +776,7 @@ function ExplorerFileHelper({
             className="h-8 text-[12px]"
             onClick={handleChooseFile}
           >
-            Change
+            {t('Change')}
           </Button>
           <Button
             type="button"
@@ -776,7 +784,7 @@ function ExplorerFileHelper({
             size="sm"
             className="h-8 w-8 shrink-0 p-0 text-muted-foreground/60"
             onClick={handleClearFile}
-            aria-label="Clear file"
+            aria-label={t('Clear file')}
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -789,7 +797,7 @@ function ExplorerFileHelper({
           className="h-8 text-[12px]"
           onClick={handleChooseFile}
         >
-          Choose file
+          {t('Choose file')}
         </Button>
       )}
     </>
@@ -805,6 +813,7 @@ function ExplorerPasswordValue({
   value: string
   onChange: (value: string) => void
 }) {
+  const t = useT()
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
@@ -828,8 +837,8 @@ function ExplorerPasswordValue({
         type="button"
         onClick={() => setRevealed((current) => !current)}
         className="absolute end-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label={revealed ? 'Hide password' : 'Show password'}
-        title={revealed ? 'Hide password' : 'Show password'}
+        aria-label={revealed ? t('Hide password') : t('Show password')}
+        title={revealed ? t('Hide password') : t('Show password')}
       >
         {revealed ? (
           <EyeOff className="h-4 w-4" />

@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ComponentType, SVGProps } from 'react'
 import type { ReactNode } from 'react'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type MarketingHeroSectionProps = {
@@ -29,6 +30,7 @@ export function MarketingHeroSection({
   footer,
   className,
 }: MarketingHeroSectionProps) {
+  const t = useT()
   const isCenter = align === 'center'
 
   return (
@@ -51,7 +53,7 @@ export function MarketingHeroSection({
       >
         {eyebrow ? (
           <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-            {eyebrow}
+            {t(eyebrow)}
             <span className="text-[var(--brand-cta)]">_</span>
           </p>
         ) : null}
@@ -77,7 +79,7 @@ export function MarketingHeroSection({
             !isCenter && 'max-w-3xl',
           )}
         >
-          {title}
+          {t(title)}
           {!gradientTitle ? <span className="text-[var(--brand-cta)]">_</span> : null}
         </h1>
         <p
@@ -87,7 +89,7 @@ export function MarketingHeroSection({
             !isCenter && 'max-w-2xl',
           )}
         >
-          {description}
+          {t(description)}
         </p>
         {children ? (
           <div
@@ -143,6 +145,7 @@ export function MarketingSectionHeading({
   size = 'lg',
   className,
 }: MarketingSectionHeadingProps) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -158,7 +161,7 @@ export function MarketingSectionHeading({
           size === 'sm' && 'text-[15px] font-semibold sm:text-[16px]',
         )}
       >
-        {title}
+        {t(title)}
         <span className="text-[var(--brand-cta)]">_</span>
       </h2>
       {description ? (
@@ -168,7 +171,7 @@ export function MarketingSectionHeading({
             align === 'center' && 'mx-auto max-w-2xl text-balance',
           )}
         >
-          {description}
+          {t(description)}
         </p>
       ) : null}
     </div>
@@ -246,6 +249,7 @@ export function MarketingFeatureGrid({
   columns = 3,
   className,
 }: MarketingFeatureGridProps) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -271,9 +275,9 @@ export function MarketingFeatureGrid({
                 <Icon className="size-3.5 text-muted-foreground" aria-hidden />
               </span>
               <div>
-                <h3 className="text-[14px] font-semibold text-foreground">{item.title}</h3>
+                <h3 className="text-[14px] font-semibold text-foreground">{t(item.title)}</h3>
                 <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
-                  {item.description}
+                  {t(item.description)}
                 </p>
               </div>
             </div>
@@ -295,11 +299,12 @@ export function MarketingBentoFeatureCard({
   items,
   className,
 }: MarketingBentoFeatureCardProps) {
+  const t = useT()
   return (
     <div className={cn('overflow-hidden rounded-xl border border-border bg-card/45', className)}>
       {title ? (
         <div className="border-b border-border bg-muted/15 px-4 py-3 text-center">
-          <h3 className="text-[13px] font-normal text-foreground">{title}</h3>
+          <h3 className="text-[13px] font-normal text-foreground">{t(title)}</h3>
         </div>
       ) : null}
       <div className="grid grid-cols-2">
@@ -317,8 +322,8 @@ export function MarketingBentoFeatureCard({
               <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40">
                 <Icon className="size-3.5 text-muted-foreground" aria-hidden />
               </span>
-              <h4 className="mt-3 text-[13px] font-semibold text-foreground">{item.title}</h4>
-              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{item.description}</p>
+              <h4 className="mt-3 text-[13px] font-semibold text-foreground">{t(item.title)}</h4>
+              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{t(item.description)}</p>
             </article>
           )
         })}
@@ -338,6 +343,7 @@ type MarketingHeroStatsProps = {
 }
 
 export function MarketingHeroStats({ items, className }: MarketingHeroStatsProps) {
+  const t = useT()
   const isWide = items.length >= 5
 
   return (
@@ -370,7 +376,7 @@ export function MarketingHeroStats({ items, className }: MarketingHeroStatsProps
                 isWide ? 'max-w-[9.5rem] sm:max-w-none' : 'max-w-[10rem]',
               )}
             >
-              {item.label}
+              {t(item.label)}
             </dt>
             <dd
               className={cn(
@@ -400,6 +406,7 @@ export function MarketingStatGrid({
   compact = true,
   className,
 }: MarketingStatGridProps) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -431,7 +438,7 @@ export function MarketingStatGrid({
               compact ? 'text-[10px] leading-snug sm:text-[11px]' : 'text-[13px]',
             )}
           >
-            {item.label}
+            {t(item.label)}
           </p>
         </div>
       ))}
@@ -458,10 +465,11 @@ export function MarketingInvolvementCards({
   items,
   className,
 }: MarketingInvolvementCardsProps) {
+  const t = useT()
   return (
     <div className={className}>
       {title ? (
-        <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">{t(title)}</h3>
       ) : null}
       <div
         className={cn(
@@ -480,8 +488,8 @@ export function MarketingInvolvementCards({
                 <Icon className="size-5 text-muted-foreground" aria-hidden />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-foreground">{item.title}</p>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">{item.description}</p>
+                <p className="text-[13px] font-medium text-foreground">{t(item.title)}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">{t(item.description)}</p>
               </div>
             </>
           )
@@ -524,16 +532,17 @@ export function MarketingCtaSection({
   description?: string
   children: ReactNode
 }) {
+  const t = useT()
   return (
     <section className="relative border-t border-border">
       <HomeSoftLights variant="testimonials" className="opacity-50" />
       <div className="relative mx-auto max-w-xl px-4 py-16 text-center sm:px-6 sm:py-20">
         <h2 className="font-aeonik-pro text-[28px] font-normal leading-tight text-foreground sm:text-[32px]">
-          {title}
+          {t(title)}
           <span className="text-[var(--brand-cta)]">_</span>
         </h2>
         {description ? (
-          <p className="mt-4 text-[14px] leading-7 text-muted-foreground">{description}</p>
+          <p className="mt-4 text-[14px] leading-7 text-muted-foreground">{t(description)}</p>
         ) : null}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">{children}</div>
       </div>

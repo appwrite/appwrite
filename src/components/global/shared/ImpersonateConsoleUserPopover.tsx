@@ -52,6 +52,7 @@ import {
   type RecentImpersonationUser,
 } from '@/lib/user-prefs-keys'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type ConsoleAccount = Models.User & {
   impersonator?: boolean
@@ -69,6 +70,7 @@ function recentImpersonationUserToModel(
 }
 
 export function ImpersonateConsoleUserPopover() {
+  const t = useT()
   const { account: accountRaw } = useAuth()
   const account = accountRaw as ConsoleAccount | undefined
   const [open, setOpen] = useState(false)
@@ -145,16 +147,16 @@ export function ImpersonateConsoleUserPopover() {
   const handleSelectUser = async (user: Models.User) => {
     const targetId = user?.$id
     if (!targetId?.trim()) {
-      toast.error('This user has no valid ID; pick another user.')
+      toast.error(t('This user has no valid ID; pick another user.'))
       return
     }
 
     if (user.$id === account?.$id) {
-      toast.error('That user is already the active Console session.')
+      toast.error(t('That user is already the active Console session.'))
       return
     }
     if (operatorId && user.$id === operatorId) {
-      toast.error('You cannot impersonate your own operator account.')
+      toast.error(t('You cannot impersonate your own operator account.'))
       return
     }
 
@@ -164,7 +166,7 @@ export function ImpersonateConsoleUserPopover() {
       operator = readConsoleImpersonationOperatorSnapshot()
       if (!operator) {
         toast.error(
-          'Operator context was lost. Stop impersonating, then start again.',
+          t('Operator context was lost. Stop impersonating, then start again.'),
         )
         return
       }
@@ -192,7 +194,7 @@ export function ImpersonateConsoleUserPopover() {
           ? e.message
           : e instanceof Error
             ? e.message
-            : 'Could not start impersonation.'
+            : t('Could not start impersonation.')
       toast.error(message)
     }
   }
@@ -220,14 +222,16 @@ export function ImpersonateConsoleUserPopover() {
             <button
               type="button"
               className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:flex"
-              aria-label={isImpersonating ? 'Impersonating' : 'Impersonate'}
+              aria-label={
+                isImpersonating ? t('Impersonating') : t('Impersonate')
+              }
             >
               <Eye className="h-4 w-4" />
             </button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          <p>{isImpersonating ? 'Impersonating' : 'Impersonate'}</p>
+          <p>{isImpersonating ? t('Impersonating') : t('Impersonate')}</p>
         </TooltipContent>
       </Tooltip>
       <PopoverContent
@@ -236,19 +240,19 @@ export function ImpersonateConsoleUserPopover() {
       >
         <div className="border-b border-border px-4 py-3">
           <h3 className="text-[13px] font-semibold text-foreground">
-            Impersonate user
+            {t('Impersonate user')}
           </h3>
           <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
-            Matches the start of name, email, phone, or user ID. The Console
-            runs with the selected account&apos;s access until you end
-            impersonation.
+            {t(
+              "Matches the start of name, email, phone, or user ID. The Console runs with the selected account's access until you end impersonation.",
+            )}
           </p>
         </div>
 
         {isImpersonating && (
           <div className="border-b border-border bg-muted/30 px-4 py-3">
             <p className="text-[12px] text-muted-foreground">
-              Active session:{' '}
+              {t('Active session:')}{' '}
               <span className="font-medium text-foreground">
                 {account?.name || account?.email || account?.$id}
               </span>
@@ -260,7 +264,7 @@ export function ImpersonateConsoleUserPopover() {
               className="mt-2 h-8 text-[12px]"
               onClick={() => void handleStop()}
             >
-              Exit impersonation
+              {t('Exit impersonation')}
             </Button>
           </div>
         )}
@@ -268,7 +272,7 @@ export function ImpersonateConsoleUserPopover() {
         <Command shouldFilter={false} className="overflow-visible">
           <div className="relative border-b border-border">
             <CommandInput
-              placeholder="Name, email, phone, or user ID…"
+              placeholder={t('Name, email, phone, or user ID…')}
               value={search}
               onValueChange={setSearch}
               className={cn('h-9 text-[13px]', isFetching && 'pe-9')}
@@ -285,7 +289,7 @@ export function ImpersonateConsoleUserPopover() {
           </div>
           <CommandList className="max-h-[280px]">
             {showRecentSection && (
-              <CommandGroup heading="Recent">
+              <CommandGroup heading={t('Recent')}>
                 {recentImpersonationUsers.map((recent) => {
                   const disabled =
                     recent.$id === account?.$id ||
@@ -351,7 +355,7 @@ export function ImpersonateConsoleUserPopover() {
                     className="h-5 w-5 animate-spin text-muted-foreground"
                     aria-hidden
                   />
-                  <span className="sr-only">Loading users</span>
+                  <span className="sr-only">{t('Loading users')}</span>
                 </div>
               ) : (
                 <EmptyState
@@ -361,13 +365,17 @@ export function ImpersonateConsoleUserPopover() {
                   className="px-6 py-8"
                   title={
                     debouncedSearch.trim()
-                      ? 'No matching users'
-                      : 'No users to show'
+                      ? t('No matching users')
+                      : t('No users to show')
                   }
                   description={
                     debouncedSearch.trim()
-                      ? 'Try a different prefix for name, email, phone, or user ID.'
-                      : 'Enter text that matches the start of a name, email, phone, or user ID.'
+                      ? t(
+                          'Try a different prefix for name, email, phone, or user ID.',
+                        )
+                      : t(
+                          'Enter text that matches the start of a name, email, phone, or user ID.',
+                        )
                   }
                 />
               )}

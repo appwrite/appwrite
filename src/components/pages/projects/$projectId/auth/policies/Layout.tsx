@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Clock, KeyRound, Mail, Users, UsersRound } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
+import { useT } from '@/lib/i18n/translate'
 import { POLICIES_SETTINGS_CARD_INDEX } from '@/lib/settings-search/policies-settings-cards'
 import {
   PoliciesSettingsSearchProvider,
@@ -95,6 +96,7 @@ function PoliciesLayoutContent({
   activeSubTab,
   children,
 }: PoliciesLayoutProps) {
+  const t = useT()
   const navigate = useNavigate()
   const { query: policiesSearchQuery, setQuery: setPoliciesSearchQuery } =
     usePoliciesSettingsSearch()
@@ -103,13 +105,15 @@ function PoliciesLayoutContent({
     () =>
       NAV_ITEMS.map((item) => ({
         ...item,
+        label: t(item.label),
         params: { projectId },
       })),
-    [projectId],
+    [projectId, t],
   )
 
-  const activeLabel =
-    NAV_ITEMS.find((item) => item.id === activeSubTab)?.label ?? 'Sessions'
+  const activeLabel = t(
+    NAV_ITEMS.find((item) => item.id === activeSubTab)?.label ?? 'Sessions',
+  )
 
   return (
     <SettingsLayoutShell
@@ -118,9 +122,9 @@ function PoliciesLayoutContent({
       cardIndex={POLICIES_SETTINGS_CARD_INDEX}
       searchQuery={policiesSearchQuery}
       onSearchQueryChange={setPoliciesSearchQuery}
-      searchPlaceholder="Search policies..."
-      mobileNavAriaLabel="Policies section"
-      desktopNavAriaLabel="Policies navigation"
+      searchPlaceholder={t('Search policies...')}
+      mobileNavAriaLabel={t('Policies section')}
+      desktopNavAriaLabel={t('Policies navigation')}
       onNavigateToSection={(sectionId) => {
         const item = NAV_ITEMS.find((n) => n.id === sectionId)
         if (!item) return
@@ -130,7 +134,9 @@ function PoliciesLayoutContent({
         })
       }}
     >
-      <h2 className="sr-only">{activeLabel} policies</h2>
+      <h2 className="sr-only">
+        {activeLabel} {t('policies')}
+      </h2>
       {children}
     </SettingsLayoutShell>
   )

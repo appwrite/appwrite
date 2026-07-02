@@ -19,6 +19,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface MigrationContextMenuProps {
   projectId: string
@@ -35,6 +36,7 @@ export function MigrationContextMenu({
   onViewDetails,
   children,
 }: MigrationContextMenuProps) {
+  const t = useT()
   const migrationHref = buildConsoleUrl(
     `/projects/${projectId}/settings/migrations?migrationId=${migration.$id}`,
   )
@@ -45,26 +47,26 @@ export function MigrationContextMenu({
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={() => onViewDetails(migration)}>
           <ContextMenuIcon icon={LayoutList} />
-          Overview
+          {t('Overview')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', migration.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Link', migrationHref)}
             >
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -77,18 +79,18 @@ export function MigrationContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(migrationHref)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(migrationHref)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

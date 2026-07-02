@@ -12,12 +12,14 @@ import {
 } from '@/components/ui/popover'
 import { getQueryDisplayPartsFromEntry, QueryFilterForm } from './QueryFilterForm'
 import { QueryExpression } from './QueryExpression'
+import { useT } from '@/lib/i18n/translate'
 
 function LiveIndicator() {
+  const t = useT()
   return (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/[0.08] px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-      Live
+      {t('Live')}
     </span>
   )
 }
@@ -35,6 +37,7 @@ function ConfigurationSubscriptionRow({
   onAddQuery: (query: SubscriptionQueryEntry) => void
   onRemoveQuery: (queryId: string) => void
 }) {
+  const t = useT()
   const [queryPopoverOpen, setQueryPopoverOpen] = useState(false)
 
   const handleAddQuery = useCallback(
@@ -71,7 +74,7 @@ function ConfigurationSubscriptionRow({
                 className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
               >
                 <Filter className="me-1 h-3 w-3" />
-                Query
+                {t('Query')}
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -81,15 +84,15 @@ function ConfigurationSubscriptionRow({
             >
               <div className="border-b border-border px-4 py-3">
                 <p className="text-[13px] font-semibold text-foreground">
-                  Add query
+                  {t('Add query')}
                 </p>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  Filter events for this subscription only.
+                  {t('Filter events for this subscription only.')}
                 </p>
               </div>
               <div className="px-4 py-3">
                 <QueryFilterForm
-                  submitLabel="Add query"
+                  submitLabel={t('Add query')}
                   onSubmit={handleAddQuery}
                   onCancel={() => setQueryPopoverOpen(false)}
                 />
@@ -100,7 +103,7 @@ function ConfigurationSubscriptionRow({
           <button
             type="button"
             className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-60 transition-[color,opacity,background-color] hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring group-hover:opacity-100"
-            aria-label={`Remove subscription ${entry.channel}`}
+            aria-label={`${t('Remove subscription')} ${entry.channel}`}
             onClick={onRemove}
           >
             <X className="h-3.5 w-3.5" />
@@ -125,7 +128,7 @@ function ConfigurationSubscriptionRow({
                 <button
                   type="button"
                   className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-[color,opacity,background-color] hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/query:opacity-100"
-                  aria-label="Remove query"
+                  aria-label={t('Remove query')}
                   onClick={() => onRemoveQuery(query.id)}
                 >
                   <X className="h-3 w-3" />
@@ -157,11 +160,12 @@ export function ConfigurationItemsList({
   ) => void
   onRemoveSubscriptionQuery: (subscriptionId: string, queryId: string) => void
 }) {
+  const t = useT()
   if (configuredSubscriptions.length === 0) {
     return (
       <div className="flex min-h-[160px] items-center justify-center px-4 py-8 text-center">
         <p className="max-w-[14rem] text-[13px] leading-relaxed text-muted-foreground">
-          Add a subscription to configure channels and query filters.
+          {t('Add a subscription to configure channels and query filters.')}
         </p>
       </div>
     )

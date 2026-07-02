@@ -45,6 +45,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 const MAX_SCOPES = 100
 const MAX_SCOPE_LENGTH = 128
@@ -122,6 +123,7 @@ function SectionUpdateButton({
   pending?: boolean
   onClick: () => void
 }) {
+  const t = useT()
   return (
     <Button
       size="sm"
@@ -129,7 +131,7 @@ function SectionUpdateButton({
       disabled={disabled || pending}
       onClick={onClick}
     >
-      Update
+      {t('Update')}
     </Button>
   )
 }
@@ -214,6 +216,7 @@ function DurationField({
   onValueChange: (value: number | null) => void
   onUnitChange: (unit: OAuth2ServerTimeUnit) => void
 }) {
+  const t = useT()
   return (
     <div className="space-y-2">
       <div>
@@ -249,7 +252,7 @@ function DurationField({
           <SelectContent>
             {OAUTH2_SERVER_TIME_UNIT_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                {t(option.label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -260,6 +263,7 @@ function DurationField({
 }
 
 function CopyableUrl({ value }: { value: string }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -283,12 +287,12 @@ function CopyableUrl({ value }: { value: string }) {
         {copied ? (
           <>
             <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
-            Copied
+            {t('Copied')}
           </>
         ) : (
           <>
             <Copy className="me-1.5 h-3.5 w-3.5" />
-            Copy
+            {t('Copy')}
           </>
         )}
       </Button>
@@ -323,12 +327,13 @@ const PUBLIC_EXAMPLES = [
 ]
 
 function ExampleList({ items }: { items: typeof CONFIDENTIAL_EXAMPLES }) {
+  const t = useT()
   return (
     <ul className="space-y-2 pt-1">
       {items.map((item) => (
         <li key={item.title} className="text-[12px] text-muted-foreground">
-          <span className="font-medium text-foreground">{item.title}.</span>{' '}
-          {item.description}
+          <span className="font-medium text-foreground">{t(item.title)}.</span>{' '}
+          {t(item.description)}
         </li>
       ))}
     </ul>
@@ -364,6 +369,7 @@ interface OAuth2ServerViewProps {
 }
 
 export function View({ projectId }: OAuth2ServerViewProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { project, projectData } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -494,7 +500,9 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (requiresAuthorizationUrl) {
-        throw new Error('Authorization URL is required when the server is enabled.')
+        throw new Error(
+          t('Authorization URL is required when the server is enabled.'),
+        )
       }
       const scopeError = validateScopes(mergeOAuth2Scopes(scopes))
       if (scopeError) throw new Error(scopeError)
@@ -519,16 +527,16 @@ export function View({ projectId }: OAuth2ServerViewProps) {
       queryClient.setQueryData(projectQueryOptions(projectId).queryKey, response)
       const message =
         pendingSection === 'status'
-          ? 'Server status has been updated.'
+          ? t('Server status has been updated.')
           : pendingSection === 'integration'
-            ? 'Integration settings have been updated.'
-            : 'Token lifetimes have been updated.'
+            ? t('Integration settings have been updated.')
+            : t('Token lifetimes have been updated.')
       toast.success(message)
       setPendingSection(null)
     },
     onError: (error: Error) => {
       toast.error(
-        getErrorMessage(error, 'Failed to update OAuth2 server settings'),
+        getErrorMessage(error, t('Failed to update OAuth2 server settings')),
       )
       setPendingSection(null)
     },
@@ -546,14 +554,16 @@ export function View({ projectId }: OAuth2ServerViewProps) {
   return (
     <div className="space-y-6">
       <SettingsSection
-        title="Server status"
-        description="Let external apps authenticate users through this project. They register as OAuth clients, use your user directory, and receive tokens you issue."
+        title={t('Server status')}
+        description={t(
+          'Let external apps authenticate users through this project. They register as OAuth clients, use your user directory, and receive tokens you issue.',
+        )}
         headerExtra={
           <Badge
             variant={enabled ? 'success' : 'secondary'}
             className="shrink-0 text-[10px] uppercase tracking-wide"
           >
-            {enabled ? 'Active' : 'Inactive'}
+            {enabled ? t('Active') : t('Inactive')}
           </Badge>
         }
         footer={
@@ -568,7 +578,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
       >
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="oauth2-server-enabled" className="text-[13px]">
-            Enable OAuth2 server
+            {t('Enable OAuth2 server')}
           </Label>
           <Switch
             id="oauth2-server-enabled"
@@ -582,8 +592,10 @@ export function View({ projectId }: OAuth2ServerViewProps) {
       {enabled ? (
         <>
           <SettingsSection
-            title="Integration"
-            description="Share the discovery URL with integrators. Point your consent screen at the authorization URL."
+            title={t('Integration')}
+            description={t(
+              'Share the discovery URL with integrators. Point your consent screen at the authorization URL.',
+            )}
             footer={
               <SectionUpdateButton
                 pending={
@@ -598,19 +610,22 @@ export function View({ projectId }: OAuth2ServerViewProps) {
           >
             <div className="space-y-2">
               <Label className="text-[12px] font-medium uppercase tracking-wide text-muted-foreground">
-                OIDC discovery URL
+                {t('OIDC discovery URL')}
               </Label>
               <CopyableUrl value={discoveryUrl} />
               <p className="text-[12px] text-muted-foreground">
-                OAuth libraries fetch this once to learn authorize, token, and
-                JWKS endpoints. It should return JSON when opened in a browser.
+                {t(
+                  'OAuth libraries fetch this once to learn authorize, token, and JWKS endpoints. It should return JSON when opened in a browser.',
+                )}
               </p>
             </div>
 
             <div className="space-y-2">
               <FieldHint
-                label="Authorization URL"
-                hint="Your consent screen URL. Users are redirected here during authorization."
+                label={t('Authorization URL')}
+                hint={t(
+                  'Your consent screen URL. Users are redirected here during authorization.',
+                )}
               />
               <Input
                 id="oauth2-authorization-url"
@@ -624,8 +639,8 @@ export function View({ projectId }: OAuth2ServerViewProps) {
 
             <div className="space-y-2">
               <FieldHint
-                label="Scopes"
-                hint={`openid, profile, and email are always included. Add up to ${MAX_SCOPES} scopes total, each up to ${MAX_SCOPE_LENGTH} characters.`}
+                label={t('Scopes')}
+                hint={`${t('openid, profile, and email are always included. Add up to')} ${MAX_SCOPES} ${t('scopes total, each up to')} ${MAX_SCOPE_LENGTH} ${t('characters.')}`}
               />
               <InputTags
                 id="oauth2-scopes"
@@ -633,15 +648,17 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 lockedTags={[...REQUIRED_OAUTH2_SCOPES]}
                 disabled={!canEdit}
                 splitOnComma
-                placeholder="Add custom scopes"
+                placeholder={t('Add custom scopes')}
                 onChange={(next) => setScopes(mergeOAuth2Scopes(next))}
               />
             </div>
           </SettingsSection>
 
           <SettingsSection
-            title="Token lifetimes"
-            description="Confidential clients use a client secret on a backend. Public clients (SPAs, mobile) use PKCE only."
+            title={t('Token lifetimes')}
+            description={t(
+              'Confidential clients use a client secret on a backend. Public clients (SPAs, mobile) use PKCE only.',
+            )}
             footer={
               <SectionUpdateButton
                 pending={updateMutation.isPending && pendingSection === 'tokens'}
@@ -653,21 +670,21 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-0">
               <div className="lg:pe-8">
               <ClientTokenSettingsColumn
-                title="Confidential clients"
+                title={t('Confidential clients')}
                 description={
                   <>
-                    Server-side apps that store a{' '}
+                    {t('Server-side apps that store a')}{' '}
                     <code className="rounded bg-muted px-1 font-mono text-[11px]">
                       client_secret
                     </code>{' '}
-                    privately.
+                    {t('privately.')}
                   </>
                 }
               >
                 <DurationField
                   id="oauth2-access-token-duration"
-                  label="Access token TTL"
-                  hint="Default: 8 hours when empty."
+                  label={t('Access token TTL')}
+                  hint={t('Default: 8 hours when empty.')}
                   value={accessTokenValue}
                   unit={accessTokenUnit}
                   placeholder="8"
@@ -677,8 +694,8 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 />
                 <DurationField
                   id="oauth2-refresh-token-duration"
-                  label="Refresh token TTL"
-                  hint="Default: 365 days when empty."
+                  label={t('Refresh token TTL')}
+                  hint={t('Default: 365 days when empty.')}
                   value={refreshTokenValue}
                   unit={refreshTokenUnit}
                   placeholder="365"
@@ -692,10 +709,10 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                       htmlFor="oauth2-confidential-pkce"
                       className="text-[13px] font-medium"
                     >
-                      Require PKCE
+                      {t('Require PKCE')}
                     </Label>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      Extra protection if an auth code is intercepted.
+                      {t('Extra protection if an auth code is intercepted.')}
                     </p>
                   </div>
                   <Switch
@@ -708,7 +725,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 <Collapsible>
                   <CollapsibleTrigger className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground">
                     <ChevronDown className="h-3.5 w-3.5" />
-                    Example use cases
+                    {t('Example use cases')}
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <ExampleList items={CONFIDENTIAL_EXAMPLES} />
@@ -719,13 +736,15 @@ export function View({ projectId }: OAuth2ServerViewProps) {
 
               <div className="border-t border-border pt-6 lg:border-s lg:border-t-0 lg:ps-8 lg:pt-0">
                 <ClientTokenSettingsColumn
-                title="Public clients"
-                description="Browser and mobile clients. PKCE is always required; no client secret is issued."
+                title={t('Public clients')}
+                description={t(
+                  'Browser and mobile clients. PKCE is always required; no client secret is issued.',
+                )}
               >
                 <DurationField
                   id="oauth2-public-access-token-duration"
-                  label="Access token TTL"
-                  hint="Default: 1 hour when empty."
+                  label={t('Access token TTL')}
+                  hint={t('Default: 1 hour when empty.')}
                   value={publicAccessTokenValue}
                   unit={publicAccessTokenUnit}
                   placeholder="1"
@@ -735,8 +754,8 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 />
                 <DurationField
                   id="oauth2-public-refresh-token-duration"
-                  label="Refresh token TTL"
-                  hint="Default: 30 days when empty."
+                  label={t('Refresh token TTL')}
+                  hint={t('Default: 30 days when empty.')}
                   value={publicRefreshTokenValue}
                   unit={publicRefreshTokenUnit}
                   placeholder="30"
@@ -747,7 +766,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 <Collapsible>
                   <CollapsibleTrigger className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground">
                     <ChevronDown className="h-3.5 w-3.5" />
-                    Example use cases
+                    {t('Example use cases')}
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <ExampleList items={PUBLIC_EXAMPLES} />

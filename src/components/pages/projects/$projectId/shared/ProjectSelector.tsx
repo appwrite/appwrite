@@ -46,6 +46,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
+import { useT } from '@/lib/i18n/translate'
 import {
   INITIAL_LOADER_SHELL_GATE,
   resetInitialLoaderShellGate,
@@ -160,6 +161,7 @@ export function ProjectSelector({
   isMobile,
   onCreateOrganization,
 }: ProjectSelectorProps) {
+  const t = useT()
   const { features, isCloud } = useConsoleProfile()
   const supportsMultiTenancy = features.multiTenancy
   const navigate = useNavigate()
@@ -718,7 +720,7 @@ export function ProjectSelector({
             overlayClassName="z-[131]"
             showCloseButton={false}
           >
-            <DialogTitle className="sr-only">Select project</DialogTitle>
+            <DialogTitle className="sr-only">{t('Select project')}</DialogTitle>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <h2 className="text-[15px] font-semibold text-foreground">
@@ -922,6 +924,7 @@ function ProjectSelectorContent({
   onCreateOrganization,
   prefetchTeamProjects,
 }: ProjectSelectorContentProps) {
+  const t = useT()
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
@@ -958,7 +961,7 @@ function ProjectSelectorContent({
   if (!selectedTeam || !selectedProject) {
     return (
       <div className="flex h-[300px] items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading...</div>
+        <div className="text-sm text-muted-foreground">{t('Loading...')}</div>
       </div>
     )
   }
@@ -975,7 +978,7 @@ function ProjectSelectorContent({
             <Search className="h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Find Organization..."
+              placeholder={t('Find Organization...')}
               value={teamSearch}
               onChange={(e) => setTeamSearch(e.target.value)}
               className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -1025,7 +1028,7 @@ function ProjectSelectorContent({
                             )}
                           >
                             {teamOrg.billingPlanDowngrade
-                              ? 'Downgraded'
+                              ? t('Downgraded')
                               : getPlanDisplayName(teamOrg.plan)}
                           </span>
                         )}
@@ -1050,7 +1053,7 @@ function ProjectSelectorContent({
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-3.5 w-3.5" />
               </div>
-              <span className="text-[13px]">Create Organization</span>
+              <span className="text-[13px]">{t('Create Organization')}</span>
             </button>
           </div>
         </div>
@@ -1068,7 +1071,7 @@ function ProjectSelectorContent({
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Find Project..."
+            placeholder={t('Find Project...')}
             value={projectSearch}
             onChange={(e) => setProjectSearch(e.target.value)}
             className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -1087,8 +1090,8 @@ function ProjectSelectorContent({
             {displayProjects.length === 0 ? (
               <p className="px-2 py-4 text-center text-[12px] text-muted-foreground">
                 {selectedTeam || !supportsMultiTenancy
-                  ? 'No projects found'
-                  : 'Select an organization'}
+                  ? t('No projects found')
+                  : t('Select an organization')}
               </p>
             ) : (
               <>
@@ -1171,7 +1174,7 @@ function ProjectSelectorContent({
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
             </div>
-            <span className="text-[13px]">Create Project</span>
+            <span className="text-[13px]">{t('Create Project')}</span>
           </button>
         </div>
       </div>
@@ -1205,6 +1208,7 @@ function MobileProjectSelectorContent({
   onCreateOrganization,
   prefetchTeamProjects,
 }: ProjectSelectorContentProps) {
+  const t = useT()
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
   const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
 
@@ -1250,7 +1254,7 @@ function MobileProjectSelectorContent({
   if (!selectedTeam || !selectedProject) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading...</div>
+        <div className="text-sm text-muted-foreground">{t('Loading...')}</div>
       </div>
     )
   }
@@ -1292,7 +1296,7 @@ function MobileProjectSelectorContent({
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Find Organization..."
+              placeholder={t('Find Organization...')}
               value={teamSearch}
               onChange={(e) => setTeamSearch(e.target.value)}
               className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -1343,7 +1347,7 @@ function MobileProjectSelectorContent({
                           )}
                         >
                           {teamOrg.billingPlanDowngrade
-                            ? 'Downgraded'
+                            ? t('Downgraded')
                             : getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
@@ -1367,7 +1371,7 @@ function MobileProjectSelectorContent({
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>
-              <span className="text-[14px]">Create Organization</span>
+              <span className="text-[14px]">{t('Create Organization')}</span>
             </button>
           </div>
         </div>
@@ -1396,7 +1400,7 @@ function MobileProjectSelectorContent({
             <Search className="h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Find Project..."
+              placeholder={t('Find Project...')}
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
               className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -1412,8 +1416,8 @@ function MobileProjectSelectorContent({
               {displayProjects.length === 0 ? (
                 <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
                   {selectedTeam || !supportsMultiTenancy
-                    ? 'No projects found'
-                    : 'Select an organization'}
+                    ? t('No projects found')
+                    : t('Select an organization')}
                 </p>
               ) : (
                 <>
@@ -1499,7 +1503,7 @@ function MobileProjectSelectorContent({
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>
-              <span className="text-[14px]">Create Project</span>
+              <span className="text-[14px]">{t('Create Project')}</span>
             </button>
           </div>
         </div>

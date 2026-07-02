@@ -38,10 +38,12 @@ import {
 } from '@/components/ui/tooltip'
 import type { Models } from '@appwrite.io/console'
 import { CreateBucket } from './CreateBucket'
+import { useT } from '@/lib/i18n/translate'
 
 const PICK_LIMIT = 25
 
 export function MobileBucketSelector() {
+  const t = useT()
   const { projectId, bucketId: value } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -65,8 +67,11 @@ export function MobileBucketSelector() {
     noCreate || (bucketsLimit > 0 && totalCount >= bucketsLimit)
 
   useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timer)
   }, [search])
 
   useEffect(() => {
@@ -96,7 +101,7 @@ export function MobileBucketSelector() {
   const selectedName =
     activeBucket?.name ??
     buckets.find((b) => b.$id === value)?.name ??
-    (value ? 'Bucket' : 'Select bucket')
+    (value ? t('Bucket') : t('Select bucket'))
 
   const createMutation = useMutation({
     mutationFn: async (form: { bucketId?: string; name: string }) => {
@@ -109,7 +114,7 @@ export function MobileBucketSelector() {
       })
     },
     onSuccess: (bucket) => {
-      toast.success(`${bucket.name} has been created`)
+      toast.success(`${bucket.name} ${t('has been created')}`)
       void queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
       setCreateOpen(false)
       setOpen(false)
@@ -149,12 +154,12 @@ export function MobileBucketSelector() {
           <PopoverContent className="w-[min(100vw-2rem,380px)] p-0" align="start">
             <Command shouldFilter={false}>
               <CommandInput
-                placeholder="Search buckets…"
+                placeholder={t('Search buckets…')}
                 value={search}
                 onValueChange={setSearch}
               />
               <CommandList>
-                <CommandEmpty>No buckets found.</CommandEmpty>
+                <CommandEmpty>{t('No buckets found.')}</CommandEmpty>
                 <CommandGroup>
                   {buckets.map((bucket) => (
                     <CommandItem
@@ -188,7 +193,7 @@ export function MobileBucketSelector() {
                 className="h-9 w-9 shrink-0"
                 disabled={createDisabled}
                 onClick={() => setCreateOpen(true)}
-                aria-label="Create bucket"
+                aria-label={t('Create bucket')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -197,8 +202,8 @@ export function MobileBucketSelector() {
           {createDisabled ? (
             <TooltipContent className="max-w-xs text-xs">
               {noCreate
-                ? "You don't have permission to create buckets."
-                : 'Bucket limit reached for your plan.'}
+                ? t("You don't have permission to create buckets.")
+                : t('Bucket limit reached for your plan.')}
             </TooltipContent>
           ) : null}
         </Tooltip>

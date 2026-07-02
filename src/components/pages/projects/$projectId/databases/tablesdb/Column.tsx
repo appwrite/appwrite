@@ -24,6 +24,7 @@ import {
   isValidInt64,
   parseInt64Value,
 } from '@/lib/utils/database-columns'
+import { useT } from '@/lib/i18n/translate'
 
 export type ColumnType =
   | 'text'
@@ -189,6 +190,7 @@ export function ColumnDrawer({
   isLoading = false,
   table,
 }: ColumnDrawerProps) {
+  const t = useT()
   const isEditMode = !!column
   const relationshipTables = availableTables.filter(
     (table) => table.$id !== currentTableId,
@@ -484,8 +486,8 @@ export function ColumnDrawer({
       if (!(column as unknown)?.isSuggestion) {
         toast.success(
           isEditMode
-            ? 'Column updated successfully'
-            : 'Column created successfully',
+            ? t('Column updated successfully')
+            : t('Column created successfully'),
         )
       }
     } catch (error) {
@@ -498,7 +500,7 @@ export function ColumnDrawer({
   const addEnumElement = () => {
     if (enumElementInput.trim()) {
       if (enumElementInput.length > 255) {
-        toast.error('Enum elements have a maximum length of 255 characters')
+        toast.error(t('Enum elements have a maximum length of 255 characters'))
         return
       }
       setEnumElements([...enumElements, enumElementInput.trim()])
@@ -512,7 +514,7 @@ export function ColumnDrawer({
 
   const updateEnumElement = (index: number, value: string) => {
     if (value.length > 255) {
-      toast.error('Enum elements have a maximum length of 255 characters')
+      toast.error(t('Enum elements have a maximum length of 255 characters'))
       return
     }
     const newElements = [...enumElements]
@@ -542,7 +544,7 @@ export function ColumnDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title={isEditMode ? 'Update Column' : 'Create Column'}
+      title={isEditMode ? t('Update Column') : t('Create Column')}
       maxWidth="sm:max-w-2xl"
     >
       <>
@@ -561,7 +563,7 @@ export function ColumnDrawer({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, key: e.target.value }))
                 }
-                placeholder="Enter key"
+                placeholder={t('Enter key')}
                 disabled={
                   isLoading || (isEditMode && formData.type === 'relationship')
                 }
@@ -573,7 +575,7 @@ export function ColumnDrawer({
               )}
               {formData.type !== 'relationship' && (
                 <p className="text-[11px] text-muted-foreground">
-                  Allowed characters: a-z, A-Z, 0-9, -, ., _
+                  {t('Allowed characters: a-z, A-Z, 0-9, -, ., _')}
                 </p>
               )}
             </div>
@@ -635,7 +637,7 @@ export function ColumnDrawer({
                 <SelectContent>
                   {COLUMN_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {t(type.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -663,7 +665,7 @@ export function ColumnDrawer({
                       const size = parseInt(e.target.value) || 0
                       setFormData((prev) => ({ ...prev, size }))
                     }}
-                    placeholder="Enter size"
+                    placeholder={t('Enter size')}
                     min={formData.encrypt ? 150 : 1}
                     disabled={isLoading}
                     className={errors.size ? 'border-destructive' : ''}
@@ -675,7 +677,7 @@ export function ColumnDrawer({
                   )}
                   {formData.encrypt && (
                     <p className="text-[11px] text-muted-foreground">
-                      Encrypted string columns require a minimum size of 150.
+                      {t('Encrypted string columns require a minimum size of 150.')}
                     </p>
                   )}
                 </div>
@@ -716,7 +718,7 @@ export function ColumnDrawer({
                   )}
                   {formData.encrypt && (
                     <p className="text-[11px] text-muted-foreground">
-                      Encrypted varchar columns require a minimum size of 150.
+                      {t('Encrypted varchar columns require a minimum size of 150.')}
                     </p>
                   )}
                   <p className="text-[11px] text-muted-foreground">
@@ -732,13 +734,10 @@ export function ColumnDrawer({
                   table.bytesMax > 0 && (
                     <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
                       <p className="text-[11px] font-medium text-foreground">
-                        Row size usage
+                        {t('Row size usage')}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        Database rows have a maximum size of 64 KB. varchar
-                        columns use 4 bytes per character plus a small overhead.
-                        text, mediumtext, and longtext columns only use ~20
-                        bytes regardless of content length.
+                        {t('Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.')}
                       </p>
                       <Progress
                         value={
@@ -767,21 +766,21 @@ export function ColumnDrawer({
             {formData.type === 'text' && (
               <>
                 <p className="text-[11px] text-muted-foreground">
-                  Maximum size: 16,383 characters.
+                  {t('Maximum size: 16,383 characters.')}
                 </p>
               </>
             )}
             {formData.type === 'mediumtext' && (
               <>
                 <p className="text-[11px] text-muted-foreground">
-                  Maximum size: 4,194,303 characters.
+                  {t('Maximum size: 4,194,303 characters.')}
                 </p>
               </>
             )}
             {formData.type === 'longtext' && (
               <>
                 <p className="text-[11px] text-muted-foreground">
-                  Maximum size: 1,073,741,823 characters.
+                  {t('Maximum size: 1,073,741,823 characters.')}
                 </p>
               </>
             )}
@@ -797,7 +796,7 @@ export function ColumnDrawer({
                       htmlFor="column-min"
                       className="text-[12px] font-medium"
                     >
-                      Min
+                      {t('Min')}
                     </Label>
                     {formData.type === 'bigint' ? (
                       <Input
@@ -815,7 +814,7 @@ export function ColumnDrawer({
                             })
                           }
                         }}
-                        placeholder="Enter min"
+                        placeholder={t('Enter min')}
                         disabled={isLoading}
                         aria-invalid={!!errors.min}
                       />
@@ -833,7 +832,7 @@ export function ColumnDrawer({
                                 : parseInt(e.target.value, 10)
                           setFormData((prev) => ({ ...prev, min }))
                         }}
-                        placeholder="Enter min"
+                        placeholder={t('Enter min')}
                         step={formData.type === 'double' ? 0.1 : 1}
                         disabled={isLoading}
                       />
@@ -847,7 +846,7 @@ export function ColumnDrawer({
                       htmlFor="column-max"
                       className="text-[12px] font-medium"
                     >
-                      Max
+                      {t('Max')}
                     </Label>
                     {formData.type === 'bigint' ? (
                       <Input
@@ -865,7 +864,7 @@ export function ColumnDrawer({
                             })
                           }
                         }}
-                        placeholder="Enter max"
+                        placeholder={t('Enter max')}
                         disabled={isLoading}
                         aria-invalid={!!errors.max}
                       />
@@ -883,7 +882,7 @@ export function ColumnDrawer({
                                 : parseInt(e.target.value, 10)
                           setFormData((prev) => ({ ...prev, max }))
                         }}
-                        placeholder="Enter max"
+                        placeholder={t('Enter max')}
                         step={formData.type === 'double' ? 0.1 : 1}
                         disabled={isLoading}
                       />
@@ -917,7 +916,7 @@ export function ColumnDrawer({
                         onChange={(e) =>
                           updateEnumElement(index, e.target.value)
                         }
-                        placeholder="Add elements here"
+                        placeholder={t('Add elements here')}
                         maxLength={255}
                         disabled={isLoading}
                       />
@@ -929,7 +928,7 @@ export function ColumnDrawer({
                           className="h-9 w-9 shrink-0"
                           onClick={() => removeEnumElement(index)}
                           disabled={isLoading}
-                          aria-label="Remove enum value"
+                          aria-label={t('Remove enum value')}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -945,7 +944,7 @@ export function ColumnDrawer({
                     className="w-full"
                   >
                     <Plus className="h-3.5 w-3.5 me-1.5" />
-                    Add element
+                    {t('Add element')}
                   </Button>
                 </div>
                 {errors.elements && (
@@ -956,15 +955,14 @@ export function ColumnDrawer({
                 <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
                   <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                   <p className="text-[11px] text-muted-foreground">
-                    Enum elements have a maximum length of 255 characters. This
-                    limit can not be exceeded.
+                    {t('Enum elements have a maximum length of 255 characters. This limit can not be exceeded.')}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <Input
                     value={enumElementInput}
                     onChange={(e) => setEnumElementInput(e.target.value)}
-                    placeholder="Type to add element"
+                    placeholder={t('Type to add element')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault()
@@ -982,7 +980,7 @@ export function ColumnDrawer({
               <>
                 <div className="space-y-2">
                   <Label className="text-[12px] font-medium">
-                    Relationship Type
+                    {t('Relationship Type')}
                   </Label>
                   <RadioGroup
                     value={formData.twoWay ? 'two' : 'one'}
@@ -1003,10 +1001,10 @@ export function ColumnDrawer({
                         className="flex flex-1 flex-col items-start gap-1 leading-normal cursor-pointer"
                       >
                         <div className="font-medium text-[12px]">
-                          One-way relationship
+                          {t('One-way relationship')}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          One Relation column within this table
+                          {t('One Relation column within this table')}
                         </div>
                       </Label>
                     </div>
@@ -1017,11 +1015,10 @@ export function ColumnDrawer({
                         className="flex flex-1 flex-col items-start gap-1 leading-normal cursor-pointer"
                       >
                         <div className="font-medium text-[12px]">
-                          Two-way relationship
+                          {t('Two-way relationship')}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          One Relation column within this table and another
-                          within the related table
+                          {t('One Relation column within this table and another within the related table')}
                         </div>
                       </Label>
                     </div>
@@ -1051,7 +1048,7 @@ export function ColumnDrawer({
                         errors.relatedTableId ? 'border-destructive' : ''
                       }
                     >
-                      <SelectValue placeholder="Select a table" />
+                      <SelectValue placeholder={t('Select a table')} />
                     </SelectTrigger>
                     <SelectContent>
                       {relationshipTables.map((table) => (
@@ -1086,7 +1083,7 @@ export function ColumnDrawer({
                             key: e.target.value,
                           }))
                         }
-                        placeholder="Enter key"
+                        placeholder={t('Enter key')}
                         disabled={isLoading}
                         pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
                         className={errors.key ? 'border-destructive' : ''}
@@ -1097,7 +1094,7 @@ export function ColumnDrawer({
                         </p>
                       )}
                       <p className="text-[11px] text-muted-foreground">
-                        Allowed characters: a-z, A-Z, 0-9, -, ., _
+                        {t('Allowed characters: a-z, A-Z, 0-9, -, ., _')}
                       </p>
                     </div>
 
@@ -1119,7 +1116,7 @@ export function ColumnDrawer({
                               twoWayKey: e.target.value,
                             }))
                           }
-                          placeholder="Enter key"
+                          placeholder={t('Enter key')}
                           disabled={isLoading || isEditMode}
                           pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
                           className={
@@ -1132,9 +1129,7 @@ export function ColumnDrawer({
                           </p>
                         )}
                         <p className="text-[11px] text-muted-foreground">
-                          Allowed characters: a-z, A-Z, 0-9, -, ., _. Once
-                          created, column key cannot be adjusted to maintain
-                          data integrity.
+                          {t('Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.')}
                         </p>
                       </div>
                     )}
@@ -1162,12 +1157,12 @@ export function ColumnDrawer({
                             errors.relationshipType ? 'border-destructive' : ''
                           }
                         >
-                          <SelectValue placeholder="Select a relation" />
+                          <SelectValue placeholder={t('Select a relation')} />
                         </SelectTrigger>
                         <SelectContent>
                           {RELATIONSHIP_TYPES.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
-                              {type.label}
+                              {t(type.label)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1243,12 +1238,12 @@ export function ColumnDrawer({
                             errors.onDelete ? 'border-destructive' : ''
                           }
                         >
-                          <SelectValue placeholder="Select a deletion method" />
+                          <SelectValue placeholder={t('Select a deletion method')} />
                         </SelectTrigger>
                         <SelectContent>
                           {ON_DELETE_OPTIONS.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
-                              {option.label}
+                              {t(option.label)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1284,7 +1279,7 @@ export function ColumnDrawer({
                     htmlFor="spatial-required"
                     className="text-[12px] font-normal cursor-pointer"
                   >
-                    Required
+                    {t('Required')}
                   </Label>
                 </div>
 
@@ -1324,7 +1319,7 @@ export function ColumnDrawer({
                     htmlFor="spatial-default"
                     className="text-[12px] font-normal cursor-pointer"
                   >
-                    Default value
+                    {t('Default value')}
                   </Label>
                 </div>
 
@@ -1391,7 +1386,7 @@ export function ColumnDrawer({
                     htmlFor="column-required"
                     className="text-[12px] font-normal cursor-pointer"
                   >
-                    Required
+                    {t('Required')}
                   </Label>
                 </div>
 
@@ -1412,7 +1407,7 @@ export function ColumnDrawer({
                     htmlFor="column-array"
                     className="text-[12px] font-normal cursor-pointer"
                   >
-                    Array
+                    {t('Array')}
                   </Label>
                 </div>
               </>
@@ -1425,7 +1420,7 @@ export function ColumnDrawer({
                   htmlFor="column-default"
                   className="text-[12px] font-medium"
                 >
-                  Default value
+                  {t('Default value')}
                 </Label>
                 {formData.type === 'boolean' ? (
                   <Select
@@ -1447,8 +1442,8 @@ export function ColumnDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="null">NULL</SelectItem>
-                      <SelectItem value="true">True</SelectItem>
-                      <SelectItem value="false">False</SelectItem>
+                      <SelectItem value="true">{t('True')}</SelectItem>
+                      <SelectItem value="false">{t('False')}</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : formData.type === 'datetime' ? (
@@ -1534,7 +1529,7 @@ export function ColumnDrawer({
                       formData.type === 'bigint' ? undefined : formData.max
                     }
                     step={formData.type === 'double' ? 0.1 : 1}
-                    placeholder="Enter value"
+                    placeholder={t('Enter value')}
                     disabled={isLoading}
                   />
                 ) : formData.type === 'varchar' ? (
@@ -1547,7 +1542,7 @@ export function ColumnDrawer({
                         const value = e.target.value || null
                         setFormData((prev) => ({ ...prev, xdefault: value }))
                       }}
-                      placeholder="Enter value"
+                      placeholder={t('Enter value')}
                       maxLength={formData.size ?? 255}
                       disabled={isLoading}
                     />
@@ -1559,7 +1554,7 @@ export function ColumnDrawer({
                         const value = e.target.value || null
                         setFormData((prev) => ({ ...prev, xdefault: value }))
                       }}
-                      placeholder="Enter value"
+                      placeholder={t('Enter value')}
                       maxLength={formData.size ?? 255}
                       disabled={isLoading}
                       className="min-h-[80px]"
@@ -1575,7 +1570,7 @@ export function ColumnDrawer({
                       const value = e.target.value || null
                       setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
-                    placeholder="Enter value"
+                    placeholder={t('Enter value')}
                     disabled={isLoading}
                     className="min-h-[80px]"
                   />
@@ -1594,7 +1589,7 @@ export function ColumnDrawer({
                       const value = e.target.value || null
                       setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
-                    placeholder="Enter value"
+                    placeholder={t('Enter value')}
                     maxLength={
                       formData.type === 'string' ? formData.size : undefined
                     }
@@ -1608,10 +1603,10 @@ export function ColumnDrawer({
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    At-rest encryption
+                    {t('At-rest encryption')}
                   </h3>
                   <p className="text-[13px] text-muted-foreground mt-2">
-                    {ENCRYPT_DESCRIPTION}
+                    {t(ENCRYPT_DESCRIPTION)}
                   </p>
                 </div>
                 <div className="border-t border-border" />
@@ -1640,7 +1635,7 @@ export function ColumnDrawer({
                       htmlFor="column-encrypt"
                       className="text-[13px] font-medium cursor-pointer"
                     >
-                      Enable
+                      {t('Enable')}
                     </Label>
                   </div>
                 </div>
@@ -1658,7 +1653,7 @@ export function ColumnDrawer({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

@@ -44,6 +44,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
 import { PostgresColumnTypeSelector } from './PostgresColumnTypeSelector'
 import { PostgresForeignKeySelector } from './PostgresForeignKeySelector'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresTableColumnDrawerProps = {
   open: boolean
@@ -68,6 +69,7 @@ export function PostgresTableColumnDrawer({
   column,
   onSuccess,
 }: PostgresTableColumnDrawerProps) {
+  const t = useT()
   const isEditing = !!column
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const { schema: tableSchema, table: tableName } = parsePostgresTableId(tableId)
@@ -110,7 +112,7 @@ export function PostgresTableColumnDrawer({
   const handleSubmit = async () => {
     const trimmedName = name.trim()
     if (!trimmedName) {
-      toast.error('Column name is required')
+      toast.error(t('Column name is required'))
       return
     }
 
@@ -255,11 +257,11 @@ export function PostgresTableColumnDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={isEditing ? 'Update column' : 'Create column'}
+      title={isEditing ? t('Update column') : t('Create column')}
       description={
         isEditing
-          ? 'Update the column definition, constraints, and metadata.'
-          : 'Add a new column with optional constraints and metadata.'
+          ? t('Update the column definition, constraints, and metadata.')
+          : t('Add a new column with optional constraints and metadata.')
       }
       maxWidth="sm:max-w-lg"
     >
@@ -296,10 +298,10 @@ export function PostgresTableColumnDrawer({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <Label htmlFor="column-nullable" className="text-[12px] font-medium">
-                  Nullable
+                  {t('Nullable')}
                 </Label>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Allow NULL values in this column.
+                  {t('Allow NULL values in this column.')}
                 </p>
               </div>
               <Switch
@@ -311,7 +313,7 @@ export function PostgresTableColumnDrawer({
             {!isEditing ? (
               <div className="space-y-2">
                 <Label htmlFor="column-default" className="text-[12px] font-medium">
-                  Default value
+                  {t('Default value')}
                 </Label>
                 <Input
                   id="column-default"
@@ -326,7 +328,7 @@ export function PostgresTableColumnDrawer({
             ) : null}
             <div className="space-y-2">
               <Label htmlFor="column-comment" className="text-[12px] font-medium">
-                Comment
+                {t('Comment')}
               </Label>
               <Textarea
                 id="column-comment"
@@ -334,12 +336,12 @@ export function PostgresTableColumnDrawer({
                 onChange={(event) => setComment(event.target.value)}
                 rows={2}
                 className="min-h-[80px] resize-y"
-                placeholder="Describe what this column stores"
+                placeholder={t('Describe what this column stores')}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="column-check" className="text-[12px] font-medium">
-                Check
+                {t('Check')}
               </Label>
               <p className="text-[11px] text-muted-foreground">
                 SQL expression inside CHECK (...), for example{' '}
@@ -347,8 +349,7 @@ export function PostgresTableColumnDrawer({
               </p>
               {hasMultipleChecks ? (
                 <p className="text-[11px] text-muted-foreground">
-                  This column has multiple check constraints. Saving replaces them
-                  with a single check.
+                  {t('This column has multiple check constraints. Saving replaces them with a single check.')}
                 </p>
               ) : null}
               <Textarea
@@ -380,7 +381,7 @@ export function PostgresTableColumnDrawer({
               onClick={() => onOpenChange(false)}
               disabled={executeSql.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateDomainDialogProps {
   open: boolean
@@ -23,6 +24,7 @@ export function CreateDomainDialog({
   onCreate,
   isLoading = false,
 }: CreateDomainDialogProps) {
+  const t = useT()
   const [domain, setDomain] = useState('')
 
   // Reset form when dialog closes
@@ -44,9 +46,9 @@ export function CreateDomainDialog({
         className="sm:max-w-md p-0"
 >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add Domain</DialogTitle>
+          <DialogTitle>{t('Add Domain')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Enter the domain name you want to add to your organization.
+            {t('Enter the domain name you want to add to your organization.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -56,7 +58,7 @@ export function CreateDomainDialog({
 >
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
-              <Label htmlFor="domain">Domain</Label>
+              <Label htmlFor="domain">{t('Domain')}</Label>
               <Input
                 id="domain"
                 value={domain}
@@ -66,7 +68,7 @@ export function CreateDomainDialog({
                 autoFocus
               />
               <p className="text-[12px] text-muted-foreground">
-                Enter the domain name without protocol (e.g., example.com)
+                {t('Enter the domain name without protocol (e.g., example.com)')}
               </p>
             </div>
           </div>
@@ -77,13 +79,13 @@ export function CreateDomainDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
 >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isLoading || !domain.trim()}
 >
-              Add Domain
+              {t('Add Domain')}
             </Button>
           </div>
         </form>

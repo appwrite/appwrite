@@ -14,6 +14,7 @@ import {
   formatRequestsValue,
 } from '@/lib/usage/requests-events'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export const PROJECT_LIST_REQUESTS_CHART_HEIGHT = 48
 export const PROJECT_LIST_REQUESTS_TABLE_CHART_HEIGHT = 32
@@ -75,12 +76,13 @@ function ProjectRequestsChartLink({
   children: ReactNode
   className?: string
 }) {
+  const t = useT()
   return (
     <Link
       to="/projects/$projectId"
       params={{ projectId }}
       className={cn(projectChartLinkClassName, className)}
-      aria-label="View project"
+      aria-label={t('View project')}
       onClick={(event) => event.stopPropagation()}
     >
       {children}
@@ -102,11 +104,12 @@ function ChartTooltipBody({
 }: {
   point: UsageChartPoint & { value: number }
 }) {
+  const t = useT()
   return (
     <>
       <p className="text-[12px] font-medium text-foreground">{point.date}</p>
       <p className="text-[12px] tabular-nums text-muted-foreground">
-        {formatRequestsValue(point.total)} requests
+        {formatRequestsValue(point.total)} {t('requests')}
       </p>
     </>
   )
@@ -355,10 +358,11 @@ function RequestsChartBlock({
   isError: boolean
   usePortalTooltip?: boolean
 }) {
+  const t = useT()
   if (isError) {
     return (
       <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 px-2 text-center">
-        <span className="text-[11px] text-muted-foreground">Unavailable</span>
+        <span className="text-[11px] text-muted-foreground">{t('Unavailable')}</span>
       </div>
     )
   }
@@ -383,6 +387,7 @@ export function ProjectListRequestsChart({
   className,
   variant = 'card',
 }: ProjectListRequestsChartProps) {
+  const t = useT()
   const gradientId = useId().replace(/:/g, '')
   const hasPoints = chartPoints.length > 0
   const totalRequests = useMemo(
@@ -484,7 +489,7 @@ export function ProjectListRequestsChart({
           minHeight: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT,
         }}
         aria-busy={isLoading}
-        aria-label={isLoading ? 'Loading request usage' : undefined}
+        aria-label={isLoading ? t('Loading request usage') : undefined}
       >
         <div className="flex h-full w-11 shrink-0 items-center">
           {valueContent}
@@ -516,11 +521,11 @@ export function ProjectListRequestsChart({
       className={cn('min-w-0', className)}
       style={{ minHeight: PROJECT_LIST_REQUESTS_CONTENT_MIN_HEIGHT }}
       aria-busy={isLoading}
-      aria-label={isLoading ? 'Loading request usage' : undefined}
+      aria-label={isLoading ? t('Loading request usage') : undefined}
     >
       <div className="mb-1.5 flex h-5 min-w-0 items-center gap-2">
         <span className="shrink-0 text-[12px] font-medium leading-none text-muted-foreground">
-          Requests
+          {t('Requests')}
         </span>
 
         {isLoading ? (
@@ -555,7 +560,7 @@ export function ProjectListRequestsChart({
         {isError ? (
           <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 px-3 text-center">
             <span className="text-[12px] text-muted-foreground">
-              Usage unavailable
+              {t('Usage unavailable')}
             </span>
           </div>
         ) : (

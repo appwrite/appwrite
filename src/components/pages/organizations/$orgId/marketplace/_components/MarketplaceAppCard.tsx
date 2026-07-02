@@ -2,6 +2,7 @@ import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { MARKETPLACE_CATEGORY_ICONS } from '@/lib/marketplace/types'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MarketplaceAppBadges } from './MarketplaceAppBadges'
+import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceAppCardProps = {
   app: MarketplaceApp
@@ -21,6 +22,7 @@ function statusLabel(status: MarketplaceApp['status']): string {
 }
 
 export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
+  const t = useT()
   const CategoryIcon = MARKETPLACE_CATEGORY_ICONS[app.category]
 
   return (
@@ -30,7 +32,7 @@ export function MarketplaceAppCard({ app, onClick }: MarketplaceAppCardProps) {
       subtitle={app.shortDescription}
       icon={CategoryIcon}
       onClick={onClick}
-      statusLabel={app.isOwned ? statusLabel(app.status) : undefined}
+      statusLabel={app.isOwned ? t(statusLabel(app.status)) : undefined}
       status={app.isOwned ? statusVariant(app.status) : undefined}
     />
   )

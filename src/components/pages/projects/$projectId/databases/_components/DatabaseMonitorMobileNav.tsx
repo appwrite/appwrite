@@ -6,6 +6,7 @@ import {
   getEffectiveDatabaseSpecIdForMonitoring,
   isServerlessDatabaseMonitoring,
 } from '@/lib/database-specs'
+import { useT } from '@/lib/i18n/translate'
 
 type DatabaseMonitorMobileNavProps = {
   projectId: string
@@ -16,6 +17,7 @@ export function DatabaseMonitorMobileNav({
   projectId,
   databaseId,
 }: DatabaseMonitorMobileNavProps) {
+  const t = useT()
   const { database } = useProjectDatabase(projectId, databaseId)
   const databaseType =
     (database as { databaseType?: ApiDatabaseType } | null)?.databaseType ??
@@ -61,7 +63,7 @@ export function DatabaseMonitorMobileNav({
           className="h-8 shrink-0 whitespace-nowrap text-[12px]"
           onClick={() => scrollToChart(s.id)}
         >
-          {s.label}
+          {t(s.label)}
         </Button>
       ))}
     </div>

@@ -16,6 +16,7 @@ import { fetchCouponAccount } from '@/lib/react-query/hooks'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface ValidateCreditModalProps {
   open: boolean
@@ -54,6 +55,7 @@ export function ValidateCreditModal({
   onCouponApply,
   elevatedForWizard = false,
 }: ValidateCreditModalProps) {
+  const t = useT()
   const [couponCode, setCouponCode] = useState('')
   const [isApplying, setIsApplying] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -62,7 +64,7 @@ export function ValidateCreditModal({
 
   const handleApply = async () => {
     if (!trimmedCode) {
-      toast.error('Please enter a coupon code')
+      toast.error(t('Please enter a coupon code'))
       return
     }
 
@@ -72,7 +74,7 @@ export function ValidateCreditModal({
     try {
       const resolvedCoupon = await fetchCouponAccount(trimmedCode)
       if (!resolvedCoupon) {
-        const message = 'Coupon not found. Please check the code and try again.'
+        const message = t('Coupon not found. Please check the code and try again.')
         setSubmitError(message)
         toast.error(message)
         return
@@ -82,9 +84,9 @@ export function ValidateCreditModal({
       setCouponCode('')
       setSubmitError(null)
       onOpenChange(false)
-      toast.success('Coupon applied successfully')
+      toast.success(t('Coupon applied successfully'))
     } catch (error) {
-      const message = getCouponErrorMessage(error)
+      const message = t(getCouponErrorMessage(error))
       setSubmitError(message)
       toast.error(message)
     } finally {
@@ -107,10 +109,9 @@ export function ValidateCreditModal({
         overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
       >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Apply coupon</DialogTitle>
+          <DialogTitle>{t('Apply coupon')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Enter a coupon code to update your estimated total. Applied credits
-            expire after a set period and do not roll over.
+            {t('Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -120,7 +121,7 @@ export function ValidateCreditModal({
           <div className="space-y-4">
             <div>
               <Label htmlFor="coupon-code" className="text-[13px] font-medium">
-                Coupon code <span className="text-destructive">*</span>
+                {t('Coupon code')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="coupon-code"
@@ -129,7 +130,7 @@ export function ValidateCreditModal({
                   setCouponCode(e.target.value.toUpperCase())
                   setSubmitError(null)
                 }}
-                placeholder="Enter coupon code"
+                placeholder={t('Enter coupon code')}
                 className="mt-2 h-9 text-[13px]"
                 disabled={isApplying}
                 onKeyDown={(e) => {
@@ -154,13 +155,13 @@ export function ValidateCreditModal({
             onClick={() => handleOpenChange(false)}
             disabled={isApplying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={() => void handleApply()}
             disabled={!trimmedCode || isApplying}
           >
-            Apply coupon
+            {t('Apply coupon')}
           </Button>
         </div>
       </DialogContent>

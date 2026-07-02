@@ -35,6 +35,7 @@ import {
   sortRepositoryBranches,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface BranchSelectorProps {
   projectId: string | undefined
@@ -62,6 +63,7 @@ export function BranchSelector({
   disabled = false,
   className,
 }: BranchSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -129,20 +131,20 @@ export function BranchSelector({
 
   const labelContent = (
     <>
-      {label}
+      {t(label)}
       {labelTooltip && (
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               className="inline-flex ms-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-              aria-label="More info"
+              aria-label={t('More info')}
             >
               <Info className="h-3.5 w-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-[240px] z-[200]">
-            {labelTooltip}
+            {t(labelTooltip)}
           </TooltipContent>
         </Tooltip>
       )}
@@ -187,7 +189,7 @@ export function BranchSelector({
             className="h-4 w-4 shrink-0 animate-spin text-muted-foreground"
             aria-hidden
           />
-          <span className="truncate">Loading branches...</span>
+          <span className="truncate">{t('Loading branches...')}</span>
         </div>
       </div>
     )
@@ -234,7 +236,7 @@ export function BranchSelector({
               !value && 'text-muted-foreground',
             )}
           >
-            <span className="truncate">{value || placeholder}</span>
+            <span className="truncate">{value || t(placeholder)}</span>
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -248,7 +250,7 @@ export function BranchSelector({
           <Command shouldFilter={false}>
             <div className="relative">
               <CommandInput
-                placeholder="Find a branch..."
+                placeholder={t('Find a branch...')}
                 value={search}
                 onValueChange={setSearch}
                 className={cn('h-9 text-[13px]', isLoadingList && 'pe-8')}
@@ -266,12 +268,12 @@ export function BranchSelector({
             <CommandList className="max-h-[240px] overflow-y-auto overscroll-contain">
               {!isLoadingList && displayBranches.length === 0 && debouncedSearch && (
                 <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                  No branches found
+                  {t('No branches found')}
                 </CommandEmpty>
               )}
               {!isLoadingList && displayBranches.length === 0 && !debouncedSearch && (
                 <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                  No branches available
+                  {t('No branches available')}
                 </CommandEmpty>
               )}
               <CommandGroup>
@@ -296,7 +298,7 @@ export function BranchSelector({
                 ))}
                 {!debouncedSearch && displayBranches.length > 0 && (
                   <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
-                    Type to search all branches
+                    {t('Type to search all branches')}
                   </div>
                 )}
               </CommandGroup>

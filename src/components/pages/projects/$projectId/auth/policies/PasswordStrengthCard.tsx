@@ -45,6 +45,7 @@ import {
   validatePasswordAgainstPolicy,
 } from '@/lib/password-strength'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type PasswordStrengthCardProps = {
   projectId: string
@@ -55,6 +56,7 @@ export function PasswordStrengthCard({
   projectId,
   currentPolicy,
 }: PasswordStrengthCardProps) {
+  const t = useT()
   const [policy, setPolicy] = useState<PasswordStrengthPolicy>(currentPolicy)
   const [demoEmail, setDemoEmail] = useState('user@example.com')
   const [demoPassword, setDemoPassword] = useState('')
@@ -127,10 +129,10 @@ export function PasswordStrengthCard({
     lastSubmittedValue.current = JSON.stringify(payload)
     mutation.mutate(payload, {
       onSuccess: () => {
-        toast.success('Updated password strength requirements')
+        toast.success(t('Updated password strength requirements'))
       },
       onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update password strength')
+        toast.error(error.message || t('Failed to update password strength'))
         lastSubmittedValue.current = null
       },
     })
@@ -146,7 +148,7 @@ export function PasswordStrengthCard({
 
   const handleValidateDemo = () => {
     if (!demoPassword.trim()) {
-      toast.error('Enter a password to validate')
+      toast.error(t('Enter a password to validate'))
       return
     }
     setDemoChecked(true)
@@ -164,38 +166,38 @@ export function PasswordStrengthCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Strength
+          {t('Strength')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Set minimum length and character requirements for user passwords.
-          Rules apply when users sign up, reset their password, or change their
-          password through your app. Existing passwords stay valid until the
-          user sets a new one. Password updates from the Appwrite console also
-          validate against this policy.
+          {t(
+            'Set minimum length and character requirements for user passwords. Rules apply when users sign up, reset their password, or change their password through your app. Existing passwords stay valid until the user sets a new one. Password updates from the Appwrite console also validate against this policy.', // pragma: allowlist secret
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
         <div className="px-6 py-4 space-y-6 bg-muted/10">
           <div className="space-y-2">
-            <Label className="text-[13px]">Preset</Label>
+            <Label className="text-[13px]">{t('Preset')}</Label>
             <Select
               value={matchingPresetId ?? undefined}
               onValueChange={handlePresetChange}
             >
               <SelectTrigger className="w-full h-9 text-[13px]">
-                <SelectValue placeholder="Custom settings" />
+                <SelectValue placeholder={t('Custom settings')} />
               </SelectTrigger>
               <SelectContent>
                 {PASSWORD_STRENGTH_PRESETS.map((preset) => (
                   <SelectItem key={preset.id} value={preset.id}>
-                    {preset.label}
+                    {t(preset.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-[12px] text-muted-foreground">
-              Presets adjust the fields below. Review and click Update to save.
+              {t(
+                'Presets adjust the fields below. Review and click Update to save.',
+              )}
             </p>
           </div>
 
@@ -204,7 +206,7 @@ export function PasswordStrengthCard({
               id="password-strength-min-label"
               className="text-[13px]"
             >
-              Minimum length
+              {t('Minimum length')}
             </Label>
             <MinLengthStepper
               id="password-strength-min"
@@ -216,18 +218,18 @@ export function PasswordStrengthCard({
               max={MAX_PASSWORD_LENGTH}
             />
             <p className="text-[12px] text-muted-foreground">
-              {MIN_PASSWORD_LENGTH}–{MAX_PASSWORD_LENGTH} characters
+              {MIN_PASSWORD_LENGTH}–{MAX_PASSWORD_LENGTH} {t('characters')}
             </p>
           </div>
 
           <div className="space-y-3">
             <p className="text-[13px] font-medium text-foreground">
-              Required character types
+              {t('Required character types')}
             </p>
             <div className="space-y-3">
               <CharacterTypeRow
                 id="password-strength-uppercase"
-                label="Uppercase letters (A-Z)"
+                label={t('Uppercase letters (A-Z)')}
                 checked={policy.uppercase}
                 disabled={mutation.isPending}
                 onCheckedChange={(checked) =>
@@ -236,7 +238,7 @@ export function PasswordStrengthCard({
               />
               <CharacterTypeRow
                 id="password-strength-lowercase"
-                label="Lowercase letters (a-z)"
+                label={t('Lowercase letters (a-z)')}
                 checked={policy.lowercase}
                 disabled={mutation.isPending}
                 onCheckedChange={(checked) =>
@@ -245,7 +247,7 @@ export function PasswordStrengthCard({
               />
               <CharacterTypeRow
                 id="password-strength-number"
-                label="Numbers (0-9)"
+                label={t('Numbers (0-9)')}
                 checked={policy.number}
                 disabled={mutation.isPending}
                 onCheckedChange={(checked) =>
@@ -254,7 +256,7 @@ export function PasswordStrengthCard({
               />
               <CharacterTypeRow
                 id="password-strength-symbols"
-                label="Symbols (non-alphanumeric)"
+                label={t('Symbols (non-alphanumeric)')}
                 checked={policy.symbols}
                 disabled={mutation.isPending}
                 onCheckedChange={(checked) =>
@@ -268,11 +270,12 @@ export function PasswordStrengthCard({
         <div className="px-6 py-4 bg-muted/10 flex flex-col">
           <div className="mb-4">
             <p className="text-[13px] font-medium text-foreground">
-              Demo sign-up
+              {t('Demo sign-up')}
             </p>
             <p className="text-[12px] text-muted-foreground mt-1">
-              Test a password against the settings on the left before you save.
-              This preview uses the same rules as Appwrite auth validation.
+              {t(
+                'Test a password against the settings on the left before you save. This preview uses the same rules as Appwrite auth validation.', // pragma: allowlist secret
+              )}
             </p>
           </div>
 
@@ -282,10 +285,10 @@ export function PasswordStrengthCard({
             <div className="px-5 py-6 space-y-5">
               <div className="space-y-1">
                 <h4 className="text-[17px] font-semibold tracking-tight text-foreground">
-                  Create an account
+                  {t('Create an account')}
                 </h4>
                 <p className="text-[13px] text-muted-foreground">
-                  Enter your details to test password rules
+                  {t('Enter your details to test password rules')}
                 </p>
               </div>
 
@@ -299,7 +302,7 @@ export function PasswordStrengthCard({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="demo-email" className="text-[13px]">
-                    Email
+                    {t('Email')}
                   </Label>
                   <Input
                     id="demo-email"
@@ -314,7 +317,7 @@ export function PasswordStrengthCard({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="demo-password" className="text-[13px]">
-                    Password
+                    {t('Password')}
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -328,7 +331,7 @@ export function PasswordStrengthCard({
                       disabled={mutation.isPending}
                       className="h-9 text-[13px]"
                       autoComplete="new-password"
-                      placeholder="Try a password..."
+                      placeholder={t('Try a password...')}
                     />
                     <Button
                       type="button"
@@ -337,7 +340,9 @@ export function PasswordStrengthCard({
                       className="h-9 w-9 shrink-0"
                       onClick={() => setShowDemoPassword((v) => !v)}
                       aria-label={
-                        showDemoPassword ? 'Hide password' : 'Show password'
+                        showDemoPassword
+                          ? t('Hide password')
+                          : t('Show password')
                       }
                     >
                       {showDemoPassword ? (
@@ -356,14 +361,16 @@ export function PasswordStrengthCard({
                     <div className="flex items-start gap-2 text-[13px] text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
                       <span>
-                        This password meets your current policy settings.
+                        {t('This password meets your current policy settings.')}
                       </span>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       <div className="flex items-start gap-2 text-[13px] text-red-600 dark:text-red-400">
                         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                        <span>This password does not meet your policy.</span>
+                        <span>
+                          {t('This password does not meet your policy.')}
+                        </span>
                       </div>
                       <ul className="space-y-2">
                         {demoValidation.failures.map((failure) => (
@@ -375,7 +382,7 @@ export function PasswordStrengthCard({
                               className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-600 dark:text-red-400"
                               aria-hidden
                             />
-                            <span>{failure}</span>
+                            <span>{t(failure)}</span>
                           </li>
                         ))}
                       </ul>
@@ -389,11 +396,11 @@ export function PasswordStrengthCard({
                 className="w-full h-9 text-[13px]"
                 disabled={mutation.isPending}
               >
-                Validate password
+                {t('Validate password')}
               </Button>
 
               <p className="text-center text-[12px] text-muted-foreground">
-                Preview only. No account is created.
+                {t('Preview only. No account is created.')}
               </p>
               </form>
             </div>
@@ -412,16 +419,16 @@ export function PasswordStrengthCard({
             >
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="text-[13px] font-semibold text-foreground">
-                  Compliance
+                  {t('Compliance')}
                 </span>
                 <Badge variant="success" className="text-[10px] shrink-0">
                   {complianceSummary.compliantCount}/{complianceSummary.total}{' '}
-                  compliant
+                  {t('compliant')}
                 </Badge>
                 {complianceSummary.gapCount > 0 && (
                   <Badge variant="error" className="text-[10px] shrink-0">
                     {complianceSummary.gapCount}{' '}
-                    {complianceSummary.gapCount === 1 ? 'gap' : 'gaps'}
+                    {complianceSummary.gapCount === 1 ? t('gap') : t('gaps')}
                   </Badge>
                 )}
               </div>
@@ -436,9 +443,9 @@ export function PasswordStrengthCard({
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 pt-3">
             <p className="text-[12px] text-muted-foreground leading-relaxed">
-              See whether your current settings meet widely used password
-              guidance. Stricter policies than a standard still count as
-              compliant.
+              {t(
+                'See whether your current settings meet widely used password guidance. Stricter policies than a standard still count as compliant.',
+              )}
             </p>
             <div className="rounded-lg border border-border overflow-hidden grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
               {standardResultColumns.map((column, columnIndex) => (
@@ -462,7 +469,7 @@ export function PasswordStrengthCard({
           disabled={!hasChanges || mutation.isPending}
           onClick={handleSubmit}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>
@@ -486,6 +493,7 @@ function MinLengthStepper({
   min: number
   max: number
 }) {
+  const t = useT()
   const [draft, setDraft] = useState<string | null>(null)
   const clamp = (n: number) => clampPasswordMinLength(n, min, max)
   const maxDigits = String(max).length
@@ -537,7 +545,7 @@ function MinLengthStepper({
         className="size-8"
         onClick={() => stepValue(-1)}
         disabled={disabled || effectiveValue <= min}
-        aria-label="Decrease minimum length"
+        aria-label={t('Decrease minimum length')}
       >
         <Minus className="size-3.5" />
       </Button>
@@ -547,7 +555,7 @@ function MinLengthStepper({
         pattern="[0-9]*"
         value={displayValue}
         disabled={disabled}
-        aria-label="Minimum password length"
+        aria-label={t('Minimum password length')}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
@@ -599,7 +607,7 @@ function MinLengthStepper({
         className="size-8"
         onClick={() => stepValue(1)}
         disabled={disabled || effectiveValue >= max}
-        aria-label="Increase minimum length"
+        aria-label={t('Increase minimum length')}
       >
         <Plus className="size-3.5" />
       </Button>
@@ -643,6 +651,7 @@ function StandardRow({
 }: {
   result: ReturnType<typeof checkStandardCompliance>
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const { standard, compliant, reasons } = result
 
@@ -659,11 +668,11 @@ function StandardRow({
                 variant={compliant ? 'success' : 'error'}
                 className="text-[10px] shrink-0"
               >
-                {compliant ? 'Compliant' : 'Not compliant'}
+                {compliant ? t('Compliant') : t('Not compliant')}
               </Badge>
             </div>
             <p className="text-[12px] text-muted-foreground mt-1">
-              {standard.description}
+              {t(standard.description)}
             </p>
           </div>
           {!compliant && (
@@ -674,7 +683,7 @@ function StandardRow({
                 size="sm"
                 className="h-8 shrink-0 text-[12px] text-muted-foreground"
               >
-                Why
+                {t('Why')}
                 <ChevronDown
                   className={`h-3.5 w-3.5 ms-1 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
@@ -694,7 +703,7 @@ function StandardRow({
                     className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-600 dark:text-red-400"
                     aria-hidden
                   />
-                  <span>{reason}</span>
+                  <span>{t(reason)}</span>
                 </li>
               ))}
             </ul>

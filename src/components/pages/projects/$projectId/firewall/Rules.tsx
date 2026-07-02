@@ -52,6 +52,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { mockFirewallRules, type FirewallRule } from '@/lib/utils/mock-data'
+import { useT } from '@/lib/i18n/translate'
 
 interface RulesTabProps {
   projectId: string
@@ -59,6 +60,7 @@ interface RulesTabProps {
 }
 
 export function RulesTab({ searchValue }: RulesTabProps) {
+  const t = useT()
   const [rules, setRules] = useState<FirewallRule[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [creatingRule, setCreatingRule] = useState(false)
@@ -297,19 +299,19 @@ export function RulesTab({ searchValue }: RulesTabProps) {
       case 'block':
         return (
           <Badge variant="destructive" className="text-[11px]">
-            Block
+            {t('Block')}
           </Badge>
         )
       case 'allow':
         return (
           <Badge variant="default" className="bg-emerald-500 text-[11px]">
-            Allow
+            {t('Allow')}
           </Badge>
         )
       case 'challenge':
         return (
           <Badge variant="secondary" className="bg-amber-500 text-[11px]">
-            Challenge
+            {t('Challenge')}
           </Badge>
         )
       default:
@@ -352,11 +354,13 @@ export function RulesTab({ searchValue }: RulesTabProps) {
         <div>
           <EmptyState
             icon={Shield}
-            title={searchValue ? undefined : 'No firewall rules'}
+            title={searchValue ? undefined : t('No firewall rules')}
             description={
               searchValue
                 ? undefined
-                : 'Create your first firewall rule to protect your project from malicious requests.'
+                : t(
+                    'Create your first firewall rule to protect your project from malicious requests.',
+                  )
             }
             isEmpty={!searchValue}
             hasFilters={!!searchValue}
@@ -377,7 +381,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                 className="h-8 gap-1.5 text-[13px] font-medium"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Create rule
+                {t('Create rule')}
               </Button>
             </div>
           )}
@@ -388,25 +392,25 @@ export function RulesTab({ searchValue }: RulesTabProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]">
-                  Status
+                  {t('Status')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Rule
+                  {t('Rule')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Action
+                  {t('Action')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Priority
+                  {t('Priority')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Conditions
+                  {t('Conditions')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Stats
+                  {t('Stats')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Last Triggered
+                  {t('Last Triggered')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
               </TableRow>
@@ -466,22 +470,22 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                     <div className="flex flex-col gap-0.5">
                       {rule.conditions.ipAddress && (
                         <span className="text-[11px] text-muted-foreground">
-                          IP: {rule.conditions.ipAddress}
+                          {t('IP:')} {rule.conditions.ipAddress}
                         </span>
                       )}
                       {rule.conditions.path && (
                         <span className="text-[11px] text-muted-foreground">
-                          Path: {rule.conditions.path}
+                          {t('Path:')} {rule.conditions.path}
                         </span>
                       )}
                       {rule.conditions.country && (
                         <span className="text-[11px] text-muted-foreground">
-                          Country: {rule.conditions.country}
+                          {t('Country:')} {rule.conditions.country}
                         </span>
                       )}
                       {rule.rateLimit && (
                         <span className="text-[11px] text-muted-foreground">
-                          Rate limit: {rule.rateLimit.requests}/
+                          {t('Rate limit:')} {rule.rateLimit.requests}/
                           {rule.rateLimit.window}s
                         </span>
                       )}
@@ -490,16 +494,16 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   <TableCell className="px-4 py-3">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[12px] text-foreground">
-                        {rule.stats.totalRequests.toLocaleString()} total
+                        {rule.stats.totalRequests.toLocaleString()} {t('total')}
                       </span>
                       {rule.stats.blocked > 0 && (
                         <span className="text-[11px] text-red-500">
-                          {rule.stats.blocked.toLocaleString()} blocked
+                          {rule.stats.blocked.toLocaleString()} {t('blocked')}
                         </span>
                       )}
                       {rule.stats.allowed > 0 && (
                         <span className="text-[11px] text-emerald-500">
-                          {rule.stats.allowed.toLocaleString()} allowed
+                          {rule.stats.allowed.toLocaleString()} {t('allowed')}
                         </span>
                       )}
                     </div>
@@ -512,7 +516,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       />
                     ) : (
                       <span className="text-[12px] text-muted-foreground">
-                        Never
+                        {t('Never')}
                       </span>
                     )}
                   </TableCell>
@@ -523,7 +527,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEditRule(rule)}>
-                          <MenuItemContent icon={Pencil}>Update</MenuItemContent>
+                          <MenuItemContent icon={Pencil}>
+                            {t('Update')}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleToggleEnabled(rule)}
@@ -531,21 +537,25 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                           <MenuItemContent
                             icon={rule.enabled ? ToggleLeft : ToggleRight}
                           >
-                            {rule.enabled ? 'Disable' : 'Enable'}
+                            {rule.enabled ? t('Disable') : t('Enable')}
                           </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => copyRuleId(rule.$id)}>
                           <MenuItemContent
                             icon={copiedRuleId === rule.$id ? Check : Copy}
                           >
-                            {copiedRuleId === rule.$id ? 'Copied' : 'Copy ID'}
+                            {copiedRuleId === rule.$id
+                              ? t('Copied')
+                              : t('Copy ID')}
                           </MenuItemContent>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => setDeletingRule(rule)}
                         >
-                          <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                          <MenuItemContent icon={Trash2}>
+                            {t('Delete')}
+                          </MenuItemContent>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -561,42 +571,44 @@ export function RulesTab({ searchValue }: RulesTabProps) {
       <Dialog open={creatingRule} onOpenChange={setCreatingRule}>
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Create firewall rule</DialogTitle>
+            <DialogTitle>{t('Create firewall rule')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Define a new rule to protect your project from malicious requests.
+              {t(
+                'Define a new rule to protect your project from malicious requests.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
 
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Rule name</Label>
+              <Label htmlFor="name">{t('Rule name')}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="e.g., Block suspicious IPs"
+                placeholder={t('e.g., Block suspicious IPs')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('Description')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Optional description of what this rule does"
+                placeholder={t('Optional description of what this rule does')}
                 rows={2}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="action">Action</Label>
+                <Label htmlFor="action">{t('Action')}</Label>
                 <Select
                   value={formData.action}
                   onValueChange={(value: 'block' | 'allow' | 'challenge') =>
@@ -607,15 +619,15 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="block">Block</SelectItem>
-                    <SelectItem value="allow">Allow</SelectItem>
-                    <SelectItem value="challenge">Challenge</SelectItem>
+                    <SelectItem value="block">{t('Block')}</SelectItem>
+                    <SelectItem value="allow">{t('Allow')}</SelectItem>
+                    <SelectItem value="challenge">{t('Challenge')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="priority">Priority</Label>
+                <Label htmlFor="priority">{t('Priority')}</Label>
                 <Input
                   id="priority"
                   type="number"
@@ -633,11 +645,11 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
             <div className="space-y-4 border-t border-border pt-4">
               <h4 className="text-[13px] font-medium text-foreground">
-                Conditions
+                {t('Conditions')}
               </h4>
 
               <div className="space-y-2">
-                <Label htmlFor="ipAddress">IP Address (optional)</Label>
+                <Label htmlFor="ipAddress">{t('IP Address (optional)')}</Label>
                 <Input
                   id="ipAddress"
                   value={formData.conditions.ipAddress}
@@ -653,7 +665,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="path">Path (optional)</Label>
+                <Label htmlFor="path">{t('Path (optional)')}</Label>
                 <Input
                   id="path"
                   value={formData.conditions.path}
@@ -669,7 +681,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="method">HTTP Method (optional)</Label>
+                <Label htmlFor="method">{t('HTTP Method (optional)')}</Label>
                 <Select
                   value={formData.conditions.method}
                   onValueChange={(value) =>
@@ -679,10 +691,10 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   }
                 >
                   <SelectTrigger id="method">
-                    <SelectValue placeholder="Any method" />
+                    <SelectValue placeholder={t('Any method')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any method</SelectItem>
+                    <SelectItem value="">{t('Any method')}</SelectItem>
                     <SelectItem value="GET">GET</SelectItem>
                     <SelectItem value="POST">POST</SelectItem>
                     <SelectItem value="PUT">PUT</SelectItem>
@@ -693,7 +705,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="country">Country (optional)</Label>
+                <Label htmlFor="country">{t('Country (optional)')}</Label>
                 <Input
                   id="country"
                   value={formData.conditions.country}
@@ -713,10 +725,10 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-[13px] font-medium text-foreground">
-                    Rate limiting
+                    {t('Rate limiting')}
                   </h4>
                   <p className="text-[12px] text-muted-foreground">
-                    Limit requests per time window
+                    {t('Limit requests per time window')}
                   </p>
                 </div>
                 <Switch
@@ -732,7 +744,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               {formData.rateLimit.enabled && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="rateLimitRequests">Requests</Label>
+                    <Label htmlFor="rateLimitRequests">{t('Requests')}</Label>
                     <Input
                       id="rateLimitRequests"
                       type="number"
@@ -749,7 +761,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="rateLimitWindow">Window (seconds)</Label>
+                    <Label htmlFor="rateLimitWindow">
+                      {t('Window (seconds)')}
+                    </Label>
                     <Input
                       id="rateLimitWindow"
                       type="number"
@@ -770,9 +784,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
             <div className="flex items-center justify-between border-t border-border pt-4">
               <div>
-                <Label htmlFor="enabled">Enabled</Label>
+                <Label htmlFor="enabled">{t('Enabled')}</Label>
                 <p className="text-[12px] text-muted-foreground">
-                  Rule will be active immediately
+                  {t('Rule will be active immediately')}
                 </p>
               </div>
               <Switch
@@ -787,7 +801,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setCreatingRule(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="brandCta"
@@ -796,7 +810,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               className="gap-1.5"
             >
               <Plus className="h-4 w-4" />
-              Create rule
+              {t('Create rule')}
             </Button>
           </div>
         </DialogContent>
@@ -809,9 +823,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
       >
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Update firewall rule</DialogTitle>
+            <DialogTitle>{t('Update firewall rule')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Modify the rule configuration and conditions.
+              {t('Modify the rule configuration and conditions.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -819,33 +833,33 @@ export function RulesTab({ searchValue }: RulesTabProps) {
           <div className="px-6 pb-4 pt-0 space-y-4">
             {/* Same form fields as create dialog */}
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Rule name</Label>
+              <Label htmlFor="edit-name">{t('Rule name')}</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="e.g., Block suspicious IPs"
+                placeholder={t('e.g., Block suspicious IPs')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t('Description')}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Optional description of what this rule does"
+                placeholder={t('Optional description of what this rule does')}
                 rows={2}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-action">Action</Label>
+                <Label htmlFor="edit-action">{t('Action')}</Label>
                 <Select
                   value={formData.action}
                   onValueChange={(value: 'block' | 'allow' | 'challenge') =>
@@ -856,15 +870,15 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="block">Block</SelectItem>
-                    <SelectItem value="allow">Allow</SelectItem>
-                    <SelectItem value="challenge">Challenge</SelectItem>
+                    <SelectItem value="block">{t('Block')}</SelectItem>
+                    <SelectItem value="allow">{t('Allow')}</SelectItem>
+                    <SelectItem value="challenge">{t('Challenge')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-priority">Priority</Label>
+                <Label htmlFor="edit-priority">{t('Priority')}</Label>
                 <Input
                   id="edit-priority"
                   type="number"
@@ -882,11 +896,13 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
             <div className="space-y-4 border-t border-border pt-4">
               <h4 className="text-[13px] font-medium text-foreground">
-                Conditions
+                {t('Conditions')}
               </h4>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-ipAddress">IP Address (optional)</Label>
+                <Label htmlFor="edit-ipAddress">
+                  {t('IP Address (optional)')}
+                </Label>
                 <Input
                   id="edit-ipAddress"
                   value={formData.conditions.ipAddress}
@@ -902,7 +918,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-path">Path (optional)</Label>
+                <Label htmlFor="edit-path">{t('Path (optional)')}</Label>
                 <Input
                   id="edit-path"
                   value={formData.conditions.path}
@@ -918,7 +934,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-method">HTTP Method (optional)</Label>
+                <Label htmlFor="edit-method">
+                  {t('HTTP Method (optional)')}
+                </Label>
                 <Select
                   value={formData.conditions.method}
                   onValueChange={(value) =>
@@ -928,10 +946,10 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                   }
                 >
                   <SelectTrigger id="edit-method">
-                    <SelectValue placeholder="Any method" />
+                    <SelectValue placeholder={t('Any method')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any method</SelectItem>
+                    <SelectItem value="">{t('Any method')}</SelectItem>
                     <SelectItem value="GET">GET</SelectItem>
                     <SelectItem value="POST">POST</SelectItem>
                     <SelectItem value="PUT">PUT</SelectItem>
@@ -942,7 +960,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-country">Country (optional)</Label>
+                <Label htmlFor="edit-country">{t('Country (optional)')}</Label>
                 <Input
                   id="edit-country"
                   value={formData.conditions.country}
@@ -962,10 +980,10 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-[13px] font-medium text-foreground">
-                    Rate limiting
+                    {t('Rate limiting')}
                   </h4>
                   <p className="text-[12px] text-muted-foreground">
-                    Limit requests per time window
+                    {t('Limit requests per time window')}
                   </p>
                 </div>
                 <Switch
@@ -981,7 +999,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
               {formData.rateLimit.enabled && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-rateLimitRequests">Requests</Label>
+                    <Label htmlFor="edit-rateLimitRequests">
+                      {t('Requests')}
+                    </Label>
                     <Input
                       id="edit-rateLimitRequests"
                       type="number"
@@ -999,7 +1019,7 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
                   <div className="space-y-2">
                     <Label htmlFor="edit-rateLimitWindow">
-                      Window (seconds)
+                      {t('Window (seconds)')}
                     </Label>
                     <Input
                       id="edit-rateLimitWindow"
@@ -1021,9 +1041,9 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
             <div className="flex items-center justify-between border-t border-border pt-4">
               <div>
-                <Label htmlFor="edit-enabled">Enabled</Label>
+                <Label htmlFor="edit-enabled">{t('Enabled')}</Label>
                 <p className="text-[12px] text-muted-foreground">
-                  Rule will be active immediately
+                  {t('Rule will be active immediately')}
                 </p>
               </div>
               <Switch
@@ -1038,14 +1058,14 @@ export function RulesTab({ searchValue }: RulesTabProps) {
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setEditingRule(null)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="brandCta"
               onClick={handleUpdateRule}
               disabled={!formData.name.trim()}
             >
-              Update rule
+              {t('Update rule')}
             </Button>
           </div>
         </DialogContent>
@@ -1058,19 +1078,19 @@ export function RulesTab({ searchValue }: RulesTabProps) {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete firewall rule</DialogTitle>
+            <DialogTitle>{t('Delete firewall rule')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete "{deletingRule?.name}"? This
-              action cannot be undone.
+              {t('Are you sure you want to delete')} "{deletingRule?.name}"?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setDeletingRule(null)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteRule}>
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

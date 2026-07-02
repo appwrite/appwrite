@@ -14,20 +14,25 @@ import { Button } from '@/components/ui/button'
 import { PRODUCT_HERO_LOGO_STRIPS } from '@/lib/products/hero-logo-strip'
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductPageContent } from '@/lib/products/types'
+import { useI18n } from '@/lib/i18n'
 
 type ProductPageLayoutProps = {
   content: ProductPageContent
 }
 
 export function ProductPageLayout({ content }: ProductPageLayoutProps) {
+  const { catalog } = useI18n()
+  const pageLayoutCopy = catalog.website.products.pageLayout
+  const productNamesCopy = catalog.website.products.productNames
   const product = PRODUCT_REGISTRY[content.id]
   const ProductIcon = product.icon
   const heroLogoStrip = PRODUCT_HERO_LOGO_STRIPS[content.id]
+  const productName = productNamesCopy[content.id] ?? product.name
 
   return (
     <div className="relative overflow-x-clip bg-background">
       <MarketingHeroSection
-        leading={<ProductHeroIcon icon={ProductIcon} name={product.name} />}
+        leading={<ProductHeroIcon icon={ProductIcon} name={productName} />}
         title={content.hero.title}
         description={content.hero.description}
         wideFooter={content.hero.stats?.length === 5}
@@ -44,11 +49,11 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
           <Link to="/sign-up" search={{ redirect: '/' }}>
-            Start building
+            {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={product.docsPath}>View docs</a>
+          <a href={product.docsPath}>{pageLayoutCopy.viewDocs}</a>
         </Button>
       </MarketingHeroSection>
 
@@ -64,11 +69,11 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
           <Link to="/sign-up" search={{ redirect: '/' }}>
-            Start building
+            {pageLayoutCopy.startBuilding}
           </Link>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">View pricing</Link>
+          <Link to="/pricing">{pageLayoutCopy.viewPricing}</Link>
         </Button>
       </MarketingCtaSection>
 

@@ -99,6 +99,7 @@ import {
 import { DeploymentDownloadType, ImageFormat } from '@appwrite.io/console'
 import { useAvifSupport } from '@/lib/avif-support'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
@@ -195,6 +196,7 @@ function getVcsProvider(
 }
 
 export function SiteDeploymentsView() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -438,9 +440,9 @@ export function SiteDeploymentsView() {
         type: DeploymentDownloadType.Source})
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download source code')
+      toast.error(t('Failed to download source code'))
     }
   }
 
@@ -454,9 +456,9 @@ export function SiteDeploymentsView() {
         type: DeploymentDownloadType.Output})
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
-      toast.success('Download started')
+      toast.success(t('Download started'))
     } catch {
-      toast.error('Failed to download build output')
+      toast.error(t('Failed to download build output'))
     }
   }
 
@@ -476,11 +478,11 @@ export function SiteDeploymentsView() {
         queryKey: [...Dependencies.DEPLOYMENTS]})
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId]})
-      toast.success('Deployment rebuild started')
+      toast.success(t('Deployment rebuild started'))
       setRedeployDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to redeploy')
+      toast.error(error.message || t('Failed to redeploy'))
     }})
 
   // Activate mutation (disabled for active deployment, but included for consistency)
@@ -499,11 +501,11 @@ export function SiteDeploymentsView() {
         queryKey: [...Dependencies.DEPLOYMENTS]})
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId]})
-      toast.success('Deployment activated successfully')
+      toast.success(t('Deployment activated successfully'))
       setActivateDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to activate deployment')
+      toast.error(error.message || t('Failed to activate deployment'))
     }})
 
   const cancelBuildMutation = useMutation({
@@ -524,10 +526,10 @@ export function SiteDeploymentsView() {
         queryKey: Dependencies.DEPLOYMENTS})
       await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId]})
-      toast.success('Build cancelled')
+      toast.success(t('Build cancelled'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel build')
+      toast.error(error.message || t('Failed to cancel build'))
     }})
 
   // Delete mutation for active deployment
@@ -537,7 +539,9 @@ export function SiteDeploymentsView() {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       throw new Error(
-        'Cannot delete the active deployment. Please activate another deployment first.',
+        t(
+          'Cannot delete the active deployment. Please activate another deployment first.',
+        ),
       )
     },
     onSuccess: () => {
@@ -545,11 +549,11 @@ export function SiteDeploymentsView() {
         queryKey: [...Dependencies.DEPLOYMENTS]})
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId]})
-      toast.success('Deployment deleted successfully')
+      toast.success(t('Deployment deleted successfully'))
       setDeleteActiveDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete deployment')
+      toast.error(error.message || t('Failed to delete deployment'))
     }})
 
   // Bulk delete mutation
@@ -563,7 +567,9 @@ export function SiteDeploymentsView() {
       const activeDeploymentId = activeDeploymentResolved?.$id
       if (activeDeploymentId && deploymentIds.includes(activeDeploymentId)) {
         throw new Error(
-          'Cannot delete the active deployment. Please activate another deployment first.',
+          t(
+            'Cannot delete the active deployment. Please activate another deployment first.',
+          ),
         )
       }
 
@@ -580,13 +586,15 @@ export function SiteDeploymentsView() {
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId]})
       toast.success(
-        `Successfully deleted ${selectedDeployments.size} deployment${selectedDeployments.size > 1 ? 's' : ''}`,
+        selectedDeployments.size === 1
+          ? t('Deployment deleted successfully')
+          : `${t('Successfully deleted')} ${selectedDeployments.size} ${t('deployments')}`,
       )
       setSelectedDeployments(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete deployments')
+      toast.error(error.message || t('Failed to delete deployments'))
     }})
 
   const handleBulkDelete = () => {
@@ -654,7 +662,7 @@ export function SiteDeploymentsView() {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
         <p className="text-[13px] text-muted-foreground">
-          Loading deployments...
+          {t('Loading deployments...')}
         </p>
       </div>
     )
@@ -669,14 +677,14 @@ export function SiteDeploymentsView() {
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4 flex items-center gap-2">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  Active deployment
+                  {t('Active deployment')}
                 </h3>
                 {isBuilding && (
                   <Badge
                     variant="deploymentBuilding"
                     className="text-[10px] shrink-0"
                   >
-                    Building
+                    {t('Building')}
                   </Badge>
                 )}
               </div>
@@ -708,7 +716,7 @@ export function SiteDeploymentsView() {
                             <img
                               key={screenshotId}
                               src={screenshotUrl}
-                              alt="Deployment screenshot"
+                              alt={t('Deployment screenshot')}
                               onLoad={() => setScreenshotLoaded(true)}
                               className={cn(
                                 'w-full h-full object-cover transition-opacity duration-500',
@@ -744,7 +752,7 @@ export function SiteDeploymentsView() {
                                       ? 'bg-primary text-primary-foreground'
                                       : 'text-muted-foreground hover:text-foreground hover:bg-muted',
                                   )}
-                                  title="Light screenshot"
+                                  title={t('Light screenshot')}
                                 >
                                   <Sun className="h-3.5 w-3.5" />
                                 </button>
@@ -759,7 +767,7 @@ export function SiteDeploymentsView() {
                                       ? 'bg-primary text-primary-foreground'
                                       : 'text-muted-foreground hover:text-foreground hover:bg-muted',
                                   )}
-                                  title="Dark screenshot"
+                                  title={t('Dark screenshot')}
                                 >
                                   <Moon className="h-3.5 w-3.5" />
                                 </button>
@@ -775,7 +783,7 @@ export function SiteDeploymentsView() {
                       <div className="w-full lg:w-1/2 flex h-64 lg:h-80 items-center justify-center rounded-lg border border-border/50 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 relative overflow-hidden">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
                         <p className="relative text-[12px] font-medium text-muted-foreground/60">
-                          Preview not available
+                          {t('Preview not available')}
                         </p>
                         {/* Framework Icon - Bottom Left */}
                         {site && (
@@ -801,7 +809,7 @@ export function SiteDeploymentsView() {
                       {/* Deployed */}
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Deployed
+                          {t('Deployed')}
                         </div>
                         <div className="text-[13px] text-foreground">
                           <DateTooltip
@@ -821,7 +829,7 @@ export function SiteDeploymentsView() {
                         ) && (
                           <div>
                             <div className="text-[12px] text-muted-foreground mb-1.5">
-                              Build duration
+                              {t('Build duration')}
                             </div>
                             <div className="text-[13px] text-foreground">
                               {isDeploymentInProgress(
@@ -849,7 +857,7 @@ export function SiteDeploymentsView() {
                       {/* Total size */}
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Total size
+                          {t('Total size')}
                         </div>
                         <div className="text-[13px] text-foreground">
                           {formatSize(
@@ -865,7 +873,7 @@ export function SiteDeploymentsView() {
                         activeDeploymentForCard.providerRepositoryName && (
                           <div>
                             <div className="text-[12px] text-muted-foreground mb-1.5">
-                              Source
+                              {t('Source')}
                             </div>
                             <div className="flex items-center gap-1.5 text-[13px] text-foreground min-w-0">
                               {vcsProvider.icon}
@@ -895,7 +903,7 @@ export function SiteDeploymentsView() {
                       {/* Global CDN */}
                       <div>
                         <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                          <span>Global CDN</span>
+                          <span>{t('Global CDN')}</span>
                           <TooltipProvider delayDuration={0}>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -909,21 +917,19 @@ export function SiteDeploymentsView() {
                               </TooltipTrigger>
                               <TooltipContent side="right" className="max-w-xs">
                                 <p className="text-[12px] font-medium mb-1.5 text-background">
-                                  Content Delivery Network
+                                  {t('Content Delivery Network')}
                                 </p>
                                 <p className="text-[11px] text-background/90">
-                                  Appwrite's CDN provides global coverage with
-                                  120+ points of presence worldwide, reducing
-                                  latency through edge caching and content
-                                  optimization. All content is delivered over
-                                  TLS for secure, encrypted connections.
+                                  {t(
+                                    "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.", // pragma: allowlist secret
+                                  )}
                                 </p>
                                   <DocsRouteLink
                                     href="/docs/products/network/cdn"
                                     className="link-neutral text-[11px] mt-1.5 inline-block"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    Learn more →
+                                    {t('Learn more →')}
                                   </DocsRouteLink>
                               </TooltipContent>
                             </Tooltip>
@@ -932,7 +938,7 @@ export function SiteDeploymentsView() {
                         <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
                           <span className="text-[13px] font-medium text-foreground">
-                            Connected
+                            {t('Connected')}
                           </span>
                         </div>
                       </div>
@@ -940,7 +946,7 @@ export function SiteDeploymentsView() {
                       {/* DDoS protection */}
                       <div>
                         <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                          <span>DDoS protection</span>
+                          <span>{t('DDoS protection')}</span>
                           <TooltipProvider delayDuration={0}>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -954,22 +960,19 @@ export function SiteDeploymentsView() {
                               </TooltipTrigger>
                               <TooltipContent side="right" className="max-w-xs">
                                 <p className="text-[12px] font-medium mb-1.5 text-background">
-                                  DDoS Mitigation
+                                  {t('DDoS Mitigation')}
                                 </p>
                                 <p className="text-[11px] text-background/90">
-                                  Appwrite's network includes built-in DDoS
-                                  mitigation to protect against distributed
-                                  denial-of-service attacks, ensuring
-                                  uninterrupted access to your sites and
-                                  maintaining high availability even during high
-                                  traffic loads.
+                                  {t(
+                                    "Appwrite's network includes built-in DDoS mitigation to protect against distributed denial-of-service attacks, ensuring uninterrupted access to your sites and maintaining high availability even during high traffic loads.", // pragma: allowlist secret
+                                  )}
                                 </p>
                                   <DocsRouteLink
                                     href="/docs/products/network"
                                     className="link-neutral text-[11px] mt-1.5 inline-block"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    Learn more →
+                                    {t('Learn more →')}
                                   </DocsRouteLink>
                               </TooltipContent>
                             </Tooltip>
@@ -978,7 +981,7 @@ export function SiteDeploymentsView() {
                         <div className="flex items-center gap-1.5">
                           <Shield className="h-4 w-4 text-green-500" />
                           <span className="text-[13px] font-medium text-foreground">
-                            Active
+                            {t('Active')}
                           </span>
                         </div>
                       </div>
@@ -987,7 +990,7 @@ export function SiteDeploymentsView() {
                     {/* Domains */}
                     <div className="mt-4 pt-4 border-t border-border">
                       <div className="text-[12px] text-muted-foreground mb-1.5">
-                        Domains
+                        {t('Domains')}
                       </div>
                       {activeDomains.length > 0 ? (
                         <>
@@ -1007,7 +1010,8 @@ export function SiteDeploymentsView() {
                           </div>
                           {hasMoreDomains && (
                             <p className="text-[11px] text-muted-foreground mt-1.5">
-                              +{totalActiveDomains - activeDomains.length} more
+                              +{totalActiveDomains - activeDomains.length}{' '}
+                              {t('more')}
                             </p>
                           )}
                           <div
@@ -1028,7 +1032,7 @@ export function SiteDeploymentsView() {
                                   projectId: projectId!,
                                   siteId: siteId!}}
                               >
-                                View all domains
+                                {t('View all domains')}
                                 {hasMoreDomains && (
                                   <Badge
                                     variant="secondary"
@@ -1052,7 +1056,7 @@ export function SiteDeploymentsView() {
                                   projectId: projectId!,
                                   siteId: siteId!}}
                               >
-                                Add domain
+                                {t('Add domain')}
                               </Link>
                             </Button>
                           </div>
@@ -1076,7 +1080,7 @@ export function SiteDeploymentsView() {
                                 projectId: projectId!,
                                 siteId: siteId!}}
                             >
-                              View all domains
+                              {t('View all domains')}
                             </Link>
                           </Button>
                           <span className="text-muted-foreground/60">·</span>
@@ -1092,7 +1096,7 @@ export function SiteDeploymentsView() {
                                 projectId: projectId!,
                                 siteId: siteId!}}
                             >
-                              Add domain
+                              {t('Add domain')}
                             </Link>
                           </Button>
                         </div>
@@ -1111,13 +1115,13 @@ export function SiteDeploymentsView() {
                       className="h-9 text-[13px]"
                     >
                       <Download className="me-1.5 h-4 w-4" />
-                      Download
+                      {t('Download')}
                       <ChevronDown className="ms-auto sm:ms-1.5 h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      Source code
+                      {t('Source code')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
@@ -1130,11 +1134,13 @@ export function SiteDeploymentsView() {
                         !isDeploymentCompleted(
                           activeDeploymentForCard?.status,
                         )
-                          ? 'Build output is available after the deployment has completed.'
+                          ? t(
+                              'Build output is available after the deployment has completed.',
+                            )
                           : undefined
                       }
                     >
-                      Build output
+                      {t('Build output')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1146,7 +1152,7 @@ export function SiteDeploymentsView() {
                   className="h-9 text-[13px]"
                 >
                   <RefreshCw className="me-1.5 h-4 w-4" />
-                  Redeploy
+                  {t('Redeploy')}
                 </Button>
                 <Link
                   to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
@@ -1161,7 +1167,7 @@ export function SiteDeploymentsView() {
                     className="h-9 text-[13px]"
                   >
                     <ScrollText className="me-1.5 h-4 w-4" />
-                    Build logs
+                    {t('Build logs')}
                   </Button>
                 </Link>
                 {activeDomains.length > 0 && (
@@ -1173,14 +1179,14 @@ export function SiteDeploymentsView() {
                         className="h-9 text-[13px]"
                       >
                         <Globe className="me-1.5 h-4 w-4" />
-                        Visit
+                        {t('Visit')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="z-[200] w-80">
                       <div className="space-y-3">
                         <div>
                           <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                            Domains
+                            {t('Domains')}
                           </h4>
                           <div className="space-y-1.5">
                             {activeDomains.map((rule) => (
@@ -1207,7 +1213,8 @@ export function SiteDeploymentsView() {
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
                               >
                                 <span>
-                                  View all {totalActiveDomains} domains
+                                  {t('View all')} {totalActiveDomains}{' '}
+                                  {t('domains')}
                                 </span>
                               </Link>
                             )}
@@ -1229,10 +1236,10 @@ export function SiteDeploymentsView() {
                   <Clock className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <p className="mb-1 text-[14px] font-medium text-foreground">
-                  There is no active deployment
+                  {t('There is no active deployment')}
                 </p>
                 <p className="text-[13px] text-muted-foreground">
-                  Create your first deployment to activate this site.
+                  {t('Create your first deployment to activate this site.')}
                 </p>
               </div>
             </div>
@@ -1265,7 +1272,7 @@ export function SiteDeploymentsView() {
                         />
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                        Deployment ID
+                        {t('Deployment ID')}
                       </TableHead>
                       <TableHead
                         className={cn(
@@ -1273,22 +1280,22 @@ export function SiteDeploymentsView() {
                           DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
                         )}
                       >
-                        Status
+                        {t('Status')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                        Type
+                        {t('Type')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                        Source
+                        {t('Source')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                        Total Size
+                        {t('Total Size')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                        Duration
+                        {t('Duration')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                        Created
+                        {t('Created')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px]"></TableHead>
                     </TableRow>
@@ -1369,7 +1376,7 @@ export function SiteDeploymentsView() {
                                 className="gap-1.5 text-[11px] font-medium"
                               >
                                 <CheckCircle2 className="h-3 w-3" />
-                                Active
+                                {t('Active')}
                               </Badge>
                             ) : (
                               <Badge
@@ -1380,7 +1387,7 @@ export function SiteDeploymentsView() {
                                   const StatusIcon = statusBadge.icon
                                   return <StatusIcon className="h-3 w-3" />
                                 })()}
-                                {statusBadge.label}
+                                {t(statusBadge.label)}
                               </Badge>
                             )}
                           </TableCell>
@@ -1440,7 +1447,7 @@ export function SiteDeploymentsView() {
                                   {deploymentData.type === 'cli' && (
                                     <GitBranch className="h-3.5 w-3.5" />
                                   )}
-                                  <span>{typeLabel}</span>
+                                  <span>{t(typeLabel)}</span>
                                 </div>
                               )
                             })()}
@@ -1531,7 +1538,7 @@ export function SiteDeploymentsView() {
                                             </span>
                                             {commitAuthor ? (
                                               <span className="min-w-0 truncate">
-                                                {' by '}
+                                                {` ${t('by')} `}
                                                 {commitAuthorUrl ? (
                                                   <a
                                                     href={commitAuthorUrl}
@@ -1606,7 +1613,9 @@ export function SiteDeploymentsView() {
                                     }
                                     title={
                                       deploymentData.status !== 'ready'
-                                        ? 'Build must be ready before activating'
+                                        ? t(
+                                            'Build must be ready before activating',
+                                          )
                                         : undefined
                                     }
                                     onClick={async (e) => {
@@ -1634,16 +1643,18 @@ export function SiteDeploymentsView() {
                                             siteId,
                                           ]})
                                         toast.success(
-                                          'Deployment activated successfully',
+                                          t('Deployment activated successfully'),
                                         )
                                       } catch {
                                         toast.error(
-                                          'Failed to activate deployment',
+                                          t('Failed to activate deployment'),
                                         )
                                       }
                                     }}
                                   >
-                                    <MenuItemContent icon={Play}>Activate</MenuItemContent>
+                                    <MenuItemContent icon={Play}>
+                                      {t('Activate')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -1663,15 +1674,15 @@ export function SiteDeploymentsView() {
                                           ...Dependencies.DEPLOYMENTS,
                                         ]})
                                       toast.success(
-                                        'Deployment rebuild started',
+                                        t('Deployment rebuild started'),
                                       )
                                     } catch {
-                                      toast.error('Failed to redeploy')
+                                      toast.error(t('Failed to redeploy'))
                                     }
                                   }}
                                 >
                                   <MenuItemContent icon={RefreshCw}>
-                                    Redeploy
+                                    {t('Redeploy')}
                                   </MenuItemContent>
                                 </DropdownMenuItem>
                                 <DropdownMenuSub>
@@ -1680,7 +1691,7 @@ export function SiteDeploymentsView() {
                                     onPointerDown={(e) => e.stopPropagation()}
                                   >
                                     <MenuItemIcon icon={Download} />
-                                    Download
+                                    {t('Download')}
                                   </DropdownMenuSubTrigger>
                                   <DropdownMenuSubContent className="z-[200]">
                                     <DropdownMenuItem
@@ -1703,16 +1714,16 @@ export function SiteDeploymentsView() {
                                             (url.includes('?') ? '&' : '?') +
                                             'mode=admin'
                                           window.open(urlWithMode, '_blank')
-                                          toast.success('Download started')
+                                          toast.success(t('Download started'))
                                         } catch {
                                           toast.error(
-                                            'Failed to download source code',
+                                            t('Failed to download source code'),
                                           )
                                         }
                                       }}
                                     >
                                       <MenuItemContent icon={FileCode}>
-                                        Source code
+                                        {t('Source code')}
                                       </MenuItemContent>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -1725,7 +1736,9 @@ export function SiteDeploymentsView() {
                                         !isDeploymentCompleted(
                                           deploymentData.status,
                                         )
-                                          ? 'Build output is available after the deployment has completed.'
+                                          ? t(
+                                              'Build output is available after the deployment has completed.',
+                                            )
                                           : undefined
                                       }
                                       onClick={(e) => {
@@ -1753,16 +1766,16 @@ export function SiteDeploymentsView() {
                                             (url.includes('?') ? '&' : '?') +
                                             'mode=admin'
                                           window.open(urlWithMode, '_blank')
-                                          toast.success('Download started')
+                                          toast.success(t('Download started'))
                                         } catch {
                                           toast.error(
-                                            'Failed to download build output',
+                                            t('Failed to download build output'),
                                           )
                                         }
                                       }}
                                     >
                                       <MenuItemContent icon={Package}>
-                                        Build output
+                                        {t('Build output')}
                                       </MenuItemContent>
                                     </DropdownMenuItem>
                                   </DropdownMenuSubContent>
@@ -1773,11 +1786,15 @@ export function SiteDeploymentsView() {
                                   title={
                                     !canDeleteFromMenu
                                       ? isActive
-                                        ? 'The active deployment cannot be deleted from the list'
+                                        ? t(
+                                            'The active deployment cannot be deleted from the list',
+                                          )
                                         : isDeploymentInProgress(
                                               deploymentData.status,
                                             )
-                                          ? 'Wait for the build to finish or cancel it first'
+                                          ? t(
+                                              'Wait for the build to finish or cancel it first',
+                                            )
                                           : undefined
                                       : undefined
                                   }
@@ -1800,18 +1817,20 @@ export function SiteDeploymentsView() {
                                           siteId,
                                         ]})
                                       toast.success(
-                                        'Deployment deleted successfully',
+                                        t('Deployment deleted successfully'),
                                       )
                                     } catch (error) {
                                       toast.error(
                                         error instanceof Error
                                           ? error.message
-                                          : 'Failed to delete deployment',
+                                          : t('Failed to delete deployment'),
                                       )
                                     }
                                   }}
                                 >
-                                  <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                                 {isDeploymentInProgress(
                                   deploymentData.status,
@@ -1825,7 +1844,9 @@ export function SiteDeploymentsView() {
                                       setCancelBuildDialogOpen(true)
                                     }}
                                   >
-                                    <MenuItemContent icon={XCircle}>Cancel</MenuItemContent>
+                                    <MenuItemContent icon={XCircle}>
+                                      {t('Cancel')}
+                                    </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1845,15 +1866,15 @@ export function SiteDeploymentsView() {
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel="deployments"
+                itemLabel={t('deployments')}
                 className="py-2"
               />
             </>
           ) : (
             <EmptyState
               icon={Clock}
-              title="No deployments yet"
-              description="Create your first deployment to get started"
+              title={t('No deployments yet')}
+              description={t('Create your first deployment to get started')}
               isEmpty={true}
               variant="card"
               iconSize="md"
@@ -1872,9 +1893,9 @@ export function SiteDeploymentsView() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Cancel build</DialogTitle>
+            <DialogTitle>{t('Cancel build')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Stop the current deployment? You can deploy again later.
+              {t('Stop the current deployment? You can deploy again later.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1904,7 +1925,7 @@ export function SiteDeploymentsView() {
               }}
               className="h-9 text-[13px]"
             >
-              Keep building
+              {t('Keep building')}
             </Button>
             <Button
               variant="destructive"
@@ -1917,7 +1938,7 @@ export function SiteDeploymentsView() {
               }
               className="h-9 text-[13px]"
             >
-              Cancel build
+              {t('Cancel build')}
             </Button>
           </div>
         </DialogContent>
@@ -1928,8 +1949,11 @@ export function SiteDeploymentsView() {
         <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
           <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              {selectedDeployments.size} deployment
-              {selectedDeployments.size > 1 ? 's' : ''} selected
+              {selectedDeployments.size}{' '}
+              {selectedDeployments.size > 1
+                ? t('deployments')
+                : t('deployment')}{' '}
+              {t('selected')}
             </Badge>
             <div className="flex items-center gap-2">
               <Button
@@ -1938,7 +1962,7 @@ export function SiteDeploymentsView() {
                 onClick={() => setSelectedDeployments(new Set())}
                 className="h-8 text-xs"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -1948,7 +1972,7 @@ export function SiteDeploymentsView() {
                 className="h-8 gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -1959,14 +1983,16 @@ export function SiteDeploymentsView() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete Deployments</DialogTitle>
+            <DialogTitle>{t('Delete Deployments')}</DialogTitle>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-4">
             <DialogDescription className="text-[13px] mb-4">
-              Are you sure you want to delete {selectedDeployments.size}{' '}
-              deployment{selectedDeployments.size > 1 ? 's' : ''}? This action
-              cannot be undone.
+              {t('Are you sure you want to delete')} {selectedDeployments.size}{' '}
+              {selectedDeployments.size > 1
+                ? t('deployments')
+                : t('deployment')}
+              ? {t('This action cannot be undone.')}
             </DialogDescription>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {displayedDeployments
@@ -1987,14 +2013,14 @@ export function SiteDeploymentsView() {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={bulkDeleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={confirmBulkDelete}
               disabled={bulkDeleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -2008,13 +2034,14 @@ export function SiteDeploymentsView() {
         >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Delete deployment</DialogTitle>
+              <DialogTitle>{t('Delete deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action
-                cannot be undone.
+                {t(
+                  'Are you sure you want to delete this deployment? This action cannot be undone.',
+                )}
               </DialogDescription>
               <DeploymentInfo
                 deployment={activeDeploymentForCard}
@@ -2027,7 +2054,7 @@ export function SiteDeploymentsView() {
                 onClick={() => setDeleteActiveDialogOpen(false)}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -2035,7 +2062,7 @@ export function SiteDeploymentsView() {
                 disabled={deleteActiveMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>
@@ -2047,14 +2074,14 @@ export function SiteDeploymentsView() {
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Redeploy deployment</DialogTitle>
+              <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the
-                current site configuration. The original deployment's code will
-                be preserved and used for the new build.
+                {t(
+                  "This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.",
+                )}
               </DialogDescription>
               <DeploymentInfo
                 deployment={activeDeploymentForCard}
@@ -2068,7 +2095,7 @@ export function SiteDeploymentsView() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="default"
@@ -2076,7 +2103,7 @@ export function SiteDeploymentsView() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Redeploy
+                {t('Redeploy')}
               </Button>
             </div>
           </DialogContent>
@@ -2088,13 +2115,14 @@ export function SiteDeploymentsView() {
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-start">
-              <DialogTitle>Activate deployment</DialogTitle>
+              <DialogTitle>{t('Activate deployment')}</DialogTitle>
             </DialogHeader>
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic
-                will be routed to this deployment once activated.
+                {t(
+                  'This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.',
+                )}
               </DialogDescription>
               <DeploymentInfo
                 deployment={activeDeploymentForCard}
@@ -2108,7 +2136,7 @@ export function SiteDeploymentsView() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="default"
@@ -2116,7 +2144,7 @@ export function SiteDeploymentsView() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                Activate
+                {t('Activate')}
               </Button>
             </div>
           </DialogContent>

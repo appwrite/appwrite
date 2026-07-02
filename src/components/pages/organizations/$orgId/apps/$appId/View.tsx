@@ -25,8 +25,10 @@ import {
   useOrgAppUpdate,
 } from './_components/useOrgAppUpdate'
 import { DeleteAppCard } from './_components/DeleteAppCard'
+import { useT } from '@/lib/i18n/translate'
 
 export function View() {
+  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   if (!app || !orgId) return null
@@ -64,17 +66,18 @@ export function View() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Details
+            {t('Details')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Name and descriptions shown on the marketplace listing and OAuth2
-            consent screen.
+            {t(
+              'Name and descriptions shown on the marketplace listing and OAuth2 consent screen.',
+            )}
           </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="app-general-name">Name</Label>
+            <Label htmlFor="app-general-name">{t('Name')}</Label>
             <Input
               id="app-general-name"
               value={name}
@@ -82,16 +85,16 @@ export function View() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="app-general-tagline">Tagline</Label>
+            <Label htmlFor="app-general-tagline">{t('Tagline')}</Label>
             <Input
               id="app-general-tagline"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
-              placeholder="Short summary for listings and consent"
+              placeholder={t('Short summary for listings and consent')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="app-general-description">Description</Label>
+            <Label htmlFor="app-general-description">{t('Description')}</Label>
             <Textarea
               id="app-general-description"
               value={description}
@@ -101,7 +104,7 @@ export function View() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="app-general-category">Category</Label>
+            <Label htmlFor="app-general-category">{t('Category')}</Label>
             <Select
               value={category}
               onValueChange={(value) =>
@@ -114,14 +117,14 @@ export function View() {
               <SelectContent>
                 {MARKETPLACE_CATEGORY_ORDER.map((key) => (
                   <SelectItem key={key} value={key}>
-                    {MARKETPLACE_CATEGORY_LABELS[key]}
+                    {t(MARKETPLACE_CATEGORY_LABELS[key])}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>App ID</Label>
+            <Label>{t('App ID')}</Label>
             <CopyableId id={app.$id} />
           </div>
         </div>
@@ -132,7 +135,7 @@ export function View() {
             disabled={isUpdating || !trimOrEmpty(name)}
             onClick={handleUpdate}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </div>

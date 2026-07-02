@@ -69,6 +69,7 @@ import {
   getDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
 } from '@/lib/databases/dedicated-database-regions'
+import { useT } from '@/lib/i18n/translate'
 
 export type DatabaseTypeOption =
   | 'TablesDB'
@@ -169,6 +170,7 @@ function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
 }
 
 export function CreateDatabaseWizardView() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -426,7 +428,7 @@ export function CreateDatabaseWizardView() {
         spec: selectedSpec?.id ?? 'none',
         has_custom_id: Boolean(databaseId?.trim()),
       })
-      toast.success('Database created')
+      toast.success(t('Database created'))
       if (isNativeDatabaseType(dbType)) {
         if (dbType === 'Postgres') {
           navigate({
@@ -474,7 +476,7 @@ export function CreateDatabaseWizardView() {
         spec: selectedSpec?.id ?? 'none',
         error_name: error instanceof Error ? error.name : 'unknown',
       })
-      const fallback = 'Failed to create database'
+      const fallback = t('Failed to create database')
       const message =
         isNativeDatabaseType(dbType) ||
         dbType === 'DocumentsDB' ||
@@ -487,15 +489,16 @@ export function CreateDatabaseWizardView() {
 
   const handleCreate = () => {
     const newErrors: Record<string, string> = {}
-    if (!name.trim()) newErrors.name = 'Name is required'
+    if (!name.trim()) newErrors.name = t('Name is required')
     if (isNativeDatabaseType(dbType)) {
       const dedicatedIdError = databaseId?.trim()
         ? getDedicatedDatabaseIdError(databaseId)
         : null
       if (dedicatedIdError) newErrors.databaseId = dedicatedIdError
     } else if (databaseId?.trim() && !validateDatabaseId(databaseId)) {
-      newErrors.databaseId =
-        'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
+      newErrors.databaseId = t(
+        'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.',
+      )
     }
     setErrors(newErrors)
     const invalidFields = Object.keys(newErrors)
@@ -546,14 +549,14 @@ export function CreateDatabaseWizardView() {
         onClick={handleCreate}
         data-analytics-track="manual"
       >
-        Create database
+        {t('Create database')}
       </Button>
     </div>
   )
 
   return (
     <WizardLayout
-      title="Create database"
+      title={t('Create database')}
       fullscreen
       maxWidth="max-w-[1400px]"
       fallbackPath={`/projects/${pid}/databases`}
@@ -581,12 +584,12 @@ export function CreateDatabaseWizardView() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="db-name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="db-name"
                 type="text"
-                placeholder="My database"
+                placeholder={t('My database')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -599,13 +602,13 @@ export function CreateDatabaseWizardView() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="db-id">Database ID</Label>
+              <Label htmlFor="db-id">{t('Database ID')}</Label>
               <IdInput
                 id="db-id"
                 value={databaseId}
                 onChange={setDatabaseId}
                 maxLength={36}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
                 idFormat={
                   isNativeDatabaseType(dbType) ||
                   dbType === 'DocumentsDB' ||
@@ -627,10 +630,10 @@ export function CreateDatabaseWizardView() {
         <section>
           <div className="mb-8">
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
-              Choose database type
+              {t('Choose database type')}
             </h2>
             <p className="text-[13px] text-muted-foreground">
-              Pick an Appwrite database or a native SQL engine.
+              {t('Pick an Appwrite database or a native SQL engine.')} {/* pragma: allowlist secret */}
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -645,13 +648,13 @@ export function CreateDatabaseWizardView() {
               >
                 <div className="mb-6 space-y-1">
                   <h3 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {group.title}
+                    {t(group.title)}
                   </h3>
                   <p className="text-[12px] leading-5 text-muted-foreground">
                     {group.title === 'Native databases' &&
                     !supportsDedicatedDatabaseCompute
                       ? regionUnavailableMessage
-                      : group.description}
+                      : t(group.description)}
                   </p>
                 </div>
                 <div className="space-y-4">
@@ -699,7 +702,7 @@ export function CreateDatabaseWizardView() {
                               variant="info"
                               className="text-[10px] shrink-0"
                             >
-                              Beta
+                              {t('Beta')}
                             </Badge>
                           )}
                           {optionMeta.comingSoon && (
@@ -707,12 +710,12 @@ export function CreateDatabaseWizardView() {
                               variant="inactive"
                               className="text-[10px] shrink-0"
                             >
-                              Coming soon
+                              {t('Coming soon')}
                             </Badge>
                           )}
                         </span>
                         <p className="text-[12px] leading-5 text-muted-foreground">
-                          {optionMeta.comingSoonMessage ?? opt.description}
+                          {optionMeta.comingSoonMessage ?? t(opt.description)}
                         </p>
                       </div>
                     </button>
@@ -728,14 +731,14 @@ export function CreateDatabaseWizardView() {
         {dbType && showSpecsForType && (
           <section className="pt-6">
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
-              Specifications
+              {t('Specifications')}
             </h2>
             <p className="text-[13px] text-muted-foreground mb-4">
-              Select the compute and storage tier for your database.
+              {t('Select the compute and storage tier for your database.')}
             </p>
             <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
               <p className="text-[13px] font-medium text-foreground">
-                {DATABASE_COMPUTE_CREDITS_NOTE}
+                {t(DATABASE_COMPUTE_CREDITS_NOTE)}
               </p>
             </div>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -749,19 +752,19 @@ export function CreateDatabaseWizardView() {
                     <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
                       <TableHead className="w-[48px] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider" />
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Tier
+                        {t('Tier')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                         CPU
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Memory
+                        {t('Memory')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Connections
+                        {t('Connections')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[140px]">
-                        Price
+                        {t('Price')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -772,7 +775,7 @@ export function CreateDatabaseWizardView() {
                           colSpan={6}
                           className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                         >
-                          Loading specifications…
+                          {t('Loading specifications…')}
                         </TableCell>
                       </TableRow>
                     ) : selectableSpecs.length === 0 ? (
@@ -781,7 +784,7 @@ export function CreateDatabaseWizardView() {
                           colSpan={6}
                           className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                         >
-                          No specifications are available for your plan.
+                          {t('No specifications are available for your plan.')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -812,7 +815,7 @@ export function CreateDatabaseWizardView() {
                           </TableCell>
                           <TableCell className="px-4 py-3.5">
                             <span className="text-[13px] font-medium text-foreground">
-                              {spec.label}
+                              {t(spec.label)}
                             </span>
                           </TableCell>
                           <TableCell className="px-4 py-3.5 text-[13px] text-muted-foreground">
@@ -830,7 +833,7 @@ export function CreateDatabaseWizardView() {
                                 variant="inactive"
                                 className="text-[10px] shrink-0"
                               >
-                                Upgrade
+                                {t('Upgrade')}
                               </Badge>
                             ) : (
                               <span className="inline-block text-end text-[13px] font-semibold tabular-nums tracking-tight text-foreground">

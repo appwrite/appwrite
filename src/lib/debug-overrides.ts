@@ -32,6 +32,8 @@ export const DEBUG_OVERRIDE_KEYS = {
   unlockOnboardingLocks: 'debug:unlockOnboardingLocks',
   /** Page text direction for RTL layout testing. Default ltr. */
   pageDirection: 'debug:pageDirection',
+  /** App copy language preference used by the i18n provider. */
+  language: 'debug:language',
 } as const
 
 /** Overrides that are not persisted to localStorage (reset on reload). */
@@ -53,6 +55,7 @@ export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 export type KeyboardLayoutOverride = 'auto' | 'macos' | 'windows'
 
 export type PageDirectionOverride = 'ltr' | 'rtl'
+export type DebugLanguageOverride = 'auto' | 'en' | 'he'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
@@ -97,6 +100,8 @@ export type DebugOverrides = {
   unlockOnboardingLocks: boolean
   /** Document direction for RTL layout testing in debug mode. */
   pageDirection: PageDirectionOverride
+  /** App language preference from debug menu. */
+  language: DebugLanguageOverride
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -214,6 +219,11 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.pageDirection,
       ['ltr', 'rtl'] as const,
       'ltr',
+    ),
+    language: readStringFromStorage(
+      DEBUG_OVERRIDE_KEYS.language,
+      ['auto', 'en', 'he'] as const,
+      'auto',
     ),
   }
 }

@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { PaymentMethodForm } from './PaymentMethodForm'
+import { useT } from '@/lib/i18n/translate'
 
 interface PaymentModalProps {
   open: boolean
@@ -26,6 +27,7 @@ export function PaymentModal({
   onSuccess,
   elevatedForWizard = false,
 }: PaymentModalProps) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -33,9 +35,9 @@ export function PaymentModal({
         overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
       >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add payment method</DialogTitle>
+          <DialogTitle>{t('Add payment method')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Enter your card details to add a new payment method.
+            {t('Enter your card details to add a new payment method.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

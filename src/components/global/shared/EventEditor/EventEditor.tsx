@@ -25,6 +25,7 @@ import { useEventBuilder } from '@/lib/events-editor/use-event-builder'
 import { EventResourceIdSelector } from './EventResourceIdSelector'
 import type { EventEditorModalProps } from './types'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export function EventEditor({
   open,
@@ -38,6 +39,7 @@ export function EventEditor({
   confirmLabel,
   title,
 }: EventEditorModalProps) {
+  const t = useT()
   const builder = useEventBuilder(initialValue)
   const [copied, setCopied] = useState(false)
 
@@ -109,16 +111,16 @@ export function EventEditor({
         overlayClassName="z-[130]"
       >
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{resolvedTitle}</DialogTitle>
+          <DialogTitle>{t(resolvedTitle)}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {resolvedDescription}{' '}
+            {t(resolvedDescription)}{' '}
             <a
               href={resolvedDocsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="link-neutral"
             >
-              Learn more
+              {t('Learn more')}
             </a>
           </DialogDescription>
         </DialogHeader>
@@ -143,7 +145,7 @@ export function EventEditor({
                   variant="outline"
                   onClick={builder.cancelCustom}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   size="sm"
@@ -155,7 +157,7 @@ export function EventEditor({
                   }
                 >
                   <Check className="h-4 w-4 me-1.5" />
-                  Apply
+                  {t('Apply')}
                 </Button>
               </div>
             </div>
@@ -375,7 +377,7 @@ export function EventEditor({
                   <span className="whitespace-nowrap">
                     {previewString || (
                       <span className="text-muted-foreground">
-                        Select a service to build
+                        {t('Select a service to build')}
                       </span>
                     )}
                   </span>
@@ -385,7 +387,7 @@ export function EventEditor({
                   size="sm"
                   className="h-8 w-8 p-0 shrink-0"
                   onClick={builder.enterCustomMode}
-                  title="Edit manually"
+                  title={t('Edit manually')}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -395,7 +397,7 @@ export function EventEditor({
                   className="h-8 w-8 p-0 shrink-0"
                   onClick={handleCopy}
                   disabled={!previewString}
-                  title="Copy"
+                  title={t('Copy')}
                 >
                   {copied ? (
                     <Check className="h-4 w-4 text-green-600" />
@@ -409,10 +411,10 @@ export function EventEditor({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleConfirm} disabled={!isConfirmValid}>
-            {resolvedConfirmLabel}
+            {t(resolvedConfirmLabel)}
           </Button>
         </div>
       </DialogContent>
@@ -441,10 +443,11 @@ function IdSelectorRow({
   onSelect: (v: string | '*') => void
   placeholder?: string
 }) {
+  const t = useT()
   return (
     <div>
       <p className="text-[12px] font-medium text-muted-foreground mb-2">
-        {label}
+        {t(label)}
       </p>
       <EventResourceIdSelector
         projectId={projectId}
@@ -473,10 +476,11 @@ function PillRow({
   onSelect: (v: string | null) => void
   optional?: boolean
 }) {
+  const t = useT()
   return (
     <div>
       <p className="text-[12px] font-medium text-muted-foreground mb-2">
-        {label}
+        {t(label)}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {optional && (
@@ -490,7 +494,7 @@ function PillRow({
                 : 'border-border bg-background hover:bg-muted',
             )}
           >
-            All
+            {t('All')}
           </button>
         )}
         {options.map((opt) => (

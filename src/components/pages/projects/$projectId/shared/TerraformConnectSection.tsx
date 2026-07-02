@@ -8,6 +8,7 @@ import {
 } from '@/components/global/shared/CodeBlock'
 import { cn } from '@/lib/utils'
 import { TerraformIcon } from '@/components/global/shared/TerraformIcon'
+import { useT } from '@/lib/i18n/translate'
 
 const TERRAFORM_PROVIDER_REPO =
   'https://github.com/appwrite/terraform-provider-appwrite'
@@ -195,6 +196,7 @@ export function TerraformConnectSection({
   projectId,
   onViewApiKeys,
 }: TerraformConnectSectionProps) {
+  const t = useT()
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const [copied, setCopied] = useState(false)
 
@@ -214,7 +216,7 @@ export function TerraformConnectSection({
     if (!selectedFile) return
     navigator.clipboard.writeText(selectedFile.code)
     setCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -223,22 +225,23 @@ export function TerraformConnectSection({
       <div className="space-y-4 min-w-0 min-h-0 overflow-y-auto">
         <div className="space-y-3">
           <h4 className="text-[13px] font-semibold text-foreground">
-            Infrastructure as code
+            {t('Infrastructure as code')}
           </h4>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            The official Appwrite Terraform provider lets you create and update
-            project resources from{' '}
+            {t(
+              'The official Appwrite Terraform provider lets you create and update project resources from', // pragma: allowlist secret
+            )}{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               .tf
             </code>{' '}
-            files instead of clicking through the console - ideal for staging
-            and production parity, code review, and automated pipelines.
+            {t(
+              'files instead of clicking through the console - ideal for staging and production parity, code review, and automated pipelines.',
+            )}
           </p>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            Use it when you want repeatable environments, documented changes in
-            Git, or to wire Appwrite into a broader Terraform stack (VPC, DNS,
-            functions, and more) in one workflow. The registry documents
-            resources such as{' '}
+            {t(
+              'Use it when you want repeatable environments, documented changes in Git, or to wire Appwrite into a broader Terraform stack (VPC, DNS, functions, and more) in one workflow. The registry documents resources such as', // pragma: allowlist secret
+            )}{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               appwrite_database
             </code>
@@ -250,27 +253,28 @@ export function TerraformConnectSection({
             <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
               appwrite_messaging_topic
             </code>
-            , and others, with full schemas and imports.
+            , {t('and others, with full schemas and imports.')}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <h4 className="text-[13px] font-semibold text-foreground">
-              API keys
+              {t('API keys')}
             </h4>
           </div>
           <div className="px-4 py-3 space-y-3">
             <p className="text-[13px] text-muted-foreground">
-              Terraform needs an API key with scopes for the resources you
-              manage. Pass it with{' '}
+              {t(
+                'Terraform needs an API key with scopes for the resources you manage. Pass it with',
+              )}{' '}
               <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
                 TF_VAR_appwrite_api_key
               </code>{' '}
-              or{' '}
+              {t('or')}{' '}
               <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
                 terraform.tfvars
               </code>
-              - never commit secrets to Git.
+              - {t('never commit secrets to Git.')}
             </p>
             <Button
               variant="secondary"
@@ -279,7 +283,7 @@ export function TerraformConnectSection({
               onClick={onViewApiKeys}
             >
               <Key className="h-4 w-4" />
-              View API keys
+              {t('View API keys')}
             </Button>
           </div>
         </div>
@@ -291,7 +295,7 @@ export function TerraformConnectSection({
             className="inline-flex items-center gap-1.5 link-neutral text-[13px]"
           >
             <TerraformIcon />
-            Provider docs on Terraform Registry
+            {t('Provider docs on Terraform Registry')}
             <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </a>
           <a
@@ -347,7 +351,7 @@ export function TerraformConnectSection({
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
-              Copy
+              {t('Copy')}
             </Button>
           )}
         </div>
@@ -366,19 +370,19 @@ export function TerraformConnectSection({
           <p className="shrink-0 text-[12px] text-muted-foreground pt-2">
             {selectedFile.label === 'main.tf' ? (
               <>
-                Provider uses this project&apos;s endpoint and project ID. Run{' '}
+                {t("Provider uses this project's endpoint and project ID. Run")}{' '}
                 <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
                   terraform init
                 </code>{' '}
-                then{' '}
+                {t('then')}{' '}
                 <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
                   terraform apply
                 </code>
                 .
               </>
-            ) : (
-              (selectedFile.footerHint ?? null)
-            )}
+            ) : selectedFile.footerHint ? (
+              t(selectedFile.footerHint)
+            ) : null}
           </p>
         )}
       </div>

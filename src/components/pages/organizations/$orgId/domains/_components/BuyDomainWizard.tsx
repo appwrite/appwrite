@@ -22,12 +22,14 @@ import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 import { DomainSearchResults } from './DomainSearchResults'
 import type { DomainSelectionQuote } from '@/lib/domains/search'
+import { useT } from '@/lib/i18n/translate'
 
 export function BuyDomainWizard({
   routeSearch,
 }: {
   routeSearch: BuyDomainWizardSearch
 }) {
+  const t = useT()
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -62,14 +64,14 @@ export function BuyDomainWizard({
           await queryClient.refetchQueries({
             queryKey: ['domains', 'organization', orgId],
           })
-          toast.success('Payment confirmed')
+          toast.success(t('Payment confirmed'))
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
             params: { orgId, domainId: result.domainId },
             replace: true,
           })
         } else {
-          toast.error('Purchase could not be completed')
+          toast.error(t('Purchase could not be completed'))
           navigate({
             to: '/organizations/$orgId/domains/buy',
             params: { orgId },
@@ -79,7 +81,7 @@ export function BuyDomainWizard({
         }
       } catch (e) {
         toast.error(
-          e instanceof Error ? e.message : 'Failed to complete purchase',
+          e instanceof Error ? e.message : t('Failed to complete purchase'),
         )
         navigate({
           to: '/organizations/$orgId/domains/buy',
@@ -89,7 +91,14 @@ export function BuyDomainWizard({
         })
       }
     })()
-  }, [routeSearch.payment, routeSearch.invoiceId, orgId, navigate, queryClient])
+  }, [
+    routeSearch.payment,
+    routeSearch.invoiceId,
+    orgId,
+    navigate,
+    queryClient,
+    t,
+  ])
 
   useEffect(() => {
     if (
@@ -108,11 +117,13 @@ export function BuyDomainWizard({
       try {
         const quote = await fetchDomainPrice(domain)
         if (!quote.available) {
-          toast.error(`${domain} is not available`)
+          toast.error(`${domain} ${t('is not available')}`)
           return
         }
         if (isDomainLimitReached) {
-          toast.error(`Your current plan includes up to ${domainsLimit} domains.`)
+          toast.error(
+            `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
+          )
           return
         }
 
@@ -128,7 +139,7 @@ export function BuyDomainWizard({
         setStage('checkout')
       } catch (e) {
         toast.error(
-          e instanceof Error ? e.message : 'Failed to load domain price',
+          e instanceof Error ? e.message : t('Failed to load domain price'),
         )
       }
     })()
@@ -138,6 +149,7 @@ export function BuyDomainWizard({
     orgId,
     isDomainLimitReached,
     domainsLimit,
+    t,
   ])
 
   const handleSelectDomain = (
@@ -145,7 +157,9 @@ export function BuyDomainWizard({
     opts?: DomainSelectionQuote,
   ) => {
     if (isDomainLimitReached) {
-      toast.error(`Your current plan includes up to ${domainsLimit} domains.`)
+      toast.error(
+        `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
+      )
       return
     }
     setCheckoutSelection({
@@ -175,14 +189,14 @@ export function BuyDomainWizard({
 
   return (
     <WizardLayout
-      title="Buy domain"
+      title={t('Buy domain')}
       fallbackPath={fallbackPath}
       fullscreen
       useSidebar={false}
       footer={
         <div className="flex gap-2 justify-end w-full">
           <Button variant="outline" onClick={() => navigate({ to: '..' })}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </div>
       }
@@ -194,8 +208,9 @@ export function BuyDomainWizard({
         limitMessage={
           isDomainLimitReached ? (
             <p className="text-[12px] text-amber-600 dark:text-amber-400">
-              Your current plan includes up to {domainsLimit} domains.{' '}
-              <UpgradePlanLink orgId={orgId} /> to buy another domain.
+              {t('Your current plan includes up to')} {domainsLimit}{' '}
+              {t('domains')}. <UpgradePlanLink orgId={orgId} />{' '}
+              {t('to buy another domain.')}
             </p>
           ) : null
         }

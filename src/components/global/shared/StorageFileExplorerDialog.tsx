@@ -26,6 +26,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { getStorageFileIcon } from '@/components/global/shared/StorageFilePreviewThumb'
+import { useT } from '@/lib/i18n/translate'
 
 const MODAL_WIDTH = 1100
 const MODAL_HEIGHT = 600
@@ -57,6 +58,7 @@ export function StorageFileExplorerDialog({
   confirmLabel = 'Add',
   onConfirm,
 }: StorageFileExplorerDialogProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const bucketUploadInputRef = useRef<HTMLInputElement>(null)
   const [selectedBucketId, setSelectedBucketId] = useState<string | null>(null)
@@ -203,7 +205,7 @@ export function StorageFileExplorerDialog({
       await queryClient.refetchQueries({
         queryKey: ['files', 'project', projectId, 'bucket', displayedBucketId],
       })
-      toast.success('File uploaded')
+      toast.success(t('File uploaded'))
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
@@ -232,8 +234,10 @@ export function StorageFileExplorerDialog({
         style={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       >
         <DialogHeader className="px-6 pt-6 pb-4 text-start shrink-0">
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">{description}</DialogDescription>
+          <DialogTitle>{t(title)}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {t(description)}
+          </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
 
@@ -241,7 +245,7 @@ export function StorageFileExplorerDialog({
           <div className="w-[220px] shrink-0 border-e border-border flex flex-col">
             <div className="px-3 py-1.5 border-b border-border">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Buckets
+                {t('Buckets')}
               </p>
             </div>
             <div className="flex-1 overflow-y-auto py-1">
@@ -265,7 +269,9 @@ export function StorageFileExplorerDialog({
                 </button>
               ))}
               {buckets.length === 0 && (
-                <p className="px-3 py-2 text-[12px] text-muted-foreground">No buckets</p>
+                <p className="px-3 py-2 text-[12px] text-muted-foreground">
+                  {t('No buckets')}
+                </p>
               )}
             </div>
           </div>
@@ -273,7 +279,7 @@ export function StorageFileExplorerDialog({
           <div className="flex-1 flex flex-col min-w-0 min-h-0">
             {!selectedBucketId && (
               <div className="flex-1 flex items-center justify-center text-[13px] text-muted-foreground">
-                Select a bucket to browse files
+                {t('Select a bucket to browse files')}
               </div>
             )}
 
@@ -284,7 +290,7 @@ export function StorageFileExplorerDialog({
                     <>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[13px] font-medium text-foreground">
-                          {bucket?.name ?? 'Bucket'}
+                          {bucket?.name ?? t('Bucket')}
                         </span>
                         <CopyableId
                           id={displayedBucketId}
@@ -296,7 +302,7 @@ export function StorageFileExplorerDialog({
                         <div className="relative flex-1 min-w-0">
                           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
-                            placeholder="Search files"
+                            placeholder={t('Search files')}
                             value={storageSearch}
                             onChange={(e) => setStorageSearch(e.target.value.trim())}
                             className="ps-8 h-8 text-[13px]"
@@ -344,7 +350,7 @@ export function StorageFileExplorerDialog({
                             className="cursor-pointer flex items-center gap-1.5"
                           >
                             <Upload className="h-3.5 w-3.5" />
-                            Upload
+                            {t('Upload')}
                           </label>
                         </Button>
                         <input
@@ -365,16 +371,22 @@ export function StorageFileExplorerDialog({
                     <div className="overflow-y-auto p-4 min-h-0 flex-1 max-h-[360px]">
                       {displayedFilesLoading && files.length === 0 ? (
                         <div className="flex flex-1 items-center justify-center py-12 text-[13px] text-muted-foreground">
-                          Loading files…
+                          {t('Loading files…')}
                         </div>
                       ) : files.length === 0 && filesTotal === 0 ? (
                         <EmptyState
                           icon={File}
-                          title={storageSearch ? 'No files match your search' : 'No files in this bucket'}
+                          title={
+                            storageSearch
+                              ? t('No files match your search')
+                              : t('No files in this bucket')
+                          }
                           description={
                             storageSearch
-                              ? 'Try a different search or upload a file.'
-                              : 'Upload a file to this bucket or choose another bucket.'
+                              ? t('Try a different search or upload a file.')
+                              : t(
+                                  'Upload a file to this bucket or choose another bucket.',
+                                )
                           }
                           variant="card"
                           iconSize="md"
@@ -488,10 +500,10 @@ export function StorageFileExplorerDialog({
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end shrink-0">
           <Button variant="outline" type="button" onClick={() => handleOpenChange(false)}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="button" onClick={handleConfirm} disabled={!canConfirm}>
-            {confirmLabel}
+            {t(confirmLabel)}
           </Button>
         </div>
       </DialogContent>

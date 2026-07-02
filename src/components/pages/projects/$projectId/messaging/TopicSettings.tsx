@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -32,6 +33,7 @@ export function View({
 }: {
   initialTopic?: Models.Topic
 } = {}) {
+  const t = useT()
   const { projectId, topicId } = useParams({
     strict: false,
   })
@@ -76,10 +78,10 @@ export function View({
       queryClient.invalidateQueries({
         queryKey: ['topic', 'project', projectId, topicId],
       })
-      toast.success('Topic name updated successfully')
+      toast.success(t('Topic name updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update topic name')
+      toast.error(getErrorMessage(error) || t('Failed to update topic name'))
     },
   })
 
@@ -97,14 +99,14 @@ export function View({
       await queryClient.refetchQueries({
         queryKey: ['topics', 'project', projectId],
       })
-      toast.success('Topic deleted successfully')
+      toast.success(t('Topic deleted successfully'))
       navigate({
         to: '/projects/$projectId/messaging/topics',
         params: { projectId: projectId! },
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete topic')
+      toast.error(getErrorMessage(error) || t('Failed to delete topic'))
     },
   })
 
@@ -136,7 +138,7 @@ export function View({
     () => [
       {
         id: 'subscribers',
-        label: 'Subscribers',
+        label: t('Subscribers'),
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: {
           projectId: projectId as string,
@@ -147,7 +149,7 @@ export function View({
         ? [
             {
               id: 'settings' as const,
-              label: 'Settings',
+              label: t('Settings'),
               to: '/projects/$projectId/messaging/topics/$topicId/settings',
               params: {
                 projectId: projectId as string,
@@ -157,14 +159,14 @@ export function View({
           ]
         : []),
     ],
-    [projectId, topicId, showSettingsTab],
+    [projectId, topicId, showSettingsTab, t],
   )
 
   if (topicLoading && !initialTopic) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading topic...</p>
+          <p className="text-[13px] text-muted-foreground">{t('Loading topic...')}</p>
         </div>
       </div>
     )
@@ -174,7 +176,7 @@ export function View({
     return (
       <div className="flex items-center justify-center py-16">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Topic not found</p>
+          <p className="text-[13px] text-muted-foreground">{t('Topic not found')}</p>
         </div>
       </div>
     )
@@ -191,7 +193,7 @@ export function View({
             projectId={projectId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to topics',
+              'aria-label': t('Back to topics'),
             }}
           />
         }
@@ -206,20 +208,21 @@ export function View({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Name
+                {t('Name')}
               </h3>
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
               <p className="text-[13px] text-muted-foreground">
-                Update your topic's display name. This will be visible to all
-                organization members.
+                {t(
+                  "Update your topic's display name. This will be visible to all organization members.",
+                )}
               </p>
               <Input
                 id="topic-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Topic name"
+                placeholder={t('Topic name')}
                 className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
               />
             </div>
@@ -234,7 +237,7 @@ export function View({
                 }
                 onClick={() => updateNameMutation.mutate(name)}
 >
-                Update
+                {t('Update')}
               </Button>
             </div>
           </div>
@@ -243,7 +246,7 @@ export function View({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Overview
+                {t('Overview')}
               </h3>
             </div>
             <div className="border-t border-border" />
@@ -252,7 +255,7 @@ export function View({
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Topic ID
+                      {t('Topic ID')}
                     </p>
                     <CopyableId id={topic.$id} size="sm" />
                   </div>
@@ -260,7 +263,7 @@ export function View({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Created
+                      {t('Created')}
                     </p>
                     {topic.$createdAt ? (
                       <DateTooltip
@@ -276,7 +279,7 @@ export function View({
                   </div>
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                      Updated
+                      {t('Updated')}
                     </p>
                     <DateTooltip
                       date={topic.$updatedAt || topic.$createdAt}
@@ -293,14 +296,15 @@ export function View({
           <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                Delete topic
+                {t('Delete topic')}
               </h3>
             </div>
             <div className="border-t border-destructive/20" />
             <div className="px-6 py-4">
               <p className="text-[13px] text-muted-foreground">
-                Permanently delete this topic and all its subscribers. This
-                action cannot be undone.
+                {t(
+                  'Permanently delete this topic and all its subscribers. This action cannot be undone.',
+                )}
               </p>
 
               {/* Topic Info Summary */}
@@ -320,13 +324,12 @@ export function View({
                         {(topic.emailTotal || 0) +
                           (topic.smsTotal || 0) +
                           (topic.pushTotal || 0)}{' '}
-                        subscriber
                         {(topic.emailTotal || 0) +
                           (topic.smsTotal || 0) +
                           (topic.pushTotal || 0) !==
                         1
-                          ? 's'
-                          : ''}
+                          ? t('subscribers')
+                          : t('subscriber')}
                       </p>
                     ) : null}
                   </div>
@@ -343,7 +346,7 @@ export function View({
                 disabled={deleteTopicMutation.isPending}
 >
                 <Trash2 className="me-1.5 h-4 w-4" />
-                Delete topic
+                {t('Delete topic')}
               </Button>
             </div>
           </div>
@@ -355,10 +358,11 @@ export function View({
             className="sm:max-w-md p-0"
 >
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete topic</DialogTitle>
+              <DialogTitle>{t('Delete topic')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete this topic? This action cannot
-                be undone.
+                {t(
+                  'Are you sure you want to delete this topic? This action cannot be undone.',
+                )}
               </DialogDescription>
             </DialogHeader>
 
@@ -368,14 +372,14 @@ export function View({
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={deleteTopicMutation.isPending}
 >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => deleteTopicMutation.mutate()}
                 disabled={deleteTopicMutation.isPending}
 >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>

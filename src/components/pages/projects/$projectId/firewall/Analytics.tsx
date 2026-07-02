@@ -31,6 +31,7 @@ import {
   type FirewallAnalytics,
 } from '@/lib/utils/mock-data'
 import { DateRangePicker } from '../analytics/DateRangePicker'
+import { useT } from '@/lib/i18n/translate'
 
 interface AnalyticsTabProps {
   projectId: string
@@ -53,6 +54,7 @@ function StatCard({
   trend,
   className,
 }: StatCardProps) {
+  const t = useT()
   return (
     <Card className={cn('p-4', className)}>
       <div className="flex items-start justify-between">
@@ -80,7 +82,7 @@ function StatCard({
                 {change}%
               </span>
               <span className="text-[11px] text-muted-foreground">
-                vs last period
+                {t('vs last period')}
               </span>
             </div>
           )}
@@ -184,6 +186,7 @@ function buildFirewallChartData(
 }
 
 export function AnalyticsTab({}: AnalyticsTabProps) {
+  const t = useT()
   const [analytics, setAnalytics] = useState<FirewallAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() =>
@@ -273,11 +276,12 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
               <Activity className="h-6 w-6 text-muted-foreground" />
             </div>
             <h3 className="mb-2 text-[15px] font-medium text-foreground">
-              No analytics data
+              {t('No analytics data')}
             </h3>
             <p className="max-w-sm text-[13px] text-muted-foreground">
-              Analytics data will appear here once your firewall rules start
-              processing requests.
+              {t(
+                'Analytics data will appear here once your firewall rules start processing requests.',
+              )}
             </p>
           </div>
         </div>
@@ -303,28 +307,28 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard
-          label="Total requests"
+          label={t('Total requests')}
           value={analytics.totalRequests}
           change={analytics.requestsChange}
           trend={analytics.requestsChange > 0 ? 'up' : 'down'}
           icon={<Activity className="h-5 w-5" />}
         />
         <StatCard
-          label="Blocked"
+          label={t('Blocked')}
           value={analytics.totalBlocked}
           change={analytics.blockedChange}
           trend={analytics.blockedChange > 0 ? 'up' : 'down'}
           icon={<ShieldX className="h-5 w-5" />}
         />
         <StatCard
-          label="Allowed"
+          label={t('Allowed')}
           value={analytics.totalAllowed}
           change={analytics.allowedChange}
           trend={analytics.allowedChange > 0 ? 'up' : 'down'}
           icon={<ShieldCheck className="h-5 w-5" />}
         />
         <StatCard
-          label="Block rate"
+          label={t('Block rate')}
           value={`${blockRate}%`}
           change={analytics.blockRateChange}
           trend={analytics.blockRateChange > 0 ? 'up' : 'down'}
@@ -336,10 +340,10 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
       <Card className="p-5 mb-6">
         <div className="mb-4">
           <h3 className="text-[14px] font-semibold text-foreground mb-1">
-            Request activity over time
+            {t('Request activity over time')}
           </h3>
           <p className="text-[12px] text-muted-foreground">
-            Real-time view of requests processed by firewall rules
+            {t('Real-time view of requests processed by firewall rules')}
           </p>
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -383,7 +387,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
               stackId="1"
               stroke="#ef4444"
               fill="url(#colorBlocked)"
-              name="Blocked"
+              name={t('Blocked')}
             />
             <Area
               type="monotone"
@@ -391,7 +395,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
               stackId="1"
               stroke="#f59e0b"
               fill="url(#colorChallenged)"
-              name="Challenged"
+              name={t('Challenged')}
             />
             <Area
               type="monotone"
@@ -399,7 +403,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
               stackId="1"
               stroke="#10b981"
               fill="url(#colorAllowed)"
-              name="Allowed"
+              name={t('Allowed')}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -412,10 +416,10 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-[14px] font-semibold text-foreground mb-1">
-                Top blocked IPs
+                {t('Top blocked IPs')}
               </h3>
               <p className="text-[12px] text-muted-foreground">
-                IP addresses with the most blocked requests
+                {t('IP addresses with the most blocked requests')}
               </p>
             </div>
             <Globe className="h-5 w-5 text-muted-foreground" />
@@ -423,7 +427,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
           <div className="space-y-3">
             {topBlockedIPs.length === 0 ? (
               <p className="text-[12px] text-muted-foreground text-center py-4">
-                No blocked IPs in this period
+                {t('No blocked IPs in this period')}
               </p>
             ) : (
               topBlockedIPs.map((item, index) => (
@@ -450,7 +454,9 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
                     <p className="text-[13px] font-semibold text-red-500">
                       {item.count.toLocaleString()}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">blocked</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t('blocked')}
+                    </p>
                   </div>
                 </div>
               ))
@@ -463,10 +469,10 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-[14px] font-semibold text-foreground mb-1">
-                Top blocked countries
+                {t('Top blocked countries')}
               </h3>
               <p className="text-[12px] text-muted-foreground">
-                Countries with the most blocked requests
+                {t('Countries with the most blocked requests')}
               </p>
             </div>
             <Globe className="h-5 w-5 text-muted-foreground" />
@@ -474,7 +480,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
           <div className="space-y-3">
             {topBlockedCountries.length === 0 ? (
               <p className="text-[12px] text-muted-foreground text-center py-4">
-                No blocked countries in this period
+                {t('No blocked countries in this period')}
               </p>
             ) : (
               topBlockedCountries.map((item, index) => (
@@ -499,7 +505,9 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
                     <p className="text-[13px] font-semibold text-red-500">
                       {item.count.toLocaleString()}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">blocked</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t('blocked')}
+                    </p>
                   </div>
                 </div>
               ))

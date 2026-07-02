@@ -28,6 +28,7 @@ import {
   getPlatformIdentifier,
   type ProjectPlatform,
 } from '@/lib/utils/platform'
+import { useT } from '@/lib/i18n/translate'
 
 interface PlatformContextMenuProps {
   projectId: string
@@ -42,6 +43,7 @@ export function PlatformContextMenu({
   children,
   onUpdate,
 }: PlatformContextMenuProps) {
+  const t = useT()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteMutation = useDeletePlatform(projectId)
 
@@ -56,11 +58,11 @@ export function PlatformContextMenu({
   const handleDelete = () => {
     deleteMutation.mutate(platform.$id, {
       onSuccess: () => {
-        toast.success('App deleted')
+        toast.success(t('App deleted'))
         setDeleteDialogOpen(false)
       },
       onError: (error: Error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete app')
+        toast.error(getErrorMessage(error) || t('Failed to delete app'))
       },
     })
   }
@@ -74,7 +76,7 @@ export function PlatformContextMenu({
             <>
               <ContextMenuItem onSelect={() => onUpdate(platform)}>
                 <ContextMenuIcon icon={Pencil} />
-                Update
+                {t('Update')}
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
@@ -82,21 +84,21 @@ export function PlatformContextMenu({
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('ID', platform.$id)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy ID
+                {t('Copy ID')}
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', platform.name)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy name
+                  {t('Copy name')}
                 </ContextMenuItem>
               )}
               {hasIdentifier && (
@@ -106,7 +108,7 @@ export function PlatformContextMenu({
                   }
                 >
                   <ContextMenuIcon icon={Tag} />
-                  Copy identifier
+                  {t('Copy identifier')}
                 </ContextMenuItem>
               )}
               <ContextMenuItem
@@ -119,14 +121,14 @@ export function PlatformContextMenu({
                 }
               >
                 <ContextMenuIcon icon={FileJson} />
-                Copy as JSON
+                {t('Copy as JSON')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -134,11 +136,11 @@ export function PlatformContextMenu({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete app</DialogTitle>
+            <DialogTitle>{t('Delete app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete
-              {platform.name ? ` "${platform.name}"` : ' this app'}? This action
-              cannot be undone.
+              {t('Are you sure you want to delete')}
+              {platform.name ? ` "${platform.name}"` : ` ${t('this app')}`}?{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -147,14 +149,14 @@ export function PlatformContextMenu({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

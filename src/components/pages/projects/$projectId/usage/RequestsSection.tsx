@@ -46,6 +46,7 @@ import {
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
+import { useT } from '@/lib/i18n/translate'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import {
   UsageBreakdownCard,
@@ -100,21 +101,22 @@ function UsageRequestsChartArea({ children }: { children: ReactNode }) {
 }
 
 function UsageRequestsChartError({ onRetry }: { onRetry?: () => void }) {
+  const t = useT()
   return (
     <UsageRequestsChartArea>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
         <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
         <div className="max-w-sm">
           <p className="text-[13px] font-medium text-foreground">
-            {OVERVIEW_REQUESTS_ERROR.title}
+            {t(OVERVIEW_REQUESTS_ERROR.title)}
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            {OVERVIEW_REQUESTS_ERROR.message}
+            {t(OVERVIEW_REQUESTS_ERROR.message)}
           </p>
         </div>
         {onRetry ? (
           <Button variant="outline" size="sm" onClick={onRetry}>
-            Try again
+            {t('Try again')}
           </Button>
         ) : null}
       </div>
@@ -139,6 +141,7 @@ function RequestsChartCard({
   isError,
   onRetry,
 }: RequestsChartCardProps) {
+  const t = useT()
   const { dateRange, chartInterval } = useUsageFilters()
   const chartData = useMemo(
     () =>
@@ -169,7 +172,7 @@ function RequestsChartCard({
       <div className="shrink-0 flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <h3 className="text-[14px] font-medium text-foreground">
-            Requests over time
+            {t('Requests over time')}
           </h3>
 
           <div className={usageRequestsMetricHeaderClass}>
@@ -181,7 +184,7 @@ function RequestsChartCard({
                   {formattedTotal}
                 </span>
                 <span className="text-[13px] text-muted-foreground">
-                  requests
+                  {t('requests')}
                 </span>
                 {!isError && chartPoints.length > 0 ? (
                   <span
@@ -192,14 +195,14 @@ function RequestsChartCard({
                       changePercent === 0 && 'text-muted-foreground',
                     )}
                   >
-                    {changeLabel} vs previous period
+                    {changeLabel} {t('vs previous period')}
                   </span>
                 ) : !isLoading ? (
                   <span
                     className="invisible text-[12px] font-medium tabular-nums"
                     aria-hidden
                   >
-                    0% vs previous period
+                    0% {t('vs previous period')}
                   </span>
                 ) : null}
               </>
@@ -216,7 +219,7 @@ function RequestsChartCard({
         ) : chartData.length === 0 ? (
           <UsageRequestsChartArea>
             <div className="absolute inset-0 flex items-center justify-center text-[13px] text-muted-foreground">
-              No data for this date range
+              {t('No data for this date range')}
             </div>
           </UsageRequestsChartArea>
         ) : (
@@ -272,7 +275,7 @@ function RequestsChartCard({
                         <p className="text-[13px] font-medium text-foreground">
                           {formatRequestsValue(data.value)}{' '}
                           <span className="font-normal text-muted-foreground">
-                            requests
+                            {t('requests')}
                           </span>
                         </p>
                       </div>

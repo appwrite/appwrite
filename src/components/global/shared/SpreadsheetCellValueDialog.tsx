@@ -9,6 +9,7 @@ import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExampl
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import { formatSpreadsheetCellValueForDialog } from '@/lib/spreadsheet-cell-formatting'
 import type { SpreadsheetCellValueDialogState } from '@/components/global/shared/SpreadsheetCellContextMenu'
+import { useT } from '@/lib/i18n/translate'
 
 type SpreadsheetCellValueDialogProps = {
   state: SpreadsheetCellValueDialogState | null
@@ -35,6 +36,7 @@ export function SpreadsheetCellValueDialog({
   state,
   onOpenChange,
 }: SpreadsheetCellValueDialogProps) {
+  const t = useT()
   const content = state
     ? formatSpreadsheetCellValueForDialog(state.value, state.full)
     : ''
@@ -44,10 +46,10 @@ export function SpreadsheetCellValueDialog({
     <Dialog open={state !== null} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(85dvh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 px-6 pb-4 pt-6 text-start">
-          <DialogTitle>{state?.columnLabel ?? 'Cell value'}</DialogTitle>
+          <DialogTitle>{state?.columnLabel ?? t('Cell value')}</DialogTitle>
           {state ? (
             <DialogDescription className="mt-2 text-[13px]">
-              Row {state.rowNumber}
+              {t('Row')} {state.rowNumber}
             </DialogDescription>
           ) : null}
         </DialogHeader>

@@ -6,6 +6,7 @@ import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
 import { describeTriggerBehavior, normalizeTriggerPatterns } from '@/lib/git-build-triggers'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { BuildTriggersCard } from '../../shared/BuildTriggersCard'
+import { useT } from '@/lib/i18n/translate'
 
 const SITES_BUILD_TRIGGERS_DOCS =
   '/docs/products/sites/deploy-from-git#build-triggers'
@@ -21,6 +22,7 @@ export function SiteBuildTriggersCard({
   siteId,
   site,
 }: SiteBuildTriggersCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
 
   const updateSiteMutation = useMutation({
@@ -38,7 +40,7 @@ export function SiteBuildTriggersCard({
         variables.providerBranches,
         variables.providerPaths,
       )
-      toast.success(`Triggers updated. ${summary}`)
+      toast.success(`${t('Triggers updated.')} ${summary}`)
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -47,7 +49,7 @@ export function SiteBuildTriggersCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update triggers'))
+      toast.error(getErrorMessage(error, t('Failed to update triggers')))
     },
   })
 

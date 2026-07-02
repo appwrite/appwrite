@@ -105,6 +105,7 @@ import {
   MarketingProductsNavPopover,
 } from '@/components/pages/marketing/MarketingProductsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
+import { useI18n } from '@/lib/i18n'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -113,19 +114,41 @@ type MarketingHeaderNavItem = {
   hasMenuIndicator?: boolean
 }
 
-const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
-  {
-    label: 'Products',
-    href: '/products/auth',
-    menu: 'products',
-  },
-  { label: 'Docs', href: '/docs' },
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Enterprise', href: '/enterprise' },
-  { label: 'Customers', href: '/blog/category/customer-stories' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Changelog', href: '/changelog' },
-] as const
+function getDefaultMarketingHeaderNav(
+  copy: ReturnType<typeof useI18n>['catalog']['app']['header']['marketingNav'],
+): readonly MarketingHeaderNavItem[] {
+  return [
+    {
+      label: copy.products,
+      href: '/products/auth',
+      menu: 'products',
+    },
+    {
+      label: copy.docs,
+      href: '/docs',
+    },
+    {
+      label: copy.pricing,
+      href: '/pricing',
+    },
+    {
+      label: copy.enterprise,
+      href: '/enterprise',
+    },
+    {
+      label: copy.customers,
+      href: '/blog/category/customer-stories',
+    },
+    {
+      label: copy.blog,
+      href: '/blog',
+    },
+    {
+      label: copy.changelog,
+      href: '/changelog',
+    },
+  ] as const
+}
 
 const ACCOUNT_MENU_ITEM_CLASS =
   'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-start text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
@@ -153,10 +176,12 @@ function MarketingNavLabel({
 function MarketingNavLink({
   item,
   showChangelogBadge,
+  changelogAriaLabel,
   className,
 }: {
   item: MarketingHeaderNavItem
   showChangelogBadge: boolean
+  changelogAriaLabel: string
   className?: string
 }) {
   return (
@@ -167,7 +192,7 @@ function MarketingNavLink({
         className,
       )}
       {...(item.href === '/changelog' && showChangelogBadge
-        ? { 'aria-label': 'Changelog, new updates' }
+        ? { 'aria-label': changelogAriaLabel }
         : {})}
     >
       <MarketingNavLabel
@@ -181,9 +206,11 @@ function MarketingNavLink({
 function MarketingMobileNavLink({
   item,
   showChangelogBadge,
+  changelogAriaLabel,
 }: {
   item: MarketingHeaderNavItem
   showChangelogBadge: boolean
+  changelogAriaLabel: string
 }) {
   return (
     <SheetClose asChild>
@@ -191,7 +218,7 @@ function MarketingMobileNavLink({
         href={item.href}
         className="link-unstyled flex h-10 w-full items-center justify-start rounded-md px-3 text-start text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         {...(item.href === '/changelog' && showChangelogBadge
-          ? { 'aria-label': 'Changelog, new updates' }
+          ? { 'aria-label': changelogAriaLabel }
           : {})}
       >
         <MarketingNavLabel
@@ -229,7 +256,7 @@ export function ConsoleHeader({
   marketingNav,
   headerTitleSuffix,
   centerSearch = false,
-  centerSearchPlaceholder = 'Search in docs',
+  centerSearchPlaceholder,
   hideSearch = false,
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
@@ -274,29 +301,36 @@ export function ConsoleHeader({
     ? (project?.teamId ?? undefined)
     : (orgIdFromRoute ?? (account?.prefs?.organization as string | undefined))
   const { features } = useConsoleProfile()
+  const { catalog } = useI18n()
+  const headerCopy = catalog.app.header
+  const resolvedCenterSearchPlaceholder =
+    centerSearchPlaceholder ?? headerCopy.centerSearchPlaceholder
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
+  const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(
+    headerCopy.marketingNav,
+  )
   const marketingNavItems = (
     marketingNav === true
-      ? DEFAULT_MARKETING_HEADER_NAV
+      ? defaultMarketingHeaderNav
       : marketingNav
         ? marketingNav
         : []
   ).map((item) => {
-    if (item.label === 'Blog') {
+    if (item.href === '/blog') {
       return { ...item, href: getBlogPageUrl('/blog', features.marketing) }
     }
-    if (item.label === 'Customers') {
+    if (item.href === '/blog/category/customer-stories') {
       return {
         ...item,
         href: getBlogPageUrl('/blog/category/customer-stories', features.marketing),
       }
     }
-    if (item.label === 'Docs') {
+    if (item.href === '/docs') {
       return { ...item, href: getMarketingPageUrl('/docs', features.marketing) }
     }
-    if (item.label === 'Changelog') {
+    if (item.href === '/changelog') {
       return { ...item, href: getMarketingPageUrl('/changelog', features.marketing) }
     }
     return item
@@ -332,7 +366,7 @@ export function ConsoleHeader({
   }
 
   // Get user display name (prefer name, fallback to email)
-  const displayName = account?.name || account?.email || 'User'
+  const displayName = account?.name || account?.email || headerCopy.accountMenu.user
   const userEmail = account?.email || ''
   const accountId = account?.$id || ''
 
@@ -343,7 +377,9 @@ export function ConsoleHeader({
   )
 
   // Account status (active if account exists)
-  const accountStatus = account ? 'Active' : 'Inactive'
+  const accountStatus = account
+    ? headerCopy.accountMenu.active
+    : headerCopy.accountMenu.inactive
 
   // Check if 2FA is enabled
   // Appwrite account object may have mfa or twoFactorAuthenticatorEnabled property
@@ -391,7 +427,7 @@ export function ConsoleHeader({
               type="button"
               onClick={onMenuClick}
               className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1024px]:hidden"
-              aria-label="Open navigation"
+              aria-label={headerCopy.actions.openNavigation}
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -403,7 +439,7 @@ export function ConsoleHeader({
                 <button
                   type="button"
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1280px]:hidden"
-                  aria-label="Open website navigation"
+                  aria-label={headerCopy.actions.openWebsiteNavigation}
                 >
                   <Menu className="h-4 w-4" />
                 </button>
@@ -416,7 +452,7 @@ export function ConsoleHeader({
                 </SheetHeader>
                 <nav
                   className="flex flex-col p-2 text-start"
-                  aria-label="Website navigation"
+                  aria-label={headerCopy.marketingNav.websiteNavigation}
                 >
                   {marketingNavItems.map((item) =>
                     isMarketingProductsNavItem(item) ? (
@@ -426,6 +462,9 @@ export function ConsoleHeader({
                         key={item.label}
                         item={item}
                         showChangelogBadge={showChangelogBadge}
+                        changelogAriaLabel={
+                          headerCopy.marketingNav.changelogNewUpdatesAria
+                        }
                       />
                     ),
                   )}
@@ -530,7 +569,7 @@ export function ConsoleHeader({
           {showMarketingLinks ? (
             <nav
               className="ms-2 hidden min-w-0 items-center justify-start gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ms-0 @[1536px]:-translate-x-1/2"
-              aria-label="Website navigation"
+              aria-label={headerCopy.marketingNav.websiteNavigation}
             >
               {marketingNavItems.map((item) =>
                 isMarketingProductsNavItem(item) ? (
@@ -540,6 +579,9 @@ export function ConsoleHeader({
                     key={item.label}
                     item={item}
                     showChangelogBadge={showChangelogBadge}
+                    changelogAriaLabel={
+                      headerCopy.marketingNav.changelogNewUpdatesAria
+                    }
                   />
                 ),
               )}
@@ -557,7 +599,7 @@ export function ConsoleHeader({
             >
               <Link to="/organizations/$orgId" params={{ orgId }}>
                 <ArrowLeft className="h-4 w-4" />
-                Back to organization
+                {headerCopy.actions.backToOrganization}
               </Link>
             </Button>
           )}
@@ -612,7 +654,7 @@ export function ConsoleHeader({
                   onClick={() => projectConnectDialog?.openConnect('app')}
                 >
                   <Plug2 className="h-4 w-4" />
-                  Connect
+                  {headerCopy.actions.connect}
                 </button>
               )}
 
@@ -629,7 +671,7 @@ export function ConsoleHeader({
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Create</p>
+                        <p>{headerCopy.actions.create}</p>
                       </TooltipContent>
                     </Tooltip>
                     <DropdownMenuContent align="start" className="w-56">
@@ -642,13 +684,13 @@ export function ConsoleHeader({
                                 className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                               >
                                 <FolderPlus className="h-4 w-4" />
-                                <span>New Project</span>
+                                <span>{headerCopy.createMenu.newProject}</span>
                               </DropdownMenuItem>
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              You don&apos;t have permission to create projects.
+                              {headerCopy.permissions.createProjects}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -674,7 +716,7 @@ export function ConsoleHeader({
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
                           <FolderPlus className="h-4 w-4" />
-                          <span>New Project</span>
+                          <span>{headerCopy.createMenu.newProject}</span>
                         </DropdownMenuItem>
                       )}
                       {supportsMultiTenancy && (
@@ -693,7 +735,7 @@ export function ConsoleHeader({
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
                           <Building2 className="h-4 w-4" />
-                          <span>New Organization</span>
+                          <span>{headerCopy.createMenu.newOrganization}</span>
                         </DropdownMenuItem>
                       )}
 
@@ -702,7 +744,7 @@ export function ConsoleHeader({
                           <DropdownMenuSeparator />
                           {/* Resources Category */}
                           <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                            Build
+                            {headerCopy.createMenu.buildSection}
                           </DropdownMenuLabel>
                           {!canCreateDatabaseFlag ? (
                             <Tooltip>
@@ -713,14 +755,13 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Database className="h-4 w-4" />
-                                    <span>New Database</span>
+                                    <span>{headerCopy.createMenu.newDatabase}</span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  You don&apos;t have permission to create
-                                  databases.
+                                  {headerCopy.permissions.createDatabases}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -739,7 +780,7 @@ export function ConsoleHeader({
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Database className="h-4 w-4" />
-                              <span>New Database</span>
+                              <span>{headerCopy.createMenu.newDatabase}</span>
                             </DropdownMenuItem>
                           )}
                           {!canCreateUserFlag ? (
@@ -751,14 +792,13 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Users className="h-4 w-4" />
-                                    <span>New User</span>
+                                    <span>{headerCopy.createMenu.newUser}</span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  You don&apos;t have permission to create
-                                  users.
+                                  {headerCopy.permissions.createUsers}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -777,7 +817,7 @@ export function ConsoleHeader({
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Users className="h-4 w-4" />
-                              <span>New User</span>
+                              <span>{headerCopy.createMenu.newUser}</span>
                             </DropdownMenuItem>
                           )}
                           {!canCreateBucketFlag ? (
@@ -789,14 +829,13 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Folder className="h-4 w-4" />
-                                    <span>New Bucket</span>
+                                    <span>{headerCopy.createMenu.newBucket}</span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  You don&apos;t have permission to create
-                                  buckets.
+                                  {headerCopy.permissions.createBuckets}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -815,7 +854,7 @@ export function ConsoleHeader({
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Folder className="h-4 w-4" />
-                              <span>New Bucket</span>
+                              <span>{headerCopy.createMenu.newBucket}</span>
                             </DropdownMenuItem>
                           )}
                           {!canCreateFunctionFlag ? (
@@ -827,14 +866,13 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Zap className="h-4 w-4" />
-                                    <span>New Function</span>
+                                    <span>{headerCopy.createMenu.newFunction}</span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  You don&apos;t have permission to create
-                                  functions.
+                                  {headerCopy.permissions.createFunctions}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -849,7 +887,7 @@ export function ConsoleHeader({
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Zap className="h-4 w-4" />
-                              <span>New Function</span>
+                              <span>{headerCopy.createMenu.newFunction}</span>
                             </DropdownMenuItem>
                           )}
                           {!canCreateTopicFlag ? (
@@ -861,14 +899,13 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <MessageSquare className="h-4 w-4" />
-                                    <span>New Message</span>
+                                    <span>{headerCopy.createMenu.newMessage}</span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  You don&apos;t have permission to create
-                                  messaging topics.
+                                  {headerCopy.permissions.createTopics}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -887,14 +924,14 @@ export function ConsoleHeader({
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <MessageSquare className="h-4 w-4" />
-                              <span>New Message</span>
+                              <span>{headerCopy.createMenu.newMessage}</span>
                             </DropdownMenuItem>
                           )}
 
                           <DropdownMenuSeparator />
                           {/* Deploy Category */}
                           <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                            Deploy
+                            {headerCopy.createMenu.deploySection}
                           </DropdownMenuLabel>
                           {!canCreateSiteFlag ? (
                             <Tooltip>
@@ -905,14 +942,13 @@ export function ConsoleHeader({
                                     className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
                                   >
                                     <Globe className="h-4 w-4" />
-                                    <span>New Site</span>
+                                    <span>{headerCopy.createMenu.newSite}</span>
                                   </DropdownMenuItem>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>
-                                  You don&apos;t have permission to create
-                                  sites.
+                                  {headerCopy.permissions.createSites}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -927,7 +963,7 @@ export function ConsoleHeader({
                               className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                             >
                               <Globe className="h-4 w-4" />
-                              <span>New Site</span>
+                              <span>{headerCopy.createMenu.newSite}</span>
                             </DropdownMenuItem>
                           )}
                         </>
@@ -949,7 +985,7 @@ export function ConsoleHeader({
             >
               <Search className="h-3.5 w-3.5 shrink-0" />
               <span className="min-w-0 flex-1 truncate text-start">
-                {centerSearchPlaceholder}
+                {resolvedCenterSearchPlaceholder}
               </span>
               {searchModKey ? (
                 <span className="ms-auto flex shrink-0 items-center gap-1">
@@ -982,7 +1018,7 @@ export function ConsoleHeader({
                   type="button"
                   onClick={openCommandCenter}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  aria-label={centerSearchPlaceholder}
+                  aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -997,7 +1033,7 @@ export function ConsoleHeader({
                   to="/sign-in"
                   search={authRedirect ? { redirect: authRedirect } : undefined}
                 >
-                  Sign in
+                  {headerCopy.actions.signIn}
                 </Link>
               </Button>
               <Button
@@ -1010,7 +1046,7 @@ export function ConsoleHeader({
                   to="/sign-up"
                   search={authRedirect ? { redirect: authRedirect } : undefined}
                 >
-                  Sign up
+                  {headerCopy.actions.signUp}
                 </Link>
               </Button>
             </>
@@ -1025,7 +1061,9 @@ export function ConsoleHeader({
                     className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
                   >
                     <Search className="h-3.5 w-3.5 shrink-0" />
-                    <span className="hidden @[850px]:inline">Search...</span>
+                    <span className="hidden @[850px]:inline">
+                      {headerCopy.search.compactPlaceholder}
+                    </span>
                     {searchModKey ? (
                       <kbd className="ms-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
                         {searchModKey}K
@@ -1046,7 +1084,7 @@ export function ConsoleHeader({
                   type="button"
                   onClick={openCommandCenter}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
-                  aria-label={centerSearchPlaceholder}
+                  aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -1082,7 +1120,7 @@ export function ConsoleHeader({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Assistant</p>
+                    <p>{headerCopy.actions.assistant}</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -1104,7 +1142,7 @@ export function ConsoleHeader({
                     >
                       <Link to="/upgrade" search={{ orgId }}>
                         <ArrowUpCircle className="h-4 w-4" />
-                        Upgrade
+                        {headerCopy.actions.upgrade}
                       </Link>
                     </Button>
                   </div>
@@ -1152,7 +1190,7 @@ export function ConsoleHeader({
                   <DropdownMenuItem asChild>
                     <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
                       <User className="h-4 w-4" />
-                      <span>Account</span>
+                      <span>{headerCopy.accountMenu.account}</span>
                     </Link>
                   </DropdownMenuItem>
 
@@ -1167,7 +1205,7 @@ export function ConsoleHeader({
                       className={ACCOUNT_MENU_ITEM_CLASS}
                     >
                       <FolderOpen className="h-4 w-4" />
-                      <span>Projects</span>
+                      <span>{headerCopy.accountMenu.projects}</span>
                     </Link>
                   </DropdownMenuItem>
 
@@ -1179,7 +1217,7 @@ export function ConsoleHeader({
                         className={ACCOUNT_MENU_ITEM_CLASS}
                       >
                         <Globe className="h-4 w-4" />
-                        <span>Domains</span>
+                        <span>{headerCopy.accountMenu.domains}</span>
                       </Link>
                     </DropdownMenuItem>
                   ) : null}
@@ -1192,7 +1230,7 @@ export function ConsoleHeader({
                     {account?.registration && (
                       <div>
                         <p className="text-[11px] text-muted-foreground mb-1.5">
-                          Member since
+                          {headerCopy.accountMenu.memberSince}
                         </p>
                         <p className="text-[14px] text-foreground">
                           {memberSince}
@@ -1203,7 +1241,7 @@ export function ConsoleHeader({
                     {/* Account Status */}
                     <div>
                       <p className="text-[11px] text-muted-foreground mb-1.5">
-                        Account status
+                        {headerCopy.accountMenu.accountStatus}
                       </p>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -1216,21 +1254,21 @@ export function ConsoleHeader({
                     {features.accountMfa && (
                       <div>
                         <p className="text-[11px] text-muted-foreground mb-1.5">
-                          2FA
+                          {headerCopy.accountMenu.twoFactor}
                         </p>
                         <div className="flex items-center gap-2">
                           {is2FAEnabled ? (
                             <>
                               <Shield className="h-3.5 w-3.5 text-emerald-500" />
                               <p className="text-[14px] text-foreground">
-                                Enabled
+                                {headerCopy.accountMenu.enabled}
                               </p>
                             </>
                           ) : (
                             <>
                               <Shield className="h-3.5 w-3.5 text-muted-foreground" />
                               <p className="text-[14px] text-muted-foreground">
-                                Disabled
+                                {headerCopy.accountMenu.disabled}
                               </p>
                             </>
                           )}
@@ -1242,7 +1280,7 @@ export function ConsoleHeader({
                     {accountId && (
                       <div>
                         <p className="text-[11px] text-muted-foreground mb-1.5">
-                          Account ID
+                          {headerCopy.accountMenu.accountId}
                         </p>
                         <TooltipProvider delayDuration={0}>
                           <Tooltip>
@@ -1266,8 +1304,8 @@ export function ConsoleHeader({
                             <TooltipContent side="left">
                               <p>
                                 {copiedField === 'accountId'
-                                  ? 'Copied!'
-                                  : 'Copy account ID'}
+                                  ? headerCopy.accountMenu.copied
+                                  : headerCopy.accountMenu.copyAccountId}
                               </p>
                             </TooltipContent>
                           </Tooltip>
@@ -1291,7 +1329,7 @@ export function ConsoleHeader({
                           className={ACCOUNT_MENU_ITEM_CLASS}
                         >
                           <LayoutDashboard className="h-4 w-4" />
-                          <span>Console</span>
+                          <span>{headerCopy.accountMenu.console}</span>
                         </Link>
                       </DropdownMenuItem>
                     ) : marketingNavLinksExternal ? (
@@ -1303,14 +1341,14 @@ export function ConsoleHeader({
                           className={ACCOUNT_MENU_ITEM_CLASS}
                         >
                           <Home className="h-4 w-4" />
-                          <span>Home</span>
+                          <span>{headerCopy.accountMenu.home}</span>
                         </a>
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
                         <Link to="/home" className={ACCOUNT_MENU_ITEM_CLASS}>
                           <Home className="h-4 w-4" />
-                          <span>Home</span>
+                          <span>{headerCopy.accountMenu.home}</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -1324,12 +1362,12 @@ export function ConsoleHeader({
                           className={ACCOUNT_MENU_ITEM_CLASS}
                         >
                           <BookOpen className="h-4 w-4" />
-                          <span>Docs</span>
+                          <span>{headerCopy.accountMenu.docs}</span>
                         </a>
                       ) : (
                         <Link to="/docs" className={ACCOUNT_MENU_ITEM_CLASS}>
                           <BookOpen className="h-4 w-4" />
-                          <span>Docs</span>
+                          <span>{headerCopy.accountMenu.docs}</span>
                         </Link>
                       )}
                     </DropdownMenuItem>
@@ -1342,22 +1380,22 @@ export function ConsoleHeader({
                           rel="noopener noreferrer"
                           className={ACCOUNT_MENU_ITEM_CLASS}
                           {...(showChangelogBadge
-                            ? { 'aria-label': 'Changelog, new updates' }
+                            ? { 'aria-label': headerCopy.marketingNav.changelogNewUpdatesAria }
                             : {})}
                         >
                           <Clock className="h-4 w-4" />
-                          <span>Changelog</span>
+                          <span>{headerCopy.accountMenu.changelog}</span>
                         </a>
                       ) : (
                         <Link
                           to="/changelog"
                           className={ACCOUNT_MENU_ITEM_CLASS}
                           {...(showChangelogBadge
-                            ? { 'aria-label': 'Changelog, new updates' }
+                            ? { 'aria-label': headerCopy.marketingNav.changelogNewUpdatesAria }
                             : {})}
                         >
                           <Clock className="h-4 w-4" />
-                          <span>Changelog</span>
+                          <span>{headerCopy.accountMenu.changelog}</span>
                         </Link>
                       )}
                     </DropdownMenuItem>
@@ -1368,20 +1406,20 @@ export function ConsoleHeader({
                       <DropdownMenuSeparator className="my-1 bg-border" />
 
                       <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Admin
+                        {headerCopy.accountMenu.admin}
                       </DropdownMenuLabel>
 
                       <DropdownMenuItem asChild>
                         <Link to="/cache" className={ACCOUNT_MENU_ITEM_CLASS}>
                           <DatabaseZap className="h-4 w-4" />
-                          <span>Cache</span>
+                          <span>{headerCopy.accountMenu.cache}</span>
                         </Link>
                       </DropdownMenuItem>
 
                       <DropdownMenuItem asChild>
                         <Link to="/blocks" className={ACCOUNT_MENU_ITEM_CLASS}>
                           <ShieldAlert className="h-4 w-4" />
-                          <span>Blocks</span>
+                          <span>{headerCopy.accountMenu.blocks}</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -1398,7 +1436,7 @@ export function ConsoleHeader({
                     className={ACCOUNT_MENU_ITEM_CLASS}
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>Sign out</span>
+                    <span>{headerCopy.actions.signOut}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

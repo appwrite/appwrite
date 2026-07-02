@@ -51,6 +51,7 @@ import {
   cancelSiteDeployment,
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
+import { useT } from '@/lib/i18n/translate'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -81,6 +82,7 @@ interface DeployingViewProps {
 }
 
 export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { theme, resolvedTheme } = useTheme()
@@ -141,14 +143,14 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     onSuccess: () => {
       setCancelBuildDialogOpen(false)
       resetFormData()
-      toast.success('Deployment cancelled')
+      toast.success(t('Deployment cancelled'))
       navigate({
         to: '/projects/$projectId/sites',
         params: { projectId: projectId! },
       })
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel deployment')
+      toast.error(error.message || t('Failed to cancel deployment'))
     },
   })
 
@@ -297,7 +299,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     const StatusIcon = statusBadge.icon
                     return <StatusIcon className="h-3.5 w-3.5" />
                   })()}
-                  {statusBadge.label}
+                  {t(statusBadge.label)}
                 </Badge>
               )}
             </div>
@@ -309,7 +311,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               {frameworkInfo && (
                 <div className="flex justify-between gap-3 items-center">
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                    Framework
+                    {t('Framework')}
                   </dt>
                   <dd className="text-[12px] font-medium text-foreground truncate text-end">
                     {frameworkInfo.name}
@@ -319,7 +321,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               {repository && (
                 <div className="flex justify-between gap-3 items-center">
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                    Source
+                    {t('Source')}
                   </dt>
                   <dd className="text-[12px] font-mono text-foreground truncate text-end">
                     {repository.organization}/{repository.name}
@@ -329,7 +331,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               {site?.providerBranch && (
                 <div className="flex justify-between gap-3 items-center">
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                    Branch
+                    {t('Branch')}
                   </dt>
                   <dd className="text-[12px] font-mono text-foreground truncate text-end">
                     {site.providerBranch}
@@ -340,7 +342,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                 <>
                   <div className="flex justify-between gap-3 items-center">
                     <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                      Deployed
+                      {t('Deployed')}
                     </dt>
                     <dd className="text-[12px] font-medium text-foreground text-end">
                       <DateTooltip date={deployment.$createdAt} />
@@ -350,7 +352,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     0 && (
                     <div className="flex justify-between gap-3 items-center">
                       <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                        Size
+                        {t('Size')}
                       </dt>
                       <dd className="text-[12px] font-medium text-foreground text-end">
                         {formatSize(
@@ -371,7 +373,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   return (
     <>
       <WizardLayout
-        title="Create site"
+        title={t('Create site')}
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
         maxWidth="max-w-[1400px]"
@@ -385,14 +387,14 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                 onClick={handleCancelDeployment}
                 disabled={cancelDeploymentMutation.isPending}
               >
-                Cancel deployment
+                {t('Cancel deployment')}
               </Button>
             )}
             <Button
               variant={status === 'ready' ? 'default' : 'outline'}
               onClick={handleGoToDashboard}
             >
-              Go to dashboard
+              {t('Go to dashboard')}
             </Button>
           </div>
         }
@@ -424,13 +426,13 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         <p className="text-[13px] font-medium text-muted-foreground">
-                          Loading preview…
+                          {t('Loading preview…')}
                         </p>
                       </div>
                     )}
                     <img
                       src={screenshotUrl}
-                      alt={`${site.name} preview`}
+                      alt={`${site.name} ${t('preview')}`}
                       className="h-full w-full object-cover object-top"
                       onLoad={() => setPreviewImageLoaded(true)}
                     />
@@ -439,10 +441,12 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <div className="aspect-[21/9] w-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                     <p className="text-[13px] font-medium text-muted-foreground">
-                      Generating preview…
+                      {t('Generating preview…')}
                     </p>
                     <p className="text-[12px] text-muted-foreground/80">
-                      Screenshot may take a few moments after build completes
+                      {t(
+                        'Screenshot may take a few moments after build completes',
+                      )}
                     </p>
                     <FrameworkIcon
                       framework={site.framework}
@@ -489,7 +493,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                           rel="noopener noreferrer"
                         >
                           <ExternalLink className="me-1.5 h-4 w-4" />
-                          Visit site
+                          {t('Visit site')}
                         </a>
                       </Button>
                     )}
@@ -501,10 +505,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <h3 className="text-[15px] font-semibold text-foreground">
-                    Next steps
+                    {t('Next steps')}
                   </h3>
                   <p className="text-[13px] text-muted-foreground mt-2">
-                    Configure your site or share it with others
+                    {t('Configure your site or share it with others')}
                   </p>
                 </div>
                 <div className="border-t border-border" />
@@ -520,10 +524,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[13px] font-medium text-foreground">
-                          Add repository
+                          {t('Add repository')}
                         </p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Connect Git for automatic deployments
+                          {t('Connect Git for automatic deployments')}
                         </p>
                       </div>
                     </Link>
@@ -538,10 +542,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">
-                        Add custom domain
+                        {t('Add custom domain')}
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Use your own domain name
+                        {t('Use your own domain name')}
                       </p>
                     </div>
                   </Link>
@@ -550,7 +554,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     onClick={() => {
                       if (siteUrl) {
                         navigator.clipboard.writeText(siteUrl)
-                        toast.success('URL copied to clipboard')
+                        toast.success(t('URL copied to clipboard'))
                       }
                     }}
                     className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-start w-full"
@@ -560,10 +564,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">
-                        Copy site URL
+                        {t('Copy site URL')}
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Copy URL to clipboard
+                        {t('Copy URL to clipboard')}
                       </p>
                     </div>
                   </button>
@@ -571,7 +575,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     type="button"
                     onClick={() => {
                       if (!siteUrl) {
-                        toast.error('Site URL is not available yet')
+                        toast.error(t('Site URL is not available yet'))
                         return
                       }
                       setQrDialogOpen(true)
@@ -583,10 +587,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">
-                        Open on mobile
+                        {t('Open on mobile')}
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Scan QR code
+                        {t('Scan QR code')}
                       </p>
                     </div>
                   </button>
@@ -604,9 +608,9 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
           overlayClassName="z-[9999]"
         >
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>View on mobile</DialogTitle>
+            <DialogTitle>{t('View on mobile')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Scan this QR code to open your site on a mobile device
+              {t('Scan this QR code to open your site on a mobile device')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -615,19 +619,19 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               <div className="p-4 bg-white rounded-lg">
                 <img
                   src={qrImageUrl}
-                  alt="QR code to open site on mobile"
+                  alt={t('QR code to open site on mobile')}
                   className="h-48 w-48 rounded"
                 />
               </div>
             ) : (
               <p className="text-[13px] text-muted-foreground text-center px-4">
-                QR code could not be generated. Try again in a moment.
+                {t('QR code could not be generated. Try again in a moment.')}
               </p>
             )}
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
             <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
-              Close
+              {t('Close')}
             </Button>
           </div>
         </DialogContent>
@@ -643,9 +647,9 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
           overlayClassName="z-[9999]"
         >
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Cancel build</DialogTitle>
+            <DialogTitle>{t('Cancel build')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Stop the current deployment? You can deploy again later.
+              {t('Stop the current deployment? You can deploy again later.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -660,7 +664,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               onClick={() => setCancelBuildDialogOpen(false)}
               className="h-9 text-[13px]"
             >
-              Keep building
+              {t('Keep building')}
             </Button>
             <Button
               variant="destructive"
@@ -668,7 +672,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               disabled={cancelDeploymentMutation.isPending}
               className="h-9 text-[13px]"
             >
-              Cancel build
+              {t('Cancel build')}
             </Button>
           </div>
         </DialogContent>

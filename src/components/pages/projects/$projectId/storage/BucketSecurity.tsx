@@ -10,8 +10,10 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { PermissionsEditor } from '../auth/PermissionsEditor'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 export function BucketSecurity() {
+  const t = useT()
   const { projectId, bucketId } = useParams({
     strict: false,
   })
@@ -58,7 +60,7 @@ export function BucketSecurity() {
       })
     },
     onSuccess: () => {
-      toast.success('Bucket permissions have been updated')
+      toast.success(t('Bucket permissions have been updated'))
       queryClient.invalidateQueries({ queryKey: Dependencies.BUCKET })
     },
     onError: (error) => {
@@ -82,7 +84,7 @@ export function BucketSecurity() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.BUCKET })
-      toast.success('Security has been updated')
+      toast.success(t('Security has been updated'))
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -98,7 +100,7 @@ export function BucketSecurity() {
   if (bucketLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('Loading...')}</div>
       </div>
     )
   }
@@ -106,7 +108,7 @@ export function BucketSecurity() {
   if (!bucket) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Bucket not found</div>
+        <div className="text-muted-foreground">{t('Bucket not found')}</div>
       </div>
     )
   }
@@ -118,12 +120,12 @@ export function BucketSecurity() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Permissions
+              {t('Permissions')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Choose who can access your bucket and files.{' '}
+              {t('Choose who can access your bucket and files.')}{' '}
               <DocsRouteLink className="link-neutral" href="/docs/permissions">
-                Learn more
+                {t('Learn more')}
               </DocsRouteLink>
               .
             </p>
@@ -147,7 +149,7 @@ export function BucketSecurity() {
               }
               onClick={handleBucketPermissionsUpdate}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -156,7 +158,7 @@ export function BucketSecurity() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              File level security
+              {t('File level security')}
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -173,25 +175,30 @@ export function BucketSecurity() {
                   htmlFor="file-security"
                   className="text-[13px] text-foreground"
                 >
-                  File level security
+                  {t('File level security')}
                 </Label>
               </div>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-[13px] text-muted-foreground">
-                When file security is enabled, users need{' '}
-                <strong>both bucket permissions and file permissions</strong> to
-                access files. File permissions are an additional layer, not an
-                alternative to bucket permissions.
+                {t('When file security is enabled, users need')}{' '}
+                <strong>
+                  {t('both bucket permissions and file permissions')}
+                </strong>{' '}
+                {t(
+                  'to access files. File permissions are an additional layer, not an alternative to bucket permissions.',
+                )}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                <strong>Upload operations</strong> always require bucket-level
-                permissions, regardless of file security settings.
+                <strong>{t('Upload operations')}</strong>{' '}
+                {t(
+                  'always require bucket-level permissions, regardless of file security settings.',
+                )}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                If file security is disabled, users can access files{' '}
-                <strong>only if they have bucket permissions</strong>. File
-                permissions will be ignored.
+                {t('If file security is disabled, users can access files')}{' '}
+                <strong>{t('only if they have bucket permissions')}</strong>.{' '}
+                {t('File permissions will be ignored.')}
               </p>
             </div>
           </div>
@@ -209,7 +216,7 @@ export function BucketSecurity() {
                 }
               }}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>

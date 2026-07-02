@@ -2,6 +2,7 @@ import { Check, MessageSquare, Radio } from 'lucide-react'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const COLLABORATORS = [
@@ -52,6 +53,7 @@ function PeerCursor({
 }
 
 export function AuthPresencesVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame eyebrow="Team workspace" title="See who is working together">
       <div className="space-y-4">
@@ -72,10 +74,10 @@ export function AuthPresencesVisual() {
               <span className="relative inline-flex size-2 rounded-full bg-muted-foreground transition-colors duration-300 group-hover/visual:bg-emerald-500" />
             </span>
             <p className="text-[11px] font-medium text-muted-foreground transition-colors duration-300 group-hover/visual:text-foreground">
-              3 online
+              3 {t('online')}
             </p>
             <Badge variant="info" className="hidden shrink-0 text-[10px] sm:inline-flex">
-              Live
+              {t('Live')}
             </Badge>
           </div>
         </div>
@@ -95,9 +97,11 @@ export function AuthPresencesVisual() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Shared doc
+                {t('Shared doc')}
               </p>
-              <p className="mt-1 text-[12px] font-semibold text-foreground">Q4 launch plan</p>
+              <p className="mt-1 text-[12px] font-semibold text-foreground">
+                {t('Q4 launch plan')}
+              </p>
             </div>
             <Radio
               className="size-3.5 shrink-0 text-muted-foreground motion-reduce:animate-none group-hover/visual:animate-pulse"
@@ -119,17 +123,19 @@ export function AuthPresencesVisual() {
                 />
               </span>
               <span className="text-[11px] text-muted-foreground transition-[color,text-decoration-color] duration-500 delay-300 group-hover/visual:line-through motion-reduce:delay-0">
-                Finalize hero copy
+                {t('Finalize hero copy')}
               </span>
             </div>
             <div className="flex items-center gap-2 px-2 py-1">
               <span className="size-3.5 shrink-0 rounded border border-border/80 bg-background" />
-              <span className="text-[11px] text-muted-foreground">Review pricing section</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t('Review pricing section')}
+              </span>
             </div>
           </div>
 
           <p className="mt-3 text-[10px] text-muted-foreground">
-            <span className="font-medium text-foreground/80">Paige</span> viewing{' '}
+            <span className="font-medium text-foreground/80">Paige</span> {t('viewing')}{' '}
             <span className="font-mono">/teams/acme/roadmap</span>
           </p>
         </div>
@@ -138,7 +144,8 @@ export function AuthPresencesVisual() {
           <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[11px] text-muted-foreground">
-              <span className="font-medium text-foreground">Happy Quinn</span> is typing in team chat
+              <span className="font-medium text-foreground">Happy Quinn</span>{' '}
+              {t('is typing in team chat')}
             </p>
             <div className="mt-1 flex gap-1">
               {[0, 1, 2].map((dot) => (
@@ -152,7 +159,7 @@ export function AuthPresencesVisual() {
             </div>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            Typing
+            {t('Typing')}
           </Badge>
         </div>
       </div>

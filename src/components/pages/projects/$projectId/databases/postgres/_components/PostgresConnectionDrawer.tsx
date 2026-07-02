@@ -29,6 +29,7 @@ import {
   isPostgresClientBackend,
   type PostgresActiveConnectionRow,
 } from '@/lib/postgres-metrics'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresConnectionDrawerProps = {
   open: boolean
@@ -95,6 +96,7 @@ export function PostgresConnectionDrawer({
   isCancelPending,
   isTerminatePending,
 }: PostgresConnectionDrawerProps) {
+  const t = useT()
   const handleCopyPid = useCallback(() => {
     if (!connection) return
     void copyToClipboard('PID', String(connection.pid))
@@ -177,7 +179,7 @@ export function PostgresConnectionDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Connection details"
+      title={t('Connection details')}
       description={`Details for connection PID ${connection.pid}`}
       maxWidth="sm:max-w-xl"
       side="right"
@@ -194,10 +196,10 @@ export function PostgresConnectionDrawer({
                 onClick={handleCopyPid}
               >
                 <Copy className="h-4 w-4" />
-                <span className="sr-only">Copy PID</span>
+                <span className="sr-only">{t('Copy PID')}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Copy PID</TooltipContent>
+            <TooltipContent side="bottom">{t('Copy PID')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       }
@@ -236,7 +238,7 @@ export function PostgresConnectionDrawer({
                       )}
                       {longRunning ? (
                         <Badge variant="warning" className="shrink-0 text-[10px]">
-                          Long-running
+                          {t('Long-running')}
                         </Badge>
                       ) : null}
                     </div>
@@ -273,7 +275,7 @@ export function PostgresConnectionDrawer({
                 </div>
               </div>
 
-              <DetailSection title="Session">
+              <DetailSection title={t('Session')}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <DetailField label="PID">
                     <CopyableId
@@ -282,7 +284,7 @@ export function PostgresConnectionDrawer({
                       maxWidth={220}
                     />
                   </DetailField>
-                  <DetailField label="Type">
+                  <DetailField label={t('Type')}>
                     <Badge
                       variant={backendTypeBadgeVariant(connection.backendType)}
                       className="text-[10px]"
@@ -290,7 +292,7 @@ export function PostgresConnectionDrawer({
                       {typeLabel}
                     </Badge>
                   </DetailField>
-                  <DetailField label="User">
+                  <DetailField label={t('User')}>
                     <p
                       className={cn(
                         'text-[13px]',
@@ -302,17 +304,17 @@ export function PostgresConnectionDrawer({
                       {usernameLabel}
                     </p>
                   </DetailField>
-                  <DetailField label="Database">
+                  <DetailField label={t('Database')}>
                     <p className="font-mono text-[12px] text-muted-foreground">
                       {databaseLabel}
                     </p>
                   </DetailField>
-                  <DetailField label="Application">
+                  <DetailField label={t('Application')}>
                     <p className="text-[13px] text-muted-foreground">
                       {applicationLabel}
                     </p>
                   </DetailField>
-                  <DetailField label="Client">
+                  <DetailField label={t('Client')}>
                     <CopyableId
                       id={clientAddress}
                       displayText={clientAddress}
@@ -324,9 +326,9 @@ export function PostgresConnectionDrawer({
                 </div>
               </DetailSection>
 
-              <DetailSection title="Activity">
+              <DetailSection title={t('Activity')}>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <DetailField label="State">
+                  <DetailField label={t('State')}>
                     {stateLabel === '—' ? (
                       <p className="text-[13px] text-muted-foreground">—</p>
                     ) : (
@@ -341,32 +343,32 @@ export function PostgresConnectionDrawer({
                       </Badge>
                     )}
                   </DetailField>
-                  <DetailField label="Wait event">
+                  <DetailField label={t('Wait event')}>
                     <p className="font-mono text-[12px] text-muted-foreground">
                       {waitEventLabel}
                     </p>
                   </DetailField>
-                  <DetailField label="Query duration">
+                  <DetailField label={t('Query duration')}>
                     <p className="text-[13px] text-foreground">{queryDuration}</p>
                   </DetailField>
-                  <DetailField label="Connection age">
+                  <DetailField label={t('Connection age')}>
                     <p className="text-[13px] text-foreground">{connectionAge}</p>
                   </DetailField>
-                  <DetailField label="Backend start">
+                  <DetailField label={t('Backend start')}>
                     {connection.backendStart ? (
                       <DateTooltip date={connection.backendStart} />
                     ) : (
                       <p className="text-[13px] text-muted-foreground">—</p>
                     )}
                   </DetailField>
-                  <DetailField label="Query start">
+                  <DetailField label={t('Query start')}>
                     {connection.queryStart ? (
                       <DateTooltip date={connection.queryStart} />
                     ) : (
                       <p className="text-[13px] text-muted-foreground">—</p>
                     )}
                   </DetailField>
-                  <DetailField label="State change" className="sm:col-span-2">
+                  <DetailField label={t('State change')} className="sm:col-span-2">
                     {connection.stateChange ? (
                       <DateTooltip date={connection.stateChange} />
                     ) : (
@@ -376,7 +378,7 @@ export function PostgresConnectionDrawer({
                 </div>
               </DetailSection>
 
-              <DetailSection title="Query" bodyClassName="p-0">
+              <DetailSection title={t('Query')} bodyClassName="p-0">
                 {query ? (
                   <ConnectCodeExample
                     code={query}
@@ -391,13 +393,13 @@ export function PostgresConnectionDrawer({
                         onClick={() => onOpenInSqlEditor(query)}
                       >
                         <SearchCode className="h-3.5 w-3.5" />
-                        Open in SQL editor
+                        {t('Open in SQL editor')}
                       </Button>
                     }
                   />
                 ) : (
                   <p className="px-4 py-3 text-[13px] text-muted-foreground">
-                    No query running on this connection.
+                    {t('No query running on this connection.')}
                   </p>
                 )}
               </DetailSection>

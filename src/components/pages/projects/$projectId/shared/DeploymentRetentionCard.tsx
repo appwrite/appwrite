@@ -13,6 +13,7 @@ import {
   getRetentionOptions,
   MAX_DEPLOYMENT_RETENTION,
 } from '@/lib/deployment-retention'
+import { useT } from '@/lib/i18n/translate'
 
 interface DeploymentRetentionCardProps {
   deploymentRetention: number
@@ -25,6 +26,7 @@ export function DeploymentRetentionCard({
   onUpdate,
   isPending = false,
 }: DeploymentRetentionCardProps) {
+  const t = useT()
   const [unlimitedRetention, setUnlimitedRetention] = useState(
     currentRetention === 0,
   )
@@ -58,11 +60,12 @@ export function DeploymentRetentionCard({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Retention
+              {t('Retention')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Control how long inactive deployments are kept before they are
-              automatically deleted. Active deployments are always retained.
+              {t(
+                'Control how long inactive deployments are kept before they are automatically deleted. Active deployments are always retained.',
+              )}
             </p>
           </div>
         </div>
@@ -81,7 +84,7 @@ export function DeploymentRetentionCard({
               htmlFor="deployment-retention-unlimited"
               className="text-[13px] text-foreground cursor-pointer"
             >
-              Keep deployments forever
+              {t('Keep deployments forever')}
             </Label>
           </div>
 
@@ -89,7 +92,7 @@ export function DeploymentRetentionCard({
             <>
               <div className="space-y-2 max-w-[200px]">
                 <Label htmlFor="deployment-retention" className="text-[13px]">
-                  Retention period
+                  {t('Retention period')}
                 </Label>
                 <Select
                   value={String(retentionDays)}
@@ -100,7 +103,7 @@ export function DeploymentRetentionCard({
                     id="deployment-retention"
                     className="h-9 border-border bg-background text-[13px] text-foreground focus:ring-0"
                   >
-                    <SelectValue placeholder="1 Month" />
+                    <SelectValue placeholder={t('1 Month')} />
                   </SelectTrigger>
                   <SelectContent>
                     {retentionOptions.map((option) => (
@@ -109,19 +112,19 @@ export function DeploymentRetentionCard({
                         value={String(option.value)}
                         className="text-[13px]"
                       >
-                        {option.label}
+                        {t(option.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <p className="text-[12px] text-muted-foreground">
-                {`Inactive deployments are deleted after ${selectedLabel.toLowerCase()}.`}
+                {`${t('Inactive deployments are deleted after')} ${t(selectedLabel).toLowerCase()}.`}
               </p>
             </>
           ) : (
             <p className="text-[12px] text-muted-foreground">
-              Inactive deployments will not be automatically deleted.
+              {t('Inactive deployments will not be automatically deleted.')}
             </p>
           )}
         </div>
@@ -133,7 +136,7 @@ export function DeploymentRetentionCard({
           disabled={isUnchanged || isInvalid || isPending}
           onClick={() => onUpdate(deploymentRetention)}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

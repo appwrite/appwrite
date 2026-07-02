@@ -1,6 +1,7 @@
 import { AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CONSOLE_ACCOUNT_ACCESS_BLOCKED } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 type AccountAccessBlockedScreenProps = {
   /**
@@ -13,6 +14,7 @@ type AccountAccessBlockedScreenProps = {
 export function AccountAccessBlockedScreen({
   layout = 'fullscreen',
 }: AccountAccessBlockedScreenProps) {
+  const t = useT()
   const { title, message } = CONSOLE_ACCOUNT_ACCESS_BLOCKED
   const isFill = layout === 'fill'
 
@@ -34,9 +36,9 @@ export function AccountAccessBlockedScreen({
         </div>
 
         <div className="space-y-3 text-center">
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <h1 className="text-2xl font-semibold">{t(title)}</h1>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {message}
+            {t(message)}
           </p>
         </div>
       </div>

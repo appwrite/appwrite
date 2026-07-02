@@ -1,5 +1,6 @@
 import { Clock, Database, Mail } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -44,6 +45,7 @@ const USE_CASES: UseCase[] = [
 ]
 
 function UseCaseRow({ useCase }: { useCase: UseCase }) {
+  const t = useT()
   const Icon = useCase.icon
   const highlighted = Boolean(useCase.highlightKey)
 
@@ -70,10 +72,10 @@ function UseCaseRow({ useCase }: { useCase: UseCase }) {
       </span>
       <div className="min-w-0 flex-1">
         <p className={cn('text-[11px] font-medium leading-tight', productBentoIdle.text)}>
-          {useCase.label}
+          {t(useCase.label)}
         </p>
         <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-          {useCase.detail}
+          {t(useCase.detail)}
         </p>
       </div>
     </div>
@@ -81,13 +83,16 @@ function UseCaseRow({ useCase }: { useCase: UseCase }) {
 }
 
 export function FunctionsProductVisual() {
+  const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:group-hover:translate-y-0">
       <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[20rem] flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3 py-2')}>
-          <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>My functions</p>
+          <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>
+            {t('My functions')}
+          </p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Auto-scales with demand, schedules, and events
+            {t('Auto-scales with demand, schedules, and events')}
           </p>
         </div>
 

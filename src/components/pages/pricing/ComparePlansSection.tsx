@@ -21,6 +21,7 @@ import {
 } from './_components/PricingShared'
 import { PricingSectionHeading } from './_components/PricingSectionHeading'
 import { CompareToc } from './CompareToc'
+import { useT } from '@/lib/i18n/translate'
 import { PRICING_PLAN_COLUMNS } from '@/lib/pricing/constants'
 import { comparisonTables } from '@/lib/pricing/comparison-data'
 import { getComparisonTableAnchorId } from '@/lib/pricing/comparison-sections'
@@ -38,6 +39,7 @@ function MobilePlanTabs({
   activePlan: PlanId
   onPlanChange: (plan: PlanId) => void
 }) {
+  const t = useT()
   return (
     <Tabs
       value={activePlan}
@@ -51,7 +53,7 @@ function MobilePlanTabs({
             value={column.id}
             className="text-[12px] capitalize"
           >
-            {column.label}
+            {t(column.label)}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -66,6 +68,7 @@ function CompareCategoryTable({
   table: ComparisonTable
   mobilePlan: PlanId
 }) {
+  const t = useT()
   return (
     <div
       id={getComparisonTableAnchorId(table.title)}
@@ -73,7 +76,7 @@ function CompareCategoryTable({
     >
       <div className="border-b border-border px-4 py-4 sm:px-6">
         <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[17px]">
-          {table.title}
+          {t(table.title)}
         </h3>
       </div>
 
@@ -87,14 +90,14 @@ function CompareCategoryTable({
         <TableHeader>
           <TableRow className="hover:bg-transparent border-b border-border">
             <TableHead className={cn(compareStickyHeadClassName, 'text-start')}>
-              Feature
+              {t('Feature')}
             </TableHead>
             {PRICING_PLAN_COLUMNS.map((column) => (
               <TableHead
                 key={column.id}
                 className={cn(compareStickyHeadClassName, 'text-center')}
               >
-                {column.label}
+                {t(column.label)}
               </TableHead>
             ))}
           </TableRow>
@@ -139,6 +142,7 @@ function CompareCategoryTable({
 }
 
 export function ComparePlansSection() {
+  const t = useT()
   const [mobilePlan, setMobilePlan] = useState<PlanId>('pro')
 
   return (
@@ -149,8 +153,8 @@ export function ComparePlansSection() {
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <PricingSectionHeading
           align="left"
-          title="Compare plans"
-          description="Discover our plans and find the one that fits your project's needs."
+          title={t('Compare plans')}
+          description={t("Discover our plans and find the one that fits your project's needs.")}
           className="max-w-2xl"
         />
       </div>
@@ -190,7 +194,7 @@ export function ComparePlansSection() {
                   className={cn('h-10 flex-1 text-[13px]', outlineTierButtonClassName)}
                   asChild
                 >
-                  <Link to={href}>{label}</Link>
+                  <Link to={href}>{t(label)}</Link>
                 </Button>
               )
             }
@@ -206,7 +210,7 @@ export function ComparePlansSection() {
                 asChild
               >
                 <Link to="/sign-up" search={{ redirect: '/' }}>
-                  {label}
+                  {t(label)}
                 </Link>
               </Button>
             )

@@ -9,6 +9,7 @@ import type { ApiExplorerMethod } from '@/lib/api-explorer/types'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MetadataTextMarkdown } from '@/components/global/shared/MetadataTextMarkdown'
+import { useT } from '@/lib/i18n/translate'
 
 type AuthRequirementDescriptionProps = {
   method: ApiExplorerMethod
@@ -41,6 +42,7 @@ export function AuthRequirementDescriptionContent({
   description: MethodAuthDescriptionData
   className?: string
 }) {
+  const t = useT()
   return (
     <div className={cn('space-y-1.5', className)}>
       <MetadataTextMarkdown
@@ -50,12 +52,12 @@ export function AuthRequirementDescriptionContent({
 
       {description.impersonation ? (
         <p className={SECONDARY_TEXT_CLASS}>
-          Supports optional impersonation.{' '}
+          {t('Supports optional impersonation.')}{' '}
           <DocsRouteLink
             href={IMPERSONATION_DOCS_HREF}
             className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
           >
-            Learn more
+            {t('Learn more')}
           </DocsRouteLink>
         </p>
       ) : null}

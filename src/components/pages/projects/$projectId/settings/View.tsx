@@ -7,6 +7,7 @@ import {
   canCreateMigration,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ProjectSettingsOverview } from './Overview'
 import { Domains } from './Domains'
@@ -22,6 +23,7 @@ export interface SettingsViewProps {
 }
 
 export function View({ initialMigrationsData }: SettingsViewProps = {}) {
+  const t = useT()
   const params = useParams({ strict: false })
   const location = useLocation()
   const projectId = params.projectId as string
@@ -57,42 +59,42 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     () => [
       {
         id: 'overview',
-        label: 'Overview',
+        label: t('Overview'),
         to: '/projects/$projectId/settings/',
         params: { projectId: projectId as string },
       },
       {
         id: 'domains',
-        label: 'Custom domains',
+        label: t('Custom domains'),
         to: '/projects/$projectId/settings/domains',
         params: { projectId: projectId as string },
       },
       {
         id: 'variables',
-        label: 'Variables',
+        label: t('Variables'),
         to: '/projects/$projectId/settings/variables',
         params: { projectId: projectId as string },
       },
       {
         id: 'webhooks',
-        label: 'Webhooks',
+        label: t('Webhooks'),
         to: '/projects/$projectId/settings/webhooks',
         params: { projectId: projectId as string },
       },
       {
         id: 'migrations',
-        label: 'Migrations',
+        label: t('Migrations'),
         to: '/projects/$projectId/settings/migrations',
         params: { projectId: projectId as string },
       },
       {
         id: 'smtp',
-        label: 'SMTP',
+        label: t('SMTP'),
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
     ],
-    [projectId],
+    [projectId, t],
   )
 
   const { project } = useProject(projectId)
@@ -107,11 +109,11 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     (activeTab === 'migrations' && noMigrationsPermission)
   const createDisabledTooltip =
     activeTab === 'domains' && noDomainsPermission
-      ? "You don't have permission to add domains."
+      ? t("You don't have permission to add domains.")
       : activeTab === 'webhooks' && noWebhooksPermission
-        ? "You don't have permission to create webhooks."
+        ? t("You don't have permission to create webhooks.")
         : activeTab === 'migrations' && noMigrationsPermission
-          ? "You don't have permission to create migrations."
+          ? t("You don't have permission to create migrations.")
           : undefined
 
   // Determine search and create props based on active tab
@@ -119,14 +121,22 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     activeTab !== 'overview' &&
     activeTab !== 'smtp' &&
     activeTab !== 'variables'
-  const searchPlaceholder = hasSearch ? `Search ${activeTab}...` : undefined
+  const searchPlaceholder = hasSearch
+    ? activeTab === 'domains'
+      ? t('Search domains...')
+      : activeTab === 'webhooks'
+        ? t('Search webhooks...')
+        : activeTab === 'migrations'
+          ? t('Search migrations...')
+          : `Search ${activeTab}...`
+    : undefined
   const createLabel =
     activeTab === 'domains'
-      ? 'Add domain'
+      ? t('Add domain')
       : activeTab === 'webhooks'
-        ? 'Create webhook'
+        ? t('Create webhook')
         : activeTab === 'migrations'
-          ? 'Import data'
+          ? t('Import data')
           : undefined
   const createTo =
     activeTab === 'domains'
@@ -153,7 +163,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Settings"
+        title={t('Settings')}
         tabs={tabs}
         activeTab={activeTab}
         showFilters={false}

@@ -15,6 +15,7 @@ import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
 } from './database-mascot-icons'
+import { useT } from '@/lib/i18n/translate'
 
 type DbTypeMeta = {
   id: string
@@ -129,6 +130,7 @@ export function CreateDatabaseSummary({
   monthlyCost = null,
   canCreate,
 }: CreateDatabaseSummaryProps) {
+  const t = useT()
   const trimmedName = name.trim()
   const hasType = Boolean(selectedDbType && dbType)
   const showPricing = Boolean(
@@ -139,16 +141,16 @@ export function CreateDatabaseSummary({
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="border-b border-border bg-muted/30 px-4 py-3">
         <h3 className="text-[13px] font-semibold tracking-tight text-foreground">
-          Database summary
+          {t('Database summary')}
         </h3>
       </div>
 
       <div className="space-y-4 px-4 py-4">
-        <InlineRow label="Name">
+        <InlineRow label={t('Name')}>
           {trimmedName ? (
             <span className="font-medium">{trimmedName}</span>
           ) : (
-            <span className="text-muted-foreground">Required</span>
+            <span className="text-muted-foreground">{t('Required')}</span>
           )}
         </InlineRow>
 
@@ -158,11 +160,11 @@ export function CreateDatabaseSummary({
               {databaseId.trim()}
             </span>
           ) : (
-            <span className="text-muted-foreground">Auto-generated</span>
+            <span className="text-muted-foreground">{t('Auto-generated')}</span>
           )}
         </InlineRow>
 
-        <InlineRow label="Type">
+        <InlineRow label={t('Type')}>
           {hasType ? (
             <span className="inline-flex items-center justify-end gap-1.5 font-medium">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -172,12 +174,12 @@ export function CreateDatabaseSummary({
               {(selectedDbType!.id === 'DocumentsDB' ||
                 selectedDbType!.id === 'VectorsDB') && (
                 <Badge variant="info" className="text-[10px] shrink-0">
-                  Beta
+                  {t('Beta')}
                 </Badge>
               )}
             </span>
           ) : (
-            <span className="text-muted-foreground">Not selected</span>
+            <span className="text-muted-foreground">{t('Not selected')}</span>
           )}
         </InlineRow>
 
@@ -185,7 +187,7 @@ export function CreateDatabaseSummary({
           <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[13px] font-semibold text-foreground">
-                {selectedSpec.label}
+                {t(selectedSpec.label)}
               </span>
               <span className="text-[13px] font-semibold tabular-nums text-foreground">
                 {selectedSpec.price}
@@ -195,10 +197,10 @@ export function CreateDatabaseSummary({
               <InlineRow label="CPU">
                 <span className="font-medium tabular-nums">{selectedSpec.cpu}</span>
               </InlineRow>
-              <InlineRow label="Memory">
+              <InlineRow label={t('Memory')}>
                 <span className="font-medium tabular-nums">{selectedSpec.memory}</span>
               </InlineRow>
-              <InlineRow label="Connections">
+              <InlineRow label={t('Connections')}>
                 <span className="font-medium tabular-nums">
                   {selectedSpec.connections}
                 </span>
@@ -208,30 +210,30 @@ export function CreateDatabaseSummary({
             {showPricing && monthlyCost && (
               <>
                 <div className="border-t border-border/80 pt-3 space-y-2">
-                  <CostLine label="Compute" amountUsd={monthlyCost.baseUsd} />
+                  <CostLine label={t('Compute')} amountUsd={monthlyCost.baseUsd} />
                   <CostLine
                     label={
                       replicaCount === 0
-                        ? 'Replicas'
-                        : `Replicas (${replicaCount})`
+                        ? t('Replicas')
+                        : `${t('Replicas')} (${replicaCount})`
                     }
                     amountUsd={monthlyCost.haReplicasUsd}
-                    zeroLabel="None"
+                    zeroLabel={t('None')}
                   />
                   <CostLine
-                    label={pitrEnabled ? 'PITR' : 'PITR (off)'}
+                    label={pitrEnabled ? 'PITR' : `PITR (${t('off')})`}
                     amountUsd={monthlyCost.pitrUsd}
-                    zeroLabel="Off"
+                    zeroLabel={t('Off')}
                   />
                   <CostLine
-                    label="Total"
+                    label={t('Total')}
                     amountUsd={monthlyCost.totalUsd}
                     emphasize
                   />
                 </div>
                 <div className="space-y-1.5 text-[12px] leading-relaxed text-muted-foreground">
-                  <p>{DATABASE_COMPUTE_CREDITS_NOTE}</p>
-                  <p>Storage and bandwidth overages billed separately.</p>
+                  <p>{t(DATABASE_COMPUTE_CREDITS_NOTE)}</p>
+                  <p>{t('Storage and bandwidth overages billed separately.')}</p>
                 </div>
               </>
             )}
@@ -240,7 +242,7 @@ export function CreateDatabaseSummary({
 
         {showSpecs && !selectedSpec && (
           <p className="text-[12px] text-muted-foreground">
-            Select a compute tier to continue.
+            {t('Select a compute tier to continue.')}
           </p>
         )}
       </div>
@@ -263,7 +265,7 @@ export function CreateDatabaseSummary({
                 className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500"
                 aria-hidden
               />
-              Ready to create
+              {t('Ready to create')}
             </span>
           ) : hasType && selectedDbType?.comingSoon ? (
             'This database type is not available yet.'

@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const NETWORK_PROTECTIONS = [
@@ -13,6 +14,7 @@ type SitesNetworkProtectionsProps = {
 }
 
 export function SitesNetworkProtections({ className }: SitesNetworkProtectionsProps) {
+  const t = useT()
   return (
     <div className={cn('flex flex-wrap justify-center gap-2', className)}>
       {NETWORK_PROTECTIONS.map((label) => (
@@ -24,7 +26,7 @@ export function SitesNetworkProtections({ className }: SitesNetworkProtectionsPr
             className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
             aria-hidden
           />
-          {label}
+          {t(label)}
         </div>
       ))}
     </div>

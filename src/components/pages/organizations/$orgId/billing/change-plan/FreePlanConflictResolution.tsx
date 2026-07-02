@@ -7,6 +7,7 @@ import {
   type OrgSummary,
 } from '@/lib/billing/free-plan-conflict'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 interface FreePlanConflictResolutionProps {
   otherFreeOrg: OrgSummary
@@ -25,6 +26,7 @@ export function FreePlanConflictResolution({
   keepChoiceId: keepChoiceIdProp,
   onKeepChoiceChange,
 }: FreePlanConflictResolutionProps) {
+  const t = useT()
   const [keepChoiceIdState, setKeepChoiceIdState] = useState(() =>
     showCurrentOrgOption && currentOrg ? currentOrg.$id : NEW_ORG_CHOICE,
   )
@@ -47,11 +49,11 @@ export function FreePlanConflictResolution({
     return [
       {
         id: NEW_ORG_CHOICE,
-        name: pendingOrgName?.trim() || 'New organization',
+        name: pendingOrgName?.trim() || t('New organization'),
       },
       { id: otherFreeOrg.$id, name: otherFreeOrg.name },
     ]
-  }, [currentOrg, otherFreeOrg, pendingOrgName, showCurrentOrgOption])
+  }, [currentOrg, otherFreeOrg, pendingOrgName, showCurrentOrgOption, t])
 
   const orgToDelete = resolveOrgToDelete(
     keepChoiceId,
@@ -64,10 +66,10 @@ export function FreePlanConflictResolution({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Choose which organization to keep
+          {t('Choose which organization to keep')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Only one free organization is allowed per account.
+          {t('Only one free organization is allowed per account.')}
         </p>
       </div>
 
@@ -94,7 +96,7 @@ export function FreePlanConflictResolution({
                 htmlFor={`keep-org-${id}`}
                 className="cursor-pointer text-[13px] font-medium text-foreground"
               >
-                Keep {name}
+                {t('Keep')} {name}
               </Label>
             </div>
           ))}
@@ -102,11 +104,11 @@ export function FreePlanConflictResolution({
 
         {orgToDelete ? (
           <p className="text-[13px] text-red-600 dark:text-red-400">
-            {orgToDelete.name} and all its resources will be deleted.
+            {orgToDelete.name} {t('and all its resources will be deleted.')}
           </p>
         ) : (
           <p className="text-[13px] text-muted-foreground">
-            Choose a paid plan for the new organization instead.
+            {t('Choose a paid plan for the new organization instead.')}
           </p>
         )}
       </div>

@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react'
 import { useSwitchResourceInPlace } from '@/components/global/shared/ResourceTitleSwitcher'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { DatabaseSelector } from './DatabaseSelector'
+import { useT } from '@/lib/i18n/translate'
 
 type NativeSidebarDatabaseBarProps = {
   projectId: string
@@ -19,6 +20,7 @@ export function NativeSidebarDatabaseBar({
   databaseSpecification,
   nativeEngine,
 }: NativeSidebarDatabaseBarProps) {
+  const t = useT()
   const switchResource = useSwitchResourceInPlace()
 
   return (
@@ -28,12 +30,12 @@ export function NativeSidebarDatabaseBar({
           to="/projects/$projectId/databases"
           params={{ projectId }}
           className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          aria-label="Back to databases"
+          aria-label={t('Back to databases')}
         >
           <ChevronLeft className="h-4 w-4" />
         </Link>
         <span className="text-[13px] font-medium text-foreground">
-          Databases
+          {t('Databases')}
         </span>
       </div>
       <div className="flex min-w-0 flex-col gap-2 px-2 py-2">

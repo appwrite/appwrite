@@ -5,6 +5,7 @@ import {
   PolicySidebarSection,
   policySidebarLinkClassName,
 } from '@/components/pages/legal/PolicySidebarNav'
+import { useT } from '@/lib/i18n/translate'
 import { PRICING_DATABASE_ANCHOR_ID } from '@/lib/pricing/dedicated-databases'
 import { comparisonPageSections } from '@/lib/pricing/comparison-sections'
 import { scrollToComparisonSection } from '@/lib/pricing/comparison-scroll'
@@ -16,6 +17,7 @@ const pricingPageSections = [
 ] as const
 
 export function CompareToc({ className }: { className?: string }) {
+  const t = useT()
   const [activeId, setActiveId] = useState(pricingPageSections[0]?.id ?? '')
 
   useEffect(() => {
@@ -59,18 +61,21 @@ export function CompareToc({ className }: { className?: string }) {
         className,
       )}
     >
-      <PolicySidebarSection title="On this page" ariaLabel="Compare plans sections">
+      <PolicySidebarSection
+        title={t('On this page')}
+        ariaLabel={t('Compare plans sections')}
+      >
         <ul className="space-y-0.5">
           {pricingPageSections.map((section) => (
             <li key={section.id} className="min-w-0">
               <a
                 href={`#${section.id}`}
-                title={section.label}
+                title={t(section.label)}
                 onClick={(event) => handleClick(event, section.id)}
                 className={policySidebarLinkClassName(activeId === section.id)}
                 aria-current={activeId === section.id ? 'location' : undefined}
               >
-                {section.label}
+                {t(section.label)}
               </a>
             </li>
           ))}

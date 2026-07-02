@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 interface FunctionLoggingCardProps {
   projectId: string | null | undefined
@@ -20,6 +21,7 @@ export function FunctionLoggingCard({
   functionId,
   func,
 }: FunctionLoggingCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [logging, setLogging] = useState(true)
 
@@ -37,7 +39,7 @@ export function FunctionLoggingCard({
       )
     },
     onSuccess: () => {
-      toast.success('Logging updated successfully')
+      toast.success(t('Logging updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -46,7 +48,7 @@ export function FunctionLoggingCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update logging'))
+      toast.error(getErrorMessage(error, t('Failed to update logging')))
     },
   })
 
@@ -59,11 +61,13 @@ export function FunctionLoggingCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Logging</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Logging')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          When enabled, execution output is written to your function logs in the
-          console, which helps debugging. Disabling it reduces log volume when
-          you do not need stdout and stderr from every run.
+          {t(
+            'When enabled, execution output is written to your function logs in the console, which helps debugging. Disabling it reduces log volume when you do not need stdout and stderr from every run.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -71,12 +75,12 @@ export function FunctionLoggingCard({
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Label htmlFor="function-logging" className="text-[13px]">
-              Execution logging
+              {t('Execution logging')}
             </Label>
             <p className="text-[12px] text-muted-foreground mt-1">
               {logging
-                ? 'Enabled - function stdout and stderr are recorded.'
-                : 'Disabled - less log output per execution.'}
+                ? t('Enabled - function stdout and stderr are recorded.')
+                : t('Disabled - less log output per execution.')}
             </p>
           </div>
           <Switch
@@ -95,7 +99,7 @@ export function FunctionLoggingCard({
           disabled={!hasChanges || updateMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

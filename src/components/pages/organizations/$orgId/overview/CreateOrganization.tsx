@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
+import { useT } from '@/lib/i18n/translate'
 
 interface CreateOrganizationDialogProps {
   open: boolean
@@ -24,6 +25,7 @@ export function CreateOrganizationDialog({
   onCreate,
   isLoading = false,
 }: CreateOrganizationDialogProps) {
+  const t = useT()
   const [organizationId, setOrganizationId] = useState<string | undefined>(
     undefined,
   )
@@ -60,10 +62,11 @@ export function CreateOrganizationDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Create organization</DialogTitle>
+          <DialogTitle>{t('Create organization')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new organization to manage your projects and organization
-            members.
+            {t(
+              'Create a new organization to manage your projects and organization members.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -71,25 +74,25 @@ export function CreateOrganizationDialog({
         <form onSubmit={handleSubmit}>
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="organization-id">Organization ID</Label>
+              <Label htmlFor="organization-id">{t('Organization ID')}</Label>
               <IdInput
                 id="organization-id"
                 value={organizationId}
                 onChange={setOrganizationId}
                 maxLength={36}
                 disabled={isLoading}
-                placeholder="Leave blank to auto-generate"
+                placeholder={t('Leave blank to auto-generate')}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="name">
-                Name <span className="text-destructive">*</span>
+                {t('Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="My Organization"
+                placeholder={t('My Organization')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
@@ -107,10 +110,10 @@ export function CreateOrganizationDialog({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim()}>
-              Create organization
+              {t('Create organization')}
             </Button>
           </div>
         </form>

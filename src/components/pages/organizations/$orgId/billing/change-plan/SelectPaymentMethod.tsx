@@ -12,6 +12,7 @@ import { Plus, Ticket } from 'lucide-react'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { formatPaymentMethodSummary } from '../utils'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface SelectPaymentMethodProps {
   paymentMethods: Models.PaymentMethod[]
@@ -35,6 +36,7 @@ export function SelectPaymentMethod({
   onAddCredits,
   showApplyCoupon = false,
 }: SelectPaymentMethodProps) {
+  const t = useT()
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = paymentMethods.filter((pm) => pm.last4)
   const hasCompletedPaymentMethods = completedPaymentMethods.length > 0
@@ -56,7 +58,7 @@ export function SelectPaymentMethod({
           htmlFor="payment-method"
           className="text-[13px] font-medium mb-2 block"
         >
-          Payment method <span className="text-destructive">*</span>
+          {t('Payment method')} <span className="text-destructive">*</span>
         </Label>
 
         {hasCompletedPaymentMethods ? (
@@ -66,7 +68,7 @@ export function SelectPaymentMethod({
               onValueChange={onPaymentMethodSelect}
             >
               <SelectTrigger id="payment-method" className="h-9 text-[13px]">
-                <SelectValue placeholder="Select payment method">
+                <SelectValue placeholder={t('Select payment method')}>
                   {selectedPaymentMethodId
                     ? (() => {
                         const method = completedPaymentMethods.find(
@@ -96,7 +98,7 @@ export function SelectPaymentMethod({
                 onClick={onAddPaymentMethod}
               >
                 <Plus className="me-1.5 h-4 w-4" />
-                Add payment method
+                {t('Add payment method')}
               </Button>
               {showApplyCoupon && onAddCredits ? (
                 <Button
@@ -106,7 +108,7 @@ export function SelectPaymentMethod({
                   onClick={onAddCredits}
                 >
                   <Ticket className="me-1.5 h-4 w-4" />
-                  Apply coupon
+                  {t('Apply coupon')}
                 </Button>
               ) : null}
             </div>
@@ -114,7 +116,7 @@ export function SelectPaymentMethod({
         ) : (
           <div className="rounded-lg border border-border bg-card/50 p-4">
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              Add a payment method to continue with a paid plan.
+              {t('Add a payment method to continue with a paid plan.')}
             </p>
             <Button
               variant="outline"
@@ -122,7 +124,7 @@ export function SelectPaymentMethod({
               className="mt-3 h-8 text-[13px]"
               onClick={onAddPaymentMethod}
             >
-              Add payment method
+              {t('Add payment method')}
             </Button>
           </div>
         )}
@@ -131,17 +133,17 @@ export function SelectPaymentMethod({
       {/* Tax ID */}
       <div className="pt-4 border-t border-border">
         <Label htmlFor="tax-id" className="text-[13px] font-medium">
-          Tax ID (Optional)
+          {t('Tax ID (Optional)')}
         </Label>
         <Input
           id="tax-id"
           value={taxId}
           onChange={(e) => onTaxIdChange(e.target.value)}
-          placeholder="Enter tax identification number"
+          placeholder={t('Enter tax identification number')}
           className="mt-2 h-9 text-[13px]"
         />
         <p className="text-[12px] text-muted-foreground mt-1">
-          For business accounts, enter your tax identification number
+          {t('For business accounts, enter your tax identification number')}
         </p>
       </div>
     </div>

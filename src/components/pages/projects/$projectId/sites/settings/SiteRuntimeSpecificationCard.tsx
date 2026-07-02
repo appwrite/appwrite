@@ -12,6 +12,7 @@ import { useProject } from '@/lib/react-query/hooks'
 import { hasUnavailableSpecifications } from '@/lib/specifications'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
+import { useT } from '@/lib/i18n/translate'
 
 interface SiteRuntimeSpecificationCardProps {
   projectId: string | null | undefined
@@ -26,6 +27,7 @@ export function SiteRuntimeSpecificationCard({
   site,
   isCloud = false,
 }: SiteRuntimeSpecificationCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: specificationsData } = useSiteSpecifications(projectId)
@@ -51,7 +53,7 @@ export function SiteRuntimeSpecificationCard({
       return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
-      toast.success('Specification updated successfully')
+      toast.success(t('Specification updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -60,7 +62,7 @@ export function SiteRuntimeSpecificationCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update specification'))
+      toast.error(getErrorMessage(error, t('Failed to update specification')))
     },
   })
 
@@ -82,8 +84,10 @@ export function SiteRuntimeSpecificationCard({
 
   return (
     <SpecificationTableCard
-      title="Specification"
-      description="CPU and memory allocated when your site handles requests, including server-side rendering (SSR)."
+      title={t('Specification')}
+      description={t(
+        'CPU and memory allocated when your site handles requests, including server-side rendering (SSR).',
+      )}
       scope="runtime-site"
       specs={specifications}
       selectedSlug={runtimeSpecification}

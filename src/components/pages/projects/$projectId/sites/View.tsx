@@ -92,6 +92,7 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { useT } from '@/lib/i18n/translate'
 
 type SitesListSearch = {
   search?: string
@@ -106,6 +107,7 @@ function formatRuntimeImageLabel(runtime: string | undefined) {
 }
 
 export function View() {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -560,13 +562,15 @@ export function View() {
         queryKey: Dependencies.SITES,
       })
       toast.success(
-        `Successfully deleted ${selectedSites.size} site${selectedSites.size > 1 ? 's' : ''}`,
+        selectedSites.size === 1
+          ? t('Site deleted successfully')
+          : `${t('Successfully deleted')} ${selectedSites.size} ${t('sites')}`,
       )
       setSelectedSites(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete sites')
+      toast.error(getErrorMessage(error) || t('Failed to delete sites'))
     },
   })
 
@@ -640,11 +644,11 @@ export function View() {
   return (
     <div className="flex flex-col">
       <ServiceHeader
-        title="Sites"
-        searchPlaceholder="Search sites..."
+        title={t('Sites')}
+        searchPlaceholder={t('Search sites...')}
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
-        createLabel="Create site"
+        createLabel={t('Create site')}
         onCreate={() => {
           navigate({
             to: '/projects/$projectId/sites/create',
@@ -654,7 +658,7 @@ export function View() {
         createDisabled={isCreateDisabled}
         createDisabledTooltip={
           noCreatePermission
-            ? "You don't have permission to create sites."
+            ? t("You don't have permission to create sites.")
             : undefined
         }
         showFilters={true}
@@ -667,7 +671,7 @@ export function View() {
             onRemoveFilter={removeFilter}
             onClearAll={clearAllFilters}
             onApplyFilter={applyFilter}
-            resourceLabel="sites"
+            resourceLabel={t('sites')}
             filterScope="sites"
             onApplyQuery={(queryParam, sortParam) =>
               navigateToSitesList({
@@ -707,7 +711,7 @@ export function View() {
                 planName: organizationPlan?.name ?? null,
                 planId: organizationPlan?.$id,
               })}
-              resourceName="sites"
+              resourceName={t('sites')}
               orgId={project?.teamId}
               fullWidth={false}
             />
@@ -720,7 +724,7 @@ export function View() {
           showLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
-                Loading sites...
+                {t('Loading sites...')}
               </p>
             </div>
           ) : paginatedSites.length > 0 ? (
@@ -739,22 +743,22 @@ export function View() {
                         />
                       </TableHead>
                       <TableHead className="w-[120px] px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Preview
+                        {t('Preview')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Site
+                        {t('Site')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Status
+                        {t('Status')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Last deployed
+                        {t('Last deployed')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                        Created
+                        {t('Created')}
                       </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                        Updated
+                        {t('Updated')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -845,7 +849,7 @@ export function View() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
-                                      {siteData.name || 'Unnamed Site'}
+                                      {siteData.name || t('Unnamed Site')}
                                     </p>
                                     {runtimeImageLabel ? (
                                       <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
@@ -879,7 +883,7 @@ export function View() {
                                     />
                                   ) : (
                                     <span className="text-[12px] text-muted-foreground/50">
-                                      Never
+                                      {t('Never')}
                                     </span>
                                   )
                                 })()}
@@ -941,14 +945,16 @@ export function View() {
                 pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel="sites"
+                itemLabel={t('sites')}
               />
             </>
           ) : (
             <EmptyState
               icon={Globe}
-              title="No sites yet"
-              description="Create your first site to start deploying static sites"
+              title={t('No sites yet')}
+              description={t(
+                'Create your first site to start deploying static sites',
+              )}
               isEmpty={
                 !(urlSearch && urlSearch.length > 0) && filterMap.size === 0
               }
@@ -963,7 +969,7 @@ export function View() {
             {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
-                  Loading sites...
+                  {t('Loading sites...')}
                 </p>
               </div>
             ) : paginatedSites.length > 0 ? (
@@ -1002,7 +1008,7 @@ export function View() {
                         ]
                       : []),
                     {
-                      label: 'Deployed',
+                      label: t('Deployed'),
                       value: activeDeploymentCreatedAt ? (
                         <DateTooltip
                           date={activeDeploymentCreatedAt}
@@ -1010,7 +1016,7 @@ export function View() {
                           className="text-[12px] font-medium text-muted-foreground"
                         />
                       ) : (
-                        'Never'
+                        t('Never')
                       ),
                     },
                   ]
@@ -1050,7 +1056,7 @@ export function View() {
                                         ) : null}
                                         <img
                                           src={screenshotUrl}
-                                          alt={`${siteData.name || 'Site'} preview`}
+                                          alt={`${siteData.name || t('Site')} ${t('preview')}`}
                                           onLoad={() => {
                                             setLoadedScreenshots((prev) =>
                                               new Set(prev).add(screenshotKey),
@@ -1072,7 +1078,7 @@ export function View() {
                                   <div className="absolute inset-0 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20" />
                                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
                                   <p className="relative flex h-full items-center justify-center text-[12px] font-medium text-muted-foreground/60">
-                                    Preview not available
+                                    {t('Preview not available')}
                                   </p>
                                 </>
                               )}
@@ -1083,7 +1089,7 @@ export function View() {
                           <div className="px-4 pt-4 pb-0">
                             <div className="min-w-0">
                               <h3 className="truncate text-[14px] font-medium text-foreground">
-                                {siteData.name || 'Unnamed Site'}
+                                {siteData.name || t('Unnamed Site')}
                               </h3>
                               {runtimeImageLabel ? (
                                 <p
@@ -1135,8 +1141,10 @@ export function View() {
             ) : (
               <EmptyState
                 icon={Globe}
-                title="No sites yet"
-                description="Create your first site to start deploying static sites"
+                title={t('No sites yet')}
+                description={t(
+                  'Create your first site to start deploying static sites',
+                )}
                 isEmpty={!(urlSearch || filterMap.size > 0)}
                 hasFilters={!!(urlSearch || filterMap.size > 0)}
                 variant="card"
@@ -1150,7 +1158,7 @@ export function View() {
                 pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
-                itemLabel="sites"
+                itemLabel={t('sites')}
               />
             )}
           </>
@@ -1161,8 +1169,9 @@ export function View() {
           <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedSites.size} site{selectedSites.size > 1 ? 's' : ''}{' '}
-                selected
+                {selectedSites.size}{' '}
+                {selectedSites.size > 1 ? t('sites') : t('site')}{' '}
+                {t('selected')}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -1171,7 +1180,7 @@ export function View() {
                   onClick={() => setSelectedSites(new Set())}
                   className="h-8 text-xs"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1180,7 +1189,7 @@ export function View() {
                   disabled={bulkDeleteMutation.isPending}
                   className="h-8 gap-2"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -1191,11 +1200,11 @@ export function View() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete Sites</DialogTitle>
+              <DialogTitle>{t('Delete Sites')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedSites.size} site
-                {selectedSites.size > 1 ? 's' : ''}? This action cannot be
-                undone.
+                {t('Are you sure you want to delete')} {selectedSites.size}{' '}
+                {selectedSites.size > 1 ? t('sites') : t('site')}?{' '}
+                {t('This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
 
@@ -1205,14 +1214,14 @@ export function View() {
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmBulkDelete}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>

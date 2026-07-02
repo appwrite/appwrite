@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
@@ -36,6 +37,7 @@ export const Route = createFileRoute('/_public/reset')({
 })
 
 function ResetPage() {
+  const t = useT()
   const search = useSearch({ from: '/_public/reset' })
   const navigate = useNavigate()
   const router = useRouter()
@@ -83,7 +85,7 @@ function ResetPage() {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
         await prefetchPostAuthDestination(queryClient, account)
         await router.invalidate()
-        toast.success('Password reset successfully')
+        toast.success(t('Password reset successfully'))
         const orgId = await resolvePostAuthOrganizationId(account)
         navigate({
           to: '/organizations/$orgId',
@@ -92,7 +94,7 @@ function ResetPage() {
         })
       } catch {
         purgeConsoleAccountCaches(queryClient)
-        toast.success('Password reset successfully')
+        toast.success(t('Password reset successfully'))
         setIsSuccess(true)
       }
     },
@@ -109,14 +111,17 @@ function ResetPage() {
         } catch (navigationError: unknown) {
           setIsOpeningMfa(false)
           toast.error(
-            getErrorMessage(navigationError, 'Could not open MFA verification'),
+            getErrorMessage(
+              navigationError,
+              t('Could not open MFA verification'),
+            ),
           )
         }
         return
       }
 
       console.error('Reset error:', error)
-      toast.error(getErrorMessage(error, 'Failed to reset password'))
+      toast.error(getErrorMessage(error, t('Failed to reset password')))
     },
   })
 
@@ -127,18 +132,19 @@ function ResetPage() {
         <div className="w-full max-w-sm md:max-w-4xl">
           <div className="rounded-lg border bg-card p-6 text-center">
             <h1 className="text-2xl font-semibold tracking-tight mb-2">
-              Invalid reset link
+              {t('Invalid reset link')}
             </h1>
             <p className="text-sm text-muted-foreground mb-4">
-              This password reset link is invalid or has expired. Please request
-              a new one.
+              {t(
+                'This password reset link is invalid or has expired. Please request a new one.',
+              )}
             </p>
             <div className="flex gap-2 justify-center">
               <Link
                 to="/recovery"
                 className="link-neutral text-sm"
               >
-                Request new reset link
+                {t('Request new reset link')}
               </Link>
             </div>
           </div>
@@ -168,24 +174,24 @@ function ResetPage() {
                 navigate({ to: '/sign-in', replace: true })
               }}
             >
-              Continue to sign in
+              {t('Continue to sign in')}
             </button>
           </p>
         ) : null}
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By clicking continue, you agree to our{' '}
+          {t('By clicking continue, you agree to our')}{' '}
           <a
             href="#"
             className="link-neutral"
           >
-            Terms of Service
+            {t('Terms of Service')}
           </a>{' '}
-          and{' '}
+          {t('and')}{' '}
           <a
             href="#"
             className="link-neutral"
           >
-            Privacy Policy
+            {t('Privacy Policy')}
           </a>
           .
         </p>

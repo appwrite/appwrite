@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/lib/i18n/translate'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import {
   useCsvImportMigrations,
@@ -46,6 +47,7 @@ function MigrationItem({
   onViewDetails: (m: Models.Migration) => void
   onDismiss: () => void
 }) {
+  const t = useT()
   const parsed = getTableNameFromResourceId(migration.resourceId)
   const { table } = useProjectTable(
     projectId,
@@ -64,17 +66,17 @@ function MigrationItem({
   let statusLabel: string
   switch (status) {
     case 'pending':
-      statusLabel = 'Preparing CSV for import...'
+      statusLabel = t('Preparing CSV for import...')
       break
     case 'processing':
     case 'uploading':
-      statusLabel = `Importing to ${tableName}`
+      statusLabel = `${t('Importing to')} ${tableName}`
       break
     case 'completed':
-      statusLabel = `Import completed to ${tableName}`
+      statusLabel = `${t('Import completed to')} ${tableName}`
       break
     case 'failed':
-      statusLabel = `Import failed to ${tableName}`
+      statusLabel = `${t('Import failed to')} ${tableName}`
       break
     default:
       statusLabel = `Import (${status})`
@@ -106,7 +108,7 @@ function MigrationItem({
               className="h-auto p-0 text-[12px] mt-0.5"
               onClick={() => onViewDetails(migration)}
             >
-              View details
+              {t('View details')}
             </Button>
           )}
         </div>
@@ -115,7 +117,7 @@ function MigrationItem({
           size="sm"
           className="h-6 w-6 p-0 shrink-0"
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t('Dismiss')}
         >
           <X className="h-3.5 w-3.5" />
         </Button>
@@ -129,6 +131,7 @@ interface CsvImportBoxProps {
 }
 
 export function CsvImportBox({ projectId }: CsvImportBoxProps) {
+  const t = useT()
   const { sessionImportIds, dismissedImportIds, dismissImport } =
     useSessionMigrations(projectId)
   const { migrations } = useCsvImportMigrations(projectId, sessionImportIds)
@@ -193,7 +196,7 @@ export function CsvImportBox({ projectId }: CsvImportBoxProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-[13px] font-semibold mb-2">
-              Import error details
+              {t('Import error details')}
             </div>
             <pre className="text-[12px] text-muted-foreground whitespace-pre-wrap break-words">
               {JSON.stringify(detailsMigration.errors ?? [], null, 2)}
@@ -204,7 +207,7 @@ export function CsvImportBox({ projectId }: CsvImportBoxProps) {
               className="mt-3"
               onClick={() => setDetailsMigration(null)}
             >
-              Close
+              {t('Close')}
             </Button>
           </div>
         </div>

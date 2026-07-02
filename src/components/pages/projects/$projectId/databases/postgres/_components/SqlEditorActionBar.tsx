@@ -21,6 +21,7 @@ import {
   POSTGRES_SQL_EDITOR_SURFACE_CLASS,
   POSTGRES_RUN_QUERY_PLAY_ICON_CLASS,
 } from './postgres-chrome'
+import { useT } from '@/lib/i18n/translate'
 
 type SqlEditorActionBarProps = {
   canUndo: boolean
@@ -86,6 +87,7 @@ export function SqlEditorActionBar({
   onRun,
   onExplain,
 }: SqlEditorActionBarProps) {
+  const t = useT()
   const { isMac } = usePlatform()
   const undoShortcut = formatShortcutLabel(POSTGRES_SQL_UNDO_SHORTCUT_RAW, isMac)
   const redoShortcut = formatShortcutLabel(POSTGRES_SQL_REDO_SHORTCUT_RAW, isMac)
@@ -119,7 +121,7 @@ export function SqlEditorActionBar({
               onMouseDown={(event) => event.preventDefault()}
               onClick={onUndo}
               disabled={!canUndo}
-              aria-label="Undo"
+              aria-label={t('Undo')}
             >
               <Undo2 className="h-3.5 w-3.5 shrink-0" />
             </Button>
@@ -138,7 +140,7 @@ export function SqlEditorActionBar({
               onMouseDown={(event) => event.preventDefault()}
               onClick={onRedo}
               disabled={!canRedo}
-              aria-label="Redo"
+              aria-label={t('Redo')}
             >
               <Redo2 className="h-3.5 w-3.5 shrink-0" />
             </Button>
@@ -160,7 +162,7 @@ export function SqlEditorActionBar({
               disabled={!canSave}
             >
               <Bookmark className="h-3.5 w-3.5 shrink-0" />
-              Save
+              {t('Save')}
             </Button>
           </ShortcutTooltip>
 
@@ -180,7 +182,7 @@ export function SqlEditorActionBar({
               disabled={!canFormat}
             >
               <Braces className="h-3.5 w-3.5 shrink-0" />
-              Format
+              {t('Format')}
             </Button>
           </ShortcutTooltip>
 
@@ -190,10 +192,10 @@ export function SqlEditorActionBar({
             enabled={canExplain}
             disabledReason={
               isExplaining
-                ? 'Query explanation is running.'
+                ? t('Query explanation is running.')
                 : isRunning
-                  ? 'Query is running.'
-                  : 'Write SQL before explaining a query.'
+                  ? t('Query is running.')
+                  : t('Write SQL before explaining a query.')
             }
             enabledLabel={`Explain (${explainShortcut})`}
           >
@@ -220,10 +222,10 @@ export function SqlEditorActionBar({
             enabled={canRun}
             disabledReason={
               isRunning
-                ? 'Query is running.'
+                ? t('Query is running.')
                 : isExplaining
-                  ? 'Query explanation is running.'
-                  : 'Write SQL before running a query.'
+                  ? t('Query explanation is running.')
+                  : t('Write SQL before running a query.')
             }
             enabledLabel={`Run (${runShortcut})`}
           >

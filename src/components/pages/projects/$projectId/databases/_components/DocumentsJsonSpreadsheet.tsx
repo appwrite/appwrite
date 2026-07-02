@@ -39,6 +39,7 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { FileText } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 function documentPayloadJson(row: Record<string, unknown>): string {
   const o: Record<string, unknown> = {}
@@ -89,6 +90,7 @@ export function DocumentsJsonSpreadsheet({
   onRefetchReady,
   onRowsCountChange,
 }: DocumentsJsonSpreadsheetProps) {
+  const t = useT()
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
@@ -345,7 +347,7 @@ export function DocumentsJsonSpreadsheet({
   if (showRowsLoading) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
-        <p className="text-[13px] text-muted-foreground">Loading documents…</p>
+        <p className="text-[13px] text-muted-foreground">{t('Loading documents…')}</p>
       </div>
     )
   }
@@ -364,7 +366,7 @@ export function DocumentsJsonSpreadsheet({
               }
               description={
                 documentsPaneHasFilters
-                  ? 'Try adjusting or clearing filters.'
+                  ? t('Try adjusting or clearing filters.')
                   : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
               }
               isEmpty={!documentsPaneHasFilters}
@@ -407,13 +409,13 @@ export function DocumentsJsonSpreadsheet({
                     </div>
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Document ID
+                    {t('Document ID')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Created
+                    {t('Created')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Updated
+                    {t('Updated')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -530,7 +532,7 @@ export function DocumentsJsonSpreadsheet({
                 onClick={() => setSelectedRows(new Set())}
                 className="h-8 text-xs"
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -538,7 +540,7 @@ export function DocumentsJsonSpreadsheet({
                 onClick={() => setDeleteDialogOpen(true)}
                 className="h-8 gap-2"
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -548,7 +550,7 @@ export function DocumentsJsonSpreadsheet({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete documents</DialogTitle>
+            <DialogTitle>{t('Delete documents')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete {selectedRows.size} document
               {selectedRows.size > 1 ? 's' : ''}? This action cannot be undone.
@@ -560,7 +562,7 @@ export function DocumentsJsonSpreadsheet({
               onClick={() => setDeleteDialogOpen(false)}
               disabled={bulkDeleteMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -569,7 +571,7 @@ export function DocumentsJsonSpreadsheet({
               }
               disabled={bulkDeleteMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

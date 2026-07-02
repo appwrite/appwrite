@@ -88,6 +88,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
@@ -131,6 +132,7 @@ type ViewProps = {
 }
 
 export function View({ initialData }: ViewProps = {}) {
+  const t = useT()
   const { orgId, domainId } = useParams({
     strict: false})
   const navigate = useNavigate()
@@ -327,16 +329,16 @@ export function View({ initialData }: ViewProps = {}) {
     () => [
       {
         id: 'records',
-        label: 'DNS Records',
+        label: t('DNS Records'),
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId: orgId as string, domainId: domainId as string }},
       {
         id: 'settings',
-        label: 'Settings',
+        label: t('Settings'),
         to: '/organizations/$orgId/domains/$domainId/settings',
         params: { orgId: orgId as string, domainId: domainId as string }},
     ],
-    [orgId, domainId],
+    [orgId, domainId, t],
   )
 
   // Create record mutation
@@ -368,7 +370,7 @@ export function View({ initialData }: ViewProps = {}) {
           comment: data.comment}},
       {
         onSuccess: () => {
-          toast.success('DNS record created successfully')
+          toast.success(t('DNS record created successfully'))
           setCreateRecordDialogOpen(false)
         },
         onError: (error) => {
@@ -407,7 +409,7 @@ export function View({ initialData }: ViewProps = {}) {
           comment: data.comment}},
       {
         onSuccess: () => {
-          toast.success('DNS record updated successfully')
+          toast.success(t('DNS record updated successfully'))
           setUpdateRecordDialogOpen(false)
           setSelectedRecord(null)
         },
@@ -423,7 +425,7 @@ export function View({ initialData }: ViewProps = {}) {
   const handleDeleteRecord = (recordId: string) => {
     deleteRecordMutation.mutate(recordId, {
       onSuccess: () => {
-        toast.success('DNS record deleted successfully')
+        toast.success(t('DNS record deleted successfully'))
         setDeleteRecordDialogOpen(false)
         setSelectedRecord(null)
       },
@@ -451,7 +453,7 @@ export function View({ initialData }: ViewProps = {}) {
       await queryClient.refetchQueries({
         queryKey: ['domain', domainId]})
       toast.success(
-        `Deleted ${recordIds.length} DNS record${recordIds.length > 1 ? 's' : ''}`,
+        `${t('Deleted')} ${recordIds.length} ${recordIds.length > 1 ? t('DNS records') : t('DNS record')}`,
       )
       setSelectedRecords(new Set())
       setBulkDeleteRecordsDialogOpen(false)
@@ -496,7 +498,7 @@ export function View({ initialData }: ViewProps = {}) {
   const handleImportZone = (content: string) => {
     importZoneMutation.mutate(content, {
       onSuccess: () => {
-        toast.success('Zone file imported successfully')
+        toast.success(t('Zone file imported successfully'))
         setImportZoneDialogOpen(false)
       },
       onError: (error) => {
@@ -566,7 +568,7 @@ export function View({ initialData }: ViewProps = {}) {
       )
 
       toast.success(
-        `Successfully added ${records.length} DNS records from ${presetLabels[preset]}`,
+        `${t('Successfully added')} ${records.length} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
       queryClient.invalidateQueries({
         queryKey: ['dns-records', 'domain', domainId]})
@@ -597,7 +599,7 @@ export function View({ initialData }: ViewProps = {}) {
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        toast.success('Zone file downloaded')
+        toast.success(t('Zone file downloaded'))
       }
     } catch (error) {
       toast.error(getErrorMessage(error as Error))
@@ -618,19 +620,23 @@ export function View({ initialData }: ViewProps = {}) {
           // Invalidate domain data to refresh the page
           queryClient.invalidateQueries({
             queryKey: ['domain', domainId]})
-          toast.success(`${domain.domain} has been verified`)
+          toast.success(`${domain.domain} ${t('has been verified')}`)
           setRetryDialogOpen(false)
         } else {
           // Still not verified - show error
           toast.error(
-            'Domain verification failed. Please check your domain settings or try again later.',
+            t(
+              'Domain verification failed. Please check your domain settings or try again later.',
+            ),
           )
         }
       },
       onError: (error) => {
         toast.error(
           getErrorMessage(error) ||
-            'Domain verification failed. Please check your domain settings or try again later.',
+            t(
+              'Domain verification failed. Please check your domain settings or try again later.',
+            ),
         )
       }})
   }
@@ -742,7 +748,7 @@ export function View({ initialData }: ViewProps = {}) {
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopiedField(null), 2000)
   }
 
@@ -774,10 +780,10 @@ export function View({ initialData }: ViewProps = {}) {
     },
     onSuccess: (data) => {
       setRegistrarTransferAuthCode(data.authCode)
-      toast.success('Transfer authorization code generated')
+      toast.success(t('Transfer authorization code generated'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to start transfer out')
+      toast.error(getErrorMessage(error) || t('Failed to start transfer out'))
     }})
 
   const handleTransferDomain = async () => {
@@ -792,7 +798,7 @@ export function View({ initialData }: ViewProps = {}) {
         (org) => org.value === targetOrgId,
       )
       toast.success(
-        `${domain?.domain || 'Domain'} has been transferred to ${selectedOrg?.label || 'the selected organization'}`,
+        `${domain?.domain || t('Domain')} ${t('has been transferred to')} ${selectedOrg?.label || t('the selected organization')}`,
       )
 
       setTransferDialogOpen(false)
@@ -802,7 +808,7 @@ export function View({ initialData }: ViewProps = {}) {
         to: '/organizations/$orgId/domains',
         params: { orgId: targetOrgId }})
     } catch (error) {
-      toast.error(getErrorMessage(error) || 'Failed to transfer domain')
+      toast.error(getErrorMessage(error) || t('Failed to transfer domain'))
     }
   }
 
@@ -812,12 +818,12 @@ export function View({ initialData }: ViewProps = {}) {
   const handleDeleteDomain = () => {
     if (!domainId || !domain) return
     if (deleteConfirmation !== domain.domain) {
-      toast.error('Domain name does not match')
+      toast.error(t('Domain name does not match'))
       return
     }
     deleteDomainMutation.mutate(domainId, {
       onSuccess: () => {
-        toast.success(`${domain.domain} has been deleted`)
+        toast.success(`${domain.domain} ${t('has been deleted')}`)
         setDeleteDialogOpen(false)
         setDeleteConfirmation('')
         // Navigate back to domains list
@@ -826,7 +832,7 @@ export function View({ initialData }: ViewProps = {}) {
           params: { orgId: orgId! }})
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error) || 'Failed to delete domain')
+        toast.error(getErrorMessage(error) || t('Failed to delete domain'))
       }})
   }
 
@@ -839,12 +845,12 @@ export function View({ initialData }: ViewProps = {}) {
           setAutoRenewalEnabled(!!updatedDomain.autoRenewal)
           toast.success(
             updatedDomain.autoRenewal
-              ? 'Auto renewal has been enabled'
-              : 'Auto renewal has been disabled',
+              ? t('Auto renewal has been enabled')
+              : t('Auto renewal has been disabled'),
           )
         },
         onError: (error) => {
-          toast.error(getErrorMessage(error) || 'Failed to update auto renewal')
+          toast.error(getErrorMessage(error) || t('Failed to update auto renewal'))
         }},
     )
   }
@@ -873,7 +879,7 @@ export function View({ initialData }: ViewProps = {}) {
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[13px] font-medium text-foreground">
-            Domain not found
+            {t('Domain not found')}
           </p>
           <Button
             variant="link"
@@ -883,7 +889,7 @@ export function View({ initialData }: ViewProps = {}) {
                 params: { orgId: orgId! }})
             }
           >
-            Back to domains
+            {t('Back to domains')}
           </Button>
         </div>
       </div>
@@ -903,12 +909,12 @@ export function View({ initialData }: ViewProps = {}) {
         title={
           <DetailResourceHeaderTitle
             kind="domain"
-            label={domain?.domain ?? 'Domain'}
+            label={domain?.domain ?? t('Domain')}
             resourceId={domain?.$id ?? ''}
             organizationId={orgId}
             back={{
               onClick: handleBack,
-              'aria-label': 'Back to domains'}}
+              'aria-label': t('Back to domains')}}
           />
         }
           tabs={tabs}
@@ -925,13 +931,13 @@ export function View({ initialData }: ViewProps = {}) {
                     <ArrowLeftRight className="h-4 w-4 shrink-0 text-blue-500" />
                     <div className="flex-1 min-w-0 space-y-1">
                       <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
-                        Domain transfer in progress
+                        {t('Domain transfer in progress')}
                         {transferStatusBadge?.label
-                          ? ` · ${transferStatusBadge.label}`
+                          ? ` · ${t(transferStatusBadge.label)}`
                           : null}
                       </AlertTitle>
                       <AlertDescription className="text-[12px] leading-relaxed text-blue-600/80 dark:text-blue-400/80">
-                        {DOMAIN_TRANSFER_IN_PROGRESS_DESCRIPTION}
+                        {t(DOMAIN_TRANSFER_IN_PROGRESS_DESCRIPTION)}
                         {transferStatusData?.reason ? (
                           <span className="mt-2 block text-blue-600/90 dark:text-blue-400/90">
                             {transferStatusData.reason}
@@ -955,12 +961,11 @@ export function View({ initialData }: ViewProps = {}) {
                     <div className="flex flex-1 items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          Domain not verified
+                          {t('Domain not verified')}
                         </AlertTitle>
                         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                           <span className="inline">
-                            Update your domain's nameservers to point to
-                            Appwrite
+                            {t("Update your domain's nameservers to point to Appwrite")} {/* pragma: allowlist secret */}
                           </span>
                         </AlertDescription>
                       </div>
@@ -977,7 +982,7 @@ export function View({ initialData }: ViewProps = {}) {
                               'animate-spin',
                           )}
                         />
-                        Retry Verification
+                        {t('Retry Verification')}
                       </Button>
                     </div>
                   </Alert>
@@ -997,7 +1002,7 @@ export function View({ initialData }: ViewProps = {}) {
                     {/* Status */}
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        Status
+                        {t('Status')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center gap-1.5">
                         {transferInProgress && transferStatusBadge ? (
@@ -1005,7 +1010,7 @@ export function View({ initialData }: ViewProps = {}) {
                             variant={transferStatusBadge.variant}
                             className="text-[10px] shrink-0"
                           >
-                            {transferStatusBadge.label}
+                            {t(transferStatusBadge.label)}
                           </Badge>
                         ) : (
                           verificationStatus && (
@@ -1018,7 +1023,7 @@ export function View({ initialData }: ViewProps = {}) {
                                     : 'text-yellow-600 dark:text-yellow-500',
                                 )}
                               >
-                                {verificationStatus.label}
+                                {t(verificationStatus.label)}
                               </code>
                               {!verificationStatus.isVerified && (
                                 <Button
@@ -1030,7 +1035,7 @@ export function View({ initialData }: ViewProps = {}) {
                                     retryVerificationMutation.isPending
                                   }
                                 >
-                                  Verify
+                                  {t('Verify')}
                                 </Button>
                               )}
                             </>
@@ -1042,13 +1047,13 @@ export function View({ initialData }: ViewProps = {}) {
                     {/* Registrar */}
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        Registrar
+                        {t('Registrar')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
                         <code className="text-[12px] font-mono text-foreground">
                           {domain.registrar === 'appwrite'
                             ? 'Appwrite'
-                            : '3rd party'}
+                            : t('3rd party')}
                         </code>
                       </div>
                     </div>
@@ -1056,7 +1061,7 @@ export function View({ initialData }: ViewProps = {}) {
                     {/* Nameservers */}
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        Nameservers
+                        {t('Nameservers')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center min-w-0">
                         <code className="text-[12px] font-mono text-foreground truncate">
@@ -1068,7 +1073,7 @@ export function View({ initialData }: ViewProps = {}) {
                     {/* Expiry date */}
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        Expiry date
+                        {t('Expiry date')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
                         <code className="text-[12px] font-mono text-foreground">
@@ -1088,7 +1093,7 @@ export function View({ initialData }: ViewProps = {}) {
                     {/* Auto renewal */}
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        Auto renewal
+                        {t('Auto renewal')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
                         <div className="flex items-center gap-1.5">
@@ -1100,7 +1105,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 : 'text-yellow-600 dark:text-yellow-500',
                             )}
                           >
-                            {domain.autoRenewal ? 'Enabled' : 'Disabled'}
+                            {domain.autoRenewal ? t('Enabled') : t('Disabled')}
                           </code>
                           <Button
                             variant="link"
@@ -1112,7 +1117,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 params: { orgId: orgId!, domainId: domainId! }})
                             }
                           >
-                            Update
+                            {t('Update')}
                           </Button>
                         </div>
                       </div>
@@ -1121,7 +1126,7 @@ export function View({ initialData }: ViewProps = {}) {
                     {/* Renewal price */}
                     <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
-                        Renewal price
+                        {t('Renewal price')}
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
                         <code className="text-[12px] font-mono text-foreground">
@@ -1181,7 +1186,7 @@ export function View({ initialData }: ViewProps = {}) {
                     className="h-9 gap-1.5 text-[13px] cursor-pointer"
                   >
                     <Upload className="h-4 w-4" />
-                    Import zone file
+                    {t('Import zone file')}
                   </Button>
                   <Button
                     variant="outline"
@@ -1190,7 +1195,7 @@ export function View({ initialData }: ViewProps = {}) {
                     className="h-9 gap-1.5 text-[13px] cursor-pointer"
                   >
                     <Download className="h-4 w-4" />
-                    Export
+                    {t('Export')}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -1200,7 +1205,7 @@ export function View({ initialData }: ViewProps = {}) {
                         className="h-9 gap-1.5 text-[13px] cursor-pointer"
                       >
                         <List className="h-4 w-4" />
-                        Add preset
+                        {t('Add preset')}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
@@ -1252,21 +1257,21 @@ export function View({ initialData }: ViewProps = {}) {
                       className="h-9 gap-1.5 text-[13px] cursor-pointer sm:hidden"
                     >
                       <MoreHorizontal className="h-4 w-4" />
-                      More
+                      {t('More')}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48">
                     <DropdownMenuItem
                       onClick={() => setImportZoneDialogOpen(true)}
                     >
-                      Import
+                      {t('Import')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleExportZone}>
-                      Export
+                      {t('Export')}
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[13px]">
-                        Preset
+                        {t('Preset')}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52">
                         <DropdownMenuItem
@@ -1316,7 +1321,7 @@ export function View({ initialData }: ViewProps = {}) {
                     className="h-9 gap-1.5 text-[13px] font-medium cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
-                    Create Record
+                    {t('Create Record')}
                   </Button>
                 </div>
               </div>
@@ -1341,28 +1346,28 @@ export function View({ initialData }: ViewProps = {}) {
                             ) : null}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                            Name
+                            {t('Name')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[90px]">
-                            Type
+                            {t('Type')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                            Value
+                            {t('Value')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[70px]">
                             TTL
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">
-                            Priority
+                            {t('Priority')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[70px]">
-                            Weight
+                            {t('Weight')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[70px]">
-                            Port
+                            {t('Port')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                            Comment
+                            {t('Comment')}
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4"></TableHead>
                         </TableRow>
@@ -1439,8 +1444,8 @@ export function View({ initialData }: ViewProps = {}) {
                                     >
                                       {value === 'a.a.a.a' ||
                                       value === 'b:b::b:b:b'
-                                        ? 'Served by Appwrite'
-                                        : 'Generated by Appwrite'}
+                                        ? t('Served by Appwrite') // pragma: allowlist secret
+                                        : t('Generated by Appwrite')} {/* pragma: allowlist secret */}
                                     </Badge>
                                   ) : (
                                     <>
@@ -1566,7 +1571,7 @@ export function View({ initialData }: ViewProps = {}) {
                                           }}
                                         >
                                           <MenuItemContent icon={Pencil}>
-                                            Update
+                                            {t('Update')}
                                           </MenuItemContent>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
@@ -1576,7 +1581,7 @@ export function View({ initialData }: ViewProps = {}) {
                                           }}
                                         >
                                           <MenuItemContent icon={Trash2}>
-                                            Delete
+                                            {t('Delete')}
                                           </MenuItemContent>
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
@@ -1623,7 +1628,7 @@ export function View({ initialData }: ViewProps = {}) {
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
-                    itemLabel="records"
+                    itemLabel={t('records')}
                   />
 
                   {/* Bulk Delete DNS Records Action Bar */}
@@ -1631,8 +1636,11 @@ export function View({ initialData }: ViewProps = {}) {
                     <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
                       <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                         <Badge variant="secondary" className="h-6 px-2.5">
-                          {selectedRecords.size} record
-                          {selectedRecords.size > 1 ? 's' : ''} selected
+                          {selectedRecords.size}{' '}
+                          {selectedRecords.size > 1
+                            ? t('records')
+                            : t('record')}{' '}
+                          {t('selected')}
                         </Badge>
                         <div className="flex items-center gap-2">
                           <Button
@@ -1641,7 +1649,7 @@ export function View({ initialData }: ViewProps = {}) {
                             onClick={() => setSelectedRecords(new Set())}
                             className="h-8 text-xs"
                           >
-                            Cancel
+                            {t('Cancel')}
                           </Button>
                           <Button
                             variant="destructive"
@@ -1650,7 +1658,7 @@ export function View({ initialData }: ViewProps = {}) {
                             disabled={bulkDeleteRecordsMutation.isPending}
                             className="h-8 gap-2"
                           >
-                            Delete
+                            {t('Delete')}
                           </Button>
                         </div>
                       </div>
@@ -1664,12 +1672,14 @@ export function View({ initialData }: ViewProps = {}) {
                   >
                     <DialogContent className="sm:max-w-md p-0">
                       <DialogHeader className="px-6 pt-6 text-start">
-                        <DialogTitle>Delete DNS records</DialogTitle>
+                        <DialogTitle>{t('Delete DNS records')}</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to delete {selectedRecords.size}{' '}
-                          DNS record
-                          {selectedRecords.size > 1 ? 's' : ''}? This action
-                          cannot be undone.
+                          {t('Are you sure you want to delete')}{' '}
+                          {selectedRecords.size}{' '}
+                          {selectedRecords.size > 1
+                            ? t('DNS records')
+                            : t('DNS record')}
+                          ? {t('This action cannot be undone.')}
                         </DialogDescription>
                       </DialogHeader>
 
@@ -1679,14 +1689,14 @@ export function View({ initialData }: ViewProps = {}) {
                           onClick={() => setBulkDeleteRecordsDialogOpen(false)}
                           disabled={bulkDeleteRecordsMutation.isPending}
                         >
-                          Cancel
+                          {t('Cancel')}
                         </Button>
                         <Button
                           variant="destructive"
                           onClick={confirmBulkDeleteRecords}
                           disabled={bulkDeleteRecordsMutation.isPending}
                         >
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </div>
                     </DialogContent>
@@ -1695,15 +1705,17 @@ export function View({ initialData }: ViewProps = {}) {
               ) : hasRecordFilters ? (
                 <EmptyState
                   icon={Globe}
-                  title="No records match your filters"
-                  description="Try adjusting or clearing filters to see more records"
+                  title={t('No records match your filters')}
+                  description={t(
+                    'Try adjusting or clearing filters to see more records',
+                  )}
                   variant="card"
                 />
               ) : (
                 <EmptyState
                   icon={Globe}
-                  title="No DNS records"
-                  description="Add your first DNS record to get started"
+                  title={t('No DNS records')}
+                  description={t('Add your first DNS record to get started')}
                   variant="card"
                 />
               )}
@@ -1714,11 +1726,12 @@ export function View({ initialData }: ViewProps = {}) {
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Auto renewal
+                      {t('Auto renewal')}
                     </h3>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      Choose whether this domain should renew automatically
-                      before it expires.
+                      {t(
+                        'Choose whether this domain should renew automatically before it expires.',
+                      )}
                     </p>
                   </div>
                   <div className="border-t border-border" />
@@ -1729,7 +1742,7 @@ export function View({ initialData }: ViewProps = {}) {
                           htmlFor="auto-renewal-toggle"
                           className="text-[13px] font-medium text-foreground"
                         >
-                          Enable auto renewal
+                          {t('Enable auto renewal')}
                         </Label>
                         <p className="text-[12px] text-muted-foreground">
                           <span
@@ -1738,7 +1751,7 @@ export function View({ initialData }: ViewProps = {}) {
                               autoRenewalStatusClassName,
                             )}
                           >
-                            {autoRenewalEnabled ? 'Enabled' : 'Disabled'}
+                            {autoRenewalEnabled ? t('Enabled') : t('Disabled')}
                           </span>
                         </p>
                       </div>
@@ -1754,7 +1767,7 @@ export function View({ initialData }: ViewProps = {}) {
                     </div>
                     <div className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Renewal price
+                        {t('Renewal price')}
                       </p>
                       <p className="mt-1 text-[13px] font-medium text-foreground">
                         {domain.renewalPrice > 0
@@ -1764,8 +1777,9 @@ export function View({ initialData }: ViewProps = {}) {
                     </div>
                     {!canManageAutoRenewal && (
                       <p className="mt-3 text-[12px] text-muted-foreground">
-                        Auto renewal is available for domains registered with
-                        Appwrite.
+                        {t(
+                          'Auto renewal is available for domains registered with Appwrite.', // pragma: allowlist secret
+                        )}
                       </p>
                     )}
                   </div>
@@ -1780,7 +1794,7 @@ export function View({ initialData }: ViewProps = {}) {
                       }
                       onClick={handleUpdateAutoRenewal}
                     >
-                      Update
+                      {t('Update')}
                     </Button>
                   </div>
                 </div>
@@ -1791,19 +1805,19 @@ export function View({ initialData }: ViewProps = {}) {
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Change organization
+                      {t('Change organization')}
                     </h3>
                   </div>
                   <div className="border-t border-border" />
                   <div className="px-6 py-4">
                     <p className="text-[13px] text-muted-foreground mb-4">
-                      Select an organization you own to move this domain.
+                      {t('Select an organization you own to move this domain.')}
                     </p>
                     <Label
                       htmlFor="organization"
                       className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
                     >
-                      Move to
+                      {t('Move to')}
                     </Label>
                     <Select
                       value={selectedOrgId}
@@ -1817,8 +1831,8 @@ export function View({ initialData }: ViewProps = {}) {
                         <SelectValue
                           placeholder={
                             organizationsLoading && organizations.length === 0
-                              ? 'Loading organizations...'
-                              : 'Select destination'
+                              ? t('Loading organizations...')
+                              : t('Select destination')
                           }
                         />
                       </SelectTrigger>
@@ -1826,8 +1840,8 @@ export function View({ initialData }: ViewProps = {}) {
                         {organizations.length === 0 ? (
                           <div className="px-2 py-1.5 text-[13px] text-muted-foreground">
                             {organizationsLoading
-                              ? 'Loading...'
-                              : 'No other organizations available'}
+                              ? t('Loading...')
+                              : t('No other organizations available')}
                           </div>
                         ) : (
                           organizations.map((org) => (
@@ -1850,7 +1864,7 @@ export function View({ initialData }: ViewProps = {}) {
                       }
                       onClick={() => setTransferDialogOpen(true)}
                     >
-                      Move
+                      {t('Move')}
                     </Button>
                   </div>
                 </div>
@@ -1864,20 +1878,21 @@ export function View({ initialData }: ViewProps = {}) {
                 >
                   <DialogContent className="sm:max-w-md p-0">
                     <DialogHeader className="px-6 pt-6 text-start">
-                      <DialogTitle>Change organization</DialogTitle>
+                      <DialogTitle>{t('Change organization')}</DialogTitle>
                       <DialogDescription className="text-[13px] mt-2">
-                        Are you sure you want to move{' '}
-                        <strong>{domain.domain}</strong> to{' '}
+                        {t('Are you sure you want to move')}{' '}
+                        <strong>{domain.domain}</strong> {t('to')}{' '}
                         <strong>
                           {organizations.find(
                             (org) => org.value === selectedOrgId,
-                          )?.label || 'the selected organization'}
+                          )?.label || t('the selected organization')}
                         </strong>
                         ?
                         <br />
                         <br />
-                        Members who are not part of the destination organization
-                        must be invited to gain access to this domain.
+                        {t(
+                          'Members who are not part of the destination organization must be invited to gain access to this domain.',
+                        )}
                       </DialogDescription>
                     </DialogHeader>
 
@@ -1888,7 +1903,7 @@ export function View({ initialData }: ViewProps = {}) {
                         className="h-9 text-[13px]"
                         onClick={() => setTransferDialogOpen(false)}
                       >
-                        Cancel
+                        {t('Cancel')}
                       </Button>
                       <Button
                         size="sm"
@@ -1896,7 +1911,7 @@ export function View({ initialData }: ViewProps = {}) {
                         disabled={transferDomainMutation.isPending}
                         onClick={handleTransferDomain}
                       >
-                        Move
+                        {t('Move')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -1908,12 +1923,12 @@ export function View({ initialData }: ViewProps = {}) {
                   <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                     <div className="px-6 py-4">
                       <h3 className="text-[15px] font-semibold text-foreground">
-                        Transfer to another registrar
+                        {t('Transfer to another registrar')}
                       </h3>
                       <p className="text-[13px] text-muted-foreground mt-2">
-                        Generate an authorization code to move this domain to a
-                        different registrar. You will provide this code at the
-                        receiving registrar.
+                        {t(
+                          'Generate an authorization code to move this domain to a different registrar. You will provide this code at the receiving registrar.',
+                        )}
                       </p>
                     </div>
                     <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -1926,7 +1941,7 @@ export function View({ initialData }: ViewProps = {}) {
                           setRegistrarTransferDialogOpen(true)
                         }}
                       >
-                        Get transfer code
+                        {t('Get transfer code')}
                       </Button>
                     </div>
                   </div>
@@ -1945,13 +1960,17 @@ export function View({ initialData }: ViewProps = {}) {
                       <DialogHeader className="px-6 pt-6 pb-4 text-start">
                         <DialogTitle>
                           {registrarTransferAuthCode
-                            ? 'Your transfer code'
-                            : 'Transfer to another registrar'}
+                            ? t('Your transfer code')
+                            : t('Transfer to another registrar')}
                         </DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
                           {registrarTransferAuthCode
-                            ? 'Copy this code and submit it at your new registrar to complete the transfer out.'
-                            : 'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.'}
+                            ? t(
+                                'Copy this code and submit it at your new registrar to complete the transfer out.',
+                              )
+                            : t(
+                                'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.',
+                              )}
                         </DialogDescription>
                       </DialogHeader>
                       {registrarTransferAuthCode ? (
@@ -1975,13 +1994,13 @@ export function View({ initialData }: ViewProps = {}) {
                                 }
                                 title={
                                   transferCodeRevealed
-                                    ? 'Hide code'
-                                    : 'Show code'
+                                    ? t('Hide code')
+                                    : t('Show code')
                                 }
                                 aria-label={
                                   transferCodeRevealed
-                                    ? 'Hide code'
-                                    : 'Show code'
+                                    ? t('Hide code')
+                                    : t('Show code')
                                 }
                               >
                                 {transferCodeRevealed ? (
@@ -2004,7 +2023,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 )
                               }
                             >
-                              Copy code
+                              {t('Copy code')}
                             </Button>
                             <Button
                               size="sm"
@@ -2013,7 +2032,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 setRegistrarTransferDialogOpen(false)
                               }
                             >
-                              Close
+                              {t('Close')}
                             </Button>
                           </div>
                         </>
@@ -2027,7 +2046,7 @@ export function View({ initialData }: ViewProps = {}) {
                               setRegistrarTransferDialogOpen(false)
                             }
                           >
-                            Cancel
+                            {t('Cancel')}
                           </Button>
                           <Button
                             size="sm"
@@ -2035,7 +2054,7 @@ export function View({ initialData }: ViewProps = {}) {
                             disabled={createTransferOutMutation.isPending}
                             onClick={() => createTransferOutMutation.mutate()}
                           >
-                            Generate code
+                            {t('Generate code')}
                           </Button>
                         </div>
                       )}
@@ -2049,14 +2068,16 @@ export function View({ initialData }: ViewProps = {}) {
                 <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
-                      Delete domain
+                      {t('Delete domain')}
                     </h3>
                   </div>
                   <div className="border-t border-destructive/20" />
                   <div className="px-6 py-4">
                     <p className="text-[13px] text-muted-foreground">
-                      Permanently delete this domain and all associated DNS
-                      records. This action cannot be undone.
+                      {t(
+                        'Permanently delete this domain and all associated DNS records.',
+                      )}{' '}
+                      {t('This action cannot be undone.')}
                     </p>
 
                     {/* Domain Info Summary */}
@@ -2068,8 +2089,8 @@ export function View({ initialData }: ViewProps = {}) {
                         </p>
                         <p className="text-[12px] text-muted-foreground">
                           {domain.nameservers?.toLowerCase() === 'appwrite'
-                            ? 'Verified'
-                            : 'Unverified'}
+                            ? t('Verified')
+                            : t('Unverified')}
                         </p>
                       </div>
                     </div>
@@ -2085,21 +2106,21 @@ export function View({ initialData }: ViewProps = {}) {
                           size="sm"
                           className="h-9 text-[13px]"
                         >
-                          Delete domain
+                          {t('Delete domain')}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md p-0">
                         <DialogHeader className="px-6 pt-6 text-start">
-                          <DialogTitle>Delete Domain</DialogTitle>
+                          <DialogTitle>{t('Delete Domain')}</DialogTitle>
                           <DialogDescription className="text-[13px] mt-2">
-                            Are you sure you want to delete{' '}
+                            {t('Are you sure you want to delete')}{' '}
                             {domain && (
                               <span className="font-medium text-foreground">
                                 {domain.domain}
                               </span>
                             )}{' '}
-                            and all its DNS records? This action cannot be
-                            undone.
+                            {t('and all its DNS records?')}{' '}
+                            {t('This action cannot be undone.')}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="border-t border-border" />
@@ -2118,28 +2139,28 @@ export function View({ initialData }: ViewProps = {}) {
                                   <p className="text-[11px] text-muted-foreground">
                                     {domain.nameservers?.toLowerCase() ===
                                     'appwrite'
-                                      ? 'Verified'
-                                      : 'Unverified'}
+                                      ? t('Verified')
+                                      : t('Unverified')}
                                   </p>
                                 </div>
                               </div>
                             )}
                           </div>
                           <label className="text-[13px] text-muted-foreground">
-                            Type{' '}
+                            {t('Type')}{' '}
                             {domain && (
                               <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
                                 {domain.domain}
                               </span>
                             )}{' '}
-                            to confirm
+                            {t('to confirm')}
                           </label>
                           <Input
                             value={deleteConfirmation}
                             onChange={(e) =>
                               setDeleteConfirmation(e.target.value)
                             }
-                            placeholder="Enter domain name"
+                            placeholder={t('Enter domain name')}
                             className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
                             autoFocus
                           />
@@ -2154,7 +2175,7 @@ export function View({ initialData }: ViewProps = {}) {
                               setDeleteConfirmation('')
                             }}
                           >
-                            Cancel
+                            {t('Cancel')}
                           </Button>
                           <Button
                             variant="destructive"
@@ -2166,7 +2187,7 @@ export function View({ initialData }: ViewProps = {}) {
                             }
                             onClick={handleDeleteDomain}
                           >
-                            Delete
+                            {t('Delete')}
                           </Button>
                         </div>
                       </DialogContent>

@@ -10,6 +10,7 @@ import {
   POSTGRES_SQL_RESULTS_MIN_HEIGHT_PX,
 } from '@/lib/resizable-layout'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 /** Same vertical handle as API Explorer / `ResizableHandle` (hairline + 8px hit area). */
 const HANDLE_CLASS = cn(
@@ -52,6 +53,7 @@ export function PostgresSqlEditorContainer({
   children,
   className,
 }: PostgresSqlEditorContainerProps) {
+  const t = useT()
   const containerRef = useRef<HTMLDivElement>(null)
   const editorPaneRef = useRef<HTMLDivElement>(null)
   const isDraggingRef = useRef(false)
@@ -172,7 +174,7 @@ export function PostgresSqlEditorContainer({
       <div
         role="separator"
         aria-orientation="horizontal"
-        aria-label="Resize SQL editor"
+        aria-label={t('Resize SQL editor')}
         data-resize-handle-state={isDragging ? 'drag' : 'idle'}
         className={HANDLE_CLASS}
         onPointerDown={handlePointerDown}

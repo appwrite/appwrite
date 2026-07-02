@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import type { Organization } from '@/lib/utils/mock-data'
 import { cn } from '@/lib/utils'
 import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import { useT } from '@/lib/i18n/translate'
 
 const SHARD_SPECS = [
   {
@@ -83,7 +84,8 @@ export function ProjectSelectorPlanBadge({
   upcomingDowngrade = false,
   className,
 }: ProjectSelectorPlanBadgeProps) {
-  const label = upcomingDowngrade ? 'Downgraded' : getPlanDisplayName(plan)
+  const t = useT()
+  const label = upcomingDowngrade ? t('Downgraded') : getPlanDisplayName(plan)
   const colors = upcomingDowngrade
     ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
     : getPlanBadgeColor(plan)

@@ -20,6 +20,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * AvailableCreditsSection Component
@@ -51,6 +52,7 @@ export function AvailableCreditsSection({
   onAddCredits,
   orgId,
 }: AvailableCreditsSectionProps) {
+  const t = useT()
   const [requestedPage, setRequestedPage] = useState(0)
   const [displayedPage, setDisplayedPage] = useState(0)
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
@@ -168,12 +170,12 @@ export function AvailableCreditsSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available credits
+            {t('Available credits')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading credits...
+            {t('Loading credits...')}
           </p>
         </div>
       </div>
@@ -185,13 +187,13 @@ export function AvailableCreditsSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available credits
+            {t('Available credits')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
           <Alert>
             <AlertDescription className="text-[13px]">
-              Upgrade to add credits.
+              {t('Upgrade to add credits.')}
             </AlertDescription>
           </Alert>
         </div>
@@ -207,12 +209,12 @@ export function AvailableCreditsSection({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Available credits
+            {t('Available credits')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            {error instanceof Error ? error.message : 'Failed to load credits'}
+            {error instanceof Error ? error.message : t('Failed to load credits')}
           </p>
         </div>
       </div>
@@ -226,11 +228,12 @@ export function AvailableCreditsSection({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-[15px] font-semibold text-foreground">
-              Available credits
+              {t('Available credits')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-              Credits expire on the date shown for each code. Unused credits do
-              not roll over after that date.
+              {t(
+                'Credits expire on the date shown for each code. Unused credits do not roll over after that date.',
+              )}
             </p>
           </div>
           {hasCredits && (
@@ -238,7 +241,7 @@ export function AvailableCreditsSection({
               variant="info"
               className="h-6 px-2.5 text-[10px] font-medium shrink-0"
             >
-              Balance: {formatCurrency(totalAvailableCredit)}
+              {t('Balance:')} {formatCurrency(totalAvailableCredit)}
             </Badge>
           )}
         </div>
@@ -257,7 +260,7 @@ export function AvailableCreditsSection({
               {formatCurrency(totalAvailableCredit)}
             </p>
             <p className="text-[12px] text-muted-foreground">
-              Available balance
+              {t('Available balance')}
             </p>
           </div>
         </div>
@@ -266,8 +269,9 @@ export function AvailableCreditsSection({
         {!hasCredits && processedCredits.length === 0 && (
           <div className="mt-4 text-center py-4">
             <p className="text-[13px] text-muted-foreground">
-              You don't have any credits. Credits can be used to offset your
-              monthly charges.
+              {t(
+                "You don't have any credits. Credits can be used to offset your monthly charges.",
+              )}
             </p>
           </div>
         )}
@@ -280,7 +284,7 @@ export function AvailableCreditsSection({
             <div className="flex items-center gap-2">
               <Ticket className="h-4 w-4 text-muted-foreground" />
               <span className="text-[13px] font-medium text-foreground">
-                Credit History
+                {t('Credit History')}
               </span>
               <span className="text-[11px] text-muted-foreground">
                 ({creditsTotal})
@@ -293,16 +297,16 @@ export function AvailableCreditsSection({
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    Code
+                    {t('Code')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                    Total
+                    {t('Total')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                    Remaining
+                    {t('Remaining')}
                   </TableHead>
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                    Credit expires
+                    {t('Credit expires')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -356,7 +360,7 @@ export function AvailableCreditsSection({
                                 variant="error"
                                 className="h-5 px-1.5 text-[10px] shrink-0"
                               >
-                                Expired
+                                {t('Expired')}
                               </Badge>
                             ) : credit.expiresAtDate &&
                               !isExpired &&
@@ -366,7 +370,7 @@ export function AvailableCreditsSection({
                                 variant="warning"
                                 className="h-5 px-1.5 text-[10px] shrink-0"
                               >
-                                Expires soon
+                                {t('Expires soon')}
                               </Badge>
                             ) : null}
                           </div>
@@ -387,9 +391,9 @@ export function AvailableCreditsSection({
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-border px-6 py-3">
               <span className="text-[12px] text-muted-foreground">
-                Showing {displayedPage * ITEMS_PER_PAGE + 1}–
+                {t('Showing')} {displayedPage * ITEMS_PER_PAGE + 1}–
                 {Math.min((displayedPage + 1) * ITEMS_PER_PAGE, creditsTotal)}{' '}
-                of {creditsTotal}
+                {t('of')} {creditsTotal}
               </span>
               <div className="flex items-center gap-1">
                 <Button
@@ -430,7 +434,7 @@ export function AvailableCreditsSection({
           onClick={onAddCredits}
         >
           <Plus className="h-4 w-4" />
-          Add credits
+          {t('Add credits')}
         </Button>
       </div>
     </div>

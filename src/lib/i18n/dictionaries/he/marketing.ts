@@ -1,0 +1,1213 @@
+/**
+ * Hebrew translations for marketing/website pages (pricing, company, products, etc).
+ * Keys are the exact English source strings (English is the source of truth).
+ */
+export const heMarketingDictionary: Record<string, string> = {
+  '1 vendor • 1 subscription • 1 bill': 'ספק אחד • מנוי אחד • חשבונית אחת',
+  '1-10 employees': '1-10 עובדים',
+  '1.0 release notes': 'הערות גרסה 1.0',
+  '10 active sessions': '10 סשנים פעילים',
+  '1001-5000 employees': '1001-5000 עובדים',
+  '11-50 employees': '11-50 עובדים',
+  '120+ edge locations': 'יותר מ-120 נקודות קצה',
+  '13+ runtimes': 'יותר מ-13 סביבות ריצה',
+  '2 selected': '2 נבחרו',
+  '201-500 employees': '201-500 עובדים',
+  '24/7 support': 'תמיכה 24/7',
+  '2m ago': 'לפני 2 דקות',
+  '3 channels': '3 ערוצים',
+  '3 members · Owner access': '3 חברים · הרשאת בעלים',
+  '3 targets': '3 יעדים',
+  '3 topics': '3 נושאים',
+  '30 days': '30 יום',
+  '30+ providers': 'יותר מ-30 ספקים',
+  '30s limit': 'מגבלת 30 שניות',
+  '4/7 compliant': '4/7 תואמים',
+  '50,000 GitHub stars': '50,000 כוכבי GitHub',
+  '5000+ employees': 'יותר מ-5000 עובדים',
+  '501-1000 employees': '501-1000 עובדים',
+  '51-200 employees': '51-200 עובדים',
+  '6-digit code': 'קוד בן 6 ספרות',
+  '67% smaller': 'קטן ב-67%',
+  '90-day log retention': 'שמירת לוגים ל-90 יום',
+  'A complete development platform, backed by the open source community, built to keep teams efficient by cutting context switching and integration overhead. From auth, databases, storage, and functions to MCP servers, Skills, and agent integrations, everything lives in one place so Appwrite moves with you from ideation to scale.': // pragma: allowlist secret
+    'פלטפורמת פיתוח שלמה, בגיבוי קהילת הקוד הפתוח, שנבנתה כדי לשמור על יעילות הצוות על ידי צמצום מעברי הקשר ותקורת האינטגרציות. מאימות, מסדי נתונים, אחסון ופונקציות ועד שרתי MCP, Skills ואינטגרציות לסוכנים, הכול נמצא במקום אחד כך ש-Appwrite מתקדמת איתכם מהרעיון ועד לסקייל.', // pragma: allowlist secret
+  'A customer completes checkout': 'לקוח משלים תשלום בקופה',
+  'A great fit for passion projects and small applications.': 'התאמה מצוינת לפרויקטים אישיים ולאפליקציות קטנות.',
+  'A premium, cloud-equal edition with advanced management tools. The same platform and tooling Appwrite uses to run Cloud at 500K projects scale, deployed in your environment.': // pragma: allowlist secret
+    'מהדורת פרימיום, זהה לענן, עם כלי ניהול מתקדמים. אותה פלטפורמה ואותם כלים שבהם Appwrite מפעילה את הענן בקנה מידה של 500 אלף פרויקטים, פרוסים בסביבה שלכם.', // pragma: allowlist secret
+  'Accepted startups receive:': 'סטארטאפים שמתקבלים מקבלים:',
+  'Access': 'גישה',
+  'Access the Education plan': 'גישה לתוכנית Education',
+  'Account alerts': 'התראות חשבון',
+  'Active': 'פעיל',
+  'Active deployment': 'פריסה פעילה',
+  'Active now · 2h ago': 'פעיל כעת · לפני שעתיים',
+  'Activity logs': 'יומני פעילות',
+  'Add slash commands to your Discord servers.': 'הוסיפו פקודות סלאש לשרתי ה-Discord שלכם.',
+  'Additional API bandwidth': 'רוחב פס API נוסף',
+  'Additional connections': 'חיבורים נוספים',
+  'Additional executions': 'הרצות נוספות',
+  'Additional GB-hours': 'שעות GB נוספות',
+  'Additional projects': 'פרויקטים נוספים',
+  'Additional reads': 'קריאות נוספות',
+  'Additional screenshots': 'צילומי מסך נוספים',
+  'Additional storage': 'אחסון נוסף',
+  'Additional transformations': 'טרנספורמציות נוספות',
+  'Additional users': 'משתמשים נוספים',
+  'Additional writes': 'כתיבות נוספות',
+  'Advanced observability': 'ניטור ותצפיתיות מתקדמים',
+  'Advisor': 'יועץ',
+  'After': 'אחרי',
+  'Agencies and consultancies': 'סוכנויות וחברות ייעוץ',
+  'AI-native': 'AI בליבת העבודה',
+  'AI-native team': 'צוות AI-native',
+  'AI-powered development': 'פיתוח מבוסס AI',
+  'Alerts': 'התראות',
+  'Algorithm': 'אלגוריתם',
+  'All': 'הכול',
+  'All categories': 'כל הקטגוריות',
+  'All in one platform': 'הכול בפלטפורמה אחת',
+  'All platform services included': 'כל שירותי הפלטפורמה כלולים',
+  'All-in-one platform': 'פלטפורמת הכול-באחד',
+  'Allow': 'אפשר',
+  'Allow admin panel': 'אפשר גישה לפאנל הניהול',
+  'Allowed': 'מאושר',
+  'Analytics': 'אנליטיקה',
+  'and': 'וכן',
+  'And more': 'ועוד',
+  'Angel Investor': "משקיע אנג'ל",
+  'Angel Investors': "משקיעי אנג'ל",
+  'Announcements': 'הכרזות',
+  'Anonymous': 'אנונימי',
+  "Any other details you'd like to share?": 'פרטים נוספים שתרצו לשתף?',
+  "Any student enrolled in the GitHub Student Developer Pack can apply for free and receive Appwrite's Education plan until graduation.": // pragma: allowlist secret
+    'כל סטודנט הרשום ל-GitHub Student Developer Pack יכול להגיש מועמדות בחינם ולקבל את תוכנית ה-Education של Appwrite עד סיום הלימודים.', // pragma: allowlist secret
+  'Anyone can join and help Appwrite become better.': 'כל אחד יכול להצטרף ולעזור ל-Appwrite להשתפר.', // pragma: allowlist secret
+  'API bandwidth': 'רוחב פס API',
+  'App': 'אפליקציה',
+  'Applies to new files in this bucket': 'חל על קבצים חדשים בבאקט זה',
+  'Apply now': 'הגישו מועמדות',
+  'Apply to the program': 'הגישו מועמדות לתוכנית',
+  'apply.': 'חלים.',
+  'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.': // pragma: allowlist secret
+    'Appwrite 2.0 הביאה חוויית פלטפורמה מרעננת ויסודות חזקים יותר, מונעת על ידי Hyperloop B, מנוע חדש לפלטפורמה, ו-Console IV, קונסולה מהדור הבא שנבנתה מחדש עם TanStack.', // pragma: allowlist secret
+  'Appwrite Arena launched as an open benchmark for evaluating how effectively AI models understand and work with Appwrite APIs and workflows.': // pragma: allowlist secret
+    'Appwrite Arena הושקה כמדד פתוח להערכת מידת ההבנה והעבודה של מודלי AI עם ממשקי ה-API ותהליכי העבודה של Appwrite.', // pragma: allowlist secret
+  'Appwrite Cloud entered public beta, making the platform available without self-hosting and opening the door to managed infrastructure for teams of every size.': // pragma: allowlist secret
+    'Appwrite Cloud נכנסה לבטא ציבורית, מה שהפך את הפלטפורמה לזמינה ללא אירוח עצמי ופתח את הדלת לתשתית מנוהלת לצוותים בכל גודל.', // pragma: allowlist secret
+  'Appwrite Cloud reached general availability with production-grade reliability, expanded infrastructure, and the performance teams need to run applications at scale.': // pragma: allowlist secret
+    'Appwrite Cloud הגיעה לזמינות כללית עם אמינות ברמת פרודקשן, תשתית מורחבת והביצועים שצוותים צריכים כדי להריץ אפליקציות בקנה מידה גדול.', // pragma: allowlist secret
+  'Appwrite Cloud will automatically verify your GitHub Student Developer Pack membership and apply the Education plan to your account. You can then start using Appwrite right away.': // pragma: allowlist secret
+    'Appwrite Cloud תאמת אוטומטית את חברותכם ב-GitHub Student Developer Pack ותחיל את תוכנית ה-Education על החשבון שלכם. לאחר מכן תוכלו להתחיל להשתמש ב-Appwrite מיד.', // pragma: allowlist secret
+  'Appwrite completed a $27M Series A led by Tiger Global, with participation from existing investors, to accelerate product development and global growth.': // pragma: allowlist secret
+    'Appwrite השלימה סבב Series A של 27 מיליון דולר בהובלת Tiger Global, בהשתתפות משקיעים קיימים, כדי להאיץ את פיתוח המוצר והצמיחה הגלובלית.', // pragma: allowlist secret
+  'Appwrite Firewall with WAF capabilities to filter malicious traffic and protect applications at the edge.': // pragma: allowlist secret
+    'Appwrite Firewall עם יכולות WAF לסינון תעבורה זדונית ולהגנה על אפליקציות בקצה הרשת.', // pragma: allowlist secret
+  'Appwrite for Enterprise': 'Appwrite לארגונים', // pragma: allowlist secret
+  'Appwrite includes a migration tool to help you move from other platforms. Our team can also assist if you need additional help during your transition.': // pragma: allowlist secret
+    'Appwrite כוללת כלי מיגרציה שיעזור לכם לעבור מפלטפורמות אחרות. הצוות שלנו ישמח לסייע אם תזדקקו לעזרה נוספת במהלך המעבר.', // pragma: allowlist secret
+  "Appwrite introduced native PostgreSQL and MySQL database solutions to the platform, giving teams dedicated relational engines for SQL workflows, portable schemas, and production workloads alongside Appwrite's managed data layer.": // pragma: allowlist secret
+    'Appwrite הוסיפה לפלטפורמה פתרונות מסדי נתונים נייטיביים של PostgreSQL ו-MySQL, והעניקה לצוותים מנועים רלציוניים ייעודיים לתהליכי SQL, סכמות ניידות ועומסי פרודקשן לצד שכבת הנתונים המנוהלת של Appwrite.', // pragma: allowlist secret
+  'Appwrite is built for and by developers, with a strong focus on your experience. Never worry about scaling or security again.': // pragma: allowlist secret
+    'Appwrite נבנתה למפתחים ועל ידי מפתחים, עם דגש חזק על החוויה שלכם. לא תצטרכו לדאוג יותר לסקיילינג או לאבטחה.', // pragma: allowlist secret
+  'Appwrite is built for developers, agents, and AI-assisted workflows, and our team works the same way. We integrate AI into how we plan, build, ship, and support, pairing human judgment with tooling that helps us move faster without adding unnecessary overhead.': // pragma: allowlist secret
+    'Appwrite נבנתה למפתחים, לסוכנים ולתהליכי עבודה נתמכי AI, והצוות שלנו עובד באותה צורה. אנחנו משלבים AI באופן שבו אנחנו מתכננים, בונים, משחררים ותומכים, ומשלבים שיקול דעת אנושי עם כלים שעוזרים לנו לנוע מהר יותר בלי תקורה מיותרת.', // pragma: allowlist secret
+  'Appwrite is built to handle large traffic spikes and grow with your application. During a major launch, we can also provide increased support and on-call help.': // pragma: allowlist secret
+    'Appwrite נבנתה להתמודד עם קפיצות תעבורה גדולות ולצמוח יחד עם האפליקציה שלכם. במהלך השקה משמעותית נוכל גם לספק תמיכה מוגברת וזמינות מיידית.', // pragma: allowlist secret
+  'Appwrite is proudly backed by some of the top investors in the industry.': 'Appwrite נתמכת בגאווה על ידי כמה מהמשקיעים המובילים בתעשייה.', // pragma: allowlist secret
+  'Appwrite launched publicly as an open-source backend platform. Designed from the outset to abstract cloud complexity through familiar APIs and protocols, the project gained rapid traction in its first month, including strong visibility across developer communities.': // pragma: allowlist secret
+    'Appwrite הושקה לציבור כפלטפורמת backend בקוד פתוח. הפרויקט, שתוכנן מלכתחילה להפשיט את מורכבות הענן באמצעות ממשקי API ופרוטוקולים מוכרים, צבר תאוצה מהירה בחודש הראשון, כולל חשיפה רחבה בקהילות מפתחים.', // pragma: allowlist secret
+  'Appwrite Network docs': 'תיעוד Appwrite Network', // pragma: allowlist secret
+  'Appwrite offers an all-in-one hosting platform for you to build and deploy your product from a single place.': // pragma: allowlist secret
+    'Appwrite מציעה פלטפורמת אירוח הכול-באחד שמאפשרת לכם לבנות ולפרוס את המוצר ממקום אחד.', // pragma: allowlist secret
+  'Appwrite on GitHub': 'Appwrite ב-GitHub', // pragma: allowlist secret
+  'Appwrite on Product Hunt as #1 Product of the Week': 'Appwrite ב-Product Hunt כמוצר מספר 1 של השבוע', // pragma: allowlist secret
+  'Appwrite Presences introduced a Realtime API for short-lived user statuses, with built-in channels, automatic expiry, and permission-aware subscriptions.': // pragma: allowlist secret
+    'Appwrite Presences הציגה Realtime API לסטטוסי משתמשים קצרי חיים, עם ערוצים מובנים, תפוגה אוטומטית ומינויים מודעי הרשאות.', // pragma: allowlist secret
+  'Appwrite raised $10M in seed funding led by Bessemer Venture Partners and Flybridge, with participation from Ibex Investors, Seedcamp, and the Abraham Fund. The round supported company formation, brought foundational engineering talent from the open-source contributor community, and expanded the investor and board network.': // pragma: allowlist secret
+    'Appwrite גייסה 10 מיליון דולר בסבב Seed בהובלת Bessemer Venture Partners ו-Flybridge, בהשתתפות Ibex Investors, Seedcamp וקרן Abraham. הסבב תמך בהקמת החברה, הביא כישרונות הנדסיים מובילים מקהילת התורמים בקוד פתוח והרחיב את רשת המשקיעים והדירקטוריון.', // pragma: allowlist secret
+  'Appwrite reduces the time and resources spent building a backend infrastructure from scratch.': // pragma: allowlist secret
+    'Appwrite מצמצמת את הזמן והמשאבים המושקעים בבניית תשתית backend מאפס.', // pragma: allowlist secret
+  'Appwrite shipped a redesigned Console with a new in-house design system and a developer experience built specifically for managing production backends at scale.': // pragma: allowlist secret
+    'Appwrite שחררה קונסולה מעוצבת מחדש עם מערכת עיצוב חדשה מבית וחוויית מפתח שנבנתה במיוחד לניהול סביבות backend בפרודקשן בקנה מידה גדול.', // pragma: allowlist secret
+  'Appwrite Sites launched as an open-source application hosting product, letting teams develop, deploy, and scale web apps from the same platform as their backend services.': // pragma: allowlist secret
+    'Appwrite Sites הושק כמוצר אירוח אפליקציות בקוד פתוח, שמאפשר לצוותים לפתח, לפרוס ולהרחיב אפליקציות ווב מאותה פלטפורמה שבה פועלים שירותי ה-backend שלהם.', // pragma: allowlist secret
+  'Appwrite surpassed 50,000 GitHub stars, reflecting sustained adoption and the strength of its global open-source community.': // pragma: allowlist secret
+    'Appwrite חצתה את רף 50,000 כוכבי GitHub, עדות לאימוץ מתמשך ולעוצמת קהילת הקוד הפתוח הגלובלית שלה.', // pragma: allowlist secret
+  'Appwrite team members during the first Init shoot in Prague': 'חברי צוות Appwrite במהלך צילומי ה-Init הראשונים בפראג', // pragma: allowlist secret
+  'Appwrite team members working together at a cafe in Barcelona': 'חברי צוות Appwrite עובדים יחד בבית קפה בברצלונה', // pragma: allowlist secret
+  "Appwrite unveiled a refreshed brand identity, including a new logo, redesigned website, and improved documentation, reflecting the company's evolution from a backend service into an all-in-one open-source development platform.": // pragma: allowlist secret
+    'Appwrite חשפה זהות מותג מרעננת, כולל לוגו חדש, אתר מעוצב מחדש ותיעוד משופר, המשקפים את התפתחות החברה משירות backend לפלטפורמת פיתוח הכול-באחד בקוד פתוח.', // pragma: allowlist secret
+  'Appwrite won Best Developer Tool at the 2022 Golden Kitty Awards': 'Appwrite זכתה בפרס כלי המפתחים הטוב ביותר ב-Golden Kitty Awards לשנת 2022', // pragma: allowlist secret
+  "Appwrite won Product Hunt's Golden Kitty Award for Best Developer Tool, recognizing the platform's impact among makers and the broader developer community.": // pragma: allowlist secret
+    'Appwrite זכתה בפרס Golden Kitty של Product Hunt לכלי המפתחים הטוב ביותר, הוקרה להשפעת הפלטפורמה בקרב יוצרים וקהילת המפתחים הרחבה.', // pragma: allowlist secret
+  'Appwrite-powered authentication screens generator for any application.': 'מחולל מסכי אימות מבוסס Appwrite לכל אפליקציה.', // pragma: allowlist secret
+  'Appwrite-powered platform where you can sell your digital products online.': 'פלטפורמה מבוססת Appwrite למכירת מוצרים דיגיטליים אונליין.', // pragma: allowlist secret
+  'Apr 30, 2026': '30 באפריל 2026',
+  'Architecture and deployment guidance for your stack.': 'הכוונה בארכיטקטורה ובפריסה עבור הסטאק שלכם.',
+  'Are OTP SMS costs covered by Appwrite?': 'האם עלויות SMS של OTP מכוסות על ידי Appwrite?', // pragma: allowlist secret
+  'Arena announcement': 'הכרזת Arena',
+  'As your business grows, so do the opportunities with Appwrite. Our Partner Program is designed to evolve with you, offering flexible tiers that adapt to your unique needs and goals.': // pragma: allowlist secret
+    'ככל שהעסק שלכם צומח, כך גדלות גם ההזדמנויות עם Appwrite. תוכנית השותפים שלנו נועדה להתפתח יחד איתכם, עם דרגות גמישות שמותאמות לצרכים ולמטרות הייחודיים שלכם.', // pragma: allowlist secret
+  'Ask questions and let GPT answer from your app.': 'שאלו שאלות ותנו ל-GPT לענות מתוך האפליקציה שלכם.',
+  'Async': 'אסינכרוני',
+  'Attach Storage to existing object-storage pipelines without rebuilding upload flows.': 'חברו את Storage לצינורות אחסון אובייקטים קיימים בלי לבנות מחדש תהליכי העלאה.',
+  'Audited security controls': 'בקרות אבטחה מבוקרות',
+  'Auth methods': 'שיטות אימות',
+  'Auth UI': 'ממשק אימות',
+  'Auth user': 'משתמש Auth',
+  'Auth, databases, storage, functions, messaging, hosting, and network security in one stack your teams already know how to operate.':
+    'אימות, מסדי נתונים, אחסון, פונקציות, הודעות, אירוח ואבטחת רשת בסטאק אחד שהצוותים שלכם כבר יודעים לתפעל.',
+  'Authenticator app': 'אפליקציית אימות',
+  'Auto-build on push with branch and path filters.': 'בנייה אוטומטית בכל push עם מסנני ענפים ונתיבים.',
+  'Auto-scales with demand, schedules, and events': 'מתרחב אוטומטית לפי ביקוש, תזמונים ואירועים',
+  'Automatic TLS': 'TLS אוטומטי',
+  'Back to catalog': 'חזרה לקטלוג',
+  'Back to form': 'חזרה לטופס',
+  'Backed by top investors': 'בגיבוי משקיעים מובילים',
+  'Background': 'רקע',
+  'Backups': 'גיבויים',
+  'Backups retention': 'שמירת גיבויים',
+  'Badge': 'תג',
+  'Bandwidth': 'רוחב פס',
+  'Become a Partner': 'הפכו לשותפים',
+  'Before': 'לפני',
+  'Behind the scenes: portrait setup for the first Init in Prague': 'מאחורי הקלעים: הכנת צילומי פורטרט ל-Init הראשון בפראג',
+  'Behind the scenes: reviewing takes on the first Init set in Prague': 'מאחורי הקלעים: צפייה בטייקים בסט ה-Init הראשון בפראג',
+  'Benchmark': 'בנצ׳מארק',
+  'Benefits of Appwrite for startups': 'היתרונות של Appwrite לסטארטאפים', // pragma: allowlist secret
+  'Beyond early stage': 'מעבר לשלב מוקדם',
+  'Block': 'חסימה',
+  'Block suspicious IPs': 'חסמו כתובות IP חשודות',
+  'Blocked': 'נחסם',
+  'Blog': 'בלוג',
+  'Body': 'גוף',
+  'Boost businesses with Appwrite': 'האיצו עסקים עם Appwrite', // pragma: allowlist secret
+  'Bootstrapped above $5M ARR': 'בוטסטראפ מעל 5 מיליון דולר ARR',
+  'Bootstrapped companies with more than $5M in annual recurring revenue.': 'חברות בוטסטראפ עם יותר מ-5 מיליון דולר בהכנסות שנתיות חוזרות.',
+  'bot': 'בוט',
+  'Brand assets': 'נכסי מותג',
+  'Brand colors': 'צבעי המותג',
+  'Brand refresh': 'רענון מותג',
+  'Bucket compression': 'דחיסת באקט',
+  'Bucket permissions apply to all files': 'הרשאות הבאקט חלות על כל הקבצים',
+  'Buckets': 'באקטים',
+  'Budget caps and alerts': 'תקרות תקציב והתראות',
+  'Build': 'בנייה',
+  'Build duration': 'משך בנייה',
+  'Build like a team of hundreds.': 'בנו כמו צוות של מאות.',
+  'Build logs': 'לוגי בנייה',
+  'Build triggers': 'טריגרים לבנייה',
+  'Build with any framework': 'בנו עם כל פריימוורק',
+  'Build your next project with Appwrite': 'בנו את הפרויקט הבא שלכם עם Appwrite', // pragma: allowlist secret
+  'Build your startup with Appwrite': 'בנו את הסטארטאפ שלכם עם Appwrite', // pragma: allowlist secret
+  'Build, deploy, secure, and observe your app from one platform, all under one subscription.':
+    'בנו, פרסו, אבטחו ונטרו את האפליקציה שלכם מפלטפורמה אחת, הכול תחת מנוי אחד.',
+  'Building on Appwrite Cloud': 'בנייה על Appwrite Cloud', // pragma: allowlist secret
+  'Building on Appwrite?': 'בונים על Appwrite?', // pragma: allowlist secret
+  'Builds': 'בניות',
+  'Built by a community of 800+ contributors': 'נבנה על ידי קהילה של יותר מ-800 תורמים',
+  'Built for scale': 'בנוי לסקייל',
+  'Built into every Appwrite project: backend APIs, serverless functions, and hosted websites, with requests and assets served through our CDN and DDoS protection at the network edge. Choose global regions and edges to optimize latency, compliance, and data residency.': // pragma: allowlist secret
+    'מובנה בכל פרויקט Appwrite: ממשקי API של backend, פונקציות serverless ואתרים מאוחסנים, עם בקשות ונכסים המוגשים דרך ה-CDN שלנו והגנת DDoS בקצה הרשת. בחרו אזורים ונקודות קצה גלובליים כדי לייעל זמן תגובה, תאימות ומיקום נתונים.', // pragma: allowlist secret
+  'Built-in security': 'אבטחה מובנית',
+  'Bulk operations': 'פעולות בכמות גדולה',
+  'Business': 'עסקים',
+  'Businesses primarily offering services rather than building their own software product.': 'עסקים שמציעים בעיקר שירותים ואינם בונים מוצר תוכנה משלהם.',
+  'Buy domain': 'קנו דומיין',
+  'By asset type': 'לפי סוג נכס',
+  'By region': 'לפי אזור',
+  'By trigger': 'לפי טריגר',
+  'Cache': 'מטמון',
+  'Cache hit': 'פגיעת מטמון',
+  'California privacy': 'פרטיות קליפורניה',
+  'Campaign message': 'הודעת קמפיין',
+  'Can I use the Education plan for commercial purposes?': 'האם אפשר להשתמש בתוכנית Education למטרות מסחריות?',
+  'Can we self-host Appwrite?': 'האם אפשר לארח את Appwrite באופן עצמאי?', // pragma: allowlist secret
+  'Cancel': 'ביטול',
+  'Careers': 'קריירה',
+  'Catalog': 'קטלוג',
+  'Category': 'קטגוריה',
+  'CDN cached': 'שמור ב-CDN',
+  'CDN edge': 'קצה CDN',
+  'CDN locations': 'מיקומי CDN',
+  'Centralized identity for console access with enterprise authentication policies.': 'זהות מרכזית לגישה לקונסולה עם מדיניות אימות ארגונית.',
+  'Certificates are issued when a hostname is verified.': 'תעודות מונפקות כאשר שם המארח מאומת.',
+  'Challenge': 'אתגר',
+  'Challenged': 'נדרש אימות',
+  'Chat': "צ'אט",
+  'Check our Open Issues': 'עיינו ב-Issues הפתוחים שלנו',
+  'Check your inbox': 'בדקו את תיבת הדואר',
+  'Choose serverless or dedicated compute for each database. Pay for usage when traffic is variable, or pick a fixed monthly tier when you need reserved resources and predictable costs.':
+    'בחרו מחשוב serverless או ייעודי לכל מסד נתונים. שלמו לפי שימוש כשהתעבורה משתנה, או בחרו דרגה חודשית קבועה כשאתם צריכים משאבים שמורים ועלויות צפויות.',
+  'Closed Issues': 'Issues סגורים',
+  'Cloud credits': 'קרדיטים לענן',
+  'Cloud GA': 'זמינות כללית לענן',
+  'Cloud is GA!': 'הענן בזמינות כללית!',
+  'Cloud or self-hosted': 'ענן או אירוח עצמי',
+  'Cloud projects': 'פרויקטים בענן',
+  'Cloud public beta': 'בטא ציבורית לענן',
+  'Co-branding lockups': 'שילובי לוגו משותפים',
+  'Co-branding logotypes': 'לוגוטייפים בשיתוף מותגים',
+  'Co-branding logotype example': 'דוגמה ללוגוטייפ בשיתוף מותגים',
+  'Co-branding lockup example': 'דוגמה לשילוב לוגו משותף',
+  'Co-founder': 'מייסד שותף',
+  'Co-Founder': 'מייסד שותף',
+  'Co-founder & Partner': 'מייסד שותף ופרטנר',
+  'Co-marketing': 'שיווק משותף',
+  'Code': 'קוד',
+  'Collaborate on the same page in real time': 'שתפו פעולה על אותו עמוד בזמן אמת',
+  'Coming soon': 'בקרוב',
+  'Commits': 'קומיטים',
+  'Common flows': 'תרחישים נפוצים',
+  'Common questions about plans, billing, and usage limits.': 'שאלות נפוצות על תוכניות, חיוב ומגבלות שימוש.',
+  'Community': 'קהילה',
+  'Community and marketing': 'קהילה ושיווק',
+  'Community members': 'חברי קהילה',
+  'Companies older than 5 years, unless bootstrapped with up to $5M in annual recurring revenue.':
+    'חברות בנות יותר מ-5 שנים, אלא אם הן בוטסטראפ עם עד 5 מיליון דולר בהכנסות שנתיות חוזרות.',
+  'Company name': 'שם החברה',
+  'Company page sections': 'מקטעי עמוד החברה',
+  'Company size': 'גודל החברה',
+  'Company URL': 'כתובת אתר החברה',
+  'Company website': 'אתר החברה',
+  'Compare': 'השוואה',
+  'Compare plan limits, included capabilities, and scaling options.': 'השוו מגבלות תוכנית, יכולות כלולות ואפשרויות סקיילינג.',
+  'Compare plans': 'השוואת תוכניות',
+  'Compare plans sections': 'מקטעי השוואת תוכניות',
+  'Complete the application form on this page with your full name, email, company name, and website.':
+    'מלאו את טופס המועמדות בעמוד זה עם שם מלא, אימייל, שם החברה ואתר.',
+  'Completed': 'הושלם',
+  'Compliance': 'תאימות רגולטורית',
+  'Compliance artifacts, agreements, and enterprise governance built for security reviews and procurement. Enterprise plans include access to SOC 2 reporting, data processing agreements, and advanced identity controls.':
+    'מסמכי תאימות, הסכמים וממשל ארגוני שנבנו לסקרי אבטחה ורכש. תוכניות Enterprise כוללות גישה לדוחות SOC 2, הסכמי עיבוד נתונים ובקרות זהות מתקדמות.',
+  'Compliance options for regulated industries and enterprise procurement requirements.': 'אפשרויות תאימות לתעשיות מפוקחות ולדרישות רכש ארגוניות.',
+  'Compose message': 'חיבור הודעה',
+  'Compute': 'מחשוב',
+  'Compute options': 'אפשרויות מחשוב',
+  'Compute tier': 'דרגת מחשוב',
+  'Concurrent connections': 'חיבורים מקבילים',
+  'Config': 'קונפיגורציה',
+  'Connect a repository for automatic builds on push, branch previews, and production deploys.':
+    'חברו מאגר קוד לבניות אוטומטיות בכל push, לתצוגות מקדימות של ענפים ולפריסות פרודקשן.',
+  'Connect AI agents to your Appwrite backend. No custom integrations required.': 'חברו סוכני AI ל-backend של Appwrite. ללא צורך באינטגרציות מותאמות.', // pragma: allowlist secret
+  'Connect Appwrite in other agents and IDEs.': 'חברו את Appwrite לסוכנים ולסביבות פיתוח נוספות.', // pragma: allowlist secret
+  'Connect Slack, Discord, WhatsApp, and other chat surfaces for team and user notifications.':
+    "חברו את Slack, Discord, WhatsApp וממשקי צ'אט נוספים להתראות לצוות ולמשתמשים.",
+  "Connect your favorite AI productivity tools with Appwrite's MCP.": 'חברו את כלי ה-AI המועדפים עליכם עם ה-MCP של Appwrite.', // pragma: allowlist secret
+  'Connected': 'מחובר',
+  'Connected websites and apps': 'אתרים ואפליקציות מחוברים',
+  'Console 2.0': 'קונסולה 2.0',
+  'Console 2.0 launch': 'השקת קונסולה 2.0',
+  'Consultancy': 'חברת ייעוץ',
+  'Contact sales': 'דברו עם מכירות',
+  'contact us': 'צרו איתנו קשר',
+  'Contact us': 'צרו קשר',
+  'Content': 'תוכן',
+  'Content compression': 'דחיסת תוכן',
+  'Content delivery network': 'רשת אספקת תוכן',
+  'Continents': 'יבשות',
+  'Continue': 'המשך',
+  'Contractual availability commitments for mission-critical production workloads.': 'התחייבויות זמינות חוזיות לעומסי פרודקשן קריטיים.',
+  'Contributors': 'תורמים',
+  'Cookies Policy': 'מדיניות עוגיות',
+  'Copied': 'הועתק',
+  'Copied to clipboard': 'הועתק ללוח',
+  'Copy': 'העתקה',
+  'Copy URL': 'העתקת כתובת',
+  'Cost/1M': 'עלות למיליון',
+  'Countries': 'מדינות',
+  'CPU and memory': 'מעבד וזיכרון',
+  'Create an account': 'צרו חשבון',
+  'Create content': 'צרו תוכן',
+  'Create your Appwrite account through the Education program sign up page. Once verified, the Education plan will be applied to your account.': // pragma: allowlist secret
+    'צרו את חשבון ה-Appwrite שלכם דרך עמוד ההרשמה של תוכנית Education. לאחר האימות, תוכנית ה-Education תוחל על החשבון שלכם.', // pragma: allowlist secret
+  'Created': 'נוצר',
+  'Creating a site from starter templates and popular frameworks': 'יצירת אתר מתבניות התחלה ומפריימוורקים פופולריים',
+  'Cron schedules trigger functions automatically': 'תזמוני Cron מפעילים פונקציות אוטומטית',
+  'Custom backup policies': 'מדיניות גיבוי מותאמת',
+  'Custom bandwidth, storage, compute, and project limits tailored to your traffic, workloads, and organizational structure.':
+    'מגבלות מותאמות של רוחב פס, אחסון, מחשוב ופרויקטים בהתאם לתעבורה, לעומסים ולמבנה הארגוני שלכם.',
+  'Custom organization roles': 'תפקידי ארגון מותאמים',
+  'Custom SMTP': 'SMTP מותאם',
+  'Customer stories': 'סיפורי לקוחות',
+  'Customer success manager': 'מנהל הצלחת לקוח',
+  'Dark Grey': 'אפור כהה',
+  'Dashboard': 'לוח בקרה',
+  'Data encryption': 'הצפנת נתונים',
+  'Database events': 'אירועי מסד נתונים',
+  'Database pricing': 'תמחור מסדי נתונים',
+  'Database types': 'סוגי מסדי נתונים',
+  'Databases': 'מסדי נתונים',
+  'Day': 'יום',
+  'DB operations / month': 'פעולות מסד נתונים / חודש',
+  'DDoS mitigation': 'מיגון DDoS',
+  'Dedicated': 'ייעודי',
+  'Dedicated compute': 'מחשוב ייעודי',
+  'Dedicated compute tiers': 'דרגות מחשוב ייעודי',
+  'Dedicated databases': 'מסדי נתונים ייעודיים',
+  'Dedicated partner for onboarding and ongoing success.': 'שותף ייעודי לקליטה ולהצלחה מתמשכת.',
+  'Dedicated success management, priority response times, and direct access to Appwrite engineers when you need them.': // pragma: allowlist secret
+    'ניהול הצלחה ייעודי, זמני תגובה מועדפים וגישה ישירה למהנדסי Appwrite כשאתם זקוקים להם.', // pragma: allowlist secret
+  'Deep work over coffee in Barcelona during Camp': 'עבודה מעמיקה על כוס קפה בברצלונה במהלך Camp',
+  'Deeper visibility into platform activity, performance, and operational health.': 'נראות מעמיקה יותר לפעילות הפלטפורמה, לביצועים ולתקינות התפעולית.',
+  'Delete selected': 'מחיקת הנבחרים',
+  'Delivered across every selected channel': 'נמסר בכל ערוץ שנבחר',
+  'Delivery': 'מסירה',
+  'Delivery path': 'נתיב מסירה',
+  'Deploy and host web applications': 'פרסו וארחו אפליקציות ווב',
+  'Deployment ID': 'מזהה פריסה',
+  'Deployments': 'פריסות',
+  'Design': 'עיצוב',
+  'Designed for the AI agents in your workflow': 'מתוכנן לסוכני ה-AI בתהליך העבודה שלכם',
+  'Designing the new website': 'עיצוב האתר החדש',
+  'Details': 'פרטים',
+  'Develop your developer skills with Appwrite Pro, join a vibrant community of open-source contributors, and start building with a vast array of frameworks.': // pragma: allowlist secret
+    'פתחו את כישורי הפיתוח שלכם עם Appwrite Pro, הצטרפו לקהילה תוססת של תורמי קוד פתוח והתחילו לבנות עם מגוון רחב של פריימוורקים.', // pragma: allowlist secret
+  'Develop your skills': 'פתחו את הכישורים שלכם',
+  'Developer experience': 'חוויית מפתח',
+  'Developers': 'מפתחים',
+  'Developers worldwide': 'מפתחים ברחבי העולם',
+  'Development Lead': 'מוביל פיתוח',
+  'Discord members': 'חברי Discord',
+  'Discord Command Bot': 'בוט פקודות ל-Discord',
+  'Discounts': 'הנחות',
+  "Discover Appwrite's community across platforms and join the fun.": 'גלו את קהילת Appwrite בפלטפורמות השונות והצטרפו לחגיגה.', // pragma: allowlist secret
+  'Discover infinite possibilities': 'גלו אפשרויות אינסופיות',
+  "Discover our plans and find the one that fits your project's needs.": 'גלו את התוכניות שלנו ומצאו את זו שמתאימה לצורכי הפרויקט שלכם.',
+  'Docs': 'תיעוד',
+  'Documents': 'מסמכים',
+  'Does the Appwrite Startups program include web hosting?': 'האם תוכנית הסטארטאפים של Appwrite כוללת אירוח אתרים?', // pragma: allowlist secret
+  'Does the Education plan include any add-ons?': 'האם תוכנית Education כוללת תוספים?',
+  'Domains': 'דומיינים',
+  'Download': 'הורדה',
+  'Download assets': 'הורדת נכסים',
+  'Draft hero copy': 'טיוטת טקסט ראשי',
+  'Draft your message once...': 'נסחו את ההודעה פעם אחת...',
+  'Duration': 'משך',
+  'Duration:': 'משך:',
+  'Early access': 'גישה מוקדמת',
+  'Early hand-drawn logo sketches from the Appwrite rebrand process': 'סקיצות לוגו מוקדמות בציור יד מתהליך המיתוג מחדש של Appwrite', // pragma: allowlist secret
+  'Early-stage company': 'חברה בשלב מוקדם',
+  'Earn free access through GitHub Education to build your next project on Appwrite Cloud. Sign up for the GitHub Student Developer Pack to receive Appwrite Cloud for the duration of your studies.': // pragma: allowlist secret
+    'קבלו גישה חינמית דרך GitHub Education לבניית הפרויקט הבא שלכם על Appwrite Cloud. הירשמו ל-GitHub Student Developer Pack כדי לקבל את Appwrite Cloud למשך תקופת הלימודים.', // pragma: allowlist secret
+  'Edge compute': 'מחשוב קצה',
+  'Edit': 'עריכה',
+  'Edit your code and the function restarts automatically. Deploy when you are ready.': 'ערכו את הקוד והפונקציה תופעל מחדש אוטומטית. פרסו כשאתם מוכנים.',
+  'Edits sync instantly for everyone in the doc': 'עריכות מסתנכרנות מיידית לכל מי שבמסמך',
+  'Education Program': 'תוכנית Education',
+  'Efficient communication': 'תקשורת יעילה',
+  'Eldad Fux, Founder and CEO of Appwrite': 'אלדד פוקס, מייסד ומנכ"ל Appwrite', // pragma: allowlist secret
+  'Eliminate friction and abstract complexity for every creator. We build Appwrite for agents and developers, giving them the tools and experience they need to create and innovate without limits and with minimum concerns.': // pragma: allowlist secret
+    'לבטל חיכוך ולהפשיט מורכבות עבור כל יוצר. אנחנו בונים את Appwrite לסוכנים ולמפתחים, ומעניקים להם את הכלים והחוויה שהם צריכים כדי ליצור ולחדש בלי גבולות ועם מינימום דאגות.', // pragma: allowlist secret
+  'Email': 'אימייל',
+  'Email address': 'כתובת אימייל',
+  'Email link sign-in': 'התחברות בקישור אימייל',
+  'Email OTP': 'קוד חד-פעמי באימייל',
+  'Email policies': 'מדיניות אימייל',
+  'Email the team a weekly sales and usage digest': 'שלחו לצוות סיכום שבועי של מכירות ושימוש',
+  'Email, SMS, and push from a single SDK client.': 'אימייל, SMS והתראות פוש מלקוח SDK אחד.',
+  'Email, SMS, and push from one message': 'אימייל, SMS ופוש מהודעה אחת',
+  'Email/Password': 'אימייל/סיסמה',
+  'Emails': 'אימיילים',
+  "Empower your team and elevate your customers' experiences with the newest technology.": 'העצימו את הצוות ושדרגו את חוויית הלקוחות שלכם עם הטכנולוגיה החדשה ביותר.',
+  'Enable OAuth 2 sign-in for external accounts.': 'הפעילו התחברות OAuth 2 לחשבונות חיצוניים.',
+  'Enable per-file permissions on individual uploads.': 'הפעילו הרשאות ברמת קובץ להעלאות בודדות.',
+  'Enabled': 'מופעל',
+  'Encrypt new uploads at rest so leaked files stay unreadable.': 'הצפינו העלאות חדשות במנוחה כך שקבצים שדלפו יישארו בלתי קריאים.',
+  'Encrypted': 'מוצפן',
+  'Encryption': 'הצפנה',
+  'Engineer at DevKind': 'מהנדס ב-DevKind',
+  'Engineering': 'הנדסה',
+  'Enhanced network-level DDoS mitigation for high-traffic production workloads and mission-critical availability.':
+    'מיגון DDoS משופר ברמת הרשת לעומסי פרודקשן עתירי תעבורה ולזמינות קריטית.',
+  'Enlarge image:': 'הגדלת תמונה:',
+  'Enroll on GitHub Education': 'הירשמו ל-GitHub Education',
+  'Enroll to the GitHub Student Developer Pack': 'הירשמו ל-GitHub Student Developer Pack',
+  'Enter verification code': 'הזינו קוד אימות',
+  'Enterprise': 'Enterprise',
+  'Enterprise customers receive a dedicated success manager, 24/7 support on Slack, and priority response times. We also help with onboarding, architecture reviews, and ongoing optimization.':
+    'לקוחות Enterprise מקבלים מנהל הצלחה ייעודי, תמיכה 24/7 ב-Slack וזמני תגובה מועדפים. אנחנו גם מסייעים בקליטה, בסקירות ארכיטקטורה ובאופטימיזציה שוטפת.',
+  'Enterprise is designed for organizations with production workloads that need custom resource limits, premium support, compliance options, or deployment flexibility beyond the Pro plan.':
+    'Enterprise מיועדת לארגונים עם עומסי פרודקשן שזקוקים למגבלות משאבים מותאמות, לתמיכת פרימיום, לאפשרויות תאימות או לגמישות פריסה מעבר לתוכנית Pro.',
+  'Enterprise plans can include SOC-2 and HIPAA support, along with SSO, activity logs, and custom backup policies for security and governance workflows.':
+    'תוכניות Enterprise יכולות לכלול תמיכה ב-SOC-2 וב-HIPAA, לצד SSO, יומני פעילות ומדיניות גיבוי מותאמת לתהליכי אבטחה וממשל.',
+  'Enterprise support': 'תמיכת Enterprise',
+  'Error submitting form. Please contact support.': 'שגיאה בשליחת הטופס. אנא פנו לתמיכה.',
+  'Errors': 'שגיאות',
+  'EU data processing': 'עיבוד נתונים באיחוד האירופי',
+  'Evaluating vendors': 'בוחנים ספקים',
+  'Event triggers': 'טריגרים מאירועים',
+  'Event-driven': 'מונע אירועים',
+  'Every day at midnight': 'כל יום בחצות',
+  'Every hour': 'כל שעה',
+  'Every Monday at 9 AM': 'כל יום שני ב-9 בבוקר',
+  'Every plan includes the full Appwrite platform toolkit.': 'כל תוכנית כוללת את מלוא ערכת הכלים של פלטפורמת Appwrite.', // pragma: allowlist secret
+  'Everyday thousands of companies are built on top of Appwrite. Benefit from our network as an Appwrite Partner.': // pragma: allowlist secret
+    'בכל יום אלפי חברות נבנות על גבי Appwrite. תיהנו מהרשת שלנו כשותפי Appwrite.', // pragma: allowlist secret
+  'Everything you need to develop, deploy, and scale your applications.': 'כל מה שצריך כדי לפתח, לפרוס ולהרחיב את האפליקציות שלכם.',
+  'Everything your app needs,': 'כל מה שהאפליקציה שלכם צריכה,',
+  'Execution details': 'פרטי הרצה',
+  'Execution ID': 'מזהה הרצה',
+  'Execution logs': 'לוגי הרצה',
+  'Execution modes': 'מצבי הרצה',
+  'Executions': 'הרצות',
+  'Experts': 'מומחים',
+  'Expires': 'פג תוקף',
+  'Explore open roles or learn how Appwriters join from the community.': 'גלו משרות פתוחות או למדו איך Appwriters מצטרפים מהקהילה.', // pragma: allowlist secret
+  'Explore the partner program': 'גלו את תוכנית השותפים',
+  'Exploring options': 'בוחנים אפשרויות',
+  'Express builds': 'בניות מהירות',
+  'Extended retention for audits, incident response, and compliance workflows.': 'שמירה מורחבת לביקורות, לתגובה לאירועים ולתהליכי תאימות.',
+  'Extra storage and bandwidth': 'אחסון ורוחב פס נוספים',
+  'Failed to copy color': 'העתקת הצבע נכשלה',
+  'FAQ': 'שאלות נפוצות',
+  'Faster time to market': 'זמן מהיר יותר לשוק',
+  'Feature': 'יכולת',
+  'Featured': 'מומלצים',
+  'File security': 'אבטחת קבצים',
+  'File size limit': 'מגבלת גודל קובץ',
+  'File tokens': 'טוקני קבצים',
+  'File-level rules override bucket defaults for sensitive assets.': 'כללים ברמת קובץ גוברים על ברירות המחדל של הבאקט עבור נכסים רגישים.',
+  'files': 'קבצים',
+  'Files': 'קבצים',
+  'Fill out the contact form on this page. Our sales team will review your use case and schedule a conversation to scope resources, support, and deployment options.':
+    'מלאו את טופס יצירת הקשר בעמוד זה. צוות המכירות שלנו יבחן את תרחיש השימוש שלכם ויתאם שיחה להגדרת משאבים, תמיכה ואפשרויות פריסה.',
+  'Filter requests before they reach your APIs': 'סננו בקשות לפני שהן מגיעות לממשקי ה-API שלכם',
+  'Finalize hero copy': 'סיום טקסט ראשי',
+  'Find a Partner': 'מצאו שותף',
+  'Find an Integration': 'מצאו אינטגרציה',
+  'Find bugs and submit PRs to fix them.': 'מצאו באגים ושלחו PRs לתיקונם.',
+  'Find improvements in our docs and improve accessibility.': 'מצאו שיפורים בתיעוד שלנו ושפרו נגישות.',
+  "Find your favourite apps to integrate with your projects in Appwrite's marketplace.": 'מצאו את האפליקציות האהובות עליכם לאינטגרציה עם הפרויקטים שלכם במרקטפלייס של Appwrite.', // pragma: allowlist secret
+  'Find your next career at Appwrite and join a remote team building the platform developers and agents rely on.': // pragma: allowlist secret
+    'מצאו את הקריירה הבאה שלכם ב-Appwrite והצטרפו לצוות מרוחק שבונה את הפלטפורמה שמפתחים וסוכנים סומכים עליה.', // pragma: allowlist secret
+  'Fine-grained access control beyond standard owner and developer roles.': 'בקרת גישה מדויקת מעבר לתפקידי בעלים ומפתח סטנדרטיים.',
+  'Firewall': 'חומת אש',
+  'Firewall and WAF': 'חומת אש ו-WAF',
+  'First name': 'שם פרטי',
+  'Fixed monthly compute tiers with reserved CPU, memory, and connections.': 'דרגות מחשוב חודשיות קבועות עם מעבד, זיכרון וחיבורים שמורים.',
+  'Flat org structure': 'מבנה ארגוני שטוח',
+  'followers': 'עוקבים',
+  "Following the Series A, Appwrite established a $50,000 fund to support independent open-source projects, reinforcing the company's commitment to the broader ecosystem.": // pragma: allowlist secret
+    'בעקבות סבב ה-Series A, Appwrite הקימה קרן של 50,000 דולר לתמיכה בפרויקטי קוד פתוח עצמאיים, חיזוק למחויבות החברה לאקוסיסטם הרחב.', // pragma: allowlist secret
+  'For agencies, consultancies, freelancers, and integrators who want to provide a scalable backend solution for their clients. Partner with Appwrite to provide a highly custom solution with the newest technology.': // pragma: allowlist secret
+    'לסוכנויות, חברות ייעוץ, פרילנסרים ואינטגרטורים שרוצים לספק ללקוחותיהם פתרון backend סקיילבילי. שתפו פעולה עם Appwrite כדי לספק פתרון מותאם במיוחד עם הטכנולוגיה החדשה ביותר.', // pragma: allowlist secret
+  'For enterprises that need more power and premium support.': 'לארגונים שצריכים יותר עוצמה ותמיכת פרימיום.',
+  'For enterprises that need more power, premium support, and advanced security features.': 'לארגונים שצריכים יותר עוצמה, תמיכת פרימיום ויכולות אבטחה מתקדמות.',
+  'For innovative software companies striving to create solutions that integrate seamlessly with our platform. Partner with Appwrite to create a better developer experience.': // pragma: allowlist secret
+    'לחברות תוכנה חדשניות ששואפות ליצור פתרונות שמשתלבים בצורה חלקה עם הפלטפורמה שלנו. שתפו פעולה עם Appwrite ליצירת חוויית מפתח טובה יותר.', // pragma: allowlist secret
+  'For production applications that need powerful functionality and resources to scale.': 'לאפליקציות פרודקשן שזקוקות ליכולות עוצמתיות ולמשאבים כדי לגדול.',
+  'Forks': 'פורקים',
+  'Founder': 'מייסד',
+  'Founder & CEO': 'מייסד ומנכ"ל',
+  'Founder at K-Collect': 'מייסד K-Collect',
+  'Founder at LangX': 'מייסד LangX',
+  'Founder swag': 'מתנות למייסדים',
+  'Free': 'חינם',
+  'From fast-moving startups to global enterprises, developers ship faster with Appwrite.': 'מסטארטאפים מהירים ועד ארגונים גלובליים, מפתחים משחררים מהר יותר עם Appwrite.', // pragma: allowlist secret
+  'From MVP to enterprise, our app scales automatically, letting you focus on your business goals.':
+    'מ-MVP ועד רמת ארגון, האפליקציה שלנו מתרחבת אוטומטית ומאפשרת לכם להתמקד ביעדים העסקיים.',
+  'Full name': 'שם מלא',
+  'Fully managed infrastructure with a plan customized to your needs: increased limits, predictable fixed pricing, uptime SLAs, and global CDN.':
+    'תשתית מנוהלת במלואה עם תוכנית שמותאמת לצרכים שלכם: מגבלות מוגדלות, תמחור קבוע וצפוי, הסכמי SLA לזמינות ו-CDN גלובלי.',
+  'Function domain': 'דומיין פונקציה',
+  'Function templates': 'תבניות פונקציות',
+  'Functions': 'פונקציות',
+  'GB-hours': 'שעות GB',
+  'Generated · active deployment': 'נוצר · פריסה פעילה',
+  'Generated domain': 'דומיין שנוצר',
+  'Get access to Appwrite Cloud and build your entire backend with Appwrite.': 'קבלו גישה ל-Appwrite Cloud ובנו את כל ה-backend שלכם עם Appwrite.', // pragma: allowlist secret
+  'Get community support and priority support from the Appwrite team.': 'קבלו תמיכה קהילתית ותמיכה מועדפת מצוות Appwrite.', // pragma: allowlist secret
+  'Get community support in the Appwrite Discord server.': 'קבלו תמיכה קהילתית בשרת ה-Discord של Appwrite.', // pragma: allowlist secret
+  'Get exclusive Appwrite swag for founders in the program.': 'קבלו מתנות Appwrite בלעדיות למייסדים בתוכנית.', // pragma: allowlist secret
+  'Get free access to build with Appwrite’s Education plan, valid throughout your student career.': // pragma: allowlist secret
+    'קבלו גישה חינמית לבנייה עם תוכנית ה-Education של Appwrite, בתוקף לכל אורך תקופת הלימודים שלכם.', // pragma: allowlist secret
+  'Get help from the open source community': 'קבלו עזרה מקהילת הקוד הפתוח',
+  'Get involved': 'קחו חלק',
+  'Get onboarded': 'עברו קליטה',
+  'Get started': 'התחילו עכשיו',
+  'Get Started': 'התחילו עכשיו',
+  'Get started today': 'התחילו עוד היום',
+  'Getting started': 'צעדים ראשונים',
+  'Git branch · staging': 'ענף Git · staging',
+  'Git push': 'Git push',
+  'Git repository': 'מאגר Git',
+  'GitHub stars': 'כוכבי GitHub',
+  'GitHub Stars': 'כוכבי GitHub',
+  'GitLab, Bitbucket, Gitea, and more coming soon.': 'GitLab, Bitbucket, Gitea ועוד בקרוב.',
+  'Global and remote-first': 'גלובלי ומרוחק תחילה',
+  'Global CDN included. Transformed images cached in your project region before they reach the edge.':
+    'CDN גלובלי כלול. תמונות מעובדות נשמרות במטמון באזור הפרויקט שלכם לפני שהן מגיעות לקצה.',
+  'Go to application form': 'מעבר לטופס המועמדות',
+  'Go to Appwrite Docs': 'מעבר לתיעוד Appwrite', // pragma: allowlist secret
+  'Go to the Appwrite Console and select the organization you wish to add credits to. In your organization overview, you can switch to the billing tab. Here, you need to go to the bottom of the page, where you will find the ability to add credits, as well as see the status of your credits. Credits are only relevant to Pro organizations since Free organizations are 100% free.': // pragma: allowlist secret
+    'עברו לקונסולת Appwrite ובחרו את הארגון שאליו תרצו להוסיף קרדיטים. בסקירת הארגון תוכלו לעבור ללשונית החיוב. שם, בתחתית העמוד, תמצאו את האפשרות להוסיף קרדיטים ולראות את סטטוס הקרדיטים שלכם. קרדיטים רלוונטיים רק לארגוני Pro, שכן ארגוני Free הם חינמיים לחלוטין.', // pragma: allowlist secret
+  "Go to the Appwrite Console and select the organization you wish to view. Here, you will find a usage tab with an overview of all your project's usage stats.": // pragma: allowlist secret
+    'עברו לקונסולת Appwrite ובחרו את הארגון שתרצו לצפות בו. שם תמצאו לשונית שימוש עם סקירה של כל נתוני השימוש של הפרויקט שלכם.', // pragma: allowlist secret
+  'Go to the Appwrite Console and use the drop-down menu in the top right corner to navigate to your organization overview by clicking on your organization. This will bring you to your overview, where you can select the billing tab. Here you will find your overview, payment history and methods, billing address, set a budget cap, and add your credits.': // pragma: allowlist secret
+    'עברו לקונסולת Appwrite והשתמשו בתפריט הנפתח בפינה העליונה כדי לנווט לסקירת הארגון בלחיצה על הארגון שלכם. משם תוכלו לבחור בלשונית החיוב, שבה תמצאו סקירה, היסטוריית תשלומים ואמצעי תשלום, כתובת חיוב, הגדרת תקרת תקציב והוספת קרדיטים.', // pragma: allowlist secret
+  'Gold': 'זהב',
+  'Golden Kitty Award': 'פרס Golden Kitty',
+  'Gravity': 'מוקד חיתוך',
+  'Group targets for broadcasts without managing recipient lists.': 'קבצו יעדים לשידורים בלי לנהל רשימות נמענים.',
+  'Growing together': 'צומחים יחד',
+  'gzip or zstd shrinks stored files and outbound traffic automatically.': 'gzip או zstd מכווצים אוטומטית קבצים מאוחסנים ותעבורה יוצאת.',
+  'HA read replicas': 'רפליקות קריאה בזמינות גבוהה',
+  'HA replicas': 'רפליקות בזמינות גבוהה',
+  'Hands-on sessions to onboard your developers.': 'מפגשים מעשיים לקליטת המפתחים שלכם.',
+  'Headers': 'כותרות',
+  'Healthcare workloads': 'עומסי בריאות',
+  'Help others discover Appwrite with videos and blogs.': 'עזרו לאחרים לגלות את Appwrite עם סרטונים ובלוגים.', // pragma: allowlist secret
+  'Helping others': 'עזרה לאחרים',
+  'HIPAA-aligned controls': 'בקרות תואמות HIPAA',
+  'History: 5': 'היסטוריה: 5',
+  'Hit': 'פגיעה',
+  'Hot reload': 'טעינה חמה',
+  'How can I apply credits to my organization?': 'איך מוסיפים קרדיטים לארגון שלי?',
+  'How can I join the OSS program?': 'איך מצטרפים לתוכנית ה-OSS?',
+  'How can I join the Startups program?': 'איך מצטרפים לתוכנית הסטארטאפים?',
+  'How do I apply?': 'איך מגישים מועמדות?',
+  'How do we get started?': 'איך מתחילים?',
+  'How is Enterprise pricing determined?': 'איך נקבע תמחור ה-Enterprise?',
+  'How long do the Appwrite Education program benefits last?': 'לכמה זמן תקפות ההטבות של תוכנית ה-Education של Appwrite?', // pragma: allowlist secret
+  'How to apply': 'איך מגישים מועמדות',
+  'How we hire': 'איך אנחנו מגייסים',
+  'How we work': 'איך אנחנו עובדים',
+  'HTTP domains and SDK calls with async disabled. Response body returned to the caller.': 'דומייני HTTP וקריאות SDK עם אסינכרוניות כבויה. גוף התגובה מוחזר לקורא.',
+  'Hybrid apps are supported too. Frameworks like Next.js, Nuxt, and SvelteKit can mix static pages with server-rendered routes in the same site.':
+    'גם אפליקציות היברידיות נתמכות. פריימוורקים כמו Next.js, Nuxt ו-SvelteKit יכולים לשלב עמודים סטטיים עם נתיבים מרונדרים בשרת באותו אתר.',
+  'I am already using another backend provider. How do I migrate to Appwrite?': 'אני כבר משתמש בספק backend אחר. איך עוברים ל-Appwrite?', // pragma: allowlist secret
+  'I have a Free plan account. How do I upgrade to a paid plan?': 'יש לי חשבון בתוכנית Free. איך משדרגים לתוכנית בתשלום?',
+  'I need to sign a BAA. Can I do this with Appwrite?': 'אני צריך לחתום על BAA. אפשר לעשות זאת עם Appwrite?', // pragma: allowlist secret
+  'I work with sensitive data and need to sign a BAA. Does Appwrite provide this?': 'אני עובד עם נתונים רגישים וצריך לחתום על BAA. האם Appwrite מספקת זאת?', // pragma: allowlist secret
+  "I'm already an Appwrite user. Can I still apply?": 'אני כבר משתמש ב-Appwrite. האם עדיין אפשר להגיש מועמדות?', // pragma: allowlist secret
+  'Identity': 'זהות',
+  'If accepted, we activate your program benefits and share next steps to build on Appwrite Cloud.': // pragma: allowlist secret
+    'אם תתקבלו, נפעיל את הטבות התוכנית ונשתף את הצעדים הבאים לבנייה על Appwrite Cloud.', // pragma: allowlist secret
+  'If you want to upgrade to a paid plan, you can do so in your Appwrite dashboard, select your organization, and change your plan in the Billing section.': // pragma: allowlist secret
+    'כדי לשדרג לתוכנית בתשלום, היכנסו ללוח הבקרה של Appwrite, בחרו את הארגון שלכם ושנו את התוכנית באזור החיוב.', // pragma: allowlist secret
+  "If you're a student with the GitHub Student Developer Pack, you can access the Appwrite Education plan for free while in school to help you build your next project.": // pragma: allowlist secret
+    'אם אתם סטודנטים עם GitHub Student Developer Pack, תוכלו לקבל גישה חינמית לתוכנית ה-Education של Appwrite במהלך הלימודים כדי לבנות את הפרויקט הבא שלכם.', // pragma: allowlist secret
+  "If you're already enrolled in the GitHub Student Developer Pack, click the 'Sign up' button on this page and fill in your details. If you're not enrolled with GitHub Education yet, first apply for the GitHub Student Developer Pack, then come back and sign up to Appwrite Cloud here.": // pragma: allowlist secret
+    "אם אתם כבר רשומים ל-GitHub Student Developer Pack, לחצו על כפתור 'הרשמה' בעמוד זה ומלאו את הפרטים. אם אינכם רשומים עדיין ל-GitHub Education, הגישו קודם מועמדות ל-GitHub Student Developer Pack, ואז חזרו והירשמו כאן ל-Appwrite Cloud.", // pragma: allowlist secret
+  'If your needs grow beyond the program, contact us to discuss Enterprise options and a tailored plan for your organization.':
+    'אם הצרכים שלכם גדלים מעבר לתוכנית, צרו קשר כדי לדון באפשרויות Enterprise ובתוכנית מותאמת לארגון שלכם.',
+  'Image transformations': 'טרנספורמציות תמונה',
+  'Images': 'תמונות',
+  'Impersonate user': 'התחזות למשתמש',
+  'Implement search functionalities': 'הטמיעו יכולות חיפוש',
+  'Improve documentation': 'שפרו את התיעוד',
+  'In app notifications': 'התראות בתוך האפליקציה',
+  'Included': 'כלול',
+  'Index database rows for search-as-you-type.': 'אנדקסו שורות מסד נתונים לחיפוש תוך כדי הקלדה.',
+  'Innovation': 'חדשנות',
+  'Inspire and get inspired': 'תעניקו השראה וקבלו השראה',
+  "Inspire and get inspired. Join Appwrite's community of maintainers and contributors and help us make Appwrite better for developers worldwide.": // pragma: allowlist secret
+    'תעניקו השראה וקבלו השראה. הצטרפו לקהילת המתחזקים והתורמים של Appwrite ועזרו לנו להפוך את Appwrite לטובה יותר עבור מפתחים בכל העולם.', // pragma: allowlist secret
+  'Instant Rollback': 'שחזור מיידי',
+  'Integrations': 'אינטגרציות',
+  'Integrations matching your search and filters.': 'אינטגרציות שתואמות את החיפוש והמסננים שלכם.',
+  'Introduction': 'מבוא',
+  'Investors': 'משקיעים',
+  'is typing in team chat': "מקליד בצ'אט הצוות",
+  'Issue #': 'Issue מס׳',
+  'Issues': 'Issues',
+  'Join a growing community of developers and students who use Appwrite to build their products. Gain access to a wealth of knowledge, support, and shared experiences needed to grow and advance your tech career.': // pragma: allowlist secret
+    'הצטרפו לקהילה צומחת של מפתחים וסטודנטים שמשתמשים ב-Appwrite לבניית המוצרים שלהם. קבלו גישה לשפע של ידע, תמיכה וניסיון משותף שיעזרו לכם לצמוח ולקדם את הקריירה הטכנולוגית שלכם.', // pragma: allowlist secret
+  'Join a lean, AI-native team': 'הצטרפו לצוות רזה ו-AI-native',
+  'Join a vibrant community': 'הצטרפו לקהילה תוססת',
+  'Join Discord': 'הצטרפו ל-Discord',
+  'Join Init': 'הצטרפו ל-Init',
+  'Join our Discord': 'הצטרפו ל-Discord שלנו',
+  'Join the Appwrite Education program in collaboration with the GitHub Student Developer Pack. Students access Appwrite Cloud for free throughout their studies.': // pragma: allowlist secret
+    'הצטרפו לתוכנית ה-Education של Appwrite בשיתוף GitHub Student Developer Pack. סטודנטים מקבלים גישה חינמית ל-Appwrite Cloud לאורך כל הלימודים.', // pragma: allowlist secret
+  'Join the Appwrite Partners program and grow your business. Deliver powerful solutions to clients, increase revenue, and expand your reach.': // pragma: allowlist secret
+    'הצטרפו לתוכנית השותפים של Appwrite והצמיחו את העסק. ספקו ללקוחות פתרונות עוצמתיים, הגדילו הכנסות והרחיבו את טווח ההגעה.', // pragma: allowlist secret
+  'Join the Appwrite Startups program': 'הצטרפו לתוכנית הסטארטאפים של Appwrite', // pragma: allowlist secret
+  'Join the community': 'הצטרפו לקהילה',
+  'Join the team': 'הצטרפו לצוות',
+  'Join workshops and training sessions to help your team build and scale with Appwrite.': 'השתתפו בסדנאות ובהדרכות שיעזרו לצוות שלכם לבנות ולגדול עם Appwrite.', // pragma: allowlist secret
+  'Jump to timeline year': 'קפיצה לשנה בציר הזמן',
+  'Kickstart your developer journey with Appwrite': 'התניעו את מסע הפיתוח שלכם עם Appwrite', // pragma: allowlist secret
+  'Last 30 days': '30 הימים האחרונים',
+  'Last name': 'שם משפחה',
+  'Later-stage funding': 'גיוס בשלב מאוחר',
+  'Launch homepage v2': 'השקת עמוד בית v2',
+  'Launch landing page': 'השקת עמוד נחיתה',
+  'Launch plan': 'תוכנית השקה',
+  'Launch week is live. Follow daily drops, live sessions, and giveaways.': 'שבוע ההשקות בעיצומו. עקבו אחרי חשיפות יומיות, שידורים חיים והגרלות.',
+  'Lean and effective': 'רזה ואפקטיבי',
+  'Learn more': 'למידע נוסף',
+  'Learn more about': 'למדו עוד על',
+  'Light Grey': 'אפור בהיר',
+  'Live': 'בשידור חי',
+  'Log drains': 'ניקוז לוגים',
+  'Logging': 'רישום לוגים',
+  'Logomark': 'סמל הלוגו',
+  'Logotype': 'לוגוטייפ',
+  'Logs': 'לוגים',
+  'Logs retention': 'שמירת לוגים',
+  'Loved by teams building in production': 'אהובה על צוותים שבונים בפרודקשן',
+  'Low latency worldwide': 'זמן תגובה נמוך בכל העולם',
+  'Machine learning and AI capabilities': 'יכולות למידת מכונה ו-AI',
+  'Magic URL': 'קישור קסם',
+  'Manage A, CNAME, TXT, and other records in one place.': 'נהלו רשומות A, CNAME, TXT ואחרות במקום אחד.',
+  'Manage database systems': 'נהלו מערכות מסדי נתונים',
+  'Manual': 'ידני',
+  'Manual upload': 'העלאה ידנית',
+  'Map each hostname to a deployment, branch, or redirect.': 'מפו כל שם מארח לפריסה, לענף או להפניה.',
+  'Marketing site': 'אתר שיווקי',
+  'matches': 'התאמות',
+  'Max message size': 'גודל הודעה מרבי',
+  'members': 'חברים',
+  'Memory': 'זיכרון',
+  'Messages': 'הודעות', // pragma: allowlist secret
+  'Messaging': 'הודעות',
+  'Messaging announcement': 'הכרזת Messaging',
+  'Messaging docs': 'תיעוד Messaging',
+  'Messaging expanded the platform with email, push, and SMS capabilities, giving teams native tools for user communication and notifications.':
+    'Messaging הרחיב את הפלטפורמה עם יכולות אימייל, פוש ו-SMS, והעניק לצוותים כלים נייטיביים לתקשורת עם משתמשים ולהתראות.',
+  'Method': 'מתודה',
+  'MFA enabled': 'MFA מופעל',
+  'Min 12 chars': 'לפחות 12 תווים',
+  'Miss': 'החטאה',
+  'Model': 'מודל',
+  'Modern formats on delivery': 'פורמטים מודרניים במסירה',
+  'Monitor and analyze application logs': 'נטרו ונתחו לוגים של האפליקציה',
+  'Monthly compute': 'מחשוב חודשי',
+  'More about': 'עוד על',
+  'More about the Appwrite Network': 'עוד על Appwrite Network', // pragma: allowlist secret
+  'More customers': 'עוד לקוחות',
+  'More providers': 'עוד ספקים',
+  'Most popular': 'הפופולרית ביותר',
+  'My functions': 'הפונקציות שלי',
+  'N/A': 'לא זמין',
+  'Name': 'שם',
+  'Naming': 'שם המותג',
+  'Native PostgreSQL and MySQL': 'PostgreSQL ו-MySQL נייטיביים',
+  'Nearest PoP': 'נקודת הנוכחות הקרובה',
+  'Network': 'רשת',
+  'Network protections included with every Appwrite project': 'הגנות רשת כלולות בכל פרויקט Appwrite', // pragma: allowlist secret
+  'News': 'חדשות',
+  'Newsletters': 'ניוזלטרים',
+  'No Appwrite branding on emails': 'ללא מיתוג Appwrite באימיילים', // pragma: allowlist secret
+  'No errors found.': 'לא נמצאו שגיאות.',
+  'No funding or revenue yet?': 'עדיין בלי גיוס או הכנסות?',
+  'No headers found.': 'לא נמצאו כותרות.',
+  'No matching log lines.': 'אין שורות לוג תואמות.',
+  'No, the Education plan does not cover any add-ons.': 'לא, תוכנית ה-Education אינה כוללת תוספים.',
+  'No, you may not use the Education plan for any non-educational or commercial purposes.': 'לא, אין להשתמש בתוכנית ה-Education למטרות שאינן לימודיות או למטרות מסחריות.',
+  'Not sure yet': 'עדיין לא בטוחים',
+  'Notifications': 'התראות',
+  'Number of projects': 'מספר פרויקטים',
+  'of original': 'מהמקור',
+  'Official': 'רשמי',
+  'Official plugins': 'תוספים רשמיים',
+  'on GitHub': 'ב-GitHub',
+  'On this page': 'בעמוד זה',
+  'on X': 'ב-X',
+  'On-set monitor during the first Init filming in Prague': 'מוניטור בסט במהלך צילומי ה-Init הראשונים בפראג',
+  'Once your Appwrite account is created, go to our Docs and get started with Appwrite Cloud.': 'לאחר יצירת חשבון ה-Appwrite, עברו לתיעוד שלנו והתחילו לעבוד עם Appwrite Cloud.', // pragma: allowlist secret
+  'One Messaging service': 'שירות הודעות אחד',
+  'One platform for your entire stack': 'פלטפורמה אחת לכל הסטאק שלכם',
+  'One platform. One subscription.': 'פלטפורמה אחת. מנוי אחד.',
+  'one subscription': 'מנוי אחד',
+  'One-click marketplace plugins for Cursor, Claude Code, and Codex.': 'תוספי מרקטפלייס בלחיצה אחת ל-Cursor, Claude Code ו-Codex.',
+  'One-click signup via GitHub, Google, Apple, and more.': 'הרשמה בלחיצה אחת דרך GitHub, Google, Apple ועוד.',
+  'One-time backup codes when authenticator access is unavailable.': 'קודי גיבוי חד-פעמיים כשאין גישה לאפליקציית האימות.',
+  'online': 'מחובר',
+  'Open': 'פתוח',
+  'Open Issues': 'Issues פתוחים',
+  'Open preview': 'פתיחת תצוגה מקדימה',
+  'Open source fund': 'קרן קוד פתוח',
+  'Open-source': 'קוד פתוח',
+  'Open-source alternative to Hacker News.': 'אלטרנטיבה בקוד פתוח ל-Hacker News.',
+  'Open-source launch': 'השקת קוד פתוח',
+  'or': 'או',
+  'Organization members': 'חברי ארגון',
+  'Organization roles': 'תפקידי ארגון',
+  'Original': 'מקור',
+  'OSS Contributors': 'תורמי קוד פתוח',
+  'OSS fund announcement': 'הכרזת קרן ה-OSS',
+  'Other ways to help': 'דרכים נוספות לעזור',
+  'Others': 'אחרים',
+  'OTP verification': 'אימות OTP',
+  'Our mission': 'המשימה שלנו',
+  'Our story': 'הסיפור שלנו',
+  'Our team evaluates your application against the program criteria and follows up by email.': 'הצוות שלנו בוחן את המועמדות מול קריטריוני התוכנית וחוזר אליכם באימייל.',
+  'Our team reviews your application against the program criteria and follows up by email with onboarding steps if you are accepted.':
+    'הצוות שלנו בוחן את המועמדות מול קריטריוני התוכנית וחוזר אליכם באימייל עם שלבי קליטה אם תתקבלו.',
+  "Our team will review your application and follow up to ensure we're a perfect fit.": 'הצוות שלנו יבחן את המועמדות וייצור קשר כדי לוודא שאנחנו התאמה מושלמת.',
+  'Outside the program': 'מחוץ לתוכנית',
+  'Over half a million developers scale with Appwrite': 'יותר מחצי מיליון מפתחים גדלים עם Appwrite', // pragma: allowlist secret
+  'Overall': 'סה"כ',
+  'Overview': 'סקירה',
+  'Package manager stores are cached between builds. Deployment retention removes old inactive deployments to save storage. Path filters help Turborepo monorepos skip unnecessary deploys.':
+    'מאגרי מנהל החבילות נשמרים במטמון בין בניות. שמירת פריסות מסירה פריסות ישנות ולא פעילות כדי לחסוך אחסון. מסנני נתיבים עוזרים למונו-ריפו של Turborepo לדלג על פריסות מיותרות.',
+  'Package your source as .tar.gz and upload from the Console when you need a one-off deploy.': 'ארזו את הקוד כ-tar.gz. והעלו מהקונסולה כשאתם צריכים פריסה חד-פעמית.',
+  'Pages built at deploy time. Fast cold starts for Vite, Astro, React, and Vue.': 'עמודים שנבנים בזמן הפריסה. עליות קרות מהירות ל-Vite, Astro, React ו-Vue.',
+  'Partner': 'שותף',
+  'Partner benefits designed to help you deliver more value to your clients.': 'הטבות שותפים שנועדו לעזור לכם לספק ערך רב יותר ללקוחות.',
+  'Partner Tiers': 'דרגות שותפים',
+  'Partner with one of the fastest growing dev tool companies': 'שתפו פעולה עם אחת מחברות כלי הפיתוח הצומחות במהירות',
+  'Partners Program': 'תוכנית השותפים',
+  'Pass a user JWT so Server SDKs inside the function respect Auth permissions.': 'העבירו JWT של משתמש כדי ש-SDKs של השרת בתוך הפונקציה יכבדו הרשאות Auth.',
+  'Password policies': 'מדיניות סיסמאות',
+  'Password reset': 'איפוס סיסמה',
+  'Path': 'נתיב',
+  'Pay for storage and database operations. No fixed compute fee.': 'שלמו על אחסון ופעולות מסד נתונים. ללא עלות מחשוב קבועה.',
+  'Payments': 'תשלומים',
+  'Payments with Stripe': 'תשלומים עם Stripe',
+  'Phone': 'טלפון',
+  'Phone OTP': 'קוד חד-פעמי בטלפון',
+  'Phone SMS': 'SMS לטלפון',
+  'Pick a preset or write a custom cron expression.': 'בחרו תבנית מוכנה או כתבו ביטוי cron מותאם.',
+  'Pick the plan that fits your stage. Upgrade anytime as your app grows.': 'בחרו את התוכנית שמתאימה לשלב שלכם. שדרגו בכל עת כשהאפליקציה גדלה.',
+  'Pin your version. Deploy isolated. Built for production.': 'נעצו את הגרסה. פרסו בבידוד. בנוי לפרודקשן.',
+  'Platform': 'פלטפורמה',
+  'Platform events, cron schedules, and queued executions. Uses your configured timeout.': 'אירועי פלטפורמה, תזמוני cron והרצות בתור. משתמש בטיים-אאוט שהגדרתם.',
+  'Platforms with Model Context Protocol support': 'פלטפורמות עם תמיכה ב-Model Context Protocol',
+  'Platinum': 'פלטינה',
+  'Please share more information about your use case': 'שתפו מידע נוסף על תרחיש השימוש שלכם',
+  'Point-in-time recovery': 'שחזור לנקודת זמן',
+  'PoP locations': 'מיקומי PoP',
+  'Popular': 'פופולרי',
+  'Popular integrations to get started quickly.': 'אינטגרציות פופולריות להתחלה מהירה.',
+  'Pre-built integrations to skip boilerplate.': 'אינטגרציות מוכנות מראש שחוסכות קוד תשתית.',
+  'Preferred deployment': 'פריסה מועדפת',
+  'Premium DDoS protection': 'הגנת DDoS פרימיום',
+  'Presences announcement': 'הכרזת Presences',
+  'Presences docs': 'תיעוד Presences',
+  'Present at meetups': 'הרצו במיטאפים',
+  'Preset': 'תבנית מוכנה',
+  'Presets': 'תבניות מוכנות',
+  'Preview': 'תצוגה מקדימה',
+  'Preview URL': 'כתובת תצוגה מקדימה',
+  'Price': 'מחיר',
+  'Pricing aligned to your usage profile across bandwidth, storage, and compute.': 'תמחור מותאם לפרופיל השימוש שלכם ברוחב פס, אחסון ומחשוב.',
+  'Pricing is based on your usage profile, support requirements, and deployment model. Cloud Enterprise plans offer customized limits with predictable fixed pricing. Our team works with you to build a plan that matches your scale and procurement process.':
+    'התמחור מבוסס על פרופיל השימוש, דרישות התמיכה ומודל הפריסה שלכם. תוכניות Cloud Enterprise מציעות מגבלות מותאמות עם תמחור קבוע וצפוי. הצוות שלנו עובד איתכם לבניית תוכנית שמתאימה לקנה המידה ולתהליך הרכש שלכם.',
+  'Priority support': 'תמיכה מועדפת',
+  'Privacy Policy': 'מדיניות פרטיות',
+  'Private Slack channel': 'ערוץ Slack פרטי',
+  'Processed once': 'מעובד פעם אחת',
+  'Product': 'מוצר',
+  'Product updates': 'עדכוני מוצר',
+  'Product visuals': 'ויז׳ואלים של המוצר',
+  'Product-first team': 'צוות ממוקד מוצר',
+  'Product-focused startup': 'סטארטאפ ממוקד מוצר',
+  'Production': 'פרודקשן',
+  'products': 'מוצרים',
+  'Program announcement': 'הכרזת התוכנית',
+  'Program members receive Appwrite Cloud Pro for 12 months, cloud credits, unlimited team members, premium email support, training workshops, a private Slack channel with our team, a dedicated program manager, and founder swag.': // pragma: allowlist secret
+    'חברי התוכנית מקבלים Appwrite Cloud Pro ל-12 חודשים, קרדיטים לענן, חברי צוות ללא הגבלה, תמיכת אימייל פרימיום, סדנאות הדרכה, ערוץ Slack פרטי עם הצוות שלנו, מנהל תוכנית ייעודי ומתנות למייסדים.', // pragma: allowlist secret
+  'Project ID': 'מזהה פרויקט',
+  'Project-scoped endpoint with SigV4 signing.': 'נקודת קצה ברמת פרויקט עם חתימת SigV4.',
+  'Promote a previous deployment without rebuilding.': 'קדמו פריסה קודמת בלי לבנות מחדש.',
+  'Prompt ChatGPT': 'שלחו פרומפט ל-ChatGPT',
+  'Protection': 'הגנה',
+  'Provider type': 'סוג ספק',
+  'Providers': 'ספקים',
+  'Public beta announcement': 'הכרזת הבטא הציבורית',
+  'Public link': 'קישור ציבורי',
+  'Pull Requests': 'Pull Requests',
+  'Push': 'פוש',
+  'Push notifications': 'התראות פוש',
+  'Push to main': 'push ל-main',
+  'Query': 'שאילתה',
+  'Rate limit API endpoints': 'הגבילו קצב לנקודות קצה של ה-API',
+  'Reach users instantly on iOS, Android, and web with APNS and FCM.': 'הגיעו למשתמשים מיידית ב-iOS, ב-Android ובווב עם APNS ו-FCM.',
+  'React to platform events as they occur.': 'הגיבו לאירועי פלטפורמה ברגע שהם קורים.',
+  'React when rows are created or updated': 'הגיבו כששורות נוצרות או מתעדכנות',
+  'Read customer story': 'לקריאת סיפור הלקוח',
+  'Read our case studies': 'קראו את מקרי הבוחן שלנו',
+  'Reads': 'קריאות',
+  'Reads and writes': 'קריאות וכתיבות',
+  'Ready': 'מוכן',
+  'Ready · 3 days ago': 'מוכן · לפני 3 ימים',
+  'Ready · yesterday': 'מוכן · אתמול',
+  'Ready to buy': 'מוכנים לרכישה',
+  'Ready to deploy': 'מוכן לפריסה',
+  'Ready to get started?': 'מוכנים להתחיל?',
+  'Real-time communication platforms': 'פלטפורמות תקשורת בזמן אמת',
+  'Realtime': 'זמן אמת',
+  'Rebrand announcement': 'הכרזת המיתוג מחדש',
+  'Receive card payments and store paid orders.': 'קבלו תשלומי כרטיסי אשראי ושמרו הזמנות ששולמו.',
+  'Recovery codes': 'קודי שחזור',
+  'Redirect': 'הפניה',
+  'Redo': 'בצע שוב',
+  'Reduce vendor sprawl and integration overhead. Appwrite unifies the backend services enterprise teams need to build, deploy, and protect modern applications without juggling multiple contracts or stitching vendors together.': // pragma: allowlist secret
+    'צמצמו ריבוי ספקים ותקורת אינטגרציות. Appwrite מאחדת את שירותי ה-backend שצוותי ארגון צריכים כדי לבנות, לפרוס ולהגן על אפליקציות מודרניות בלי ללהטט בין חוזים או לתפור ספקים יחד.', // pragma: allowlist secret
+  'Region': 'אזור',
+  'Region cache': 'מטמון אזורי',
+  'Register a domain in Appwrite without leaving the Console.': 'רשמו דומיין ב-Appwrite בלי לצאת מהקונסולה.', // pragma: allowlist secret
+  'Register domains where you build': 'רשמו דומיינים היכן שאתם בונים',
+  'Related integrations': 'אינטגרציות קשורות',
+  'Related policies': 'מסמכי מדיניות קשורים',
+  'Remote': 'מרוחק',
+  'Render on every request at the edge. Runtime env vars and framework-native 404 pages.': 'רינדור בכל בקשה בקצה הרשת. משתני סביבה בזמן ריצה ועמודי 404 נייטיביים לפריימוורק.',
+  'Repeat transforms stay fast': 'טרנספורמציות חוזרות נשארות מהירות',
+  'Replace a patchwork of backend vendors with one platform. Enterprise teams reduce integration overhead, accelerate delivery, and scale with custom resources, dedicated support, and flexible deployment.':
+    'החליפו טלאים של ספקי backend בפלטפורמה אחת. צוותי ארגון מצמצמים תקורת אינטגרציות, מאיצים אספקה וגדלים עם משאבים מותאמים, תמיכה ייעודית ופריסה גמישה.',
+  'Replace fragmented backend, hosting, storage, and delivery tooling with a single platform built for the full application lifecycle. Reduce integration surface area, simplify procurement, and give your team one system to operate and scale.':
+    'החליפו כלים מפוצלים ל-backend, אירוח, אחסון ואספקה בפלטפורמה אחת שנבנתה למחזור החיים המלא של האפליקציה. צמצמו את שטח האינטגרציות, פשטו את הרכש ותנו לצוות מערכת אחת לתפעול ולסקייל.',
+  'Replace separate email, SMS, and push SDKs with one API and delivery log.': 'החליפו SDKs נפרדים לאימייל, SMS ופוש ב-API אחד וביומן מסירה אחד.',
+  'Report bugs': 'דווחו על באגים',
+  'Reports, cleanups, and recurring background jobs.': 'דוחות, ניקויים ומשימות רקע חוזרות.',
+  'Request': 'בקשה',
+  'Request details': 'פרטי בקשה',
+  'Request logs': 'לוגי בקשות',
+  'Requests': 'בקשות',
+  'Requests / month': 'בקשות / חודש',
+  'Requests evaluated against active rules': 'בקשות נבחנות מול כללים פעילים',
+  'Reset all': 'איפוס הכול',
+  'Resize, crop, format, quality, borders, and rotation. No duplicate uploads.': 'שינוי גודל, חיתוך, פורמט, איכות, מסגרות וסיבוב. בלי העלאות כפולות.',
+  'Resources': 'משאבים',
+  'Resources for presenting the Appwrite brand to maintain consistency while using our logos, colors, and other brand elements across various platforms and materials.': // pragma: allowlist secret
+    'משאבים להצגת מותג Appwrite לשמירה על עקביות בשימוש בלוגואים, בצבעים וברכיבי מותג נוספים בפלטפורמות ובחומרים שונים.', // pragma: allowlist secret
+  'Response bodies are not stored by default.': 'גופי תגובה אינם נשמרים כברירת מחדל.',
+  'result': 'תוצאה',
+  'results': 'תוצאות',
+  'Retention and recovery settings aligned to your disaster recovery requirements.': 'הגדרות שמירה ושחזור בהתאם לדרישות התאוששות מאסון שלכם.',
+  'Review pricing section': 'סקירת מקטע התמחור',
+  'Rollback': 'שחזור גרסה',
+  'Rollbacks switch which deployment is served. No code is deleted, modified, or rebuilt, so recovery is near-instant with zero downtime.':
+    'שחזור גרסה מחליף את הפריסה המוגשת. שום קוד לא נמחק, משתנה או נבנה מחדש, כך שההתאוששות כמעט מיידית וללא השבתה.',
+  'Round-the-clock Slack and email from our engineering team.': 'זמינות מסביב לשעון ב-Slack ובאימייל מצוות ההנדסה שלנו.',
+  'rows': 'שורות',
+  'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': // pragma: allowlist secret
+    'הריצו את Enterprise על Appwrite Cloud בניהול מלא או כמהדורת פרימיום באירוח עצמי בסביבה שלכם.', // pragma: allowlist secret
+  'Run on localhost': 'הרצה על localhost',
+  'Same Docker runtime as production, on your machine.': 'אותה סביבת Docker כמו בפרודקשן, על המחשב שלכם.',
+  'Save on development and cloud costs and reduce risk at an early stage.': 'חסכו בעלויות פיתוח וענן והפחיתו סיכון בשלב מוקדם.',
+  'Scale': 'סקייל',
+  'Scale effortlessly': 'גדלו ללא מאמץ',
+  'Schedule message': 'תזמון הודעה',
+  'Scheduled executions': 'הרצות מתוזמנות',
+  'Scheduled send': 'שליחה מתוזמנת',
+  'Schedules': 'תזמונים',
+  'Screenshots': 'צילומי מסך',
+  'Seamlessly deploy your code': 'פרסו את הקוד בצורה חלקה',
+  'Search': 'חיפוש',
+  'Search 160+ TLDs with live pricing and private WHOIS. Manage DNS, connect Sites, Functions, or custom API domains, and provision TLS without leaving Appwrite.': // pragma: allowlist secret
+    'חפשו ביותר מ-160 סיומות דומיין עם תמחור חי ו-WHOIS פרטי. נהלו DNS, חברו Sites, פונקציות או דומייני API מותאמים והנפיקו TLS בלי לצאת מ-Appwrite.', // pragma: allowlist secret
+  'Search integrations': 'חיפוש אינטגרציות',
+  'Search logs...': 'חיפוש בלוגים...',
+  'Search templates…': 'חיפוש תבניות…',
+  'Secure online payment processing': 'עיבוד תשלומים מקוון ומאובטח',
+  'Security': 'אבטחה',
+  'Security alerts': 'התראות אבטחה',
+  'Security and compliance': 'אבטחה ותאימות',
+  'Security docs': 'תיעוד אבטחה',
+  'See contributors of Appwrite since 2019 and discover how you can start contributing.': 'ראו את תורמי Appwrite מאז 2019 וגלו איך תוכלו להתחיל לתרום.', // pragma: allowlist secret
+  "See what's included": 'ראו מה כלול',
+  'Seed funding': 'גיוס Seed',
+  'Seed round coverage': 'סיקור סבב ה-Seed',
+  'Select deployment': 'בחירת פריסה',
+  'Selected': 'נבחר',
+  'Self-hosted edition': 'מהדורת אירוח עצמי',
+  'Send email when users sign up': 'שלחו אימייל כשמשתמשים נרשמים',
+  'Send magic link': 'שליחת קישור קסם',
+  'Send now': 'שליחה עכשיו',
+  'Send OTP codes, delivery updates, and alerts outside your app through Twilio, Vonage, MSG91, Telesign, Textmagic, and other SMS vendors.':
+    'שלחו קודי OTP, עדכוני משלוח והתראות מחוץ לאפליקציה דרך Twilio, Vonage, MSG91, Telesign, Textmagic וספקי SMS נוספים.',
+  'Send realtime alerts to signed-in users without leaving your application experience.': 'שלחו התראות בזמן אמת למשתמשים מחוברים בלי לצאת מחוויית האפליקציה.',
+  'Send receipt, update inventory, and notify fulfillment': 'שלחו קבלה, עדכנו מלאי והודיעו למערך האספקה',
+  'Send receipts, digests, and transactional mail through SendGrid, Mailgun, SMTP, and other email providers.':
+    'שלחו קבלות, סיכומים ודואר טרנזקציוני דרך SendGrid, Mailgun, SMTP וספקי אימייל נוספים.',
+  'Series A': 'סבב Series A',
+  'Series A coverage': 'סיקור ה-Series A',
+  'Serve WebP or AVIF without storing duplicate files.': 'הגישו WebP או AVIF בלי לאחסן קבצים כפולים.',
+  'Server': 'שרת',
+  'Server-side rendering': 'רינדור בצד השרת',
+  'Serverless': 'Serverless',
+  'Serverless read/write quotas and overage rates are in': 'מכסות קריאה/כתיבה serverless ותעריפי חריגה נמצאים תחת',
+  'Session verified': 'הסשן אומת',
+  'Sessions': 'סשנים',
+  'Settings': 'הגדרות',
+  'Share tables, buckets, and functions without building custom RBAC.': 'שתפו טבלאות, באקטים ופונקציות בלי לבנות RBAC מותאם.',
+  'Share without session cookies or bucket permissions.': 'שתפו בלי עוגיות סשן או הרשאות באקט.',
+  'Share your experience and represent Appwrite in public.': 'שתפו את הניסיון שלכם וייצגו את Appwrite בציבור.', // pragma: allowlist secret
+  'Share your name, email, company name, and website using the application form below.': 'שתפו שם, אימייל, שם חברה ואתר באמצעות טופס המועמדות למטה.',
+  'Shared doc': 'מסמך משותף',
+  'Ship faster': 'שחררו מהר יותר',
+  'Ship faster with Appwrite': 'שחררו מהר יותר עם Appwrite', // pragma: allowlist secret
+  'Ship notes, feature highlights, and links for your subscribers.': 'שלחו עדכונים, יכולות בולטות וקישורים למנויים שלכם.',
+  'Ship pricing section': 'שחרור מקטע התמחור',
+  'Ship production features without stitching together multiple vendors or maintaining custom backend infrastructure.':
+    'שחררו יכולות פרודקשן בלי לתפור יחד ספקים מרובים או לתחזק תשתית backend מותאמת.',
+  "Should you require further assistance or have specific needs beyond what's presented on this page, please don't hesitate to":
+    'אם תזדקקו לסיוע נוסף או שיש לכם צרכים ספציפיים מעבר למוצג בעמוד זה, אל תהססו',
+  'Side-by-side comparison of the previous and refreshed Appwrite logos': 'השוואה זה לצד זה בין הלוגו הקודם והמרענן של Appwrite', // pragma: allowlist secret
+  'sign in': 'התחברו',
+  'Sign in to your account': 'התחברו לחשבון שלכם',
+  'Sign up': 'הרשמה',
+  'Sign up for the Student Developer pack and explore the benefits.': 'הירשמו ל-Student Developer Pack וגלו את ההטבות.',
+  'Sign up now': 'הירשמו עכשיו',
+  'Silver': 'כסף',
+  'Single Sign-On (SSO)': 'כניסה מאוחדת (SSO)',
+  'Site': 'אתר',
+  'Sites': 'אתרים',
+  'Sites docs': 'תיעוד Sites',
+  'Size': 'גודל',
+  'Size & crop': 'גודל וחיתוך',
+  'Slack support': 'תמיכה ב-Slack',
+  'SOC 2 Type II report': 'דוח SOC 2 Type II',
+  'SOC-2 and HIPAA': 'SOC-2 ו-HIPAA',
+  'SOC-2, HIPAA, and BAA': 'SOC-2, HIPAA ו-BAA',
+  'Social providers': 'ספקי התחברות חברתית',
+  'Software development transforms our everyday lives, shaped by the creativity and innovation of developers and the AI agents they work with. At Appwrite, we enable them to build products the world loves by removing technical barriers with our backend platform.': // pragma: allowlist secret
+    'פיתוח תוכנה משנה את חיי היומיום שלנו, ומעוצב על ידי היצירתיות והחדשנות של מפתחים וסוכני ה-AI שהם עובדים איתם. ב-Appwrite אנחנו מאפשרים להם לבנות מוצרים שהעולם אוהב, על ידי הסרת חסמים טכניים עם פלטפורמת ה-backend שלנו.', // pragma: allowlist secret
+  'Software Engineer': 'מהנדס תוכנה',
+  'Spacing is determined by the Appwrite mark. Unless otherwise noted by partner brands, each logo is optically equal as a collection of shapes.': // pragma: allowlist secret
+    'המרווח נקבע לפי סמל Appwrite. אלא אם צוין אחרת על ידי מותגים שותפים, כל לוגו שווה אופטית כאוסף של צורות.', // pragma: allowlist secret
+  'Spin up your backend in minutes, deploy in seconds. Fast and simple.': 'הקימו backend בדקות, פרסו בשניות. מהיר ופשוט.',
+  'SSR output': 'פלט SSR',
+  'SSR responses': 'תגובות SSR',
+  'Staging': 'סביבת בדיקות',
+  'Star on GitHub': 'תנו כוכב ב-GitHub',
+  'stargazers': 'נותני כוכבים',
+  'stars': 'כוכבים',
+  'Start building': 'התחילו לבנות',
+  'Start building like a team of hundreds today': 'התחילו לבנות כמו צוות של מאות עוד היום',
+  'Start building like a team of hundreds with Appwrite': 'התחילו לבנות כמו צוות של מאות עם Appwrite', // pragma: allowlist secret
+  'Start building with Appwrite today': 'התחילו לבנות עם Appwrite עוד היום', // pragma: allowlist secret
+  'Start from our docs': 'התחילו מהתיעוד שלנו',
+  'Start small, build consistently, and give things enough time to become real.': 'התחילו בקטן, בנו בעקביות ותנו לדברים מספיק זמן להפוך לאמיתיים.',
+  'Startups program': 'תוכנית הסטארטאפים',
+  'Startups Program': 'תוכנית הסטארטאפים',
+  'Static assets': 'נכסים סטטיים',
+  'Static, SPA, and PWA': 'סטטי, SPA ו-PWA',
+  'Status': 'סטטוס',
+  'Step': 'שלב',
+  'Storage': 'אחסון',
+  'Storage files and transformed previews inherit Appwrite CDN delivery and regional caching automatically. No separate CDN setup required.': // pragma: allowlist secret
+    'קבצי אחסון ותצוגות מקדימות מעובדות יורשים אוטומטית את אספקת ה-CDN של Appwrite ואת המטמון האזורי. אין צורך בהקמת CDN נפרדת.', // pragma: allowlist secret
+  'Storage for data and media': 'אחסון לנתונים ולמדיה',
+  'Store less, transfer less, load faster. One upload, optimized on every delivery.': 'אחסנו פחות, העבירו פחות, טענו מהר יותר. העלאה אחת, מותאמת בכל מסירה.',
+  'Stream execution and platform logs into your observability stack.': 'הזרימו לוגי הרצה ופלטפורמה למערך התצפיתיות שלכם.',
+  'Strength presets, compliance checks, and reuse rules.': 'תבניות חוזק, בדיקות תאימות וכללי שימוש חוזר.',
+  'Stripe webhooks': 'webhooks של Stripe',
+  'Strong preset': 'תבנית חזקה',
+  'Students with access to the Education plan can create 2 projects with equal usage limits as the Appwrite Pro plan (minus email support) at no cost. We also have a special channel for Education program members in the Appwrite Discord server for support, which will feature exclusive events, hackathons, etc.': // pragma: allowlist secret
+    'סטודנטים עם גישה לתוכנית ה-Education יכולים ליצור 2 פרויקטים עם מגבלות שימוש זהות לתוכנית Appwrite Pro (למעט תמיכת אימייל) ללא עלות. יש לנו גם ערוץ ייעודי לחברי תוכנית ה-Education בשרת ה-Discord של Appwrite לתמיכה, שיכלול אירועים בלעדיים, האקתונים ועוד.', // pragma: allowlist secret
+  'Subject': 'נושא',
+  'Submit application': 'שליחת מועמדות',
+  'Submit new ideas': 'הציעו רעיונות חדשים',
+  'Submit your application': 'שלחו את המועמדות שלכם',
+  'Subscribe user targets from Auth or pick them in the Console when you create a topic.': 'רשמו יעדי משתמשים מ-Auth או בחרו אותם בקונסולה בעת יצירת נושא.',
+  'Subscriber audiences': 'קהלי מנויים',
+  'subscribers': 'מנויים',
+  'Subscribers': 'מנויים',
+  'Suggest features, integrations, or SDKs for our roadmap.': 'הציעו יכולות, אינטגרציות או SDKs למפת הדרכים שלנו.',
+  'Support': 'תמיכה',
+  'Support developers with their projects and contributions.': 'תמכו במפתחים בפרויקטים ובתרומות שלהם.',
+  'Supported Git providers': 'ספקי Git נתמכים',
+  'Sync': 'סינכרוני',
+  'Sync HTTP for APIs and webhooks.': 'HTTP סינכרוני לממשקי API ול-webhooks.',
+  'Sync with Meilisearch': 'סנכרון עם Meilisearch',
+  'Table of contents': 'תוכן עניינים',
+  'Target': 'יעד',
+  'targets': 'יעדים',
+  'Targets': 'יעדים',
+  'Targets are created when users verify email or phone in Auth, or when your app registers push device tokens.':
+    'יעדים נוצרים כשמשתמשים מאמתים אימייל או טלפון ב-Auth, או כשהאפליקציה שלכם רושמת טוקני פוש של מכשירים.',
+  'Teach AI agents your backend, so they always make the right call.': 'למדו את סוכני ה-AI את ה-backend שלכם, כדי שתמיד יקבלו את ההחלטה הנכונה.',
+  'Team': 'צוות',
+  'Team Appwrite': 'צוות Appwrite', // pragma: allowlist secret
+  'Team Appwrite at Camp 3.0, New York City': 'צוות Appwrite ב-Camp 3.0, ניו יורק', // pragma: allowlist secret
+  'Team Appwrite at Camp 5.0, Barcelona': 'צוות Appwrite ב-Camp 5.0, ברצלונה', // pragma: allowlist secret
+  'Team composition:': 'הרכב הצוות:',
+  'Teams': 'צוותים',
+  'Teams and developers who ship integrations, tools, or services on Appwrite can join our partner program for verified catalog placement, co-marketing, training, and engineering support.': // pragma: allowlist secret
+    'צוותים ומפתחים שמשחררים אינטגרציות, כלים או שירותים על Appwrite יכולים להצטרף לתוכנית השותפים שלנו למיקום מאומת בקטלוג, שיווק משותף, הדרכה ותמיכה הנדסית.', // pragma: allowlist secret
+  'Technology Partner Program': 'תוכנית שותפי טכנולוגיה',
+  'Templates': 'תבניות',
+  'Terminal': 'טרמינל',
+  'Terms and Conditions': 'תנאים והגבלות',
+  'Terms of Service': 'תנאי שירות',
+  'Text verification': 'אימות בהודעת טקסט',
+  'Thank you for applying': 'תודה על הגשת המועמדות',
+  "Thanks for signing up. Here's how to get started with your new account.": 'תודה שנרשמתם. כך מתחילים עם החשבון החדש שלכם.',
+  'The Appwrite Cloud GA journey from private beta to launch': 'מסע Appwrite Cloud לזמינות כללית, מבטא פרטית ועד השקה', // pragma: allowlist secret
+  "The Appwrite logo stands as a prominent symbol of our brand's identity. Refrain from altering our logo and preferably use our logo on a neutral background.": // pragma: allowlist secret
+    'הלוגו של Appwrite הוא סמל מרכזי של זהות המותג שלנו. הימנעו משינוי הלוגו והעדיפו להשתמש בו על רקע ניטרלי.', // pragma: allowlist secret
+  'The Appwrite Network': 'רשת Appwrite', // pragma: allowlist secret
+  'The Appwrite Pro plan includes generous limits designed for production applications. Review our pricing page for a full overview of included resources and add-ons.': // pragma: allowlist secret
+    'תוכנית Appwrite Pro כוללת מגבלות נדיבות שתוכננו לאפליקציות פרודקשן. עיינו בעמוד התמחור לסקירה מלאה של המשאבים והתוספים הכלולים.', // pragma: allowlist secret
+  'The Appwrite Startups Program gives you an all-in-one platform to build and host your product, plus cloud credits, training, priority support, and founder swag.': // pragma: allowlist secret
+    'תוכנית הסטארטאפים של Appwrite מעניקה לכם פלטפורמת הכול-באחד לבנייה ולאירוח המוצר, בתוספת קרדיטים לענן, הדרכה, תמיכה מועדפת ומתנות למייסדים.', // pragma: allowlist secret
+  'The Appwrite Startups Program launched to support early-stage teams with credits, guidance, and infrastructure as they build on the platform.': // pragma: allowlist secret
+    'תוכנית הסטארטאפים של Appwrite הושקה כדי לתמוך בצוותים בשלבים מוקדמים עם קרדיטים, ליווי ותשתית בזמן שהם בונים על הפלטפורמה.', // pragma: allowlist secret
+  'The Appwrite team at Camp 3.0 on a rooftop in New York City': 'צוות Appwrite ב-Camp 3.0 על גג בניין בניו יורק', // pragma: allowlist secret
+  'The Appwrite team at Camp 5.0': 'צוות Appwrite ב-Camp 5.0', // pragma: allowlist secret
+  'The first stable release marked a major milestone after years of community-driven development, spanning thousands of commits and contributions from developers worldwide.':
+    'הגרסה היציבה הראשונה סימנה אבן דרך משמעותית לאחר שנים של פיתוח מונע קהילה, שכלל אלפי קומיטים ותרומות ממפתחים בכל העולם.',
+  'The new logo': 'הלוגו החדש',
+  'The power of open source benefits us all': 'העוצמה של קוד פתוח מיטיבה עם כולנו',
+  'The Sites view in Console, ready to deploy your first web app': 'תצוגת Sites בקונסולה, מוכנה לפריסת אפליקציית הווב הראשונה שלכם',
+  'The Startups program is for companies with traction through funding or revenue. If you have neither, Appwrite Cloud Pro is the right place to start building.': // pragma: allowlist secret
+    'תוכנית הסטארטאפים מיועדת לחברות עם טרקשן דרך גיוס או הכנסות. אם אין לכם אף אחד מהם, Appwrite Cloud Pro הוא המקום הנכון להתחיל לבנות.', // pragma: allowlist secret
+  'The Startups program is for product teams at an early stage of growth. Apply if your company meets the criteria below.':
+    'תוכנית הסטארטאפים מיועדת לצוותי מוצר בשלב צמיחה מוקדם. הגישו מועמדות אם החברה שלכם עומדת בקריטריונים שלהלן.',
+  'The Startups program is reserved for early-stage product companies with funding or revenue. These profiles are usually not accepted.':
+    'תוכנית הסטארטאפים שמורה לחברות מוצר בשלב מוקדם עם גיוס או הכנסות. הפרופילים הבאים בדרך כלל אינם מתקבלים.',
+  'The Startups program requires evidence of traction through funding or revenue. If your company has neither, start with Appwrite Cloud Pro instead of applying here.': // pragma: allowlist secret
+    'תוכנית הסטארטאפים דורשת עדות לטרקשן דרך גיוס או הכנסות. אם לחברה שלכם אין אף אחד מהם, התחילו עם Appwrite Cloud Pro במקום להגיש מועמדות כאן.', // pragma: allowlist secret
+  'The very first Appwrite Console': 'קונסולת Appwrite הראשונה אי פעם', // pragma: allowlist secret
+  'This credit is available only for users who are verified through the GitHub program as students. The plan is valid until you graduate from GitHub Education.':
+    'הקרדיט זמין רק למשתמשים שאומתו כסטודנטים דרך תוכנית GitHub. התוכנית בתוקף עד לסיום הלימודים ב-GitHub Education.',
+  'This form is protected by reCAPTCHA, and the Google': 'טופס זה מוגן על ידי reCAPTCHA, ושל Google',
+  'This program is open to all Appwrite users who are verified members of the GitHub Student Developer Pack.': // pragma: allowlist secret
+    'התוכנית פתוחה לכל משתמשי Appwrite שהם חברים מאומתים ב-GitHub Student Developer Pack.', // pragma: allowlist secret
+  'Tier': 'דרגה',
+  'Time': 'זמן',
+  'Time-based': 'מבוסס זמן',
+  'Timeline': 'ציר זמן',
+  'Title': 'כותרת',
+  'TLS encryption': 'הצפנת TLS',
+  'to register and connect your domain.': 'כדי לרשום ולחבר את הדומיין שלכם.',
+  'Top GitHub projects': 'פרויקטים מובילים ב-GitHub',
+  'Top paths': 'נתיבים מובילים',
+  'Topic': 'נושא',
+  'Topics': 'נושאים',
+  'TOTP codes from Google Authenticator, 1Password, and similar apps.': 'קודי TOTP מ-Google Authenticator, מ-1Password ומאפליקציות דומות.',
+  'Track console actions across your organization for security and governance.': 'עקבו אחרי פעולות בקונסולה בכל הארגון לצורכי אבטחה וממשל.',
+  'Traffic': 'תעבורה',
+  'Traffic rules': 'כללי תעבורה',
+  'Training': 'הדרכה',
+  'Transform': 'טרנספורמציה',
+  'Trigger': 'טריגר',
+  'Trust center': 'מרכז אמון',
+  'Try adjusting or clearing your filters.': 'נסו להתאים או לנקות את המסננים.',
+  'Type II certified': 'מוסמך Type II',
+  'Typing': 'מקליד',
+  'Undo': 'ביטול פעולה',
+  'Unleashing creativity and innovation in every creator': 'משחררים יצירתיות וחדשנות בכל יוצר',
+  'Unlocks on': 'נפתח בתאריך',
+  'Upload': 'העלאה',
+  'Uptime SLA': 'SLA לזמינות',
+  'Uptime SLAs': 'הסכמי SLA לזמינות',
+  'Use case': 'תרחיש שימוש',
+  'Use one platform for backend development and web hosting and reduce vendors.': 'השתמשו בפלטפורמה אחת לפיתוח backend ולאירוח אתרים וצמצמו ספקים.',
+  'Use these product visuals to enhance your articles, presentations, and content related to Appwrite.': // pragma: allowlist secret
+    'השתמשו בוויז׳ואלים האלה של המוצר כדי להעשיר מאמרים, מצגות ותוכן שקשור ל-Appwrite.', // pragma: allowlist secret
+  'User authentication and authorization': 'אימות והרשאות משתמשים',
+  'Users': 'משתמשים',
+  'VC-backed companies that have raised beyond Series A.': 'חברות בגיבוי הון סיכון שגייסו מעבר ל-Series A.',
+  'Vendor': 'ספק',
+  'Verified': 'מאומת',
+  'Verify events and sync billing state': 'אמתו אירועים וסנכרנו את מצב החיוב',
+  'View': 'צפייה',
+  'View all contributors': 'צפו בכל התורמים',
+  'View all Open Issues': 'צפו בכל ה-Issues הפתוחים',
+  'View all projects': 'צפו בכל הפרויקטים',
+  'View careers': 'צפו במשרות',
+  'View day': 'צפייה ביום',
+  'View full benchmark': 'צפו בבנצ׳מארק המלא',
+  'View leaderboard': 'צפו בטבלת הדירוג',
+  'View Logs': 'צפייה בלוגים',
+  'View on GitHub': 'צפייה ב-GitHub',
+  'View pricing plans': 'צפו בתוכניות התמחור',
+  'View Pro plan': 'צפו בתוכנית Pro',
+  'viewing': 'צופה',
+  'Visit our showcase website built with Appwrite to find inspiration for your projects or to showcase what you have built.': // pragma: allowlist secret
+    'בקרו באתר התצוגה שלנו שנבנה עם Appwrite כדי למצוא השראה לפרויקטים שלכם או להציג את מה שבניתם.', // pragma: allowlist secret
+  'Visit the community': 'בקרו בקהילה',
+  'Volume discounts': 'הנחות כמות',
+  'Volume discounts are available in case you handle the bill for your clients.': 'הנחות כמות זמינות אם אתם מנהלים את החיוב עבור הלקוחות שלכם.',
+  'Ways to partner': 'דרכים לשותפות',
+  'We adhere to all needed compliance: GDPR, HIPAA, CCPA, SOC-2.': 'אנחנו עומדים בכל דרישות התאימות הנדרשות: GDPR, HIPAA, CCPA, SOC-2.',
+  'We are a remote-first, AI-native team built to stay lean. We recruit exceptional talent worldwide, communicate with clarity, and combine human judgment with AI to ship ambitious work at speed.':
+    'אנחנו צוות מרוחק תחילה ו-AI-native שנבנה להישאר רזה. אנחנו מגייסים כישרונות יוצאי דופן מכל העולם, מתקשרים בבהירות ומשלבים שיקול דעת אנושי עם AI כדי לשחרר עבודה שאפתנית במהירות.',
+  'We hire the best people wherever they are. Being remote-first keeps us thoughtful about communication across time zones and cultures. We stay humble, treat each other with respect, and work to help everyone on the team do their best work.':
+    'אנחנו מגייסים את האנשים הטובים ביותר בכל מקום שבו הם נמצאים. עבודה מרוחקת תחילה שומרת אותנו קשובים לתקשורת בין אזורי זמן ותרבויות. אנחנו נשארים צנועים, מתייחסים זה לזה בכבוד ועוזרים לכל אחד בצוות לעשות את עבודתו הטובה ביותר.',
+  'We keep overhead lean and our investments close to the product. Most of our team is dedicated to creating products developers genuinely enjoy using.':
+    'אנחנו שומרים על תקורה רזה ועל השקעות קרובות למוצר. רוב הצוות שלנו מוקדש ליצירת מוצרים שמפתחים באמת נהנים להשתמש בהם.',
+  'We provide in-depth training and workshops to help you master Appwrite for your clients.': 'אנחנו מספקים הדרכות מעמיקות וסדנאות שיעזרו לכם לשלוט ב-Appwrite עבור הלקוחות שלכם.', // pragma: allowlist secret
+  'We review your eligibility': 'אנחנו בוחנים את הזכאות שלכם',
+  'We strive to stay a smaller team that punches above its weight. That means clear priorities, async-first communication, and workflows designed for effectiveness. We minimize bureaucracy, keep decision-making close to the work, and use AI where it saves time so people can focus on high-impact work.':
+    'אנחנו שואפים להישאר צוות קטן שמכה מעל משקלו. זה אומר סדרי עדיפויות ברורים, תקשורת אסינכרונית תחילה ותהליכי עבודה שמתוכננים לאפקטיביות. אנחנו ממזערים בירוקרטיה, שומרים את קבלת ההחלטות קרובה לעבודה ומשתמשים ב-AI היכן שהוא חוסך זמן, כדי שאנשים יוכלו להתמקד בעבודה בעלת השפעה גבוהה.',
+  'We welcome product-focused startups that are 5 years old or younger and have raised funding (pre-seed through Series A) or bootstrapped revenue up to $5M in annual recurring revenue. Companies with no funding and no revenue are not eligible. The program is not open to agencies, consultancies, or resellers.':
+    'אנחנו מקבלים בברכה סטארטאפים ממוקדי מוצר בני 5 שנים או פחות שגייסו הון (מ-pre-seed ועד Series A) או הגיעו בבוטסטראפ להכנסות של עד 5 מיליון דולר בהכנסות שנתיות חוזרות. חברות ללא גיוס וללא הכנסות אינן זכאיות. התוכנית אינה פתוחה לסוכנויות, לחברות ייעוץ או למשווקים.',
+  'We will have a dedicated partner catalog, an official partner badge, and other visibility opportunities.':
+    'יהיו לנו קטלוג שותפים ייעודי, תג שותף רשמי והזדמנויות חשיפה נוספות.',
+  'Webhooks': 'Webhooks',
+  'Webhooks, sync jobs, and reactive workflows.': 'Webhooks, משימות סנכרון ותהליכים תגובתיים.',
+  'Weekly digest': 'סיכום שבועי',
+  'Weekly product digest': 'סיכום מוצר שבועי',
+  'Welcome back': 'ברוכים השבים',
+  'What are the limits of the Pro plan?': 'מהן המגבלות של תוכנית Pro?',
+  'What compliance options are available?': 'אילו אפשרויות תאימות זמינות?',
+  'What does the Education plan offer?': 'מה מציעה תוכנית ה-Education?',
+  'What happens after I apply?': 'מה קורה אחרי שמגישים מועמדות?',
+  'What happens after I sign up?': 'מה קורה אחרי ההרשמה?',
+  'What happens if I reach a resource limit in my Free plan?': 'מה קורה אם אני מגיע למגבלת משאבים בתוכנית ה-Free שלי?',
+  'What happens if I reach a resource limit in my Pro plan?': 'מה קורה אם אני מגיע למגבלת משאבים בתוכנית ה-Pro שלי?',
+  'What happens if we scale overnight?': 'מה קורה אם נגדל בן לילה?',
+  'What if we have no funding or revenue yet?': 'מה אם עדיין אין לנו גיוס או הכנסות?',
+  'What if we need more resources than the Startups program offers?': 'מה אם נצטרך יותר משאבים ממה שתוכנית הסטארטאפים מציעה?',
+  'What is the Appwrite Education Program?': 'מהי תוכנית ה-Education של Appwrite?', // pragma: allowlist secret
+  'What kind of support do we get?': 'איזו תמיכה נקבל?',
+  'What payment methods does Appwrite support?': 'באילו אמצעי תשלום Appwrite תומכת?', // pragma: allowlist secret
+  'What support is included?': 'איזו תמיכה כלולה?',
+  'What we build': 'מה אנחנו בונים',
+  "What's included in the Appwrite Startups program?": 'מה כלול בתוכנית הסטארטאפים של Appwrite?', // pragma: allowlist secret
+  'When something happens': 'כשמשהו קורה',
+  'When the clock hits': 'כשהשעון מגיע',
+  'Where can I find an overview of my organization usage stats?': 'איפה אפשר למצוא סקירה של נתוני השימוש של הארגון שלי?',
+  'Where can I find information about my invoices and other billing information?': 'איפה אפשר למצוא מידע על חשבוניות ופרטי חיוב נוספים?',
+  'While prioritizing recognizability, the logotype is the recommended choice. Using the Appwrite logomark is suitable for situations where space constraints make it challenging to showcase the complete logotype.': // pragma: allowlist secret
+    'כשנותנים עדיפות לזיהוי, הלוגוטייפ הוא הבחירה המומלצת. השימוש בסמל הלוגו של Appwrite מתאים למצבים שבהם מגבלות מקום מקשות על הצגת הלוגוטייפ המלא.', // pragma: allowlist secret
+  'Who is eligible to apply?': 'מי זכאי להגיש מועמדות?',
+  'Who is the Enterprise plan for?': 'למי מיועדת תוכנית ה-Enterprise?',
+  'Who qualifies': 'מי זכאי',
+  'Why Appwrite?': 'למה Appwrite?', // pragma: allowlist secret
+  'Why does Appwrite ask for payment verification for up to $150?': 'למה Appwrite מבקשת אימות תשלום של עד 150 דולר?', // pragma: allowlist secret
+  'Width (px)': 'רוחב (px)',
+  'With every contribution, Appwrite gets better for all of us. Start contributing today.': 'עם כל תרומה, Appwrite משתפרת עבור כולנו. התחילו לתרום עוד היום.', // pragma: allowlist secret
+  'Work email address': 'כתובת אימייל עבודה',
+  'Works for external viewers without third-party cookie issues.': 'עובד לצופים חיצוניים בלי בעיות עוגיות צד שלישי.',
+  'Works with': 'עובד עם',
+  'Works with every major LLM. Find out how well your model integrates with Appwrite.': 'עובד עם כל LLM מוביל. גלו עד כמה המודל שלכם משתלב עם Appwrite.', // pragma: allowlist secret
+  "Write 'Appwrite,' with a lowercase 'w' and no space between the two words. Please refrain from using variations like 'AppWrite' or 'App Write'.": // pragma: allowlist secret
+    "כתבו 'Appwrite' עם w קטנה וללא רווח בין שתי המילים. הימנעו משימוש בווריאציות כמו 'AppWrite' או 'App Write'.", // pragma: allowlist secret
+  'Writes': 'כתיבות',
+  'Yes. Accepted startups can host websites and web apps with Appwrite Sites as part of the program.': // pragma: allowlist secret
+    'כן. סטארטאפים שמתקבלים יכולים לארח אתרים ואפליקציות ווב עם Appwrite Sites כחלק מהתוכנית.', // pragma: allowlist secret
+  'Yes. The Enterprise self-hosted edition is a premium, cloud-equal release with advanced management tools. It is the same platform Appwrite uses to run Cloud at 500K projects scale, deployed in your environment with dedicated support, SLAs, and compliance features.': // pragma: allowlist secret
+    'כן. מהדורת האירוח העצמי של Enterprise היא גרסת פרימיום, זהה לענן, עם כלי ניהול מתקדמים. זו אותה פלטפורמה שבה Appwrite מפעילה את הענן בקנה מידה של 500 אלף פרויקטים, פרוסה בסביבה שלכם עם תמיכה ייעודית, הסכמי SLA ויכולות תאימות.', // pragma: allowlist secret
+  'Yes. We can provide a Business Associate Agreement for organizations that require it.': 'כן. אנחנו יכולים לספק הסכם Business Associate לארגונים שזקוקים לו.',
+  'You': 'אתם',
+  'You are building a software product or platform. The program is not open to agencies, consultancies, or resellers.':
+    'אתם בונים מוצר תוכנה או פלטפורמה. התוכנית אינה פתוחה לסוכנויות, לחברות ייעוץ או למשווקים.',
+  'You are starting a new project on Appwrite or migrating from another backend provider.': 'אתם מתחילים פרויקט חדש על Appwrite או עוברים מספק backend אחר.', // pragma: allowlist secret
+  "You don't need to have a team of engineers to develop, host, and scale applications. Appwrite gives you everything you need, including built-in security, AI, and open source.": // pragma: allowlist secret
+    'אתם לא צריכים צוות מהנדסים כדי לפתח, לארח ולהרחיב אפליקציות. Appwrite נותנת לכם את כל מה שצריך, כולל אבטחה מובנית, AI וקוד פתוח.', // pragma: allowlist secret
+  'You have access to the Appwrite community for technical questions. Program members also receive a private Slack channel with our support team and a dedicated program manager for non-technical questions.': // pragma: allowlist secret
+    'יש לכם גישה לקהילת Appwrite לשאלות טכניות. חברי התוכנית מקבלים גם ערוץ Slack פרטי עם צוות התמיכה שלנו ומנהל תוכנית ייעודי לשאלות לא טכניות.', // pragma: allowlist secret
+  'You will get access to the Appwrite engineering team to get the support you need.': 'תקבלו גישה לצוות ההנדסה של Appwrite לתמיכה שאתם צריכים.', // pragma: allowlist secret
+  'You will get early access to new features and products and the ability to influence our roadmap.':
+    'תקבלו גישה מוקדמת ליכולות ולמוצרים חדשים ואת היכולת להשפיע על מפת הדרכים שלנו.',
+  'Your access to the Appwrite Education plan is valid until you finish your studies and graduate from the GitHub Student Developer Pack.': // pragma: allowlist secret
+    'הגישה שלכם לתוכנית ה-Education של Appwrite בתוקף עד לסיום הלימודים והסיום ב-GitHub Student Developer Pack.', // pragma: allowlist secret
+  'Your company is 5 years old or younger and has raised funding (pre-seed through Series A) or bootstrapped revenue up to $5M in annual recurring revenue.':
+    'החברה שלכם בת 5 שנים או פחות וגייסה הון (מ-pre-seed ועד Series A) או הגיעה בבוטסטראפ להכנסות של עד 5 מיליון דולר בהכנסות שנתיות חוזרות.',
+  'Your data is always yours. Want to migrate away? You can do so at any time.': 'הנתונים שלכם תמיד שלכם. רוצים לעבור לפלטפורמה אחרת? תוכלו לעשות זאת בכל עת.',
+  'Your language, your runtime': 'השפה שלכם, סביבת הריצה שלכם',
+  'Your providers': 'הספקים שלכם',
+  'Your site has been deployed.': 'האתר שלכם נפרס.',
+  'Your startups developer toolkit': 'ערכת הכלים למפתחים בסטארטאפ שלכם',
+  "Your users' data is safe from day one with Appwrite's built in security.": 'נתוני המשתמשים שלכם מוגנים מהיום הראשון עם האבטחה המובנית של Appwrite.', // pragma: allowlist secret
+  'Zero configuration development': 'פיתוח ללא קונפיגורציה',
+  'Auth': 'אימות',
+  'CPU': 'מעבד',
+  'Q4 launch plan': 'תוכנית השקה לרבעון 4',
+  'S3-compatible access': 'גישה תואמת S3',
+  'Semantic search over race briefings and telemetry notes': 'חיפוש סמנטי בתדריכי מרוץ וברשומות טלמטריה',
+  'Skills': 'Skills',
+  'Welcome to Acme': 'ברוכים הבאים ל-Acme',
+  "What's new in Acme this week": 'מה חדש ב-Acme השבוע',
+}

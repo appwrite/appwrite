@@ -59,6 +59,7 @@ import {
   hasUnavailableSpecifications,
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
+import { useT } from '@/lib/i18n/translate'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -85,6 +86,7 @@ export function RepositoryConfigView({
   installationIdFromSearch,
   providerRepositoryIdFromSearch,
 }: RepositoryConfigViewProps) {
+  const t = useT()
   const { projectId } = useParams({ strict: false })
   const { project } = useProject(projectId)
   const navigate = useNavigate()
@@ -199,15 +201,15 @@ export function RepositoryConfigView({
 
   const handleDeploy = async () => {
     if (!projectId || !functionName || !runtime) {
-      toast.error('Please fill in function name and runtime')
+      toast.error(t('Please fill in function name and runtime'))
       return
     }
     if (!domain.trim()) {
-      toast.error('Please enter a domain')
+      toast.error(t('Please enter a domain'))
       return
     }
     if (!installationId || !providerRepositoryId) {
-      toast.error('Missing repository connection')
+      toast.error(t('Missing repository connection'))
       return
     }
 
@@ -272,7 +274,7 @@ export function RepositoryConfigView({
         search: { functionId: finalFunctionId, deploymentId: deployment.$id },
       })
     } catch (err: unknown) {
-      toast.error(err?.message || 'Failed to create function')
+      toast.error(err?.message || t('Failed to create function'))
       setIsDeploying(false)
     }
   }
@@ -312,7 +314,7 @@ export function RepositoryConfigView({
                 <>
                   <span className="mx-1.5">·</span>
                   <span>
-                    Updated <DateTooltip date={repository.pushedAt} />
+                    {t('Updated')} <DateTooltip date={repository.pushedAt} />
                   </span>
                 </>
               )}
@@ -334,7 +336,7 @@ export function RepositoryConfigView({
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <GitBranch className="h-3.5 w-3.5" />
-            Branch
+            {t('Branch')}
           </span>
           <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">
             {branch || repository?.defaultBranch || 'main'}
@@ -343,7 +345,7 @@ export function RepositoryConfigView({
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <FolderOpen className="h-3.5 w-3.5" />
-            Root directory
+            {t('Root directory')}
           </span>
           <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
             {rootDirectory || './'}
@@ -352,7 +354,7 @@ export function RepositoryConfigView({
         {runtime && (
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-              Runtime
+              {t('Runtime')}
             </span>
             <span className="flex items-center gap-1.5 text-[12px] text-foreground">
               <RuntimeIcon runtime={runtime} size="sm" />
@@ -364,10 +366,10 @@ export function RepositoryConfigView({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
               <Key className="h-3.5 w-3.5" />
-              Variables
+              {t('Variables')}
             </span>
             <span className="text-[12px] text-foreground">
-              {variables.length} configured
+              {variables.length} {t('configured')}
             </span>
           </div>
         )}
@@ -376,7 +378,7 @@ export function RepositoryConfigView({
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-[11px] text-muted-foreground">
-            Ready to deploy
+            {t('Ready to deploy')}
           </span>
         </div>
       </div>
@@ -385,9 +387,9 @@ export function RepositoryConfigView({
 
   return (
     <WizardLayout
-      title="Create function"
+      title={t('Create function')}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       fallbackPath={`/projects/${projectId}/functions`}
       onClose={() =>
         navigate({
@@ -417,7 +419,7 @@ export function RepositoryConfigView({
             }
             disabled={isDeploying}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleDeploy}
@@ -429,7 +431,7 @@ export function RepositoryConfigView({
               !domainValid
             }
           >
-            Create and deploy
+            {t('Create and deploy')}
           </Button>
         </>
       }
@@ -445,7 +447,7 @@ export function RepositoryConfigView({
                 {repoOwner}/{repoName}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Git repository
+                {t('Git repository')}
               </p>
             </div>
           </div>
@@ -459,7 +461,7 @@ export function RepositoryConfigView({
               to="/projects/$projectId/functions/create"
               params={{ projectId: projectId! }}
             >
-              Change
+              {t('Change')}
             </Link>
           </Button>
         </div>
@@ -468,43 +470,45 @@ export function RepositoryConfigView({
       {/* Details card */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Details</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t('Details')}
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="function-name" className="text-[13px]">
-              Function name
+              {t('Function name')}
             </Label>
             <Input
               id="function-name"
               value={functionName}
               onChange={(e) => setFunctionName(e.target.value)}
-              placeholder="My function"
+              placeholder={t('My function')}
               className="h-9 text-[13px]"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Function ID</Label>
+            <Label className="text-[13px]">{t('Function ID')}</Label>
             <IdInput
               value={functionId}
               onChange={setFunctionId}
-              placeholder="Auto-generated"
+              placeholder={t('Auto-generated')}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[13px]">Runtime</Label>
+            <Label className="text-[13px]">{t('Runtime')}</Label>
             {detectRuntimeMutation.isPending ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 <span className="text-[13px] text-muted-foreground">
-                  Detecting runtime...
+                  {t('Detecting runtime...')}
                 </span>
               </div>
             ) : (
               <Select value={runtime} onValueChange={setRuntime}>
                 <SelectTrigger className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select runtime" />
+                  <SelectValue placeholder={t('Select runtime')} />
                 </SelectTrigger>
                 <SelectContent>
                   {runtimes.map((r) => (
@@ -521,9 +525,9 @@ export function RepositoryConfigView({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-[13px]">Public</Label>
+              <Label className="text-[13px]">{t('Public')}</Label>
               <p className="text-[11px] text-muted-foreground">
-                Allow anyone to execute this function (execute role: any)
+                {t('Allow anyone to execute this function (execute role: any)')}
               </p>
             </div>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
@@ -531,14 +535,14 @@ export function RepositoryConfigView({
           {specifications.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="specification" className="text-[13px]">
-                Compute
+                {t('Compute')}
               </Label>
               <Select
                 value={specification || undefined}
                 onValueChange={setSpecification}
               >
                 <SelectTrigger id="specification" className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select specification" />
+                  <SelectValue placeholder={t('Select specification')} />
                 </SelectTrigger>
                 <SelectContent>
                   {specifications
@@ -555,12 +559,12 @@ export function RepositoryConfigView({
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Runtime specification for your function
+                {t('Runtime specification for your function')}
               </p>
               {hasUnavailableSpecifications(specifications) && (
                 <p className="text-[11px] text-muted-foreground">
-                  <UpgradePlanLink orgId={project?.teamId} /> to unlock
-                  additional specifications.
+                  <UpgradePlanLink orgId={project?.teamId} />{' '}
+                  {t('to unlock additional specifications.')}
                 </p>
               )}
             </div>
@@ -579,7 +583,7 @@ export function RepositoryConfigView({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Production branch
+            {t('Production branch')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -590,7 +594,7 @@ export function RepositoryConfigView({
             providerRepositoryId={providerRepositoryId}
             value={branch}
             onChange={setBranch}
-            label="Branch"
+            label={t('Branch')}
           />
           <RootDirectoryPicker
             projectId={projectId}
@@ -599,14 +603,14 @@ export function RepositoryConfigView({
             branch={branch || 'main'}
             value={rootDirectory}
             onChange={setRootDirectory}
-            label="Root directory"
-            description="Directory containing your function code"
+            label={t('Root directory')}
+            description={t('Directory containing your function code')}
           />
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-[13px]">Silent mode</Label>
+              <Label className="text-[13px]">{t('Silent mode')}</Label>
               <p className="text-[11px] text-muted-foreground">
-                Disable automated comments on repository commits
+                {t('Disable automated comments on repository commits')}
               </p>
             </div>
             <Switch checked={silentMode} onCheckedChange={setSilentMode} />
@@ -623,14 +627,14 @@ export function RepositoryConfigView({
         <AccordionItem value="build-settings" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
             <span className="text-[15px] font-semibold text-foreground">
-              Build
+              {t('Build')}
             </span>
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="entrypoint" className="text-[13px]">
-                  Entrypoint
+                  {t('Entrypoint')}
                 </Label>
                 <Input
                   id="entrypoint"
@@ -642,7 +646,7 @@ export function RepositoryConfigView({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="commands" className="text-[13px]">
-                  Build commands
+                  {t('Build commands')}
                 </Label>
                 <Input
                   id="commands"

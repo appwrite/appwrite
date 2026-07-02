@@ -4,6 +4,7 @@ import { PricingSectionHeading } from '@/components/pages/pricing/_components/Pr
 import type { PolicySlug } from '@/lib/legal/policies'
 import { PolicyRelatedLinks } from '@/components/pages/legal/PolicyRelatedLinks'
 import { PolicyToc, type PolicyTocItem } from './PolicyToc'
+import { useT } from '@/lib/i18n/translate'
 
 type PolicyLayoutProps = {
   title: string
@@ -18,6 +19,7 @@ export function PolicyLayout({
   currentPolicy,
   children,
 }: PolicyLayoutProps) {
+  const t = useT()
   return (
     <div className="relative">
       <HomeSoftLights variant="pricing" className="pointer-events-none opacity-70" />
@@ -28,7 +30,7 @@ export function PolicyLayout({
             <PricingSectionHeading
               as="h1"
               align="left"
-              title={title}
+              title={t(title)}
               className="max-w-3xl"
             />
             {currentPolicy ? (

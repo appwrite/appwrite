@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 interface FunctionTimeoutCardProps {
   projectId: string | null | undefined
@@ -20,6 +21,7 @@ export function FunctionTimeoutCard({
   functionId,
   func,
 }: FunctionTimeoutCardProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [requestTimeout, setRequestTimeout] = useState(15)
 
@@ -37,7 +39,7 @@ export function FunctionTimeoutCard({
       )
     },
     onSuccess: () => {
-      toast.success('Timeout updated successfully')
+      toast.success(t('Timeout updated successfully'))
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
@@ -46,13 +48,13 @@ export function FunctionTimeoutCard({
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update timeout'))
+      toast.error(getErrorMessage(error, t('Failed to update timeout')))
     },
   })
 
   const handleSave = () => {
     if (requestTimeout < 1 || requestTimeout > 900) {
-      toast.error('Timeout must be between 1 and 900 seconds')
+      toast.error(t('Timeout must be between 1 and 900 seconds'))
       return
     }
     updateMutation.mutate({ timeout: requestTimeout })
@@ -64,18 +66,20 @@ export function FunctionTimeoutCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Timeout</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Timeout')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Maximum time a single execution may run before it is stopped. Use a
-          higher value for slow I/O or heavy work; use a lower value to cap run
-          time. Allowed range is 1–900 seconds.
+          {t(
+            'Maximum time a single execution may run before it is stopped. Use a higher value for slow I/O or heavy work; use a lower value to cap run time. Allowed range is 1–900 seconds.',
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <div className="space-y-2">
           <Label htmlFor="function-timeout" className="text-[13px]">
-            Seconds per execution
+            {t('Seconds per execution')}
           </Label>
           <Input
             id="function-timeout"
@@ -95,7 +99,7 @@ export function FunctionTimeoutCard({
           disabled={!hasChanges || !timeoutValid || updateMutation.isPending}
           onClick={handleSave}
         >
-          Update
+          {t('Update')}
         </Button>
       </div>
     </div>

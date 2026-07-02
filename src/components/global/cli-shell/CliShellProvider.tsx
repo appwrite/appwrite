@@ -106,6 +106,7 @@ import {
   type CliTerminalSearchResults,
 } from '@/lib/cli-shell/cli-terminal-search-label'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 export type { CliTerminalSearchResults }
 
@@ -216,6 +217,7 @@ type CliShellProviderProps = {
 }
 
 export function CliShellProvider({ projectId, children }: CliShellProviderProps) {
+  const t = useT()
   const { account, isLoading: isAccountLoading } = useAuth()
   const { project } = useProject(projectId)
   const organizationId = project?.teamId
@@ -1153,7 +1155,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
       setSessions((prev) => {
         if (prev.length >= MAX_CLI_SHELL_SESSIONS) {
-          toast.error(`Maximum ${MAX_CLI_SHELL_SESSIONS} terminal sessions.`)
+          toast.error(
+            `${t('Maximum')} ${MAX_CLI_SHELL_SESSIONS} ${t('terminal sessions.')}`,
+          )
           return prev
         }
         added = true
@@ -1200,7 +1204,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       }
       requestAnimationFrame(() => focusNewSession())
     },
-    [focusSession],
+    [focusSession, t],
   )
 
   const renameSession = useCallback((sessionId: string, name: string) => {
@@ -1230,7 +1234,9 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
 
     setSessions((prev) => {
       if (prev.length >= MAX_CLI_SHELL_SESSIONS) {
-        toast.error(`Maximum ${MAX_CLI_SHELL_SESSIONS} terminal sessions.`)
+        toast.error(
+          `${t('Maximum')} ${MAX_CLI_SHELL_SESSIONS} ${t('terminal sessions.')}`,
+        )
         return prev
       }
       const nextSession: CliShellSession = {
@@ -1247,7 +1253,7 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
       requestAnimationFrame(() => focusNewSession(attempt + 1))
     }
     requestAnimationFrame(() => focusNewSession())
-  }, [focusSession])
+  }, [focusSession, t])
 
   const removeSession = useCallback((sessionId: string) => {
     sessionsDirtyRef.current = true
@@ -1862,18 +1868,21 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     resolveTerminalApiSessionId,
   ])
 
-  const copyTextToClipboard = useCallback(async (text: string, label: string) => {
-    if (!text) {
-      toast.error(`Nothing to copy for ${label}.`)
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success(`Copied ${label}`)
-    } catch {
-      toast.error(`Failed to copy ${label}`)
-    }
-  }, [])
+  const copyTextToClipboard = useCallback(
+    async (text: string, label: string) => {
+      if (!text) {
+        toast.error(`${t('Nothing to copy for')} ${t(label)}.`)
+        return
+      }
+      try {
+        await navigator.clipboard.writeText(text)
+        toast.success(`${t('Copied')} ${t(label)}`)
+      } catch {
+        toast.error(`${t('Failed to copy')} ${t(label)}`)
+      }
+    },
+    [t],
+  )
 
   const copyTerminalSelection = useCallback(() => {
     const api = getTerminalApi()
@@ -1894,13 +1903,13 @@ export function CliShellProvider({ projectId, children }: CliShellProviderProps)
     const api = getTerminalApi()
     const content = api?.getBufferText?.() ?? ''
     if (!content.trim()) {
-      toast.error('Nothing to export.')
+      toast.error(t('Nothing to export.'))
       return
     }
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     downloadTextFile(`terminal-${projectId}-${stamp}.txt`, content)
-    toast.success('Terminal output downloaded')
-  }, [getTerminalApi, projectId])
+    toast.success(t('Terminal output downloaded'))
+  }, [getTerminalApi, projectId, t])
 
   const toggle = useCallback(() => {
     setOpen((prev) => {

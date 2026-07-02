@@ -5,6 +5,7 @@ import {
   MockPolicyCard,
   MockSwitchRow,
 } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const AUTH_METHODS = [
@@ -16,19 +17,22 @@ const AUTH_METHODS = [
 ] as const
 
 export function AuthSecurityVisual() {
+  const t = useT()
   return (
     <div className="space-y-4">
       <div className="grid gap-3 xl:grid-cols-4">
         <MockPolicyCard
           title="Session length"
           description="Session validity duration."
-          footer={<p className="text-[12px] font-medium text-foreground">30 days</p>}
+          footer={<p className="text-[12px] font-medium text-foreground">{t('30 days')}</p>}
         />
         <MockPolicyCard
           title="Sessions limit"
           description="Concurrent sessions per user."
           footer={
-            <p className="text-[12px] font-medium text-foreground">10 active sessions</p>
+            <p className="text-[12px] font-medium text-foreground">
+              {t('10 active sessions')}
+            </p>
           }
         />
         <MockPolicyCard
@@ -37,7 +41,7 @@ export function AuthSecurityVisual() {
           footer={
             <div className="flex items-center justify-between gap-2">
               <Badge variant="success" className="text-[10px]">
-                Enabled
+                {t('Enabled')}
               </Badge>
               <Switch
                 checked
@@ -54,7 +58,7 @@ export function AuthSecurityVisual() {
           footer={
             <div className="flex items-center justify-between gap-2">
               <Badge variant="success" className="text-[10px]">
-                Enabled
+                {t('Enabled')}
               </Badge>
               <Switch
                 checked
@@ -69,9 +73,11 @@ export function AuthSecurityVisual() {
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-xl border border-border bg-card/50 p-4">
-          <p className="text-[12px] font-semibold text-foreground">Password policies</p>
+          <p className="text-[12px] font-semibold text-foreground">
+            {t('Password policies')}
+          </p>
           <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-            Strength presets, compliance checks, and reuse rules.
+            {t('Strength presets, compliance checks, and reuse rules.')}
           </p>
           <div className="mt-3 space-y-2">
             <MockSwitchRow label="Dictionary check" checked />
@@ -79,22 +85,24 @@ export function AuthSecurityVisual() {
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Badge variant="inactive" className="text-[10px]">
-              Strong preset
+              {t('Strong preset')}
             </Badge>
             <Badge variant="inactive" className="text-[10px]">
-              Min 12 chars
+              {t('Min 12 chars')}
             </Badge>
             <Badge variant="inactive" className="text-[10px]">
-              History: 5
+              {t('History: 5')}
             </Badge>
             <Badge variant="success" className="text-[10px]">
-              4/7 compliant
+              {t('4/7 compliant')}
             </Badge>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card/50 p-4">
-          <p className="text-[12px] font-semibold text-foreground">Email policies</p>
+          <p className="text-[12px] font-semibold text-foreground">
+            {t('Email policies')}
+          </p>
           <div className="mt-3 space-y-2">
             <MockSwitchRow label="Block disposable emails" checked />
             <MockSwitchRow label="Block aliased emails" checked />
@@ -103,7 +111,9 @@ export function AuthSecurityVisual() {
         </div>
 
         <div className="rounded-xl border border-border bg-card/50 p-4 md:col-span-2 xl:col-span-1">
-          <p className="text-[12px] font-semibold text-foreground">Auth methods</p>
+          <p className="text-[12px] font-semibold text-foreground">
+            {t('Auth methods')}
+          </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
             {AUTH_METHODS.map((method) => {
               const Icon = method.icon
@@ -118,7 +128,7 @@ export function AuthSecurityVisual() {
                   <div className="flex min-w-0 items-center gap-2">
                     <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                     <span className="truncate text-[11px] font-medium text-foreground">
-                      {method.label}
+                      {t(method.label)}
                     </span>
                   </div>
                   <Switch

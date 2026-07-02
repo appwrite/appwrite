@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const GRAVITY_ICONS = [
@@ -132,10 +133,11 @@ function MockAccordionSection({
   title: string
   open?: boolean
 }) {
+  const t = useT()
   return (
     <div className="border-b border-border">
       <div className="flex items-center justify-between py-3 text-[13px] font-medium text-foreground">
-        <span>{title}</span>
+        <span>{t(title)}</span>
         <ChevronDown
           className={cn('size-4 text-muted-foreground transition-transform', open && 'rotate-180')}
           aria-hidden
@@ -146,6 +148,7 @@ function MockAccordionSection({
 }
 
 export function StorageTransformWizardVisual() {
+  const t = useT()
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/45">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
@@ -160,14 +163,14 @@ export function StorageTransformWizardVisual() {
               value="design"
               className="text-[12px] shadow-none data-[state=active]:shadow-none"
             >
-              Design
+              {t('Design')}
             </TabsTrigger>
             <TabsTrigger
               value="code"
               disabled
               className="text-[12px] shadow-none data-[state=active]:shadow-none"
             >
-              Code
+              {t('Code')}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -180,7 +183,7 @@ export function StorageTransformWizardVisual() {
             disabled
           >
             <Undo2 className="size-3.5" aria-hidden />
-            Undo
+            {t('Undo')}
           </Button>
           <Button
             type="button"
@@ -190,7 +193,7 @@ export function StorageTransformWizardVisual() {
             disabled
           >
             <Redo2 className="size-3.5" aria-hidden />
-            Redo
+            {t('Redo')}
           </Button>
           <Button
             type="button"
@@ -200,7 +203,7 @@ export function StorageTransformWizardVisual() {
             disabled
           >
             <RotateCcw className="size-3.5" aria-hidden />
-            Reset all
+            {t('Reset all')}
           </Button>
           <Button
             type="button"
@@ -210,7 +213,7 @@ export function StorageTransformWizardVisual() {
             disabled
           >
             <Filter className="size-3.5" aria-hidden />
-            Presets
+            {t('Presets')}
             <span className="flex size-4 min-w-4 items-center justify-center rounded-full bg-muted text-[10px] font-medium tabular-nums text-muted-foreground">
               6
             </span>
@@ -257,9 +260,9 @@ export function StorageTransformWizardVisual() {
             </div>
             <div className="flex rounded-md border border-border bg-card/95 p-0.5 backdrop-blur-sm">
               <span className="rounded px-2.5 py-1.5 text-[11px] font-medium bg-muted text-foreground">
-                Edit
+                {t('Edit')}
               </span>
-              <span className="rounded px-2.5 py-1.5 text-[11px] text-muted-foreground">Compare</span>
+              <span className="rounded px-2.5 py-1.5 text-[11px] text-muted-foreground">{t('Compare')}</span>
             </div>
           </div>
 
@@ -272,13 +275,13 @@ export function StorageTransformWizardVisual() {
           <div className="px-4 py-3">
             <div className="border-b border-border">
               <div className="flex items-center justify-between py-3 text-[13px] font-medium text-foreground">
-                <span>Size & crop</span>
+                <span>{t('Size & crop')}</span>
                 <ChevronDown className="size-4 rotate-180 text-muted-foreground" aria-hidden />
               </div>
               <div className="space-y-4 pb-4">
                 <div className="space-y-2">
                   <div className="flex justify-between gap-2">
-                    <Label className="text-[11px] text-muted-foreground">Width (px)</Label>
+                    <Label className="text-[11px] text-muted-foreground">{t('Width (px)')}</Label>
                     <span className="text-[11px] tabular-nums text-foreground">640</span>
                   </div>
                   <Slider
@@ -296,7 +299,7 @@ export function StorageTransformWizardVisual() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label className="text-[11px] text-muted-foreground">Gravity</Label>
+                    <Label className="text-[11px] text-muted-foreground">{t('Gravity')}</Label>
                     <span className="ms-auto font-mono text-[10px] text-muted-foreground">center</span>
                   </div>
                   <div className="w-full max-w-[9.5rem] rounded-lg border border-border bg-muted/25 p-px">
@@ -345,13 +348,13 @@ export function StorageTransformWizardVisual() {
             <span className="font-medium tabular-nums">842 KB</span>
             <ArrowRight className="mx-1 inline size-3 align-text-bottom text-muted-foreground" />
             <span className="font-medium tabular-nums">278 KB</span>
-            <span className="text-muted-foreground"> · 33% of original</span>
+            <span className="text-muted-foreground"> · 33% {t('of original')}</span>
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" className="h-8 text-[11px]" disabled>
             <Download className="me-1.5 size-3.5" aria-hidden />
-            Download
+            {t('Download')}
           </Button>
           <Button
             type="button"
@@ -361,11 +364,11 @@ export function StorageTransformWizardVisual() {
             disabled
           >
             <Copy className="me-1.5 size-3.5" aria-hidden />
-            Copy URL
+            {t('Copy URL')}
           </Button>
           <Button type="button" variant="outline" size="sm" className="h-8 text-[11px]" disabled>
             <ExternalLink className="me-1.5 size-3.5" aria-hidden />
-            Open
+            {t('Open')}
           </Button>
         </div>
       </div>

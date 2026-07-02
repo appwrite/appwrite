@@ -22,6 +22,7 @@ import type { TransferInSearch } from '@/routes/_public/organizations.$orgId.dom
 import { TransferDomainInSummary } from './TransferDomainInSummary'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
+import { useT } from '@/lib/i18n/translate'
 
 const PRICE_DEBOUNCE_MS = 500
 
@@ -30,6 +31,7 @@ export function TransferDomainInWizard({
 }: {
   search: TransferInSearch
 }) {
+  const t = useT()
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -54,8 +56,11 @@ export function TransferDomainInWizard({
       setDebouncedPriceDomain('')
       return
     }
-    const t = setTimeout(() => setDebouncedPriceDomain(raw), PRICE_DEBOUNCE_MS)
-    return () => clearTimeout(t)
+    const timer = setTimeout(
+      () => setDebouncedPriceDomain(raw),
+      PRICE_DEBOUNCE_MS,
+    )
+    return () => clearTimeout(timer)
   }, [domainInput])
 
   const priceQuery = useQuery(
@@ -96,14 +101,14 @@ export function TransferDomainInWizard({
               queryKey: ['domain', result.domainId],
             }),
           ])
-          toast.success('Transfer payment confirmed')
+          toast.success(t('Transfer payment confirmed'))
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
             params: { orgId, domainId: result.domainId },
             replace: true,
           })
         } else {
-          toast.error('Transfer could not be completed')
+          toast.error(t('Transfer could not be completed'))
           navigate({
             to: '/organizations/$orgId/domains/transfer-in',
             params: { orgId },
@@ -113,7 +118,7 @@ export function TransferDomainInWizard({
         }
       } catch (e) {
         toast.error(
-          e instanceof Error ? e.message : 'Failed to complete transfer',
+          e instanceof Error ? e.message : t('Failed to complete transfer'),
         )
         navigate({
           to: '/organizations/$orgId/domains/transfer-in',
@@ -123,7 +128,7 @@ export function TransferDomainInWizard({
         })
       }
     })()
-  }, [search.payment, search.invoiceId, orgId, navigate, queryClient])
+  }, [search.payment, search.invoiceId, orgId, navigate, queryClient, t])
 
   const completedPaymentMethods = useMemo(
     () => paymentMethods.filter((pm) => pm.last4),
@@ -132,21 +137,21 @@ export function TransferDomainInWizard({
 
   const transferMutation = useMutation({
     mutationFn: async () => {
-      if (!orgId) throw new Error('Organization is required')
+      if (!orgId) throw new Error(t('Organization is required'))
       if (isDomainLimitReached) {
         throw new Error(
-          `Your current plan includes up to ${domainsLimit} domains.`,
+          `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
         )
       }
       const domain = domainInput.trim().toLowerCase()
       if (!domain || !domain.includes('.')) {
-        throw new Error('Enter a full domain name (e.g. example.com)')
+        throw new Error(t('Enter a full domain name (e.g. example.com)'))
       }
       if (!authCode.trim()) {
-        throw new Error('Authorization code is required')
+        throw new Error(t('Authorization code is required'))
       }
       if (!paymentMethodId) {
-        throw new Error('Select a payment method')
+        throw new Error(t('Select a payment method'))
       }
 
       const purchase = await createDomainTransferIn({
@@ -171,7 +176,9 @@ export function TransferDomainInWizard({
         organizationId: orgId,
       })
       if (finalized.status !== DomainPurchaseStatus.Succeeded) {
-        throw new Error('Transfer could not be completed. Please try again.')
+        throw new Error(
+          t('Transfer could not be completed. Please try again.'),
+        )
       }
       return { kind: 'done' as const, domainId: finalized.domainId }
     },
@@ -184,7 +191,7 @@ export function TransferDomainInWizard({
           queryKey: ['domain', result.domainId],
         }),
       ])
-      toast.success('Domain transfer started')
+      toast.success(t('Domain transfer started'))
       navigate({
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId: orgId!, domainId: result.domainId },
@@ -207,7 +214,7 @@ export function TransferDomainInWizard({
 
   return (
     <WizardLayout
-      title="Transfer domain in"
+      title={t('Transfer domain in')}
       fallbackPath={fallbackPath}
       fullscreen
       useSidebar
@@ -233,14 +240,14 @@ export function TransferDomainInWizard({
               })
             }
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
             disabled={!canStartTransfer}
             onClick={() => transferMutation.mutate()}
           >
-            Start transfer
+            {t('Start transfer')}
           </Button>
         </>
       }
@@ -248,17 +255,18 @@ export function TransferDomainInWizard({
       <div className="w-full min-w-0 space-y-6 lg:max-w-none">
         <div>
           <h2 className="text-[15px] font-semibold text-foreground">
-            Transfer an existing domain
+            {t('Transfer an existing domain')}
           </h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Request a transfer into this organization using the authorization
-            code from your current registrar. Registry fees are shown in the
-            summary as you type the domain name.
+            {t(
+              'Request a transfer into this organization using the authorization code from your current registrar. Registry fees are shown in the summary as you type the domain name.',
+            )}
           </p>
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
-              Your current plan includes up to {domainsLimit} domains.{' '}
-              <UpgradePlanLink orgId={orgId} /> to transfer another domain.
+              {t('Your current plan includes up to')} {domainsLimit}{' '}
+              {t('domains')}. <UpgradePlanLink orgId={orgId} />{' '}
+              {t('to transfer another domain.')}
             </p>
           ) : null}
         </div>
@@ -266,17 +274,17 @@ export function TransferDomainInWizard({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Domain
+              {t('Domain')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Full hostname and the auth code your registrar provided.
+              {t('Full hostname and the auth code your registrar provided.')}
             </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="td-domain" className="text-[13px]">
-                Domain name
+                {t('Domain name')}
               </Label>
               <Input
                 id="td-domain"
@@ -288,7 +296,7 @@ export function TransferDomainInWizard({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="td-auth" className="text-[13px]">
-                Authorization code
+                {t('Authorization code')}
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -296,7 +304,7 @@ export function TransferDomainInWizard({
                   type={authCodeRevealed ? 'text' : 'password'}
                   value={authCode}
                   onChange={(e) => setAuthCode(e.target.value)}
-                  placeholder="From your current registrar"
+                  placeholder={t('From your current registrar')}
                   className="h-9 text-[13px] font-mono"
                   autoComplete="off"
                 />
@@ -306,8 +314,10 @@ export function TransferDomainInWizard({
                   size="icon"
                   className="h-9 w-9 shrink-0"
                   onClick={() => setAuthCodeRevealed((v) => !v)}
-                  title={authCodeRevealed ? 'Hide code' : 'Show code'}
-                  aria-label={authCodeRevealed ? 'Hide code' : 'Show code'}
+                  title={authCodeRevealed ? t('Hide code') : t('Show code')}
+                  aria-label={
+                    authCodeRevealed ? t('Hide code') : t('Show code')
+                  }
                 >
                   {authCodeRevealed ? (
                     <EyeOff className="h-4 w-4" />
@@ -323,10 +333,10 @@ export function TransferDomainInWizard({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Payment
+              {t('Payment')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Transfer fees are charged to the selected payment method.
+              {t('Transfer fees are charged to the selected payment method.')}
             </p>
           </div>
           <div className="border-t border-border" />

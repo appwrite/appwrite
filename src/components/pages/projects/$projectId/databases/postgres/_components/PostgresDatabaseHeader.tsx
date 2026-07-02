@@ -4,6 +4,7 @@ import {
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
 import { PostgresConnectionsHeaderLimit } from './PostgresConnectionsHeaderLimit'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresDatabaseHeaderProps = {
   projectId: string
@@ -16,6 +17,7 @@ export function PostgresDatabaseHeader({
   databaseId,
   databaseTab,
 }: PostgresDatabaseHeaderProps) {
+  const t = useT()
   const titleLabel = POSTGRES_DATABASE_TAB_LABELS[databaseTab]
 
   return (
@@ -23,14 +25,14 @@ export function PostgresDatabaseHeader({
       title={
         databaseTab === 'connections' ? (
           <span className="inline-flex min-w-0 items-baseline gap-2">
-            <span className="truncate">{titleLabel}</span>
+            <span className="truncate">{t(titleLabel)}</span>
             <PostgresConnectionsHeaderLimit
               projectId={projectId}
               databaseId={databaseId}
             />
           </span>
         ) : (
-          titleLabel
+          t(titleLabel)
         )
       }
       fullWidthBorder

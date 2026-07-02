@@ -13,6 +13,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import {
   WIZARD_DIALOG_OVERLAY_Z,
   wizardDialogContentClassName,
@@ -48,6 +49,7 @@ export function VariableEditor({
   isSaving = false,
   elevatedForWizard = false,
 }: VariableEditorProps) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -59,10 +61,11 @@ export function VariableEditor({
         onEscapeKeyDown={(e) => e.stopPropagation()}
       >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Variable editor</DialogTitle>
+          <DialogTitle>{t('Variable editor')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Edit all variables at once. Secret variables are not shown and will
-            not be affected.
+            {t(
+              'Edit all variables at once. Secret variables are not shown and will not be affected.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -86,7 +89,7 @@ export function VariableEditor({
                 onClick={onCopy}
               >
                 <Copy className="me-2 h-3.5 w-3.5" />
-                Copy
+                {t('Copy')}
               </Button>
               <Button
                 type="button"
@@ -96,7 +99,7 @@ export function VariableEditor({
                 onClick={onDownload}
               >
                 <Download className="me-2 h-3.5 w-3.5" />
-                Download
+                {t('Download')}
               </Button>
             </div>
           </div>
@@ -115,7 +118,7 @@ export function VariableEditor({
               htmlFor="editor-content"
               className="text-[13px] mb-2 shrink-0"
             >
-              Content
+              {t('Content')}
             </Label>
             <div className="flex-1 min-h-0 overflow-hidden">
               <Textarea
@@ -142,7 +145,7 @@ export function VariableEditor({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             size="sm"
@@ -150,7 +153,7 @@ export function VariableEditor({
             onClick={onSave}
             disabled={isSaving}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </DialogContent>

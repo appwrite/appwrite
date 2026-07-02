@@ -5,10 +5,12 @@ import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.sites.$siteId.logs'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
 import { queryParamToMap } from '@/lib/table-filters'
+import { useT } from '@/lib/i18n/translate'
 
 const LOGS_PER_PAGE = 25
 
 export function View() {
+  const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
@@ -117,12 +119,14 @@ export function View() {
         projectId={projectId}
         resourceVariant="site"
         resourceId={siteId}
-        emptyStateTitle={hasFilters ? undefined : 'No logs yet'}
+        emptyStateTitle={hasFilters ? undefined : t('No logs yet')}
         emptyStateDescription={
-          hasFilters ? undefined : 'Logs will appear here when your site runs.'
+          hasFilters
+            ? undefined
+            : t('Logs will appear here when your site runs.')
         }
         hasFilters={hasFilters}
-        itemLabel="logs"
+        itemLabel={t('logs')}
       />
     </div>
   )

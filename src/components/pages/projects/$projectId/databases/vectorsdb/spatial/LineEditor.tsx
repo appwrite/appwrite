@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Line Editor Component
@@ -27,6 +28,7 @@ export function LineEditor({
   disabled = false,
   showNullCheckbox = true,
 }: LineEditorProps) {
+  const t = useT()
   const [points, setPoints] = useState<number[][]>(value || [])
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export function LineEditor({
 
   const removePoint = (index: number) => {
     if (points.length <= 2) {
-      toast.error('Line must have at least 2 points')
+      toast.error(t('Line must have at least 2 points'))
       return
     }
     const newPoints = points.filter((_, i) => i !== index)
@@ -65,7 +67,7 @@ export function LineEditor({
   return (
     <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between">
-        <Label className="text-[12px] font-medium">Coordinate Points</Label>
+        <Label className="text-[12px] font-medium">{t('Coordinate Points')}</Label>
         <Button
           type="button"
           variant="outline"
@@ -75,12 +77,12 @@ export function LineEditor({
           className="h-7 text-[11px]"
         >
           <Plus className="h-3 w-3 me-1" />
-          Add Point
+          {t('Add Point')}
         </Button>
       </div>
       {points.length === 0 ? (
         <p className="text-[12px] text-muted-foreground py-2 text-center">
-          No points. Click "Add Point" to add coordinates (minimum 2 required).
+          {t('No points. Click "Add Point" to add coordinates (minimum 2 required).')}
         </p>
       ) : (
         <div className="space-y-2">
@@ -95,7 +97,7 @@ export function LineEditor({
                 </span>
                 <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">
-                    Lon
+                    {t('Lon')}
                   </Label>
                   <Input
                     type="number"
@@ -112,7 +114,7 @@ export function LineEditor({
                 </span>
                 <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">
-                    Lat
+                    {t('Lat')}
                   </Label>
                   <Input
                     type="number"
@@ -136,7 +138,7 @@ export function LineEditor({
                 className="h-7 w-7 shrink-0"
                 onClick={() => removePoint(index)}
                 disabled={disabled || points.length <= 2}
-                aria-label="Remove point"
+                aria-label={t('Remove point')}
               >
                 <X className="h-3.5 w-3.5" />
               </Button>
@@ -144,7 +146,7 @@ export function LineEditor({
           ))}
           {points.length < 2 && (
             <p className="text-[10px] text-amber-600 dark:text-amber-400">
-              Add at least 2 points to form a line
+              {t('Add at least 2 points to form a line')}
             </p>
           )}
         </div>
@@ -178,7 +180,7 @@ export function LineEditor({
             htmlFor="line-null"
             className="text-[11px] text-muted-foreground cursor-pointer select-none"
           >
-            Set to NULL
+            {t('Set to NULL')}
           </label>
         </div>
       )}

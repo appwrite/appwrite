@@ -22,6 +22,7 @@ import {
   OUTPUT_FORMAT_LABELS,
   type ImageTransformState,
 } from './transform-image-wizard-state'
+import { useT } from '@/lib/i18n/translate'
 
 const CLAMP_W = (w: number) => Math.min(4000, Math.max(64, Math.round(w)))
 const CLAMP_H = (h: number) => Math.min(4000, Math.max(1, Math.round(h)))
@@ -309,6 +310,7 @@ export function TransformImageDesignOverlay({
   /** Called after a pointer resize / rotate / radius drag ends (for undo grouping). */
   onTransformInteractionEnd?: () => void
 }) {
+  const t = useT()
   const wrapRef = useRef<HTMLDivElement>(null)
   const frameRef = useRef<HTMLDivElement>(null)
   const localImgRef = useRef<HTMLImageElement>(null)
@@ -662,7 +664,7 @@ export function TransformImageDesignOverlay({
         <div className="flex w-full max-w-full flex-col items-stretch justify-center gap-5 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 sm:flex-initial">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Original
+              {t('Original')}
             </p>
             <div
               className="flex w-full max-w-full min-h-0 items-center justify-center"
@@ -683,7 +685,7 @@ export function TransformImageDesignOverlay({
           </div>
           <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 sm:flex-initial">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Output
+              {t('Output')}
             </p>
             <div
               className="flex w-full max-w-full items-center justify-center"
@@ -854,7 +856,7 @@ export function TransformImageDesignOverlay({
                 EDGE_CURSOR[edge],
                 RESIZE_HANDLE_POS[edge],
               )}
-              aria-label={`Resize from ${edge}. Use arrow keys to nudge; Alt for larger steps. Hold Shift with corner handles to keep aspect. Pointer drag with Shift locks aspect.`}
+              aria-label={`${t('Resize from')} ${edge}. ${t('Use arrow keys to nudge; Alt for larger steps. Hold Shift with corner handles to keep aspect. Pointer drag with Shift locks aspect.')}`}
               onPointerDown={(ev) => startResize(edge, ev)}
               onKeyDown={(ev) => applyResizeKeyboard(edge, ev)}
             >
@@ -869,7 +871,9 @@ export function TransformImageDesignOverlay({
                   HANDLE_TOOL,
                   'start-1/2 top-0 -translate-x-1/2 -translate-y-[calc(100%+40px)] cursor-grab active:cursor-grabbing',
                 )}
-                aria-label="Rotate: drag in a circle, or use Left and Right arrow keys. Shift with arrows rotates 15 degrees."
+                aria-label={t(
+                  'Rotate: drag in a circle, or use Left and Right arrow keys. Shift with arrows rotates 15 degrees.',
+                )}
                 onPointerDown={startRotate}
                 onKeyDown={(ev) => {
                   if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
@@ -891,8 +895,9 @@ export function TransformImageDesignOverlay({
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-[220px] text-[12px]">
-              Drag in a circle to rotate. Keyboard: Left or Right arrow (Shift
-              for 15° steps). Same as rotation in the sidebar.
+              {t(
+                'Drag in a circle to rotate. Keyboard: Left or Right arrow (Shift for 15° steps). Same as rotation in the sidebar.',
+              )}
             </TooltipContent>
           </Tooltip>
           {(['nw', 'ne', 'se', 'sw'] as const).map((corner) => (
@@ -905,7 +910,9 @@ export function TransformImageDesignOverlay({
                     RADIUS_CORNER_POS[corner],
                     RADIUS_CORNER_CURSOR[corner],
                   )}
-                  aria-label="Corner radius: drag toward the image to increase radius, or use Up and Down arrow keys. Shift for larger steps, Alt for largest steps."
+                  aria-label={t(
+                    'Corner radius: drag toward the image to increase radius, or use Up and Down arrow keys. Shift for larger steps, Alt for largest steps.',
+                  )}
                   onPointerDown={(ev) => startRadiusCorner(corner, ev)}
                   onKeyDown={applyRadiusKeyboard}
                 >
@@ -922,9 +929,9 @@ export function TransformImageDesignOverlay({
                 }
                 className="max-w-[220px] text-[12px]"
               >
-                Drag toward the image along the diagonal to increase corner
-                radius (away from the image to decrease). Keyboard: Up or Down
-                arrow (Shift or Alt for bigger steps).
+                {t(
+                  'Drag toward the image along the diagonal to increase corner radius (away from the image to decrease). Keyboard: Up or Down arrow (Shift or Alt for bigger steps).',
+                )}
               </TooltipContent>
             </Tooltip>
           ))}
@@ -946,7 +953,7 @@ export function TransformImageDesignOverlay({
           </span>
           <span className="text-muted-foreground"> · </span>
           <span className="text-muted-foreground">
-            {previewOutputFormatLabel(state.output)}
+            {t(previewOutputFormatLabel(state.output))}
           </span>
         </span>
       </div>

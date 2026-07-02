@@ -7,6 +7,7 @@ import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
@@ -58,6 +59,7 @@ export const Route = createFileRoute('/_auth/verify-email')({
 })
 
 function VerifyEmailPage() {
+  const t = useT()
   const search = useSearch({ from: '/_auth/verify-email' })
   const navigate = useNavigate()
   const router = useRouter()
@@ -71,7 +73,7 @@ function VerifyEmailPage() {
       })
     },
     onSuccess: async () => {
-      toast.success('Email verified successfully')
+      toast.success(t('Email verified successfully'))
       try {
         const account = await refreshConsoleAccountAfterAuth(queryClient)
         await prefetchPostAuthDestination(queryClient, account, search.redirect)
@@ -101,7 +103,7 @@ function VerifyEmailPage() {
       const message =
         error instanceof AppwriteException
           ? error.message
-          : 'Verification link is invalid or has expired.'
+          : t('Verification link is invalid or has expired.')
       toast.error(message)
     },
   })
@@ -118,13 +120,13 @@ function VerifyEmailPage() {
       return await sdk.forConsole.account.createEmailVerification({ url })
     },
     onSuccess: () => {
-      toast.success('Verification email sent')
+      toast.success(t('Verification email sent'))
     },
     onError: (error: unknown) => {
       const message =
         error instanceof AppwriteException
           ? error.message
-          : 'Failed to send verification email'
+          : t('Failed to send verification email')
       toast.error(message)
     },
   })
@@ -151,13 +153,13 @@ function VerifyEmailPage() {
         <div className="w-full max-w-sm md:max-w-4xl">
           <VerifyEmail status="confirming" />
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            By continuing, you agree to our{' '}
+            {t('By continuing, you agree to our')}{' '}
             <MarketingSiteLink className="link-neutral" href="/terms">
-              Terms of Service
+              {t('Terms of Service')}
             </MarketingSiteLink>{' '}
-            and{' '}
+            {t('and')}{' '}
             <MarketingSiteLink className="link-neutral" href="/privacy">
-              Privacy Policy
+              {t('Privacy Policy')}
             </MarketingSiteLink>
             .
           </p>
@@ -178,13 +180,13 @@ function VerifyEmailPage() {
           redirect={search.redirect}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By continuing, you agree to our{' '}
+          {t('By continuing, you agree to our')}{' '}
           <MarketingSiteLink className="link-neutral" href="/terms">
-            Terms of Service
+            {t('Terms of Service')}
           </MarketingSiteLink>{' '}
-          and{' '}
+          {t('and')}{' '}
           <MarketingSiteLink className="link-neutral" href="/privacy">
-            Privacy Policy
+            {t('Privacy Policy')}
           </MarketingSiteLink>
           .
         </p>

@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const TOPICS = [
   {
@@ -32,24 +33,25 @@ const TOPICS = [
 ] as const
 
 export function MessagingTopicsVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'messages', label: 'Messages' },
-        { id: 'topics', label: 'Topics', active: true },
-        { id: 'providers', label: 'Providers' },
+        { id: 'messages', label: t('Messages') }, // pragma: allowlist secret
+        { id: 'topics', label: t('Topics'), active: true },
+        { id: 'providers', label: t('Providers') },
       ]}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Subscriber audiences</p>
+            <p className="text-[13px] font-semibold text-foreground">{t('Subscriber audiences')}</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Group targets for broadcasts without managing recipient lists.
+              {t('Group targets for broadcasts without managing recipient lists.')}
             </p>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            3 topics
+            {t('3 topics')}
           </Badge>
         </div>
 
@@ -58,13 +60,13 @@ export function MessagingTopicsVisual() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Topic
+                  {t('Topic')}
                 </TableHead>
                 <TableHead className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Use case
+                  {t('Use case')}
                 </TableHead>
                 <TableHead className="px-3 py-2.5 text-end text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Subscribers
+                  {t('Subscribers')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -82,7 +84,7 @@ export function MessagingTopicsVisual() {
                   </TableCell>
                   <TableCell className="px-3 py-2.5">
                     <Badge variant="outline" className="text-[10px]">
-                      {topic.useCase}
+                      {t(topic.useCase)}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-3 py-2.5 text-end">
@@ -102,7 +104,7 @@ export function MessagingTopicsVisual() {
             <Users className="size-3.5 text-muted-foreground" aria-hidden />
           </span>
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Subscribe user targets from Auth or pick them in the Console when you create a topic.
+            {t('Subscribe user targets from Auth or pick them in the Console when you create a topic.')}
           </p>
         </div>
       </div>

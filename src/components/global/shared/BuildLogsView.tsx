@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 import * as React from 'react'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 /** Strip ANSI SGR sequences for clipboard text. */
 export function stripAnsiForClipboard(text: string): string {
@@ -287,6 +288,7 @@ export function BuildLogsView({
   trailingPadding = true,
   lineHorizontalPaddingClass,
 }: BuildLogsViewProps) {
+  const t = useT()
   const parsedLogs = useMemo(() => {
     if (!buildLogs) return null
 
@@ -356,7 +358,11 @@ export function BuildLogsView({
                 : ''
           }`}
           style={gridStyle}
-          title={highlightLineOnHover ? `Line ${originalLineNumber}` : undefined}
+          title={
+            highlightLineOnHover
+              ? `${t('Line')} ${originalLineNumber}`
+              : undefined
+          }
         >
           <div
             onClick={
@@ -374,7 +380,7 @@ export function BuildLogsView({
             } ${isClickable ? 'cursor-pointer' : ''}`}
             title={
               isClickable
-                ? `Select line ${originalLineNumber} (Shift for range, ⌘/Ctrl to toggle)`
+                ? `${t('Select line')} ${originalLineNumber} ${t('(Shift for range, ⌘/Ctrl to toggle)')}`
                 : undefined
             }
           >
@@ -406,6 +412,7 @@ export function BuildLogsView({
     highlightLineOnHover,
     trailingPadding,
     lineHorizontalPaddingClass,
+    t,
   ])
 
   if (!buildLogs) {
@@ -419,7 +426,7 @@ export function BuildLogsView({
               : 'ps-4 sm:ps-6 pe-0'
         } ${className}`}
       >
-        {emptyMessage}
+        {typeof emptyMessage === 'string' ? t(emptyMessage) : emptyMessage}
       </div>
     )
   }
