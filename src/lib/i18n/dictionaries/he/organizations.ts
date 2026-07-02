@@ -408,7 +408,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
   'Enter your full domain name to load a price quote.':
     'הזינו את שם הדומיין המלא שלכם לקבלת הצעת מחיר.',
-  Enterprise: 'Enterprise',
+  'Enterprise': 'אנטרפרייז',
   'Estimate, subject to change based on usage':
     'הערכה, עשויה להשתנות בהתאם לשימוש',
   'Estimated fees from the registry before you pay.':

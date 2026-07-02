@@ -204,7 +204,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Enter text that matches the start of a name, email, phone, or user ID.':
     'הזינו טקסט התואם את תחילת השם, האימייל, הטלפון או מזהה המשתמש.',
   'Enter value': 'הזינו ערך',
-  'Enterprise & 24/7 support': 'תמיכת Enterprise מסביב לשעון',
+  'Enterprise & 24/7 support': 'תמיכת אנטרפרייז מסביב לשעון',
   Essential: 'חיוניות',
   'Execute function': 'הרצת פונקציה',
   'Execution ID': 'מזהה הרצה',

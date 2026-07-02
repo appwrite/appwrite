@@ -6,6 +6,8 @@
 
 @import './fonts-inter-latin.css';
 
+@import './fonts-noto-sans-hebrew.css';
+
 @import '@xterm/xterm/css/xterm.css';
 
 /* Match default dark + debug-only themes that omit .dark but use dark surfaces (see html-theme.ts). */
@@ -147,10 +149,16 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
 }
 
 /*
- * Aeonik Pro is Latin-only. For Hebrew and other non-English UI, brand typography
- * uses Inter (the regular console font) so scripts render correctly.
+ * Aeonik Pro is Latin-only. For Hebrew, keep Aeonik for Latin glyphs and fall back to
+ * Noto Sans Hebrew for Hebrew script. Other non-English UI uses Inter.
  */
-html:not([lang='en']) {
+html[lang='he'] {
+  --font-aeonik-pro:
+    'Aeonik Pro', 'Noto Sans Hebrew', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', sans-serif;
+}
+
+html:not([lang='en']):not([lang='he']) {
   --font-aeonik-pro: var(--font-inter);
 }
 

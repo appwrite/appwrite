@@ -148,10 +148,10 @@ export function DatabasePricingSection() {
                       {t(tier.cpu)}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-[13px] text-muted-foreground sm:px-6">
-                      {tier.memory}
+                      {t(tier.memory)}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-end text-[13px] font-medium text-foreground sm:px-6">
-                      {tier.price}
+                      {t(tier.price)}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -175,52 +175,60 @@ function getProductBentoItems(homeCopy: HomeCopy) {
   }))
 }
 
-const securityItems: {
-  title: string
-  description: string
-  icon: LucideIcon
-}[] = [
-  {
-    title: HOME_COPY.securityItems.ddosTitle,
-    description: HOME_COPY.securityItems.ddosDescription,
-    icon: ShieldCheck,
-  },
-  {
-    title: HOME_COPY.securityItems.encryptionTitle,
-    description: HOME_COPY.securityItems.encryptionDescription,
-    icon: LockKeyhole,
-  },
-  {
-    title: HOME_COPY.securityItems.abuseTitle,
-    description: HOME_COPY.securityItems.abuseDescription,
-    icon: BadgeCheck,
-  },
-  {
-    title: HOME_COPY.securityItems.migrationsTitle,
-    description: HOME_COPY.securityItems.migrationsDescription,
-    icon: DatabaseBackup,
-  },
-  {
-    title: HOME_COPY.securityItems.gdprTitle,
-    description: HOME_COPY.securityItems.gdprDescription,
-    icon: Globe2,
-  },
-  {
-    title: HOME_COPY.securityItems.soc2Title,
-    description: HOME_COPY.securityItems.soc2Description,
-    icon: Pentagon,
-  },
-  {
-    title: HOME_COPY.securityItems.hipaaTitle,
-    description: HOME_COPY.securityItems.hipaaDescription,
-    icon: HeartPulse,
-  },
-  {
-    title: HOME_COPY.securityItems.ccpaTitle,
-    description: HOME_COPY.securityItems.ccpaDescription,
-    icon: Scale,
-  },
-]
+function getSecurityItems(homeCopy: HomeCopy) {
+  const items = homeCopy.securityItems
+
+  return [
+    {
+      id: 'ddos',
+      title: items.ddosTitle,
+      description: items.ddosDescription,
+      icon: ShieldCheck,
+    },
+    {
+      id: 'encryption',
+      title: items.encryptionTitle,
+      description: items.encryptionDescription,
+      icon: LockKeyhole,
+    },
+    {
+      id: 'abuse',
+      title: items.abuseTitle,
+      description: items.abuseDescription,
+      icon: BadgeCheck,
+    },
+    {
+      id: 'migrations',
+      title: items.migrationsTitle,
+      description: items.migrationsDescription,
+      icon: DatabaseBackup,
+    },
+    {
+      id: 'gdpr',
+      title: items.gdprTitle,
+      description: items.gdprDescription,
+      icon: Globe2,
+    },
+    {
+      id: 'soc2',
+      title: items.soc2Title,
+      description: items.soc2Description,
+      icon: Pentagon,
+    },
+    {
+      id: 'hipaa',
+      title: items.hipaaTitle,
+      description: items.hipaaDescription,
+      icon: HeartPulse,
+    },
+    {
+      id: 'ccpa',
+      title: items.ccpaTitle,
+      description: items.ccpaDescription,
+      icon: Scale,
+    },
+  ] as const
+}
 
 export const Route = createFileRoute('/home')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -257,6 +265,10 @@ function HomePage() {
   const homeCopy = catalog.website.home
   const productBentoItems = useMemo(
     () => getProductBentoItems(homeCopy),
+    [homeCopy],
+  )
+  const securityItems = useMemo(
+    () => getSecurityItems(homeCopy),
     [homeCopy],
   )
 
@@ -537,7 +549,7 @@ function HomePage() {
 
                 return (
                   <article
-                    key={item.title}
+                    key={item.id}
                     className="group border-b border-border p-5 transition-colors hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0"
                   >
                     <div className="flex flex-col gap-3">

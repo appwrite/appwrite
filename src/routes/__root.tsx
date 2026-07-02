@@ -157,6 +157,13 @@ function getHeadFontPreloads() {
     },
     {
       rel: 'preload' as const,
+      href: '/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2',
+      as: 'font' as const,
+      type: 'font/woff2',
+      crossOrigin: 'anonymous' as const,
+    },
+    {
+      rel: 'preload' as const,
       href: '/fonts/inter/inter-latin-400-normal.woff2',
       as: 'font' as const,
       type: 'font/woff2',

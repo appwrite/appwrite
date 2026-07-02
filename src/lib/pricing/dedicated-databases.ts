@@ -12,6 +12,10 @@ export const DEDICATED_DB_HA_REPLICA_PERCENT = Math.round(
 )
 export const DEDICATED_DB_PITR_PERCENT = Math.round(DEFAULT_PITR_RATE * 100)
 
+/** Stable i18n keys for pricing labels derived from add-on rates. */
+export const DEDICATED_DB_HA_REPLICA_PRICING_LABEL = `+${DEDICATED_DB_HA_REPLICA_PERCENT}% of base per replica`
+export const DEDICATED_DB_PITR_PRICING_LABEL = `+${DEDICATED_DB_PITR_PERCENT}% of base`
+
 export const DATABASE_PRICING_COMPARISON_ROWS = [
   {
     label: 'Monthly compute',
@@ -36,12 +40,12 @@ export const DATABASE_PRICING_COMPARISON_ROWS = [
   {
     label: 'HA replicas',
     serverless: '—',
-    dedicated: `+${DEDICATED_DB_HA_REPLICA_PERCENT}% of base per replica`,
+    dedicated: DEDICATED_DB_HA_REPLICA_PRICING_LABEL,
   },
   {
     label: 'Point-in-time recovery',
     serverless: '—',
-    dedicated: `+${DEDICATED_DB_PITR_PERCENT}% of base`,
+    dedicated: DEDICATED_DB_PITR_PRICING_LABEL,
   },
   {
     label: 'Database types',
@@ -78,11 +82,11 @@ export const DEDICATED_DATABASE_PRICING = {
     { label: 'Compute tier', value: 'From $10/mo per database' },
     {
       label: 'HA read replicas',
-      value: `+${DEDICATED_DB_HA_REPLICA_PERCENT}% of base per replica`,
+      value: DEDICATED_DB_HA_REPLICA_PRICING_LABEL,
     },
     {
       label: 'Point-in-time recovery',
-      value: `+${DEDICATED_DB_PITR_PERCENT}% of base`,
+      value: DEDICATED_DB_PITR_PRICING_LABEL,
     },
     { label: 'Extra storage and bandwidth', value: 'Usage-based overage' },
   ],

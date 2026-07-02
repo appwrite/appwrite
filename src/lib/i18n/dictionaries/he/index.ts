@@ -7,6 +7,7 @@ import { heOrganizationsDictionary } from './organizations'
 import { heAccountGlobalDictionary } from './account-global'
 import { heSharedUiDictionary } from './shared-ui'
 import { heMarketingDictionary } from './marketing'
+import { hePricingDictionary } from './pricing'
 
 /**
  * Merged Hebrew dictionary keyed by English source strings.
@@ -14,6 +15,7 @@ import { heMarketingDictionary } from './marketing'
  */
 export const heDictionary: Record<string, string> = {
   ...heMarketingDictionary,
+  ...hePricingDictionary,
   ...heSharedUiDictionary,
   ...heAccountGlobalDictionary,
   ...heOrganizationsDictionary,

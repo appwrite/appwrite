@@ -3,6 +3,7 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heMarketingDictionary: Record<string, string> = {
+  '/month': 'לחודש',
   '1 vendor • 1 subscription • 1 bill': 'ספק אחד • מנוי אחד • חשבונית אחת',
   '1-10 employees': '1-10 עובדים',
   '1.0 release notes': 'הערות גרסה 1.0',
@@ -400,6 +401,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Earn free access through GitHub Education to build your next project on Appwrite Cloud. Sign up for the GitHub Student Developer Pack to receive Appwrite Cloud for the duration of your studies.': // pragma: allowlist secret
     'קבלו גישה חינמית דרך GitHub Education לבניית הפרויקט הבא שלכם על Appwrite Cloud. הירשמו ל-GitHub Student Developer Pack כדי לקבל את Appwrite Cloud למשך תקופת הלימודים.', // pragma: allowlist secret
   'Edge compute': 'מחשוב קצה',
+  'Edges': 'נקודות קצה',
   'Edit': 'עריכה',
   'Edit your code and the function restarts automatically. Deploy when you are ready.': 'ערכו את הקוד והפונקציה תופעל מחדש אוטומטית. פרסו כשאתם מוכנים.',
   'Edits sync instantly for everyone in the doc': 'עריכות מסתנכרנות מיידית לכל מי שבמסמך',
@@ -433,14 +435,14 @@ export const heMarketingDictionary: Record<string, string> = {
   'Enroll on GitHub Education': 'הירשמו ל-GitHub Education',
   'Enroll to the GitHub Student Developer Pack': 'הירשמו ל-GitHub Student Developer Pack',
   'Enter verification code': 'הזינו קוד אימות',
-  'Enterprise': 'Enterprise',
+  'Enterprise': 'אנטרפרייז',
   'Enterprise customers receive a dedicated success manager, 24/7 support on Slack, and priority response times. We also help with onboarding, architecture reviews, and ongoing optimization.':
     'לקוחות Enterprise מקבלים מנהל הצלחה ייעודי, תמיכה 24/7 ב-Slack וזמני תגובה מועדפים. אנחנו גם מסייעים בקליטה, בסקירות ארכיטקטורה ובאופטימיזציה שוטפת.',
   'Enterprise is designed for organizations with production workloads that need custom resource limits, premium support, compliance options, or deployment flexibility beyond the Pro plan.':
     'Enterprise מיועדת לארגונים עם עומסי פרודקשן שזקוקים למגבלות משאבים מותאמות, לתמיכת פרימיום, לאפשרויות תאימות או לגמישות פריסה מעבר לתוכנית Pro.',
   'Enterprise plans can include SOC-2 and HIPAA support, along with SSO, activity logs, and custom backup policies for security and governance workflows.':
     'תוכניות Enterprise יכולות לכלול תמיכה ב-SOC-2 וב-HIPAA, לצד SSO, יומני פעילות ומדיניות גיבוי מותאמת לתהליכי אבטחה וממשל.',
-  'Enterprise support': 'תמיכת Enterprise',
+  'Enterprise support': 'תמיכת אנטרפרייז',
   'Error submitting form. Please contact support.': 'שגיאה בשליחת הטופס. אנא פנו לתמיכה.',
   'Errors': 'שגיאות',
   'EU data processing': 'עיבוד נתונים באיחוד האירופי',
@@ -513,6 +515,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Founder at LangX': 'מייסד LangX',
   'Founder swag': 'מתנות למייסדים',
   'Free': 'Free',
+  'From': 'החל מ-',
   'From fast-moving startups to global enterprises, developers ship faster with Appwrite.': 'מסטארטאפים מהירים ועד ארגונים גלובליים, מפתחים משחררים מהר יותר עם Appwrite.', // pragma: allowlist secret
   'From MVP to enterprise, our app scales automatically, letting you focus on your business goals.':
     'מ-MVP ועד רמת ארגון, האפליקציה שלנו מתרחבת אוטומטית ומאפשרת לכם להתמקד ביעדים העסקיים.',
@@ -658,7 +661,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Learn more about': 'למדו עוד על',
   'Light Grey': 'אפור בהיר',
   'Live': 'Live',
-  'Log drains': 'Log drains',
+  'Log drains': 'ייצוא לוגים',
   'Logging': 'רישום לוגים',
   'Logomark': 'סמל הלוגו',
   'Logotype': 'לוגוטייפ',
@@ -1026,6 +1029,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Subscribe user targets from Auth or pick them in the Console when you create a topic.': 'רשמו יעדי משתמשים מאימות או בחרו אותם בקונסולה בעת יצירת נושא.',
   'Subscriber audiences': 'קהלי מנויים',
   'subscribers': 'מנויים',
+  'Sub-50ms latency': 'זמן תגובה מתחת ל-50ms',
   'Subscribers': 'מנויים',
   'Suggest features, integrations, or SDKs for our roadmap.': 'הציעו יכולות, אינטגרציות או SDKs למפת הדרכים שלנו.',
   'Support': 'תמיכה',
@@ -1283,7 +1287,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Dictionary check': 'בדיקת מילון',
   'documentation': 'הדוקומנטציה',
   'Email / Password': 'אימייל / סיסמה',
-  'Enterprise FAQ': 'שאלות נפוצות על Enterprise',
+  'Enterprise FAQ': 'שאלות נפוצות על אנטרפרייז',
   'Everything in Pro, plus enterprise capabilities': 'כל מה שיש ב-Pro, בתוספת יכולות ארגוניות',
   'Extra verification before account changes': 'אימות נוסף לפני שינויים בחשבון',
   'fra · region cache': 'fra · מטמון אזורי',

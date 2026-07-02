@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useIntersectionVisible } from '@/hooks/use-intersection-visible'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
   NETWORK_SEGMENT_CSS_VARS,
@@ -22,6 +23,7 @@ const GLOBE_BACKDROP_CLASSNAME =
   'h-full w-full bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--foreground)_5%,transparent)_0%,transparent_68%)]'
 
 function NetworkGlobeLegend({ className }: { className?: string }) {
+  const t = useT()
   const segments: NetworkSegment[] = ['pop-locations', 'edges', 'regions']
 
   return (
@@ -38,7 +40,7 @@ function NetworkGlobeLegend({ className }: { className?: string }) {
             style={{ backgroundColor: NETWORK_SEGMENT_CSS_VARS[segment] }}
             aria-hidden
           />
-          <span className="text-foreground">{NETWORK_SEGMENT_LABELS[segment]}</span>
+          <span className="text-foreground">{t(NETWORK_SEGMENT_LABELS[segment])}</span>
         </span>
       ))}
     </div>

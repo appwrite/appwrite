@@ -183,7 +183,7 @@ export function PlanSelection({
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0 flex-1 space-y-2">
             <span className="text-[15px] font-semibold text-foreground">
-              Enterprise
+              {t('Enterprise')}
             </span>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
               {t(ENTERPRISE_COLLAPSED_HINT)}
@@ -226,7 +226,7 @@ export function PlanSelection({
           <div className="min-w-0 flex-1 space-y-2">
             <div className={planTitleRowClassName}>
               <span className="text-[15px] font-semibold text-foreground">
-                Enterprise
+                {t('Enterprise')}
               </span>
               {isEnterpriseCurrent && (
                 <Badge
