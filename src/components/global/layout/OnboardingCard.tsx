@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useOnboardingProgress } from '@/lib/hooks/useOnboardingProgress'
+import { useI18n } from '@/lib/i18n'
 
 interface OnboardingCardProps {
   projectId: string | undefined
@@ -23,8 +24,14 @@ export function OnboardingCard({
   projectId,
   collapsed = false,
 }: OnboardingCardProps) {
+  const { catalog } = useI18n()
+  const onboardingCopy = catalog.app.sidebar.onboarding
   const { progress, completedSteps, totalSteps, isPending } =
     useOnboardingProgress(projectId)
+
+  const progressAriaLabel = isPending
+    ? onboardingCopy.getStarted
+    : `${onboardingCopy.getStarted} · ${completedSteps} ${onboardingCopy.of} ${totalSteps} ${onboardingCopy.completed}`
 
   if (!projectId) {
     return null
@@ -45,11 +52,7 @@ export function OnboardingCard({
               to="/projects/$projectId/onboarding"
               params={{ projectId }}
               className="flex aspect-square w-full items-center justify-center rounded-md p-2 text-[var(--brand-cta)]"
-              aria-label={
-                isPending
-                  ? 'Get started'
-                  : `Get started · ${completedSteps} of ${totalSteps} completed`
-              }
+              aria-label={progressAriaLabel}
             >
               {isPending ? (
                 <span className="h-[18px] w-[18px] rounded-full bg-muted animate-pulse" />
@@ -87,11 +90,11 @@ export function OnboardingCard({
             </Link>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
-            <p>Get started</p>
+            <p>{onboardingCopy.getStarted}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isPending
-                ? 'Loading…'
-                : `${completedSteps}/${totalSteps} completed`}
+                ? onboardingCopy.loading
+                : `${completedSteps}/${totalSteps} ${onboardingCopy.completed}`}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -108,19 +111,17 @@ export function OnboardingCard({
         EXPANDED_LINK,
         'block px-3 pt-2 pb-2.5 min-h-[4.75rem] flex flex-col justify-center',
       )}
-      aria-label={
-        isPending
-          ? 'Get started'
-          : `Get started · ${completedSteps} of ${totalSteps} completed`
-      }
+      aria-label={progressAriaLabel}
     >
       <h3 className="text-[13px] font-semibold text-foreground mb-1.5">
-        Get started
+        {onboardingCopy.getStarted}
       </h3>
       {isPending ? (
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">Progress</span>
+            <span className="text-[11px] text-muted-foreground">
+              {onboardingCopy.progress}
+            </span>
             <span className="h-3 w-8 rounded bg-muted animate-pulse" />
           </div>
           <div className="h-1.5 rounded-full bg-muted animate-pulse" />
@@ -128,7 +129,9 @@ export function OnboardingCard({
       ) : (
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">Progress</span>
+            <span className="text-[11px] text-muted-foreground">
+              {onboardingCopy.progress}
+            </span>
             <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
               {completedSteps}/{totalSteps}
             </span>
