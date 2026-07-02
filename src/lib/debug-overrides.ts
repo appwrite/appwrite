@@ -55,7 +55,7 @@ export type InitLowPowerAnimationsOverride = 'auto' | 'on' | 'off'
 export type KeyboardLayoutOverride = 'auto' | 'macos' | 'windows'
 
 export type PageDirectionOverride = 'ltr' | 'rtl'
-export type DebugLanguageOverride = 'auto' | 'en'
+export type DebugLanguageOverride = 'auto' | 'en' | 'he'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
@@ -222,7 +222,7 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     language: readStringFromStorage(
       DEBUG_OVERRIDE_KEYS.language,
-      ['auto', 'en'] as const,
+      ['auto', 'en', 'he'] as const,
       'auto',
     ),
   }

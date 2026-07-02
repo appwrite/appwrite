@@ -105,7 +105,7 @@ import {
   MarketingProductsNavPopover,
 } from '@/components/pages/marketing/MarketingProductsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
-import { getEnglishCatalog, useI18n } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -114,39 +114,41 @@ type MarketingHeaderNavItem = {
   hasMenuIndicator?: boolean
 }
 
-const DEFAULT_MARKETING_HEADER_NAV: readonly MarketingHeaderNavItem[] = [
-  // Default labels come from the English translation catalog.
-  // Runtime language switching still supports custom marketingNav prop labels.
-  {
-    label: getEnglishCatalog().app.header.marketingNav.products,
-    href: '/products/auth',
-    menu: 'products',
-  },
-  {
-    label: getEnglishCatalog().app.header.marketingNav.docs,
-    href: '/docs',
-  },
-  {
-    label: getEnglishCatalog().app.header.marketingNav.pricing,
-    href: '/pricing',
-  },
-  {
-    label: getEnglishCatalog().app.header.marketingNav.enterprise,
-    href: '/enterprise',
-  },
-  {
-    label: getEnglishCatalog().app.header.marketingNav.customers,
-    href: '/blog/category/customer-stories',
-  },
-  {
-    label: getEnglishCatalog().app.header.marketingNav.blog,
-    href: '/blog',
-  },
-  {
-    label: getEnglishCatalog().app.header.marketingNav.changelog,
-    href: '/changelog',
-  },
-] as const
+function getDefaultMarketingHeaderNav(
+  copy: ReturnType<typeof useI18n>['catalog']['app']['header']['marketingNav'],
+): readonly MarketingHeaderNavItem[] {
+  return [
+    {
+      label: copy.products,
+      href: '/products/auth',
+      menu: 'products',
+    },
+    {
+      label: copy.docs,
+      href: '/docs',
+    },
+    {
+      label: copy.pricing,
+      href: '/pricing',
+    },
+    {
+      label: copy.enterprise,
+      href: '/enterprise',
+    },
+    {
+      label: copy.customers,
+      href: '/blog/category/customer-stories',
+    },
+    {
+      label: copy.blog,
+      href: '/blog',
+    },
+    {
+      label: copy.changelog,
+      href: '/changelog',
+    },
+  ] as const
+}
 
 const ACCOUNT_MENU_ITEM_CLASS =
   'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-start text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground'
@@ -254,7 +256,7 @@ export function ConsoleHeader({
   marketingNav,
   headerTitleSuffix,
   centerSearch = false,
-  centerSearchPlaceholder = getEnglishCatalog().app.header.centerSearchPlaceholder,
+  centerSearchPlaceholder,
   hideSearch = false,
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
@@ -301,29 +303,34 @@ export function ConsoleHeader({
   const { features } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
+  const resolvedCenterSearchPlaceholder =
+    centerSearchPlaceholder ?? headerCopy.centerSearchPlaceholder
   const supportsMultiTenancy = features.multiTenancy
   const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(orgId ?? project?.teamId)
+  const defaultMarketingHeaderNav = getDefaultMarketingHeaderNav(
+    headerCopy.marketingNav,
+  )
   const marketingNavItems = (
     marketingNav === true
-      ? DEFAULT_MARKETING_HEADER_NAV
+      ? defaultMarketingHeaderNav
       : marketingNav
         ? marketingNav
         : []
   ).map((item) => {
-    if (item.label === headerCopy.marketingNav.blog) {
+    if (item.href === '/blog') {
       return { ...item, href: getBlogPageUrl('/blog', features.marketing) }
     }
-    if (item.label === headerCopy.marketingNav.customers) {
+    if (item.href === '/blog/category/customer-stories') {
       return {
         ...item,
         href: getBlogPageUrl('/blog/category/customer-stories', features.marketing),
       }
     }
-    if (item.label === headerCopy.marketingNav.docs) {
+    if (item.href === '/docs') {
       return { ...item, href: getMarketingPageUrl('/docs', features.marketing) }
     }
-    if (item.label === headerCopy.marketingNav.changelog) {
+    if (item.href === '/changelog') {
       return { ...item, href: getMarketingPageUrl('/changelog', features.marketing) }
     }
     return item
@@ -978,7 +985,7 @@ export function ConsoleHeader({
             >
               <Search className="h-3.5 w-3.5 shrink-0" />
               <span className="min-w-0 flex-1 truncate text-start">
-                {centerSearchPlaceholder}
+                {resolvedCenterSearchPlaceholder}
               </span>
               {searchModKey ? (
                 <span className="ms-auto flex shrink-0 items-center gap-1">
@@ -1011,7 +1018,7 @@ export function ConsoleHeader({
                   type="button"
                   onClick={openCommandCenter}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  aria-label={centerSearchPlaceholder}
+                  aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -1077,7 +1084,7 @@ export function ConsoleHeader({
                   type="button"
                   onClick={openCommandCenter}
                   className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
-                  aria-label={centerSearchPlaceholder}
+                  aria-label={resolvedCenterSearchPlaceholder}
                 >
                   <Search className="h-4 w-4" />
                 </button>

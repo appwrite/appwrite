@@ -922,7 +922,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const languageDescription =
       overrides.language === 'auto'
         ? languageCopy.activeAuto
-        : languageCopy.activeEnglish
+        : overrides.language === 'he'
+          ? languageCopy.activeHebrew
+          : languageCopy.activeEnglish
 
     const languageOptions: MenuItem[] = (
       [
@@ -936,13 +938,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           value: 'en' as const,
           description: languageCopy.englishDescription,
         },
+        {
+          label: languageCopy.hebrewLabel,
+          value: 'he' as const,
+          description: languageCopy.hebrewDescription,
+        },
       ] as const
     ).map((option) => ({
       label: option.label,
       description: option.description,
       onClick: () => {
-        setOverrides((prev) => ({ ...prev, language: option.value }))
+        setOverrides((prev) => ({
+          ...prev,
+          language: option.value,
+          ...(option.value === 'he' ? { pageDirection: 'rtl' as const } : {}),
+        }))
         setDebugOverride('language', option.value)
+        if (option.value === 'he') {
+          setDebugOverride('pageDirection', 'rtl')
+        }
       },
       active: overrides.language === option.value,
       icon: <Languages className="h-3 w-3" />,
