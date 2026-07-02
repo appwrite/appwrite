@@ -156,6 +156,7 @@ class Specs extends Action
                 'Bearer' => [
                     'type' => 'http',
                     'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
                     'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
@@ -248,6 +249,7 @@ class Specs extends Action
                 'Bearer' => [
                     'type' => 'http',
                     'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
                     'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
@@ -346,6 +348,7 @@ class Specs extends Action
                 'Bearer' => [
                     'type' => 'http',
                     'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
                     'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
