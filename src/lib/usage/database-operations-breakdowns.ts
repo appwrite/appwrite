@@ -24,16 +24,16 @@ export const DATABASE_OPERATIONS_BREAKDOWN_SECTIONS: readonly DatabaseOperations
   [
     {
       dimension: 'resourceId',
-      title: 'Resource IDs',
-      description: 'Operations grouped by database resource ID.',
-      metricId: 'breakdown-resource-id',
+      title: 'Resources',
+      description: 'Operations grouped by resource.',
+      metricId: 'breakdown-resources',
       labelVariant: 'mono',
     },
     {
       dimension: 'resource',
-      title: 'Resource types',
-      description: 'Operations grouped by resource type.',
-      metricId: 'breakdown-resource-type',
+      title: 'Resources',
+      description: 'Operations grouped by resource.',
+      metricId: 'breakdown-resources',
       labelVariant: 'default',
     },
     {

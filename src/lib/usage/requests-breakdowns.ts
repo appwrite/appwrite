@@ -96,16 +96,16 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
   },
   {
     dimension: 'resourceId',
-    title: 'Resource IDs',
-    description: 'Request volume grouped by resource ID.',
-    metricId: 'breakdown-resource-id',
+    title: 'Resources',
+    description: 'Request volume grouped by resource.',
+    metricId: 'breakdown-resources',
     labelVariant: 'mono',
   },
   {
     dimension: 'resource',
-    title: 'Resource types',
-    description: 'Request volume grouped by resource type.',
-    metricId: 'breakdown-resource-type',
+    title: 'Resources',
+    description: 'Request volume grouped by resource.',
+    metricId: 'breakdown-resources',
     labelVariant: 'default',
   },
 ] as const

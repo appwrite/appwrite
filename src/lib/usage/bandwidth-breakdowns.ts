@@ -97,16 +97,16 @@ export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] 
   },
   {
     dimension: 'resourceId',
-    title: 'Resource IDs',
-    description: 'Bandwidth grouped by resource ID.',
-    metricId: 'breakdown-resource-id',
+    title: 'Resources',
+    description: 'Bandwidth grouped by resource.',
+    metricId: 'breakdown-resources',
     labelVariant: 'mono',
   },
   {
     dimension: 'resource',
-    title: 'Resource types',
-    description: 'Bandwidth grouped by resource type.',
-    metricId: 'breakdown-resource-type',
+    title: 'Resources',
+    description: 'Bandwidth grouped by resource.',
+    metricId: 'breakdown-resources',
     labelVariant: 'default',
   },
 ] as const

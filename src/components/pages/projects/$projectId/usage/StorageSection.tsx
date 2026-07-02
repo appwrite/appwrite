@@ -7,13 +7,10 @@ import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
   IMAGE_TRANSFORMATIONS_DESCRIPTION,
   IMAGE_TRANSFORMATIONS_DOCS_HREF,
-  IMAGE_TRANSFORMATIONS_BREAKDOWN_TITLE,
   STORAGE_BUILDS_DESCRIPTION,
   STORAGE_DEPLOYMENTS_DESCRIPTION,
   STORAGE_DOCS_HREF,
-  STORAGE_FILE_BREAKDOWN_TITLE,
   STORAGE_FILE_DESCRIPTION,
-  STORAGE_RESOURCE_TYPES_BREAKDOWN_TITLE,
   formatImageTransformationsTotal,
   formatImageTransformationsValue,
   formatStorageBytesTotal,
@@ -170,9 +167,7 @@ export function StorageSection({
         formatValue={formatStorageBytesValue}
         axisFormat="bytes"
         showBreakdown={showBreakdown}
-        breakdownTitle={STORAGE_FILE_BREAKDOWN_TITLE}
         breakdownItems={filesBreakdownItems}
-        resourceTypeBreakdownTitle={STORAGE_RESOURCE_TYPES_BREAKDOWN_TITLE}
         resourceTypeBreakdownItems={filesResourceTypeBreakdownItems}
         breakdownLookup={storageBreakdownResources?.resources}
         onRetry={handleRetryAll}
@@ -244,9 +239,7 @@ export function StorageSection({
         formatValue={formatImageTransformationsValue}
         axisFormat="count"
         showBreakdown={showBreakdown}
-        breakdownTitle={IMAGE_TRANSFORMATIONS_BREAKDOWN_TITLE}
         breakdownItems={imageTransformationsBreakdownItems}
-        resourceTypeBreakdownTitle={STORAGE_RESOURCE_TYPES_BREAKDOWN_TITLE}
         resourceTypeBreakdownItems={imageTransformationsResourceTypeBreakdownItems}
         breakdownLookup={storageBreakdownResources?.resources}
         onRetry={handleRetryAll}

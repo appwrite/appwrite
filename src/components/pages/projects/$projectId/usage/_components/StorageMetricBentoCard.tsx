@@ -6,19 +6,16 @@ import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-br
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
 import {
-  UsageBreakdownCard,
   UsageMetricCardFooter,
   UsageMetricCardShell,
 } from './UsageMetricCard'
+import { UsageResourceBreakdownCard } from './UsageResourceBreakdownCard'
 
 const STORAGE_USAGE_ERROR = {
   title: "Couldn't load storage usage",
   message:
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const
-
-const breakdownRowGridClass =
-  'grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0'
 
 type StorageMetricBentoCardProps = {
   projectId: string
@@ -35,9 +32,7 @@ type StorageMetricBentoCardProps = {
   formatValue: (value: number) => string
   axisFormat?: UsageChartAxisFormat
   showBreakdown: boolean
-  breakdownTitle: string
   breakdownItems: UsageBreakdownItem[]
-  resourceTypeBreakdownTitle: string
   resourceTypeBreakdownItems: UsageBreakdownItem[]
   breakdownLookup: StorageBreakdownResourceMap | undefined
   onRetry: () => void
@@ -59,9 +54,7 @@ export function StorageMetricBentoCard({
   formatValue,
   axisFormat = 'bytes',
   showBreakdown,
-  breakdownTitle,
   breakdownItems,
-  resourceTypeBreakdownTitle,
   resourceTypeBreakdownItems,
   breakdownLookup,
   onRetry,
@@ -69,61 +62,54 @@ export function StorageMetricBentoCard({
 }: StorageMetricBentoCardProps) {
   return (
     <UsageMetricCardShell>
-      <UsageTimeSeriesChartCard
-        embedded
-        title={title}
-        description={description}
-        unitLabel={unitLabel}
-        chartGradientId={chartGradientId}
-        total={total}
-        changePercent={changePercent}
-        chartPoints={chartPoints}
-        isLoading={isLoading}
-        isError={isError}
-        errorTitle={STORAGE_USAGE_ERROR.title}
-        errorMessage={STORAGE_USAGE_ERROR.message}
-        formatTotal={formatTotal}
-        formatValue={formatValue}
-        axisFormat={axisFormat}
-        onRetry={onRetry}
-      />
-
-      {showBreakdown ? (
-        <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
-          <UsageBreakdownCard
+      <div
+        className={cn(
+          'grid grid-cols-1 divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
+        )}
+      >
+        <div className="lg:col-span-2">
+          <UsageTimeSeriesChartCard
             embedded
-            title={breakdownTitle}
+            title={title}
             description={description}
-            dimension="resourceId"
-            items={breakdownItems}
-            labelVariant="mono"
-            countryLookups={null}
-            storageLookup={breakdownLookup}
+            unitLabel={unitLabel}
+            chartGradientId={chartGradientId}
+            total={total}
+            changePercent={changePercent}
+            chartPoints={chartPoints}
             isLoading={isLoading}
             isError={isError}
             errorTitle={STORAGE_USAGE_ERROR.title}
             errorMessage={STORAGE_USAGE_ERROR.message}
+            formatTotal={formatTotal}
             formatValue={formatValue}
-            onRetry={onRetry}
-          />
-          <UsageBreakdownCard
-            embedded
-            title={resourceTypeBreakdownTitle}
-            description={description}
-            dimension="resource"
-            items={resourceTypeBreakdownItems}
-            labelVariant="default"
-            countryLookups={null}
-            storageLookup={breakdownLookup}
-            isLoading={isLoading}
-            isError={isError}
-            errorTitle={STORAGE_USAGE_ERROR.title}
-            errorMessage={STORAGE_USAGE_ERROR.message}
-            formatValue={formatValue}
+            axisFormat={axisFormat}
             onRetry={onRetry}
           />
         </div>
-      ) : null}
+
+        {showBreakdown ? (
+          <UsageResourceBreakdownCard
+            embedded
+            description={description}
+            resourceIdView={{
+              items: breakdownItems,
+              isLoading,
+              isError,
+            }}
+            resourceTypeView={{
+              items: resourceTypeBreakdownItems,
+              isLoading,
+              isError,
+            }}
+            storageLookup={breakdownLookup}
+            errorTitle={STORAGE_USAGE_ERROR.title}
+            errorMessage={STORAGE_USAGE_ERROR.message}
+            formatValue={formatValue}
+            onRetry={onRetry}
+          />
+        ) : null}
+      </div>
 
       <UsageMetricCardFooter description={description} docsHref={docsHref} />
     </UsageMetricCardShell>

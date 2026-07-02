@@ -47,7 +47,9 @@ import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/Cha
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useT } from '@/lib/i18n/translate'
+import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
+import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import {
   UsageBreakdownCard,
   UsageMetricCardFooter,
@@ -345,12 +347,14 @@ export function RequestsSection({
     showBreakdown,
   )
 
+  const { standardEntries, resourceIdEntry, resourceTypeEntry } = useMemo(
+    () => splitUsageBreakdownEntries(breakdowns),
+    [breakdowns],
+  )
+
   const resourceBreakdownIds = useMemo(() => {
-    const resourceSection = breakdowns.find(
-      (entry) => entry.section.dimension === 'resourceId',
-    )
-    return resourceSection?.items.map((item) => item.label) ?? []
-  }, [breakdowns])
+    return resourceIdEntry?.items.map((item) => item.label) ?? []
+  }, [resourceIdEntry?.items])
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
@@ -399,7 +403,7 @@ export function RequestsSection({
 
       {showBreakdown ? (
         <div className="grid items-stretch gap-6 lg:grid-cols-2">
-          {breakdowns.map(({ section, items, isLoading, isError }) => (
+          {standardEntries.map(({ section, items, isLoading, isError }) => (
             <div
               key={section.dimension}
               className="flex h-full min-h-0 flex-col"
@@ -411,18 +415,6 @@ export function RequestsSection({
                 items={items}
                 labelVariant={section.labelVariant}
                 countryLookups={countryLookups}
-                computeLookup={
-                  section.dimension === 'resourceId' ? computeLookup : undefined
-                }
-                databaseLookup={
-                  section.dimension === 'resourceId' ? databaseLookup : undefined
-                }
-                storageLookup={
-                  section.dimension === 'resourceId' ? storageLookup : undefined
-                }
-                tableLookup={
-                  section.dimension === 'resourceId' ? tableLookup : undefined
-                }
                 isLoading={isLoading}
                 isError={isError}
                 errorTitle={OVERVIEW_REQUESTS_ERROR.title}
@@ -440,6 +432,45 @@ export function RequestsSection({
               />
             </div>
           ))}
+
+          {resourceIdEntry && resourceTypeEntry ? (
+            <div className="flex h-full min-h-0 flex-col">
+              <UsageResourceBreakdownCard
+                description={resourceIdEntry.section.description}
+                resourceIdView={{
+                  items: resourceIdEntry.items,
+                  isLoading: resourceIdEntry.isLoading,
+                  isError: resourceIdEntry.isError,
+                }}
+                resourceTypeView={{
+                  items: resourceTypeEntry.items,
+                  isLoading: resourceTypeEntry.isLoading,
+                  isError: resourceTypeEntry.isError,
+                }}
+                countryLookups={countryLookups}
+                computeLookup={computeLookup}
+                databaseLookup={databaseLookup}
+                storageLookup={storageLookup}
+                tableLookup={tableLookup}
+                errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+                errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+                formatValue={formatRequestsValue}
+                onRetry={handleRetryAll}
+                onShowMore={(dimension) =>
+                  setBreakdownDrawer({
+                    title:
+                      dimension === 'resourceId'
+                        ? 'Resources · Resource ID'
+                        : 'Resources · Resource type',
+                    description: resourceIdEntry.section.description,
+                    dimension,
+                    labelVariant:
+                      dimension === 'resourceId' ? 'mono' : 'default',
+                  })
+                }
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
 

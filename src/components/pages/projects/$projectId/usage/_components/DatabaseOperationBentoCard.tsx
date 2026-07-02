@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
@@ -12,13 +13,17 @@ import type {
   DatabaseReadsBreakdownQueryEntry,
   DatabaseWritesBreakdownQueryEntry,
 } from '@/lib/react-query/hooks/usage-events'
+import type { DatabaseOperationsBreakdownSection } from '@/lib/usage/database-operations-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
+import type { UsageResourceBreakdownDimension } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
 import {
   UsageBreakdownCard,
   UsageMetricCardFooter,
   UsageMetricCardShell,
 } from './UsageMetricCard'
+import { UsageResourceBreakdownCard } from './UsageResourceBreakdownCard'
 
 const DATABASE_USAGE_ERROR = {
   title: "Couldn't load database usage",
@@ -62,6 +67,26 @@ type DatabaseOperationBentoCardProps = {
   docsHref?: string
 }
 
+function breakdownDrawerTitle(
+  operation: 'reads' | 'writes',
+  section: DatabaseOperationsBreakdownSection,
+  t: ReturnType<typeof useT>,
+): string {
+  const prefix = operation === 'reads' ? t('Reads') : t('Writes')
+  return `${prefix} · ${t(section.title)}`
+}
+
+function resourcesDrawerTitle(
+  operation: 'reads' | 'writes',
+  dimension: UsageResourceBreakdownDimension,
+  t: ReturnType<typeof useT>,
+): string {
+  const prefix = operation === 'reads' ? t('Reads') : t('Writes')
+  const suffix =
+    dimension === 'resourceId' ? t('Resource ID') : t('Resource type')
+  return `${prefix} · ${t('Resources')} · ${suffix}`
+}
+
 export function DatabaseOperationBentoCard({
   projectId,
   operation,
@@ -83,6 +108,11 @@ export function DatabaseOperationBentoCard({
   docsHref,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
+  const { standardEntries, resourceIdEntry, resourceTypeEntry } = useMemo(
+    () => splitUsageBreakdownEntries(breakdowns),
+    [breakdowns],
+  )
+
   return (
     <UsageMetricCardShell>
       <UsageTimeSeriesChartCard
@@ -105,7 +135,40 @@ export function DatabaseOperationBentoCard({
 
       {showBreakdown ? (
         <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
-          {breakdowns.map(({ section, items, isLoading, isError }) => (
+          {resourceIdEntry && resourceTypeEntry ? (
+            <UsageResourceBreakdownCard
+              embedded
+              description={resourceIdEntry.section.description}
+              resourceIdView={{
+                items: resourceIdEntry.items,
+                isLoading: resourceIdEntry.isLoading,
+                isError: resourceIdEntry.isError,
+              }}
+              resourceTypeView={{
+                items: resourceTypeEntry.items,
+                isLoading: resourceTypeEntry.isLoading,
+                isError: resourceTypeEntry.isError,
+              }}
+              databaseLookup={databaseLookup}
+              tableLookup={tableLookup}
+              errorTitle={DATABASE_USAGE_ERROR.title}
+              errorMessage={DATABASE_USAGE_ERROR.message}
+              formatValue={formatDatabaseOperationsValue}
+              onRetry={onRetry}
+              onShowMore={(dimension) =>
+                onOpenBreakdownDrawer({
+                  operation,
+                  title: resourcesDrawerTitle(operation, dimension, t),
+                  description: resourceIdEntry.section.description,
+                  dimension,
+                  labelVariant:
+                    dimension === 'resourceId' ? 'mono' : 'default',
+                })
+              }
+            />
+          ) : null}
+
+          {standardEntries.map(({ section, items, isLoading, isError }) => (
             <UsageBreakdownCard
               key={section.dimension}
               embedded
@@ -126,7 +189,7 @@ export function DatabaseOperationBentoCard({
               onShowMore={() =>
                 onOpenBreakdownDrawer({
                   operation,
-                  title: `${t(operation === 'reads' ? 'Reads' : 'Writes')} · ${t(section.title)}`,
+                  title: breakdownDrawerTitle(operation, section, t),
                   description: section.description,
                   dimension: section.dimension,
                   labelVariant: section.labelVariant,

@@ -14,19 +14,12 @@ import {
   formatGbHoursValue,
 } from '@/lib/usage/gb-hours-events'
 import {
-  COMPUTE_EXECUTIONS_BREAKDOWN_TITLE,
   COMPUTE_EXECUTIONS_DESCRIPTION,
-  COMPUTE_FUNCTION_EXECUTIONS_BREAKDOWN_TITLE,
   COMPUTE_FUNCTION_EXECUTIONS_DESCRIPTION,
-  COMPUTE_FUNCTION_GB_HOURS_BREAKDOWN_TITLE,
   COMPUTE_FUNCTION_GB_HOURS_DESCRIPTION,
   COMPUTE_FUNCTIONS_DOCS_HREF,
-  COMPUTE_GB_HOURS_BREAKDOWN_TITLE,
   COMPUTE_GB_HOURS_DESCRIPTION,
-  COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE,
-  COMPUTE_SITE_EXECUTIONS_BREAKDOWN_TITLE,
   COMPUTE_SITE_EXECUTIONS_DESCRIPTION,
-  COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE,
   COMPUTE_SITE_GB_HOURS_DESCRIPTION,
   COMPUTE_SITES_DOCS_HREF,
   topConsumersToBreakdownItems,
@@ -190,19 +183,6 @@ export function ComputeUsageSection({
         ? COMPUTE_SITE_GB_HOURS_DESCRIPTION
         : COMPUTE_GB_HOURS_DESCRIPTION
 
-  const executionsBreakdownTitle =
-    scope === 'functions'
-      ? COMPUTE_FUNCTION_EXECUTIONS_BREAKDOWN_TITLE
-      : scope === 'sites'
-        ? COMPUTE_SITE_EXECUTIONS_BREAKDOWN_TITLE
-        : COMPUTE_EXECUTIONS_BREAKDOWN_TITLE
-  const gbHoursBreakdownTitle =
-    scope === 'functions'
-      ? COMPUTE_FUNCTION_GB_HOURS_BREAKDOWN_TITLE
-      : scope === 'sites'
-        ? COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE
-        : COMPUTE_GB_HOURS_BREAKDOWN_TITLE
-
   const docsHref =
     scope === 'sites' ? COMPUTE_SITES_DOCS_HREF : COMPUTE_FUNCTIONS_DOCS_HREF
 
@@ -228,7 +208,6 @@ export function ComputeUsageSection({
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
         showBreakdown={showBreakdown}
-        breakdownTitle={executionsBreakdownTitle}
         breakdownItems={
           executionsQuery.isError
             ? []
@@ -236,7 +215,6 @@ export function ComputeUsageSection({
                 executionsQuery.data?.topConsumers ?? [],
               )
         }
-        resourceTypeBreakdownTitle={COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE}
         resourceTypeBreakdownItems={
           executionsQuery.isError
             ? []
@@ -266,13 +244,11 @@ export function ComputeUsageSection({
         formatValue={formatGbHoursValue}
         axisFormat="gbhours"
         showBreakdown={showBreakdown}
-        breakdownTitle={gbHoursBreakdownTitle}
         breakdownItems={
           gbHoursQuery.isError
             ? []
             : topConsumersToBreakdownItems(gbHoursQuery.data?.topConsumers ?? [])
         }
-        resourceTypeBreakdownTitle={COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE}
         resourceTypeBreakdownItems={
           gbHoursQuery.isError
             ? []

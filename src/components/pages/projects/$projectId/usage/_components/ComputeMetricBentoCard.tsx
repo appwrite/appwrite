@@ -6,19 +6,16 @@ import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-br
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
 import {
-  UsageBreakdownCard,
   UsageMetricCardFooter,
   UsageMetricCardShell,
 } from './UsageMetricCard'
+import { UsageResourceBreakdownCard } from './UsageResourceBreakdownCard'
 
 const COMPUTE_USAGE_ERROR = {
   title: "Couldn't load compute usage",
   message:
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const
-
-const breakdownRowGridClass =
-  'grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0'
 
 type ComputeMetricBentoCardProps = {
   projectId: string
@@ -35,9 +32,7 @@ type ComputeMetricBentoCardProps = {
   formatValue: (value: number) => string
   axisFormat?: UsageChartAxisFormat
   showBreakdown: boolean
-  breakdownTitle: string
   breakdownItems: UsageBreakdownItem[]
-  resourceTypeBreakdownTitle: string
   resourceTypeBreakdownItems: UsageBreakdownItem[]
   breakdownLookup: ComputeBreakdownResourceMap | undefined
   breakdownTitleAddon?: React.ReactNode
@@ -60,9 +55,7 @@ export function ComputeMetricBentoCard({
   formatValue,
   axisFormat = 'count',
   showBreakdown,
-  breakdownTitle,
   breakdownItems,
-  resourceTypeBreakdownTitle,
   resourceTypeBreakdownItems,
   breakdownLookup,
   breakdownTitleAddon,
@@ -71,62 +64,55 @@ export function ComputeMetricBentoCard({
 }: ComputeMetricBentoCardProps) {
   return (
     <UsageMetricCardShell>
-      <UsageTimeSeriesChartCard
-        embedded
-        title={title}
-        description={description}
-        unitLabel={unitLabel}
-        chartGradientId={chartGradientId}
-        total={total}
-        changePercent={changePercent}
-        chartPoints={chartPoints}
-        isLoading={isLoading}
-        isError={isError}
-        errorTitle={COMPUTE_USAGE_ERROR.title}
-        errorMessage={COMPUTE_USAGE_ERROR.message}
-        formatTotal={formatTotal}
-        formatValue={formatValue}
-        axisFormat={axisFormat}
-        onRetry={onRetry}
-      />
-
-      {showBreakdown ? (
-        <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
-          <UsageBreakdownCard
+      <div
+        className={cn(
+          'grid grid-cols-1 divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
+        )}
+      >
+        <div className="lg:col-span-2">
+          <UsageTimeSeriesChartCard
             embedded
-            title={breakdownTitle}
+            title={title}
             description={description}
-            dimension="resourceId"
-            items={breakdownItems}
-            labelVariant="mono"
-            countryLookups={null}
-            computeLookup={breakdownLookup}
+            unitLabel={unitLabel}
+            chartGradientId={chartGradientId}
+            total={total}
+            changePercent={changePercent}
+            chartPoints={chartPoints}
             isLoading={isLoading}
             isError={isError}
+            errorTitle={COMPUTE_USAGE_ERROR.title}
+            errorMessage={COMPUTE_USAGE_ERROR.message}
+            formatTotal={formatTotal}
+            formatValue={formatValue}
+            axisFormat={axisFormat}
+            onRetry={onRetry}
+          />
+        </div>
+
+        {showBreakdown ? (
+          <UsageResourceBreakdownCard
+            embedded
+            description={description}
+            resourceIdView={{
+              items: breakdownItems,
+              isLoading,
+              isError,
+            }}
+            resourceTypeView={{
+              items: resourceTypeBreakdownItems,
+              isLoading,
+              isError,
+            }}
+            computeLookup={breakdownLookup}
             errorTitle={COMPUTE_USAGE_ERROR.title}
             errorMessage={COMPUTE_USAGE_ERROR.message}
             formatValue={formatValue}
             onRetry={onRetry}
             titleAddon={breakdownTitleAddon}
           />
-          <UsageBreakdownCard
-            embedded
-            title={resourceTypeBreakdownTitle}
-            description={description}
-            dimension="resource"
-            items={resourceTypeBreakdownItems}
-            labelVariant="default"
-            countryLookups={null}
-            computeLookup={breakdownLookup}
-            isLoading={isLoading}
-            isError={isError}
-            errorTitle={COMPUTE_USAGE_ERROR.title}
-            errorMessage={COMPUTE_USAGE_ERROR.message}
-            formatValue={formatValue}
-            onRetry={onRetry}
-          />
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       <UsageMetricCardFooter description={description} docsHref={docsHref} />
     </UsageMetricCardShell>
