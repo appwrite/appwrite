@@ -21,6 +21,7 @@ import {
   MARKETPLACE_CATEGORY_LABELS,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
+import { useT } from '@/lib/i18n/translate'
 
 export type CreateMarketplaceAppInput = {
   name: string
@@ -51,6 +52,7 @@ export function CreateMarketplaceApp({
   onCreate,
   isSubmitting = false,
 }: CreateMarketplaceAppProps) {
+  const t = useT()
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugTouched, setSlugTouched] = useState(false)
@@ -93,10 +95,11 @@ export function CreateMarketplaceApp({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Add app</DialogTitle>
+          <DialogTitle>{t('Add app')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create an OAuth2 app listing for the marketplace. It is saved as a
-            draft until you publish it.
+            {t(
+              'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -104,17 +107,17 @@ export function CreateMarketplaceApp({
         <form onSubmit={handleSubmit}>
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="marketplace-app-name">Name</Label>
+              <Label htmlFor="marketplace-app-name">{t('Name')}</Label>
               <Input
                 id="marketplace-app-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="My integration"
+                placeholder={t('My integration')}
                 autoFocus
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="marketplace-app-slug">Slug</Label>
+              <Label htmlFor="marketplace-app-slug">{t('Slug')}</Label>
               <Input
                 id="marketplace-app-slug"
                 value={slug}
@@ -125,11 +128,11 @@ export function CreateMarketplaceApp({
                 placeholder="my-integration"
               />
               <p className="text-[12px] text-muted-foreground">
-                Used in the public listing URL
+                {t('Used in the public listing URL')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="marketplace-app-category">Category</Label>
+              <Label htmlFor="marketplace-app-category">{t('Category')}</Label>
               <Select
                 value={category}
                 onValueChange={(v) =>
@@ -146,30 +149,30 @@ export function CreateMarketplaceApp({
                     ) as MarketplaceAppCategory[]
                   ).map((key) => (
                     <SelectItem key={key} value={key}>
-                      {MARKETPLACE_CATEGORY_LABELS[key]}
+                      {t(MARKETPLACE_CATEGORY_LABELS[key])}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="marketplace-app-short">Short description</Label>
+              <Label htmlFor="marketplace-app-short">{t('Short description')}</Label>
               <Input
                 id="marketplace-app-short"
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
-                placeholder="One line summary"
+                placeholder={t('One line summary')}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="marketplace-app-description">
-                Description
+                {t('Description')}
               </Label>
               <Textarea
                 id="marketplace-app-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Full description for the listing page"
+                placeholder={t('Full description for the listing page')}
                 rows={4}
                 className="resize-none"
               />
@@ -182,10 +185,10 @@ export function CreateMarketplaceApp({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit || isSubmitting}>
-              Add app
+              {t('Add app')}
             </Button>
           </div>
         </form>

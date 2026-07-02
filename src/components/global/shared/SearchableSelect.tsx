@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export interface SearchableSelectItem {
   value: string
@@ -74,6 +75,7 @@ export function SearchableSelect({
   listFooter,
   onOpenChange,
 }: SearchableSelectProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const listScrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -130,7 +132,7 @@ export function SearchableSelect({
             triggerClassName,
           )}
         >
-          <span className="truncate">{displayText || placeholder}</span>
+          <span className="truncate">{t(displayText || placeholder)}</span>
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -147,7 +149,7 @@ export function SearchableSelect({
         <Command shouldFilter={!onSearchChange}>
           <div className="relative">
             <CommandInput
-              placeholder={searchPlaceholder}
+              placeholder={t(searchPlaceholder)}
               className={cn('h-9 text-[13px]', isFetching && 'pe-8')}
               onValueChange={onSearchChange}
             />
@@ -167,11 +169,11 @@ export function SearchableSelect({
           >
             {items.length === 0 && isFetching ? (
               <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
-                Loading…
+                {t('Loading…')}
               </div>
             ) : items.length === 0 ? (
               <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
-                {emptyMessage}
+                {t(emptyMessage)}
               </CommandEmpty>
             ) : (
               <CommandGroup>

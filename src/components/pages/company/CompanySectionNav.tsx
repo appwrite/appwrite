@@ -2,8 +2,10 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import { companyPageSections } from '@/lib/company/sections'
 import { scrollToCompanySection, scrollToCompanySectionFromHash } from '@/lib/company/section-scroll'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export function CompanySectionNav() {
+  const t = useT()
   const [activeId, setActiveId] = useState(companyPageSections[0]?.id ?? '')
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function CompanySectionNav() {
 
   return (
     <nav
-      aria-label="Company page sections"
+      aria-label={t('Company page sections')}
       className="relative z-[1] border-b border-border bg-background/80 backdrop-blur-sm"
     >
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-4">
@@ -67,7 +69,7 @@ export function CompanySectionNav() {
                   )}
                   aria-current={isActive ? 'location' : undefined}
                 >
-                  {section.label}
+                  {t(section.label)}
                 </a>
               </li>
             )

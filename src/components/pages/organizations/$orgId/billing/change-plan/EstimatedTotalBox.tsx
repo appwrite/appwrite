@@ -10,6 +10,7 @@ import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { formatCurrency } from '../utils'
 import { CouponExpirationNotice } from '../CouponExpirationNotice'
 import { AppwriteException, type Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 function getEstimationErrorMessage(error: unknown): string {
   if (error instanceof AppwriteException && error.code === 429) {
@@ -123,11 +124,12 @@ function getEstimationDiscountLines(
 const DEFAULT_BUDGET_CAP_USD = 200
 
 function EstimatedTotalSkeleton() {
+  const t = useT()
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden sticky top-6">
       <div className="px-6 py-4">
         <h3 className="text-[13px] font-semibold text-foreground">
-          Estimated total
+          {t('Estimated total')}
         </h3>
       </div>
 
@@ -193,6 +195,7 @@ export function EstimatedTotalBox({
   onCouponRemove,
   onBudgetChange,
 }: EstimatedTotalBoxProps) {
+  const t = useT()
   const [budgetEnabled, setBudgetEnabled] = useState(false)
   const [budgetValue, setBudgetValue] = useState<string>('')
 
@@ -233,10 +236,10 @@ export function EstimatedTotalBox({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[13px] font-semibold text-foreground">
-            Estimated total
+            {t('Estimated total')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-            Add a payment method to see your estimated total.
+            {t('Add a payment method to see your estimated total.')}
           </p>
         </div>
       </div>
@@ -245,18 +248,18 @@ export function EstimatedTotalBox({
 
   if (!estimation) {
     const message = error
-      ? getEstimationErrorMessage(error)
-      : 'Unable to load estimation.'
+      ? t(getEstimationErrorMessage(error))
+      : t('Unable to load estimation.')
 
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden sticky top-6">
         <div className="px-6 py-4">
           <h3 className="text-[13px] font-semibold text-foreground">
-            Estimated total
+            {t('Estimated total')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
-          <WarningAlert title="Unable to load estimation">
+          <WarningAlert title={t('Unable to load estimation')}>
             <div className="space-y-3">
               <p>{message}</p>
               {error && onRetry ? (
@@ -266,7 +269,7 @@ export function EstimatedTotalBox({
                   className="h-8 text-[13px]"
                   onClick={onRetry}
                 >
-                  Try again
+                  {t('Try again')}
                 </Button>
               ) : null}
             </div>
@@ -297,7 +300,7 @@ export function EstimatedTotalBox({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden sticky top-6">
       <div className="px-6 py-4">
         <h3 className="text-[13px] font-semibold text-foreground">
-          Estimated total
+          {t('Estimated total')}
         </h3>
       </div>
 
@@ -312,7 +315,7 @@ export function EstimatedTotalBox({
                 key={index}
                 className="flex items-center justify-between text-[13px]"
               >
-                <span className="text-muted-foreground">{item.name}</span>
+                <span className="text-muted-foreground">{t(item.name)}</span>
                 <span className="font-medium text-foreground">
                   {formatCurrency(item.amount || 0, item.currency || 'USD')}
                 </span>
@@ -329,7 +332,7 @@ export function EstimatedTotalBox({
                 key={index}
                 className="flex items-center justify-between text-[13px]"
               >
-                <span className="text-muted-foreground">{discountLine.label}</span>
+                <span className="text-muted-foreground">{t(discountLine.label)}</span>
                 <span className="font-medium text-green-600 dark:text-green-400">
                   -{formatCurrency(discountLine.amount, currency)}
                 </span>
@@ -356,7 +359,7 @@ export function EstimatedTotalBox({
                 size="sm"
                 className="h-6 w-6 shrink-0 p-0"
                 onClick={onCouponRemove}
-                aria-label="Remove coupon"
+                aria-label={t('Remove coupon')}
               >
                 <X className="h-3.5 w-3.5" />
               </Button>
@@ -368,7 +371,7 @@ export function EstimatedTotalBox({
         <div className="pt-2 border-t border-border">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-medium text-foreground">
-              Total due now
+              {t('Total due now')}
             </span>
             <span className="text-[15px] font-semibold text-foreground">
               {formatCurrency(totalDue, currency)}
@@ -381,11 +384,11 @@ export function EstimatedTotalBox({
           <div className="pt-2">
             <div className="flex items-center justify-between">
               <span className="text-[13px] text-muted-foreground">
-                Recurring Charge
+                {t('Recurring Charge')}
               </span>
               <span className="text-[13px] font-medium text-foreground">
                 {formatCurrency(recurringCharge, currency)}
-                /month
+                /{t('month')}
               </span>
             </div>
           </div>
@@ -396,7 +399,7 @@ export function EstimatedTotalBox({
           <div className="pt-4 border-t border-border space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="budget-cap" className="text-[13px] font-medium">
-                Budget cap
+                {t('Budget cap')}
               </Label>
               <Switch
                 id="budget-cap"
@@ -422,7 +425,7 @@ export function EstimatedTotalBox({
                   />
                 </div>
                 <p className="text-[12px] text-muted-foreground mt-1">
-                  Set a monthly spending limit
+                  {t('Set a monthly spending limit')}
                 </p>
               </div>
             )}

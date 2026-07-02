@@ -198,6 +198,7 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
+import { useT } from '@/lib/i18n/translate'
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
@@ -270,6 +271,7 @@ function EmptyMemberAvatarSlot({
   disabled?: boolean
   disabledTooltip?: string
 }) {
+  const t = useT()
   const button = (
     <button
       type="button"
@@ -280,8 +282,8 @@ function EmptyMemberAvatarSlot({
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
       )}
       style={{ zIndex }}
-      title={disabled ? undefined : 'Invite member'}
-      aria-label="Invite member"
+      title={disabled ? undefined : t('Invite member')}
+      aria-label={t('Invite member')}
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/35 bg-muted/25">
         <Plus className="h-3.5 w-3.5 text-muted-foreground" />
@@ -318,6 +320,7 @@ interface OrgOverviewProps {
 }
 
 export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
+  const t = useT()
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const { orgId } = useParams({ from: '/_public/organizations/$orgId' })
@@ -501,13 +504,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     const allNavItems = [
       {
         id: 'overview',
-        label: 'General',
+        label: t('General'),
         to: '/organizations/$orgId/settings',
         icon: Settings,
         keywords: ['general', 'overview', 'name', 'delete']},
       {
         id: 'members',
-        label: 'Members',
+        label: t('Members'),
         to: '/organizations/$orgId/settings/members',
         icon: Users,
         keywords: ['members', 'team', 'invite', 'roles']},
@@ -515,7 +518,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         ? [
             {
               id: 'billing',
-              label: 'Billing',
+              label: t('Billing'),
               to: '/organizations/$orgId/settings/billing',
               icon: CreditCard,
               keywords: ['billing', 'payment', 'invoice', 'subscription']},
@@ -525,7 +528,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         ? [
             {
               id: 'compliance',
-              label: 'Compliance',
+              label: t('Compliance'),
               to: '/organizations/$orgId/settings/compliance',
               icon: ShieldCheck,
               keywords: [
@@ -542,7 +545,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         ? [
             {
               id: 'oauth-apps',
-              label: 'OAuth apps',
+              label: t('OAuth apps'),
               to: '/organizations/$orgId/settings/oauth-apps',
               icon: KeyRound,
               keywords: ['oauth', 'sso', 'apps', 'login']},
@@ -552,7 +555,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         ? [
             {
               id: 'api-keys',
-              label: 'API keys',
+              label: t('API keys'),
               to: '/organizations/$orgId/settings/api-keys',
               icon: Key,
               keywords: ['api', 'keys', 'credentials']},
@@ -579,7 +582,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return filtered.map((item) => ({
       ...item,
       params: { orgId: orgId ?? '' }}))
-  }, [features, access, orgId])
+  }, [features, access, orgId, t])
 
   const orgSettingsCardIndex = useMemo(() => {
     if (supportsMultiTenancy) return ORG_SETTINGS_CARD_INDEX
@@ -1046,10 +1049,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     onSuccess: () => {
       // Invalidate organizations query to refetch with updated name
       queryClient.invalidateQueries({ queryKey: ['organizations', 'console'] })
-      toast.success('Organization name updated successfully')
+      toast.success(t('Organization name updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update organization name')
+      toast.error(error.message || t('Failed to update organization name'))
     }})
 
   // Mutation to delete organization
@@ -1059,7 +1062,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations', 'console'] })
-      toast.success('Organization deleted successfully')
+      toast.success(t('Organization deleted successfully'))
       setDeleteOrgDialogOpen(false)
       setDeleteOrgConfirmation('')
 
@@ -1076,7 +1079,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       }
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete organization')
+      toast.error(error.message || t('Failed to delete organization'))
     }})
 
   // Mutation to create organization
@@ -1257,10 +1260,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['projects'] })
         toast.success(
-          next.includes(projectId) ? 'Project pinned' : 'Project unpinned',
+          next.includes(projectId)
+            ? t('Project pinned')
+            : t('Project unpinned'),
         )
       },
-      onError: () => toast.error('Failed to update pinned projects')})
+      onError: () => toast.error(t('Failed to update pinned projects'))})
   }
 
   const handlePinnedDragStart = useCallback(
@@ -1338,7 +1343,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['projects'] })
         },
-        onError: () => toast.error('Failed to reorder pinned projects')})
+        onError: () => toast.error(t('Failed to reorder pinned projects'))})
     } catch {
       // ignore invalid payload
     }
@@ -1421,11 +1426,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const inviteDisabled =
     !supportsAdditionalMembers || !canInviteMembers || !orgId
   const inviteDisabledTooltip = !orgId
-    ? 'Select an organization to invite members.'
+    ? t('Select an organization to invite members.')
     : !canInviteMembers
-      ? "You don't have permission to invite members."
+      ? t("You don't have permission to invite members.")
       : !supportsAdditionalMembers
-        ? 'Member limit reached for your plan.'
+        ? t('Member limit reached for your plan.')
         : undefined
 
   // Calculate member limit
@@ -1810,7 +1815,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             )}
                           >
                             {selectedOrg.billingPlanDowngrade
-                              ? 'Downgraded'
+                              ? t('Downgraded')
                               : getPlanDisplayName(selectedOrg.plan)}
                           </Badge>
                         )}
@@ -1823,7 +1828,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     >
                       <div className="border-b border-border px-3 py-2">
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          Switch organization
+                          {t('Switch organization')}
                         </p>
                       </div>
                       <div className="max-h-64 overflow-y-auto py-1">
@@ -1852,13 +1857,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     )}
                                   >
                                     {org.billingPlanDowngrade
-                                      ? 'Downgraded'
+                                      ? t('Downgraded')
                                       : getPlanDisplayName(org.plan)}
                                   </span>
                                 )}
                                 <span className="text-[11px] text-muted-foreground">
-                                  {org.members} member
-                                  {org.members !== 1 ? 's' : ''}
+                                  {org.members}{' '}
+                                  {org.members !== 1
+                                    ? t('members')
+                                    : t('member')}
                                 </span>
                               </div>
                             </div>
@@ -1877,7 +1884,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         >
                           <Plus className="h-4 w-4" />
-                          Create organization
+                          {t('Create organization')}
                         </button>
                       </div>
                     </PopoverContent>
@@ -1912,14 +1919,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
-                      aria-label="Create organization"
+                      aria-label={t('Create organization')}
                       onClick={handleOpenCreateOrganization}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Create organization</p>
+                    <p>{t('Create organization')}</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -1979,7 +1986,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     showOverflow)) &&
                                   '-space-x-2',
                               )}
-                              title="View members"
+                              title={t('View members')}
                             >
                               {displayMembers.map(
                                 (member: TeamMember, index: number) => (
@@ -2039,7 +2046,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         disabled={inviteDisabled}
                       >
                         <UserPlus className="h-3.5 w-3.5" />
-                        Invite
+                        {t('Invite')}
                       </Button>
                     </span>
                   </TooltipTrigger>
@@ -2076,7 +2083,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         : 'text-muted-foreground hover:text-foreground/80',
                     )}
                   >
-                    {tab.label}
+                    {t(tab.label)}
                     {activeTab === tab.id && (
                       <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-foreground" />
                     )}
@@ -2139,8 +2146,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         <div className="flex-1 min-w-0">
                           <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
                             {isAtLimit
-                              ? `You've reached the limit of ${limit} member${limit !== 1 ? 's' : ''}`
-                              : `Approaching member limit`}
+                              ? `${t("You've reached the limit of")} ${limit} ${limit !== 1 ? t('members') : t('member')}`
+                              : t('Approaching member limit')}
                           </AlertTitle>
                           <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                             <span className="inline">
@@ -2153,9 +2160,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     search={{ orgId: orgId! }}
                                     className="font-medium underline hover:no-underline"
                                   >
-                                    Upgrade
+                                    {t('Upgrade')}
                                   </Link>{' '}
-                                  to unlock more capacity.
+                                  {t('to unlock more capacity.')}
                                 </>
                               ) : (
                                 <>
@@ -2167,9 +2174,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     search={{ orgId: orgId! }}
                                     className="font-medium underline hover:no-underline"
                                   >
-                                    Upgrade
+                                    {t('Upgrade')}
                                   </Link>{' '}
-                                  to unlock more capacity.
+                                  {t('to unlock more capacity.')}
                                 </>
                               )}
                             </span>
@@ -2181,7 +2188,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
                           <Link to="/upgrade" search={{ orgId: orgId! }}>
-                            Upgrade
+                            {t('Upgrade')}
                           </Link>
                         </Button>
                       </div>
@@ -2226,7 +2233,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <div className="flex flex-1 items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                            {`You've reached the limit of ${limit} project${limit !== 1 ? 's' : ''}`}
+                            {`${t("You've reached the limit of")} ${limit} ${limit !== 1 ? t('projects') : t('project')}`}
                           </AlertTitle>
                           <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                             <span className="inline">
@@ -2238,9 +2245,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   search={{ orgId: orgId! }}
                                   className="font-medium underline hover:no-underline"
                                 >
-                                  Upgrade
+                                  {t('Upgrade')}
                                 </Link>{' '}
-                                to unlock more capacity.
+                                {t('to unlock more capacity.')}
                               </>
                             </span>
                           </AlertDescription>
@@ -2251,7 +2258,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
                           <Link to="/upgrade" search={{ orgId: orgId! }}>
-                            Upgrade
+                            {t('Upgrade')}
                           </Link>
                         </Button>
                       </div>
@@ -2281,12 +2288,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           <Search className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <h3 className="text-[15px] font-medium text-foreground">
-                          Failed to load projects
+                          {t('Failed to load projects')}
                         </h3>
                         <p className="mt-1 text-[13px] text-muted-foreground">
                           {activeProjectsError instanceof Error
                             ? activeProjectsError.message
-                            : 'An error occurred'}
+                            : t('An error occurred')}
                         </p>
                       </div>
                     )}
@@ -2299,7 +2306,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           <div className="relative min-w-0 flex-1 sm:max-w-xs">
                             <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                              placeholder="Search projects..."
+                              placeholder={t('Search projects...')}
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
@@ -2325,14 +2332,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           disabled
                                         >
                                           <Plus className="h-4 w-4" />
-                                          Create project
+                                          {t('Create project')}
                                         </Button>
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <p>
-                                        You don&apos;t have permission to create
-                                        projects.
+                                        {t(
+                                          "You don't have permission to create projects.",
+                                        )}
                                       </p>
                                     </TooltipContent>
                                   </Tooltip>
@@ -2349,7 +2357,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   }
                                 >
                                   <Plus className="h-4 w-4" />
-                                  Create project
+                                  {t('Create project')}
                                 </Button>
                               )
                             }
@@ -2381,15 +2389,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         }
                                       >
                                         <Plus className="h-4 w-4" />
-                                        Create project
+                                        {t('Create project')}
                                       </Button>
                                     </div>
                                   </TooltipTrigger>
                                   {isAtLimit && (
                                     <TooltipContent side="bottom">
                                       <p>
-                                        You've reached the limit for projects on
-                                        your plan
+                                        {t(
+                                          "You've reached the limit for projects on your plan",
+                                        )}
                                       </p>
                                     </TooltipContent>
                                   )}
@@ -2404,7 +2413,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {showProjectsLoading ? (
                           <div className="rounded-lg border border-border bg-card py-12 text-center">
                             <p className="text-[13px] text-muted-foreground">
-                              Loading projects...
+                              {t('Loading projects...')}
                             </p>
                           </div>
                         ) : (
@@ -2414,7 +2423,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               pinnedProjects.length > 0 && (
                                 <div className="mb-8">
                                   <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                    Pinned
+                                    {t('Pinned')}
                                   </h2>
                                   {projectsViewMode === 'list' ? (
                                     <ProjectsListTable
@@ -2577,7 +2586,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-8 w-8 rounded-md"
-                                                            aria-label="Unpin project"
+                                                            aria-label={t(
+                                                              'Unpin project',
+                                                            )}
                                                             onClick={(e) => {
                                                               e.preventDefault()
                                                               handlePinProject(
@@ -2592,7 +2603,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                          <p>Unpin project</p>
+                                                          <p>
+                                                            {t('Unpin project')}
+                                                          </p>
                                                         </TooltipContent>
                                                       </Tooltip>
                                                     </TooltipProvider>
@@ -2630,13 +2643,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                               pinnedDraggingIndex ===
                                                               index
                                                             }
-                                                            aria-label={`Drag to reorder ${project.name}`}
+                                                            aria-label={`${t('Drag to reorder')} ${project.name}`}
                                                           >
                                                             <GripVertical className="h-4 w-4" />
                                                           </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent side="top">
-                                                          <p>Drag to reorder</p>
+                                                          <p>
+                                                            {t(
+                                                              'Drag to reorder',
+                                                            )}
+                                                          </p>
                                                         </TooltipContent>
                                                       </Tooltip>
                                                     </TooltipProvider>
@@ -2663,7 +2680,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     {!projectsSearchActive &&
                                       pinnedProjects.length > 0 && (
                                         <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                          All projects
+                                          {t('All projects')}
                                         </h2>
                                       )}
                                     {projectsViewMode === 'list' ? (
@@ -2784,7 +2801,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                               variant="ghost"
                                                               size="icon"
                                                               className="h-8 w-8 rounded-md"
-                                                              aria-label="Pin project"
+                                                              aria-label={t(
+                                                                'Pin project',
+                                                              )}
                                                               onClick={(e) => {
                                                                 e.preventDefault()
                                                                 handlePinProject(
@@ -2799,7 +2818,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             </Button>
                                                           </TooltipTrigger>
                                                           <TooltipContent>
-                                                            <p>Pin project</p>
+                                                            <p>
+                                                              {t('Pin project')}
+                                                            </p>
                                                           </TooltipContent>
                                                         </Tooltip>
                                                       </TooltipProvider>
@@ -2822,8 +2843,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               displayedProjectsByTeam.length === 0 && (
                                 <EmptyState
                                   icon={Folder}
-                                  title="No projects yet"
-                                  description="Create your first project to get started"
+                                  title={t('No projects yet')}
+                                  description={t(
+                                    'Create your first project to get started',
+                                  )}
                                   isEmpty={!searchQuery}
                                   hasFilters={!!searchQuery}
                                   variant="card"
@@ -2866,7 +2889,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       projectsLimit: size}),
                                     replace: true})
                                 }}
-                                itemLabel="projects"
+                                itemLabel={t('projects')}
                               />
                             )}
 
@@ -2926,12 +2949,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                                 <div className="px-6 py-4">
                                   <h3 className="text-[15px] font-semibold text-foreground">
-                                    API key types
+                                    {t('API key types')}
                                   </h3>
                                   <p className="mt-1 text-[13px] text-muted-foreground">
-                                    Keys apply at different levels. Each key has
-                                    its own permissions (scopes) to control
-                                    access.
+                                    {t(
+                                      'Keys apply at different levels. Each key has its own permissions (scopes) to control access.',
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -2950,11 +2973,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                                 <div className="px-4 py-3">
                                   <h3 className="text-[13px] font-semibold text-foreground">
-                                    Project keys
+                                    {t('Project keys')}
                                   </h3>
                                   <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    Databases, storage, users, functions. One
-                                    project per key.
+                                    {t(
+                                      'Databases, storage, users, functions. One project per key.',
+                                    )}
                                   </p>
                                 </div>
                                 <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
@@ -2978,7 +3002,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         params={{ orgId: orgId ?? '' }}
                                         className="inline-flex items-center gap-1.5"
                                       >
-                                        Create a project first
+                                        {t('Create a project first')}
                                         <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                                       </Link>
                                     </Button>
@@ -2995,11 +3019,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                                 <div className="px-4 py-3">
                                   <h3 className="text-[13px] font-semibold text-foreground">
-                                    Account keys
+                                    {t('Account keys')}
                                   </h3>
                                   <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    Account-level ops, CLI auth, sessions.
-                                    Per-user credentials.
+                                    {t(
+                                      'Account-level ops, CLI auth, sessions. Per-user credentials.',
+                                    )}
                                   </p>
                                 </div>
                                 <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
@@ -3013,7 +3038,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       to="/account"
                                       className="inline-flex items-center gap-1.5"
                                     >
-                                      Account settings
+                                      {t('Account settings')}
                                       <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                                     </Link>
                                   </Button>
@@ -3034,11 +3059,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                                 <div className="px-4 py-3">
                                   <h3 className="text-[13px] font-semibold text-foreground">
-                                    Org keys
+                                    {t('Org keys')}
                                   </h3>
                                   <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
-                                    Billing, team, cross-project. One key for
-                                    the whole org.
+                                    {t(
+                                      'Billing, team, cross-project. One key for the whole org.',
+                                    )}
                                   </p>
                                 </div>
                                 <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
@@ -3049,7 +3075,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     asChild
                                   >
                                     <DocsRouteLink className="inline-flex items-center gap-1.5" href="/docs/advanced/platform/api-keys">
-                                      Docs
+                                      {t('Docs')}
                                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                                     </DocsRouteLink>
                                   </Button>
@@ -3069,9 +3095,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
                                 <p className="text-[12px] text-muted-foreground">
                                   <Info className="mb-0.5 me-2 inline-block h-4 w-4 align-middle" />
-                                  Organization-level keys will be manageable
-                                  here once available. Meanwhile, use project
-                                  keys for server-side access.
+                                  {t(
+                                    'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.',
+                                  )}
                                 </p>
                               </div>
                             )},
@@ -3086,12 +3112,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <Users className="h-6 w-6 text-muted-foreground" />
                             </div>
                             <h3 className="text-[15px] font-medium text-foreground">
-                              Failed to load members
+                              {t('Failed to load members')}
                             </h3>
                             <p className="mt-1 text-[13px] text-muted-foreground">
                               {membershipsError instanceof Error
                                 ? membershipsError.message
-                                : 'An error occurred'}
+                                : t('An error occurred')}
                             </p>
                           </div>
                         )}
@@ -3104,7 +3130,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="relative w-64">
                                 <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
-                                  placeholder="Search members..."
+                                  placeholder={t('Search members...')}
                                   value={membershipsSearchQuery}
                                   onChange={(e) =>
                                     setMembershipsSearchQuery(e.target.value)
@@ -3126,7 +3152,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         disabled={inviteDisabled}
                                       >
                                         <Plus className="h-4 w-4" />
-                                        Invite
+                                        {t('Invite')}
                                       </Button>
                                     </span>
                                   </TooltipTrigger>
@@ -3146,7 +3172,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   <Users className="h-6 w-6 text-muted-foreground" />
                                 </div>
                                 <p className="text-[13px] text-muted-foreground">
-                                  Loading members...
+                                  {t('Loading members...')}
                                 </p>
                               </div>
                             ) : memberships.length > 0 ? (
@@ -3156,20 +3182,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     <TableHeader>
                                       <TableRow className="hover:bg-transparent border-b border-border">
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                          Member
+                                          {t('Member')}
                                         </TableHead>
                                         {features.orgRoles && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                            Role
+                                            {t('Role')}
                                           </TableHead>
                                         )}
                                         {features.accountMfa && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
-                                            MFA
+                                            {t('MFA')}
                                           </TableHead>
                                         )}
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end hidden sm:table-cell">
-                                          Joined
+                                          {t('Joined')}
                                         </TableHead>
                                         <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
                                       </TableRow>
@@ -3242,7 +3268,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         variant="secondary"
                                                         className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
                                                       >
-                                                        Pending
+                                                        {t('Pending')}
                                                       </Badge>
                                                     )}
                                                   </div>
@@ -3267,7 +3293,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       className="h-3 w-3 shrink-0"
                                                       aria-hidden
                                                     />
-                                                    {roleLabel}
+                                                    {t(roleLabel)}
                                                   </Badge>
                                                 </div>
                                               </TableCell>
@@ -3289,8 +3315,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </TooltipTrigger>
                                                       <TooltipContent>
                                                         <p className="text-xs">
-                                                          Multi-factor
-                                                          authentication enabled
+                                                          {t(
+                                                            'Multi-factor authentication enabled',
+                                                          )}
                                                         </p>
                                                       </TooltipContent>
                                                     </Tooltip>
@@ -3303,9 +3330,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </TooltipTrigger>
                                                       <TooltipContent>
                                                         <p className="text-xs">
-                                                          Multi-factor
-                                                          authentication not
-                                                          enabled
+                                                          {t(
+                                                            'Multi-factor authentication not enabled',
+                                                          )}
                                                         </p>
                                                       </TooltipContent>
                                                     </Tooltip>
@@ -3317,7 +3344,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <div className="text-end">
                                                 {member.status === 'pending' ? (
                                                   <span className="text-[12px] text-muted-foreground/70 italic">
-                                                    Invited
+                                                    {t('Invited')}
                                                   </span>
                                                 ) : (
                                                   <DateTooltip
@@ -3361,12 +3388,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                                 roles},
                                                             )
                                                             toast.success(
-                                                              'Invitation resent successfully',
+                                                              t(
+                                                                'Invitation resent successfully',
+                                                              ),
                                                             )
                                                           } catch (error: unknown) {
                                                             toast.error(
                                                               error?.message ||
-                                                                'Failed to resend invitation',
+                                                                t(
+                                                                  'Failed to resend invitation',
+                                                                ),
                                                             )
                                                           }
                                                         }}
@@ -3376,8 +3407,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       >
                                                         <MenuItemContent icon={Mail}>
                                                           {resendInviteMutation.isPending
-                                                            ? 'Resending...'
-                                                            : 'Resend'}
+                                                            ? t('Resending...')
+                                                            : t('Resend')}
                                                         </MenuItemContent>
                                                       </DropdownMenuItem>
                                                       <DropdownMenuSeparator />
@@ -3392,7 +3423,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                         }}
                                                       >
                                                         <MenuItemContent icon={Trash2}>
-                                                          Remove
+                                                          {t('Remove')}
                                                         </MenuItemContent>
                                                       </DropdownMenuItem>
                                                     </DropdownMenuContent>
@@ -3434,7 +3465,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                             }}
                                                           >
                                                             <MenuItemContent icon={UserCog}>
-                                                              Update
+                                                              {t('Update')}
                                                             </MenuItemContent>
                                                           </DropdownMenuItem>
                                                           <DropdownMenuSeparator />
@@ -3455,7 +3486,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           }}
                                                         >
                                                           <MenuItemContent icon={Trash2}>
-                                                            Remove
+                                                            {t('Remove')}
                                                           </MenuItemContent>
                                                         </DropdownMenuItem>
                                                       )}
@@ -3486,18 +3517,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       setRequestedMembershipsPage(1)
                                       setDisplayedMembershipsPage(1)
                                     }}
-                                    itemLabel="members"
+                                    itemLabel={t('members')}
                                   />
                                 )}
                               </>
                             ) : (
                               <EmptyState
                                 icon={Users}
-                                title="No members found"
+                                title={t('No members found')}
                                 description={
                                   membershipsSearchQuery
                                     ? undefined
-                                    : 'Invite organization members to collaborate on your projects'
+                                    : t(
+                                        'Invite organization members to collaborate on your projects',
+                                      )
                                 }
                                 isEmpty={!membershipsSearchQuery}
                                 hasFilters={!!membershipsSearchQuery}
@@ -3528,16 +3561,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                                       <div className="px-6 py-4">
                                         <h3 className="text-[15px] font-semibold text-foreground">
-                                          Organization ID
+                                          {t('Organization ID')}
                                         </h3>
                                       </div>
                                       <div className="border-t border-border" />
                                       <div className="px-6 py-4">
                                         <p className="text-[13px] text-muted-foreground mb-3">
-                                          Use this ID when integrating with the
-                                          Appwrite API, webhooks, or SDKs.
-                                          Support may also ask for this ID when
-                                          assisting with issues.
+                                          {t(
+                                            'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.', // pragma: allowlist secret
+                                          )}
                                         </p>
                                         <CopyableId
                                           id={selectedOrg.$id}
@@ -3558,20 +3590,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                                 <div className="px-6 py-4">
                                   <h3 className="text-[15px] font-semibold text-foreground">
-                                    Organization name
+                                    {t('Organization name')}
                                   </h3>
                                 </div>
                                 <div className="border-t border-border" />
                                 <div className="px-6 py-4">
                                   <p className="text-[13px] text-muted-foreground">
-                                    Update your organization's display name.
-                                    This will be visible to all organization
-                                    members.
+                                    {t(
+                                      "Update your organization's display name. This will be visible to all organization members.",
+                                    )}
                                   </p>
                                   <Input
                                     value={orgName}
                                     onChange={(e) => setOrgName(e.target.value)}
-                                    placeholder="Organization name"
+                                    placeholder={t('Organization name')}
                                     className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                                   />
                                 </div>
@@ -3597,7 +3629,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       }
                                     }}
                                   >
-                                    Update
+                                    {t('Update')}
                                   </Button>
                                 </div>
                               </div>
@@ -3618,15 +3650,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                                       <div className="px-6 py-4">
                                         <h3 className="text-[15px] font-semibold text-foreground">
-                                          Delete organization
+                                          {t('Delete organization')}
                                         </h3>
                                       </div>
                                       <div className="border-t border-destructive/20" />
                                       <div className="px-6 py-4">
                                         <p className="text-[13px] text-muted-foreground">
-                                          Permanently delete this organization
-                                          and all associated data. This action
-                                          cannot be undone.
+                                          {t(
+                                            'Permanently delete this organization and all associated data. This action cannot be undone.',
+                                          )}
                                         </p>
 
                                         {selectedOrg && (
@@ -3640,14 +3672,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 {selectedOrg.name}
                                               </p>
                                               <p className="text-[12px] text-muted-foreground">
-                                                {membershipsTotal} member
+                                                {membershipsTotal}{' '}
                                                 {membershipsTotal !== 1
-                                                  ? 's'
-                                                  : ''}{' '}
-                                                • {totalOrgProjects} project
+                                                  ? t('members')
+                                                  : t('member')}{' '}
+                                                • {totalOrgProjects}{' '}
                                                 {totalOrgProjects !== 1
-                                                  ? 's'
-                                                  : ''}
+                                                  ? t('projects')
+                                                  : t('project')}
                                               </p>
                                             </div>
 
@@ -3657,7 +3689,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   to="/organizations/$orgId/settings/members"
                                                   params={{ orgId: orgId! }}
                                                   className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-                                                  title="View members"
+                                                  title={t('View members')}
                                                   onClick={() =>
                                                     setDeleteOrgDialogOpen(
                                                       false,
@@ -3715,24 +3747,26 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               size="sm"
                                               className="h-9 text-[13px]"
                                             >
-                                              Delete organization
+                                              {t('Delete organization')}
                                             </Button>
                                           </DialogTrigger>
                                           <DialogContent className="sm:max-w-md p-0">
                                             <DialogHeader className="px-6 pt-6 text-start">
                                               <DialogTitle>
-                                                Delete organization
+                                                {t('Delete organization')}
                                               </DialogTitle>
                                               <DialogDescription className="text-[13px] mt-2">
-                                                Are you sure you want to delete{' '}
+                                                {t(
+                                                  'Are you sure you want to delete',
+                                                )}{' '}
                                                 {selectedOrg && (
                                                   <span className="font-medium text-foreground">
                                                     {selectedOrg.name}
                                                   </span>
                                                 )}{' '}
-                                                and all its projects, databases,
-                                                and files? This action cannot be
-                                                undone.
+                                                {t(
+                                                  'and all its projects, databases, and files? This action cannot be undone.',
+                                                )}
                                               </DialogDescription>
                                             </DialogHeader>
                                             <div className="border-t border-border" />
@@ -3750,18 +3784,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       </p>
                                                       <p className="text-[11px] text-muted-foreground">
                                                         {membershipsTotal}{' '}
-                                                        member
                                                         {membershipsTotal !== 1
-                                                          ? 's'
-                                                          : ''}{' '}
-                                                        will lose access •{' '}
+                                                          ? t('members')
+                                                          : t('member')}{' '}
+                                                        {t('will lose access')}{' '}
+                                                        •{' '}
                                                         {activeProjectsTotal}{' '}
-                                                        project
                                                         {activeProjectsTotal !==
                                                         1
-                                                          ? 's'
-                                                          : ''}{' '}
-                                                        will be deleted
+                                                          ? t('projects')
+                                                          : t('project')}{' '}
+                                                        {t('will be deleted')}
                                                       </p>
                                                     </div>
                                                   </div>
@@ -3770,8 +3803,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               {activeProjects.length > 0 && (
                                                 <div className="mb-4">
                                                   <p className="text-[12px] text-muted-foreground">
-                                                    Projects that will be
-                                                    deleted:{' '}
+                                                    {t(
+                                                      'Projects that will be deleted:',
+                                                    )}{' '}
                                                     {activeProjects
                                                       .slice(0, 5)
                                                       .map((project, index) => (
@@ -3802,13 +3836,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               )}
 
                                               <label className="text-[13px] text-muted-foreground">
-                                                Type{' '}
+                                                {t('Type')}{' '}
                                                 {selectedOrg && (
                                                   <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
                                                     {selectedOrg.name}
                                                   </span>
                                                 )}{' '}
-                                                to confirm
+                                                {t('to confirm')}
                                               </label>
                                               <Input
                                                 value={deleteOrgConfirmation}
@@ -3817,7 +3851,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                     e.target.value,
                                                   )
                                                 }
-                                                placeholder="Enter organization name"
+                                                placeholder={t(
+                                                  'Enter organization name',
+                                                )}
                                                 className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
                                               />
                                             </div>
@@ -3832,7 +3868,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   setDeleteOrgConfirmation('')
                                                 }}
                                               >
-                                                Cancel
+                                                {t('Cancel')}
                                               </Button>
                                               <Button
                                                 variant="destructive"
@@ -3856,7 +3892,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   }
                                                 }}
                                               >
-                                                Delete
+                                                {t('Delete')}
                                               </Button>
                                             </div>
                                           </DialogContent>
@@ -3937,12 +3973,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Update Role</DialogTitle>
+            <DialogTitle>{t('Update Role')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Update the role for{' '}
+              {t('Update the role for')}{' '}
               {selectedMember?.userName ||
                 selectedMember?.userEmail ||
-                'this member'}
+                t('this member')}
               .
             </DialogDescription>
           </DialogHeader>
@@ -3950,7 +3986,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-foreground mb-1.5 block">
-                Role
+                {t('Role')}
               </label>
               <RadioGroup
                 value={selectedRole}
@@ -4002,10 +4038,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground" />
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="text-[13px] font-medium text-foreground">
-                            {role.label}
+                            {t(role.label)}
                           </span>
                           <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                            {role.description}
+                            {t(role.description)}
                           </span>
                         </div>
                       </Label>
@@ -4025,7 +4061,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 setSelectedMember(null)
               }}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               size="sm"
@@ -4042,15 +4078,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     membershipId:
                       selectedMember.membershipId || selectedMember.$id,
                     roles: [selectedRole]})
-                  toast.success('Role updated successfully')
+                  toast.success(t('Role updated successfully'))
                   setUpdateRoleDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: unknown) {
-                  toast.error(error?.message || 'Failed to update role')
+                  toast.error(error?.message || t('Failed to update role'))
                 }
               }}
             >
-              Update role
+              {t('Update role')}
             </Button>
           </div>
         </DialogContent>
@@ -4070,26 +4106,27 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>
               {selectedMember?.status === 'pending'
-                ? 'Cancel Invitation'
-                : 'Remove from Team'}
+                ? t('Cancel Invitation')
+                : t('Remove from Team')}
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {selectedMember?.status === 'pending' ? (
                 <>
-                  Are you sure you want to cancel the invitation for{' '}
+                  {t('Are you sure you want to cancel the invitation for')}{' '}
                   {selectedMember?.userName ||
                     selectedMember?.userEmail ||
-                    'this member'}
-                  ? They will not be able to join the organization.
+                    t('this member')}
+                  ? {t('They will not be able to join the organization.')}
                 </>
               ) : (
                 <>
-                  Are you sure you want to remove{' '}
+                  {t('Are you sure you want to remove')}{' '}
                   {selectedMember?.userName ||
                     selectedMember?.userEmail ||
-                    'this member'}{' '}
-                  from the team? They will lose access to all organization
-                  resources.
+                    t('this member')}{' '}
+                  {t(
+                    'from the team? They will lose access to all organization resources.',
+                  )}
                 </>
               )}
             </DialogDescription>
@@ -4104,7 +4141,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 setSelectedMember(null)
               }}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -4119,19 +4156,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )
                   toast.success(
                     selectedMember.status === 'pending'
-                      ? 'Invitation cancelled successfully'
-                      : 'Member removed successfully',
+                      ? t('Invitation cancelled successfully')
+                      : t('Member removed successfully'),
                   )
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: unknown) {
-                  toast.error(error?.message || 'Failed to remove member')
+                  toast.error(error?.message || t('Failed to remove member'))
                 }
               }}
             >
               {selectedMember?.status === 'pending'
-                ? 'Cancel invitation'
-                : 'Remove from team'}
+                ? t('Cancel invitation')
+                : t('Remove from team')}
             </Button>
           </div>
         </DialogContent>
@@ -4144,7 +4181,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           onCreate={async (orgData) => {
             try {
               const newOrg = await createOrgMutation.mutateAsync(orgData)
-              toast.success('Organization created successfully')
+              toast.success(t('Organization created successfully'))
               setCreateOrgDialogOpen(false)
               // Navigate to the newly created organization
               navigate({
@@ -4152,7 +4189,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 params: { orgId: newOrg.$id },
                 replace: true})
             } catch (error: unknown) {
-              toast.error(error?.message || 'Failed to create organization')
+              toast.error(error?.message || t('Failed to create organization'))
             }
           }}
           isLoading={createOrgMutation.isPending}

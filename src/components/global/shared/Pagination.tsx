@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { cn, scrollConsoleMainToTop } from '@/lib/utils'
 import {
   ChevronDown,
@@ -47,6 +48,7 @@ export function SimplePagination({
   disabled = false,
   className,
 }: SimplePaginationProps) {
+  const t = useT()
   const prevPageRef = useRef(currentPage)
   const isUserInitiatedRef = useRef(false)
 
@@ -88,7 +90,7 @@ export function SimplePagination({
           className="h-8 w-8 rounded-none border-0 border-e border-border hover:bg-muted/80"
           onClick={handlePreviousPage}
           disabled={!canGoPrevious || disabled}
-          aria-label="Go to previous page"
+          aria-label={t('Go to previous page')}
         >
           <ChevronLeft className={paginationChevronClass} />
         </Button>
@@ -101,7 +103,7 @@ export function SimplePagination({
           className="h-8 w-8 rounded-none border-0 hover:bg-muted/80"
           onClick={handleNextPage}
           disabled={!canGoNext || disabled}
-          aria-label="Go to next page"
+          aria-label={t('Go to next page')}
         >
           <ChevronRight className={paginationChevronClass} />
         </Button>
@@ -171,6 +173,7 @@ export function Pagination({
   scrollToTopOnPageChange = true,
   displayItemRange,
 }: PaginationProps) {
+  const t = useT()
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const derivedStart = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const derivedEnd = Math.min(currentPage * pageSize, totalItems)
@@ -257,10 +260,10 @@ export function Pagination({
           <span className="hidden @[600px]:inline whitespace-nowrap">
             {totalKnown
               ? totalItems === 0
-                ? `No ${itemLabel}`
-                : `${startItem}-${endItem} of ${totalItems.toLocaleString()}`
+                ? `${t('No')} ${t(itemLabel)}`
+                : `${startItem}-${endItem} ${t('of')} ${totalItems.toLocaleString()}`
               : startItem === 0 && endItem === 0
-                ? `No ${itemLabel}`
+                ? `${t('No')} ${t(itemLabel)}`
                 : `${startItem}-${endItem}`}
           </span>
         )}
@@ -268,7 +271,7 @@ export function Pagination({
         {showPageSizeSelector && (
           <div className="hidden sm:flex items-center gap-2 shrink-0">
             <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-              Show
+              {t('Show')}
             </span>
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
@@ -276,7 +279,7 @@ export function Pagination({
                   variant="outline"
                   size="sm"
                   className="h-8 w-[72px] gap-1 px-2 text-[12px] font-normal tabular-nums"
-                  aria-label="Rows per page"
+                  aria-label={t('Rows per page')}
                 >
                   {pageSize}
                   <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
@@ -303,7 +306,7 @@ export function Pagination({
               </DropdownMenuContent>
             </DropdownMenu>
             <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-              per page
+              {t('per page')}
             </span>
           </div>
         )}
@@ -318,7 +321,7 @@ export function Pagination({
             className="hidden h-8 w-8 rounded-none border-0 border-e border-border @[500px]:inline-flex hover:bg-muted/80"
             onClick={handleFirstPage}
             disabled={!canGoPrevious}
-            aria-label="Go to first page"
+            aria-label={t('Go to first page')}
           >
             <ChevronsLeft className={paginationChevronClass} />
           </Button>
@@ -328,7 +331,7 @@ export function Pagination({
             className="h-8 w-8 rounded-none border-0 border-e border-border hover:bg-muted/80"
             onClick={handlePreviousPage}
             disabled={!canGoPrevious}
-            aria-label="Go to previous page"
+            aria-label={t('Go to previous page')}
           >
             <ChevronLeft className={paginationChevronClass} />
           </Button>
@@ -337,14 +340,14 @@ export function Pagination({
             dir="ltr"
           >
             <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-              Page
+              {t('Page')}
             </span>
             <span className="font-medium text-foreground tabular-nums text-[12px]">
               {currentPage}
             </span>
             {totalKnown ? (
               <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-                of {totalPages.toLocaleString()}
+                {t('of')} {totalPages.toLocaleString()}
               </span>
             ) : null}
           </div>
@@ -354,7 +357,7 @@ export function Pagination({
             className="h-8 w-8 rounded-none border-0 border-e border-border hover:bg-muted/80"
             onClick={handleNextPage}
             disabled={!canGoNext}
-            aria-label="Go to next page"
+            aria-label={t('Go to next page')}
           >
             <ChevronRight className={paginationChevronClass} />
           </Button>
@@ -364,7 +367,7 @@ export function Pagination({
             className="hidden h-8 w-8 rounded-none border-0 @[500px]:inline-flex hover:bg-muted/80"
             onClick={handleLastPage}
             disabled={!totalKnown || !canGoNext}
-            aria-label="Go to last page"
+            aria-label={t('Go to last page')}
           >
             <ChevronsRight className={paginationChevronClass} />
           </Button>

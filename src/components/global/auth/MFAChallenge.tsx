@@ -27,6 +27,7 @@ import {
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { useT } from '@/lib/i18n/translate'
 
 interface MFAChallengeProps {
   factors: Models.MfaFactors & { recoveryCode?: boolean }
@@ -110,6 +111,7 @@ export async function verifyMFAChallenge(
 }
 
 export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
+  const t = useT()
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -177,7 +179,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       setIsChallengeReady(true)
     } catch (error: unknown) {
       if (requestId !== challengeRequestIdRef.current) return
-      const message = getErrorMessage(error, 'Failed to create challenge')
+      const message = getErrorMessage(error, t('Failed to create challenge'))
       setError(message)
       toast.error(message)
     } finally {
@@ -266,12 +268,12 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       } catch (error: unknown) {
         console.error('Post MFA navigation error:', error)
         toast.error(
-          getErrorMessage(error, 'Verified but could not open the console'),
+          getErrorMessage(error, t('Verified but could not open the console')),
         )
       }
     },
     onError: (error: unknown) => {
-      const errorMessage = getErrorMessage(error, 'Failed to verify code')
+      const errorMessage = getErrorMessage(error, t('Failed to verify code'))
       setError(errorMessage)
       setCodeValue('')
     },
@@ -306,13 +308,19 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   const getFactorDescription = () => {
     switch (challengeType) {
       case AuthenticationFactor.Totp:
-        return 'Enter a 6-digit one-time code from your authenticator app.'
+        return t('Enter a 6-digit one-time code from your authenticator app.')
       case AuthenticationFactor.Email:
-        return 'A 6-digit verification code was sent to your email. Enter it below.'
+        return t(
+          'A 6-digit verification code was sent to your email. Enter it below.',
+        )
       case AuthenticationFactor.Phone:
-        return 'A 6-digit verification code was sent to your phone. Enter it below.'
+        return t(
+          'A 6-digit verification code was sent to your phone. Enter it below.',
+        )
       case AuthenticationFactor.Recoverycode:
-        return 'Enter one of the recovery codes you received when enabling MFA.'
+        return t(
+          'Enter one of the recovery codes you received when enabling MFA.',
+        )
       default:
         return ''
     }
@@ -334,14 +342,15 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       <Card className="overflow-hidden p-6 md:p-10">
         <div className="space-y-4 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Two-factor authentication
+            {t('Two-factor authentication')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            No verification methods are available for this account. Contact
-            support if you need help signing in.
+            {t(
+              'No verification methods are available for this account. Contact support if you need help signing in.',
+            )}
           </p>
           <Button variant="outline" onClick={() => void handleBack()}>
-            Back to sign in
+            {t('Back to sign in')}
           </Button>
         </div>
       </Card>
@@ -355,20 +364,20 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">
-                Two-factor authentication
+                {t('Two-factor authentication')}
               </h1>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {!isChallengeReady && (
                 <p className="text-sm text-muted-foreground">
-                  Preparing verification...
+                  {t('Preparing verification...')}
                 </p>
               )}
 
               {enabledMainFactors.length > 1 && (
                 <div className="space-y-3">
-                  <Label>Authentication method</Label>
+                  <Label>{t('Authentication method')}</Label>
                   <div className="grid gap-2">
                     {factors.totp && (
                       <Button
@@ -383,7 +392,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         disabled={disabled}
                       >
                         <Smartphone className="me-1.5 h-4 w-4" />
-                        Authenticator app
+                        {t('Authenticator app')}
                       </Button>
                     )}
                     {factors.email && (
@@ -399,7 +408,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         disabled={disabled}
                       >
                         <Mail className="me-1.5 h-4 w-4" />
-                        Email
+                        {t('Email')}
                       </Button>
                     )}
                     {factors.phone && (
@@ -415,7 +424,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         disabled={disabled}
                       >
                         <Smartphone className="me-1.5 h-4 w-4" />
-                        Phone
+                        {t('Phone')}
                       </Button>
                     )}
                   </div>
@@ -426,8 +435,8 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                 <div className="space-y-3">
                   <Label htmlFor="mfa-code">
                     {challengeType === AuthenticationFactor.Recoverycode
-                      ? 'Recovery code'
-                      : 'Verification code'}
+                      ? t('Recovery code')
+                      : t('Verification code')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
                     {getFactorDescription()}
@@ -441,7 +450,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         setCodeValue(e.target.value)
                         setError(null)
                       }}
-                      placeholder="Enter recovery code"
+                      placeholder={t('Enter recovery code')}
                       disabled={disabled || verifyMutation.isPending}
                       autoFocus
                       className="font-mono"
@@ -514,7 +523,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                       disabled={disabled || verifyMutation.isPending}
                       className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Use a recovery code instead
+                      {t('Use a recovery code instead')}
                     </button>
                   </div>
                 )}
@@ -531,7 +540,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                     verifyMutation.isPending
                   }
                 >
-                  Verify
+                  {t('Verify')}
                 </Button>
                 <div className="text-center pt-4">
                   <button
@@ -541,7 +550,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                     className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowLeft className="me-1.5 h-3.5 w-3.5 inline" />
-                    Back to sign in
+                    {t('Back to sign in')}
                   </button>
                 </div>
               </div>

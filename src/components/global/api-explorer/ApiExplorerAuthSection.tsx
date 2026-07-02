@@ -40,6 +40,7 @@ import {
   type ApiExplorerServerAuthState,
 } from '@/lib/api-explorer'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 type ProjectUserOption = {
   $id: string
@@ -110,6 +111,7 @@ function KeyInput({
   readOnly?: boolean
   placeholder?: string
 }) {
+  const t = useT()
   const [visible, setVisible] = useState(false)
 
   return (
@@ -132,7 +134,7 @@ function KeyInput({
         type="button"
         onClick={() => setVisible((current) => !current)}
         className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label={visible ? 'Hide API key' : 'Show API key'}
+        aria-label={visible ? t('Hide API key') : t('Show API key')}
       >
         {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
@@ -159,6 +161,7 @@ export function ApiExplorerAuthSection({
   onClientAuthChange,
   onServerAuthChange,
 }: ApiExplorerAuthSectionProps) {
+  const t = useT()
   const requiresSessionAuth = methodRequiresSessionAuthChoice(method, platform)
   const supportsServerApiKey = methodSupportsServerApiKey(method, platform)
   const requiresApiKey = methodRequiresApiKey(method, platform)
@@ -238,7 +241,7 @@ export function ApiExplorerAuthSection({
   const handleGenerateEphemeralKey = useCallback(async () => {
     const scopes = serverAuth.ephemeralDraftScopes
     if (scopes.length === 0) {
-      toast.error('Select at least one scope for the ephemeral key.')
+      toast.error(t('Select at least one scope for the ephemeral key.'))
       return
     }
 
@@ -251,27 +254,27 @@ export function ApiExplorerAuthSection({
         ephemeralApiKey: result.secret,
         ephemeralKeyScopes: result.scopes,
       })
-      toast.success('Ephemeral API key generated (expires in 1 hour)')
+      toast.success(t('Ephemeral API key generated (expires in 1 hour)'))
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error) || 'Failed to generate API key')
+      toast.error(getErrorMessage(error) || t('Failed to generate API key'))
     } finally {
       setIsGeneratingKey(false)
     }
-  }, [onServerAuthChange, projectId, serverAuth])
+  }, [onServerAuthChange, projectId, serverAuth, t])
 
   const showClientAuth = platform === 'client' && requiresSessionAuth
   const showServerAuth = platform === 'server' && supportsServerApiKey
   const hasActiveEphemeralKey = Boolean(serverAuth.ephemeralApiKey)
   const matchEndpointTooltip = draftMatchesEndpoint
-    ? 'Draft scopes already match this endpoint.'
-    : 'Reset draft scopes to the scopes required by this endpoint.'
+    ? t('Draft scopes already match this endpoint.')
+    : t('Reset draft scopes to the scopes required by this endpoint.')
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="space-y-4 px-6 py-4">
         <div className="space-y-1">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Authentication
+            {t('Authentication')}
           </p>
           <AuthRequirementDescription method={method} platform={platform} />
         </div>
@@ -279,7 +282,7 @@ export function ApiExplorerAuthSection({
         {requiredScopes.length > 0 && (
           <div className="space-y-2">
             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Required scopes
+              {t('Required scopes')}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {requiredScopes.map((scope) => (
@@ -298,13 +301,13 @@ export function ApiExplorerAuthSection({
           </div>
         )}
 
-        <ScopeRow label="Project">
+        <ScopeRow label={t('Project')}>
           <CopyableId id={projectId} size="sm" maxWidth={280} />
         </ScopeRow>
 
         {showClientAuth && (
           <div className="space-y-3 border-t border-border pt-4">
-            <Label className="text-[12px] text-muted-foreground">Act as</Label>
+            <Label className="text-[12px] text-muted-foreground">{t('Act as')}</Label>
             <ToggleGroup
               type="single"
               variant="outline"
@@ -316,25 +319,25 @@ export function ApiExplorerAuthSection({
                 }
               }}
               className="grid w-full max-w-xs grid-cols-2"
-              aria-label="Session authentication"
+              aria-label={t('Session authentication')}
             >
               <ToggleGroupItem
                 value="guest"
                 className="h-9 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
               >
-                Guest
+                {t('Guest')}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="user"
                 className="h-9 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
               >
-                User
+                {t('User')}
               </ToggleGroupItem>
             </ToggleGroup>
 
             {clientAuth.mode === 'guest' ? (
               <p className="text-[12px] text-muted-foreground">
-                No session or JWT is sent on the request.
+                {t('No session or JWT is sent on the request.')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -345,15 +348,15 @@ export function ApiExplorerAuthSection({
                   }
                   items={userItems}
                   placeholder={
-                    usersLoading ? 'Loading users…' : 'Select a project user'
+                    usersLoading ? t('Loading users…') : t('Select a project user')
                   }
-                  searchPlaceholder="Search by name, email, phone, or ID…"
-                  emptyMessage="No users found"
+                  searchPlaceholder={t('Search by name, email, phone, or ID…')}
+                  emptyMessage={t('No users found')}
                   disabled={usersLoading}
                   onSearchChange={setUserSearch}
                 />
                 <p className="text-[12px] text-muted-foreground">
-                  A JWT is created for this user when you send the request.
+                  {t('A JWT is created for this user when you send the request.')}
                 </p>
               </div>
             )}
@@ -363,7 +366,7 @@ export function ApiExplorerAuthSection({
         {showServerAuth && (
           <div className="space-y-4 border-t border-border pt-4">
             <div className="space-y-3">
-              <Label className="text-[12px] text-muted-foreground">API key</Label>
+              <Label className="text-[12px] text-muted-foreground">{t('API key')}</Label>
               <ToggleGroup
                 type="single"
                 variant="outline"
@@ -371,19 +374,19 @@ export function ApiExplorerAuthSection({
                 value={serverAuth.mode}
                 onValueChange={handleServerModeChange}
                 className="grid w-full max-w-xs grid-cols-2"
-                aria-label="Server API key source"
+                aria-label={t('Server API key source')}
               >
                 <ToggleGroupItem
                   value="manual"
                   className="h-9 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
                 >
-                  Manual
+                  {t('Manual')}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="ephemeral"
                   className="h-9 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
                 >
-                  Ephemeral
+                  {t('Ephemeral')}
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -397,12 +400,12 @@ export function ApiExplorerAuthSection({
                   }
                   placeholder={
                     requiresApiKey
-                      ? 'Paste a project API key'
-                      : 'Paste a project API key (optional)'
+                      ? t('Paste a project API key')
+                      : t('Paste a project API key (optional)')
                   }
                 />
                 <p className="text-[12px] text-muted-foreground">
-                  Reused across methods. Stored locally in this browser.
+                  {t('Reused across methods. Stored locally in this browser.')}
                 </p>
               </div>
             ) : (
@@ -411,19 +414,19 @@ export function ApiExplorerAuthSection({
                   <div className="space-y-3 rounded-xl border border-border bg-card/50 px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-[12px] text-muted-foreground">
-                        Active key
+                        {t('Active key')}
                       </span>
                       <Badge
                         variant={keyCoversEndpoint ? 'success' : 'warning'}
                         className={cn('text-[10px]', API_EXPLORER_PILL_CLASS)}
                       >
-                        {keyCoversEndpoint ? 'Ready' : 'Missing scopes'}
+                        {keyCoversEndpoint ? t('Ready') : t('Missing scopes')}
                       </Badge>
                     </div>
                     {!keyCoversEndpoint && missingKeyScopes.length > 0 ? (
                       <div className="flex flex-wrap items-center gap-2 text-[12px]">
                         <span className="text-muted-foreground">
-                          Needs {missingKeyScopes.join(', ')}.
+                          {t('Needs')} {missingKeyScopes.join(', ')}.
                         </span>
                         <Button
                           type="button"
@@ -432,14 +435,14 @@ export function ApiExplorerAuthSection({
                           className="h-auto p-0 text-[12px]"
                           onClick={handleAddMissingEndpointScopesToDraft}
                         >
-                          Add to draft
+                          {t('Add to draft')}
                         </Button>
                       </div>
                     ) : null}
 
                     <KeyInput value={serverAuth.ephemeralApiKey} readOnly />
                     <p className="text-[12px] text-muted-foreground">
-                      Expires in 1 hour. Regenerate after editing scopes below.
+                      {t('Expires in 1 hour. Regenerate after editing scopes below.')}
                     </p>
                   </div>
                 ) : null}
@@ -449,14 +452,14 @@ export function ApiExplorerAuthSection({
                     <div className="flex items-center gap-3 px-6 py-4">
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-foreground">
-                          Key scopes
+                          {t('Key scopes')}
                         </p>
                         <p className="text-[12px] text-muted-foreground">
                           {serverAuth.ephemeralDraftScopes.length}{' '}
                           {serverAuth.ephemeralDraftScopes.length === 1
-                            ? 'scope'
-                            : 'scopes'}{' '}
-                          selected for the next key
+                            ? t('scope')
+                            : t('scopes')}{' '}
+                          {t('selected for the next key')}
                         </p>
                       </div>
                       {endpointScopes.length > 0 ? (
@@ -471,7 +474,7 @@ export function ApiExplorerAuthSection({
                                 disabled={draftMatchesEndpoint}
                                 onClick={handleResetDraftToEndpoint}
                               >
-                                Match endpoint
+                                {t('Match endpoint')}
                               </Button>
                             </span>
                           </TooltipTrigger>
@@ -491,7 +494,7 @@ export function ApiExplorerAuthSection({
                           size="sm"
                           className="h-8 w-8 shrink-0 border-border bg-transparent p-0 text-muted-foreground hover:bg-accent hover:text-foreground"
                           aria-label={
-                            scopesOpen ? 'Collapse key scopes' : 'Expand key scopes'
+                            scopesOpen ? t('Collapse key scopes') : t('Expand key scopes')
                           }
                         >
                           <ChevronDown
@@ -535,7 +538,7 @@ export function ApiExplorerAuthSection({
                       {isGeneratingKey ? (
                         <Loader2 className="me-1.5 h-4 w-4 animate-spin" />
                       ) : null}
-                      {hasActiveEphemeralKey ? 'Regenerate key' : 'Generate key'}
+                      {hasActiveEphemeralKey ? t('Regenerate key') : t('Generate key')}
                     </Button>
                   </div>
                 </div>

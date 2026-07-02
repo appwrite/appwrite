@@ -8,6 +8,7 @@ import { InitWordmark } from '@/components/pages/init/_components/InitWordmark'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useT } from '@/lib/i18n/translate'
 import { applyInitEventVisibility } from '@/lib/init/event-visibility'
 import { getActiveLaunchEvent } from '@/lib/init/events'
 import { isInitEventDuring } from '@/lib/init/org-promo-banner'
@@ -26,6 +27,7 @@ function HomeInitDayCard({
   day: LaunchEventDayView
   eventStartDate: string
 }) {
+  const t = useT()
   if (isLaunchEventDayLocked(day)) {
     return (
       <Link
@@ -38,11 +40,13 @@ function HomeInitDayCard({
       >
         <div className="flex items-start justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Day {day.day} · {day.dateLabel}
+            {t('Day')} {day.day} · {t(day.dateLabel)}
           </p>
           <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         </div>
-        <p className="mt-3 text-[13px] font-medium text-muted-foreground">Coming soon</p>
+        <p className="mt-3 text-[13px] font-medium text-muted-foreground">
+          {t('Coming soon')}
+        </p>
         <InitDayCountdown
           eventStartDate={eventStartDate}
           dayNumber={day.day}
@@ -50,7 +54,7 @@ function HomeInitDayCard({
           className="mt-2"
         />
         <p className="mt-2 text-[12px] leading-normal text-muted-foreground/80">
-          Unlocks on {day.dateLabel}
+          {t('Unlocks on')} {t(day.dateLabel)}
         </p>
       </Link>
     )
@@ -70,23 +74,23 @@ function HomeInitDayCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Day {day.day} · {day.dateLabel}
+          {t('Day')} {day.day} · {t(day.dateLabel)}
         </p>
         {day.isLive ? (
           <Badge variant="error" className="text-[10px] shrink-0">
-            Live
+            {t('Live')}
           </Badge>
         ) : null}
       </div>
 
       <h3 className="mt-3 text-[15px] font-semibold leading-none text-foreground">
-        {day.title}
+        {t(day.title)}
       </h3>
       <p className="mt-3 min-h-[2lh] flex-1 line-clamp-2 text-[12px] leading-normal text-muted-foreground">
-        {day.description}
+        {t(day.description)}
       </p>
       <span className={cn('mt-4 text-[12px]', CARD_LINK_HINT_CLASS)}>
-        View day {day.day}
+        {t('View day')} {day.day}
         <ArrowRight className="size-3.5" aria-hidden />
       </span>
     </Link>
@@ -94,6 +98,7 @@ function HomeInitDayCard({
 }
 
 export function InitSection() {
+  const t = useT()
   const { mockInitCurrentDay } = useDebugOverrides()
 
   const visible = useMemo(
@@ -122,7 +127,7 @@ export function InitSection() {
         <div className="flex items-center gap-2.5 overflow-hidden sm:gap-3">
           <InitWordmark className="shrink-0 text-[20px] text-foreground sm:text-[22px]" />
           <Badge variant="success" className="text-[10px] shrink-0">
-            Live
+            {t('Live')}
           </Badge>
           <span
             aria-hidden
@@ -131,7 +136,7 @@ export function InitSection() {
             ·
           </span>
           <span className="hidden shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:inline">
-            {event.dateRangeLabel}
+            {t(event.dateRangeLabel)}
           </span>
           <span
             aria-hidden
@@ -140,7 +145,7 @@ export function InitSection() {
             ·
           </span>
           <p className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground max-[419px]:sr-only">
-            Launch week is live. Follow daily drops, live sessions, and giveaways.
+            {t('Launch week is live. Follow daily drops, live sessions, and giveaways.')}
           </p>
           <Button
             variant="brandCta"
@@ -149,7 +154,7 @@ export function InitSection() {
             asChild
           >
             <Link to="/init">
-              Join Init
+              {t('Join Init')}
               <ArrowRight className="size-3.5" />
             </Link>
           </Button>

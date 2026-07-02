@@ -2,6 +2,7 @@ import { forwardRef } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 /** Default row “⋯” trigger (tables, lists). */
 export const rowActionsMenuTriggerClassName =
@@ -32,6 +33,7 @@ export const RowActionsMenuTrigger = forwardRef<
   },
   ref,
 ) {
+  const t = useT()
   return (
     <Button
       ref={ref}
@@ -49,7 +51,7 @@ export const RowActionsMenuTrigger = forwardRef<
       {...props}
     >
       <MoreHorizontal className="h-4 w-4 shrink-0" />
-      <span className="sr-only">Actions</span>
+      <span className="sr-only">{t('Actions')}</span>
     </Button>
   )
 })

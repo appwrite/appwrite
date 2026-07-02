@@ -15,6 +15,7 @@ import {
   FeedbackForm,
   type FeedbackFormContext,
 } from '@/components/global/shared/FeedbackForm'
+import { useT } from '@/lib/i18n/translate'
 
 export type FeedbackPopoverContext = FeedbackFormContext
 
@@ -24,6 +25,7 @@ export function FeedbackPopover({
   projectId = '',
   billingPlanId,
 }: FeedbackPopoverContext = {}) {
+  const t = useT()
   const [isOpen, setIsOpen] = useState(false)
   const [formKey, setFormKey] = useState(0)
 
@@ -50,14 +52,14 @@ export function FeedbackPopover({
               variant="ghost"
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
-              aria-label="Feedback"
+              aria-label={t('Feedback')}
             >
               <MessageSquarePlus className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Feedback</p>
+          <p>{t('Feedback')}</p>
         </TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="w-80 p-0">

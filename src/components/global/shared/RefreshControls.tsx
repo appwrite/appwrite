@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useT } from '@/lib/i18n/translate'
 
 export type RefreshInterval =
   | 'off'
@@ -52,6 +53,7 @@ export function RefreshControls({
   defaultInterval = '30s',
   className,
 }: RefreshControlsProps) {
+  const t = useT()
   const [internalRefreshInterval, setInternalRefreshInterval] =
     useState<RefreshInterval>(defaultInterval)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -98,7 +100,7 @@ export function RefreshControls({
         className="h-9 gap-2 rounded-e-none border-e border-input px-3 text-[13px] hover:bg-accent"
       >
         <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-        Refresh
+        {t('Refresh')}
       </Button>
       <Select
         value={refreshInterval}
@@ -108,8 +110,8 @@ export function RefreshControls({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="off">Off</SelectItem>
-          <SelectItem value="auto">Auto</SelectItem>
+          <SelectItem value="off">{t('Off')}</SelectItem>
+          <SelectItem value="auto">{t('Auto')}</SelectItem>
           <SelectItem value="30s">30s</SelectItem>
           <SelectItem value="1m">1m</SelectItem>
           <SelectItem value="5m">5m</SelectItem>

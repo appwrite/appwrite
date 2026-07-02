@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 const DNS_RECORD_DESCRIPTIONS: Record<string, string> = {
@@ -46,6 +47,7 @@ export function UpdateRecordDialog({
   onUpdate,
   isLoading = false,
 }: UpdateRecordDialogProps) {
+  const t = useT()
   const [name, setName] = useState(record.name || '')
   const [value, setValue] = useState(record.value || '')
   const [ttl, setTtl] = useState(record.ttl?.toString() || '3600')
@@ -99,7 +101,7 @@ export function UpdateRecordDialog({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title="Update DNS Record"
+      title={t('Update DNS Record')}
       maxWidth="sm:max-w-lg"
     >
       <>
@@ -110,22 +112,24 @@ export function UpdateRecordDialog({
             <div className="px-6 py-6">
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="type">Type</Label>
+                  <Label htmlFor="type">{t('Type')}</Label>
                   <Input id="type" value={record.type} disabled />
                   <p className="text-[12px] text-muted-foreground">
-                    {DNS_RECORD_DESCRIPTIONS[record.type] || ''}
+                    {DNS_RECORD_DESCRIPTIONS[record.type]
+                      ? t(DNS_RECORD_DESCRIPTIONS[record.type])
+                      : ''}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    Name <span className="text-destructive">*</span>
+                    {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="@ or subdomain"
+                    placeholder={t('@ or subdomain')}
                     disabled={isLoading}
                     autoFocus
                   />
@@ -133,7 +137,7 @@ export function UpdateRecordDialog({
 
                 <div className="space-y-2">
                   <Label htmlFor="value">
-                    Value <span className="text-destructive">*</span>
+                    {t('Value')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="value"
@@ -160,7 +164,7 @@ export function UpdateRecordDialog({
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      Priority <span className="text-destructive">*</span>
+                      {t('Priority')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
@@ -177,7 +181,7 @@ export function UpdateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        Weight <span className="text-destructive">*</span>
+                        {t('Weight')} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
@@ -191,7 +195,7 @@ export function UpdateRecordDialog({
 
                     <div className="space-y-2">
                       <Label htmlFor="port">
-                        Port <span className="text-destructive">*</span>
+                        {t('Port')} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="port"
@@ -207,12 +211,12 @@ export function UpdateRecordDialog({
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="comment">Comment (optional)</Label>
+                  <Label htmlFor="comment">{t('Comment (optional)')}</Label>
                   <Textarea
                     id="comment"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Optional comment"
+                    placeholder={t('Optional comment')}
                     disabled={isLoading}
                     rows={3}
                   />
@@ -226,7 +230,7 @@ export function UpdateRecordDialog({
               type="submit"
               disabled={isLoading || !name.trim() || !value.trim()}
             >
-              Update Record
+              {t('Update Record')}
             </Button>
             <Button
               type="button"
@@ -234,7 +238,7 @@ export function UpdateRecordDialog({
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>

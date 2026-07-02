@@ -12,6 +12,7 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ConsoleResourceType } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 export interface DomainInputProps {
   value: string
@@ -45,6 +46,7 @@ export function DomainInput({
   disabled = false,
   className,
 }: DomainInputProps) {
+  const t = useT()
   const [localValue, setLocalValue] = useState('')
   const [status, setStatus] = useState<ValidationStatus>('idle')
   const [error, setError] = useState<string | undefined>()
@@ -157,7 +159,7 @@ export function DomainInput({
   return (
     <div className={cn('space-y-2', className)}>
       <Label htmlFor="domain" className="text-[13px] font-medium">
-        Domain
+        {t('Domain')}
       </Label>
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -195,10 +197,10 @@ export function DomainInput({
       <div className="h-[18px]">
         {status === 'available' && (
           <p className="text-[12px] text-green-600 dark:text-green-400">
-            Domain is available
+            {t('Domain is available')}
           </p>
         )}
-        {error && <p className="text-[12px] text-destructive">{error}</p>}
+        {error && <p className="text-[12px] text-destructive">{t(error)}</p>}
       </div>
     </div>
   )

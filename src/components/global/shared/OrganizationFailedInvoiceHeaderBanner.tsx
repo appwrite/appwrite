@@ -4,6 +4,7 @@ import {
   HeaderAlertBar,
   headerAlertOutlineButtonClass,
 } from '@/components/global/shared/HeaderAlertBar'
+import { useT } from '@/lib/i18n/translate'
 
 type OrganizationFailedInvoiceHeaderBannerProps = {
   organizationId: string | null | undefined
@@ -17,6 +18,7 @@ export function OrganizationFailedInvoiceHeaderBanner({
   show,
   orgBillingReadonly,
 }: OrganizationFailedInvoiceHeaderBannerProps) {
+  const t = useT()
   if (!show || !organizationId) return null
 
   return (
@@ -30,13 +32,17 @@ export function OrganizationFailedInvoiceHeaderBanner({
           params={{ orgId: organizationId }}
           className={headerAlertOutlineButtonClass('danger')}
         >
-          Fix payment
+          {t('Fix payment')}
         </Link>
       }
     >
       {orgBillingReadonly
-        ? 'Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.'
-        : 'Payment failed - act now. Unresolved billing may interrupt your projects and services.'}
+        ? t(
+            'Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.',
+          )
+        : t(
+            'Payment failed - act now. Unresolved billing may interrupt your projects and services.',
+          )}
     </HeaderAlertBar>
   )
 }

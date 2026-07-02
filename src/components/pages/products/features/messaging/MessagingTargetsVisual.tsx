@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const TARGETS = [
   {
@@ -38,12 +39,13 @@ const TYPE_ICON = {
 } as const
 
 export function MessagingTargetsVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'sessions', label: 'Sessions' },
-        { id: 'targets', label: 'Targets', active: true },
+        { id: 'overview', label: t('Overview') },
+        { id: 'sessions', label: t('Sessions') },
+        { id: 'targets', label: t('Targets'), active: true },
       ]}
     >
       <div className="space-y-4">
@@ -54,11 +56,11 @@ export function MessagingTargetsVisual() {
             </span>
             <div>
               <p className="text-[13px] font-semibold text-foreground">Walter O'Brien</p>
-              <p className="text-[11px] text-muted-foreground">walter@acme.io · Auth user</p>
+              <p className="text-[11px] text-muted-foreground">walter@acme.io · {t('Auth user')}</p>
             </div>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            3 targets
+            {t('3 targets')}
           </Badge>
         </div>
 
@@ -67,10 +69,10 @@ export function MessagingTargetsVisual() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Target
+                  {t('Target')}
                 </TableHead>
                 <TableHead className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Provider type
+                  {t('Provider type')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -90,7 +92,7 @@ export function MessagingTargetsVisual() {
                     </TableCell>
                     <TableCell className="px-3 py-2.5">
                       <Badge variant="info" className="text-[10px]">
-                        {target.providerType}
+                        {t(target.providerType)}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -103,8 +105,7 @@ export function MessagingTargetsVisual() {
         <div className="flex items-start gap-2 rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
           <Smartphone className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Targets are created when users verify email or phone in Auth, or when your app registers
-            push device tokens.
+            {t('Targets are created when users verify email or phone in Auth, or when your app registers push device tokens.')}
           </p>
         </div>
       </div>

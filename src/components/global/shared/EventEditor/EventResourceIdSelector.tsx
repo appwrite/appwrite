@@ -54,6 +54,7 @@ import {
 } from '@/lib/react-query/hooks/messaging'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type ResourceIdType =
   | 'database'
@@ -127,6 +128,7 @@ export function EventResourceIdSelector({
   triggerClassName,
   contentClassName,
 }: EventResourceIdSelectorProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -325,7 +327,7 @@ export function EventResourceIdSelector({
   }) => x.$id ?? x.key ?? ''
   const displayValue =
     !value || value === '*'
-      ? placeholder
+      ? t(placeholder)
       : (() => {
           const item = items.find(
             (x: {
@@ -383,7 +385,7 @@ export function EventResourceIdSelector({
         <Command shouldFilter={false}>
           <div className="relative">
             <CommandInput
-              placeholder={SEARCH_PLACEHOLDERS[type]}
+              placeholder={t(SEARCH_PLACEHOLDERS[type])}
               value={search}
               onValueChange={setSearch}
               className={cn('h-9', isFetching && 'pe-8')}
@@ -400,7 +402,7 @@ export function EventResourceIdSelector({
           </div>
           <CommandList className="max-h-[200px]">
             <CommandEmpty>
-              {isFetching ? 'Loading...' : 'No results found'}
+              {isFetching ? t('Loading...') : t('No results found')}
             </CommandEmpty>
             <CommandGroup>
               {allowAllOption ? (
@@ -411,7 +413,9 @@ export function EventResourceIdSelector({
                     setOpen(false)
                   }}
                 >
-                  <span className="text-muted-foreground">All (*)</span>
+                  <span className="text-muted-foreground">
+                    {t('All')} (*)
+                  </span>
                 </CommandItem>
               ) : null}
               {items.map(

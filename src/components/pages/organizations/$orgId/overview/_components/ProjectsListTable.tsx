@@ -35,6 +35,7 @@ import {
 } from './ProjectListPlatformAvatars'
 import { ProjectListTableRequestsCell } from './ProjectListRequestsChart'
 import { MAX_PINNED_PROJECTS } from '@/lib/team-prefs-keys'
+import { useT } from '@/lib/i18n/translate'
 
 function getProjectListRegionLabel(project: ProjectListItem): string | null {
   if (!project.region || project.region === 'unknown') return null
@@ -110,6 +111,7 @@ export function ProjectsListTable({
   onPinProject,
   isPinPending = false,
 }: ProjectsListTableProps) {
+  const t = useT()
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const showRegionColumn = features.multiRegion
@@ -124,24 +126,24 @@ export function ProjectsListTable({
             <TableHead
               className={`${getProjectColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
             >
-              Project
+              {t('Project')}
             </TableHead>
             {showRegionColumn ? (
               <TableHead className="w-[8%] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Region
+                {t('Region')}
               </TableHead>
             ) : null}
             {showUsageCharts ? (
               <TableHead
                 className={`${getRequestsColumnWidth(showRegionColumn)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
               >
-                Requests
+                {t('Requests')}
               </TableHead>
             ) : null}
             <TableHead
               className={`${getPlatformsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
             >
-              Platforms
+              {t('Platforms')}
             </TableHead>
             <TableHead
               className={`${getActionsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-end`}
@@ -199,7 +201,7 @@ export function ProjectsListTable({
                             className="gap-1 text-[10px] font-medium shrink-0"
                           >
                             <PauseCircle className="h-3 w-3" />
-                            Paused
+                            {t('Paused')}
                           </Badge>
                         ) : null}
                       </div>
@@ -249,7 +251,9 @@ export function ProjectsListTable({
                                 size="icon"
                                 className="h-8 w-8 shrink-0 rounded-md"
                                 aria-label={
-                                  isPinned ? 'Unpin project' : 'Pin project'
+                                  isPinned
+                                    ? t('Unpin project')
+                                    : t('Pin project')
                                 }
                                 onClick={() => onPinProject(project.$id)}
                                 disabled={isPinPending}
@@ -262,7 +266,7 @@ export function ProjectsListTable({
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>{isPinned ? 'Unpin project' : 'Pin project'}</p>
+                              <p>{isPinned ? t('Unpin project') : t('Pin project')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

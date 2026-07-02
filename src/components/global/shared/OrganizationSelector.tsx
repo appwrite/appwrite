@@ -8,6 +8,7 @@
 import { useMemo } from 'react'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { useTeams } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 type OrganizationOption = {
   $id: string
@@ -36,6 +37,7 @@ export function OrganizationSelector({
   triggerClassName,
   contentClassName,
 }: OrganizationSelectorProps) {
+  const t = useT()
   const { organizations: teamsOrganizations, isLoading: orgsLoading } =
     useTeams()
   const organizations = organizationsProp ?? teamsOrganizations
@@ -55,9 +57,9 @@ export function OrganizationSelector({
       value={value ?? ''}
       onValueChange={onValueChange}
       items={items}
-      placeholder={isLoading ? 'Loading…' : placeholder}
-      searchPlaceholder="Search organizations…"
-      emptyMessage="No organizations found"
+      placeholder={isLoading ? t('Loading…') : t(placeholder)}
+      searchPlaceholder={t('Search organizations…')}
+      emptyMessage={t('No organizations found')}
       disabled={disabled || isLoading}
       triggerClassName={triggerClassName}
       contentClassName={contentClassName}

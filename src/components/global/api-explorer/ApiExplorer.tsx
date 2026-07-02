@@ -116,6 +116,7 @@ import {
 import { API_EXPLORER_SEND_REQUEST_SHORTCUT_RAW } from '@/lib/api-explorer/shortcuts'
 import { useApiExplorerShortcuts } from '@/lib/api-explorer/use-api-explorer-shortcuts'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -181,6 +182,7 @@ export function ApiExplorerPlatformToggle({
   onChange,
   className,
 }: ApiExplorerPlatformToggleProps) {
+  const t = useT()
   return (
     <ToggleGroup
       type="single"
@@ -192,19 +194,19 @@ export function ApiExplorerPlatformToggle({
         onChange(next)
       }}
       className={cn('shrink-0', className)}
-      aria-label="API platform"
+      aria-label={t('API platform')}
     >
       <ToggleGroupItem
         value="client"
         className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
       >
-        Client API
+        {t('Client API')}
       </ToggleGroupItem>
       <ToggleGroupItem
         value="server"
         className="h-9 px-3 text-[13px] font-medium data-[state=on]:bg-muted data-[state=on]:text-foreground"
       >
-        Server API
+        {t('Server API')}
       </ToggleGroupItem>
     </ToggleGroup>
   )
@@ -225,6 +227,7 @@ const OPENAPI_SPEC_OPTIONS: {
 export function ApiExplorerDownloadSpecButton({
   className,
 }: ApiExplorerDownloadSpecButtonProps) {
+  const t = useT()
   const [isDownloading, setIsDownloading] = useState(false)
 
   const handleDownload = useCallback(
@@ -233,12 +236,12 @@ export function ApiExplorerDownloadSpecButton({
       try {
         await downloadOpenApiSpec(platform)
       } catch {
-        toast.error('Failed to download OpenAPI spec')
+        toast.error(t('Failed to download OpenAPI spec'))
       } finally {
         setIsDownloading(false)
       }
     },
-    [],
+    [t],
   )
 
   return (
@@ -259,7 +262,7 @@ export function ApiExplorerDownloadSpecButton({
           ) : (
             <Download className="me-1.5 h-4 w-4" />
           )}
-          OpenAPI spec
+          {t('OpenAPI spec')}
           <ChevronDown className="ms-1.5 h-3.5 w-3.5" />
         </Button>
       </DropdownMenuTrigger>
@@ -270,7 +273,7 @@ export function ApiExplorerDownloadSpecButton({
             disabled={isDownloading}
             onClick={() => handleDownload(option.value)}
           >
-            {option.label}
+            {t(option.label)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -283,6 +286,7 @@ function ApiExplorerOpenApiSpecDownloadFooter({
 }: {
   platform: ApiExplorerProjectPlatform
 }) {
+  const t = useT()
   const [isDownloading, setIsDownloading] = useState(false)
 
   const handleDownload = useCallback(async () => {
@@ -290,11 +294,11 @@ function ApiExplorerOpenApiSpecDownloadFooter({
     try {
       await downloadOpenApiSpec(platform)
     } catch {
-      toast.error('Failed to download OpenAPI spec')
+      toast.error(t('Failed to download OpenAPI spec'))
     } finally {
       setIsDownloading(false)
     }
-  }, [platform])
+  }, [platform, t])
 
   return (
     <div className="shrink-0 border-t border-border bg-background px-3 py-3">
@@ -311,7 +315,7 @@ function ApiExplorerOpenApiSpecDownloadFooter({
         ) : (
           <Download className="me-1.5 size-4" />
         )}
-        OpenAPI spec
+        {t('OpenAPI spec')}
       </Button>
     </div>
   )
@@ -348,6 +352,7 @@ export function ApiExplorer({
   onPlatformChange,
   className,
 }: ApiExplorerProps) {
+  const t = useT()
   const { account } = useAuth()
   const consoleAccount = account as ConsoleAccountCache | undefined
   const { layout: columnsLayout, persistLayout: persistColumnsLayout } =
@@ -388,7 +393,7 @@ export function ApiExplorer({
     error: specQueryError,
   } = useApiExplorerSpec(activePlatform)
   const specError = specQueryError
-    ? getErrorMessage(specQueryError) || 'Failed to load API specification'
+    ? getErrorMessage(specQueryError) || t('Failed to load API specification')
     : null
   const selectedOperationRef = useRef<string | undefined>(initialOperationId)
   const { features } = useConsoleProfile()
@@ -607,7 +612,7 @@ export function ApiExplorer({
           bodyFormValues,
         )
         if (missingField) {
-          toast.error(`Missing required field: ${missingField.label}`)
+          toast.error(`${t('Missing required field:')} ${missingField.label}`)
           return
         }
         formData = buildMultipartFormData(bodyFormFields, bodyFormValues)
@@ -617,7 +622,7 @@ export function ApiExplorer({
           bodyJsonValue,
         )
         if (missingField) {
-          toast.error(`Missing required field: ${missingField.label}`)
+          toast.error(`${t('Missing required field:')} ${missingField.label}`)
           return
         }
         if (bodyJsonValue.trim()) {
@@ -627,7 +632,7 @@ export function ApiExplorer({
               bodyJsonValue,
             )
           } catch {
-            toast.error('Invalid JSON in request body.')
+            toast.error(t('Invalid JSON in request body.'))
             return
           }
         } else {
@@ -639,13 +644,13 @@ export function ApiExplorer({
           bodyFormValues,
         )
         if (missingField) {
-          toast.error(`Missing required field: ${missingField.label}`)
+          toast.error(`${t('Missing required field:')} ${missingField.label}`)
           return
         }
         try {
           body = serializeBodyFromForm(bodyFormFields, bodyFormValues)
         } catch (error: unknown) {
-          toast.error(getErrorMessage(error) || 'Invalid request body')
+          toast.error(getErrorMessage(error) || t('Invalid request body'))
           return
         }
       }
@@ -664,7 +669,7 @@ export function ApiExplorer({
         if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
           if (clientAuth.mode === 'user') {
             if (!clientAuth.userId.trim()) {
-              toast.error('Select a user to act as, or choose Guest.')
+              toast.error(t('Select a user to act as, or choose Guest.'))
               setIsExecuting(false)
               return
             }
@@ -680,7 +685,7 @@ export function ApiExplorer({
       } else if (methodSupportsServerApiKey(selectedMethod, activePlatform)) {
         apiKey = resolveServerAuthApiKey(serverAuth)
         if (methodRequiresApiKey(selectedMethod, activePlatform) && !apiKey) {
-          toast.error('Provide an API key or generate an ephemeral key.')
+          toast.error(t('Provide an API key or generate an ephemeral key.'))
           setIsExecuting(false)
           return
         }
@@ -705,7 +710,7 @@ export function ApiExplorer({
           })
       setResponse(result)
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error) || 'Request failed')
+      toast.error(getErrorMessage(error) || t('Request failed'))
     } finally {
       setIsExecuting(false)
     }
@@ -721,6 +726,7 @@ export function ApiExplorer({
     pathFormValues,
     queryFormValues,
     selectedMethod,
+    t,
   ])
 
   const handleExecute = useCallback(() => {
@@ -769,7 +775,7 @@ export function ApiExplorer({
           bodyFormValues,
         )
         if (missingField) {
-          toast.error(`Missing required field: ${missingField.label}`)
+          toast.error(`${t('Missing required field:')} ${missingField.label}`)
           return
         }
         formData = buildMultipartFormData(bodyFormFields, bodyFormValues)
@@ -779,7 +785,7 @@ export function ApiExplorer({
           bodyJsonValue,
         )
         if (missingField) {
-          toast.error(`Missing required field: ${missingField.label}`)
+          toast.error(`${t('Missing required field:')} ${missingField.label}`)
           return
         }
         if (bodyJsonValue.trim()) {
@@ -789,7 +795,7 @@ export function ApiExplorer({
               bodyJsonValue,
             )
           } catch {
-            toast.error('Invalid JSON in request body.')
+            toast.error(t('Invalid JSON in request body.'))
             return
           }
         } else {
@@ -801,13 +807,13 @@ export function ApiExplorer({
           bodyFormValues,
         )
         if (missingField) {
-          toast.error(`Missing required field: ${missingField.label}`)
+          toast.error(`${t('Missing required field:')} ${missingField.label}`)
           return
         }
         try {
           body = serializeBodyFromForm(bodyFormFields, bodyFormValues)
         } catch (error: unknown) {
-          toast.error(getErrorMessage(error) || 'Invalid request body')
+          toast.error(getErrorMessage(error) || t('Invalid request body'))
           return
         }
       }
@@ -823,7 +829,7 @@ export function ApiExplorer({
         if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
           if (clientAuth.mode === 'user') {
             if (!clientAuth.userId.trim()) {
-              toast.error('Select a user to act as, or choose Guest.')
+              toast.error(t('Select a user to act as, or choose Guest.'))
               return
             }
             const jwt = await createUserJwtForExplorer(
@@ -838,7 +844,7 @@ export function ApiExplorer({
       } else if (methodSupportsServerApiKey(selectedMethod, activePlatform)) {
         apiKey = resolveServerAuthApiKey(serverAuth)
         if (methodRequiresApiKey(selectedMethod, activePlatform) && !apiKey) {
-          toast.error('Provide an API key or generate an ephemeral key.')
+          toast.error(t('Provide an API key or generate an ephemeral key.'))
           return
         }
       }
@@ -855,10 +861,10 @@ export function ApiExplorer({
 
       const copied = await copyToClipboard('cURL', curl, { showToast: false })
       if (copied) {
-        toast.success('cURL copied')
+        toast.success(t('cURL copied'))
       }
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error) || 'Failed to copy cURL')
+      toast.error(getErrorMessage(error) || t('Failed to copy cURL'))
     }
   }, [
     activePlatform,
@@ -872,6 +878,7 @@ export function ApiExplorer({
     pathFormValues,
     queryFormValues,
     selectedMethod,
+    t,
   ])
 
   const handlePlatformChange = useCallback(
@@ -921,7 +928,7 @@ export function ApiExplorer({
         )}
       >
         <Loader2 className="me-2 h-4 w-4 animate-spin" />
-        Loading API specification…
+        {t('Loading API specification…')}
       </div>
     )
   }
@@ -934,7 +941,7 @@ export function ApiExplorer({
           className,
         )}
       >
-        {specError ?? 'API specification unavailable.'}
+        {specError ?? t('API specification unavailable.')}
       </div>
     )
   }
@@ -1007,9 +1014,9 @@ export function ApiExplorer({
         <ConfirmActionDialog
           open={sendConfirmOpen}
           onOpenChange={setSendConfirmOpen}
-          title={sendRequestConfirmation.title}
+          title={t(sendRequestConfirmation.title)}
           description={sendRequestConfirmation.description}
-          confirmLabel="Send request"
+          confirmLabel={t('Send request')}
           confirmVariant={sendRequestConfirmation.confirmVariant}
           onConfirm={handleConfirmSendRequest}
           isConfirming={isExecuting}
@@ -1038,6 +1045,7 @@ function ServiceListPanel({
   expandedProductGroupId,
   onExpandedProductGroupChange,
 }: ServiceListPanelProps) {
+  const t = useT()
   const hasServices = productGroups.some((group) => group.services.length > 0)
 
   return (
@@ -1052,13 +1060,13 @@ function ServiceListPanel({
             />
           </div>
 
-          <nav aria-label="API services">
+          <nav aria-label={t('API services')}>
             <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              APIs
+              {t('APIs')}
             </p>
             {!hasServices ? (
               <p className="px-2 py-2 text-[13px] text-muted-foreground">
-                No services available for this API.
+                {t('No services available for this API.')}
               </p>
             ) : (
               <Accordion
@@ -1137,6 +1145,7 @@ function MethodListPanel({
   selectedMethodId,
   onSelectMethod,
 }: MethodListPanelProps) {
+  const t = useT()
   const selectedMethodRef = useRef<HTMLButtonElement | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([])
@@ -1251,9 +1260,9 @@ function MethodListPanel({
           <Input
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            placeholder="Search methods…"
+            placeholder={t('Search methods…')}
             className="h-8 border-border/60 bg-background ps-8 pe-8 text-[13px]"
-            aria-label="Search methods"
+            aria-label={t('Search methods')}
             disabled={!service}
           />
           {searchValue ? (
@@ -1262,7 +1271,7 @@ function MethodListPanel({
               variant="ghost"
               size="icon"
               className="absolute end-0.5 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
-              aria-label="Clear method search"
+              aria-label={t('Clear method search')}
               onClick={() => setSearchValue('')}
             >
               <X className="size-3.5" />
@@ -1275,11 +1284,11 @@ function MethodListPanel({
         <div className="box-border w-full max-w-full min-w-0 space-y-3 p-2">
           {!service || service.methods.length === 0 ? (
             <p className="px-2 py-4 text-[13px] text-muted-foreground">
-              No methods available.
+              {t('No methods available.')}
             </p>
           ) : filteredGroups.length === 0 ? (
             <p className="px-2 py-4 text-[13px] text-muted-foreground">
-              No methods match your search.
+              {t('No methods match your search.')}
             </p>
           ) : (
             <>
@@ -1390,6 +1399,7 @@ function getDeprecatedWarningCopy(method: ApiExplorerMethod): {
 }
 
 function MethodDeprecatedWarning({ method }: { method: ApiExplorerMethod }) {
+  const t = useT()
   if (!method.deprecated) return null
 
   const { title, description } = getDeprecatedWarningCopy(method)
@@ -1399,10 +1409,10 @@ function MethodDeprecatedWarning({ method }: { method: ApiExplorerMethod }) {
       <Alert variant="default" className="border-amber-500/30 bg-transparent">
         <AlertCircle className="h-4 w-4 text-amber-500" />
         <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-          {title}
+          {t(title)}
         </AlertTitle>
         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-          {description}
+          {t(description)}
         </AlertDescription>
       </Alert>
     </div>
@@ -1455,6 +1465,7 @@ function MethodRequestFooter({
   onCopyCurl: () => void
   onResetRequestForm: () => void
 }) {
+  const t = useT()
   const { isMac } = usePlatform()
   const sendShortcut = formatDisplayKeys(
     API_EXPLORER_SEND_REQUEST_SHORTCUT_RAW,
@@ -1462,8 +1473,8 @@ function MethodRequestFooter({
   ).join('')
   const canSend = !isExecuting
   const sendTooltip = canSend
-    ? `Send request (${sendShortcut})`
-    : 'Request is running.'
+    ? `${t('Send request')} (${sendShortcut})`
+    : t('Request is running.')
 
   return (
     <div className={COLUMN_REQUEST_FOOTER_CLASS}>
@@ -1476,7 +1487,7 @@ function MethodRequestFooter({
           disabled={isExecuting}
           onClick={onResetRequestForm}
         >
-          Reset
+          {t('Reset')}
         </Button>
         <div className="flex items-center gap-2">
           <Button
@@ -1487,7 +1498,7 @@ function MethodRequestFooter({
             disabled={isExecuting}
             onClick={onCopyCurl}
           >
-            Copy as cURL
+            {t('Copy as cURL')}
           </Button>
           <Tooltip>
           <TooltipTrigger asChild>
@@ -1499,7 +1510,7 @@ function MethodRequestFooter({
                 disabled={!canSend}
                 onClick={onExecute}
               >
-                Send request
+                {t('Send request')}
               </Button>
             </span>
           </TooltipTrigger>
@@ -1520,6 +1531,7 @@ function MethodDetailsCard({
   endpoint: string
   method: ApiExplorerMethod
 }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
   const fullUrl = `${endpoint.replace(/\/$/, '')}${method.path}`
   const methodAccent = getHttpMethodAccentClasses(method.httpMethod)
@@ -1530,10 +1542,10 @@ function MethodDetailsCard({
     try {
       await navigator.clipboard.writeText(fullUrl)
       setCopied(true)
-      toast.success('Endpoint copied')
+      toast.success(t('Endpoint copied'))
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Failed to copy endpoint')
+      toast.error(t('Failed to copy endpoint'))
     }
   }
 
@@ -1543,7 +1555,7 @@ function MethodDetailsCard({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Endpoint
+              {t('Endpoint')}
             </p>
             <button
               type="button"
@@ -1555,7 +1567,7 @@ function MethodDetailsCard({
               ) : (
                 <Copy className="h-3.5 w-3.5" />
               )}
-              Copy
+              {t('Copy')}
             </button>
           </div>
           <div
@@ -1584,7 +1596,7 @@ function MethodDetailsCard({
         {method.description && (
           <div className="space-y-2">
             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Description
+              {t('Description')}
             </p>
             <MethodDescriptionMarkdown content={method.description} />
           </div>
@@ -1598,7 +1610,7 @@ function MethodDetailsCard({
             {rateLimit !== undefined && rateLimit > 0 && (
               <div className="space-y-2">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Rate limit
+                  {t('Rate limit')}
                 </p>
                 <RateLimitDescription
                   limit={rateLimit}
@@ -1646,6 +1658,7 @@ function RequestPanel({
   onCopyCurl,
   onResetRequestForm,
 }: RequestPanelProps) {
+  const t = useT()
   const { account } = useAuth()
   const consoleAccount = account as ConsoleAccountCache | undefined
   const { layout: responseSplitLayout, persistLayout: persistResponseSplitLayout } =
@@ -1656,7 +1669,7 @@ function RequestPanel({
       <div className="flex h-full min-h-0 flex-col">
         <div className={COLUMN_HEADER_CLASS} aria-hidden />
         <div className="flex flex-1 items-center justify-center text-[13px] text-muted-foreground">
-          Select a method to inspect and send a request.
+          {t('Select a method to inspect and send a request.')}
         </div>
       </div>
     )
@@ -1720,7 +1733,7 @@ function RequestPanel({
                 />
               ) : (
                 <div className="flex h-full min-h-0 items-center justify-center px-4 text-center text-[13px] text-muted-foreground/70">
-                  Send a request to see the response here.
+                  {t('Send a request to see the response here.')}
                 </div>
               )
             }
@@ -1792,6 +1805,7 @@ function RequestPanelContent({
   onClientAuthChange,
   onServerAuthChange,
 }: RequestPanelContentProps) {
+  const t = useT()
   const pathFields = useMemo(
     () =>
       (pathParameters ?? []).map((param) => parameterToFormField(param, method)),
@@ -1832,7 +1846,7 @@ function RequestPanelContent({
       {hasRequestSections && (
         <RequestBuilderPanel>
           {hasPathParams && (
-            <RequestBuilderSection title="Path">
+            <RequestBuilderSection title={t('Path')}>
               <RequestFormFields
                 fields={pathFields}
                 values={pathFormValues}
@@ -1849,7 +1863,7 @@ function RequestPanelContent({
 
           {hasQueryParams && (
             <RequestBuilderSection
-              title="Query parameters"
+              title={t('Query parameters')}
               showTopBorder={hasPathParams}
             >
               <RequestFormFields
@@ -1868,7 +1882,7 @@ function RequestPanelContent({
 
           {hasRequestBody && (
             <RequestBodySection
-              title={hasPathParams || hasQueryParams ? 'Body' : 'Parameters'}
+              title={hasPathParams || hasQueryParams ? t('Body') : t('Parameters')}
               fields={bodyFormFields}
               formValues={bodyFormValues}
               jsonValue={bodyJsonValue}
@@ -1915,6 +1929,7 @@ function formatResponseDisplay(body: string): {
 }
 
 function ResponseHeadersPanel({ headers }: { headers: Record<string, string> }) {
+  const t = useT()
   const entries = useMemo(
     () =>
       Object.entries(headers).sort(([a], [b]) =>
@@ -1930,13 +1945,13 @@ function ResponseHeadersPanel({ headers }: { headers: Record<string, string> }) 
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(copyText)
-    toast.success('Copied headers')
-  }, [copyText])
+    toast.success(t('Copied headers'))
+  }, [copyText, t])
 
   if (entries.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-4 text-[13px] text-muted-foreground">
-        No response headers
+        {t('No response headers')}
       </div>
     )
   }
@@ -1952,7 +1967,7 @@ function ResponseHeadersPanel({ headers }: { headers: Record<string, string> }) 
           onClick={handleCopy}
         >
           <Copy className="h-3.5 w-3.5" />
-          Copy
+          {t('Copy')}
         </Button>
       </div>
       <ScrollArea className="min-h-0 flex-1">
@@ -1960,10 +1975,10 @@ function ResponseHeadersPanel({ headers }: { headers: Record<string, string> }) 
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="w-[200px] px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Key
+                {t('Key')}
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Value
+                {t('Value')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -1994,8 +2009,9 @@ function ResponseSizeFooter({ byteSize }: { byteSize: number }) {
 }
 
 function ResponseSection({ response, isRefreshing = false }: ResponseSectionProps) {
+  const t = useT()
   const imagePreviewUrl = response.imagePreviewUrl
-  const bodyTabLabel = imagePreviewUrl ? 'Preview' : 'Body'
+  const bodyTabLabel = imagePreviewUrl ? t('Preview') : t('Body')
 
   const { code, language } = useMemo(
     () => formatResponseDisplay(response.body),
@@ -2012,7 +2028,7 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
     >
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="text-[12px] font-semibold text-foreground">Response</span>
+          <span className="text-[12px] font-semibold text-foreground">{t('Response')}</span>
           <Badge
             variant={statusVariant}
             className={FORM_FIELD_TYPE_PILL_CLASS}
@@ -2036,7 +2052,7 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
             {bodyTabLabel}
           </TabsTrigger>
           <TabsTrigger value="headers" className="h-6 px-2.5 text-[11px]">
-            Headers
+            {t('Headers')}
           </TabsTrigger>
         </TabsList>
       </div>
@@ -2049,7 +2065,7 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-muted/20 p-4">
               <img
                 src={imagePreviewUrl}
-                alt="Response preview"
+                alt={t('Response preview')}
                 className="max-h-full max-w-full rounded-lg border border-border object-contain"
               />
             </div>

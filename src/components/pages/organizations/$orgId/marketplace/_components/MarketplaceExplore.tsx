@@ -16,6 +16,7 @@ import {
 import { MarketplaceAppCard } from './MarketplaceAppCard'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 type MarketplaceExploreProps = {
   catalogApps: MarketplaceApp[]
@@ -96,6 +97,7 @@ export function MarketplaceExplore({
   onAppClick,
   onNavigate,
 }: MarketplaceExploreProps) {
+  const t = useT()
   const showViewAllCatalog =
     catalogApps.length > featuredApps.length + moreApps.length
 
@@ -109,16 +111,16 @@ export function MarketplaceExplore({
 
       <section>
         <SectionHeader
-          title="More apps"
-          description="Popular integrations from the marketplace catalog."
-          actionLabel={showViewAllCatalog ? 'View all apps' : undefined}
+          title={t('More apps')}
+          description={t('Popular integrations from the marketplace catalog.')}
+          actionLabel={showViewAllCatalog ? t('View all apps') : undefined}
           onAction={
             showViewAllCatalog ? () => onNavigate('catalog') : undefined
           }
         />
         {moreApps.length === 0 ? (
           <p className="text-[13px] text-muted-foreground py-4">
-            No additional apps in the catalog yet.
+            {t('No additional apps in the catalog yet.')}
           </p>
         ) : (
           <AppGrid apps={moreApps} onAppClick={onAppClick} />
@@ -127,8 +129,10 @@ export function MarketplaceExplore({
 
       <section>
         <SectionHeader
-          title="Browse by category"
-          description="Find integrations grouped by what they help you build."
+          title={t('Browse by category')}
+          description={t(
+            'Find integrations grouped by what they help you build.',
+          )}
         />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {MARKETPLACE_CATEGORY_ORDER.map((category) => {
@@ -149,10 +153,10 @@ export function MarketplaceExplore({
                 </div>
                 <div className="min-w-0 w-full">
                   <p className="text-[13px] font-medium text-foreground truncate">
-                    {MARKETPLACE_CATEGORY_LABELS[category]}
+                    {t(MARKETPLACE_CATEGORY_LABELS[category])}
                   </p>
                   <p className="text-[12px] text-muted-foreground mt-0.5">
-                    {count} app{count !== 1 ? 's' : ''}
+                    {count} {count !== 1 ? t('apps') : t('app')}
                   </p>
                 </div>
               </button>

@@ -26,6 +26,7 @@ import {
   mapToQueryParam,
 } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
 import { useSavedFilters } from '@/lib/react-query/hooks/auth'
@@ -154,6 +155,7 @@ export function FiltersPopoverContent({
   defaultSortParam,
   onReset,
 }: FiltersPopoverContentProps) {
+  const t = useT()
   const sortEnabled = sortBy != null && sortOrder != null && !!onSortChange
   const sortOptionsFromColumns = sortEnabled
     ? columns
@@ -536,14 +538,14 @@ export function FiltersPopoverContent({
             optional: undefined,
           }
         : col
-    const label = <label className={labelClass}>Value</label>
+    const label = <label className={labelClass}>{t('Value')}</label>
     if (isBetweenOp) {
       if (vc.format === 'size') {
         return (
           <div key="value-between-size" className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className={subLabelClass}>Start</span>
+                <span className={subLabelClass}>{t('Start')}</span>
                 <Input
                   type="number"
                   min={0}
@@ -551,11 +553,11 @@ export function FiltersPopoverContent({
                   className={inputClass}
                   value={filterValue}
                   onChange={(e) => setFilterValue(e.target.value)}
-                  placeholder="Min"
+                  placeholder={t('Min')}
                 />
               </div>
               <div>
-                <span className={subLabelClass}>End</span>
+                <span className={subLabelClass}>{t('End')}</span>
                 <Input
                   type="number"
                   min={0}
@@ -563,12 +565,12 @@ export function FiltersPopoverContent({
                   className={inputClass}
                   value={filterValueEnd}
                   onChange={(e) => setFilterValueEnd(e.target.value)}
-                  placeholder="Max"
+                  placeholder={t('Max')}
                 />
               </div>
             </div>
             <div>
-              <span className={subLabelClass}>Unit</span>
+              <span className={subLabelClass}>{t('Unit')}</span>
               <SearchableSelect
                 value={filterSizeUnit}
                 onValueChange={setFilterSizeUnit}
@@ -576,9 +578,9 @@ export function FiltersPopoverContent({
                   value: u.value,
                   label: u.label,
                 }))}
-                placeholder="Unit"
-                searchPlaceholder="Search units…"
-                emptyMessage="No units found"
+                placeholder={t('Unit')}
+                searchPlaceholder={t('Search units…')}
+                emptyMessage={t('No units found')}
               />
             </div>
           </div>
@@ -588,7 +590,7 @@ export function FiltersPopoverContent({
         return (
           <div key="value-between-datetime" className="space-y-2">
             <div>
-              <span className={subLabelClass}>Start</span>
+              <span className={subLabelClass}>{t('Start')}</span>
               <Input
                 type="datetime-local"
                 className={inputClass}
@@ -600,7 +602,7 @@ export function FiltersPopoverContent({
               />
             </div>
             <div>
-              <span className={subLabelClass}>End</span>
+              <span className={subLabelClass}>{t('End')}</span>
               <Input
                 type="datetime-local"
                 className={inputClass}
@@ -622,25 +624,25 @@ export function FiltersPopoverContent({
         return (
           <div key="value-between-number" className="space-y-2">
             <div>
-              <span className={subLabelClass}>Start</span>
+              <span className={subLabelClass}>{t('Start')}</span>
               <Input
                 type="number"
                 step={vc.type === 'integer' || vc.type === 'bigint' ? 1 : 'any'}
                 className={inputClass}
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
-                placeholder="Min"
+                placeholder={t('Min')}
               />
             </div>
             <div>
-              <span className={subLabelClass}>End</span>
+              <span className={subLabelClass}>{t('End')}</span>
               <Input
                 type="number"
                 step={vc.type === 'integer' || vc.type === 'bigint' ? 1 : 'any'}
                 className={inputClass}
                 value={filterValueEnd}
                 onChange={(e) => setFilterValueEnd(e.target.value)}
-                placeholder="Max"
+                placeholder={t('Max')}
               />
             </div>
           </div>
@@ -658,17 +660,17 @@ export function FiltersPopoverContent({
             items={
               col.customAttributeSlot
                 ? [
-                    { value: 'true', label: 'True' },
-                    { value: 'false', label: 'False' },
+                    { value: 'true', label: t('True') },
+                    { value: 'false', label: t('False') },
                   ]
                 : [
-                    { value: 'true', label: 'Enabled' },
-                    { value: 'false', label: 'Disabled' },
+                    { value: 'true', label: t('Enabled') },
+                    { value: 'false', label: t('Disabled') },
                   ]
             }
-            placeholder="Select"
-            searchPlaceholder="Search…"
-            emptyMessage="No results"
+            placeholder={t('Select')}
+            searchPlaceholder={t('Search…')}
+            emptyMessage={t('No results')}
           />
         </div>
       )
@@ -701,7 +703,7 @@ export function FiltersPopoverContent({
               className={inputClass}
               value={filterValue}
               onChange={(e) => setFilterValue(e.target.value)}
-              placeholder="Amount"
+              placeholder={t('Amount')}
             />
             <SearchableSelect
               value={filterSizeUnit}
@@ -710,9 +712,9 @@ export function FiltersPopoverContent({
                 value: u.value,
                 label: u.label,
               }))}
-              placeholder="Unit"
-              searchPlaceholder="Search units…"
-              emptyMessage="No units found"
+              placeholder={t('Unit')}
+              searchPlaceholder={t('Search units…')}
+              emptyMessage={t('No units found')}
               triggerClassName="min-w-[100px]"
             />
           </div>
@@ -730,7 +732,7 @@ export function FiltersPopoverContent({
             className={inputClass}
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            placeholder="Number"
+            placeholder={t('Number')}
           />
         </div>
       )
@@ -744,11 +746,11 @@ export function FiltersPopoverContent({
             onValueChange={setFilterValue}
             items={vc.elements.map((el) => ({
               value: String(el.value),
-              label: el.label,
+              label: t(el.label),
             }))}
-            placeholder="Select"
-            searchPlaceholder="Search values…"
-            emptyMessage="No values found"
+            placeholder={t('Select')}
+            searchPlaceholder={t('Search values…')}
+            emptyMessage={t('No values found')}
           />
         </div>
       )
@@ -756,10 +758,10 @@ export function FiltersPopoverContent({
     const searchOrNotSearch =
       filterOperatorKey === 'search' || filterOperatorKey === 'notSearch'
     const placeholder = searchOrNotSearch
-      ? 'Min. 3 characters'
+      ? t('Min. 3 characters')
       : filterOperatorKey === 'regex'
         ? 'e.g. ^foo.*bar$'
-        : 'Value'
+        : t('Value')
     return (
       <div key="value-text">
         {label}
@@ -820,12 +822,12 @@ export function FiltersPopoverContent({
                 />
                 <span className="min-w-0 flex-1 text-[12px] leading-snug">
                   <span className="font-medium text-foreground/85">
-                    List order
+                    {t('List order')}
                   </span>
                   <span className="text-muted-foreground">
                     {' '}
-                    · {sortFieldSummaryLabel} ·{' '}
-                    {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                    · {t(sortFieldSummaryLabel)} ·{' '}
+                    {sortOrder === 'asc' ? t('Ascending') : t('Descending')}
                   </span>
                 </span>
               </button>
@@ -839,7 +841,7 @@ export function FiltersPopoverContent({
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                    List order
+                    {t('List order')}
                   </span>
                   {onReset && (hasNonDefaultSort || filterMap.size > 0) && (
                     <button
@@ -850,7 +852,7 @@ export function FiltersPopoverContent({
                       }}
                       className="cursor-pointer shrink-0 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Reset
+                      {t('Reset')}
                     </button>
                   )}
                 </div>
@@ -866,11 +868,11 @@ export function FiltersPopoverContent({
                     }}
                     items={sortOptionsFromColumns.map((o) => ({
                       value: o.id,
-                      label: o.label,
+                      label: t(o.label),
                     }))}
-                    placeholder="Sort field"
-                    searchPlaceholder="Search columns…"
-                    emptyMessage="No columns"
+                    placeholder={t('Sort field')}
+                    searchPlaceholder={t('Search columns…')}
+                    emptyMessage={t('No columns')}
                     triggerClassName="h-9 min-w-0 flex-1 text-[13px]"
                   />
                   <div
@@ -889,10 +891,10 @@ export function FiltersPopoverContent({
                           : 'text-muted-foreground hover:bg-muted/60',
                       )}
                       aria-pressed={sortOrder === 'asc'}
-                      title="Ascending"
+                      title={t('Ascending')}
                     >
                       <ArrowUp className="h-3.5 w-3.5" />
-                      Asc
+                      {t('Asc')}
                     </button>
                     <button
                       type="button"
@@ -905,10 +907,10 @@ export function FiltersPopoverContent({
                           : 'text-muted-foreground hover:bg-muted/60',
                       )}
                       aria-pressed={sortOrder === 'desc'}
-                      title="Descending"
+                      title={t('Descending')}
                     >
                       <ArrowDown className="h-3.5 w-3.5" />
-                      Desc
+                      {t('Desc')}
                     </button>
                   </div>
                 </div>
@@ -931,7 +933,7 @@ export function FiltersPopoverContent({
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className={labelClass}>Column</label>
+              <label className={labelClass}>{t('Column')}</label>
               <SearchableSelect
                 value={filterColumnId}
                 onValueChange={(v) => {
@@ -962,14 +964,14 @@ export function FiltersPopoverContent({
                     : null
                   setFilterOperatorKey(firstOp?.key ?? '')
                 }}
-                items={columns.map((c) => ({ value: c.id, label: c.title }))}
-                placeholder="Column"
-                searchPlaceholder="Search columns…"
-                emptyMessage="No columns found"
+                items={columns.map((c) => ({ value: c.id, label: t(c.title) }))}
+                placeholder={t('Column')}
+                searchPlaceholder={t('Search columns…')}
+                emptyMessage={t('No columns found')}
               />
             </div>
             <div className="space-y-1">
-              <label className={labelClass}>Operator</label>
+              <label className={labelClass}>{t('Operator')}</label>
               <SearchableSelect
                 value={filterOperatorKey}
                 onValueChange={(v) => {
@@ -995,49 +997,50 @@ export function FiltersPopoverContent({
                               : !!column.fulltextSearchable,
                           enumOptional:
                             vt === 'enum' ? column.optional : undefined,
-                        }).map((op) => ({ value: op.key, label: op.label }))
+                        }).map((op) => ({ value: op.key, label: t(op.label) }))
                       })()
                     : []
                 }
-                placeholder="Operator"
-                searchPlaceholder="Search operators…"
-                emptyMessage="No operators found"
+                placeholder={t('Operator')}
+                searchPlaceholder={t('Search operators…')}
+                emptyMessage={t('No operators found')}
               />
             </div>
           </div>
           {col?.customAttributeSlot === true && (
             <div className="space-y-2">
               <div className="space-y-1">
-                <label className={labelClass}>Attribute name</label>
+                <label className={labelClass}>{t('Attribute name')}</label>
                 <Input
                   className={inputClass}
                   value={customDocumentAttrKey}
                   onChange={(e) => setCustomDocumentAttrKey(e.target.value)}
-                  placeholder="e.g. email, score, tags"
+                  placeholder={t('e.g. email, score, tags')}
                   autoComplete="off"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Use preset columns for $id and other system fields. Custom
-                  names must not start with $.
+                  {t(
+                    'Use preset columns for $id and other system fields. Custom names must not start with $.',
+                  )}
                 </p>
               </div>
               <div className="space-y-1">
-                <label className={labelClass}>Value type</label>
+                <label className={labelClass}>{t('Value type')}</label>
                 <SearchableSelect
                   value={customDocumentAttrType}
                   onValueChange={(v) =>
                     setCustomDocumentAttrType(v as FilterColumnType)
                   }
                   items={[
-                    { value: 'string', label: 'Text' },
-                    { value: 'integer', label: 'Integer' },
-                    { value: 'double', label: 'Decimal' },
-                    { value: 'boolean', label: 'Boolean' },
-                    { value: 'datetime', label: 'Date / time' },
+                    { value: 'string', label: t('Text') },
+                    { value: 'integer', label: t('Integer') },
+                    { value: 'double', label: t('Decimal') },
+                    { value: 'boolean', label: t('Boolean') },
+                    { value: 'datetime', label: t('Date / time') },
                   ]}
-                  placeholder="Type"
-                  searchPlaceholder="Search…"
-                  emptyMessage="No types"
+                  placeholder={t('Type')}
+                  searchPlaceholder={t('Search…')}
+                  emptyMessage={t('No types')}
                   triggerClassName="h-9 w-full text-[13px]"
                 />
               </div>
@@ -1051,7 +1054,7 @@ export function FiltersPopoverContent({
               className="h-9 min-w-0 flex-1 text-[13px]"
               disabled={isApplyDisabled}
             >
-              {editingReplaceKey ? 'Update filter' : 'Add filter'}
+              {editingReplaceKey ? t('Update filter') : t('Add filter')}
             </Button>
             {editingReplaceKey && (
               <Button
@@ -1061,7 +1064,7 @@ export function FiltersPopoverContent({
                 className="h-9 shrink-0 text-[13px]"
                 onClick={cancelFilterEdit}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
             )}
           </div>
@@ -1075,7 +1078,7 @@ export function FiltersPopoverContent({
           <div className="px-4 py-2">
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <span className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                Active ({filterMap.size})
+                {t('Active')} ({filterMap.size})
               </span>
               <Button
                 variant="ghost"
@@ -1083,7 +1086,7 @@ export function FiltersPopoverContent({
                 className="h-7 text-[12px] text-muted-foreground hover:text-foreground -me-1"
                 onClick={handleClearAll}
               >
-                Clear all
+                {t('Clear all')}
               </Button>
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1">
@@ -1110,10 +1113,10 @@ export function FiltersPopoverContent({
                       className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 truncate text-start text-[12px] rounded-md outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring -mx-1 px-1 -my-0.5 py-0.5"
                     >
                       <span className="shrink-0 font-medium text-foreground">
-                        {column}
+                        {t(column)}
                       </span>
                       <span className="shrink-0 text-muted-foreground">
-                        {operator}
+                        {t(operator)}
                       </span>
                       {value != null && value !== '' && (
                         <span className="truncate text-foreground">
@@ -1125,7 +1128,7 @@ export function FiltersPopoverContent({
                       type="button"
                       onClick={() => onRemoveFilter(key)}
                       className="cursor-pointer shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                      aria-label="Remove filter"
+                      aria-label={t('Remove filter')}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -1142,12 +1145,13 @@ export function FiltersPopoverContent({
         <div className={cn('border-t px-4 py-2', SECTION_DIVIDE)}>
           {matchingSavedFilter ? (
             <p className="text-[12px] text-muted-foreground">
-              Same as saved filter &quot;{matchingSavedFilter.name}&quot;
+              {t('Same as saved filter')} &quot;{matchingSavedFilter.name}
+              &quot;
             </p>
           ) : (
             <div className="space-y-1.5">
               <p className="text-[12px] text-muted-foreground">
-                Save for later
+                {t('Save for later')}
               </p>
               <div className="flex flex-nowrap items-center gap-2">
                 {hasTeamLevel && (
@@ -1168,7 +1172,7 @@ export function FiltersPopoverContent({
                       )}
                       aria-pressed={saveLevel === 'user'}
                     >
-                      For me
+                      {t('For me')}
                     </button>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1187,7 +1191,7 @@ export function FiltersPopoverContent({
                           )}
                           aria-pressed={saveLevel === 'team'}
                         >
-                          For team
+                          {t('For team')}
                         </button>
                       </TooltipTrigger>
                       {!canSaveTeamFiltersResult && (
@@ -1196,15 +1200,16 @@ export function FiltersPopoverContent({
                           sideOffset={4}
                           className="z-[250]"
                         >
-                          Only owners and developers can save team-level
-                          filters.
+                          {t(
+                            'Only owners and developers can save team-level filters.',
+                          )}
                         </TooltipContent>
                       )}
                     </Tooltip>
                   </div>
                 )}
                 <Input
-                  placeholder="Filter name"
+                  placeholder={t('Filter name')}
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   onKeyDown={(e) => {
@@ -1241,8 +1246,8 @@ export function FiltersPopoverContent({
                         size="icon"
                         variant="secondary"
                         className="h-9 w-9 shrink-0"
-                        title="Save filter"
-                        aria-label="Save filter"
+                        title={t('Save filter')}
+                        aria-label={t('Save filter')}
                         disabled={
                           !saveName.trim() ||
                           isAdding ||
@@ -1283,7 +1288,9 @@ export function FiltersPopoverContent({
                         sideOffset={4}
                         className="z-[250]"
                       >
-                        Only owners and developers can save team-level filters.
+                        {t(
+                          'Only owners and developers can save team-level filters.',
+                        )}
                       </TooltipContent>
                     )}
                 </Tooltip>
@@ -1351,7 +1358,7 @@ export function FiltersPopoverContent({
                 {userSavedFilters.length > 0 && (
                   <div>
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                      My filters
+                      {t('My filters')}
                     </p>
                     <div className="space-y-1">
                       {userSavedFilters.map((item, index) => (
@@ -1395,7 +1402,7 @@ export function FiltersPopoverContent({
                 {teamSavedFilters.length > 0 && (
                   <div>
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                      Team filters
+                      {t('Team filters')}
                     </p>
                     <div className="space-y-1">
                       {teamSavedFilters.map((item, index) => (
@@ -1479,15 +1486,16 @@ export function FiltersPopoverContent({
       ) : null}
       {userSavedFilters.length === 0 && teamSavedFilters.length === 0 && (
         <p className="px-4 py-3 text-[13px] text-muted-foreground">
-          No saved filters yet. Add filters in the Filters tab and save them
-          here for quick access.
+          {t(
+            'No saved filters yet. Add filters in the Filters tab and save them here for quick access.',
+          )}
         </p>
       )}
       {filterMap.size > 0 && (
         <div className={cn('border-t px-4 py-2', SECTION_DIVIDE)}>
           <div className="space-y-1.5">
             <p className="text-[12px] text-muted-foreground">
-              Save current filters with a name:
+              {t('Save current filters with a name:')}
             </p>
             <div className="flex flex-nowrap items-center gap-2">
               {hasTeamLevel && (
@@ -1508,7 +1516,7 @@ export function FiltersPopoverContent({
                     )}
                     aria-pressed={saveLevel === 'user'}
                   >
-                    For me
+                    {t('For me')}
                   </button>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1527,7 +1535,7 @@ export function FiltersPopoverContent({
                         )}
                         aria-pressed={saveLevel === 'team'}
                       >
-                        For team
+                        {t('For team')}
                       </button>
                     </TooltipTrigger>
                     {!canSaveTeamFiltersResult && (
@@ -1536,14 +1544,16 @@ export function FiltersPopoverContent({
                         sideOffset={4}
                         className="z-[250]"
                       >
-                        Only owners and developers can save team-level filters.
+                        {t(
+                          'Only owners and developers can save team-level filters.',
+                        )}
                       </TooltipContent>
                     )}
                   </Tooltip>
                 </div>
               )}
               <Input
-                placeholder="Filter name"
+                placeholder={t('Filter name')}
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 onKeyDown={(e) => {
@@ -1580,8 +1590,8 @@ export function FiltersPopoverContent({
                       size="icon"
                       variant="secondary"
                       className="h-9 w-9 shrink-0"
-                      title="Save filter"
-                      aria-label="Save filter"
+                      title={t('Save filter')}
+                      aria-label={t('Save filter')}
                       disabled={
                         !saveName.trim() ||
                         isAdding ||
@@ -1622,7 +1632,9 @@ export function FiltersPopoverContent({
                       sideOffset={4}
                       className="z-[250]"
                     >
-                      Only owners and developers can save team-level filters.
+                      {t(
+                        'Only owners and developers can save team-level filters.',
+                      )}
                     </TooltipContent>
                   )}
               </Tooltip>
@@ -1643,7 +1655,7 @@ export function FiltersPopoverContent({
           <div className="shrink-0 px-4">
             <TabsList className="w-full grid grid-cols-2 h-9">
               <TabsTrigger value="filters" className="text-[13px]">
-                Filters
+                {t('Filters')}
                 {filterMap.size > 0 ? (
                   <ToolbarCountBadge
                     count={filterMap.size}
@@ -1652,7 +1664,7 @@ export function FiltersPopoverContent({
                 ) : null}
               </TabsTrigger>
               <TabsTrigger value="saved" className="text-[13px]">
-                Saved
+                {t('Saved')}
                 {savedFilters.length > 0 ? (
                   <ToolbarCountBadge
                     count={savedFilters.length}

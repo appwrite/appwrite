@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { WarningAlert } from '@/components/global/shared/WarningAlert'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const SELECTION_PAGE_SIZE = 5
 const SELECTION_ROW_HEIGHT_CLASS = 'h-[46px]'
@@ -46,6 +47,7 @@ export function DowngradeLimitSelection({
   loading = false,
   paginationDisabled = false,
 }: DowngradeLimitSelectionProps) {
+  const t = useT()
   const selectionValid = selectedIds.size === limit
   const totalPages = Math.max(1, Math.ceil(total / SELECTION_PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -74,14 +76,15 @@ export function DowngradeLimitSelection({
 
       <div className="px-6 py-4 space-y-4">
         {!selectionValid ? (
-          <WarningAlert title={`Select ${resourceLabel} to keep`}>
-            Choose exactly {limit} {resourceLabel} to continue.
+          <WarningAlert title={`${t('Select')} ${t(resourceLabel)} ${t('to keep')}`}>
+            {t('Choose exactly')} {limit} {t(resourceLabel)}{' '}
+            {t('to continue.')}
           </WarningAlert>
         ) : null}
 
         <div className={cn('space-y-2', SELECTION_LIST_MIN_HEIGHT_CLASS)}>
           {loading ? (
-            <p className="text-[13px] text-muted-foreground">Loading...</p>
+            <p className="text-[13px] text-muted-foreground">{t('Loading...')}</p>
           ) : (
             <>
               {items.map((item) => {
@@ -124,7 +127,7 @@ export function DowngradeLimitSelection({
                             variant="info"
                             className="text-[10px] shrink-0"
                           >
-                            You
+                            {t('You')}
                           </Badge>
                         ) : null}
                       </div>
@@ -148,7 +151,8 @@ export function DowngradeLimitSelection({
         {total > SELECTION_PAGE_SIZE ? (
           <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
             <p className="text-[12px] text-muted-foreground">
-              Showing {pageStart + 1}-{pageEnd} of {total} {resourceLabel}
+              {t('Showing')} {pageStart + 1}-{pageEnd} {t('of')} {total}{' '}
+              {t(resourceLabel)}
             </p>
             <div className="flex items-center gap-1">
               <Button
@@ -158,7 +162,7 @@ export function DowngradeLimitSelection({
                 className="h-8 w-8"
                 onClick={() => onPageChange(safePage - 1)}
                 disabled={safePage <= 1 || loading || paginationDisabled}
-                aria-label={`Previous ${resourceLabel} page`}
+                aria-label={`${t('Previous')} ${t(resourceLabel)} ${t('page')}`}
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
@@ -169,7 +173,7 @@ export function DowngradeLimitSelection({
                 className="h-8 w-8"
                 onClick={() => onPageChange(safePage + 1)}
                 disabled={safePage >= totalPages || loading || paginationDisabled}
-                aria-label={`Next ${resourceLabel} page`}
+                aria-label={`${t('Next')} ${t(resourceLabel)} ${t('page')}`}
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>

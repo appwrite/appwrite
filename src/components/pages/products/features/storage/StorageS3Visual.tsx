@@ -2,6 +2,7 @@ import { Copy, Server } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const COMPATIBLE_TOOLS = [
   { id: 'rclone', name: 'rclone', iconSrc: '/icons/rclone.svg' },
@@ -19,10 +20,11 @@ function MockCredentialRow({
   value: string
   masked?: boolean
 }) {
+  const t = useT()
   return (
     <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
+        {t(label)}
       </p>
       <div className="mt-1.5 flex items-center gap-2">
         <p className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground">
@@ -35,11 +37,12 @@ function MockCredentialRow({
 }
 
 export function StorageS3Visual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'app', label: 'App' },
-        { id: 'server', label: 'Server' },
+        { id: 'app', label: t('App') },
+        { id: 'server', label: t('Server') },
         { id: 's3', label: 'S3', active: true },
       ]}
     >
@@ -50,9 +53,9 @@ export function StorageS3Visual() {
               <Server className="size-4 text-muted-foreground" aria-hidden />
             </span>
             <div>
-              <p className="text-[13px] font-semibold text-foreground">S3-compatible access</p>
+              <p className="text-[13px] font-semibold text-foreground">{t('S3-compatible access')}</p>
               <p className="mt-0.5 text-[12px] text-muted-foreground">
-                Project-scoped endpoint with SigV4 signing.
+                {t('Project-scoped endpoint with SigV4 signing.')}
               </p>
             </div>
           </div>
@@ -72,7 +75,7 @@ export function StorageS3Visual() {
 
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Works with
+            {t('Works with')}
           </p>
           <div className="grid grid-cols-4 gap-1.5">
             {COMPATIBLE_TOOLS.map((tool) => (
@@ -93,7 +96,7 @@ export function StorageS3Visual() {
 
         <div className="rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Attach Storage to existing object-storage pipelines without rebuilding upload flows.
+            {t('Attach Storage to existing object-storage pipelines without rebuilding upload flows.')}
           </p>
         </div>
       </div>

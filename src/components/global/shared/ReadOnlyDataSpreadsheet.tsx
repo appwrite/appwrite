@@ -19,6 +19,7 @@ import {
   type SpreadsheetCellValueDialogState,
 } from '@/components/global/shared/SpreadsheetCellContextMenu'
 import { SpreadsheetCellValueDialog } from '@/components/global/shared/SpreadsheetCellValueDialog'
+import { useT } from '@/lib/i18n/translate'
 
 /** Matches database product spreadsheet table chrome (see tablesdb/Spreadsheet.tsx). */
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
@@ -102,6 +103,7 @@ export function ReadOnlyDataSpreadsheet({
   enableCellContextMenu,
   enableColumnResize = false,
 }: ReadOnlyDataSpreadsheetProps) {
+  const t = useT()
   const normalizedColumns = useMemo(() => normalizeColumns(columns), [columns])
   const isStudio = variant === 'studio'
   const showCellContextMenu = enableCellContextMenu ?? isStudio
@@ -286,7 +288,7 @@ export function ReadOnlyDataSpreadsheet({
           className,
         )}
       >
-        {loadingLabel}
+        {t(loadingLabel)}
       </div>
     )
   }
@@ -312,7 +314,7 @@ export function ReadOnlyDataSpreadsheet({
             </div>
           ) : (
             <div className="flex h-full min-h-[12rem] items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
-              {emptyLabel}
+              {t(emptyLabel)}
             </div>
           )
         ) : (

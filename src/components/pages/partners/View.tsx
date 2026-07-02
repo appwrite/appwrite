@@ -12,6 +12,7 @@ import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { CARD_LINK_HINT_CLASS } from '@/lib/link-styles'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { submitPartnerApplication } from '@/lib/marketing/growth-forms'
 import {
   PARTNERS_FORM_ID,
@@ -39,6 +40,7 @@ const PARTNER_FORM_FIELDS = [
 ]
 
 export function View() {
+  const t = useT()
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
@@ -48,11 +50,11 @@ export function View() {
         align="left"
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <a href={`#${PARTNERS_FORM_ID}`}>Become a Partner</a>
+          <a href={`#${PARTNERS_FORM_ID}`}>{t('Become a Partner')}</a>
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
           <MarketingSiteLink href={partnersHero.catalogUrl}>
-            Find a Partner
+            {t('Find a Partner')}
           </MarketingSiteLink>
         </Button>
       </MarketingHeroSection>
@@ -60,8 +62,10 @@ export function View() {
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <MarketingSectionHeading
-            title="Growing together"
-            description="Partner benefits designed to help you deliver more value to your clients."
+            title={t('Growing together')}
+            description={t(
+              'Partner benefits designed to help you deliver more value to your clients.',
+            )}
             size="md"
           />
           <div className="mt-10">
@@ -78,11 +82,13 @@ export function View() {
               <MarketingSectionHeading
                 align="left"
                 size="md"
-                title="Partner Tiers"
-                description="As your business grows, so do the opportunities with Appwrite. Our Partner Program is designed to evolve with you, offering flexible tiers that adapt to your unique needs and goals."
+                title={t('Partner Tiers')}
+                description={t(
+                  'As your business grows, so do the opportunities with Appwrite. Our Partner Program is designed to evolve with you, offering flexible tiers that adapt to your unique needs and goals.', // pragma: allowlist secret
+                )}
               />
               <Button variant="outline" className="mt-6" asChild>
-                <a href={`#${PARTNERS_FORM_ID}`}>Become a Partner</a>
+                <a href={`#${PARTNERS_FORM_ID}`}>{t('Become a Partner')}</a>
               </Button>
             </div>
             <div className="flex flex-col items-center gap-2">
@@ -90,7 +96,7 @@ export function View() {
                 <img
                   key={tier.title}
                   src={tier.badge}
-                  alt={`${tier.title} Badge`}
+                  alt={`${t(tier.title)} ${t('Badge')}`}
                   className="max-w-[280px] object-contain"
                   style={{
                     marginBottom: index === partnerTiers.length - 1 ? 0 : `-${32 + index * 8}px`,
@@ -106,7 +112,7 @@ export function View() {
 
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <MarketingSectionHeading title="Ways to partner" size="md" />
+          <MarketingSectionHeading title={t('Ways to partner')} size="md" />
           <div className="mt-10 grid gap-3 md:grid-cols-2">
             {partnerWays.map((way) => (
               <a
@@ -124,12 +130,12 @@ export function View() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold text-foreground">{way.title}</p>
+                  <p className="text-[14px] font-semibold text-foreground">{t(way.title)}</p>
                   <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
-                    {way.description}
+                    {t(way.description)}
                   </p>
                   <span className={cn('mt-4 text-[13px]', CARD_LINK_HINT_CLASS)}>
-                    {way.label}
+                    {t(way.label)}
                     <ChevronRight className="ms-0.5 size-4" aria-hidden />
                   </span>
                 </div>
@@ -142,8 +148,10 @@ export function View() {
       <section className="border-b border-border bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <MarketingSectionHeading
-            title="Partner with one of the fastest growing dev tool companies"
-            description="Everyday thousands of companies are built on top of Appwrite. Benefit from our network as an Appwrite Partner."
+            title={t('Partner with one of the fastest growing dev tool companies')}
+            description={t(
+              'Everyday thousands of companies are built on top of Appwrite. Benefit from our network as an Appwrite Partner.', // pragma: allowlist secret
+            )}
             size="md"
           />
           <div className="mt-10">
@@ -154,7 +162,7 @@ export function View() {
 
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <MarketingSectionHeading title="Why Appwrite?" size="md" />
+          <MarketingSectionHeading title={t('Why Appwrite?')} size="md" /> {/* pragma: allowlist secret */}
           <div className="mt-10">
             <MarketingFeatureGrid items={partnerWhyAppwrite} columns={3} />
           </div>
@@ -169,14 +177,16 @@ export function View() {
               <MarketingSectionHeading
                 align="left"
                 size="md"
-                title="Become a Partner"
-                description="Our team will review your application and follow up to ensure we're a perfect fit."
+                title={t('Become a Partner')}
+                description={t(
+                  "Our team will review your application and follow up to ensure we're a perfect fit.",
+                )}
               />
               <ul className="mt-8 space-y-3">
                 {partnerFormBullets.map((item) => (
                   <li key={item} className="flex items-center gap-2 text-[13px] text-foreground">
                     <Check className="size-4 shrink-0 text-[var(--brand-cta)]" aria-hidden />
-                    {item}
+                    {t(item)}
                   </li>
                 ))}
               </ul>
@@ -185,9 +195,11 @@ export function View() {
             <div className="rounded-xl border border-border bg-card/50 p-6 sm:p-8">
               <MarketingApplicationForm
                 fields={PARTNER_FORM_FIELDS}
-                submitLabel="Submit application"
-                successTitle="Thank you for applying"
-                successDescription="Our team will review your application and follow up to ensure we're a perfect fit."
+                submitLabel={t('Submit application')}
+                successTitle={t('Thank you for applying')}
+                successDescription={t(
+                  "Our team will review your application and follow up to ensure we're a perfect fit.",
+                )}
                 onSubmit={async (values) => {
                   await submitPartnerApplication({
                     name: values.name ?? '',

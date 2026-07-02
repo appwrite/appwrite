@@ -29,6 +29,7 @@ import {
   resolveSiteLinkUrl,
 } from '@/lib/marketing/urls'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import {
   ArrowUpRight,
   BookOpen,
@@ -66,6 +67,7 @@ function MilestoneLinkContent({
   icon?: LucideIcon
   iconSrc?: string
 }) {
+  const t = useT()
   return (
     <>
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -77,10 +79,10 @@ function MilestoneLinkContent({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {typeLabel}
+          {t(typeLabel)}
         </span>
         <span className="mt-0.5 block text-[12px] font-medium leading-snug text-foreground">
-          {link.label}
+          {t(link.label)}
         </span>
       </span>
       <ArrowUpRight
@@ -158,6 +160,7 @@ function MilestoneLinks({ links }: { links: readonly CompanyTimelineLink[] }) {
 }
 
 function MilestoneImages({ images }: { images: readonly CompanyTimelineImage[] }) {
+  const t = useT()
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
 
   if (images.length === 0) return null
@@ -171,7 +174,7 @@ function MilestoneImages({ images }: { images: readonly CompanyTimelineImage[] }
               type="button"
               onClick={() => setPreviewIndex(index)}
               className="block cursor-pointer overflow-hidden rounded-md border border-border bg-muted/20 transition-colors hover:border-foreground/20 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label={`Enlarge image: ${image.alt}`}
+              aria-label={`${t('Enlarge image:')} ${image.alt}`}
             >
               <img
                 src={image.src}
@@ -207,6 +210,7 @@ function MilestoneCard({
   images?: readonly CompanyTimelineImage[]
   className?: string
 }) {
+  const t = useT()
   const milestoneImages = images ?? []
   const hasLinks = links && links.length > 0
 
@@ -218,10 +222,10 @@ function MilestoneCard({
       )}
     >
       <h3 className="text-[14px] font-semibold leading-snug text-foreground sm:text-[15px]">
-        {title}
+        {t(title)}
       </h3>
       <p className="mt-2 text-[13px] leading-6 text-muted-foreground sm:text-[14px]">
-        {description}
+        {t(description)}
       </p>
       {hasLinks ? <MilestoneLinks links={links} /> : null}
       {milestoneImages.length > 0 ? (
@@ -257,9 +261,10 @@ function TimelineDate({
 }
 
 function TimelineYearNav() {
+  const t = useT()
   return (
     <nav
-      aria-label="Jump to timeline year"
+      aria-label={t('Jump to timeline year')}
       className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-2"
     >
       {companyTimelineYears.map((year) => (
@@ -404,6 +409,7 @@ function useTimelineEntryIndex() {
 }
 
 export function CompanyTimeline() {
+  const t = useT()
   const milestoneIndexById = useTimelineEntryIndex()
 
   useEffect(() => {
@@ -422,8 +428,8 @@ export function CompanyTimeline() {
       <div className="@container relative z-[1] mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
         <PricingSectionHeading
           size="md"
-          title="Our story"
-          description={companyTimelineIntro}
+          title={t('Our story')}
+          description={t(companyTimelineIntro)}
           className="mx-auto max-w-2xl"
         />
 

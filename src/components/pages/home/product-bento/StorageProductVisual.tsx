@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -74,6 +75,7 @@ function MockSliderRow({
   animationKey?: number
   delayMs?: number
 }) {
+  const t = useT()
   const trackKey =
     sliderKey && animationKey !== undefined
       ? `${sliderKey}-${animationKey}`
@@ -82,7 +84,7 @@ function MockSliderRow({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] text-muted-foreground">{label}</span>
+        <span className="text-[10px] text-muted-foreground">{t(label)}</span>
         {idleValue && hoverValue ? (
           <span className={cn('relative min-w-[2.25rem] text-end text-[10px] tabular-nums', productBentoIdle.text)}>
             <span className="transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
@@ -132,6 +134,7 @@ function MockImagePreview() {
 }
 
 export function StorageProductVisual() {
+  const t = useT()
   const [widthSliderKey, setWidthSliderKey] = useState(0)
 
   return (
@@ -142,7 +145,7 @@ export function StorageProductVisual() {
       <div className={cn('flex h-full min-h-0 flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'flex shrink-0 items-center justify-between gap-2 px-3 py-2')}>
           <span className={cn('rounded-sm bg-background px-2 py-0.5 text-[10px] font-medium shadow-sm', productBentoIdle.text)}>
-            Design
+            {t('Design')}
           </span>
           <Badge
             variant="success"
@@ -162,7 +165,9 @@ export function StorageProductVisual() {
           </div>
 
           <aside className="w-full shrink-0 border-t border-border bg-card/70 p-2 sm:w-[42%] sm:border-s sm:border-t-0 sm:p-2.5">
-            <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>Transform</p>
+            <p className={cn('text-[11px] font-medium', productBentoIdle.text)}>
+              {t('Transform')}
+            </p>
             <div className="mt-1.5 space-y-1.5 sm:mt-2.5 sm:space-y-2">
               <MockSliderRow
                 label="Width (px)"

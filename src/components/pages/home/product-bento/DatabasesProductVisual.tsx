@@ -6,6 +6,7 @@ import {
 } from '@/components/pages/projects/$projectId/databases/_components/database-mascot-icons'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { productBentoContainer, productBentoIdle, QueryEqualFilter, Syn, VectorsDbSearchSnippet } from './MockSyntax'
@@ -165,6 +166,7 @@ function SpreadsheetEmptyRow() {
 }
 
 function TablesDbPanel({ playKey }: { playKey: number }) {
+  const t = useT()
   const shouldAnimate = playKey > 0
   const [queryState, setQueryState] = useState<'running' | 'done'>(shouldAnimate ? 'running' : 'done')
   const [rowCount, setRowCount] = useState(shouldAnimate ? 843 : 847)
@@ -201,7 +203,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
               rowCount === 847 && 'group-hover:scale-105 group-hover:text-foreground',
             )}
           >
-            {rowCount} rows
+            {rowCount} {t('rows')}
           </p>
         </div>
       </div>
@@ -349,6 +351,7 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
 }
 
 function DocumentsDbPanel({ playKey }: { playKey: number }) {
+  const t = useT()
   return (
     <div
       key={playKey}
@@ -364,7 +367,7 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
           className="product-bento-db-reveal h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400"
           style={{ animationDelay: '420ms' }}
         >
-          Live
+          {t('Live')}
         </Badge>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden p-3 font-mono text-[11px] leading-relaxed sm:text-[12px]">
@@ -433,6 +436,7 @@ function VectorScoreBar({ score, delayMs }: { score: number; delayMs: number }) 
 }
 
 function VectorsDbPanel({ playKey }: { playKey: number }) {
+  const t = useT()
   return (
     <div
       key={playKey}
@@ -449,7 +453,7 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
               <span className={cn('font-medium', productBentoIdle.text)}>strategy_embeddings</span>
             </p>
             <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-              Semantic search over race briefings and telemetry notes
+              {t('Semantic search over race briefings and telemetry notes')}
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap justify-end gap-1">
@@ -472,7 +476,7 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
           style={{ animationDelay: '60ms' }}
         >
           <p className="text-[9px] uppercase tracking-wider text-muted-foreground sm:text-[10px]">
-            Query
+            {t('Query')}
           </p>
           <p className="mt-1 truncate font-mono text-[11px] sm:text-[12px]">
             <Syn tone="string">&quot;Monaco undercut on Medium&quot;</Syn>
@@ -537,7 +541,7 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
           <VectorsDbSearchSnippet />
         </div>
         <p className="shrink-0 text-[9px] tabular-nums text-muted-foreground transition-colors duration-300 group-hover:text-foreground sm:text-[10px]">
-          {VECTOR_RESULTS.length} matches · 14ms
+          {VECTOR_RESULTS.length} {t('matches')} · 14ms
         </p>
       </div>
     </div>
@@ -575,11 +579,12 @@ function NativeDbSelectionCard({
 }
 
 function NativeDbOrSeparator() {
+  const t = useT()
   return (
     <div className="flex items-center gap-2 px-1">
       <div className="h-px flex-1 bg-border" />
       <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
-        or
+        {t('or')}
       </span>
       <div className="h-px flex-1 bg-border" />
     </div>

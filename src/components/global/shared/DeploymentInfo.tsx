@@ -3,6 +3,7 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
 import { Badge } from '@/components/ui/badge'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 interface DeploymentInfoProps {
@@ -16,6 +17,7 @@ export function DeploymentInfo({
   showStatus = false,
   compact = false,
 }: DeploymentInfoProps) {
+  const t = useT()
   const statusBadge = showStatus
     ? getDeploymentStatusBadge(deployment.status, deployment.$createdAt)
     : null
@@ -39,7 +41,7 @@ export function DeploymentInfo({
                 const StatusIcon = statusBadge.icon
                 return <StatusIcon className="h-3 w-3" />
               })()}
-              {statusBadge.label}
+              {t(statusBadge.label)}
             </Badge>
           )}
         </div>
@@ -56,7 +58,7 @@ export function DeploymentInfo({
             )}
             {deployment.providerCommitAuthor && (
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="shrink-0">Committer</span>
+                <span className="shrink-0">{t('Committer')}</span>
                 <span className="truncate font-medium text-foreground">
                   {deployment.providerCommitAuthor}
                 </span>
@@ -72,7 +74,7 @@ export function DeploymentInfo({
             )}
             {deployment.$createdAt && (
               <div className="flex items-center gap-1.5">
-                <span>Deployed</span>
+                <span>{t('Deployed')}</span>
                 <DateTooltip date={deployment.$createdAt} />
               </div>
             )}
@@ -100,7 +102,7 @@ export function DeploymentInfo({
               const StatusIcon = statusBadge.icon
               return <StatusIcon className="h-3 w-3" />
             })()}
-            {statusBadge.label}
+            {t(statusBadge.label)}
           </Badge>
         )}
       </div>
@@ -113,7 +115,7 @@ export function DeploymentInfo({
           {deployment.providerBranch && (
             <div className="flex items-center gap-2">
               <GitBranch className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-muted-foreground">Branch:</span>
+              <span className="text-muted-foreground">{t('Branch:')}</span>
               <span className="font-medium text-foreground">
                 {deployment.providerBranch}
               </span>
@@ -121,7 +123,9 @@ export function DeploymentInfo({
           )}
           {deployment.providerCommitAuthor && (
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-muted-foreground shrink-0">Committer:</span>
+              <span className="text-muted-foreground shrink-0">
+                {t('Committer:')}
+              </span>
               <span className="font-medium text-foreground truncate">
                 {deployment.providerCommitAuthor}
               </span>
@@ -131,7 +135,7 @@ export function DeploymentInfo({
             <div className="flex items-start gap-2">
               <GitCommit className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <span className="text-muted-foreground">Commit:</span>
+                <span className="text-muted-foreground">{t('Commit:')}</span>
                 <span className="ms-1.5 text-foreground whitespace-pre-wrap break-words">
                   {deployment.providerCommitMessage}
                 </span>
@@ -140,7 +144,7 @@ export function DeploymentInfo({
           )}
           {deployment.$createdAt && (
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Deployed:</span>
+              <span className="text-muted-foreground">{t('Deployed:')}</span>
               <DateTooltip date={deployment.$createdAt} />
             </div>
           )}

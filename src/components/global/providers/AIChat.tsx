@@ -65,6 +65,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { StreamingMarkdown } from '@/components/global/shared/StreamingMarkdown'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
@@ -365,6 +366,7 @@ function MessageAttachments({
   attachmentIds = [],
   alignment,
 }: MessageAttachmentsProps) {
+  const t = useT()
   const uniqueAttachmentIds = useMemo(
     () => [...new Set(attachmentIds.filter(Boolean))],
     [attachmentIds],
@@ -767,7 +769,7 @@ function MessageAttachments({
                           {attachment.name}
                         </p>
                         <p className="truncate text-[10px] text-muted-foreground">
-                          {attachment.mimeType || 'File'}
+                          {attachment.mimeType || t('File')}
                           {fileSize ? ` - ${fileSize}` : ''}
                         </p>
                       </div>
@@ -782,7 +784,7 @@ function MessageAttachments({
                           href={attachment.openUrl}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label={`Open ${attachment.name}`}
+                          aria-label={`${t('Open')} ${attachment.name}`}
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
@@ -814,7 +816,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
                 onClick={goToPreviousImage}
                 disabled={!canGoToPreviousImage}
-                aria-label="Previous image"
+                aria-label={t('Previous image')}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -828,7 +830,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
                 onClick={goToNextImage}
                 disabled={!canGoToNextImage}
-                aria-label="Next image"
+                aria-label={t('Next image')}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -843,7 +845,7 @@ function MessageAttachments({
                   href={activeFullscreenAttachment.openUrl}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label={`Open ${activeFullscreenAttachment.name}`}
+                  aria-label={`${t('Open')} ${activeFullscreenAttachment.name}`}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
@@ -856,7 +858,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
                 onClick={zoomOut}
                 disabled={!canZoomOut}
-                aria-label="Zoom out"
+                aria-label={t('Zoom out')}
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
@@ -870,7 +872,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
                 onClick={zoomIn}
                 disabled={!canZoomIn}
-                aria-label="Zoom in"
+                aria-label={t('Zoom in')}
               >
                 <ZoomIn className="h-4 w-4" />
               </Button>
@@ -881,7 +883,7 @@ function MessageAttachments({
                 className="h-8 w-8 p-0"
                 onClick={resetZoom}
                 disabled={fullscreenZoom === 1}
-                aria-label="Fit image to screen"
+                aria-label={t('Fit image to screen')}
               >
                 <Maximize2 className="h-4 w-4" />
               </Button>
@@ -894,7 +896,7 @@ function MessageAttachments({
                 <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[1px]">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading image...
+                    {t('Loading image...')}
                   </div>
                 </div>
               ) : null}
@@ -944,7 +946,7 @@ function MessageAttachments({
                 className="h-8 w-8 shrink-0 p-0"
                 onClick={goToPreviousImage}
                 disabled={!canGoToPreviousImage}
-                aria-label="Previous image"
+                aria-label={t('Previous image')}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -983,7 +985,7 @@ function MessageAttachments({
                 className="h-8 w-8 shrink-0 p-0"
                 onClick={goToNextImage}
                 disabled={!canGoToNextImage}
-                aria-label="Next image"
+                aria-label={t('Next image')}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -1007,6 +1009,7 @@ const AssistantMessageRow = memo(
     onCopyMessage,
     onStartEditResend,
   }: AssistantMessageRowProps) {
+    const t = useT()
     const isUserMessage = role.toLowerCase() === 'user'
     const isRtlMessage = useMemo(
       () => isRtlMessageText(messageText),
@@ -1094,7 +1097,7 @@ const AssistantMessageRow = memo(
                       variant="ghost"
                       className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onCopyMessage(messageId, messageText)}
-                      aria-label="Copy message"
+                      aria-label={t('Copy message')}
                     >
                       {copied ? (
                         <Check className="h-2.5 w-2.5" />
@@ -1114,7 +1117,7 @@ const AssistantMessageRow = memo(
                           messageAttachments ?? [],
                         )
                       }
-                      aria-label="Edit and resend message"
+                      aria-label={t('Edit and resend message')}
                     >
                       <Pencil className="h-2.5 w-2.5" />
                     </Button>
@@ -1133,7 +1136,7 @@ const AssistantMessageRow = memo(
                           messageAttachments ?? [],
                         )
                       }
-                      aria-label="Edit and resend message"
+                      aria-label={t('Edit and resend message')}
                     >
                       <Pencil className="h-2.5 w-2.5" />
                     </Button>
@@ -1143,7 +1146,7 @@ const AssistantMessageRow = memo(
                       variant="ghost"
                       className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                       onClick={() => onCopyMessage(messageId, messageText)}
-                      aria-label="Copy message"
+                      aria-label={t('Copy message')}
                     >
                       {copied ? (
                         <Check className="h-2.5 w-2.5" />
@@ -1165,7 +1168,7 @@ const AssistantMessageRow = memo(
                 {unresolvedSelectableTokens.length > 0 && (
                   <div className="rounded-md border border-border bg-muted/20 p-2">
                     <p className="mb-1.5 text-[11px] text-muted-foreground">
-                      Select values for placeholders
+                      {t('Select values for placeholders')}
                     </p>
                     <div className="space-y-1.5">
                       {unresolvedSelectableTokens.map((token) => (
@@ -1174,7 +1177,7 @@ const AssistantMessageRow = memo(
                           className="flex items-center gap-2 text-[12px]"
                         >
                           <span className="w-[122px] shrink-0 text-muted-foreground">
-                            {PLACEHOLDER_LABELS[token]}
+                            {t(PLACEHOLDER_LABELS[token])}
                           </span>
                           <Select
                             value={selectedPlaceholderValues[token]}
@@ -1224,7 +1227,7 @@ const AssistantMessageRow = memo(
                     variant="ghost"
                     className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
                     onClick={() => onCopyMessage(messageId, messageText)}
-                    aria-label="Copy message"
+                    aria-label={t('Copy message')}
                   >
                     {copied ? (
                       <Check className="h-2.5 w-2.5" />
@@ -1603,6 +1606,7 @@ function AssistantBubbleDebugControls({
 }
 
 export function AIChatPanelContent() {
+  const t = useT()
   const { closeChat, activeConversationId, setActiveConversationId } =
     useAIChat()
   const params = useParams({ strict: false }) as {
@@ -2022,7 +2026,7 @@ export function AIChatPanelContent() {
   const handleCreateConversation = async () => {
     const conversationProjectId = await resolveConversationProjectId()
     if (!conversationProjectId) {
-      toast.error('No accessible project found to create a conversation.')
+      toast.error(t('No accessible project found to create a conversation.'))
       return
     }
 
@@ -2035,7 +2039,7 @@ export function AIChatPanelContent() {
       setConversationsPopoverOpen(false)
       focusInput()
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to create conversation'))
+      toast.error(getErrorMessage(error, t('Failed to create conversation')))
     }
   }
 
@@ -2049,7 +2053,7 @@ export function AIChatPanelContent() {
         setActiveConversationId(nextConversation?.$id ?? null)
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to delete conversation'))
+      toast.error(getErrorMessage(error, t('Failed to delete conversation')))
     }
   }
 
@@ -2174,7 +2178,7 @@ export function AIChatPanelContent() {
       return
     const conversationProjectId = await resolveConversationProjectId()
     if (!activeConversationId && !conversationProjectId) {
-      toast.error('No accessible project found to start a new conversation.')
+      toast.error(t('No accessible project found to start a new conversation.'))
       return
     }
 
@@ -2214,7 +2218,7 @@ export function AIChatPanelContent() {
       )
       if (failedAttachments.length > 0) {
         toast.error(
-          'Some attachments failed to upload. Remove them and try again.',
+          t('Some attachments failed to upload. Remove them and try again.'),
         )
         return
       }
@@ -2262,7 +2266,7 @@ export function AIChatPanelContent() {
       setComposerImageOrientations({})
     } catch (error) {
       // Keep selected attachments in place when message send fails.
-      toast.error(getErrorMessage(error, 'Failed to send message'))
+      toast.error(getErrorMessage(error, t('Failed to send message')))
     } finally {
       setIsWaitingForAttachments(false)
     }
@@ -2282,10 +2286,10 @@ export function AIChatPanelContent() {
           setCopiedMessageId(null)
         }, 1500)
       } catch (error) {
-        toast.error(getErrorMessage(error, 'Failed to copy message'))
+        toast.error(getErrorMessage(error, t('Failed to copy message')))
       }
     },
-    [],
+    [t],
   )
 
   const handleStartEditResend = useCallback(
@@ -2359,7 +2363,7 @@ export function AIChatPanelContent() {
                       <div className="flex min-w-0 items-center gap-1.5">
                         <div className="min-w-0">
                           <p className="truncate text-[13px] font-semibold text-foreground">
-                            {activeConversation?.title || 'New conversation'}
+                            {activeConversation?.title || t('New conversation')}
                           </p>
                         </div>
                         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -2370,7 +2374,7 @@ export function AIChatPanelContent() {
                   <PopoverContent align="start" className="w-[300px] p-0">
                     <div className="border-b border-border px-2 py-1.5">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Conversations
+                        {t('Conversations')}
                       </p>
                     </div>
 
@@ -2378,11 +2382,11 @@ export function AIChatPanelContent() {
                       {conversationsLoading || conversationsFetching ? (
                         <div className="flex items-center gap-1.5 px-1.5 py-2 text-[11px] text-muted-foreground">
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          Loading conversations...
+                          {t('Loading conversations...')}
                         </div>
                       ) : conversations.length === 0 ? (
                         <div className="px-1.5 py-2 text-[11px] text-muted-foreground">
-                          No conversations yet.
+                          {t('No conversations yet.')}
                         </div>
                       ) : (
                         <div className="space-y-0.5">
@@ -2410,7 +2414,7 @@ export function AIChatPanelContent() {
                                   >
                                     <p className="truncate text-[12px] font-medium text-foreground">
                                       {conversation.title ||
-                                        'Untitled conversation'}
+                                        t('Untitled conversation')}
                                     </p>
                                   </button>
                                   <Button
@@ -2425,7 +2429,7 @@ export function AIChatPanelContent() {
                                     disabled={
                                       deleteConversationMutation.isPending
                                     }
-                                    aria-label="Delete conversation"
+                                    aria-label={t('Delete conversation')}
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
@@ -2480,11 +2484,12 @@ export function AIChatPanelContent() {
                   className="mb-4"
                 />
                 <h3 className="mb-2 text-center text-lg font-semibold text-foreground">
-                  How can I help you?
+                  {t('How can I help you?')}
                 </h3>
                 <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
-                  I can inspect your project, explain issues, suggest next
-                  steps, and run approved actions.
+                  {t(
+                    'I can inspect your project, explain issues, suggest next steps, and run approved actions.',
+                  )}
                 </p>
                 {isDebugModeOpen ? (
                   <div className="mb-6 w-full max-w-md">
@@ -2512,10 +2517,10 @@ export function AIChatPanelContent() {
                   {suggestedQuestions.map((question) => (
                     <button
                       key={question}
-                      onClick={() => handleSend(question)}
+                      onClick={() => handleSend(t(question))}
                       className="w-full rounded-lg border border-border bg-card p-3 text-start text-sm text-foreground transition-colors hover:bg-accent"
                     >
-                      {question}
+                      {t(question)}
                     </button>
                   ))}
                 </div>
@@ -2535,10 +2540,10 @@ export function AIChatPanelContent() {
                       {isLoadingOlderMessages ? (
                         <>
                           <Loader2 className="me-1 h-3 w-3 animate-spin" />
-                          Loading older messages...
+                          {t('Loading older messages...')} {/* pragma: allowlist secret */}
                         </>
                       ) : (
-                        'Load older messages'
+                        t('Load older messages') // pragma: allowlist secret
                       )}
                     </Button>
                   </div>
@@ -2583,7 +2588,7 @@ export function AIChatPanelContent() {
                         particleCount={effectiveSphereParticleCount}
                         centered={false}
                       />
-                      <span>Thinking...</span>
+                      <span>{t('Thinking...')}</span>
                     </div>
                   </div>
                 )}
@@ -2616,9 +2621,9 @@ export function AIChatPanelContent() {
             {editingMessageId ? (
               <div className="mb-2 flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5">
                 <p className="truncate text-[11px] text-muted-foreground">
-                  Editing message
+                  {t('Editing message')}
                   {editingMessageAttachments.length > 0
-                    ? ` (${editingMessageAttachments.length} attachment${editingMessageAttachments.length > 1 ? 's' : ''} selected)`
+                    ? ` (${editingMessageAttachments.length} ${editingMessageAttachments.length > 1 ? t('attachments selected') : t('attachment selected')})`
                     : ''}
                 </p>
                 <Button
@@ -2628,7 +2633,7 @@ export function AIChatPanelContent() {
                   className="h-6 px-2 text-[11px]"
                   onClick={handleCancelEditResend}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               </div>
             ) : null}
@@ -2641,7 +2646,7 @@ export function AIChatPanelContent() {
                     )
                     const attachmentName =
                       attachmentFile?.name ||
-                      `Attachment ${attachmentId.slice(0, 8)}`
+                      `${t('Attachment')} ${attachmentId.slice(0, 8)}`
                     const isImageAttachment =
                       attachmentFile?.mimeType?.startsWith('image/')
                     const attachmentSize =
@@ -2701,7 +2706,7 @@ export function AIChatPanelContent() {
                               {attachmentName}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              {attachmentSize ?? 'Ready'}
+                              {attachmentSize ?? t('Ready')}
                             </p>
                           </div>
                           <button
@@ -2710,7 +2715,7 @@ export function AIChatPanelContent() {
                               handleRemoveEditingAttachment(attachmentId)
                             }
                             className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            aria-label={`Remove ${attachmentName}`}
+                            aria-label={`${t('Remove')} ${attachmentName}`}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -2778,11 +2783,11 @@ export function AIChatPanelContent() {
                           </p>
                           <p className="text-[10px] text-muted-foreground">
                             {attachment.status === 'uploading'
-                              ? 'Uploading...'
+                              ? t('Uploading...')
                               : attachment.status === 'failed'
-                                ? 'Upload failed'
+                                ? t('Upload failed')
                                 : (formatAttachmentSize(attachment.size) ??
-                                  'Ready')}
+                                  t('Ready'))}
                           </p>
                         </div>
                         <button
@@ -2791,7 +2796,7 @@ export function AIChatPanelContent() {
                             handleRemoveAttachment(attachment.localId)
                           }
                           className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                          aria-label={`Remove ${attachment.name}`}
+                          aria-label={`${t('Remove')} ${attachment.name}`}
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -2830,7 +2835,7 @@ export function AIChatPanelContent() {
                 onPaste={handleInputPaste}
                 onKeyDown={handleKeyDown}
                 placeholder={
-                  editingMessageId ? 'Edit message...' : 'Ask a question...'
+                  editingMessageId ? t('Edit message...') : t('Ask a question...')
                 }
                 dir={isInputRtl ? 'rtl' : 'ltr'}
                 rows={1}
@@ -2857,7 +2862,7 @@ export function AIChatPanelContent() {
                     ? 'bg-muted text-muted-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
-                aria-label="Attach files"
+                aria-label={t('Attach files')}
               >
                 <Paperclip className="h-3.5 w-3.5" />
               </button>
@@ -2888,8 +2893,8 @@ export function AIChatPanelContent() {
             </div>
             <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
               {hasUploadingAttachments
-                ? 'Attachments upload in background. Sending waits until they are ready.'
-                : 'Press Enter to send, Shift+Enter for new line'}
+                ? t('Attachments upload in background. Sending waits until they are ready.')
+                : t('Press Enter to send, Shift+Enter for new line')}
             </p>
           </div>
         </div>

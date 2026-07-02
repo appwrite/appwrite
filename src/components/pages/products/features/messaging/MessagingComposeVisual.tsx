@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const CHANNELS = [
@@ -20,6 +21,7 @@ function ChannelTab({
   icon: LucideIcon
   active: boolean
 }) {
+  const t = useT()
   return (
     <span
       className={cn(
@@ -30,27 +32,28 @@ function ChannelTab({
       )}
     >
       <Icon className="size-3.5 shrink-0" aria-hidden />
-      {label}
+      {t(label)}
     </span>
   )
 }
 
 export function MessagingComposeVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'messages', label: 'Messages', active: true },
-        { id: 'topics', label: 'Topics' },
-        { id: 'providers', label: 'Providers' },
+        { id: 'messages', label: t('Messages'), active: true }, // pragma: allowlist secret
+        { id: 'topics', label: t('Topics') },
+        { id: 'providers', label: t('Providers') },
       ]}
       contentClassName="p-0"
     >
       <div className="grid min-h-[16rem] lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <div className="min-w-0 border-b border-border p-4 sm:p-5 lg:border-b-0 lg:border-e">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Compose message
+            {t('Compose message')}
           </p>
-          <p className="mt-0.5 text-[13px] font-semibold text-foreground">Weekly product digest</p>
+          <p className="mt-0.5 text-[13px] font-semibold text-foreground">{t('Weekly product digest')}</p>
 
           <div className="mt-3 flex gap-1 rounded-lg border border-border bg-muted/15 p-1">
             {CHANNELS.map((channel) => (
@@ -65,24 +68,24 @@ export function MessagingComposeVisual() {
 
           <div className="mt-3 space-y-2.5">
             <div>
-              <p className="mb-1 text-[10px] font-medium text-muted-foreground">Subject</p>
+              <p className="mb-1 text-[10px] font-medium text-muted-foreground">{t('Subject')}</p>
               <Input
                 readOnly
-                value="What's new in Acme this week"
+                value={t("What's new in Acme this week")}
                 className="h-8 text-[12px]"
               />
             </div>
             <div>
-              <p className="mb-1 text-[10px] font-medium text-muted-foreground">Content</p>
+              <p className="mb-1 text-[10px] font-medium text-muted-foreground">{t('Content')}</p>
               <div className="rounded-lg border border-border bg-muted/15 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
-                Ship notes, feature highlights, and links for your subscribers.
+                {t('Ship notes, feature highlights, and links for your subscribers.')}
               </div>
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-border bg-background/80 px-3 py-2">
               <Hash className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-mono text-[11px] text-foreground">weekly-digest</p>
-                <p className="text-[10px] text-muted-foreground">Topic · 3,401 targets</p>
+                <p className="text-[10px] text-muted-foreground">{t('Topic')} · 3,401 {t('targets')}</p>
               </div>
             </div>
           </div>
@@ -90,14 +93,14 @@ export function MessagingComposeVisual() {
 
         <div className="flex min-w-0 flex-col bg-muted/10 p-4 sm:p-5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Delivery
+            {t('Delivery')}
           </p>
 
           <div className="mt-3 space-y-2.5">
             <div className="rounded-lg border border-border bg-card px-3 py-2.5">
               <div className="flex items-center gap-2">
                 <CalendarClock className="size-3.5 text-muted-foreground" aria-hidden />
-                <p className="text-[12px] font-medium text-foreground">Scheduled send</p>
+                <p className="text-[12px] font-medium text-foreground">{t('Scheduled send')}</p>
               </div>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                 Mon, 9:00 AM · America/New_York
@@ -105,16 +108,16 @@ export function MessagingComposeVisual() {
             </div>
 
             <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-              <p className="text-[11px] font-medium text-foreground">Common flows</p>
+              <p className="text-[11px] font-medium text-foreground">{t('Common flows')}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <Badge variant="outline" className="text-[10px]">
-                  OTP verification
+                  {t('OTP verification')}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">
-                  Password reset
+                  {t('Password reset')}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">
-                  Account alerts
+                  {t('Account alerts')}
                 </Badge>
               </div>
             </div>
@@ -122,10 +125,10 @@ export function MessagingComposeVisual() {
 
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             <span className="inline-flex h-8 items-center rounded-md bg-foreground px-3 text-[12px] font-medium text-background">
-              Schedule message
+              {t('Schedule message')}
             </span>
             <span className="inline-flex h-8 items-center rounded-md border border-border bg-background px-3 text-[12px] font-medium text-foreground">
-              Send now
+              {t('Send now')}
             </span>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const FEATURED_RUNTIMES = [
   { id: 'node', name: 'Node.js', version: 'node-22' },
@@ -24,6 +25,7 @@ const MORE_RUNTIMES = [
 ] as const
 
 export function FunctionsRuntimesVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       eyebrow="Runtime"
@@ -32,19 +34,19 @@ export function FunctionsRuntimesVisual() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Your language, your runtime</p>
+            <p className="text-[13px] font-semibold text-foreground">{t('Your language, your runtime')}</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Pin your version. Deploy isolated. Built for production.
+              {t('Pin your version. Deploy isolated. Built for production.')}
             </p>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            13+ runtimes
+            {t('13+ runtimes')}
           </Badge>
         </div>
 
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Ready to deploy
+            {t('Ready to deploy')}
           </p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-3">
             {FEATURED_RUNTIMES.map((runtime, index) => (
@@ -67,7 +69,7 @@ export function FunctionsRuntimesVisual() {
 
         <div>
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            And more
+            {t('And more')}
           </p>
           <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
             {MORE_RUNTIMES.map((runtime) => (

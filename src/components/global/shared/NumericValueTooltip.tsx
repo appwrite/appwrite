@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { ColumnNumericDisplay } from '@/lib/utils/database-columns'
 
 interface NumericValueTooltipProps {
@@ -21,6 +22,7 @@ export function NumericValueTooltip({
   display,
   className,
 }: NumericValueTooltipProps) {
+  const t = useT()
   const entries = display.entries?.length ? display.entries : null
 
   if (!entries?.length) {
@@ -115,7 +117,7 @@ export function NumericValueTooltip({
             >
               {entry.label ? (
                 <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  {entry.label}
+                  {t(entry.label)}
                 </span>
               ) : null}
               <span className="font-mono text-[13px] text-popover-foreground">

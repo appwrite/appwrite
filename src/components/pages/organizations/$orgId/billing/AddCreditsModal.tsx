@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAddOrganizationCredit } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 interface AddCreditsModalProps {
   open: boolean
@@ -34,6 +35,7 @@ export function AddCreditsModal({
   organizationName,
   onSuccess,
 }: AddCreditsModalProps) {
+  const t = useT()
   const [couponCode, setCouponCode] = useState('')
   const trimmedCode = couponCode.trim()
   const addCreditMutation = useAddOrganizationCredit()
@@ -41,7 +43,7 @@ export function AddCreditsModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!trimmedCode) {
-      toast.error('Please enter a promo code')
+      toast.error(t('Please enter a promo code'))
       return
     }
     try {
@@ -50,15 +52,15 @@ export function AddCreditsModal({
         couponId: trimmedCode,
       })
       const message = organizationName
-        ? `Credit has been added to ${organizationName}`
-        : 'Credit has been added to your organization'
+        ? `${t('Credit has been added to')} ${organizationName}`
+        : t('Credit has been added to your organization')
       toast.success(message)
       setCouponCode('')
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Failed to add credit'
+        error instanceof Error ? error.message : t('Failed to add credit')
       toast.error(message)
     }
   }
@@ -76,10 +78,11 @@ export function AddCreditsModal({
         className="sm:max-w-md p-0"
 >
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add credits</DialogTitle>
+          <DialogTitle>{t('Add credits')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Apply Appwrite credits to your organization. Credits expire after a
-            set period and do not roll over.
+            {t(
+              'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.', // pragma: allowlist secret
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -89,7 +92,7 @@ export function AddCreditsModal({
 >
           <div className="px-6 pb-4 pt-4">
             <Label htmlFor="add-credits-code" className="text-[13px]">
-              Add promo code
+              {t('Add promo code')}
             </Label>
             <Input
               id="add-credits-code"
@@ -97,7 +100,7 @@ export function AddCreditsModal({
               onChange={(e) =>
                 setCouponCode(e.target.value.trimStart().toUpperCase())
               }
-              placeholder="Promo code"
+              placeholder={t('Promo code')}
               className="mt-2 h-9 text-[13px]"
               disabled={addCreditMutation.isPending}
               autoFocus
@@ -111,13 +114,13 @@ export function AddCreditsModal({
               onClick={() => handleOpenChange(false)}
               disabled={addCreditMutation.isPending}
 >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
               disabled={!trimmedCode || addCreditMutation.isPending}
 >
-              Add credits
+              {t('Add credits')}
             </Button>
           </div>
         </form>

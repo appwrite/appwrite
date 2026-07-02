@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface CouponExpirationNoticeProps {
   coupon: Pick<Models.Coupon, 'validity'>
@@ -12,6 +13,7 @@ export function CouponExpirationNotice({
   variant = 'default',
   className,
 }: CouponExpirationNoticeProps) {
+  const t = useT()
   const hasCreditValidity =
     typeof coupon.validity === 'number' && coupon.validity > 0
 
@@ -23,8 +25,9 @@ export function CouponExpirationNotice({
 
   const message = (
     <p className={cn('text-muted-foreground leading-relaxed', textClass)}>
-      Credits expire {coupon.validity} day
-      {coupon.validity === 1 ? '' : 's'} after redemption and do not roll over.
+      {t('Credits expire')} {coupon.validity}{' '}
+      {coupon.validity === 1 ? t('day') : t('days')}{' '}
+      {t('after redemption and do not roll over.')}
     </p>
   )
 
@@ -39,7 +42,7 @@ export function CouponExpirationNotice({
         className,
       )}
     >
-      <p className="text-[13px] font-medium text-foreground">Credit expiration</p>
+      <p className="text-[13px] font-medium text-foreground">{t('Credit expiration')}</p>
       {message}
     </div>
   )

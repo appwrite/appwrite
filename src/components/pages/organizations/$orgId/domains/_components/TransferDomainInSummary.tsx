@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { DomainTransferPriceQuote } from '@/lib/react-query/hooks/domains'
+import { useT } from '@/lib/i18n/translate'
 
 function formatUsd(amount: number) {
   return amount.toLocaleString('en-US', {
@@ -31,10 +32,12 @@ export function TransferDomainInSummary({
   priceError,
   quote,
 }: TransferDomainInSummaryProps) {
+  const t = useT()
   const hasDomain = quotedDomain.length > 0
   const hasTransferPrice = quote != null && quote.price > 0
   const periodYears = quote?.periodYears ?? 1
-  const periodLabel = periodYears === 1 ? '1 year' : `${periodYears} years`
+  const periodLabel =
+    periodYears === 1 ? t('1 year') : `${periodYears} ${t('years')}`
   const renewalYears = quote?.renewalPeriodYears ?? quote?.periodYears ?? 1
   const hasRenewal =
     quote != null && quote.renewalPrice != null && quote.renewalPrice > 0
@@ -43,16 +46,16 @@ export function TransferDomainInSummary({
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="border-b border-border bg-muted/30 px-5 py-3.5">
         <h3 className="text-[13px] font-semibold tracking-tight text-foreground">
-          Transfer summary
+          {t('Transfer summary')}
         </h3>
         <p className="mt-0.5 text-[12px] text-muted-foreground leading-snug">
-          Estimated fees from the registry before you pay.
+          {t('Estimated fees from the registry before you pay.')}
         </p>
       </div>
 
       <div className="px-5 py-5">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-          Domain
+          {t('Domain')}
         </p>
         {hasDomain ? (
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -64,13 +67,13 @@ export function TransferDomainInSummary({
                 variant="info"
                 className="shrink-0 px-1.5 py-0 text-[10px] font-medium"
               >
-                Premium
+                {t('Premium')}
               </Badge>
             ) : null}
           </div>
         ) : (
           <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-            Enter your full domain name to load a price quote.
+            {t('Enter your full domain name to load a price quote.')}
           </p>
         )}
 
@@ -82,16 +85,19 @@ export function TransferDomainInSummary({
             </div>
           ) : priceError ? (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              We couldn&apos;t load a quote for this domain. You can still
-              continue - the amount due is confirmed when you complete payment.
+              {t(
+                "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.",
+              )}
             </p>
           ) : hasTransferPrice ? (
             <>
               <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground">Transfer</p>
+                  <p className="font-medium text-foreground">
+                    {t('Transfer')}
+                  </p>
                   <p className="mt-0.5 text-[12px] text-muted-foreground">
-                    Registry transfer · {periodLabel}
+                    {t('Registry transfer')} · {periodLabel}
                   </p>
                 </div>
                 <p className="shrink-0 tabular-nums font-semibold text-foreground">
@@ -101,9 +107,11 @@ export function TransferDomainInSummary({
               {hasRenewal ? (
                 <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground">Renewal</p>
+                    <p className="font-medium text-foreground">
+                      {t('Renewal')}
+                    </p>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      When you renew after the initial term
+                      {t('When you renew after the initial term')}
                     </p>
                   </div>
                   <p className="shrink-0 tabular-nums font-semibold text-foreground">
@@ -117,12 +125,13 @@ export function TransferDomainInSummary({
             </>
           ) : quote?.premium ? (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              This name is listed as premium. Final transfer pricing is
-              confirmed when you submit payment.
+              {t(
+                'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.',
+              )}
             </p>
           ) : (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Pricing is confirmed when you submit payment.
+              {t('Pricing is confirmed when you submit payment.')}
             </p>
           )}
         </div>
@@ -130,7 +139,7 @@ export function TransferDomainInSummary({
         {hasDomain && hasTransferPrice ? (
           <div className="mt-6 flex items-baseline justify-between gap-4 border-t border-border pt-5">
             <p className="text-[13px] font-semibold text-foreground">
-              Total due today
+              {t('Total due today')}
             </p>
             <p className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">
               ${formatUsd(quote.price)}

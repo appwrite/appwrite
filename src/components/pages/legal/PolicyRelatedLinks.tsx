@@ -9,6 +9,7 @@ import {
   PolicySidebarSection,
   policySidebarLinkClassName,
 } from './PolicySidebarNav'
+import { useT } from '@/lib/i18n/translate'
 
 type PolicyRelatedLinksProps = {
   current: PolicySlug
@@ -22,6 +23,7 @@ export function PolicyRelatedLinks({
   className,
   embedded = false,
 }: PolicyRelatedLinksProps) {
+  const t = useT()
   const location = useLocation()
   const { features } = useConsoleProfile()
   const links = getRelatedPolicyLinks(current, features.marketing)
@@ -53,14 +55,14 @@ export function PolicyRelatedLinks({
                 rel="noopener noreferrer"
                 className={linkClassName(false, embedded)}
               >
-                {link.label}
+                {t(link.label)}
               </a>
             ) : (
               <Link
                 to={link.path}
                 className={linkClassName(isActive, embedded)}
               >
-                {link.label}
+                {t(link.label)}
               </Link>
             )}
           </li>
@@ -72,8 +74,8 @@ export function PolicyRelatedLinks({
   if (embedded) {
     return (
       <PolicySidebarSection
-        title="Related policies"
-        ariaLabel="Related policies"
+        title={t('Related policies')}
+        ariaLabel={t('Related policies')}
         className={className}
       >
         {linkList}
@@ -82,9 +84,9 @@ export function PolicyRelatedLinks({
   }
 
   return (
-    <nav aria-label="Related policies" className={className}>
+    <nav aria-label={t('Related policies')} className={className}>
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Related policies
+        {t('Related policies')}
       </p>
       {linkList}
     </nav>

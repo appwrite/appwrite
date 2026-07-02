@@ -73,6 +73,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * ChangePlanWizardFullscreen Component
@@ -131,6 +132,7 @@ async function fetchAllDowngradeProjects(organizationId: string) {
 }
 
 export function ChangePlanWizardFullscreen() {
+  const t = useT()
   const navigate = useNavigate()
   const search = useSearch({ from: '/_public/upgrade' })
   const orgId = search.orgId
@@ -371,7 +373,7 @@ export function ChangePlanWizardFullscreen() {
             invites,
           })
           await refreshOrganizationBillingResources(organizationId)
-          toast.success('Payment confirmed successfully')
+          toast.success(t('Payment confirmed successfully'))
           navigate({
             to: '/organizations/$orgId/settings/billing',
             params: { orgId: organizationId },
@@ -380,7 +382,7 @@ export function ChangePlanWizardFullscreen() {
           toast.error(
             error instanceof Error
               ? error.message
-              : 'Failed to validate payment',
+              : t('Failed to validate payment'),
           )
         }
       }
@@ -392,6 +394,7 @@ export function ChangePlanWizardFullscreen() {
     validateOrganizationMutation,
     refreshOrganizationBillingResources,
     navigate,
+    t,
   ])
 
   // Initialize selected plan from URL or default (only once)
@@ -931,7 +934,7 @@ export function ChangePlanWizardFullscreen() {
         prev ? { ...prev, phase: 'complete' } : prev,
       )
 
-      toast.success('Plan updated successfully')
+      toast.success(t('Plan updated successfully'))
       navigate({
         to: '/organizations/$orgId/settings/billing',
         params: { orgId },
@@ -939,7 +942,7 @@ export function ChangePlanWizardFullscreen() {
     } catch (error) {
       setSetupProgress(null)
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update plan',
+        error instanceof Error ? error.message : t('Failed to update plan'),
       )
     }
   }
@@ -1042,7 +1045,7 @@ export function ChangePlanWizardFullscreen() {
         setSetupProgress((prev) =>
           prev ? { ...prev, phase: 'complete' } : prev,
         )
-        toast.success('Organization deleted successfully')
+        toast.success(t('Organization deleted successfully'))
         navigate({
           to: '/organizations/$orgId',
           params: { orgId: otherFreeOrg?.$id ?? orgId },
@@ -1081,7 +1084,7 @@ export function ChangePlanWizardFullscreen() {
       setSetupProgress((prev) =>
         prev ? { ...prev, phase: 'complete' } : prev,
       )
-      toast.success('Plan updated successfully')
+      toast.success(t('Plan updated successfully'))
       navigate({
         to: '/organizations/$orgId/settings/billing',
         params: { orgId },
@@ -1089,7 +1092,7 @@ export function ChangePlanWizardFullscreen() {
     } catch (error) {
       setSetupProgress(null)
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update plan',
+        error instanceof Error ? error.message : t('Failed to update plan'),
       )
     }
   }
@@ -1184,7 +1187,7 @@ export function ChangePlanWizardFullscreen() {
         prev ? { ...prev, phase: 'complete' } : prev,
       )
 
-      toast.success('Organization created successfully')
+      toast.success(t('Organization created successfully'))
       navigate({
         to: '/organizations/$orgId',
         params: { orgId: createdOrgId },
@@ -1194,7 +1197,7 @@ export function ChangePlanWizardFullscreen() {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to create organization',
+          : t('Failed to create organization'),
       )
     }
   }
@@ -1237,8 +1240,8 @@ export function ChangePlanWizardFullscreen() {
     currentTierStr === 'custom' ||
     currentTierStr === 'Custom'
 
-  const wizardTitle = isCreateMode ? 'Create organization' : 'Change plan'
-  const submitLabel = isCreateMode ? 'Create organization' : 'Change plan'
+  const wizardTitle = isCreateMode ? t('Create organization') : t('Change plan')
+  const submitLabel = isCreateMode ? t('Create organization') : t('Change plan')
 
   if (setupProgress) {
     return (
@@ -1308,7 +1311,7 @@ export function ChangePlanWizardFullscreen() {
             onClick={handleCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isButtonDisabled}>
             {submitLabel}
@@ -1319,12 +1322,12 @@ export function ChangePlanWizardFullscreen() {
       {isCreateMode && (
         <div className="space-y-2">
           <Label htmlFor="organization-name">
-            Name <span className="text-destructive">*</span>
+            {t('Name')} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="organization-name"
             type="text"
-            placeholder="My Organization"
+            placeholder={t('My Organization')}
             value={organizationName}
             onChange={(e) => setOrganizationName(e.target.value)}
             disabled={isSubmitting}
@@ -1337,25 +1340,24 @@ export function ChangePlanWizardFullscreen() {
       {/* Select Plan Section */}
       <div>
         <Label className="mb-2 block">
-          Select plan <span className="text-destructive">*</span>
+          {t('Select plan')} <span className="text-destructive">*</span>
         </Label>
         {!selfService ? (
           <Alert className="mt-2">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Custom plan</AlertTitle>
+            <AlertTitle>{t('Custom plan')}</AlertTitle>
             <AlertDescription className="mt-2">
-              You are on a custom plan. To change your plan, contact your
-              customer success manager or{' '}
+              {t('You are on a custom plan. To change your plan, contact your customer success manager or')}{' '}
               {orgId ? (
                 <Link
                   to="/organizations/$orgId/support"
                   params={{ orgId }}
                   className="underline hover:text-foreground"
                 >
-                  contact support
+                  {t('contact support')}
                 </Link>
               ) : (
-                'contact support'
+                t('contact support')
               )}
               .
             </AlertDescription>
@@ -1363,9 +1365,9 @@ export function ChangePlanWizardFullscreen() {
         ) : (
           <>
             <p className="text-[13px] text-muted-foreground mb-4">
-              For more details on our plans, visit our{' '}
+              {t('For more details on our plans, visit our')}{' '}
               <MarketingSiteLink className="underline hover:text-foreground" href="/pricing">
-                pricing page
+                {t('pricing page')}
               </MarketingSiteLink>
               .
             </p>
@@ -1373,7 +1375,7 @@ export function ChangePlanWizardFullscreen() {
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    Loading plans...
+                    {t('Loading plans...')}
                   </p>
                 </div>
               </div>
@@ -1394,7 +1396,7 @@ export function ChangePlanWizardFullscreen() {
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    No plans available. Please try refreshing the page.
+                    {t('No plans available. Please try refreshing the page.')}
                   </p>
                 </div>
               </div>
@@ -1475,25 +1477,24 @@ export function ChangePlanWizardFullscreen() {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>
-                Monthly Charges for Extra Organization Members
+                {t('Monthly Charges for Extra Organization Members')}
               </AlertTitle>
               <AlertDescription className="mt-2">
                 {extraSeatPrice
-                  ? `You will be charged $${extraSeatPrice} per month for each organization member beyond the plan limit.`
-                  : 'You will be charged for each organization member beyond the plan limit.'}
+                  ? `${t('You will be charged')} $${extraSeatPrice} ${t('per month for each organization member beyond the plan limit.')}`
+                  : t('You will be charged for each organization member beyond the plan limit.')}
               </AlertDescription>
             </Alert>
           )}
 
           {selectedPlanIsFree && (
-            <WarningAlert title="Downgrading to Free Plan">
-              Your plan will change on{' '}
+            <WarningAlert title={t('Downgrading to Free Plan')}>
+              {t('Your plan will change on')}{' '}
               {organization?.billingPlanDowngrade ||
-                'the end of your billing period'}
-              . You will lose access to premium features and organization
-              members beyond the free limit will be removed.
+                t('the end of your billing period')}
+              . {t('You will lose access to premium features and organization members beyond the free limit will be removed.')}
               <DocsRouteLink className="ms-1 underline" href="/docs/migration">
-                Learn more about migration
+                {t('Learn more about migration')}
               </DocsRouteLink>
             </WarningAlert>
           )}
@@ -1501,23 +1502,21 @@ export function ChangePlanWizardFullscreen() {
           {/* Feedback Form for Free Plan (matches old console: "What wasn't working for you?" required) */}
           {shouldCollectDowngradeFeedback && (
             <div>
-              <Label className="mb-2 block">Feedback</Label>
+              <Label className="mb-2 block">{t('Feedback')}</Label>
               <p className="text-[13px] text-muted-foreground mb-4">
-                What wasn&apos;t working for you? Please share anything that
-                influenced your decision to downgrade. This feedback helps us
-                improve the platform.
+                {t("What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.")}
               </p>
               <Label
                 htmlFor="downgrade-message"
                 className="text-[13px] font-medium"
               >
-                Your feedback <span className="text-destructive">*</span>
+                {t('Your feedback')} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="downgrade-message"
                 value={feedbackMessage}
                 onChange={(e) => setFeedbackMessage(e.target.value)}
-                placeholder="Please share anything that influenced your decision to downgrade..."
+                placeholder={t('Please share anything that influenced your decision to downgrade...')}
                 className="mt-2 min-h-[100px]"
                 required
               />

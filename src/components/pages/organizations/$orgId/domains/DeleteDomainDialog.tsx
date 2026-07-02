@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface DeleteDomainDialogProps {
   open: boolean
@@ -23,6 +24,7 @@ export function DeleteDomainDialog({
   onDelete,
   isLoading = false,
 }: DeleteDomainDialogProps) {
+  const t = useT()
   const handleDelete = () => {
     onDelete(domain.$id)
   }
@@ -31,10 +33,11 @@ export function DeleteDomainDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Delete Domain</DialogTitle>
+          <DialogTitle>{t('Delete Domain')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete <strong>{domain.domain}</strong>?
-            This action cannot be undone.
+            {t('Are you sure you want to delete')}{' '}
+            <strong>{domain.domain}</strong>?{' '}
+            {t('This action cannot be undone.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -44,14 +47,14 @@ export function DeleteDomainDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={handleDelete}
             disabled={isLoading}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>

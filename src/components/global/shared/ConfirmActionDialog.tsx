@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,11 +30,12 @@ export function ConfirmActionDialog({
   onConfirm,
   isConfirming = false,
 }: ConfirmActionDialogProps) {
+  const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{t(title)}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {description}
           </DialogDescription>
@@ -46,7 +48,7 @@ export function ConfirmActionDialog({
             disabled={isConfirming}
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -55,7 +57,7 @@ export function ConfirmActionDialog({
             disabled={isConfirming}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {t(confirmLabel)}
           </Button>
         </div>
       </DialogContent>

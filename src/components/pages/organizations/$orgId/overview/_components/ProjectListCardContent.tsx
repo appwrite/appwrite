@@ -10,6 +10,7 @@ import type {
   ProjectListPlatformsEntry,
 } from '@/lib/react-query/hooks/projects'
 import { ProjectListCardActionsMenu } from './ProjectListCardActionsMenu'
+import { useT } from '@/lib/i18n/translate'
 import { ProjectListName } from './ProjectListName'
 import { ProjectListPlatformAvatars } from './ProjectListPlatformAvatars'
 
@@ -22,6 +23,7 @@ export function ProjectListCardMain({
   project,
   failedInvoiceWarning,
 }: ProjectListCardMainProps) {
+  const t = useT()
   const { features } = useConsoleProfile()
   const showRegion =
     features.multiRegion &&
@@ -38,7 +40,7 @@ export function ProjectListCardMain({
             className="gap-1.5 text-[10px] font-medium shrink-0"
           >
             <PauseCircle className="h-3 w-3" />
-            Paused
+            {t('Paused')}
           </Badge>
         ) : null}
         {failedInvoiceWarning ? (
@@ -65,6 +67,7 @@ export function ProjectListCardFooter({
   showSettingsTab: boolean
   platformsByProjectId: Map<string, ProjectListPlatformsEntry>
 }) {
+  const t = useT()
   const platformsEntry = platformsByProjectId.get(project.$id)
 
   return (
@@ -75,7 +78,7 @@ export function ProjectListCardFooter({
         to="/projects/$projectId"
         params={{ projectId: project.$id }}
         className="absolute inset-0"
-        aria-label={`Open ${project.name}`}
+        aria-label={`${t('Open')} ${project.name}`}
       />
       <div className="relative flex min-w-0 items-center gap-2">
         <ProjectListPlatformAvatars

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { getMarketingPageUrl } from '@/lib/marketing/urls'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 
 type CookieConsentBannerProps = {
   customizeOpen: boolean
@@ -29,6 +30,7 @@ export function CookieConsentBanner({
   onCustomizeOpenChange,
   onDraftAnalyticsChange,
 }: CookieConsentBannerProps) {
+  const t = useT()
   const { features } = useConsoleProfile()
   const cookiesPolicyHref = getMarketingPageUrl('/cookies', features.marketing)
   const showPreferences = customizeOpen || reopening
@@ -51,7 +53,7 @@ export function CookieConsentBanner({
               id="cookie-consent-title"
               className="text-[15px] font-semibold text-foreground"
             >
-              {showPreferences ? 'Cookie preferences' : 'We value your privacy'}
+              {showPreferences ? t('Cookie preferences') : t('We value your privacy')}
             </h2>
             <p
               id="cookie-consent-description"
@@ -59,25 +61,25 @@ export function CookieConsentBanner({
             >
               {showPreferences ? (
                 <>
-                  Choose which optional cookies you allow. Read our{' '}
+                  {t('Choose which optional cookies you allow. Read our')}{' '}
                   <a
                     href={cookiesPolicyHref}
                     className="link-unstyled font-medium text-foreground underline-offset-4 hover:underline"
                   >
-                    Cookies Policy
+                    {t('Cookies Policy')}
                   </a>
                   .
                 </>
               ) : (
                 <>
-                  We use essential cookies to keep you signed in and remember your
-                  preferences. With your permission, we also use analytics to
-                  understand how Appwrite is used and improve it. Read our{' '}
+                  {t(
+                    'We use essential cookies to keep you signed in and remember your preferences. With your permission, we also use analytics to understand how Appwrite is used and improve it. Read our', // pragma: allowlist secret
+                  )}{' '}
                   <a
                     href={cookiesPolicyHref}
                     className="link-unstyled font-medium text-foreground underline-offset-4 hover:underline"
                   >
-                    Cookies Policy
+                    {t('Cookies Policy')}
                   </a>
                   .
                 </>
@@ -92,14 +94,14 @@ export function CookieConsentBanner({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Label className="text-[13px] font-medium text-foreground">
-                    Essential
+                    {t('Essential')}
                   </Label>
                   <Badge variant="info" className="text-[10px] shrink-0">
-                    Always active
+                    {t('Always active')}
                   </Badge>
                 </div>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  Required for sign-in, security, and remembering your preferences.
+                  {t('Required for sign-in, security, and remembering your preferences.')}
                 </p>
               </div>
             </div>
@@ -110,11 +112,12 @@ export function CookieConsentBanner({
                   htmlFor="cookie-consent-analytics"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  Analytics
+                  {t('Analytics')}
                 </Label>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  Privacy-friendly usage analytics and error reporting to help us
-                  improve Appwrite.
+                  {t(
+                    'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.', // pragma: allowlist secret
+                  )}
                 </p>
               </div>
               <Switch
@@ -137,7 +140,7 @@ export function CookieConsentBanner({
                   className="h-9 text-[13px]"
                   onClick={onClose}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               ) : (
                 <Button
@@ -146,7 +149,7 @@ export function CookieConsentBanner({
                   className="h-9 text-[13px]"
                   onClick={() => onCustomizeOpenChange(false)}
                 >
-                  Back
+                  {t('Back')}
                 </Button>
               )}
               <Button
@@ -154,7 +157,7 @@ export function CookieConsentBanner({
                 className="h-9 text-[13px]"
                 onClick={onSaveCustomPreferences}
               >
-                Save preferences
+                {t('Save preferences')}
               </Button>
             </>
           ) : (
@@ -165,7 +168,7 @@ export function CookieConsentBanner({
                 className="h-9 text-[13px]"
                 onClick={onRejectNonEssential}
               >
-                Reject non-essential
+                {t('Reject non-essential')}
               </Button>
               <Button
                 variant="outline"
@@ -173,10 +176,10 @@ export function CookieConsentBanner({
                 className="h-9 text-[13px]"
                 onClick={() => onCustomizeOpenChange(true)}
               >
-                Customize
+                {t('Customize')}
               </Button>
               <Button size="sm" className="h-9 text-[13px]" onClick={onAcceptAll}>
-                Accept all
+                {t('Accept all')}
               </Button>
             </>
           )}

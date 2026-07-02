@@ -10,6 +10,7 @@ import {
   type InitOrgPromoPhase,
 } from '@/lib/init/org-promo-banner'
 import type { LaunchEventCta } from '@/lib/init/types'
+import { useT } from '@/lib/i18n/translate'
 
 const BADGE_VARIANT: Record<InitOrgPromoPhase, 'info' | 'success' | 'warning'> =
   {
@@ -52,6 +53,7 @@ function InitOrgPromoBannerLink({
 }
 
 export function InitOrgPromoBanner() {
+  const t = useT()
   const { mockInitCurrentDay } = useDebugOverrides()
   const content = useMemo(() => {
     if (!getEnvProfileFeatures().init) return null
@@ -95,7 +97,7 @@ export function InitOrgPromoBanner() {
               variant={BADGE_VARIANT[content.phase]}
               className="relative z-10 text-[10px] shrink-0"
             >
-              {content.badgeLabel}
+              {t(content.badgeLabel)}
             </Badge>
           </>
         ) : null}
@@ -106,7 +108,7 @@ export function InitOrgPromoBanner() {
           ·
         </span>
         <p className="relative z-10 min-w-0 truncate text-[13px] text-muted-foreground transition-colors duration-300 ease-out group-hover/banner:text-foreground/80">
-          {content.message}
+          {t(content.message)}
         </p>
       </InitOrgPromoBannerLink>
     </div>

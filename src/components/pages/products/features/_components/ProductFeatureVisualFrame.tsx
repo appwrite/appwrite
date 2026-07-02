@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type ProductFeatureVisualFrameProps = {
@@ -21,6 +22,7 @@ export function ProductFeatureVisualFrame({
   contentClassName,
   children,
 }: ProductFeatureVisualFrameProps) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -40,7 +42,7 @@ export function ProductFeatureVisualFrame({
                   : 'text-muted-foreground',
               )}
             >
-              {tab.label}
+              {t(tab.label)}
             </span>
           ))}
         </div>
@@ -52,12 +54,12 @@ export function ProductFeatureVisualFrame({
           <div className="min-w-0">
             {eyebrow ? (
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {eyebrow}
+                {t(eyebrow)}
               </p>
             ) : null}
             {title ? (
               <p className={cn('text-[13px] font-semibold text-foreground', eyebrow && 'mt-0.5')}>
-                {title}
+                {t(title)}
               </p>
             ) : null}
           </div>

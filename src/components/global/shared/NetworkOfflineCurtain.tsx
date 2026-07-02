@@ -1,11 +1,13 @@
 import { WifiOff } from 'lucide-react'
 import { useNavigatorOnline } from '@/lib/network-connectivity'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * Full-viewport curtain when the browser reports no network connection.
  * Blocks interaction with the console until the connection is restored.
  */
 export function NetworkOfflineCurtain() {
+  const t = useT()
   const online = useNavigatorOnline()
 
   if (online) return null
@@ -22,12 +24,12 @@ export function NetworkOfflineCurtain() {
           <WifiOff className="size-9" aria-hidden />
         </div>
         <h1 className="text-[22px] font-semibold text-foreground">
-          You&apos;re offline
+          {t("You're offline")}
         </h1>
         <p className="mt-3 text-[15px] text-muted-foreground">
-          The console needs an internet connection to reach Appwrite&apos;s data
-          centers. We&apos;ll restore the page automatically when you are back
-          online.
+          {t(
+            "The console needs an internet connection to reach Appwrite's data centers. We'll restore the page automatically when you are back online.", // pragma: allowlist secret
+          )}
         </p>
       </div>
     </div>

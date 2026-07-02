@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { copyToClipboard } from '@/lib/utils/context-menu'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type ApiMethodHeaderActionsProps = {
@@ -23,6 +24,7 @@ export function ApiMethodHeaderActions({
   getMethodMarkdown,
   className,
 }: ApiMethodHeaderActionsProps) {
+  const t = useT()
   const [copiedPage, setCopiedPage] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const iconButtonClass = 'h-7 w-7 shrink-0 p-0 text-muted-foreground'
@@ -69,7 +71,7 @@ export function ApiMethodHeaderActions({
               size="sm"
               className={iconButtonClass}
               onClick={handleCopyLink}
-              aria-label="Copy link"
+              aria-label={t('Copy link')}
             >
               {copiedLink ? (
                 <Check className="h-3.5 w-3.5 text-green-600" strokeWidth={3} />
@@ -79,7 +81,7 @@ export function ApiMethodHeaderActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{copiedLink ? 'Link copied' : 'Copy link'}</p>
+            <p>{copiedLink ? t('Link copied') : t('Copy link')}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -91,7 +93,7 @@ export function ApiMethodHeaderActions({
               size="sm"
               className={iconButtonClass}
               onClick={handleCopyPage}
-              aria-label="Copy page"
+              aria-label={t('Copy page')}
             >
               {copiedPage ? (
                 <Check className="h-3.5 w-3.5 text-green-600" strokeWidth={3} />
@@ -101,7 +103,7 @@ export function ApiMethodHeaderActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{copiedPage ? 'Copied' : 'Copy page'}</p>
+            <p>{copiedPage ? t('Copied') : t('Copy page')}</p>
           </TooltipContent>
         </Tooltip>
       </div>

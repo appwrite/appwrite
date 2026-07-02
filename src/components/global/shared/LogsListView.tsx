@@ -25,6 +25,7 @@ import {
   getExecutionStatusBadge,
   getStatusCodeBadge,
 } from '@/components/pages/projects/$projectId/functions/Executions'
+import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 
 function formatDuration(ms: number): string {
@@ -78,35 +79,36 @@ function LogsTableColGroup() {
 const logsTableClassName = 'w-full min-w-[77rem] table-fixed'
 
 function LogsTableHead() {
+  const t = useT()
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent border-b border-border">
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 ps-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:ps-8">
-          Execution ID
+          {t('Execution ID')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Deployment ID
+          {t('Deployment ID')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Status
+          {t('Status')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Trigger
+          {t('Trigger')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Status Code
+          {t('Status Code')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Method
+          {t('Method')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Path
+          {t('Path')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          Duration
+          {t('Duration')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 pe-6 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)] sm:pe-8">
-          Created
+          {t('Created')}
         </TableHead>
       </TableRow>
     </TableHeader>
@@ -174,6 +176,7 @@ function LogsPaginationSkeleton() {
 }
 
 function LogsLoadingTable({ rowCount }: { rowCount: number }) {
+  const t = useT()
   return (
     <>
       <div
@@ -181,7 +184,7 @@ function LogsLoadingTable({ rowCount }: { rowCount: number }) {
         role="status"
         aria-live="polite"
         aria-busy="true"
-        aria-label="Loading logs"
+        aria-label={t('Loading logs')}
       >
         <Table withScrollContainer={false} className={logsTableClassName}>
           <LogsTableColGroup />
@@ -272,6 +275,7 @@ export function LogsListView({
   resourceVariant,
   resourceId,
 }: LogsListViewProps) {
+  const t = useT()
   const navigate = useNavigate()
   const location = useLocation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -393,12 +397,12 @@ export function LogsListView({
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
                         <Badge variant={statusBadge.variant}>
-                          {statusBadge.label}
+                          {t(statusBadge.label)}
                         </Badge>
                       </TableCell>
                       <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
                         <code className="rounded bg-muted/50 px-1.5 py-0.5 text-[12px] font-mono text-foreground">
-                          {triggerBadge.label}
+                          {t(triggerBadge.label)}
                         </code>
                       </TableCell>
                       <TableCell className="min-w-0 px-4 py-3">
@@ -493,8 +497,8 @@ export function LogsListView({
         <div className="flex flex-1 flex-col items-center justify-center py-16">
           <EmptyState
             icon={Zap}
-            title={emptyStateTitle}
-            description={emptyStateDescription}
+            title={t(emptyStateTitle)}
+            description={t(emptyStateDescription)}
             isEmpty={!hasFilters}
             hasFilters={hasFilters}
             variant="centered"

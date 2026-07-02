@@ -11,6 +11,7 @@ import {
 import { Copy, Eye, FileJson, Lock, Pencil, Trash2 } from 'lucide-react'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 import type { EnvVariable, VariableRecord } from './VariablesSettingsCard'
 
 type VariableRowContextMenuProps =
@@ -31,6 +32,7 @@ type VariableRowContextMenuProps =
     }
 
 export function VariableRowContextMenu(props: VariableRowContextMenuProps) {
+  const t = useT()
   const { children } = props
 
   if (props.variant === 'wizard') {
@@ -42,21 +44,21 @@ export function VariableRowContextMenu(props: VariableRowContextMenuProps) {
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
-              Copy
+              {t('Copy')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Key', variable.key)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy key
+                {t('Copy key')}
               </ContextMenuItem>
               {!variable.secret ? (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Value', variable.value)}
                 >
                   <ContextMenuIcon icon={Copy} />
-                  Copy value
+                  {t('Copy value')}
                 </ContextMenuItem>
               ) : null}
             </ContextMenuSubContent>
@@ -64,12 +66,12 @@ export function VariableRowContextMenu(props: VariableRowContextMenuProps) {
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={onToggleSecret}>
             <ContextMenuIcon icon={variable.secret ? Eye : Lock} />
-            {variable.secret ? 'Unmark secret' : 'Secret'}
+            {variable.secret ? t('Unmark secret') : t('Secret')}
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={onDelete}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -84,33 +86,33 @@ export function VariableRowContextMenu(props: VariableRowContextMenuProps) {
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={onUpdate}>
           <ContextMenuIcon icon={Pencil} />
-          Update
+          {t('Update')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', variable.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Key', variable.key)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy key
+              {t('Copy key')}
             </ContextMenuItem>
             {!variable.secret ? (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Value', variable.value)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy value
+                {t('Copy value')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
@@ -119,7 +121,7 @@ export function VariableRowContextMenu(props: VariableRowContextMenuProps) {
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -128,14 +130,14 @@ export function VariableRowContextMenu(props: VariableRowContextMenuProps) {
             <ContextMenuSeparator />
             <ContextMenuItem onSelect={onMarkSecret}>
               <ContextMenuIcon icon={Lock} />
-              Secret
+              {t('Secret')}
             </ContextMenuItem>
           </>
         ) : null}
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={onDelete}>
           <ContextMenuIcon icon={Trash2} />
-          Delete
+          {t('Delete')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

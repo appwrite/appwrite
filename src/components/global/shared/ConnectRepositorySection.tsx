@@ -28,6 +28,7 @@ import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -117,6 +118,7 @@ export function ConnectRepositorySection({
   emptyStateDescription = 'Create and deploy with a connected git repository.',
   className,
 }: ConnectRepositorySectionProps) {
+  const t = useT()
   const suggestedRepoName = useMemo(
     () =>
       defaultRepositoryName
@@ -179,7 +181,7 @@ export function ConnectRepositorySection({
         repositoryOwner: repo.organization,
       })
     } catch (error: unknown) {
-      toast.error(error?.message ?? 'Failed to create repository')
+      toast.error(error?.message ?? t('Failed to create repository'))
     }
   }
 
@@ -214,10 +216,10 @@ export function ConnectRepositorySection({
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            {emptyStateTitle}
+            {t(emptyStateTitle)}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            {emptyStateDescription}
+            {t(emptyStateDescription)}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -228,7 +230,7 @@ export function ConnectRepositorySection({
           <Button asChild>
             <a href={getGitHubAuthUrl}>
               <GitHubIcon className="me-1.5 h-4 w-4" />
-              Connect to GitHub
+              {t('Connect to GitHub')}
             </a>
           </Button>
         </div>
@@ -247,7 +249,7 @@ export function ConnectRepositorySection({
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Git repository
+            {t('Git repository')}
           </h3>
         </div>
         <div className="border-t border-border" />
@@ -262,7 +264,7 @@ export function ConnectRepositorySection({
                   {value.repositoryOwner}/{value.repositoryName}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  GitHub repository
+                  {t('GitHub repository')}
                 </p>
               </div>
             </div>
@@ -272,7 +274,7 @@ export function ConnectRepositorySection({
               className="h-9 text-[13px] shrink-0"
               onClick={handleClearRepository}
             >
-              Update
+              {t('Update')}
             </Button>
           </div>
         </div>
@@ -319,7 +321,7 @@ export function ConnectRepositorySection({
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Git repository
+          {t('Git repository')}
         </h3>
       </div>
       <div className="border-t border-border" />
@@ -345,10 +347,10 @@ export function ConnectRepositorySection({
             />
             <div>
               <span className="text-[14px] font-medium text-foreground">
-                Create new repository
+                {t('Create new repository')}
               </span>
               <p className="text-[12px] text-muted-foreground mt-1">
-                Create a new Git repository and clone the template into it.
+                {t('Create a new Git repository and clone the template into it.')}
               </p>
             </div>
           </Label>
@@ -368,10 +370,10 @@ export function ConnectRepositorySection({
             />
             <div>
               <span className="text-[14px] font-medium text-foreground">
-                Connect existing repository
+                {t('Connect existing repository')}
               </span>
               <p className="text-[12px] text-muted-foreground mt-1">
-                Link this deployment to an existing repository.
+                {t('Link this deployment to an existing repository.')}
               </p>
             </div>
           </Label>
@@ -381,14 +383,14 @@ export function ConnectRepositorySection({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="git-org" className="text-[13px]">
-                Git organization
+                {t('Git organization')}
               </Label>
               <Select
                 value={selectedInstallationId}
                 onValueChange={setSelectedInstallationId}
               >
                 <SelectTrigger id="git-org" className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select organization" />
+                  <SelectValue placeholder={t('Select organization')} />
                 </SelectTrigger>
                 <SelectContent>
                   {installations.map((inst) => (
@@ -408,7 +410,7 @@ export function ConnectRepositorySection({
                       className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                     >
                       <Plus className="h-3 w-3" />
-                      Add installation
+                      {t('Add installation')}
                     </a>
                   </div>
                 </SelectContent>
@@ -416,7 +418,7 @@ export function ConnectRepositorySection({
             </div>
             <div className="space-y-2">
               <Label htmlFor="repo-name" className="text-[13px]">
-                Repository name
+                {t('Repository name')}
               </Label>
               <Input
                 id="repo-name"
@@ -436,7 +438,7 @@ export function ConnectRepositorySection({
                 htmlFor="repo-private"
                 className="text-[13px] font-normal cursor-pointer"
               >
-                Keep repository private
+                {t('Keep repository private')}
               </Label>
             </div>
             <Button
@@ -448,7 +450,7 @@ export function ConnectRepositorySection({
               }
               className="h-9 text-[13px]"
             >
-              Create
+              {t('Create')}
             </Button>
           </div>
         )}

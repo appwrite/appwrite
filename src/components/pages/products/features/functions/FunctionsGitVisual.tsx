@@ -1,12 +1,14 @@
 import { GitBranch, GitCommitHorizontal } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 function MockField({ label, value }: { label: string; value: string }) {
+  const t = useT()
   return (
     <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
+        {t(label)}
       </p>
       <p className="mt-1 truncate font-mono text-[11px] text-foreground">{value}</p>
     </div>
@@ -14,24 +16,25 @@ function MockField({ label, value }: { label: string; value: string }) {
 }
 
 export function FunctionsGitVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'deployments', label: 'Deployments' },
-        { id: 'settings', label: 'Settings', active: true },
+        { id: 'overview', label: t('Overview') },
+        { id: 'deployments', label: t('Deployments') },
+        { id: 'settings', label: t('Settings'), active: true },
       ]}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Git repository</p>
+            <p className="text-[13px] font-semibold text-foreground">{t('Git repository')}</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Auto-build on push with branch and path filters.
+              {t('Auto-build on push with branch and path filters.')}
             </p>
           </div>
           <Badge variant="success" className="shrink-0 text-[10px]">
-            Connected
+            {t('Connected')}
           </Badge>
         </div>
 
@@ -44,7 +47,7 @@ export function FunctionsGitVisual() {
 
         <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Build triggers
+            {t('Build triggers')}
           </p>
           <div className="mt-2 space-y-1.5">
             <div className="flex items-center gap-2 text-[11px] text-foreground">
@@ -65,11 +68,11 @@ export function FunctionsGitVisual() {
               <p className="truncate text-[11px] font-medium text-foreground">
                 feat: add webhook handler
               </p>
-              <p className="text-[10px] text-muted-foreground">main · 2m ago</p>
+              <p className="text-[10px] text-muted-foreground">main · {t('2m ago')}</p>
             </div>
           </div>
           <Badge variant="success" className="shrink-0 text-[10px]">
-            Active
+            {t('Active')}
           </Badge>
         </div>
       </div>

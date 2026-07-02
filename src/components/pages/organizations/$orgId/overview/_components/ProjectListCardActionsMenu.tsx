@@ -25,6 +25,7 @@ import {
   copyResourceAsJson,
   copyToClipboard,
 } from '@/lib/utils/context-menu'
+import { useT } from '@/lib/i18n/translate'
 
 type ProjectListCardActionsMenuProps = {
   project: ProjectListItem
@@ -35,6 +36,7 @@ export function ProjectListCardActionsMenu({
   project,
   showSettingsTab,
 }: ProjectListCardActionsMenuProps) {
+  const t = useT()
   const navigate = useNavigate()
   const projectHref = buildConsoleUrl(`/projects/${project.$id}`)
   const endpoint = getProjectListItemEndpoint(project)
@@ -56,37 +58,37 @@ export function ProjectListCardActionsMenu({
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <MenuItemIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuItem
               onSelect={() => copyToClipboard('ID', project.$id)}
             >
-              <MenuItemContent icon={Copy}>Copy ID</MenuItemContent>
+              <MenuItemContent icon={Copy}>{t('Copy ID')}</MenuItemContent>
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => copyToClipboard('Endpoint', endpoint)}
             >
-              <MenuItemContent icon={Copy}>Copy endpoint</MenuItemContent>
+              <MenuItemContent icon={Copy}>{t('Copy endpoint')}</MenuItemContent>
             </DropdownMenuItem>
             {hasName ? (
               <DropdownMenuItem
                 onSelect={() => copyToClipboard('Name', project.name)}
               >
-                <MenuItemContent icon={Copy}>Copy name</MenuItemContent>
+                <MenuItemContent icon={Copy}>{t('Copy name')}</MenuItemContent>
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuItem
               onSelect={() => copyToClipboard('Link', projectHref)}
             >
-              <MenuItemContent icon={Link2}>Copy link</MenuItemContent>
+              <MenuItemContent icon={Link2}>{t('Copy link')}</MenuItemContent>
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() =>
                 void copyResourceAsJson(() => fetchProject(project.$id))
               }
             >
-              <MenuItemContent icon={FileJson}>Copy as JSON</MenuItemContent>
+              <MenuItemContent icon={FileJson}>{t('Copy as JSON')}</MenuItemContent>
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
@@ -101,7 +103,7 @@ export function ProjectListCardActionsMenu({
                 })
               }
             >
-              <MenuItemContent icon={Settings}>Settings</MenuItemContent>
+              <MenuItemContent icon={Settings}>{t('Settings')}</MenuItemContent>
             </DropdownMenuItem>
           </>
         ) : null}

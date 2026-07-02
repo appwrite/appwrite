@@ -54,6 +54,7 @@ import {
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import { useConsoleRightPane } from './ConsoleRightPaneContext'
 
 const AUTH_ROUTE_PATHNAMES = new Set([
@@ -166,6 +167,7 @@ export function DocsPreviewProvider({ children }: { children: ReactNode }) {
 }
 
 export function DocsPreviewContent() {
+  const t = useT()
   const { isOpen, slug, view, openDocsPreview, closeDocsPreview } =
     useDocsPreview()
   const { features } = useConsoleProfile()
@@ -289,7 +291,7 @@ export function DocsPreviewContent() {
             onClick={() => navigatePreviewSlug('')}
             className="min-w-0 truncate text-start text-[13px] font-semibold text-foreground transition-colors hover:text-foreground/80"
           >
-            Docs
+            {t('Docs')}
           </button>
           <div className="flex shrink-0 items-center gap-1">
             <Button
@@ -300,13 +302,13 @@ export function DocsPreviewContent() {
               onClick={handleOpenInNewWindow}
             >
               <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-              Open in new window
+              {t('Open in new window')}
             </Button>
             <button
               type="button"
               onClick={closeDocsPreview}
               className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label="Close documentation preview"
+              aria-label={t('Close documentation preview')}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -383,12 +385,12 @@ export function DocsPreviewContent() {
           ) : isLoading ? (
             <div className="flex h-full min-h-[240px] items-center justify-center text-[13px] text-muted-foreground">
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
-              Loading documentation...
+              {t('Loading documentation...')}
             </div>
           ) : isError || !page ? (
             <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 px-4 text-center">
               <p className="text-[13px] text-muted-foreground">
-                Could not load this documentation page.
+                {t('Could not load this documentation page.')}
               </p>
               <Button
                 type="button"
@@ -398,7 +400,7 @@ export function DocsPreviewContent() {
                 onClick={handleOpenInNewWindow}
               >
                 <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-                Open in new window
+                {t('Open in new window')}
               </Button>
             </div>
           ) : (
@@ -433,7 +435,7 @@ export function DocsPreviewContent() {
             className="h-8 w-full text-[13px]"
             onClick={handleOpenInDocs}
           >
-            Open in docs
+            {t('Open in docs')}
           </Button>
         </div>
       </div>

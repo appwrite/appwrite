@@ -15,23 +15,26 @@ import {
   type CompanyTeamPhoto,
 } from '@/lib/company/team'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { ArrowUpRight } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 
 function TeamMetricCell({ value, label }: CompanyTeamMetric) {
+  const t = useT()
   return (
     <div className="flex flex-col items-center justify-center px-4 py-8 text-center sm:px-6 sm:py-10">
       <p className="font-aeonik-pro text-[28px] font-normal leading-none tracking-tight text-foreground tabular-nums sm:text-[32px]">
         {value}
       </p>
       <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
-        {label}
+        {t(label)}
       </p>
     </div>
   )
 }
 
 function TeamSnapshotOverview() {
+  const t = useT()
   return (
     <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-border bg-card/50">
       <ul className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
@@ -44,13 +47,13 @@ function TeamSnapshotOverview() {
 
       <div className="border-t border-border bg-muted/20 px-4 py-4 sm:px-6 sm:py-5">
         <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
-          How we work
+          {t('How we work')}
         </p>
         <ul className="mt-3 flex flex-wrap items-center justify-center gap-2">
           {companyTeamValues.map((value) => (
             <li key={value.id}>
               <span className="inline-flex rounded-full border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground sm:text-[13px]">
-                {value.label}
+                {t(value.label)}
               </span>
             </li>
           ))}
@@ -61,14 +64,15 @@ function TeamSnapshotOverview() {
 }
 
 function TeamRoleBreakdown() {
+  const t = useT()
   return (
     <div className="mx-auto max-w-2xl space-y-5 text-center">
       <div>
         <h3 className="text-[15px] font-semibold text-foreground">
-          {companyTeamProductFirst.title}
+          {t(companyTeamProductFirst.title)}
         </h3>
         <p className="mt-2 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-          {companyTeamProductFirst.description}
+          {t(companyTeamProductFirst.description)}
         </p>
       </div>
 
@@ -76,7 +80,7 @@ function TeamRoleBreakdown() {
         <div
           className="flex h-2 overflow-hidden rounded-md bg-muted/30"
           role="img"
-          aria-label={`Team composition: ${companyTeamRoleSegments.map((segment) => `${segment.label} ${segment.percentage}%`).join(', ')}`}
+          aria-label={`${t('Team composition:')} ${companyTeamRoleSegments.map((segment) => `${t(segment.label)} ${segment.percentage}%`).join(', ')}`}
         >
           {companyTeamRoleSegments.map((segment) => (
             <div
@@ -86,7 +90,7 @@ function TeamRoleBreakdown() {
                 segment.barClassName,
               )}
               style={{ width: `${segment.percentage}%` }}
-              title={`${segment.label}: ${segment.percentage}%`}
+              title={`${t(segment.label)}: ${segment.percentage}%`}
             />
           ))}
         </div>
@@ -101,7 +105,7 @@ function TeamRoleBreakdown() {
                 className={cn('size-2 shrink-0 rounded-full', segment.barClassName)}
                 aria-hidden
               />
-              <span className="text-foreground">{segment.label}</span>
+              <span className="text-foreground">{t(segment.label)}</span>
               <span className="tabular-nums">{segment.percentage}%</span>
             </li>
           ))}
@@ -127,6 +131,7 @@ function TeamPhoto({
   gridClassName,
   variant = 'standard',
 }: CompanyTeamPhoto) {
+  const t = useT()
   return (
     <figure className={cn('min-w-0', gridClassName)}>
       <div
@@ -137,14 +142,14 @@ function TeamPhoto({
       >
         <img
           src={src}
-          alt={alt}
+          alt={t(alt)}
           className="h-full w-full object-cover object-center"
           loading="lazy"
           decoding="async"
         />
       </div>
       <figcaption className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-        {caption}
+        {t(caption)}
       </figcaption>
     </figure>
   )
@@ -161,23 +166,25 @@ function TeamPhotoGrid() {
 }
 
 function TeamPillar({ title, body }: (typeof companyTeamPillars)[number]) {
+  const t = useT()
   return (
     <div className="space-y-2.5 md:px-6 md:first:ps-0 md:last:pe-0">
-      <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
-      <p className="text-[14px] leading-7 text-muted-foreground">{body}</p>
+      <h3 className="text-[15px] font-semibold text-foreground">{t(title)}</h3>
+      <p className="text-[14px] leading-7 text-muted-foreground">{t(body)}</p>
     </div>
   )
 }
 
 function TeamCta() {
+  const t = useT()
   return (
     <div className="mt-12 flex flex-col gap-4 border-t border-border pt-12 sm:mt-14 sm:pt-14 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-[14px] font-medium text-foreground">
-          {companyTeamCta.title}
+          {t(companyTeamCta.title)}
         </p>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          {companyTeamCta.description}
+          {t(companyTeamCta.description)}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-3">
@@ -187,7 +194,7 @@ function TeamCta() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            View careers
+            {t('View careers')}
           </a>
         </Button>
         <Button variant="outline" asChild>
@@ -195,7 +202,7 @@ function TeamCta() {
             href={companyTeamLinks.evolutionBlog}
             className="gap-1.5"
           >
-            How we hire
+            {t('How we hire')}
             <ArrowUpRight className="size-3.5" aria-hidden />
           </BlogPageAnchor>
         </Button>
@@ -205,6 +212,7 @@ function TeamCta() {
 }
 
 export function CompanyTeam() {
+  const t = useT()
   return (
     <section
       id={COMPANY_SECTION_IDS.team}
@@ -214,11 +222,11 @@ export function CompanyTeam() {
       <div className="relative z-[1] mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="max-w-3xl">
           <h2 className="font-aeonik-pro text-balance text-[28px] font-normal leading-none tracking-tight text-foreground sm:text-[36px]">
-            {companyTeamIntro.title}
+            {t(companyTeamIntro.title)}
             <span className="text-[var(--brand-cta)]">_</span>
           </h2>
           <p className="mt-5 text-[14px] leading-7 text-muted-foreground sm:mt-6 sm:text-[15px]">
-            {companyTeamIntro.description}
+            {t(companyTeamIntro.description)}
           </p>
         </div>
 

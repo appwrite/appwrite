@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useT } from '@/lib/i18n/translate'
 
 export interface DateTimePickerProps {
   /** ISO string or null/empty for unset */
@@ -61,6 +62,7 @@ export function DateTimePicker({
   ariaLabel,
   onFocus,
 }: DateTimePickerProps) {
+  const t = useT()
   const [open, setOpen] = React.useState(false)
   const date = React.useMemo(() => parseISO(value), [value])
   const [timeStr, setTimeStr] = React.useState(() =>
@@ -114,7 +116,7 @@ export function DateTimePicker({
           disabled={disabled}
           autoFocus={autoFocus}
           onFocus={onFocus}
-          aria-label={ariaLabel}
+          aria-label={ariaLabel ? t(ariaLabel) : undefined}
           className={cn(
             'w-full cursor-pointer justify-start gap-2 text-start font-normal',
             size === 'sm' ? 'h-8 text-[12px]' : 'h-9 text-[13px]',
@@ -126,7 +128,7 @@ export function DateTimePicker({
             <CalendarIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />
           )}
           <span className="flex-1 truncate">
-            {date ? formatted : placeholder}
+            {date ? formatted : t(placeholder)}
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
@@ -147,7 +149,7 @@ export function DateTimePicker({
         <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/30 p-3">
           <label className="flex items-center gap-2">
             <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Time
+              {t('Time')}
             </span>
             <Input
               type="time"
@@ -164,7 +166,7 @@ export function DateTimePicker({
                 className="h-7 cursor-pointer text-[11px]"
                 onClick={handleClear}
               >
-                Clear
+                {t('Clear')}
               </Button>
             )}
             <Button
@@ -172,7 +174,7 @@ export function DateTimePicker({
               className="h-7 cursor-pointer text-[11px]"
               onClick={() => setOpen(false)}
             >
-              Done
+              {t('Done')}
             </Button>
           </div>
         </div>

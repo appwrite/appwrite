@@ -11,6 +11,7 @@ import {
   useUpdateOrganizationBudget,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * BudgetCapSection Component
@@ -33,6 +34,7 @@ interface BudgetCapSectionProps {
 }
 
 export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
+  const t = useT()
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
   const updateBudgetMutation = useUpdateOrganizationBudget()
@@ -72,10 +74,10 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
       })
       setBudget(newBudget > 0 ? newBudget.toString() : '')
       setHasChanges(false)
-      toast.success(checked ? 'Budget cap enabled' : 'Budget cap disabled')
+      toast.success(checked ? t('Budget cap enabled') : t('Budget cap disabled'))
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update budget cap',
+        error instanceof Error ? error.message : t('Failed to update budget cap'),
       )
     }
   }
@@ -96,7 +98,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
     const budgetValue = budget ? parseFloat(budget) : 0
 
     if (budgetValue <= 0) {
-      toast.error('Budget cap must be greater than 0')
+      toast.error(t('Budget cap must be greater than 0'))
       return
     }
 
@@ -106,11 +108,11 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
         budget: budgetValue,
         alerts: organization?.budgetAlerts || [],
       })
-      toast.success('Budget cap updated')
+      toast.success(t('Budget cap updated'))
       setHasChanges(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update budget cap',
+        error instanceof Error ? error.message : t('Failed to update budget cap'),
       )
     }
   }
@@ -120,11 +122,11 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Budget cap
+            {t('Budget cap')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading...</p>
+          <p className="text-[13px] text-muted-foreground">{t('Loading...')}</p>
         </div>
       </div>
     )
@@ -135,14 +137,14 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Budget cap
+            {t('Budget cap')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
-              Budget caps are not supported on your current plan.
+              {t('Budget caps are not supported on your current plan.')}
             </AlertDescription>
           </Alert>
         </div>
@@ -155,7 +157,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
       {/* Header */}
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Budget cap
+          {t('Budget cap')}
         </h3>
       </div>
 
@@ -168,11 +170,10 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
             </div>
             <div>
               <p className="text-[13px] font-medium text-foreground">
-                Enable budget cap
+                {t('Enable budget cap')}
               </p>
               <p className="text-[12px] text-muted-foreground mt-0.5">
-                Budget cap applies only to additional usage beyond your plan
-                limits
+                {t('Budget cap applies only to additional usage beyond your plan limits')}
               </p>
             </div>
           </div>
@@ -187,7 +188,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
         {enabled && (
           <div className="mt-4 ps-14">
             <label className="text-[12px] text-muted-foreground">
-              Budget cap (USD)
+              {t('Budget cap (USD)')}
             </label>
             <div className="mt-1.5 flex items-center gap-2">
               <div className="relative">
@@ -210,8 +211,8 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
           <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-[12px] text-muted-foreground">
             {enabled
-              ? `When your additional usage spending (beyond plan limits) reaches ${formatCurrency(parseFloat(budget) || 0)}, all billable services will be paused until the next billing cycle or until you increase your limit.`
-              : 'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits. Your services will automatically pause when the spending limit is reached.'}
+              ? `${t('When your additional usage spending (beyond plan limits) reaches')} ${formatCurrency(parseFloat(budget) || 0)}${t(', all billable services will be paused until the next billing cycle or until you increase your limit.')}`
+              : t('Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits. Your services will automatically pause when the spending limit is reached.')}
           </p>
         </div>
       </div>
@@ -225,7 +226,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
             onClick={handleSave}
             disabled={!hasChanges || updateBudgetMutation.isPending}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       )}

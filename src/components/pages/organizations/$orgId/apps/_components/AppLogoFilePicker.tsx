@@ -26,6 +26,7 @@ import {
   resolveAppsLogoConsoleRegion,
 } from '@/lib/appwrite/apps-logo'
 import { useProjectsForTeam } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 const PAGE_SIZE = 25
 
@@ -42,6 +43,7 @@ export function AppLogoFilePicker({
   onChange,
   disabled = false,
 }: AppLogoFilePickerProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const uploadInputRef = useRef<HTMLInputElement>(null)
   const { projects } = useProjectsForTeam(teamId, 0, 1)
@@ -89,13 +91,13 @@ export function AppLogoFilePicker({
       setFiles(response.files ?? [])
       setFilesTotal(response.total ?? 0)
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to load logo files'))
+      toast.error(getErrorMessage(error, t('Failed to load logo files')))
       setFiles([])
       setFilesTotal(0)
     } finally {
       setFilesLoading(false)
     }
-  }, [consoleStorageSdk, page, search])
+  }, [consoleStorageSdk, page, search, t])
 
   useEffect(() => {
     if (!explorerOpen) return
@@ -128,7 +130,7 @@ export function AppLogoFilePicker({
     event.target.value = ''
 
     if (!file.name.toLowerCase().endsWith('.png')) {
-      toast.error('Only PNG logos are supported')
+      toast.error(t('Only PNG logos are supported'))
       return
     }
 
@@ -162,9 +164,9 @@ export function AppLogoFilePicker({
         }
       }
 
-      toast.success('Logo uploaded')
+      toast.success(t('Logo uploaded'))
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to upload logo'))
+      toast.error(getErrorMessage(error, t('Failed to upload logo')))
     } finally {
       setUploading(false)
     }
@@ -190,7 +192,7 @@ export function AppLogoFilePicker({
             {previewUrl ? (
               <img
                 src={previewUrl}
-                alt="App logo preview"
+                alt={t('App logo preview')}
                 className="h-full w-full object-contain"
               />
             ) : (
@@ -200,8 +202,9 @@ export function AppLogoFilePicker({
 
           <div className="min-w-0 flex-1 space-y-2">
             <p className="text-[13px] text-muted-foreground">
-              Upload a PNG logo or pick an existing file from the Apps bucket.
-              Logos are publicly readable and writable by your team.
+              {t(
+                'Upload a PNG logo or pick an existing file from the Apps bucket. Logos are publicly readable and writable by your team.',
+              )}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -211,7 +214,7 @@ export function AppLogoFilePicker({
                 disabled={disabled || uploading}
                 onClick={() => setExplorerOpen(true)}
               >
-                Browse files
+                {t('Browse files')}
               </Button>
               <Button
                 type="button"
@@ -222,7 +225,7 @@ export function AppLogoFilePicker({
               >
                 <label className="cursor-pointer">
                   <Upload className="me-1.5 h-3.5 w-3.5" />
-                  Upload PNG
+                  {t('Upload PNG')}
                   <input
                     ref={uploadInputRef}
                     type="file"
@@ -244,7 +247,7 @@ export function AppLogoFilePicker({
                   onClick={() => onChange('')}
                 >
                   <X className="me-1.5 h-3.5 w-3.5" />
-                  Remove
+                  {t('Remove')}
                 </Button>
               ) : null}
             </div>
@@ -255,9 +258,9 @@ export function AppLogoFilePicker({
       <Dialog open={explorerOpen} onOpenChange={handleExplorerOpenChange}>
         <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-2xl">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Select app logo</DialogTitle>
+            <DialogTitle>{t('Select app logo')}</DialogTitle>
             <DialogDescription className="mt-2 text-[13px]">
-              Choose a PNG from the Apps bucket or upload a new one.
+              {t('Choose a PNG from the Apps bucket or upload a new one.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -270,7 +273,7 @@ export function AppLogoFilePicker({
                   setSearch(event.target.value.trim())
                   setPage(1)
                 }}
-                placeholder="Search files"
+                placeholder={t('Search files')}
                 className="h-8 text-[13px]"
               />
               <Button
@@ -282,7 +285,7 @@ export function AppLogoFilePicker({
               >
                 <label className="cursor-pointer">
                   <Upload className="me-1.5 h-3.5 w-3.5" />
-                  Upload PNG
+                  {t('Upload PNG')}
                   <input
                     type="file"
                     accept="image/png,.png"
@@ -302,13 +305,17 @@ export function AppLogoFilePicker({
             <div className="max-h-[360px] overflow-y-auto">
               {filesLoading && files.length === 0 ? (
                 <div className="py-10 text-center text-[13px] text-muted-foreground">
-                  Loading files…
+                  {t('Loading files…')}
                 </div>
               ) : files.length === 0 ? (
                 <EmptyState
                   icon={ImageIcon}
-                  title={search ? 'No files match your search' : 'No logo files yet'}
-                  description="Upload a PNG logo to get started."
+                  title={
+                    search
+                      ? t('No files match your search')
+                      : t('No logo files yet')
+                  }
+                  description={t('Upload a PNG logo to get started.')}
                   variant="card"
                   iconSize="md"
                 />
@@ -360,7 +367,7 @@ export function AppLogoFilePicker({
                 pageSizeOptions={[PAGE_SIZE]}
                 onPageChange={setPage}
                 onPageSizeChange={() => undefined}
-                itemLabel="files"
+                itemLabel={t('files')}
               />
             ) : null}
           </div>
@@ -371,14 +378,14 @@ export function AppLogoFilePicker({
               variant="outline"
               onClick={() => handleExplorerOpenChange(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="button"
               disabled={!selectedFileId || uploading}
               onClick={handleConfirmSelection}
             >
-              Select logo
+              {t('Select logo')}
             </Button>
           </div>
         </DialogContent>

@@ -60,6 +60,7 @@ import {
   useMfaReauth,
   verifyMfaReauth,
 } from '@/components/global/auth/MfaReauthForm'
+import { useT } from '@/lib/i18n/translate'
 
 // Dependencies for query invalidation
 const Dependencies = {
@@ -74,6 +75,7 @@ const Dependencies = {
 
 export function AccountIdSection() {
   const { account } = useAuth()
+  const t = useT()
 
   if (!account?.$id) return null
 
@@ -84,14 +86,15 @@ export function AccountIdSection() {
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Account ID
+          {t('Account ID')}
         </h3>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <p className="text-[13px] text-muted-foreground mb-3">
-          Use this ID when integrating with the Appwrite API or SDKs. Support
-          may also ask for this ID when assisting with issues.
+          {t(
+            'Use this ID when integrating with the Appwrite API or SDKs. Support may also ask for this ID when assisting with issues.', // pragma: allowlist secret
+          )}
         </p>
         <CopyableId id={account.$id} size="md" maxWidth={240} />
       </div>
@@ -106,6 +109,7 @@ export function AccountIdSection() {
 export function UpdateNameSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
+  const t = useT()
   const [name, setName] = useState('')
 
   useEffect(() => {
@@ -123,10 +127,10 @@ export function UpdateNameSection() {
         apiResult: updatedAccount,
         patch: { name: newName },
       })
-      toast.success('Name has been updated')
+      toast.success(t('Name has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update name')
+      toast.error(error.message || t('Failed to update name'))
     },
   })
 
@@ -147,21 +151,21 @@ export function UpdateNameSection() {
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update name
+          {t('Update name')}
         </h3>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-3">
-            Update your account display name.
+            {t('Update your account display name.')}
           </p>
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t('Name')}</Label>
             <Input
               id="name"
               type="text"
-              placeholder="Enter name"
+              placeholder={t('Enter name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={updateNameMutation.isPending}
@@ -177,7 +181,7 @@ export function UpdateNameSection() {
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -192,6 +196,7 @@ export function UpdateNameSection() {
 export function UpdateEmailSection() {
   const { account } = useAuth()
   const queryClient = useQueryClient()
+  const t = useT()
   const [email, setEmail] = useState('')
   const [emailPassword, setEmailPassword] = useState('')
 
@@ -218,10 +223,10 @@ export function UpdateEmailSection() {
       })
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
       setEmailPassword('')
-      toast.success('Email has been updated')
+      toast.success(t('Email has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update email')
+      toast.error(error.message || t('Failed to update email'))
     },
   })
 
@@ -245,12 +250,12 @@ export function UpdateEmailSection() {
       <div className="px-6 py-4">
         <div className="flex items-center gap-2">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Update email
+            {t('Update email')}
           </h3>
           {account?.emailVerification && (
             <Badge variant="success" className="text-[10px] shrink-0 gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              verified
+              {t('verified')}
             </Badge>
           )}
         </div>
@@ -259,16 +264,17 @@ export function UpdateEmailSection() {
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-3">
-            Update your account email address. Requires password verification
-            when changing email.
+            {t(
+              'Update your account email address. Requires password verification when changing email.',
+            )}
           </p>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('Email')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter email"
+                placeholder={t('Enter email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={updateEmailMutation.isPending}
@@ -278,11 +284,11 @@ export function UpdateEmailSection() {
             </div>
             {showPassword && (
               <div className="space-y-2">
-                <Label htmlFor="email-password">Password</Label>
+                <Label htmlFor="email-password">{t('Password')}</Label>
                 <Input
                   id="email-password"
                   type="password"
-                  placeholder="Enter password"
+                  placeholder={t('Enter password')}
                   value={emailPassword}
                   onChange={(e) => setEmailPassword(e.target.value)}
                   disabled={updateEmailMutation.isPending}
@@ -300,7 +306,7 @@ export function UpdateEmailSection() {
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -313,6 +319,7 @@ export function UpdateEmailSection() {
 // ============================================================================
 
 export function UpdatePasswordSection() {
+  const t = useT()
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const queryClient = useQueryClient()
@@ -336,10 +343,10 @@ export function UpdatePasswordSection() {
       })
       setOldPassword('')
       setNewPassword('')
-      toast.success('Password has been updated')
+      toast.success(t('Password has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update password')
+      toast.error(error.message || t('Failed to update password'))
     },
   })
 
@@ -360,23 +367,24 @@ export function UpdatePasswordSection() {
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Update password
+          {t('Update password')}
         </h3>
       </div>
       <form onSubmit={handleSubmit}>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-3">
-            Change your account password. Includes link to password recovery if
-            forgotten.
+            {t(
+              'Change your account password. Includes link to password recovery if forgotten.',
+            )}
           </p>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="old-password">Old password</Label>
+              <Label htmlFor="old-password">{t('Old password')}</Label>
               <Input
                 id="old-password"
                 type="password"
-                placeholder="Enter password"
+                placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 disabled={updatePasswordMutation.isPending}
@@ -385,11 +393,11 @@ export function UpdatePasswordSection() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-password">New password</Label>
+              <Label htmlFor="new-password">{t('New password')}</Label>
               <Input
                 id="new-password"
                 type="password"
-                placeholder="Enter password"
+                placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={updatePasswordMutation.isPending}
@@ -402,7 +410,7 @@ export function UpdatePasswordSection() {
                 to="/recovery"
                 className="link-neutral text-[13px]"
               >
-                Forgot your password?
+                {t('Forgot your password?')}
               </Link>
             </div>
           </div>
@@ -414,7 +422,7 @@ export function UpdatePasswordSection() {
             className="h-9 text-[13px]"
             disabled={isDisabled}
           >
-            Update
+            {t('Update')}
           </Button>
         </div>
       </form>
@@ -427,6 +435,7 @@ export function UpdatePasswordSection() {
 // ============================================================================
 
 export function IdentitiesSection() {
+  const t = useT()
   const { data, isLoading } = useAccountIdentities()
   const queryClient = useQueryClient()
   const cachedData = queryClient.getQueryData<{
@@ -442,15 +451,15 @@ export function IdentitiesSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.IDENTITIES })
-      toast.success('Identity has been deleted')
+      toast.success(t('Identity has been deleted'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete identity')
+      toast.error(error.message || t('Failed to delete identity'))
     },
   })
 
   const handleDelete = (identityId: string) => {
-    if (confirm('Are you sure you want to delete this identity?')) {
+    if (confirm(t('Are you sure you want to delete this identity?'))) {
       deleteIdentityMutation.mutate(identityId)
     }
   }
@@ -482,12 +491,14 @@ export function IdentitiesSection() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Identities
+            {t('Identities')}
           </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">Loading identities...</p>
+          <p className="text-[13px] text-muted-foreground">
+            {t('Loading identities...')}
+          </p>
         </div>
       </div>
     )
@@ -498,17 +509,17 @@ export function IdentitiesSection() {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Identities
+            {t('Identities')}
           </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
             <p className="text-[14px] font-medium text-foreground mb-1">
-              No identities are currently available.
+              {t('No identities are currently available.')}
             </p>
             <p className="text-[13px] text-muted-foreground">
-              Once you sign in via GitHub, you'll see it here.
+              {t("Once you sign in via GitHub, you'll see it here.")}
             </p>
           </div>
         </div>
@@ -523,7 +534,7 @@ export function IdentitiesSection() {
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Identities
+          {t('Identities')}
         </h3>
       </div>
       <div className="border-t border-border" />
@@ -533,16 +544,16 @@ export function IdentitiesSection() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                  Provider
+                  {t('Provider')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
-                  Email
+                  {t('Email')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  Created At
+                  {t('Created At')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  Expiry Date
+                  {t('Expiry Date')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]"></TableHead>
               </TableRow>
@@ -615,6 +626,7 @@ export function IdentitiesSection() {
 // ============================================================================
 
 export function MFASection() {
+  const t = useT()
   const { account } = useAuth()
   const { data: factorsData } = useMFAFactors()
   const queryClient = useQueryClient()
@@ -657,11 +669,13 @@ export function MFASection() {
       }
 
       toast.success(
-        `Multi-factor authentication has been ${mfa ? 'enabled' : 'disabled'}`,
+        mfa
+          ? t('Multi-factor authentication has been enabled')
+          : t('Multi-factor authentication has been disabled'),
       )
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update MFA')
+      toast.error(error.message || t('Failed to update MFA'))
       // Revert on error
       setMfaEnabled(account?.mfa || false)
     },
@@ -681,10 +695,12 @@ export function MFASection() {
     >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Multi-factor authentication
+          {t('Multi-factor authentication')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-1">
-          Enhance your account's security by requiring a second sign-in method
+          {t(
+            "Enhance your account's security by requiring a second sign-in method",
+          )}
         </p>
       </div>
       <div className="border-t border-border" />
@@ -695,12 +711,12 @@ export function MFASection() {
               htmlFor="mfa-toggle"
               className="text-[13px] font-semibold text-foreground cursor-pointer"
             >
-              Multi-factor authentication
+              {t('Multi-factor authentication')}
             </Label>
             <p className="text-[12px] text-muted-foreground">
               {mfaEnabled
-                ? 'MFA is currently enabled'
-                : 'MFA is currently disabled'}
+                ? t('MFA is currently enabled')
+                : t('MFA is currently disabled')}
             </p>
           </div>
           <Switch
@@ -731,6 +747,7 @@ export function MFASection() {
 
 // TOTP Method Component
 function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [setupDialogOpen, setSetupDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -781,7 +798,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
     onError: (error: Error) => {
       setSetupDialogOpen(false)
       resetSetupState()
-      toast.error(error.message || 'Failed to create authenticator')
+      toast.error(error.message || t('Failed to create authenticator'))
     },
   })
 
@@ -800,10 +817,10 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
       setSetupDialogOpen(false)
       setVerifyDialogOpen(false)
       resetSetupState()
-      toast.success('Authenticator app has been connected')
+      toast.success(t('Authenticator app has been connected'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to verify authenticator')
+      toast.error(error.message || t('Failed to verify authenticator'))
     },
   })
 
@@ -816,10 +833,10 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
       setDeleteDialogOpen(false)
-      toast.success('Authenticator app has been deleted')
+      toast.success(t('Authenticator app has been deleted'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete authenticator')
+      toast.error(error.message || t('Failed to delete authenticator'))
     },
   })
 
@@ -859,18 +876,19 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <h4 className="text-[14px] font-semibold text-foreground">
-              Authenticator app
+              {t('Authenticator app')}
             </h4>
             {factors.totp && (
               <Badge variant="success" className="text-[10px] shrink-0 gap-1">
                 <CheckCircle2 className="h-3 w-3" />
-                connected
+                {t('connected')}
               </Badge>
             )}
           </div>
           <p className="text-[13px] text-muted-foreground">
-            Use an authentication app to generate two-factor authentication
-            codes.
+            {t(
+              'Use an authentication app to generate two-factor authentication codes.',
+            )}
           </p>
         </div>
         <div>
@@ -882,7 +900,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               onClick={handleDelete}
               disabled={deleteAuthenticatorMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           ) : (
             <Button
@@ -891,7 +909,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               onClick={handleStartSetup}
               disabled={createAuthenticatorMutation.isPending}
             >
-              Add
+              {t('Add')}
             </Button>
           )}
         </div>
@@ -902,12 +920,14 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>
-              {step === 'qr' ? 'Scan QR code' : 'Enter verification code'}
+              {step === 'qr' ? t('Scan QR code') : t('Enter verification code')}
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {step === 'qr'
-                ? 'Install an authenticator app on your mobile device, open it and scan the provided QR code or enter it manually.'
-                : 'Enter the 6-digit one-time code generated by the app.'}
+                ? t(
+                    'Install an authenticator app on your mobile device, open it and scan the provided QR code or enter it manually.',
+                  )
+                : t('Enter the 6-digit one-time code generated by the app.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -923,7 +943,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
                     <div className="rounded-lg bg-white p-4">
                       <img
                         src={qrCodeUrl}
-                        alt="MFA QR Code"
+                        alt={t('MFA QR Code')}
                         className="mx-auto block aspect-square w-full max-w-[192px]"
                       />
                     </div>
@@ -937,15 +957,18 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
                       </div>
                       <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
                         <span className="bg-background px-2 text-muted-foreground">
-                          or
+                          {t('or')}
                         </span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[12px]">Manual entry code</Label>
+                      <Label className="text-[12px]">
+                        {t('Manual entry code')}
+                      </Label>
                       <p className="text-[12px] text-muted-foreground">
-                        Manually enter the following code into the authenticator
-                        app
+                        {t(
+                          'Manually enter the following code into the authenticator app',
+                        )}
                       </p>
                       <div className="flex items-center gap-2">
                         <Input
@@ -962,7 +985,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
             ) : (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="otp">Verification code</Label>
+                  <Label htmlFor="otp">{t('Verification code')}</Label>
                   <Input
                     id="otp"
                     type="text"
@@ -989,7 +1012,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               className="h-9 text-[13px]"
               onClick={() => handleSetupDialogOpenChange(false)}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               size="sm"
@@ -1002,7 +1025,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
                 verifyAuthenticatorMutation.isPending
               }
             >
-              Continue
+              {t('Continue')}
             </Button>
           </div>
         </DialogContent>
@@ -1011,9 +1034,9 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Delete authenticator app</DialogTitle>
+            <DialogTitle>{t('Delete authenticator app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              This removes authenticator app codes from your account.
+              {t('This removes authenticator app codes from your account.')}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1024,7 +1047,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleteAuthenticatorMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1033,7 +1056,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               onClick={() => deleteAuthenticatorMutation.mutate()}
               disabled={deleteAuthenticatorMutation.isPending}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>
@@ -1051,6 +1074,7 @@ function EmailMFAMethod({
   account: Models.User | undefined
 }) {
   useQueryClient()
+  const t = useT()
 
   const createVerificationMutation = useMutation({
     mutationFn: async () => {
@@ -1059,10 +1083,10 @@ function EmailMFAMethod({
       })
     },
     onSuccess: () => {
-      toast.success('Verification email has been sent')
+      toast.success(t('Verification email has been sent'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to send verification email')
+      toast.error(error.message || t('Failed to send verification email'))
     },
   })
 
@@ -1077,22 +1101,24 @@ function EmailMFAMethod({
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <h4 className="text-[14px] font-semibold text-foreground">Email</h4>
+          <h4 className="text-[14px] font-semibold text-foreground">
+            {t('Email')}
+          </h4>
           {account?.emailVerification && factors.email && (
             <Badge variant="success" className="text-[10px] shrink-0 gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              verified
+              {t('verified')}
             </Badge>
           )}
           {!account?.emailVerification && (
             <Badge variant="warning" className="text-[10px] shrink-0 gap-1">
               <XCircle className="h-3 w-3" />
-              unverified
+              {t('unverified')}
             </Badge>
           )}
         </div>
         <p className="text-[13px] text-muted-foreground">
-          One-time codes will be sent to: {account?.email || '-'}
+          {t('One-time codes will be sent to:')} {account?.email || '-'}
         </p>
       </div>
       {!account?.emailVerification && (
@@ -1102,7 +1128,7 @@ function EmailMFAMethod({
           onClick={handleVerify}
           disabled={createVerificationMutation.isPending}
         >
-          Verify
+          {t('Verify')}
         </Button>
       )}
     </div>
@@ -1117,6 +1143,7 @@ function SMSMFAMethod({
   factors: Models.MfaFactors
   account: Models.User | undefined
 }) {
+  const t = useT()
   return (
     <div className="flex items-start gap-4 rounded-lg border border-border bg-card/50 p-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
@@ -1128,12 +1155,12 @@ function SMSMFAMethod({
           {account?.phoneVerification && factors.phone && (
             <Badge variant="success" className="text-[10px] shrink-0 gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              verified
+              {t('verified')}
             </Badge>
           )}
         </div>
         <p className="text-[13px] text-muted-foreground">
-          One-time codes will be sent to: {account?.phone || '-'}
+          {t('One-time codes will be sent to:')} {account?.phone || '-'}
         </p>
       </div>
     </div>
@@ -1159,6 +1186,7 @@ function RecoveryCodesMethod({
   factors: Models.MfaFactors
   hasAnyMfaMethod: boolean
 }) {
+  const t = useT()
   const queryClient = useQueryClient()
   const [codesDialogOpen, setCodesDialogOpen] = useState(false)
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
@@ -1181,7 +1209,7 @@ function RecoveryCodesMethod({
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create recovery codes')
+      toast.error(error.message || t('Failed to create recovery codes'))
     },
   })
 
@@ -1203,7 +1231,7 @@ function RecoveryCodesMethod({
       const message =
         error instanceof Error
           ? error.message
-          : 'Failed to regenerate recovery codes'
+          : t('Failed to regenerate recovery codes')
       setRegenerateError(message)
       reauth.setCode('')
     } finally {
@@ -1221,7 +1249,7 @@ function RecoveryCodesMethod({
       if (err.code === 404 || err.message?.includes('not found')) {
         createRecoveryCodesMutation.mutate()
       } else {
-        toast.error(err.message || 'Failed to get recovery codes')
+        toast.error(err.message || t('Failed to get recovery codes'))
       }
     }
   }
@@ -1237,7 +1265,7 @@ function RecoveryCodesMethod({
 
   const handleCopyAll = async () => {
     await navigator.clipboard.writeText(recoveryCodesText)
-    toast.success('Recovery codes copied')
+    toast.success(t('Recovery codes copied'))
   }
 
   const handleDownload = () => {
@@ -1260,10 +1288,10 @@ function RecoveryCodesMethod({
         </div>
         <div className="flex-1">
           <h4 className="text-[14px] font-semibold text-foreground mb-1">
-            Recovery codes
+            {t('Recovery codes')}
           </h4>
           <p className="text-[13px] text-muted-foreground">
-            Use in case you can't receive two-factor authentication codes.
+            {t("Use in case you can't receive two-factor authentication codes.")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -1275,7 +1303,7 @@ function RecoveryCodesMethod({
               onClick={() => handleRegenerateDialogOpenChange(true)}
               disabled={!hasAnyMfaMethod}
             >
-              Regenerate
+              {t('Regenerate')}
             </Button>
           ) : (
             <Button
@@ -1285,7 +1313,7 @@ function RecoveryCodesMethod({
               onClick={handleView}
               disabled={!hasAnyMfaMethod}
             >
-              View
+              {t('View')}
             </Button>
           )}
         </div>
@@ -1297,10 +1325,11 @@ function RecoveryCodesMethod({
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Regenerate recovery codes</DialogTitle>
+            <DialogTitle>{t('Regenerate recovery codes')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to regenerate all recovery codes? All
-              previously generated recovery codes will become invalid.
+              {t(
+                'Are you sure you want to regenerate all recovery codes? All previously generated recovery codes will become invalid.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1321,7 +1350,7 @@ function RecoveryCodesMethod({
                 className="h-9 text-[13px]"
                 onClick={() => handleRegenerateDialogOpenChange(false)}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 type="submit"
@@ -1333,7 +1362,7 @@ function RecoveryCodesMethod({
                   isRegenerating
                 }
               >
-                Regenerate
+                {t('Regenerate')}
               </Button>
             </div>
           </form>
@@ -1344,10 +1373,11 @@ function RecoveryCodesMethod({
       <Dialog open={codesDialogOpen} onOpenChange={setCodesDialogOpen}>
         <DialogContent className="sm:max-w-lg p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Recovery codes</DialogTitle>
+            <DialogTitle>{t('Recovery codes')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Use these codes to access your account if you lose your
-              authenticator.
+              {t(
+                'Use these codes to access your account if you lose your authenticator.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1356,10 +1386,10 @@ function RecoveryCodesMethod({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400" />
               <div className="space-y-1">
                 <p className="text-[13px] font-medium text-orange-700 dark:text-orange-300">
-                  Save these recovery codes now. They won't be shown again.
+                  {t("Save these recovery codes now. They won't be shown again.")}
                 </p>
                 <p className="text-[13px] text-muted-foreground">
-                  Each code can only be used once.
+                  {t('Each code can only be used once.')}
                 </p>
               </div>
             </div>
@@ -1372,7 +1402,7 @@ function RecoveryCodesMethod({
                 disabled={recoveryCodes.length === 0}
               >
                 <Copy className="me-1.5 h-4 w-4" />
-                Copy all
+                {t('Copy all')}
               </Button>
               <Button
                 variant="outline"
@@ -1382,7 +1412,7 @@ function RecoveryCodesMethod({
                 disabled={recoveryCodes.length === 0}
               >
                 <Download className="me-1.5 h-4 w-4" />
-                Download .txt
+                {t('Download .txt')}
               </Button>
             </div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1404,7 +1434,7 @@ function RecoveryCodesMethod({
               className="h-9 text-[13px]"
               onClick={() => setCodesDialogOpen(false)}
             >
-              Close
+              {t('Close')}
             </Button>
           </div>
         </DialogContent>
@@ -1444,6 +1474,7 @@ function CopyButton({ text }: { text: string }) {
 // ============================================================================
 
 export function DeleteAccountSection() {
+  const t = useT()
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -1456,12 +1487,12 @@ export function DeleteAccountSection() {
     onSuccess: () => {
       clearConsoleAccountCache()
       queryClient.removeQueries({ queryKey: Dependencies.ACCOUNT })
-      toast.success('Account was deleted')
+      toast.success(t('Account was deleted'))
       // User will be logged out by backend
       window.location.href = '/sign-in'
     },
     onError: (error: Error) => {
-      setError(error.message || 'Failed to delete account')
+      setError(error.message || t('Failed to delete account'))
     },
   })
 
@@ -1478,24 +1509,25 @@ export function DeleteAccountSection() {
       >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-red-600 dark:text-red-400">
-            Delete account
+            {t('Delete account')}
           </h3>
         </div>
         <div className="border-t border-red-500/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Your account will be permanently deleted and access will be lost to
-            any of your teams and data. This action is irreversible.
+            {t(
+              'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.',
+            )}
           </p>
           {/* Account Info Summary */}
           <div className="flex items-center gap-3 mt-4">
             <InitialsAvatar
-              name={account?.name || account?.email || 'User'}
+              name={account?.name || account?.email || t('User')}
               size="md"
             />
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-foreground truncate">
-                {account?.name || 'User'}
+                {account?.name || t('User')}
               </p>
               {account?.email && (
                 <p className="text-[12px] text-muted-foreground">
@@ -1514,15 +1546,16 @@ export function DeleteAccountSection() {
                 size="sm"
                 className="h-9 text-[13px]"
               >
-                Delete account
+                {t('Delete account')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>Delete account</DialogTitle>
+                <DialogTitle>{t('Delete account')}</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete your account? This action
-                  cannot be undone.
+                  {t(
+                    'Are you sure you want to delete your account? This action cannot be undone.',
+                  )}
                 </DialogDescription>
               </DialogHeader>
               <div className="border-t border-border" />
@@ -1531,12 +1564,12 @@ export function DeleteAccountSection() {
                   <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
                     <div className="flex items-center gap-3">
                       <InitialsAvatar
-                        name={account.name || account.email || 'User'}
+                        name={account.name || account.email || t('User')}
                         size="sm"
                       />
                       <div>
                         <p className="text-[13px] font-medium text-foreground">
-                          {account.name || 'User'}
+                          {account.name || t('User')}
                         </p>
                         {account.email && (
                           <p className="text-[11px] text-muted-foreground">
@@ -1563,7 +1596,7 @@ export function DeleteAccountSection() {
                     setError(null)
                   }}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -1572,7 +1605,7 @@ export function DeleteAccountSection() {
                   disabled={deleteAccountMutation.isPending}
                   onClick={handleDelete}
                 >
-                  Delete account
+                  {t('Delete account')}
                 </Button>
               </div>
             </DialogContent>

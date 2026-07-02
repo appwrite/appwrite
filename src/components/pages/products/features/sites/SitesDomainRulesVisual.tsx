@@ -1,6 +1,7 @@
 import { ArrowRight, GitBranch } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const DOMAIN_RULES = [
   {
@@ -34,17 +35,18 @@ const DOMAIN_RULES = [
 ] as const
 
 export function SitesDomainRulesVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'deployments', label: 'Deployments' },
-        { id: 'domains', label: 'Domains', active: true },
+        { id: 'overview', label: t('Overview') },
+        { id: 'deployments', label: t('Deployments') },
+        { id: 'domains', label: t('Domains'), active: true },
       ]}
     >
       <div className="space-y-3">
         <p className="text-[12px] text-muted-foreground">
-          Map each hostname to a deployment, branch, or redirect.
+          {t('Map each hostname to a deployment, branch, or redirect.')}
         </p>
         <div className="overflow-hidden rounded-lg border border-border bg-background/80">
           <div className="divide-y divide-border">
@@ -63,11 +65,11 @@ export function SitesDomainRulesVisual() {
                     ) : entry.rule.startsWith('Redirect') ? (
                       <ArrowRight className="size-3 shrink-0" aria-hidden />
                     ) : null}
-                    {entry.rule}
+                    {t(entry.rule)}
                   </p>
                 </div>
                 <Badge variant={entry.badge} className="shrink-0 text-[10px]">
-                  {entry.label}
+                  {t(entry.label)}
                 </Badge>
               </div>
             ))}

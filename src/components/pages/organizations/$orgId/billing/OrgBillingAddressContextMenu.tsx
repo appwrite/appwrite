@@ -21,6 +21,7 @@ import {
 import { fetchBillingAddress } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface OrgBillingAddressContextMenuProps {
   address: Models.BillingAddress
@@ -50,19 +51,20 @@ export function OrgBillingAddressContextMenu({
   onRemove,
   children,
 }: OrgBillingAddressContextMenuProps) {
+  const t = useT()
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={onUpdate}>
           <ContextMenuIcon icon={Pencil} />
-          Update
+          {t('Update')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={ArrowLeftRight} />
-            Replace
+            {t('Replace')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent className="w-56">
             {availableAddresses.map((addr) => (
@@ -77,7 +79,7 @@ export function OrgBillingAddressContextMenu({
             {availableAddresses.length > 0 ? <ContextMenuSeparator /> : null}
             <ContextMenuItem onSelect={onAddNew}>
               <ContextMenuIcon icon={Plus} />
-              Add new address
+              {t('Add new address')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
@@ -85,14 +87,14 @@ export function OrgBillingAddressContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', address.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -100,7 +102,7 @@ export function OrgBillingAddressContextMenu({
               }
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -108,14 +110,14 @@ export function OrgBillingAddressContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={onRemove}>
           <ContextMenuIcon icon={Trash2} />
-          Remove
+          {t('Remove')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

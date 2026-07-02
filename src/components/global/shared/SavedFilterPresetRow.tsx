@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type SavedFilterPresetItem = {
   id: string
@@ -55,6 +56,7 @@ export function SavedFilterPresetRow({
   deleteDisabled,
   onRenameCommit,
 }: SavedFilterPresetRowProps) {
+  const t = useT()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.name)
   const skipBlurCommitRef = useRef(false)
@@ -133,7 +135,7 @@ export function SavedFilterPresetRow({
         editing
           ? undefined
           : canEdit
-            ? `${item.name}, drag to reorder`
+            ? `${item.name}, ${t('drag to reorder')}`
             : item.name
       }
     >
@@ -167,7 +169,7 @@ export function SavedFilterPresetRow({
           }}
           className="h-7 min-w-0 flex-1 text-[13px]"
           maxLength={NAME_MAX}
-          aria-label="Saved filter name"
+          aria-label={t('Saved filter name')}
           onClick={(ev) => ev.stopPropagation()}
         />
       ) : (
@@ -182,7 +184,7 @@ export function SavedFilterPresetRow({
             <button
               type="button"
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Rename saved filter"
+              aria-label={t('Rename saved filter')}
               onClick={(e) => {
                 e.stopPropagation()
                 startEditing()
@@ -192,7 +194,7 @@ export function SavedFilterPresetRow({
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" sideOffset={4} className="z-[250]">
-            Rename
+            {t('Rename')}
           </TooltipContent>
         </Tooltip>
       ) : editing ? (
@@ -213,7 +215,7 @@ export function SavedFilterPresetRow({
           onApply()
         }}
       >
-        Apply
+        {t('Apply')}
       </Button>
 
       {canEdit ? (
@@ -225,7 +227,7 @@ export function SavedFilterPresetRow({
           }}
           disabled={deleteDisabled}
           className="shrink-0 cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
-          aria-label="Delete saved filter"
+          aria-label={t('Delete saved filter')}
         >
           {deleteBusy ? (
             <Loader2 className="h-3 w-3 animate-spin" />

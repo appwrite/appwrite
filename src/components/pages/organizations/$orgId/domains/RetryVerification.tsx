@@ -19,6 +19,7 @@ import { Copy, Check, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 interface RetryVerificationProps {
   open: boolean
@@ -37,6 +38,7 @@ export function RetryVerification({
   onRetry,
   isLoading = false,
 }: RetryVerificationProps) {
+  const t = useT()
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const handleRetry = () => {
@@ -46,7 +48,7 @@ export function RetryVerification({
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    toast.success('Copied to clipboard')
+    toast.success(t('Copied to clipboard'))
     setTimeout(() => setCopiedField(null), 2000)
   }
 
@@ -54,11 +56,13 @@ export function RetryVerification({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Retry verification</DialogTitle>
+          <DialogTitle>{t('Retry verification')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Update your domain <strong>{domain.domain}</strong> nameservers to
-            point to Appwrite. It may take up to 48 hours for DNS changes to
-            propagate.
+            {t('Update the nameservers of your domain')}{' '}
+            <strong>{domain.domain}</strong>{' '}
+            {t(
+              'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.', // pragma: allowlist secret
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -70,7 +74,7 @@ export function RetryVerification({
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Nameserver
+                      {t('Nameserver')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
@@ -102,7 +106,7 @@ export function RetryVerification({
             </div>
             <p className="text-[13px] text-muted-foreground">
               <DocsRouteLink className="inline-flex items-center gap-1 link-neutral" href="/docs/domains">
-                Learn more about DNS settings
+                {t('Learn more about DNS settings')}
                 <ExternalLink className="h-3 w-3" />
               </DocsRouteLink>
             </p>
@@ -115,10 +119,10 @@ export function RetryVerification({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleRetry} disabled={isLoading}>
-            Retry
+            {t('Retry')}
           </Button>
         </div>
       </DialogContent>

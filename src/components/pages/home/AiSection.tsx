@@ -14,6 +14,7 @@ import {
   type IDEConfig,
 } from '@/lib/config/ide'
 import { AiTileSoftLight } from '@/components/pages/home/HomeSoftLights'
+import { useT } from '@/lib/i18n/translate'
 import {
   Table,
   TableBody,
@@ -94,14 +95,17 @@ function formatScore(value: number) {
 }
 
 function McpFeaturePanel() {
+  const t = useT()
   return (
     <AiFeatureCard
       title="MCP"
-      description="Connect AI agents to your Appwrite backend. No custom integrations required."
+      description={t(
+        'Connect AI agents to your Appwrite backend. No custom integrations required.', // pragma: allowlist secret
+      )}
       shade="mcp"
       className="border-b border-border lg:border-b-0 lg:border-e"
       cta={
-        <AiFeatureCtaButton href="/docs/tooling/mcp" label="Learn more" />
+        <AiFeatureCtaButton href="/docs/tooling/mcp" label={t('Learn more')} />
       }
     >
       <AiMcpMockVisual />
@@ -110,13 +114,19 @@ function McpFeaturePanel() {
 }
 
 function SkillsFeaturePanel() {
+  const t = useT()
   return (
     <AiFeatureCard
-      title="Skills"
-      description="Teach AI agents your backend, so they always make the right call."
+      title={t('Skills')}
+      description={t(
+        'Teach AI agents your backend, so they always make the right call.',
+      )}
       shade="skills"
       cta={
-        <AiFeatureCtaButton href="/docs/tooling/ai/skills" label="Learn more" />
+        <AiFeatureCtaButton
+          href="/docs/tooling/ai/skills"
+          label={t('Learn more')}
+        />
       }
     >
       <AiSkillsMockVisual />
@@ -138,6 +148,7 @@ function PluginTile({
   href: string
   badges: PluginTileBadge[]
 }) {
+  const t = useT()
   const className =
     'group flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 transition-colors hover:bg-accent/15'
 
@@ -156,7 +167,7 @@ function PluginTile({
             variant={badge.variant}
             className="text-[10px]"
           >
-            {badge.label}
+            {t(badge.label)}
           </Badge>
         ))}
       </span>
@@ -165,16 +176,17 @@ function PluginTile({
 }
 
 function AiPluginsSection() {
+  const t = useT()
   return (
     <div className="mt-10 grid overflow-visible pb-4 lg:mt-12 lg:grid-cols-2 lg:divide-x lg:divide-border">
       <div className="relative py-6 lg:py-0 lg:pe-10">
         <AiTileSoftLight tone="plugins" />
         <div className="relative space-y-1.5">
           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-            Official plugins
+            {t('Official plugins')}
           </h3>
           <p className="text-[13px] leading-5 text-muted-foreground">
-            One-click marketplace plugins for Cursor, Claude Code, and Codex.
+            {t('One-click marketplace plugins for Cursor, Claude Code, and Codex.')}
           </p>
         </div>
         <div className="relative mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -193,10 +205,10 @@ function AiPluginsSection() {
         <AiTileSoftLight tone="integrations" />
         <div className="relative space-y-1.5">
           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground sm:text-[18px]">
-            Integrations
+            {t('Integrations')}
           </h3>
           <p className="text-[13px] leading-5 text-muted-foreground">
-            Connect Appwrite in other agents and IDEs.
+            {t('Connect Appwrite in other agents and IDEs.')} {/* pragma: allowlist secret */}
           </p>
         </div>
         <div className="relative mt-4 grid grid-cols-2 gap-2">
@@ -211,7 +223,9 @@ function AiPluginsSection() {
         </div>
         <div className="relative mt-4">
           <Button variant="outline" className="h-9 text-[13px]" asChild>
-            <MarketingSiteLink href="/docs/tooling/mcp">Learn more</MarketingSiteLink>
+            <MarketingSiteLink href="/docs/tooling/mcp">
+              {t('Learn more')}
+            </MarketingSiteLink>
           </Button>
         </div>
       </div>
@@ -220,37 +234,38 @@ function AiPluginsSection() {
 }
 
 function BenchmarkTable() {
+  const t = useT()
   return (
     <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
       <Table className="min-w-[56rem]">
         <TableHeader>
           <TableRow className="hover:bg-transparent border-b border-border">
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Model
+              {t('Model')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Cost/1M
+              {t('Cost/1M')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Overall
+              {t('Overall')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Auth
+              {t('Auth')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               TablesDB
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Functions
+              {t('Functions')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Storage
+              {t('Storage')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Sites
+              {t('Sites')}
             </TableHead>
             <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Messaging
+              {t('Messaging')}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -296,6 +311,7 @@ function BenchmarkTable() {
 }
 
 export function AiSection() {
+  const t = useT()
   return (
     <section className="relative isolate overflow-hidden border-t border-border bg-background py-16 sm:py-20">
       <div
@@ -305,7 +321,7 @@ export function AiSection() {
 
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6">
         <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-          Designed for the AI agents in your workflow
+          {t('Designed for the AI agents in your workflow')}
           <span className="text-[var(--brand-cta)]">_</span>
         </h2>
 
@@ -322,11 +338,12 @@ export function AiSection() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4 lg:gap-5">
               <h3 className="font-aeonik-pro shrink-0 text-[16px] font-normal text-foreground sm:text-[17px]">
-                Benchmark
+                {t('Benchmark')}
               </h3>
               <p className="min-w-0 max-w-xl text-[14px] leading-6 text-muted-foreground sm:text-[15px]">
-                Works with every major LLM. Find out how well your model integrates with
-                Appwrite.
+                {t(
+                  'Works with every major LLM. Find out how well your model integrates with Appwrite.', // pragma: allowlist secret
+                )}
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
@@ -336,7 +353,7 @@ export function AiSection() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  View full benchmark
+                  {t('View full benchmark')}
                 </a>
               </Button>
             </div>

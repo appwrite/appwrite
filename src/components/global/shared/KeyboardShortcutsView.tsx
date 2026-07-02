@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { Command } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import { DEFAULT_GROUP_LABELS, type CommandKind } from '@/lib/command-center'
 import {
@@ -46,6 +47,7 @@ function ShortcutKeyBadges({
   isSequential?: boolean
   highlighted?: boolean
 }) {
+  const t = useT()
   return (
     <div className="flex shrink-0 items-center gap-0.5">
       {keys.map((key, i) => (
@@ -59,7 +61,7 @@ function ShortcutKeyBadges({
                   : 'text-muted-foreground/60',
               )}
             >
-              then
+              {t('then')}
             </span>
           )}
           <kbd
@@ -92,6 +94,7 @@ export function KeyboardShortcutsView({
   onClose,
   onKeyDown,
 }: KeyboardShortcutsViewProps) {
+  const t = useT()
   const { isMac } = usePlatform()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -159,10 +162,10 @@ export function KeyboardShortcutsView({
           onClick={onBack}
           className="flex h-6 items-center gap-1 rounded bg-accent px-2 text-[11px] font-medium text-muted-foreground hover:bg-accent/80 hover:text-foreground"
         >
-          ← Back
+          ← {t('Back')}
         </button>
         <h2 className="flex-1 ps-3 text-[14px] font-medium text-foreground">
-          Keyboard shortcuts
+          {t('Keyboard shortcuts')}
         </h2>
         {isMobile && (
           <button
@@ -188,7 +191,7 @@ export function KeyboardShortcutsView({
                 className="mb-5 inline-block w-full break-inside-avoid"
               >
                 <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-foreground/55 dark:text-muted-foreground">
-                  {group.label}
+                  {t(group.label)}
                 </h3>
                 <div className="space-y-0.5 rounded-lg border border-border bg-muted/30 p-1 dark:border-border/60 dark:bg-muted/20">
                   {group.shortcuts.map((shortcut) => {
@@ -214,7 +217,7 @@ export function KeyboardShortcutsView({
                               : 'text-foreground/90',
                           )}
                         >
-                          {shortcut.description}
+                          {t(shortcut.description)}
                         </span>
                         <ShortcutKeyBadges
                           keys={shortcut.displayKeys}
@@ -254,7 +257,7 @@ export function KeyboardShortcutsView({
             <kbd className="rounded border border-border bg-muted/50 px-1 py-0.5 text-[10px] text-foreground/80 dark:bg-muted/40 dark:text-muted-foreground">
               esc
             </kbd>
-            back
+            {t('back')}
           </span>
         </div>
       )}

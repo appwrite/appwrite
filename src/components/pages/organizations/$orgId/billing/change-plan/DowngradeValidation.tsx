@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useT } from '@/lib/i18n/translate'
 import { getDowngradePlanLimits } from '@/lib/billing/downgrade-plan-limits'
 import {
   deleteDowngradeDomains,
@@ -112,6 +113,7 @@ export function DowngradeValidation({
   deletedOrganizationLoading = false,
   expectDeletedOrganizationImpact = false,
 }: DowngradeValidationProps) {
+  const t = useT()
   const { account } = useAuth()
   const accountModel = account as Models.User | undefined
   const limits = useMemo(() => getDowngradePlanLimits(targetPlan), [targetPlan])
@@ -634,10 +636,10 @@ export function DowngradeValidation({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Adjust resources for the target plan
+            {t('Adjust resources for the target plan')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            This organization has no projects.
+            {t('This organization has no projects.')}
           </p>
         </div>
       </div>
@@ -662,8 +664,8 @@ export function DowngradeValidation({
 
       {needsMemberSelection && membersLimit !== null ? (
         <DowngradeLimitSelection
-          title="Choose members to keep"
-          description={`The target plan allows ${membersLimit} member${membersLimit === 1 ? '' : 's'}. Unselected members will be removed from the organization.`}
+          title={t('Choose members to keep')}
+          description={`${t('The target plan allows')} ${membersLimit} ${membersLimit === 1 ? t('member') : t('members')}. ${t('Unselected members will be removed from the organization.')}`}
           resourceLabel="members"
           limit={membersLimit}
           items={memberItems}
@@ -679,8 +681,8 @@ export function DowngradeValidation({
 
       {needsDomainSelection && domainsLimit !== null ? (
         <DowngradeLimitSelection
-          title="Choose domains to keep"
-          description={`The target plan allows ${domainsLimit} domain${domainsLimit === 1 ? '' : 's'}. Unselected domains will be deleted.`}
+          title={t('Choose domains to keep')}
+          description={`${t('The target plan allows')} ${domainsLimit} ${domainsLimit === 1 ? t('domain') : t('domains')}. ${t('Unselected domains will be deleted.')}`}
           resourceLabel="domains"
           limit={domainsLimit}
           items={domainItems}
@@ -727,14 +729,14 @@ export function DowngradeValidation({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Adjust resources for the target plan
+              {t('Adjust resources for the target plan')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
               {orgSelectionsLoading
-                ? 'Loading organization resources...'
+                ? t('Loading organization resources...')
                 : needsProjectSelection && keptProjects.length === 0
-                  ? 'Select projects above to review their resources.'
-                  : 'Complete the selections above to review project resources.'}
+                  ? t('Select projects above to review their resources.')
+                  : t('Complete the selections above to review project resources.')}
             </p>
           </div>
         </div>
@@ -744,11 +746,12 @@ export function DowngradeValidation({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Adjust resources for the target plan
+              {t('Adjust resources for the target plan')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              No projects to review. Confirm your member and domain selections
-              above, then continue.
+              {t(
+                'No projects to review. Confirm your member and domain selections above, then continue.',
+              )}
             </p>
           </div>
         </div>

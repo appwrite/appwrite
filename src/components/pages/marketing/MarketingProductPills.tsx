@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ArrowUpRight, Globe } from 'lucide-react'
 import { Fragment } from 'react'
 import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
+import { useT } from '@/lib/i18n/translate'
 import { pricingServices } from '@/lib/pricing/services'
 import { cn } from '@/lib/utils'
 
@@ -41,28 +42,30 @@ function ProductAvatarGroup({
   label: string
   products: readonly MarketingProductPill[]
 }) {
+  const t = useT()
   return (
     <div className="flex flex-nowrap items-center gap-2.5 sm:gap-3">
       <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        {label}
+        {t(label)}
       </p>
       <ProductAvatarsList
         items={toAvatarItems(products)}
-        ariaLabel={`${label} products`}
+        ariaLabel={`${t(label)} ${t('products')}`}
       />
     </div>
   )
 }
 
 function ScaleAvatarGroup({ href }: { href?: string }) {
+  const t = useT()
   return (
     <div className="flex flex-nowrap items-center gap-2.5 sm:gap-3">
       <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-        Scale
+        {t('Scale')}
       </p>
       <ProductAvatarsList
-        items={[{ name: 'Scale', icon: ArrowUpRight, href }]}
-        ariaLabel="Scale"
+        items={[{ name: t('Scale'), icon: ArrowUpRight, href }]}
+        ariaLabel={t('Scale')}
       />
     </div>
   )

@@ -47,6 +47,7 @@ import {
   topicsQueryOptions,
   usersQueryOptions,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 const PICK_LIMIT = 25
 
@@ -450,6 +451,7 @@ function ResourceTitleSwitcherPopover({
   disabled = false,
   className,
 }: ResourceTitleSwitcherProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -499,7 +501,7 @@ function ResourceTitleSwitcherPopover({
         <Command shouldFilter={false}>
           <div className="relative">
             <CommandInput
-              placeholder={SEARCH_PLACEHOLDERS[kind]}
+              placeholder={t(SEARCH_PLACEHOLDERS[kind])}
               value={search}
               onValueChange={setSearch}
               className={cn('h-9', isFetching && 'pe-8')}
@@ -519,7 +521,7 @@ function ResourceTitleSwitcherPopover({
               <ResourceTitleListSkeleton kind={kind} />
             ) : (
               <>
-                <CommandEmpty>No results found</CommandEmpty>
+                <CommandEmpty>{t('No results found')}</CommandEmpty>
                 <CommandGroup>
                   {items.map((item) => (
                     <CommandItem

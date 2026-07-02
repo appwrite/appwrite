@@ -1,5 +1,6 @@
 import { Bell, CheckCircle2, Mail, Phone, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { productBentoContainer, productBentoIdle } from './MockSyntax'
 
@@ -24,6 +25,7 @@ function ChannelPill({
   icon: LucideIcon
   index: number
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -33,7 +35,7 @@ function ChannelPill({
       style={{ transitionDelay: `${index * 60}ms` }}
     >
       <Icon className="size-3.5 shrink-0" aria-hidden />
-      <span>{label}</span>
+      <span>{t(label)}</span>
     </div>
   )
 }
@@ -45,6 +47,7 @@ function DeliveryChip({
   label: string
   delayMs: number
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -61,21 +64,22 @@ function DeliveryChip({
         )}
         aria-hidden
       />
-      <span className="text-[10px] font-medium sm:text-[11px]">{label}</span>
+      <span className="text-[10px] font-medium sm:text-[11px]">{t(label)}</span>
     </div>
   )
 }
 
 export function MessagingProductVisual() {
+  const t = useT()
   return (
     <div className="absolute inset-0 flex flex-col">
       <div className={cn('mx-auto flex h-full min-h-0 w-full max-w-[21rem] flex-col', productBentoContainer.shell)}>
         <div className={cn(productBentoContainer.header, 'px-3.5 py-2.5')}>
           <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
-            Campaign message
+            {t('Campaign message')}
           </p>
           <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-[12px]">
-            Email, SMS, and push from one message
+            {t('Email, SMS, and push from one message')}
           </p>
         </div>
 
@@ -100,15 +104,16 @@ export function MessagingProductVisual() {
               )}
             >
               <p className={cn('text-[12px] font-medium sm:text-[13px]', productBentoIdle.text)}>
-                Welcome to Acme
+                {t('Welcome to Acme')}
               </p>
               <div className="relative mt-1 min-h-[2.25rem] text-[11px] leading-snug text-muted-foreground sm:text-[12px] sm:leading-relaxed">
                 <span className="transition-opacity duration-200 group-hover:opacity-0 motion-reduce:group-hover:opacity-100">
-                  Draft your message once...
+                  {t('Draft your message once...')}
                 </span>
                 <span className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:static motion-reduce:opacity-100">
-                  Thanks for signing up. Here&apos;s how to get started with your new
-                  account.
+                  {t(
+                    "Thanks for signing up. Here's how to get started with your new account.",
+                  )}
                 </span>
               </div>
             </div>
@@ -119,10 +124,11 @@ export function MessagingProductVisual() {
                 <p className={cn('truncate font-mono text-[11px] sm:text-[12px]', productBentoIdle.text)}>
                   product-updates
                 </p>
-                <p className="text-[10px] text-muted-foreground sm:text-[11px]">Topic</p>
+                <p className="text-[10px] text-muted-foreground sm:text-[11px]">{t('Topic')}</p>
               </div>
               <p className="shrink-0 text-[10px] tabular-nums text-muted-foreground sm:text-[11px]">
-                <span className={cn('font-medium', productBentoIdle.text)}>1,248</span> targets
+                <span className={cn('font-medium', productBentoIdle.text)}>1,248</span>{' '}
+                {t('targets')}
               </p>
             </div>
           </div>
@@ -139,7 +145,7 @@ export function MessagingProductVisual() {
                 ))}
               </div>
               <p className="mt-2 hidden text-center text-[10px] text-muted-foreground group-hover:block motion-reduce:block sm:text-[11px]">
-                Delivered across every selected channel
+                {t('Delivered across every selected channel')}
               </p>
             </div>
 
@@ -154,7 +160,9 @@ export function MessagingProductVisual() {
                   />
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground sm:text-[11px]">Your providers</p>
+              <p className="text-[10px] text-muted-foreground sm:text-[11px]">
+                {t('Your providers')}
+              </p>
             </div>
           </div>
         </div>

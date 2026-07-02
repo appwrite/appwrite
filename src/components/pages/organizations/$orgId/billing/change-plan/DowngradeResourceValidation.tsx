@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { formatProjectNameForDisplay } from '@/lib/react-query/hooks/projects'
 import { fetchProjectDowngradeResources } from '@/lib/billing/fetch-project-downgrade-resources'
 import {
@@ -108,6 +109,7 @@ function ColumnPaginationFooter({
   onPageChange: (page: number) => void
   reserveSpace?: boolean
 }) {
+  const t = useT()
   const showPagination = totalItems > COLUMN_LIST_PAGE_SIZE
   if (!showPagination && !reserveSpace) return null
 
@@ -120,7 +122,7 @@ function ColumnPaginationFooter({
       aria-hidden={!showPagination}
     >
       <span className="text-[11px] tabular-nums text-muted-foreground">
-        Page {currentPage} of {totalPages}
+        {t('Page')} {currentPage} {t('of')} {totalPages}
       </span>
       <div className="flex items-center gap-1">
         <Button
@@ -130,7 +132,7 @@ function ColumnPaginationFooter({
           className="h-7 w-7"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          aria-label="Previous page"
+          aria-label={t('Previous page')}
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
@@ -141,7 +143,7 @@ function ColumnPaginationFooter({
           className="h-7 w-7"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          aria-label="Next page"
+          aria-label={t('Next page')}
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
@@ -204,6 +206,7 @@ export function DowngradeResourceValidation({
   onValidityChange,
   onImpactChange,
 }: DowngradeResourceValidationProps) {
+  const t = useT()
   const limits = useMemo(() => getDowngradePlanLimits(targetPlan), [targetPlan])
 
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
@@ -627,7 +630,7 @@ export function DowngradeResourceValidation({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Adjust resources for the target plan
+          {t('Adjust resources for the target plan')}
         </h3>
       </div>
 
@@ -640,7 +643,7 @@ export function DowngradeResourceValidation({
             <div className="flex flex-col border-b border-border lg:border-b-0">
               <div className={columnHeaderClassName}>
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Projects
+                  {t('Projects')}
                 </p>
               </div>
 
@@ -683,7 +686,7 @@ export function DowngradeResourceValidation({
                           </span>
                           {isLoadingProject ? (
                             <span className="block text-[12px] leading-normal text-muted-foreground mt-0.5">
-                              Loading resources...
+                              {t('Loading resources...')}
                             </span>
                           ) : null}
                         </span>
@@ -706,7 +709,7 @@ export function DowngradeResourceValidation({
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="left">
-                              {issueCount} over limit
+                              {issueCount} {t('over limit')}
                             </TooltipContent>
                           </TooltipPrimitive.Root>
                         ) : null}
@@ -721,7 +724,7 @@ export function DowngradeResourceValidation({
             <div className="flex flex-col border-b border-border lg:border-b-0">
               <div className={columnHeaderClassName}>
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Resources
+                  {t('Resources')}
                 </p>
               </div>
 
@@ -729,7 +732,7 @@ export function DowngradeResourceValidation({
                 <ColumnSearchBar
                   value={resourceTypeSearch}
                   onChange={setResourceTypeSearch}
-                  placeholder="Search resource types..."
+                  placeholder={t('Search resource types...')}
                 />
               ) : null}
 
@@ -743,15 +746,15 @@ export function DowngradeResourceValidation({
               >
                 {!activeProject || !activeResources ? (
                   <p className={columnPlaceholderClassName}>
-                    Select a project to view resources.
+                    {t('Select a project to view resources.')}
                   </p>
                 ) : activeProjectResourcesLoading ? (
                   <p className={columnPlaceholderClassName}>
-                    Loading resources...
+                    {t('Loading resources...')}
                   </p>
                 ) : paginatedResourceTypes.filtered.length === 0 ? (
                   <p className={columnPlaceholderClassName}>
-                    No resource types match your search.
+                    {t('No resource types match your search.')}
                   </p>
                 ) : (
                   <PaginatedListSlots
@@ -779,7 +782,7 @@ export function DowngradeResourceValidation({
                           )}
                         >
                           <span className="text-[13px] font-medium leading-normal text-foreground">
-                            {label}
+                            {t(label)}
                           </span>
                           {overLimit ? (
                             <Badge
@@ -818,7 +821,7 @@ export function DowngradeResourceValidation({
             <div className="flex flex-col">
               <div className={columnHeaderClassName}>
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {activeTypeConfig?.label ?? 'Selection'}
+                  {activeTypeConfig ? t(activeTypeConfig.label) : t('Selection')}
                 </p>
               </div>
 
@@ -826,7 +829,7 @@ export function DowngradeResourceValidation({
                 <ColumnSearchBar
                   value={selectionSearch}
                   onChange={setSelectionSearch}
-                  placeholder={`Search ${activeTypeConfig?.label.toLowerCase() ?? 'items'}...`}
+                  placeholder={`${t('Search')} ${activeTypeConfig ? t(activeTypeConfig.label).toLowerCase() : t('items')}...`}
                 />
               ) : null}
 
@@ -839,19 +842,23 @@ export function DowngradeResourceValidation({
               >
                 {!activeResourceType ? (
                   <p className={columnEmptyPlaceholderClassName}>
-                    Select a resource type to review items.
+                    {t('Select a resource type to review items.')}
                   </p>
                 ) : !activeProject || !activeResources ? (
                   <p className={columnEmptyPlaceholderClassName}>
-                    Select a project to view resources.
+                    {t('Select a project to view resources.')}
                   </p>
                 ) : activeItems.length === 0 ? (
                   <p className={columnEmptyPlaceholderClassName}>
-                    No {activeTypeConfig?.label.toLowerCase()} in this project.
+                    {t('No')}{' '}
+                    {activeTypeConfig
+                      ? t(activeTypeConfig.label).toLowerCase()
+                      : ''}{' '}
+                    {t('in this project.')}
                   </p>
                 ) : paginatedSelectionItems.filtered.length === 0 ? (
                   <p className={columnEmptyPlaceholderClassName}>
-                    No items match your search.
+                    {t('No items match your search.')}
                   </p>
                 ) : (
                   <PaginatedListSlots
@@ -912,7 +919,7 @@ export function DowngradeResourceValidation({
                               variant="error"
                               className="text-[10px] shrink-0"
                             >
-                              Will delete
+                              {t('Will delete')}
                             </Badge>
                           ) : null}
                         </div>

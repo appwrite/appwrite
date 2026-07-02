@@ -39,6 +39,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface AddressModalProps {
   open: boolean
@@ -56,6 +57,7 @@ export function AddressModal({
   organizationId,
   onSuccess,
 }: AddressModalProps) {
+  const t = useT()
   const isEditing = !!address
 
   const [country, setCountry] = useState('')
@@ -116,7 +118,7 @@ export function AddressModal({
     e.preventDefault()
 
     if (!country || !streetAddress || !city || !state) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('Please fill in all required fields'))
       return
     }
 
@@ -131,7 +133,7 @@ export function AddressModal({
           postalCode: postalCode || undefined,
           addressLine2: addressLine2 || undefined,
         })
-        toast.success('Billing address updated')
+        toast.success(t('Billing address updated'))
       } else {
         const newAddress = await createAddressMutation.mutateAsync({
           country,
@@ -146,9 +148,9 @@ export function AddressModal({
             organizationId,
             billingAddressId: newAddress.$id,
           })
-          toast.success('Billing address has been added to your organization')
+          toast.success(t('Billing address has been added to your organization'))
         } else {
-          toast.success('Billing address created')
+          toast.success(t('Billing address created'))
         }
       }
 
@@ -158,7 +160,7 @@ export function AddressModal({
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to save billing address',
+          : t('Failed to save billing address'),
       )
     }
   }
@@ -174,12 +176,12 @@ export function AddressModal({
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>
-            {isEditing ? 'Update billing address' : 'Add billing address'}
+            {isEditing ? t('Update billing address') : t('Add billing address')}
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {isEditing
-              ? 'Update your billing address information.'
-              : 'Add a new billing address to your account.'}
+              ? t('Update your billing address information.')
+              : t('Add a new billing address to your account.')}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -188,7 +190,7 @@ export function AddressModal({
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="country" className="text-[13px]">
-                Country <span className="text-red-500">*</span>
+                {t('Country')} <span className="text-red-500">*</span>
               </Label>
               <Popover
                 open={countryPopoverOpen}
@@ -206,8 +208,8 @@ export function AddressModal({
                     <span className="truncate">
                       {country
                         ? countries.find((c) => c.code === country)?.name ||
-                          'Select a country'
-                        : 'Select a country'}
+                          t('Select a country')
+                        : t('Select a country')}
                     </span>
                     <ChevronDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -218,11 +220,11 @@ export function AddressModal({
                 >
                   <Command>
                     <CommandInput
-                      placeholder="Search countries..."
+                      placeholder={t('Search countries...')}
                       className="h-9"
                     />
                     <CommandList>
-                      <CommandEmpty>No country found.</CommandEmpty>
+                      <CommandEmpty>{t('No country found.')}</CommandEmpty>
                       <CommandGroup>
                         {countries.map((c) => (
                           <CommandItem
@@ -254,13 +256,13 @@ export function AddressModal({
 
             <div className="space-y-2">
               <Label htmlFor="street-address" className="text-[13px]">
-                Street Address <span className="text-red-500">*</span>
+                {t('Street Address')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="street-address"
                 value={streetAddress}
                 onChange={(e) => setStreetAddress(e.target.value)}
-                placeholder="123 Main St"
+                placeholder={t('123 Main St')}
                 className="h-9 text-[13px]"
                 disabled={isLoading}
               />
@@ -268,13 +270,13 @@ export function AddressModal({
 
             <div className="space-y-2">
               <Label htmlFor="address-line-2" className="text-[13px]">
-                Address Line 2
+                {t('Address Line 2')}
               </Label>
               <Input
                 id="address-line-2"
                 value={addressLine2}
                 onChange={(e) => setAddressLine2(e.target.value)}
-                placeholder="Apt, suite, etc. (optional)"
+                placeholder={t('Apt, suite, etc. (optional)')}
                 className="h-9 text-[13px]"
                 disabled={isLoading}
               />
@@ -283,13 +285,13 @@ export function AddressModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city" className="text-[13px]">
-                  City <span className="text-red-500">*</span>
+                  {t('City')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="City"
+                  placeholder={t('City')}
                   className="h-9 text-[13px]"
                   disabled={isLoading}
                 />
@@ -297,13 +299,13 @@ export function AddressModal({
 
               <div className="space-y-2">
                 <Label htmlFor="state" className="text-[13px]">
-                  State/Province <span className="text-red-500">*</span>
+                  {t('State/Province')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="state"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
-                  placeholder="State"
+                  placeholder={t('State')}
                   className="h-9 text-[13px]"
                   disabled={isLoading}
                 />
@@ -312,7 +314,7 @@ export function AddressModal({
 
             <div className="space-y-2">
               <Label htmlFor="postal-code" className="text-[13px]">
-                Postal Code
+                {t('Postal Code')}
               </Label>
               <Input
                 id="postal-code"
@@ -332,7 +334,7 @@ export function AddressModal({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
@@ -340,7 +342,7 @@ export function AddressModal({
                 isLoading || !country || !streetAddress || !city || !state
               }
             >
-              {isEditing ? 'Update' : 'Add'}
+              {isEditing ? t('Update') : t('Add')}
             </Button>
           </div>
         </form>

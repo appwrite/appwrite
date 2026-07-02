@@ -13,9 +13,11 @@ import {
   readConsoleImpersonationOperatorSnapshot,
 } from '@/lib/console-impersonation'
 import { performExitConsoleImpersonation } from '@/lib/console-impersonation-exit'
+import { useT } from '@/lib/i18n/translate'
 
 /** No `account.get` - session target + operator snapshot only (e.g. account-access-blocked). */
 function ConsoleImpersonationBannerSession({ className }: { className?: string }) {
+  const t = useT()
   const [, bump] = useState(0)
   useEffect(() => {
     const onChange = () => bump((n) => n + 1)
@@ -30,9 +32,10 @@ function ConsoleImpersonationBannerSession({ className }: { className?: string }
   const operatorLabel =
     operatorSnapshot?.name?.trim() ||
     operatorSnapshot?.email?.trim() ||
-    'Operator'
-  const summary =
-    'Impersonation active. Operating as another console user. Exit to return to your operator session.'
+    t('Operator')
+  const summary = t(
+    'Impersonation active. Operating as another console user. Exit to return to your operator session.',
+  )
 
   return (
     <HeaderAlertBar
@@ -45,20 +48,21 @@ function ConsoleImpersonationBannerSession({ className }: { className?: string }
         <button
           type="button"
           className={headerAlertOutlineButtonClass('warning')}
-          aria-label="Exit impersonation"
+          aria-label={t('Exit impersonation')}
           onClick={() =>
             void performExitConsoleImpersonation({
               skipRecentImpersonationFlush: true,
             })
           }
         >
-          Exit
+          {t('Exit')}
         </button>
       }
     >
       <>
-        Impersonation active. Operating as{' '}
-        <span className="text-foreground">another console user</span>. Operator{' '}
+        {t('Impersonation active. Operating as')}{' '}
+        <span className="text-foreground">{t('another console user')}</span>
+        {t('. Operator')}{' '}
         <span className="text-foreground">{operatorLabel}</span>.
       </>
     </HeaderAlertBar>
@@ -66,6 +70,7 @@ function ConsoleImpersonationBannerSession({ className }: { className?: string }
 }
 
 function ConsoleImpersonationBannerFull({ className }: { className?: string }) {
+  const t = useT()
   const { account: accountRaw } = useAuth()
   const account = accountRaw as Models.User | undefined
   const operatorSnapshot = readConsoleImpersonationOperatorSnapshot()
@@ -82,12 +87,12 @@ function ConsoleImpersonationBannerFull({ className }: { className?: string }) {
   const operatorLabel =
     operatorSnapshot?.name?.trim() ||
     operatorSnapshot?.email?.trim() ||
-    (impersonatorUserId ? `User ${impersonatorUserId}` : 'Operator')
+    (impersonatorUserId ? `${t('User')} ${impersonatorUserId}` : t('Operator'))
 
   const targetLabel =
     account?.name?.trim() ||
     account?.email?.trim() ||
-    (account?.$id ? `User ${account.$id}` : 'Console user')
+    (account?.$id ? `${t('User')} ${account.$id}` : t('Console user'))
 
   const summary = `Impersonation active. Operating as ${targetLabel}. Operator ${operatorLabel}.`
 
@@ -102,16 +107,17 @@ function ConsoleImpersonationBannerFull({ className }: { className?: string }) {
         <button
           type="button"
           className={headerAlertOutlineButtonClass('warning')}
-          aria-label="Exit impersonation"
+          aria-label={t('Exit impersonation')}
           onClick={() => void performExitConsoleImpersonation()}
         >
-          Exit
+          {t('Exit')}
         </button>
       }
     >
       <>
-        Impersonation active. Operating as{' '}
-        <span className="text-foreground">{targetLabel}</span>. Operator{' '}
+        {t('Impersonation active. Operating as')}{' '}
+        <span className="text-foreground">{targetLabel}</span>
+        {t('. Operator')}{' '}
         <span className="text-foreground">{operatorLabel}</span>.
       </>
     </HeaderAlertBar>

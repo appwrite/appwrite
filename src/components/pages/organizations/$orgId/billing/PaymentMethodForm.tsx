@@ -37,6 +37,7 @@ import {
 } from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import { maskCardNumber } from './utils'
+import { useT } from '@/lib/i18n/translate'
 
 export interface PaymentMethodFormProps {
   /** Whether the enclosing surface (dialog or inline panel) is visible.
@@ -118,6 +119,7 @@ export function PaymentMethodForm({
   onCancel,
   variant = 'dialog',
 }: PaymentMethodFormProps) {
+  const t = useT()
   const [cardholderName, setCardholderName] = useState('')
   const [selectedState, setSelectedState] = useState<string>('')
   const [showStatePicker, setShowStatePicker] = useState(false)
@@ -273,7 +275,7 @@ export function PaymentMethodForm({
           if (mounted) setIsStripeLoading(false)
         } catch (mountError) {
           if (mounted) {
-            setError('Failed to mount payment form. Please try again.')
+            setError(t('Failed to mount payment form. Please try again.'))
             setIsStripeLoading(false)
             console.error('Stripe mount error:', mountError)
           }
@@ -283,7 +285,7 @@ export function PaymentMethodForm({
           setError(
             err instanceof Error
               ? err.message
-              : 'Failed to initialize payment form',
+              : t('Failed to initialize payment form'),
           )
           setIsStripeLoading(false)
           console.error('Stripe initialization error:', err)
@@ -350,15 +352,15 @@ export function PaymentMethodForm({
     e.preventDefault()
 
     if (!cardholderName.trim()) {
-      setError('Please enter a cardholder name')
+      setError(t('Please enter a cardholder name'))
       return
     }
     if (showStatePicker && !selectedState && !stateOptional) {
-      setError('Please select a state')
+      setError(t('Please select a state'))
       return
     }
     if (!paymentMethodId) {
-      setError('Payment form not ready. Please try again.')
+      setError(t('Payment form not ready. Please try again.'))
       return
     }
 
@@ -378,7 +380,7 @@ export function PaymentMethodForm({
 
       if (!resolvedProviderMethodId) {
         if (!stripeRef.current || !elementsRef.current || !clientSecret) {
-          setError('Payment form not ready. Please try again.')
+          setError(t('Payment form not ready. Please try again.'))
           return
         }
 
@@ -440,7 +442,7 @@ export function PaymentMethodForm({
               await stripeRef.current.handleNextAction({ clientSecret })
             if (aborted()) return
             if (actionError) {
-              throw new Error(actionError.message ?? 'Authentication failed')
+              throw new Error(actionError.message ?? t('Authentication failed'))
             }
             finalIntent = next ?? finalIntent
           }
@@ -450,14 +452,14 @@ export function PaymentMethodForm({
           throw new Error(
             finalIntent?.last_setup_error?.message ??
               (finalIntent?.status === 'requires_payment_method'
-                ? 'The card was declined or authentication was cancelled. Please try again or use a different card.'
+                ? t('The card was declined or authentication was cancelled. Please try again or use a different card.')
                 : `Payment setup did not complete (status: ${finalIntent?.status ?? 'unknown'}).`),
           )
         }
 
         const stripePaymentMethod = finalIntent.payment_method
         if (!stripePaymentMethod) {
-          throw new Error('Invalid payment method response')
+          throw new Error(t('Invalid payment method response'))
         }
 
         // After handleNextAction / retrieveSetupIntent the payment_method is a
@@ -525,14 +527,14 @@ export function PaymentMethodForm({
 
       toast.success(
         organizationId
-          ? 'Payment method has been added to your organization'
-          : 'A new payment method has been added to your account',
+          ? t('Payment method has been added to your organization')
+          : t('A new payment method has been added to your account'),
       )
       onSuccess?.()
     } catch (err) {
       if (aborted()) return
       setError(
-        err instanceof Error ? err.message : 'Failed to add payment method',
+        err instanceof Error ? err.message : t('Failed to add payment method'),
       )
     } finally {
       if (submitAbortRef.current === controller) {
@@ -558,8 +560,7 @@ export function PaymentMethodForm({
       >
         <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
           <p className="text-[12px] text-yellow-600 dark:text-yellow-400">
-            Stripe payment processing is not configured. Please ensure
-            VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.
+            {t('Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.')}
           </p>
         </div>
         {onCancel && (
@@ -576,7 +577,7 @@ export function PaymentMethodForm({
               size={variant === 'inline' ? 'sm' : undefined}
               onClick={onCancel}
             >
-              Close
+              {t('Close')}
             </Button>
           </div>
         )}
@@ -599,7 +600,7 @@ export function PaymentMethodForm({
         <>
           <div className="space-y-2">
             <Label htmlFor="cardholder-name" className="text-[13px]">
-              Cardholder name <span className="text-destructive">*</span>
+              {t('Cardholder name')} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="cardholder-name"
@@ -620,7 +621,7 @@ export function PaymentMethodForm({
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 <p className="text-[12px] text-muted-foreground">
-                  Loading payment form...
+                  {t('Loading payment form...')}
                 </p>
               </div>
             )}
@@ -631,7 +632,7 @@ export function PaymentMethodForm({
           {addedCardPreview ? (
             <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                Card added
+                {t('Card added')}
               </p>
               <p className="text-[13px] text-foreground mt-1 capitalize">
                 {addedCardPreview.brand}{' '}
@@ -640,7 +641,7 @@ export function PaymentMethodForm({
               {addedCardPreview.expMonth > 0 &&
                 addedCardPreview.expYear > 0 && (
                   <p className="text-[12px] text-muted-foreground mt-0.5">
-                    Expires {String(addedCardPreview.expMonth).padStart(2, '0')}
+                    {t('Expires')} {String(addedCardPreview.expMonth).padStart(2, '0')}
                     /{String(addedCardPreview.expYear).slice(-2)}
                   </p>
                 )}
@@ -648,11 +649,10 @@ export function PaymentMethodForm({
           ) : (
             <div className="rounded-md border border-border bg-muted/30 px-3 py-2.5">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                Card added
+                {t('Card added')}
               </p>
               <p className="text-[13px] text-foreground mt-1">
-                A card was entered in a previous attempt. Complete the details
-                below to finish adding it.
+                {t('A card was entered in a previous attempt. Complete the details below to finish adding it.')}
               </p>
             </div>
           )}
@@ -662,7 +662,7 @@ export function PaymentMethodForm({
           {stateOptional && (
             <div className="space-y-2">
               <Label htmlFor="cardholder-name-recover" className="text-[13px]">
-                Cardholder name <span className="text-destructive">*</span>
+                {t('Cardholder name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="cardholder-name-recover"
@@ -677,9 +677,9 @@ export function PaymentMethodForm({
 
           <div className="space-y-2">
             <Label htmlFor="state" className="text-[13px]">
-              State{' '}
+              {t('State')}{' '}
               {stateOptional ? (
-                '(optional)'
+                t('(optional)')
               ) : (
                 <span className="text-destructive">*</span>
               )}
@@ -690,7 +690,7 @@ export function PaymentMethodForm({
               disabled={isLoading}
             >
               <SelectTrigger id="state" className="h-9 text-[13px]">
-                <SelectValue placeholder="Select a state" />
+                <SelectValue placeholder={t('Select a state')} />
               </SelectTrigger>
               <SelectContent>
                 {US_STATES.map((state) => (
@@ -731,7 +731,7 @@ export function PaymentMethodForm({
             onClick={onCancel}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
         )}
         <Button
@@ -744,7 +744,7 @@ export function PaymentMethodForm({
             (showStatePicker && !selectedState && !stateOptional)
           }
         >
-          {showStatePicker ? 'Save' : 'Add'}
+          {showStatePicker ? t('Save') : t('Add')}
         </Button>
       </div>
     </form>

@@ -18,17 +18,20 @@ import { Input } from '@/components/ui/input'
 import { Link } from '@tanstack/react-router'
 import { Card } from '@/components/ui/card'
 import { getLastLoginMethod } from '@/lib/utils/auth-storage'
+import { useT, type Translator } from '@/lib/i18n/translate'
 
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+const createLoginSchema = (t: Translator) =>
+  z.object({
+    email: z.string().email(t('Please enter a valid email address')),
+    password: z.string().min(1, t('Password is required')),
+  })
 
-const signUpSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
+const createSignUpSchema = (t: Translator) =>
+  z.object({
+    name: z.string().min(2, t('Name must be at least 2 characters')),
+    email: z.string().email(t('Please enter a valid email address')),
+    password: z.string().min(8, t('Password must be at least 8 characters')),
+  })
 
 type FormValues = {
   email: string
@@ -53,7 +56,9 @@ export function SignIn({
   isGitHubLoading,
   redirect,
 }: SignInProps) {
-  const schema = mode === 'sign-in' ? loginSchema : signUpSchema
+  const t = useT()
+  const schema =
+    mode === 'sign-in' ? createLoginSchema(t) : createSignUpSchema(t)
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -121,12 +126,14 @@ export function SignIn({
             >
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
-                  {mode === 'sign-in' ? 'Welcome back' : 'Create an account'}
+                  {mode === 'sign-in'
+                    ? t('Welcome back')
+                    : t('Create an account')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   {mode === 'sign-in'
-                    ? 'Login to your account'
-                    : 'Enter your details to create a new account'}
+                    ? t('Login to your account')
+                    : t('Enter your details to create a new account')}
                 </p>
               </div>
 
@@ -135,7 +142,7 @@ export function SignIn({
                   <div className="relative">
                     {lastLoginMethod === 'github' && (
                       <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                        Last used
+                        {t('Last used')}
                       </span>
                     )}
                     <Button
@@ -157,8 +164,8 @@ export function SignIn({
                         />
                       </svg>
                       {mode === 'sign-up'
-                        ? 'Sign up with GitHub'
-                        : 'Login with GitHub'}
+                        ? t('Sign up with GitHub')
+                        : t('Login with GitHub')}
                     </Button>
                   </div>
 
@@ -168,7 +175,7 @@ export function SignIn({
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                       <span className="bg-card px-2 text-muted-foreground">
-                        Or continue with
+                        {t('Or continue with')}
                       </span>
                     </div>
                   </div>
@@ -182,9 +189,9 @@ export function SignIn({
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel>{t('Name')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your name" {...field} />
+                          <Input placeholder={t('Your name')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -197,7 +204,7 @@ export function SignIn({
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t('Email')}</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -215,7 +222,7 @@ export function SignIn({
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t('Password')}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -228,7 +235,7 @@ export function SignIn({
                           }
                           className="link-neutral text-sm"
                         >
-                          Forgot your password?
+                          {t('Forgot your password?')}
                         </Link>
                       )}
                     </FormItem>
@@ -239,24 +246,24 @@ export function SignIn({
               <div className="relative">
                 {lastLoginMethod === 'email' && (
                   <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                    Last used
+                    {t('Last used')}
                   </span>
                 )}
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {mode === 'sign-in' ? 'Login' : 'Sign up'}
+                  {mode === 'sign-in' ? t('Login') : t('Sign up')}
                 </Button>
               </div>
 
               <p className="text-center text-sm text-muted-foreground">
                 {mode === 'sign-in'
-                  ? "Don't have an account? "
-                  : 'Already have an account? '}
+                  ? t("Don't have an account?")
+                  : t('Already have an account?')}{' '}
                 <Link
                   to={mode === 'sign-in' ? '/sign-up' : '/sign-in'}
                   search={redirect ? { redirect } : undefined}
                   className="link-neutral"
                 >
-                  {mode === 'sign-in' ? 'Sign up' : 'Sign in'}
+                  {mode === 'sign-in' ? t('Sign up') : t('Sign in')}
                 </Link>
               </p>
             </form>

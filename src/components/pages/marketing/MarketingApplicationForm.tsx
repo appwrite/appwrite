@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 export type ApplicationFormSelectOption = {
@@ -47,6 +48,7 @@ export function MarketingApplicationForm({
   successDescription = 'Our team will review your application and get back to you soon.',
   defaultValues,
 }: MarketingApplicationFormProps) {
+  const t = useT()
   const [values, setValues] = useState<Record<string, string>>(() => defaultValues ?? {})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -82,7 +84,7 @@ export function MarketingApplicationForm({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : 'Error submitting form. Please contact support.',
+          : t('Error submitting form. Please contact support.'),
       )
     } finally {
       setSubmitting(false)
@@ -100,11 +102,11 @@ export function MarketingApplicationForm({
       <div className={cn('mx-auto max-w-md text-center', className)}>
         <div className="flex items-center justify-center gap-2 text-[14px] font-medium text-foreground">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
-          {successTitle}
+          {t(successTitle)}
         </div>
-        <p className="mt-3 text-[13px] leading-6 text-muted-foreground">{successDescription}</p>
+        <p className="mt-3 text-[13px] leading-6 text-muted-foreground">{t(successDescription)}</p>
         <Button variant="outline" className="mt-6" onClick={resetForm}>
-          Back to form
+          {t('Back to form')}
         </Button>
       </div>
     )
@@ -119,13 +121,13 @@ export function MarketingApplicationForm({
             className={cn('space-y-2', field.colSpan === 2 && 'sm:col-span-2')}
           >
             <Label htmlFor={field.name} className="text-[13px]">
-              {field.label}
+              {t(field.label)}
             </Label>
             {field.type === 'textarea' ? (
               <Textarea
                 id={field.name}
                 name={field.name}
-                placeholder={field.placeholder}
+                placeholder={t(field.placeholder)}
                 required={field.required ?? true}
                 value={values[field.name] ?? ''}
                 onChange={(event) => handleChange(field.name, event.target.value)}
@@ -137,12 +139,12 @@ export function MarketingApplicationForm({
                 onValueChange={(value) => handleChange(field.name, value)}
               >
                 <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue placeholder={field.placeholder} />
+                  <SelectValue placeholder={t(field.placeholder)} />
                 </SelectTrigger>
                 <SelectContent>
                   {field.options?.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -152,7 +154,7 @@ export function MarketingApplicationForm({
                 id={field.name}
                 name={field.name}
                 type={field.type}
-                placeholder={field.placeholder}
+                placeholder={t(field.placeholder)}
                 required={field.required ?? true}
                 value={values[field.name] ?? ''}
                 onChange={(event) => handleChange(field.name, event.target.value)}
@@ -166,28 +168,28 @@ export function MarketingApplicationForm({
 
       <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-end sm:justify-between">
         <p className="text-[12px] leading-5 text-muted-foreground">
-          This form is protected by reCAPTCHA, and the Google{' '}
+          {t('This form is protected by reCAPTCHA, and the Google')}{' '}
           <a
             href="https://policies.google.com/privacy"
             className="text-foreground underline underline-offset-2"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Privacy Policy
+            {t('Privacy Policy')}
           </a>{' '}
-          and{' '}
+          {t('and')}{' '}
           <a
             href="https://policies.google.com/terms"
             className="text-foreground underline underline-offset-2"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Terms of Service
+            {t('Terms of Service')}
           </a>{' '}
-          apply.
+          {t('apply.')}
         </p>
         <Button type="submit" variant="brandCta" disabled={submitting} className="shrink-0">
-          {submitLabel}
+          {t(submitLabel)}
         </Button>
       </div>
     </form>

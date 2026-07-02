@@ -2,6 +2,7 @@ import { KeyRound, Mail, Smartphone } from 'lucide-react'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { MockSwitchRow } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
 import { Syn } from '@/components/pages/home/product-bento/MockSyntax'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const PASSWORDLESS_METHODS = [
@@ -11,6 +12,7 @@ const PASSWORDLESS_METHODS = [
 ] as const
 
 export function AuthPasswordlessVisual() {
+  const t = useT()
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <ProductFeatureVisualFrame title="Auth settings" contentClassName="space-y-2">
@@ -40,8 +42,8 @@ export function AuthPasswordlessVisual() {
                   <Icon className="size-3.5 text-muted-foreground" aria-hidden />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[12px] font-medium text-foreground">{method.label}</p>
-                  <p className="text-[11px] text-muted-foreground">{method.detail}</p>
+                  <p className="text-[12px] font-medium text-foreground">{t(method.label)}</p>
+                  <p className="text-[11px] text-muted-foreground">{t(method.detail)}</p>
                 </div>
               </div>
             )

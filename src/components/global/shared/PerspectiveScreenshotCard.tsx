@@ -9,6 +9,7 @@ import {
   PERSPECTIVE_SCREENSHOT_CARD_TRANSFORM,
 } from '@/lib/perspective-screenshot-card/constants'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type PerspectiveScreenshotSceneLayout =
   | 'center'
@@ -179,6 +180,7 @@ export function PerspectiveScreenshotCard({
   browserFrame = false,
   themeId,
 }: PerspectiveScreenshotCardProps) {
+  const t = useT()
   const cardTransform = buildPerspectiveScreenshotCardTransform({
     rotateX,
     rotateY,
@@ -221,7 +223,7 @@ export function PerspectiveScreenshotCard({
             frameHeight={shellDimensions!.shellHeight}
             themeId={themeId}
             src={src}
-            alt={alt}
+            alt={t(alt)}
             focusX={focusX}
             focusY={focusY}
             zoom={zoom}
@@ -230,7 +232,7 @@ export function PerspectiveScreenshotCard({
         ) : src ? (
           <img
             src={src}
-            alt={alt}
+            alt={t(alt)}
             draggable={false}
             className="block h-full w-full object-cover"
             style={{

@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { useT } from '@/lib/i18n/translate'
 
 const DNS_RECORD_TYPES = [
   'A',
@@ -65,6 +66,7 @@ export function CreateRecordDialog({
   onCreate,
   isLoading = false,
 }: CreateRecordDialogProps) {
+  const t = useT()
   const [type, setType] = useState<string>('A')
   const [name, setName] = useState('')
   const [value, setValue] = useState('')
@@ -120,62 +122,73 @@ export function CreateRecordDialog({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title="Create DNS Record"
+      title={t('Create DNS Record')}
       maxWidth="sm:max-w-lg"
-    >
+>
       <>
         <div className="border-t border-border shrink-0" />
 
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-1 flex-col min-h-0"
+>
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="type">
-                    Type <span className="text-destructive">*</span>
+                    {t('Type')} <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={type}
                     onValueChange={setType}
                     disabled={isLoading}
-                  >
-                    <SelectTrigger id="type">
+>
+                    <SelectTrigger
+                      id="type"
+>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DNS_RECORD_TYPES.map((recordType) => (
-                        <SelectItem key={recordType} value={recordType}>
+                        <SelectItem
+                          key={recordType}
+                          value={recordType}
+>
                           {recordType}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-[12px] text-muted-foreground">
-                    {DNS_RECORD_DESCRIPTIONS[type] || ''}
+                    {DNS_RECORD_DESCRIPTIONS[type]
+                      ? t(DNS_RECORD_DESCRIPTIONS[type])
+                      : ''}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="name">
-                    Name <span className="text-destructive">*</span>
+                    {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="@ or subdomain"
+                    placeholder={t('@ or subdomain')}
                     disabled={isLoading}
                     autoFocus
                   />
                   <p className="text-[12px] text-muted-foreground">
-                    Use @ for the root domain, or enter a subdomain (e.g., www,
-                    mail)
+                    {t(
+                      'Use @ for the root domain, or enter a subdomain (e.g., www, mail)',
+                    )}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="value">
-                    Value <span className="text-destructive">*</span>
+                    {t('Value')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="value"
@@ -213,14 +226,14 @@ export function CreateRecordDialog({
                     disabled={isLoading}
                   />
                   <p className="text-[12px] text-muted-foreground">
-                    Time to live in seconds (default: 3600)
+                    {t('Time to live in seconds (default: 3600)')}
                   </p>
                 </div>
 
                 {requiresPriority && (
                   <div className="space-y-2">
                     <Label htmlFor="priority">
-                      Priority <span className="text-destructive">*</span>
+                      {t('Priority')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="priority"
@@ -233,8 +246,8 @@ export function CreateRecordDialog({
                     />
                     <p className="text-[12px] text-muted-foreground">
                       {type === 'MX'
-                        ? 'Lower numbers have higher priority'
-                        : 'Priority for SRV record'}
+                        ? t('Lower numbers have higher priority')
+                        : t('Priority for SRV record')}
                     </p>
                   </div>
                 )}
@@ -243,7 +256,7 @@ export function CreateRecordDialog({
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="weight">
-                        Weight <span className="text-destructive">*</span>
+                        {t('Weight')} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="weight"
@@ -258,7 +271,7 @@ export function CreateRecordDialog({
 
                     <div className="space-y-2">
                       <Label htmlFor="port">
-                        Port <span className="text-destructive">*</span>
+                        {t('Port')} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="port"
@@ -275,12 +288,12 @@ export function CreateRecordDialog({
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="comment">Comment (optional)</Label>
+                  <Label htmlFor="comment">{t('Comment (optional)')}</Label>
                   <Textarea
                     id="comment"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Optional comment"
+                    placeholder={t('Optional comment')}
                     disabled={isLoading}
                     rows={3}
                   />
@@ -293,16 +306,16 @@ export function CreateRecordDialog({
             <Button
               type="submit"
               disabled={isLoading || !name.trim() || !value.trim()}
-            >
-              Create Record
+>
+              {t('Create Record')}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
-            >
-              Cancel
+>
+              {t('Cancel')}
             </Button>
           </div>
         </form>

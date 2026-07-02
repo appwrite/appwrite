@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useT } from '@/lib/i18n/translate'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -52,6 +53,7 @@ export function ExplorerResourceIdHelper({
   projectId,
   formValues = {},
 }: ExplorerResourceIdHelperProps) {
+  const t = useT()
   const context = useMemo(
     () => resolveResourceIdContext(formValues),
     [formValues],
@@ -72,9 +74,9 @@ export function ExplorerResourceIdHelper({
         size="sm"
         disabled
         className="inline-flex h-8 cursor-not-allowed px-3 text-[12px] font-normal text-muted-foreground/70 opacity-100"
-        title="Set parent resource IDs first"
+        title={t('Set parent resource IDs first')}
       >
-        Set parent ID
+        {t('Set parent ID')}
       </Button>
     )
   }
@@ -89,7 +91,7 @@ export function ExplorerResourceIdHelper({
         bucketId={context.bucketId}
         value={value.trim() || undefined}
         onSelect={(next) => onChange(next === '*' ? '' : next)}
-        placeholder="Select"
+        placeholder={t('Select')}
         allowAllOption={false}
         triggerClassName="inline-flex h-8 w-auto max-w-[240px] items-center justify-start gap-1.5 px-3 text-[12px] font-normal leading-normal"
         contentClassName={REQUEST_BUILDER_ID_SELECTOR_POPOVER_CLASS}

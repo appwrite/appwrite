@@ -2,6 +2,7 @@ import { Bell, Mail, Phone } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const CHANNELS = [
@@ -43,6 +44,7 @@ function ChannelMethodRow({
   active?: boolean
   delayMs?: number
 }) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -58,7 +60,7 @@ function ChannelMethodRow({
             <Icon className="size-3.5 text-muted-foreground" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-[12px] font-medium text-foreground">{label}</p>
+            <p className="text-[12px] font-medium text-foreground">{t(label)}</p>
             <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{example}</p>
           </div>
         </div>
@@ -71,24 +73,25 @@ function ChannelMethodRow({
 }
 
 export function MessagingUnifiedApiVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'messages', label: 'Messages', active: true },
-        { id: 'providers', label: 'Providers' },
+        { id: 'overview', label: t('Overview') },
+        { id: 'messages', label: t('Messages'), active: true }, // pragma: allowlist secret
+        { id: 'providers', label: t('Providers') },
       ]}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">One Messaging service</p>
+            <p className="text-[13px] font-semibold text-foreground">{t('One Messaging service')}</p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Email, SMS, and push from a single SDK client.
+              {t('Email, SMS, and push from a single SDK client.')}
             </p>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            3 channels
+            {t('3 channels')}
           </Badge>
         </div>
 
@@ -115,7 +118,7 @@ export function MessagingUnifiedApiVisual() {
 
         <div className="rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5 text-center">
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Replace separate email, SMS, and push SDKs with one API and delivery log.
+            {t('Replace separate email, SMS, and push SDKs with one API and delivery log.')}
           </p>
         </div>
       </div>

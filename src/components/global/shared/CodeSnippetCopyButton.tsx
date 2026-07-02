@@ -4,22 +4,24 @@ import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 type CodeSnippetCopyButtonProps = {
   content: string
 }
 
 export function CodeSnippetCopyButton({ content }: CodeSnippetCopyButtonProps) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content)
       setCopied(true)
-      toast.success('Copied to clipboard')
+      toast.success(t('Copied to clipboard'))
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
     }
   }
 
@@ -36,7 +38,7 @@ export function CodeSnippetCopyButton({ content }: CodeSnippetCopyButtonProps) {
       ) : (
         <Copy className="h-3.5 w-3.5" />
       )}
-      Copy
+      {t('Copy')}
     </Button>
   )
 }

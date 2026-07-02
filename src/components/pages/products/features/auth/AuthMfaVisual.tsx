@@ -2,20 +2,24 @@ import { KeyRound, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { MockSwitchRow } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
+import { useT } from '@/lib/i18n/translate'
 
 export function AuthMfaVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame title="Multi-factor authentication" eyebrow="Security">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[13px] font-semibold text-foreground">Authenticator app</p>
+            <p className="text-[13px] font-semibold text-foreground">
+              {t('Authenticator app')}
+            </p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
-              TOTP codes from Google Authenticator, 1Password, and similar apps.
+              {t('TOTP codes from Google Authenticator, 1Password, and similar apps.')}
             </p>
           </div>
           <Badge variant="success" className="text-[10px] shrink-0">
-            MFA enabled
+            {t('MFA enabled')}
           </Badge>
         </div>
 
@@ -34,7 +38,9 @@ export function AuthMfaVisual() {
 
           <div className="space-y-3">
             <div>
-              <p className="text-[11px] font-medium text-foreground">Enter verification code</p>
+              <p className="text-[11px] font-medium text-foreground">
+                {t('Enter verification code')}
+              </p>
               <div className="mt-2 flex gap-1.5">
                 {['4', '8', '2', '1', '9', '0'].map((digit, index) => (
                   <span
@@ -59,7 +65,9 @@ export function AuthMfaVisual() {
         <div className="rounded-lg border border-border bg-background/80 p-3">
           <div className="flex items-center gap-2">
             <KeyRound className="size-3.5 text-muted-foreground" aria-hidden />
-            <p className="text-[11px] font-semibold text-foreground">Recovery codes</p>
+            <p className="text-[11px] font-semibold text-foreground">
+              {t('Recovery codes')}
+            </p>
           </div>
           <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {['a8f2-k9m1', 'p3q7-r2n8', 'x5y1-z4w6', 'h7j3-l0c9'].map((code) => (
@@ -72,7 +80,7 @@ export function AuthMfaVisual() {
             ))}
           </div>
           <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
-            One-time backup codes when authenticator access is unavailable.
+            {t('One-time backup codes when authenticator access is unavailable.')}
           </p>
         </div>
       </div>

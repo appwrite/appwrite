@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import {
   CLI_SHELL_COLLAPSED_HEIGHT_PX,
@@ -170,6 +171,7 @@ function CliShellHeaderTitle({
   showRetry?: boolean
   onRetry?: () => void
 }) {
+  const t = useT()
   return (
     <div className="flex min-w-0 items-center gap-2">
       <TerminalIcon
@@ -179,12 +181,12 @@ function CliShellHeaderTitle({
       />
       <div className="flex min-w-0 items-center gap-2">
         <span className="truncate text-[13px] font-semibold text-foreground">
-          Terminal
+          {t('Terminal')}
         </span>
         {showBootstrapSpinner ? (
           <Loader2
             className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground"
-            aria-label="Setting up CLI"
+            aria-label={t('Setting up CLI')}
           />
         ) : null}
         {showRetry ? (
@@ -196,7 +198,7 @@ function CliShellHeaderTitle({
             onClick={onRetry}
           >
             <RotateCcw className="h-3 w-3" />
-            Retry setup
+            {t('Retry setup')}
           </Button>
         ) : null}
       </div>
@@ -205,6 +207,7 @@ function CliShellHeaderTitle({
 }
 
 function ProjectCliShellCollapsedBar() {
+  const t = useT()
   const { setOpen, status } = useCliShell()
   const isBootstrapping = status === 'bootstrapping'
 
@@ -213,7 +216,7 @@ function ProjectCliShellCollapsedBar() {
       type="button"
       onClick={() => setOpen(true)}
       className="flex h-full w-full cursor-pointer items-center justify-between gap-4 bg-background px-4 text-start transition-colors hover:bg-muted/40 sm:px-6"
-      aria-label="Open terminal"
+      aria-label={t('Open terminal')}
     >
       <CliShellHeaderTitle showBootstrapSpinner={isBootstrapping} />
       <span
@@ -231,6 +234,7 @@ type ProjectCliShellPanelProps = {
 }
 
 function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
+  const t = useT()
   const { isMac } = usePlatform()
   const newTerminalShortcutKeys = formatDisplayKeys(
     CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW,
@@ -335,7 +339,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
         <div
           role="separator"
           aria-orientation="horizontal"
-          aria-label="Resize terminal"
+          aria-label={t('Resize terminal')}
           onMouseDown={handleResizeMouseDown}
           className={cn(
             'absolute inset-x-0 top-0 z-10 flex h-1.5 w-full cursor-row-resize items-center justify-center transition-colors hover:bg-primary/20',
@@ -362,7 +366,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
           )}
         >
           <CliShellHeaderIconButton
-            title={`New terminal (${newTerminalShortcutKeys})`}
+            title={`${t('New terminal')} (${newTerminalShortcutKeys})`}
             onClick={createSession}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -370,12 +374,14 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
 
           <CliShellHeaderIconButton
             title={
-              terminalSearchOpen ? 'Close search' : 'Search output (⌘F)'
+              terminalSearchOpen
+                ? t('Close search')
+                : `${t('Search output')} (⌘F)`
             }
             aria-label={
               terminalSearchOpen
-                ? 'Close terminal search'
-                : 'Search terminal output'
+                ? t('Close terminal search')
+                : t('Search terminal output')
             }
             pressed={terminalSearchOpen}
             onClick={toggleTerminalSearch}
@@ -392,42 +398,42 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 shrink-0 text-muted-foreground"
-                title="Output actions"
-                aria-label="Output actions"
+                title={t('Output actions')}
+                aria-label={t('Output actions')}
               >
                 <Ellipsis className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-48">
               <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Copy
+                {t('Copy')}
               </DropdownMenuLabel>
               <DropdownMenuItem onClick={copyTerminalSelection}>
-                Copy selection
+                {t('Copy selection')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={copyLastCommand}>
-                Copy last command
+                {t('Copy last command')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={copyTerminalOutput}>
-                Copy all output
+                {t('Copy all output')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Output
+                {t('Output')}
               </DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={exportTerminalOutput}
                 className="gap-1.5"
               >
                 <Download className="h-3.5 w-3.5" />
-                Download output
+                {t('Download output')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => clearOutput(focusedSessionId)}
                 className="gap-1.5"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Clear output
+                {t('Clear output')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -435,7 +441,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
           <CliShellHeaderDivider />
 
           <CliShellHeaderIconButton
-            title={fullscreen ? 'Exit full screen' : 'Full screen'}
+            title={fullscreen ? t('Exit full screen') : t('Full screen')}
             onClick={toggleFullscreen}
           >
             {fullscreen ? (
@@ -444,7 +450,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
               <Maximize2 className="h-3.5 w-3.5" />
             )}
           </CliShellHeaderIconButton>
-          <CliShellHeaderIconButton title="Minimize shell" onClick={toggle}>
+          <CliShellHeaderIconButton title={t('Minimize shell')} onClick={toggle}>
             <ChevronDown className="h-3.5 w-3.5" />
           </CliShellHeaderIconButton>
         </div>

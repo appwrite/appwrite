@@ -34,6 +34,7 @@ import {
   enterpriseTimelineOptions,
   enterpriseValueProps,
 } from '@/lib/enterprise/content'
+import { useT } from '@/lib/i18n/translate'
 import { submitEnterpriseApplication } from '@/lib/marketing/growth-forms'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { trackEvent } from '@/lib/analytics'
@@ -97,6 +98,7 @@ function scrollToForm() {
 }
 
 export function View() {
+  const t = useT()
   const { account, isAuthenticated } = useAuth()
 
   const formDefaultValues = useMemo(() => {
@@ -124,10 +126,10 @@ export function View() {
         footer={<MarketingHeroStats items={[...enterpriseStats]} />}
       >
         <Button variant="brandCta" size="lg" className="h-10 text-[14px]" onClick={scrollToForm}>
-          Contact sales
+          {t('Contact sales')}
         </Button>
         <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">Compare plans</Link>
+          <Link to="/pricing">{t('Compare plans')}</Link>
         </Button>
       </MarketingHeroSection>
 
@@ -256,7 +258,7 @@ export function View() {
                 {enterpriseFormBullets.map((item) => (
                   <li key={item} className="flex items-center gap-2 text-[13px] text-foreground">
                     <Check className="size-4 shrink-0 text-[var(--brand-cta)]" aria-hidden />
-                    {item}
+                    {t(item)}
                   </li>
                 ))}
               </ul>

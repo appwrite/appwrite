@@ -11,12 +11,14 @@ import {
 } from '@/components/ui/tooltip'
 import { Headphones } from 'lucide-react'
 import { SupportPanel } from '@/components/global/shared/SupportPanel'
+import { useT } from '@/lib/i18n/translate'
 
 interface SupportPopoverProps {
   orgId?: string | null
 }
 
 export function SupportPopover({ orgId }: SupportPopoverProps) {
+  const t = useT()
   return (
     <Popover>
       <Tooltip>
@@ -26,14 +28,14 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
               variant="ghost"
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
-              aria-label="Support"
+              aria-label={t('Support')}
             >
               <Headphones className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Support</p>
+          <p>{t('Support')}</p>
         </TooltipContent>
       </Tooltip>
       <PopoverContent align="end" className="w-80 p-0">

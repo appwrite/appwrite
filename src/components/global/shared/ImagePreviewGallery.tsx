@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type ImagePreviewGalleryItem = {
   src: string
@@ -58,6 +59,7 @@ export function ImagePreviewGalleryDialog({
   onActiveIndexChange,
   overlayClassName,
 }: ImagePreviewGalleryDialogProps) {
+  const t = useT()
   const activeItem = activeIndex !== null ? items[activeIndex] : null
   const hasMultiple = items.length > 1
 
@@ -101,7 +103,7 @@ export function ImagePreviewGalleryDialog({
         {activeItem ? (
           <>
             <DialogTitle className="sr-only">
-              {activeItem.alt.trim() ? activeItem.alt : 'Expanded image'}
+              {activeItem.alt.trim() ? activeItem.alt : t('Expanded image')}
             </DialogTitle>
             <div
               className="overflow-hidden rounded-xl border border-border/80 bg-card/95 shadow-2xl ring-1 ring-foreground/[0.06]"
@@ -118,7 +120,7 @@ export function ImagePreviewGalleryDialog({
                     size="icon"
                     className="absolute start-3 top-1/2 z-[1] size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-md backdrop-blur-sm"
                     onClick={() => onActiveIndexChange(activeIndex - 1)}
-                    aria-label="Previous image"
+                    aria-label={t('Previous image')}
                   >
                     <ChevronLeft className="size-4" aria-hidden />
                   </Button>
@@ -139,7 +141,7 @@ export function ImagePreviewGalleryDialog({
                     size="icon"
                     className="absolute end-3 top-1/2 z-[1] size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-md backdrop-blur-sm"
                     onClick={() => onActiveIndexChange(activeIndex + 1)}
-                    aria-label="Next image"
+                    aria-label={t('Next image')}
                   >
                     <ChevronRight className="size-4" aria-hidden />
                   </Button>

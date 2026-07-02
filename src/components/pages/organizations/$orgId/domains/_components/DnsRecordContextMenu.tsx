@@ -26,6 +26,7 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface DnsRecordContextMenuProps {
   orgId: string
@@ -50,6 +51,7 @@ export function DnsRecordContextMenu({
   onDelete,
   children,
 }: DnsRecordContextMenuProps) {
+  const t = useT()
   const recordHref = buildConsoleUrl(
     `/organizations/${orgId}/domains/${domainId}`,
   )
@@ -62,7 +64,7 @@ export function DnsRecordContextMenu({
           <>
             <ContextMenuItem onSelect={() => onUpdate(record)}>
               <ContextMenuIcon icon={Pencil} />
-              Update
+              {t('Update')}
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
@@ -70,34 +72,34 @@ export function DnsRecordContextMenu({
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', record.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Name', nameValue)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             {value ? (
               <ContextMenuItem
                 onSelect={() => copyToClipboard('Value', value)}
               >
                 <ContextMenuIcon icon={Copy} />
-                Copy value
+                {t('Copy value')}
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem
               onSelect={() => copyToClipboard('Link', recordHref)}
             >
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -105,24 +107,24 @@ export function DnsRecordContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(recordHref)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(recordHref)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         {!locked ? (
           <ContextMenuItem onSelect={() => onDelete(record)}>
             <ContextMenuIcon icon={Trash2} />
-            Delete
+            {t('Delete')}
           </ContextMenuItem>
         ) : null}
       </ContextMenuContent>

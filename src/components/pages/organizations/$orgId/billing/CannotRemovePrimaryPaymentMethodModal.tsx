@@ -15,6 +15,7 @@ import { Plus } from '@/lib/icons'
 import { PaymentMethodBrandAvatar } from '@/components/global/shared/PaymentMethodBrandAvatar'
 import { formatPaymentMethodSummary } from './utils'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface CannotRemovePrimaryPaymentMethodModalProps {
   open: boolean
@@ -33,7 +34,8 @@ export function CannotRemovePrimaryPaymentMethodModal({
   onReplacePrimary,
   onAddNew,
 }: CannotRemovePrimaryPaymentMethodModalProps) {
-  const orgLabel = organizationName?.trim() || 'your organization'
+  const t = useT()
+  const orgLabel = organizationName?.trim() || t('your organization')
   const hasExistingCards = availableMethods.length > 0
 
   const handleReplacePrimary = (paymentMethodId: string) => {
@@ -50,17 +52,14 @@ export function CannotRemovePrimaryPaymentMethodModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-start">
-          <DialogTitle>Payment method required</DialogTitle>
+          <DialogTitle>{t('Payment method required')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2 space-y-3">
             <p>
-              {orgLabel} is on a paid plan with recurring billing. Your primary
-              payment method must remain on file while subscription charges are
-              active.
+              {orgLabel}{' '}
+              {t('is on a paid plan with recurring billing. Your primary payment method must remain on file while subscription charges are active.')}
             </p>
             <p>
-              To remove this card, replace it with another payment method on
-              your account first. Once a new primary card is set, you can remove
-              this one.
+              {t('To remove this card, replace it with another payment method on your account first. Once a new primary card is set, you can remove this one.')}
             </p>
           </DialogDescription>
         </DialogHeader>
@@ -72,7 +71,7 @@ export function CannotRemovePrimaryPaymentMethodModal({
               {hasExistingCards && (
                 <div className="space-y-2">
                   <p className="text-[13px] font-medium text-foreground">
-                    Replace with an existing card
+                    {t('Replace with an existing card')}
                   </p>
                   <div className="flex flex-col gap-2">
                     {availableMethods.map((method) => (
@@ -92,7 +91,7 @@ export function CannotRemovePrimaryPaymentMethodModal({
                           className="h-8 shrink-0 text-[12px]"
                           onClick={() => handleReplacePrimary(method.$id)}
                         >
-                          Replace
+                          {t('Replace')}
                         </Button>
                       </div>
                     ))}
@@ -101,7 +100,7 @@ export function CannotRemovePrimaryPaymentMethodModal({
               )}
 
               {hasExistingCards && onAddNew && (
-                <p className="text-[12px] text-muted-foreground">Or</p>
+                <p className="text-[12px] text-muted-foreground">{t('Or')}</p>
               )}
 
               {onAddNew && (
@@ -113,7 +112,7 @@ export function CannotRemovePrimaryPaymentMethodModal({
                   onClick={handleAddNew}
                 >
                   <Plus className="h-4 w-4" />
-                  Add new card
+                  {t('Add new card')}
                 </Button>
               )}
             </div>
@@ -126,11 +125,11 @@ export function CannotRemovePrimaryPaymentMethodModal({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Close
+            {t('Close')}
           </Button>
           {!hasExistingCards && onAddNew && (
             <Button type="button" onClick={handleAddNew}>
-              Add payment method
+              {t('Add payment method')}
             </Button>
           )}
         </div>

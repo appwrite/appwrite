@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { pricingPlans } from '@/lib/pricing/plans'
 import type { ComparisonCell, ComparisonLinkCell, PlanId, PricingPlan } from '@/lib/pricing/types'
@@ -32,6 +33,7 @@ export function PricingPlanCta({
   className?: string
   size?: 'default' | 'sm'
 }) {
+  const t = useT()
   const buttonClassName = cn(
     size === 'sm' ? 'h-9 text-[12px]' : 'h-10 text-[13px]',
     'w-full',
@@ -43,7 +45,7 @@ export function PricingPlanCta({
     return (
       <Button variant={plan.ctaVariant} className={buttonClassName} asChild>
         <Link to={plan.href} search={{ redirect: '/' }}>
-          {plan.cta}
+          {t(plan.cta)}
         </Link>
       </Button>
     )
@@ -52,13 +54,14 @@ export function PricingPlanCta({
   return (
     <Button variant={plan.ctaVariant} className={buttonClassName} asChild>
       <a href={plan.href} target="_blank" rel="noopener noreferrer">
-        {plan.cta}
+        {t(plan.cta)}
       </a>
     </Button>
   )
 }
 
 export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
+  const t = useT()
   const isPro = isProPlan(plan)
 
   return (
@@ -77,18 +80,18 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
               isPro ? 'text-[16px]' : 'text-[14px]',
             )}
           >
-            {plan.name}
+            {t(plan.name)}
           </h2>
           {plan.popular ? (
             <span className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Most popular
+              {t('Most popular')}
             </span>
           ) : null}
         </div>
 
         <div className="flex flex-col gap-1">
           {plan.pricePrefix ? (
-            <span className="text-[12px] text-muted-foreground">{plan.pricePrefix}</span>
+            <span className="text-[12px] text-muted-foreground">{t(plan.pricePrefix)}</span>
           ) : (
             <span className="hidden text-[12px] sm:block sm:min-h-[1.125rem]" aria-hidden />
           )}
@@ -101,7 +104,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
                   : 'text-[36px] sm:text-[40px]',
               )}
             >
-              {plan.price}
+              {t(plan.price)}
             </span>
             {plan.priceSuffix ? (
               <span
@@ -110,7 +113,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
                   isPro ? 'text-[16px]' : 'text-[14px]',
                 )}
               >
-                {plan.priceSuffix}
+                {t(plan.priceSuffix)}
               </span>
             ) : null}
           </p>
@@ -118,7 +121,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
 
         {plan.callout ? (
           <p className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[13px] leading-5 text-foreground">
-            {plan.callout}
+            {t(plan.callout)}
           </p>
         ) : null}
 
@@ -128,7 +131,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
             isPro ? 'min-h-[3.5rem] text-[14px]' : 'min-h-[3.75rem] text-[13px]',
           )}
         >
-          {plan.description}
+          {t(plan.description)}
         </p>
 
         <PricingPlanCta plan={plan} />
@@ -136,7 +139,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
 
       <div className="relative z-[1] mt-6 flex min-h-0 flex-1 flex-col gap-3 border-t border-muted-foreground/10 pt-6 dark:border-muted/20">
         {plan.featuresIntro ? (
-          <p className="text-[13px] font-medium text-foreground">{plan.featuresIntro}</p>
+          <p className="text-[13px] font-medium text-foreground">{t(plan.featuresIntro)}</p>
         ) : (
           <div className="min-h-[1.25rem]" aria-hidden />
         )}
@@ -153,13 +156,13 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
                 className="mt-0.5 size-4 shrink-0 text-[var(--brand-cta)]"
                 aria-hidden
               />
-              <span>{feature}</span>
+              <span>{t(feature)}</span>
             </li>
           ))}
         </ul>
         {plan.footnote ? (
           <p className="mt-auto pt-2 text-[12px] leading-5 text-muted-foreground/80">
-            {plan.footnote}
+            {t(plan.footnote)}
           </p>
         ) : null}
       </div>
@@ -191,11 +194,12 @@ function isLinkCell(value: ComparisonCell): value is ComparisonLinkCell {
 }
 
 export function ComparisonCellValue({ value }: { value: ComparisonCell }) {
+  const t = useT()
   if (value === true) {
     return (
       <span className="inline-flex size-5 items-center justify-center rounded-full bg-muted">
         <Check className="size-3 text-foreground" aria-hidden />
-        <span className="sr-only">Included</span>
+        <span className="sr-only">{t('Included')}</span>
       </span>
     )
   }
@@ -208,12 +212,12 @@ export function ComparisonCellValue({ value }: { value: ComparisonCell }) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        {value.text}
+        {t(value.text)}
       </a>
     )
   }
 
-  return <span className="text-[13px] text-muted-foreground">{value}</span>
+  return <span className="text-[13px] text-muted-foreground">{t(value)}</span>
 }
 
 export function ComparisonRowLabel({
@@ -223,22 +227,23 @@ export function ComparisonRowLabel({
   title: string
   info?: string
 }) {
+  const t = useT()
   return (
     <div className="flex items-center gap-1.5 text-start">
-      <span className="text-[13px] font-medium text-foreground">{title}</span>
+      <span className="text-[13px] font-medium text-foreground">{t(title)}</span>
       {info ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              aria-label={`More about ${title}`}
+              aria-label={`${t('More about')} ${t(title)}`}
             >
               <Info className="size-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-xs text-[12px] leading-5">
-            {info}
+            {t(info)}
           </TooltipContent>
         </Tooltip>
       ) : null}

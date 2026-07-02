@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { submitFeedback, FEEDBACK_CUSTOM_FIELDS } from '@/lib/feedback'
+import { useT } from '@/lib/i18n/translate'
 
 export interface FeedbackFormContext {
   /** Where the form was opened (e.g. navbar, command-center). Default "n/a". */
@@ -25,6 +26,7 @@ export function FeedbackForm({
   billingPlanId,
   onSubmitted,
 }: FeedbackFormProps) {
+  const t = useT()
   const { account } = useAuth()
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -64,7 +66,9 @@ export function FeedbackForm({
 
       if (!sent) {
         toast.error(
-          'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
+          t(
+            'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
+          ),
         )
         return
       }
@@ -73,7 +77,7 @@ export function FeedbackForm({
       onSubmitted?.()
     } catch {
       setIsSubmitting(false)
-      toast.error('Failed to submit feedback')
+      toast.error(t('Failed to submit feedback'))
     }
   }
 
@@ -84,9 +88,9 @@ export function FeedbackForm({
           <Check className="h-6 w-6 text-green-500" />
         </div>
         <div className="text-center">
-          <p className="font-medium">Thank you!</p>
+          <p className="font-medium">{t('Thank you!')}</p>
           <p className="text-sm text-muted-foreground">
-            Your feedback helps us improve.
+            {t('Your feedback helps us improve.')}
           </p>
         </div>
       </div>
@@ -96,13 +100,13 @@ export function FeedbackForm({
   return (
     <div className="p-4">
       <div className="mb-3">
-        <h4 className="font-medium">Send feedback</h4>
+        <h4 className="font-medium">{t('Send feedback')}</h4>
         <p className="text-sm text-muted-foreground">
-          Help us improve your experience
+          {t('Help us improve your experience')}
         </p>
       </div>
       <Textarea
-        placeholder="Share your feedback..."
+        placeholder={t('Share your feedback...')}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         className="mb-3 min-h-[100px] resize-none"
@@ -115,7 +119,7 @@ export function FeedbackForm({
           onClick={handleSubmit}
           disabled={!message.trim() || message.length > 500 || isSubmitting}
         >
-          Submit
+          {t('Submit')}
         </Button>
       </div>
     </div>

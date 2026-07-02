@@ -1,4 +1,5 @@
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const GIT_PROVIDERS: {
@@ -20,11 +21,12 @@ type SitesGitProvidersProps = {
 }
 
 export function SitesGitProviders({ className }: SitesGitProvidersProps) {
+  const t = useT()
   const hasComingSoon = GIT_PROVIDERS.some((provider) => provider.comingSoon)
 
   return (
     <div className={cn('mt-6', className)}>
-      <p className="text-[12px] font-medium text-muted-foreground">Supported Git providers</p>
+      <p className="text-[12px] font-medium text-muted-foreground">{t('Supported Git providers')}</p>
       <div className="mt-2.5 flex flex-wrap gap-2">
         {GIT_PROVIDERS.map((provider) => (
           <span
@@ -43,7 +45,7 @@ export function SitesGitProviders({ className }: SitesGitProvidersProps) {
       </div>
       {hasComingSoon ? (
         <p className="mt-2 text-[11px] text-muted-foreground/80">
-          GitLab, Bitbucket, Gitea, and more coming soon.
+          {t('GitLab, Bitbucket, Gitea, and more coming soon.')}
         </p>
       ) : null}
     </div>

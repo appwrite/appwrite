@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import { LucideIcon } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 export interface EmptyStateProps {
@@ -66,6 +67,7 @@ export function EmptyState({
   iconSize = 'sm',
   iconClassName,
 }: EmptyStateProps) {
+  const t = useT()
   // Default icon size classes
   const iconSizeClasses = {
     sm: 'h-5 w-5',
@@ -121,20 +123,22 @@ export function EmptyState({
   }
 
   // Default empty state content
-  const defaultTitle =
+  const defaultTitle = t(
     title ||
-    (hasFilters
-      ? 'No results found'
-      : isEmpty
-        ? 'No items yet'
-        : 'No items found')
-  const defaultDescription =
+      (hasFilters
+        ? 'No results found'
+        : isEmpty
+          ? 'No items yet'
+          : 'No items found'),
+  )
+  const defaultDescription = t(
     description ||
-    (hasFilters
-      ? 'Try adjusting your search or filters to see more results.'
-      : isEmpty
-        ? 'Get started by creating your first item.'
-        : 'No items match your criteria.')
+      (hasFilters
+        ? 'Try adjusting your search or filters to see more results.'
+        : isEmpty
+          ? 'Get started by creating your first item.'
+          : 'No items match your criteria.'),
+  )
 
   const content = (
     <div className="flex flex-col items-center text-center">

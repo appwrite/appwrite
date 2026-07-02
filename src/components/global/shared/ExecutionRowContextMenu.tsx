@@ -29,6 +29,7 @@ import {
   fetchFunctionExecution,
   fetchSiteLog,
 } from '@/lib/react-query/hooks'
+import { useT } from '@/lib/i18n/translate'
 
 export type ExecutionRowContextMenuVariant = 'function' | 'site'
 
@@ -62,6 +63,7 @@ export function ExecutionRowContextMenu({
   onOpenDetails,
   children,
 }: ExecutionRowContextMenuProps) {
+  const t = useT()
   if (!execution?.$id || !projectId || !resourceId) {
     return <>{children}</>
   }
@@ -84,43 +86,43 @@ export function ExecutionRowContextMenu({
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={() => onOpenDetails()}>
           <ContextMenuIcon icon={LayoutList} />
-          Overview
+          {t('Overview')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', execution.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => copyToClipboard('Link', executionHref)}
             >
               <ContextMenuIcon icon={Link2} />
-              Copy link
+              {t('Copy link')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() => void copyResourceAsJson(fetchExecution)}
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => openInNewTab(executionHref)}>
           <ContextMenuIcon icon={ExternalLink} />
-          Open in new tab
+          {t('Open in new tab')}
         </ContextMenuItem>
         <ContextMenuItem onSelect={() => openInNewWindow(executionHref)}>
           <ContextMenuIcon icon={Square} />
-          Open in new window
+          {t('Open in new window')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

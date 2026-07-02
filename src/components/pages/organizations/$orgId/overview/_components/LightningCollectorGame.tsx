@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Play, RotateCcw, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type Entity = {
   id: number
@@ -27,6 +28,7 @@ const PLAYER_SIZE = 28
 const PLAYER_X = 60
 
 export function LightningCollectorGame() {
+  const t = useT()
   const [isOpen, setIsOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [score, setScore] = useState(0)
@@ -243,18 +245,19 @@ export function LightningCollectorGame() {
       <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-4">
         <div className="min-w-0 flex-1 space-y-2">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Lightning Collector
+            {t('Lightning Collector')}
           </h3>
           <p className="text-[13px] text-muted-foreground leading-relaxed">
-            Collect Appwrite tokens and avoid lightning hazards. Endurance
-            mini-game for debug sessions.
+            {t(
+              'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.', // pragma: allowlist secret
+            )}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {highScore > 0 && (
             <Badge variant="info" className="text-[10px] shrink-0 gap-1">
               <Trophy className="h-3 w-3" />
-              Best {highScore}
+              {t('Best')} {highScore}
             </Badge>
           )}
           <Button
@@ -263,7 +266,7 @@ export function LightningCollectorGame() {
             className="h-9 text-[13px]"
             onClick={() => setIsOpen((prev) => !prev)}
           >
-            {isOpen ? 'Collapse' : 'Open'}
+            {isOpen ? t('Collapse') : t('Open')}
           </Button>
         </div>
       </div>
@@ -275,7 +278,7 @@ export function LightningCollectorGame() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <dl className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px]">
                 <div className="flex items-baseline gap-2">
-                  <dt className="text-muted-foreground">Score</dt>
+                  <dt className="text-muted-foreground">{t('Score')}</dt>
                   <dd className="font-medium tabular-nums text-foreground">
                     {score}
                   </dd>
@@ -283,7 +286,7 @@ export function LightningCollectorGame() {
                 <div className="hidden text-muted-foreground sm:block">
                   <span className="text-border">|</span>
                   <span className="ms-6">
-                    Space or ↑ to jump · R to restart · click arena to jump
+                    {t('Space or ↑ to jump · R to restart · click arena to jump')}
                   </span>
                 </div>
               </dl>
@@ -294,7 +297,7 @@ export function LightningCollectorGame() {
                 className="h-9 gap-1.5 text-[13px]"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                Restart
+                {t('Restart')}
               </Button>
             </div>
 
@@ -305,7 +308,7 @@ export function LightningCollectorGame() {
               style={{ height: GAME_HEIGHT }}
               onClick={handleJump}
               role="application"
-              aria-label="Lightning Collector game arena"
+              aria-label={t('Lightning Collector game arena')}
             >
               <div
                 className="pointer-events-none absolute inset-0 opacity-[0.35]"
@@ -356,13 +359,15 @@ export function LightningCollectorGame() {
                   <div className="max-w-xs px-6 text-center">
                     <p className="text-[13px] font-semibold text-foreground">
                       {status === 'gameover'
-                        ? 'Run ended'
-                        : 'Ready to start'}
+                        ? t('Run ended')
+                        : t('Ready to start')}
                     </p>
                     <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
                       {status === 'gameover'
-                        ? `Final score: ${score}. Start another run to beat your best.`
-                        : 'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.'}
+                        ? `${t('Final score:')} ${score}. ${t('Start another run to beat your best.')}`
+                        : t(
+                            'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.',
+                          )}
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-2">
                       <Button
@@ -371,7 +376,7 @@ export function LightningCollectorGame() {
                         className="h-9 gap-1.5 text-[13px]"
                       >
                         <Play className="h-3.5 w-3.5" />
-                        {status === 'gameover' ? 'Play again' : 'Start run'}
+                        {status === 'gameover' ? t('Play again') : t('Start run')}
                       </Button>
                       <Button
                         size="sm"
@@ -379,7 +384,7 @@ export function LightningCollectorGame() {
                         className="h-9 text-[13px]"
                         onClick={() => setIsOpen(false)}
                       >
-                        Collapse
+                        {t('Collapse')}
                       </Button>
                     </div>
                   </div>
@@ -388,7 +393,7 @@ export function LightningCollectorGame() {
             </div>
 
             <p className="text-[12px] text-muted-foreground sm:hidden">
-              Space or ↑ to jump · R to restart · tap arena to jump
+              {t('Space or ↑ to jump · R to restart · tap arena to jump')}
             </p>
           </div>
         </>

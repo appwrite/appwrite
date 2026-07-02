@@ -6,6 +6,7 @@ import {
   PolicySidebarSection,
   policySidebarLinkClassName,
 } from './PolicySidebarNav'
+import { useT } from '@/lib/i18n/translate'
 
 export type PolicyTocItem = {
   id: string
@@ -19,6 +20,7 @@ type PolicyTocProps = {
 }
 
 export function PolicyToc({ items, currentPolicy, className }: PolicyTocProps) {
+  const t = useT()
   const [activeId, setActiveId] = useState(items[0]?.id ?? '')
 
   useEffect(() => {
@@ -59,16 +61,16 @@ export function PolicyToc({ items, currentPolicy, className }: PolicyTocProps) {
     >
       <div className="space-y-8 pe-2">
         {items.length > 0 ? (
-          <PolicySidebarSection title="On this page" ariaLabel="Table of contents">
+          <PolicySidebarSection title={t('On this page')} ariaLabel={t('Table of contents')}>
             <ul className="space-y-0.5">
               {items.map((item) => (
                 <li key={item.id} className="min-w-0">
                   <a
                     href={`#${item.id}`}
-                    title={item.label}
+                    title={t(item.label)}
                     className={policySidebarLinkClassName(activeId === item.id)}
                   >
-                    {item.label}
+                    {t(item.label)}
                   </a>
                 </li>
               ))}

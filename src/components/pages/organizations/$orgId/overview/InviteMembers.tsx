@@ -33,6 +33,7 @@ import type { Models } from '@appwrite.io/console'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 interface InviteMember {
   email: string
@@ -92,6 +93,7 @@ export function InviteMembersDialog({
   organizationPlan,
   onSuccess,
 }: InviteMembersDialogProps) {
+  const t = useT()
   const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
   const [invites, setInvites] = useState<InviteMember[]>([
@@ -189,7 +191,7 @@ export function InviteMembersDialog({
 
       if (successes > 0) {
         toast.success(
-          `Successfully invited ${successes} member${successes !== 1 ? 's' : ''}`,
+          `${t('Successfully invited')} ${successes} ${successes !== 1 ? t('members') : t('member')}`,
         )
         onSuccess?.()
       }
@@ -203,7 +205,7 @@ export function InviteMembersDialog({
           )
 
         toast.error(
-          `Failed to invite ${failures} member${failures !== 1 ? 's' : ''}: ${errors[0]}`,
+          `${t('Failed to invite')} ${failures} ${failures !== 1 ? t('members') : t('member')}: ${errors[0]}`,
         )
       }
 
@@ -219,7 +221,7 @@ export function InviteMembersDialog({
       onOpenChange(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to invite members',
+        error instanceof Error ? error.message : t('Failed to invite members'),
       )
     }
   }
@@ -231,7 +233,7 @@ export function InviteMembersDialog({
       memberLimit > 0 &&
       currentMemberCount + invites.length >= memberLimit
     ) {
-      toast.error('Member limit reached')
+      toast.error(t('Member limit reached'))
       return
     }
     setInvites([
@@ -277,10 +279,11 @@ export function InviteMembersDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Invite Members</DialogTitle>
+          <DialogTitle>{t('Invite Members')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Invite organization members to your organization. They'll receive an
-            email invitation to join.
+            {t(
+              "Invite organization members to your organization. They'll receive an email invitation to join.",
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -295,12 +298,12 @@ export function InviteMembersDialog({
                 <p className="text-[12px] text-amber-600 dark:text-amber-400">
                   {remainingSlots === 0 ? (
                     <>
-                      You have reached your member limit.{' '}
-                      <UpgradePlanLink orgId={organizationId} /> to invite more
-                      members.
+                      {t('You have reached your member limit.')}{' '}
+                      <UpgradePlanLink orgId={organizationId} />{' '}
+                      {t('to invite more members.')}
                     </>
                   ) : (
-                    `You have ${remainingSlots} member slot${remainingSlots !== 1 ? 's' : ''} remaining.`
+                    `${t('You have')} ${remainingSlots} ${remainingSlots !== 1 ? t('member slots') : t('member slot')} ${t('remaining.')}`
                   )}
                 </p>
               </div>
@@ -370,12 +373,12 @@ export function InviteMembersDialog({
                       <>
                         {!isEmailValid && (
                           <p className="text-[11px] text-red-500">
-                            Invalid email address
+                            {t('Invalid email address')}
                           </p>
                         )}
                         {isDuplicate && isEmailValid && (
                           <p className="text-[11px] text-red-500">
-                            Duplicate email
+                            {t('Duplicate email')}
                           </p>
                         )}
                       </>
@@ -400,7 +403,7 @@ export function InviteMembersDialog({
                           <div className="flex items-center gap-1.5 min-w-0">
                             <RoleIcon className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate">
-                              {selectedRole?.label || 'Select role'}
+                              {selectedRole ? t(selectedRole.label) : t('Select role')}
                             </span>
                           </div>
                         </SelectTrigger>
@@ -413,10 +416,10 @@ export function InviteMembersDialog({
                                   <Icon className="h-4 w-4 shrink-0 mt-0.5" />
                                   <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-[13px] font-medium">
-                                      {role.label}
+                                      {t(role.label)}
                                     </span>
                                     <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                                      {role.description}
+                                      {t(role.description)}
                                     </span>
                                   </div>
                                 </div>
@@ -453,7 +456,7 @@ export function InviteMembersDialog({
               onClick={handleAddInvite}
             >
               <Plus className="me-1.5 h-4 w-4" />
-              Add another member
+              {t('Add another member')}
             </Button>
           )}
         </div>
@@ -466,7 +469,7 @@ export function InviteMembersDialog({
             onClick={() => handleOpenChange(false)}
             disabled={createMembershipMutation.isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             variant="brandCta"
@@ -476,8 +479,8 @@ export function InviteMembersDialog({
             disabled={!isValid || createMembershipMutation.isPending}
           >
             {createMembershipMutation.isPending
-              ? 'Inviting...'
-              : `Invite ${invites.filter((i) => i.email.trim() !== '').length} member${invites.filter((i) => i.email.trim() !== '').length !== 1 ? 's' : ''}`}
+              ? t('Inviting...')
+              : `${t('Invite')} ${invites.filter((i) => i.email.trim() !== '').length} ${invites.filter((i) => i.email.trim() !== '').length !== 1 ? t('members') : t('member')}`}
           </Button>
         </div>
       </DialogContent>

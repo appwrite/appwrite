@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 import { DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS } from '@/lib/utils/deployment-status'
 import { cn } from '@/lib/utils'
 
@@ -59,23 +60,24 @@ function MockDeploymentId({ id }: { id: string }) {
 }
 
 export function SitesBuildPerformanceVisual() {
+  const t = useT()
   const [logsSearch, setLogsSearch] = useState('')
 
   return (
     <ProductFeatureVisualFrame
       tabs={[
-        { id: 'overview', label: 'Overview' },
-        { id: 'deployments', label: 'Deployments', active: true },
-        { id: 'settings', label: 'Settings' },
+        { id: 'overview', label: t('Overview') },
+        { id: 'deployments', label: t('Deployments'), active: true },
+        { id: 'settings', label: t('Settings') },
       ]}
       contentClassName="p-0"
     >
       <div className="grid min-h-[18rem] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="relative min-w-0 border-b border-border lg:border-b-0 lg:border-e">
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-            <h3 className="text-[13px] font-semibold text-foreground">Build logs</h3>
+            <h3 className="text-[13px] font-semibold text-foreground">{t('Build logs')}</h3>
             <span className="shrink-0 text-[11px] text-muted-foreground">
-              Duration: <span className="font-medium text-foreground">24s</span>
+              {t('Duration:')} <span className="font-medium text-foreground">24s</span>
             </span>
           </div>
 
@@ -84,7 +86,7 @@ export function SitesBuildPerformanceVisual() {
               <div className="relative min-w-0 flex-1">
                 <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search logs..."
+                  placeholder={t('Search logs...')}
                   value={logsSearch}
                   onChange={(event) => setLogsSearch(event.target.value)}
                   className="h-8 ps-8 text-[12px]"
@@ -113,14 +115,14 @@ export function SitesBuildPerformanceVisual() {
 
         <div className="min-w-0 p-3 sm:p-4">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Deployments
+            {t('Deployments')}
           </p>
           <div className="overflow-hidden rounded-lg border border-border bg-card">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
                   <TableHead className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Deployment ID
+                    {t('Deployment ID')}
                   </TableHead>
                   <TableHead
                     className={cn(
@@ -128,13 +130,13 @@ export function SitesBuildPerformanceVisual() {
                       DEPLOYMENT_TABLE_STATUS_COLUMN_CLASS,
                     )}
                   >
-                    Status
+                    {t('Status')}
                   </TableHead>
                   <TableHead className="w-[72px] px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Duration
+                    {t('Duration')}
                   </TableHead>
                   <TableHead className="w-[88px] px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Created
+                    {t('Created')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -158,7 +160,7 @@ export function SitesBuildPerformanceVisual() {
                         {isActive ? (
                           <Badge variant="active" className="gap-1.5 text-[10px] font-medium">
                             <CheckCircle2 className="size-3" aria-hidden />
-                            Active
+                            {t('Active')}
                           </Badge>
                         ) : (
                           <Badge
@@ -166,7 +168,7 @@ export function SitesBuildPerformanceVisual() {
                             className="gap-1.5 text-[10px] font-medium"
                           >
                             <CheckCircle2 className="size-3" aria-hidden />
-                            Ready
+                            {t('Ready')}
                           </Badge>
                         )}
                       </TableCell>
@@ -174,7 +176,7 @@ export function SitesBuildPerformanceVisual() {
                         {deployment.duration}
                       </TableCell>
                       <TableCell className="px-3 py-2.5 text-[11px] text-muted-foreground">
-                        {deployment.created}
+                        {t(deployment.created)}
                       </TableCell>
                     </TableRow>
                   )
@@ -185,9 +187,7 @@ export function SitesBuildPerformanceVisual() {
 
           <div className="mt-3 rounded-lg border border-dashed border-border bg-muted/10 px-3 py-2.5">
             <p className="text-[11px] leading-5 text-muted-foreground">
-              Package manager stores are cached between builds. Deployment retention removes old
-              inactive deployments to save storage. Path filters help Turborepo monorepos skip
-              unnecessary deploys.
+              {t('Package manager stores are cached between builds. Deployment retention removes old inactive deployments to save storage. Path filters help Turborepo monorepos skip unnecessary deploys.')}
             </p>
           </div>
         </div>

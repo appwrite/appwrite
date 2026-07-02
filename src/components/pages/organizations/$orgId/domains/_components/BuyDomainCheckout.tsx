@@ -33,6 +33,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
+import { useT } from '@/lib/i18n/translate'
 
 export type BuyDomainSelection = {
   domain: string
@@ -76,9 +77,12 @@ export function BuyDomainPurchaseSummary({
 }: {
   selection: BuyDomainSelection
 }) {
+  const t = useT()
   const hasRegistrationPrice = selection.price != null && selection.price > 0
   const periodLabel =
-    selection.periodYears === 1 ? '1 year' : `${selection.periodYears} years`
+    selection.periodYears === 1
+      ? t('1 year')
+      : `${selection.periodYears} ${t('years')}`
   const renewalYears =
     selection.renewalPeriodYears ?? selection.periodYears ?? 1
   const hasRenewal =
@@ -88,16 +92,16 @@ export function BuyDomainPurchaseSummary({
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="border-b border-border bg-muted/30 px-5 py-3.5">
         <h3 className="text-[13px] font-semibold tracking-tight text-foreground">
-          Order summary
+          {t('Order summary')}
         </h3>
         <p className="mt-0.5 text-[12px] text-muted-foreground leading-snug">
-          Review charges before you complete payment.
+          {t('Review charges before you complete payment.')}
         </p>
       </div>
 
       <div className="px-5 py-5">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-          Domain
+          {t('Domain')}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <p className="min-w-0 break-all font-mono text-[15px] font-medium leading-snug tracking-tight text-foreground">
@@ -108,7 +112,7 @@ export function BuyDomainPurchaseSummary({
               variant="info"
               className="shrink-0 px-1.5 py-0 text-[10px] font-medium"
             >
-              Premium
+              {t('Premium')}
             </Badge>
           ) : null}
         </div>
@@ -118,9 +122,11 @@ export function BuyDomainPurchaseSummary({
             <>
               <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground">Registration</p>
+                  <p className="font-medium text-foreground">
+                    {t('Registration')}
+                  </p>
                   <p className="mt-0.5 text-[12px] text-muted-foreground">
-                    Initial term · {periodLabel}
+                    {t('Initial term')} · {periodLabel}
                   </p>
                 </div>
                 <p className="shrink-0 tabular-nums font-semibold text-foreground">
@@ -130,9 +136,11 @@ export function BuyDomainPurchaseSummary({
               {hasRenewal ? (
                 <div className="flex items-start justify-between gap-4 text-[13px] leading-snug">
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground">Renewal</p>
+                    <p className="font-medium text-foreground">
+                      {t('Renewal')}
+                    </p>
                     <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      When you renew after the initial term
+                      {t('When you renew after the initial term')}
                     </p>
                   </div>
                   <p className="shrink-0 tabular-nums font-semibold text-foreground">
@@ -146,8 +154,9 @@ export function BuyDomainPurchaseSummary({
             </>
           ) : (
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              Pricing is confirmed when you submit payment. Premium and
-              specialty names may require manual review from the registry.
+              {t(
+                'Pricing is confirmed when you submit payment. Premium and specialty names may require manual review from the registry.',
+              )}
             </p>
           )}
         </div>
@@ -155,7 +164,7 @@ export function BuyDomainPurchaseSummary({
         {hasRegistrationPrice ? (
           <div className="mt-6 flex items-baseline justify-between gap-4 border-t border-border pt-5">
             <p className="text-[13px] font-semibold text-foreground">
-              Total due today
+              {t('Total due today')}
             </p>
             <p className="text-[22px] font-semibold tabular-nums tracking-tight text-foreground">
               ${formatUsd(selection.price!)}
@@ -182,6 +191,7 @@ export function BuyDomainCheckout({
   fallbackPath,
   onBackToSearch,
 }: BuyDomainCheckoutProps) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { account } = useAuth()
@@ -248,25 +258,25 @@ export function BuyDomainCheckout({
     mutationFn: async () => {
       if (isDomainLimitReached) {
         throw new Error(
-          `Your current plan includes up to ${domainsLimit} domains.`,
+          `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
         )
       }
       if (!billingAddressId) {
-        throw new Error('Select a billing address')
+        throw new Error(t('Select a billing address'))
       }
       if (!paymentMethodId) {
-        throw new Error('Select a payment method')
+        throw new Error(t('Select a payment method'))
       }
       const fn = firstName.trim()
       const ln = lastName.trim()
       if (!fn || !ln) {
-        throw new Error('First and last name are required')
+        throw new Error(t('First and last name are required'))
       }
       if (!email.trim()) {
-        throw new Error('Email is required')
+        throw new Error(t('Email is required'))
       }
       if (!phone.trim()) {
-        throw new Error('Phone is required (E.164, e.g. +15551234567)')
+        throw new Error(t('Phone is required (E.164, e.g. +15551234567)'))
       }
       const purchase = await createDomainPurchase({
         domain: selection.domain,
@@ -297,7 +307,9 @@ export function BuyDomainCheckout({
         organizationId: orgId,
       })
       if (finalized.status !== DomainPurchaseStatus.Succeeded) {
-        throw new Error('Purchase could not be completed. Please try again.')
+        throw new Error(
+          t('Purchase could not be completed. Please try again.'),
+        )
       }
       return { kind: 'done' as const, domainId: finalized.domainId }
     },
@@ -305,7 +317,7 @@ export function BuyDomainCheckout({
       await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', orgId],
       })
-      toast.success(`${selection.domain} registered successfully`)
+      toast.success(`${selection.domain} ${t('registered successfully')}`)
       navigate({
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId, domainId: result.domainId },
@@ -340,20 +352,20 @@ export function BuyDomainCheckout({
 
   return (
     <WizardLayout
-      title="Buy domain"
+      title={t('Buy domain')}
       fallbackPath={fallbackPath}
       fullscreen
       useSidebar
       sidebar={<BuyDomainPurchaseSummary selection={selection} />}
       showBackButton
-      backButtonLabel="Back"
+      backButtonLabel={t('Back')}
       onBack={onBackToSearch}
       footerAlign="right"
       constrainFooterWidth
       footer={
         <>
           <Button variant="outline" type="button" onClick={onBackToSearch}>
-            Back
+            {t('Back')}
           </Button>
           <Button
             type="button"
@@ -365,7 +377,7 @@ export function BuyDomainCheckout({
             )}
             onClick={() => purchaseMutation.mutate()}
           >
-            Pay and register
+            {t('Pay and register')}
           </Button>
         </>
       }
@@ -373,15 +385,16 @@ export function BuyDomainCheckout({
       <div className="w-full min-w-0 space-y-6 lg:max-w-none">
         <div>
           <h2 className="text-[15px] font-semibold text-foreground">
-            Complete registration
+            {t('Complete registration')}
           </h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Registrant details must match your domain registry requirements.
+            {t('Registrant details must match your domain registry requirements.')}
           </p>
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
-              Your current plan includes up to {domainsLimit} domains.{' '}
-              <UpgradePlanLink orgId={orgId} /> to register another domain.
+              {t('Your current plan includes up to')} {domainsLimit}{' '}
+              {t('domains')}. <UpgradePlanLink orgId={orgId} />{' '}
+              {t('to register another domain.')}
             </p>
           ) : null}
         </div>
@@ -389,7 +402,7 @@ export function BuyDomainCheckout({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Registrant contact
+              {t('Registrant contact')}
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -397,7 +410,7 @@ export function BuyDomainCheckout({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="bd-first" className="text-[13px]">
-                  First name
+                  {t('First name')}
                 </Label>
                 <Input
                   id="bd-first"
@@ -408,7 +421,7 @@ export function BuyDomainCheckout({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="bd-last" className="text-[13px]">
-                  Last name
+                  {t('Last name')}
                 </Label>
                 <Input
                   id="bd-last"
@@ -420,7 +433,7 @@ export function BuyDomainCheckout({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="bd-email" className="text-[13px]">
-                Email
+                {t('Email')}
               </Label>
               <Input
                 id="bd-email"
@@ -432,7 +445,7 @@ export function BuyDomainCheckout({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="bd-phone" className="text-[13px]">
-                Phone (E.164)
+                {t('Phone (E.164)')}
               </Label>
               <Input
                 id="bd-phone"
@@ -444,7 +457,7 @@ export function BuyDomainCheckout({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="bd-company" className="text-[13px]">
-                Company (optional)
+                {t('Company (optional)')}
               </Label>
               <Input
                 id="bd-company"
@@ -459,10 +472,10 @@ export function BuyDomainCheckout({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Billing address
+              {t('Billing address')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Used for registry contact and invoicing.
+              {t('Used for registry contact and invoicing.')}
             </p>
           </div>
           <div className="border-t border-border" />
@@ -473,7 +486,7 @@ export function BuyDomainCheckout({
                 onValueChange={setBillingAddressId}
               >
                 <SelectTrigger className="h-9 w-full min-w-0 text-[13px]">
-                  <SelectValue placeholder="Select billing address" />
+                  <SelectValue placeholder={t('Select billing address')} />
                 </SelectTrigger>
                 <SelectContent>
                   {addresses.map((a) => (
@@ -485,14 +498,14 @@ export function BuyDomainCheckout({
               </Select>
             ) : (
               <p className="text-[13px] text-muted-foreground">
-                No billing addresses on file.
+                {t('No billing addresses on file.')}
               </p>
             )}
             <Link
               to="/account/billing-addresses"
               className="link-neutral inline-block text-[13px]"
             >
-              Manage addresses in account settings
+              {t('Manage addresses in account settings')}
             </Link>
           </div>
         </div>
@@ -500,7 +513,7 @@ export function BuyDomainCheckout({
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Payment
+              {t('Payment')}
             </h3>
           </div>
           <div className="border-t border-border" />

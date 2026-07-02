@@ -4,8 +4,10 @@ import {
   MockMemberRow,
   MockPermissionChip,
 } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
+import { useT } from '@/lib/i18n/translate'
 
 export function AuthTeamsVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame
       tabs={[
@@ -22,7 +24,9 @@ export function AuthTeamsVisual() {
             </span>
             <div>
               <p className="text-[13px] font-semibold text-foreground">Acme Engineering</p>
-              <p className="text-[11px] text-muted-foreground">3 members · Owner access</p>
+              <p className="text-[11px] text-muted-foreground">
+                {t('3 members · Owner access')}
+              </p>
             </div>
           </div>
         </div>
@@ -59,7 +63,7 @@ export function AuthTeamsVisual() {
             <MockPermissionChip label="role:developer/read" />
           </div>
           <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
-            Share tables, buckets, and functions without building custom RBAC.
+            {t('Share tables, buckets, and functions without building custom RBAC.')}
           </p>
         </div>
       </div>

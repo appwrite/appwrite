@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const CHAT_LINK_CLASS = 'link-neutral'
@@ -77,6 +78,7 @@ const CHAT_MESSAGES: ChatMessage[] = [
 ]
 
 function ChatBubble({ message }: { message: ChatMessage }) {
+  const t = useT()
   const isReply = message.isReply
 
   return (
@@ -111,7 +113,9 @@ function ChatBubble({ message }: { message: ChatMessage }) {
               <span className={INCOMING_NAME_CLASS}>{message.name}</span>
               <time className={INCOMING_TIME_CLASS}>{message.time}</time>
             </div>
-            <p className={INCOMING_BODY_CLASS}>{message.content}</p>
+            <p className={INCOMING_BODY_CLASS}>
+              {typeof message.content === 'string' ? t(message.content) : message.content}
+            </p>
           </div>
         </div>
       </div>

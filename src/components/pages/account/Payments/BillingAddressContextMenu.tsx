@@ -13,6 +13,7 @@ import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
 import { fetchBillingAddress } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import { useT } from '@/lib/i18n/translate'
 
 interface BillingAddressContextMenuProps {
   address: Models.BillingAddress
@@ -36,26 +37,27 @@ export function BillingAddressContextMenu({
   onDelete,
   children,
 }: BillingAddressContextMenuProps) {
+  const t = useT()
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuItem onSelect={() => onUpdate(address)}>
           <ContextMenuIcon icon={Pencil} />
-          Update
+          {t('Update')}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
             <ContextMenuIcon icon={Copy} />
-            Copy
+            {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
             <ContextMenuItem
               onSelect={() => copyToClipboard('ID', address.$id)}
             >
               <ContextMenuIcon icon={Copy} />
-              Copy ID
+              {t('Copy ID')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -63,7 +65,7 @@ export function BillingAddressContextMenu({
               }
             >
               <ContextMenuIcon icon={Copy} />
-              Copy name
+              {t('Copy name')}
             </ContextMenuItem>
             <ContextMenuItem
               onSelect={() =>
@@ -73,14 +75,14 @@ export function BillingAddressContextMenu({
               }
             >
               <ContextMenuIcon icon={FileJson} />
-              Copy as JSON
+              {t('Copy as JSON')}
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onSelect={() => onDelete(address)}>
           <ContextMenuIcon icon={Trash2} />
-          Delete
+          {t('Delete')}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

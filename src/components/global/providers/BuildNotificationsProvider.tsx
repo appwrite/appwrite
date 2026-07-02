@@ -38,6 +38,7 @@ import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { registerRegionalConsoleRealtimeListener } from '@/lib/realtime/regional-console-hub'
 import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
 import { isDeploymentTimeout } from '@/lib/utils/deployment-status'
+import { useT } from '@/lib/i18n/translate'
 import { useBuildNotificationsOptedOut } from '@/lib/react-query/hooks'
 
 interface ActiveBuild {
@@ -161,6 +162,7 @@ function notificationsSupported(): boolean {
 function handleEnableClick(
   toastId: string | number,
   rememberOptedOut: () => void,
+  translate: (text: string) => string,
 ): void {
   try {
     const result = Notification.requestPermission()
@@ -172,8 +174,8 @@ function handleEnableClick(
         // Notifications. Reload automatically so the user doesn't have to do
         // it themselves - we briefly flash a toast so the reload isn't a
         // total surprise.
-        toast.success('Notifications enabled', {
-          description: 'Reloading to apply…',
+        toast.success(translate('Notifications enabled'), {
+          description: translate('Reloading to apply…'),
           duration: 1500,
         })
         window.setTimeout(() => {
@@ -186,9 +188,10 @@ function handleEnableClick(
         }, 800)
       } else if (perm === 'denied') {
         rememberOptedOut()
-        toast.message('Notifications blocked', {
-          description:
+        toast.message(translate('Notifications blocked'), {
+          description: translate(
             'You can re-enable them anytime from your browser settings.',
+          ),
         })
       }
     }
@@ -208,6 +211,7 @@ function handleEnableClick(
 function maybeShowEnableToast(
   rememberOptedOut: () => void,
   optedOut: boolean,
+  translate: (text: string) => string,
 ): void {
   if (permissionPromptShown) return
   if (!notificationsSupported()) return
@@ -224,11 +228,12 @@ function maybeShowEnableToast(
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-semibold leading-5">
-              Get notified when builds finish
+              {translate('Get notified when builds finish')}
             </div>
             <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              Allow browser notifications to hear about build completion, even
-              from another tab.
+              {translate(
+                'Allow browser notifications to hear about build completion, even from another tab.',
+              )}
             </p>
           </div>
         </div>
@@ -241,14 +246,16 @@ function maybeShowEnableToast(
             }}
             className="h-8 rounded-md px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Not now
+            {translate('Not now')}
           </button>
           <button
             type="button"
-            onClick={() => handleEnableClick(toastId, rememberOptedOut)}
+            onClick={() =>
+              handleEnableClick(toastId, rememberOptedOut, translate)
+            }
             className="h-8 rounded-md bg-primary px-3 text-[12px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Enable
+            {translate('Enable')}
           </button>
         </div>
       </div>
@@ -265,6 +272,9 @@ export function BuildNotificationsProvider({
   projectId,
 }: BuildNotificationsProviderProps) {
   const { account } = useAuth()
+  const t = useT()
+  const tRef = useRef(t)
+  tRef.current = t
   const { optedOut, setOptedOut } = useBuildNotificationsOptedOut(account)
   const { setFavicon, getCurrentFavicon } = useFavicon()
   const queryClient = useQueryClient()
@@ -393,6 +403,7 @@ export function BuildNotificationsProvider({
           maybeShowEnableToast(
             () => rememberOptedOutRef.current(),
             optedOutRef.current,
+            tRef.current,
           )
         }
         return
@@ -486,6 +497,7 @@ export function BuildNotificationsProvider({
           maybeShowEnableToast(
             () => rememberOptedOutRef.current(),
             optedOutRef.current,
+            tRef.current,
           )
         }
         return
@@ -540,8 +552,8 @@ export function BuildNotificationsProvider({
               ? 'timed out'
               : 'canceled'
       notify(
-        `${label} build ${notifyResultWord}`,
-        `${name} build ${verb}.`,
+        tRef.current(`${label} build ${notifyResultWord}`),
+        `${name} ${tRef.current(`build ${verb}.`)}`,
         `appwrite-build-${update.deploymentId}`,
       )
 

@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 const TOOLTIP_DEFAULT =
   'Payment failed - update billing to avoid interrupting your projects and services.'
@@ -31,9 +32,10 @@ export function FailedInvoiceWarningIcon({
   iconClassName,
   suppressTooltip,
 }: FailedInvoiceWarningIconProps) {
+  const t = useT()
   if (!show) return null
 
-  const tooltip = orgBillingReadonly ? TOOLTIP_READONLY : TOOLTIP_DEFAULT
+  const tooltip = t(orgBillingReadonly ? TOOLTIP_READONLY : TOOLTIP_DEFAULT)
 
   if (suppressTooltip) {
     return (

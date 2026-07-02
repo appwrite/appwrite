@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
 import { MockStatPill } from '@/components/pages/products/features/_components/ProductFeatureMockParts'
+import { useT } from '@/lib/i18n/translate'
 
 const TRANSFORM_PARAMS = [
   { label: 'width', value: '640' },
@@ -12,6 +13,7 @@ const TRANSFORM_PARAMS = [
 ] as const
 
 export function StorageTransformsVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame eyebrow="Preview endpoint" title="getFilePreview()">
       <div className="space-y-4">
@@ -23,7 +25,7 @@ export function StorageTransformsVisual() {
             </p>
           </div>
           <Badge variant="success" className="shrink-0 text-[10px]">
-            CDN cached
+            {t('CDN cached')}
           </Badge>
         </div>
 
@@ -45,7 +47,7 @@ export function StorageTransformsVisual() {
 
         <div className="rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Resize, crop, format, quality, borders, and rotation. No duplicate uploads.
+            {t('Resize, crop, format, quality, borders, and rotation. No duplicate uploads.')}
           </p>
         </div>
       </div>

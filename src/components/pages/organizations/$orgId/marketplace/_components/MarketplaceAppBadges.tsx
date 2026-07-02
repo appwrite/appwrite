@@ -9,6 +9,7 @@ import {
 import type { MarketplaceApp } from '@/lib/marketplace/types'
 import { cn } from '@/lib/utils'
 import { BadgeCheck } from 'lucide-react'
+import { useT } from '@/lib/i18n/translate'
 
 const APPWRITE_BRAND_PINK = '#FD366E'
 
@@ -69,18 +70,19 @@ function IconBadge({
 }
 
 export function MarketplaceAppBadges({ app }: MarketplaceAppBadgesProps) {
+  const t = useT()
   if (!app.isOfficial && !app.isVerified) return null
 
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex shrink-0 items-center gap-1">
         {app.isOfficial && (
-          <IconBadge label="Official" variant="inactive">
+          <IconBadge label={t('Official')} variant="inactive">
             <AppwriteMarkIcon />
           </IconBadge>
         )}
         {app.isVerified && (
-          <IconBadge label="Verified" variant="success">
+          <IconBadge label={t('Verified')} variant="success">
             <BadgeCheck className="h-3 w-3" aria-hidden />
           </IconBadge>
         )}

@@ -10,6 +10,7 @@ import {
 import { usePresetRecords, useCreateDnsRecord } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 
 interface AddPresetDialogProps {
   open: boolean
@@ -35,6 +36,7 @@ export function AddPresetDialog({
   domainId,
   onAdd,
 }: AddPresetDialogProps) {
+  const t = useT()
   const [selectedPreset, setSelectedPreset] = useState<PresetType | null>(null)
 
   const { data: presetRecords, isLoading: isLoadingPresets } = usePresetRecords(
@@ -69,7 +71,7 @@ export function AddPresetDialog({
       )
 
       toast.success(
-        `Successfully added ${presetRecords.dnsRecords.length} DNS records from ${PRESETS.find((p) => p.id === selectedPreset)?.label}`,
+        `${t('Successfully added')} ${presetRecords.dnsRecords.length} ${t('DNS records from')} ${PRESETS.find((p) => p.id === selectedPreset)?.label}`,
       )
       onAdd()
       onOpenChange(false)
@@ -94,10 +96,11 @@ export function AddPresetDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Add preset records</DialogTitle>
+          <DialogTitle>{t('Add preset records')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select an email provider preset to automatically add the required
-            DNS records.
+            {t(
+              'Select an email provider preset to automatically add the required DNS records.',
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -119,10 +122,11 @@ export function AddPresetDialog({
           {selectedPreset && presetRecords && (
             <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3">
               <p className="text-[12px] text-muted-foreground mb-1">
-                This will add {presetRecords.dnsRecords?.length || 0} DNS record
+                {t('This will add')} {presetRecords.dnsRecords?.length || 0}{' '}
                 {(presetRecords.dnsRecords?.length || 0) !== 1
-                  ? 's'
-                  : ''} for {selectedPresetLabel}
+                  ? t('DNS records')
+                  : t('DNS record')}{' '}
+                {t('for')} {selectedPresetLabel}
               </p>
             </div>
           )}
@@ -134,7 +138,7 @@ export function AddPresetDialog({
             onClick={() => handleOpenChange(false)}
             disabled={createRecordMutation.isPending}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleAddPreset}
@@ -145,7 +149,7 @@ export function AddPresetDialog({
             }
             className="gap-2"
           >
-            Add preset
+            {t('Add preset')}
           </Button>
         </div>
       </DialogContent>

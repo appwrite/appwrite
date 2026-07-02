@@ -1,5 +1,6 @@
 import { Check, Loader2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export type OrganizationSetupPhase =
   | 'submitting'
@@ -179,14 +180,15 @@ interface OrganizationSetupProgressProps {
 export function OrganizationSetupProgress({
   progress,
 }: OrganizationSetupProgressProps) {
+  const t = useT()
   const steps = buildSteps(progress)
   const activeIndex = getPhaseIndex(steps, progress.phase)
   const headline =
     progress.mode === 'create'
-      ? 'Setting up your organization'
+      ? t('Setting up your organization')
       : progress.mode === 'downgrade'
-        ? 'Downgrading your plan'
-      : 'Updating your plan'
+        ? t('Downgrading your plan')
+      : t('Updating your plan')
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center px-4 py-16 sm:py-24">
@@ -198,7 +200,7 @@ export function OrganizationSetupProgress({
         {headline}
       </h2>
       <p className="mt-2 max-w-xs text-center text-[13px] leading-relaxed text-muted-foreground">
-        This usually takes a few seconds. Please keep this window open.
+        {t('This usually takes a few seconds. Please keep this window open.')}
       </p>
 
       <ol className="mt-10 mx-auto w-full max-w-xs space-y-0">
@@ -246,10 +248,10 @@ export function OrganizationSetupProgress({
                     isCurrent ? 'text-foreground' : 'text-muted-foreground',
                   )}
                 >
-                  {step.label}
+                  {t(step.label)}
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {step.description}
+                  {t(step.description)}
                 </p>
               </div>
             </li>

@@ -19,6 +19,7 @@ import { IntegrationCard } from './IntegrationCard'
 import { IntegrationPartnerNote } from './IntegrationPartnerNote'
 import { integrationPillClassName } from './IntegrationPill'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type ViewProps = IntegrationsCatalog & {
   filtered: IntegrationMeta[]
@@ -46,13 +47,14 @@ function FilterPill({
 }
 
 function CategorySection({ group }: { group: IntegrationCategoryGroup }) {
+  const t = useT()
   return (
     <section id={group.category} className="scroll-mt-24">
       <div className="border-b border-border pb-4">
         <h2 className="font-aeonik-pro text-[22px] font-normal text-foreground">
-          {group.heading}
+          {t(group.heading)}
         </h2>
-        <p className="mt-2 text-[13px] text-muted-foreground">{group.description}</p>
+        <p className="mt-2 text-[13px] text-muted-foreground">{t(group.description)}</p>
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {group.integrations.map((integration) => (
@@ -71,6 +73,7 @@ export function View({
   filtered,
   search,
 }: ViewProps) {
+  const t = useT()
   const navigate = useNavigate()
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [query, setQuery] = useState(search?.search ?? '')
@@ -116,9 +119,11 @@ export function View({
   return (
     <div className="relative overflow-x-hidden bg-background">
       <MarketingHeroSection
-        eyebrow="Integrations"
-        title="Discover infinite possibilities"
-        description="Find your favourite apps to integrate with your projects in Appwrite's marketplace."
+        eyebrow={t('Integrations')}
+        title={t('Discover infinite possibilities')}
+        description={t(
+          "Find your favourite apps to integrate with your projects in Appwrite's marketplace.", // pragma: allowlist secret
+        )}
         align="left"
       />
 
@@ -128,7 +133,7 @@ export function View({
             <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
               <div>
                 <label htmlFor="integration-search" className="sr-only">
-                  Search integrations
+                  {t('Search integrations')}
                 </label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -136,7 +141,7 @@ export function View({
                     id="integration-search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search integrations"
+                    placeholder={t('Search integrations')}
                     className="h-10 ps-9 text-[13px]"
                   />
                 </div>
@@ -144,7 +149,7 @@ export function View({
 
               <div>
                 <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Platform
+                  {t('Platform')}
                 </h2>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <FilterPill
@@ -157,7 +162,7 @@ export function View({
                       })
                     }
                   >
-                    All
+                    {t('All')}
                   </FilterPill>
                   {platforms.map((platform) => (
                     <FilterPill
@@ -179,7 +184,7 @@ export function View({
 
               <div>
                 <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Category
+                  {t('Category')}
                 </h2>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link
@@ -187,7 +192,7 @@ export function View({
                     search={() => buildIntegrationsRouteSearch({ search: query, platform: selectedPlatform })}
                     className={cn(integrationPillClassName({ active: selectedCategory === 'all' }), 'link-unstyled')}
                   >
-                    All categories
+                    {t('All categories')}
                   </Link>
                   {categories.map((category) => (
                     <Link
@@ -207,7 +212,7 @@ export function View({
                         'link-unstyled',
                       )}
                     >
-                      {category.heading}
+                      {t(category.heading)}
                     </Link>
                   ))}
                 </div>
@@ -219,12 +224,12 @@ export function View({
                 <div>
                   <div className="border-b border-border pb-4">
                     <h2 className="font-aeonik-pro text-[22px] font-normal text-foreground">
-                      {filtered.length} result{filtered.length === 1 ? '' : 's'}
+                      {filtered.length} {filtered.length === 1 ? t('result') : t('results')}
                     </h2>
                     <p className="mt-2 text-[13px] text-muted-foreground">
                       {filtered.length === 0
-                        ? 'Try adjusting or clearing your filters.'
-                        : 'Integrations matching your search and filters.'}
+                        ? t('Try adjusting or clearing your filters.')
+                        : t('Integrations matching your search and filters.')}
                     </p>
                   </div>
                   {filtered.length > 0 ? (
@@ -241,10 +246,10 @@ export function View({
                 <section>
                   <div className="border-b border-border pb-4">
                     <h2 className="font-aeonik-pro text-[22px] font-normal text-foreground">
-                      Featured
+                      {t('Featured')}
                     </h2>
                     <p className="mt-2 text-[13px] text-muted-foreground">
-                      Popular integrations to get started quickly.
+                      {t('Popular integrations to get started quickly.')}
                     </p>
                   </div>
                   <div className="mt-6 flex flex-col gap-4">

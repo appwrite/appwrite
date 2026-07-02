@@ -2,6 +2,7 @@ import { SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
 import { companyFounder } from '@/lib/company/founder'
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
+import { useT } from '@/lib/i18n/translate'
 
 function SocialIconMask({
   icon,
@@ -57,6 +58,7 @@ const founderSocialLinks = [
 ] as const
 
 export function CompanyFounder() {
+  const t = useT()
   return (
     <section
       id={COMPANY_SECTION_IDS.founder}
@@ -64,7 +66,7 @@ export function CompanyFounder() {
     >
       <SectionSoftLight tone="orange" position="right" align="center" />
       <div className="relative z-[1] mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-        <PricingSectionHeading title="Founder" size="md" align="left" />
+        <PricingSectionHeading title={t('Founder')} size="md" align="left" />
 
         <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] xl:gap-12">
           <div className="flex flex-col items-center text-center lg:items-start lg:text-start">
@@ -79,7 +81,7 @@ export function CompanyFounder() {
               {companyFounder.name}
             </p>
             <p className="mt-1 text-[13px] text-muted-foreground sm:text-[14px]">
-              {companyFounder.title}
+              {t(companyFounder.title)}
             </p>
             <div className="mt-4 flex items-center justify-center gap-1 lg:justify-start">
               {founderSocialLinks.map((link) => (
@@ -106,7 +108,7 @@ export function CompanyFounder() {
                 &ldquo;
               </span>
               <blockquote className="text-center font-aeonik-pro text-balance text-[17px] font-normal leading-7 text-foreground sm:text-[18px] sm:leading-8 lg:text-start">
-                {companyFounder.quote}
+                {t(companyFounder.quote)}
               </blockquote>
             </div>
 
@@ -117,12 +119,12 @@ export function CompanyFounder() {
                     key={paragraph}
                     className="text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7"
                   >
-                    {paragraph}
+                    {t(paragraph)}
                   </p>
                 ))}
               </div>
               <p className="text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
-                {companyFounder.bio[2]}
+                {companyFounder.bio[2] ? t(companyFounder.bio[2]) : null}
               </p>
             </div>
           </figure>

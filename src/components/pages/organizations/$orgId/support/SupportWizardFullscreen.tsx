@@ -38,6 +38,7 @@ import { cn } from '@/lib/utils'
 import { APPWRITE_SUPPORT_EMAIL } from '@/lib/utils/error-formatting'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { useT } from '@/lib/i18n/translate'
 
 const SUBJECT_MAX = 128
 
@@ -68,6 +69,7 @@ function formatFileSize(bytes: number): string {
 }
 
 export function SupportWizardFullscreen() {
+  const t = useT()
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
   // Same as change plan wizard: no fallbackPath - use internal console history so we return to the page user was on (billing, members, etc.)
@@ -122,7 +124,7 @@ export function SupportWizardFullscreen() {
 
   const handleAttachmentSelect = (file: File) => {
     if (file.size > ATTACHMENT_MAX_BYTES) {
-      toast.error(`File must be ${ATTACHMENT_MAX_MB} MB or less`)
+      toast.error(`${t('File must be')} ${ATTACHMENT_MAX_MB} ${t('MB or less')}`)
       return
     }
     setSubmitError((e) => (e?.kind === 'attachment' ? null : e))
@@ -200,7 +202,7 @@ export function SupportWizardFullscreen() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-              Support hours
+              {t('Support hours')}
             </h3>
             <span
               className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${
@@ -214,11 +216,11 @@ export function SupportWizardFullscreen() {
                   supportHours.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
                 }`}
               />
-              {supportHours.isOpen ? 'Online' : 'Offline'}
+              {supportHours.isOpen ? t('Online') : t('Offline')}
             </span>
           </div>
           <p className="text-[13px] text-muted-foreground tabular-nums whitespace-nowrap mt-2">
-            Mon–Fri {supportHours.startLocal} – {supportHours.endLocal}
+            {t('Mon–Fri')} {supportHours.startLocal} – {supportHours.endLocal}
           </p>
           <p className="text-[12px] text-muted-foreground/70 mt-1 font-mono tracking-tight">
             {supportHours.timezone}
@@ -227,7 +229,7 @@ export function SupportWizardFullscreen() {
         <div className="border-t border-border/80" />
         <div className="px-6 py-3 bg-muted/30">
           <p className="text-[12px] text-muted-foreground/90 leading-relaxed">
-            Tickets can be submitted anytime; we reply during support hours.
+            {t('Tickets can be submitted anytime; we reply during support hours.')}
           </p>
         </div>
       </div>
@@ -236,10 +238,10 @@ export function SupportWizardFullscreen() {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-            Need 24/7 or enterprise support?
+            {t('Need 24/7 or enterprise support?')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-            Get dedicated support and SLAs for your organization.
+            {t('Get dedicated support and SLAs for your organization.')}
           </p>
           <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
             <a
@@ -247,7 +249,7 @@ export function SupportWizardFullscreen() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Contact sales
+              {t('Contact sales')}
             </a>
           </Button>
         </div>
@@ -257,11 +259,12 @@ export function SupportWizardFullscreen() {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-            What happens next
+            {t('What happens next')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-            Confirmation email with ticket ID. Typically within 24h during
-            support hours.
+            {t(
+              'Confirmation email with ticket ID. Typically within 24h during support hours.',
+            )}
           </p>
         </div>
       </div>
@@ -270,10 +273,10 @@ export function SupportWizardFullscreen() {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-            Resources
+            {t('Resources')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-            Docs, status, and community
+            {t('Docs, status, and community')}
           </p>
         </div>
         <div className="border-t border-border/80" />
@@ -286,12 +289,12 @@ export function SupportWizardFullscreen() {
               className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors"
             >
               <Activity className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span>Status</span>
+              <span>{t('Status')}</span>
               <ExternalLink className="h-3 w-3 ms-auto shrink-0 text-muted-foreground" />
             </a>
             <DocsRouteLink className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-[12px] font-medium text-foreground hover:bg-muted/50 hover:border-border transition-colors" href="/docs">
               <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span>Docs</span>
+              <span>{t('Docs')}</span>
               <ExternalLink className="h-3 w-3 ms-auto shrink-0 text-muted-foreground" />
             </DocsRouteLink>
             <a
@@ -336,11 +339,11 @@ export function SupportWizardFullscreen() {
   if (submitted) {
     return (
       <WizardLayout
-        title="Ticket submitted"
+        title={t('Ticket submitted')}
         fullscreen
         useSidebar={false}
         footerAlign="right"
-        footer={<Button onClick={handleCancel}>Done</Button>}
+        footer={<Button onClick={handleCancel}>{t('Done')}</Button>}
       >
         <div className="flex min-h-[70dvh] flex-col items-center justify-center py-12 px-4">
           <div className="w-full max-w-xl flex flex-col items-center text-center">
@@ -351,53 +354,59 @@ export function SupportWizardFullscreen() {
               />
             </div>
             <h2 className="text-[18px] font-semibold text-foreground tracking-tight">
-              Your support ticket has been submitted
+              {t('Your support ticket has been submitted')}
             </h2>
             <p className="mt-3 max-w-md text-[13px] text-muted-foreground leading-relaxed">
-              We've received your request and will get back to you as soon as we
-              can.
+              {t(
+                "We've received your request and will get back to you as soon as we can.",
+              )}
             </p>
           </div>
           <div className="mt-10 w-full max-w-xl">
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-                  What happens next
+                  {t('What happens next')}
                 </h3>
                 <ul className="mt-4 space-y-3 text-[13px] text-muted-foreground leading-relaxed">
                   <li className="flex gap-3 text-start">
                     <span className="text-muted-foreground/60 shrink-0">•</span>
                     <span>
-                      Check <strong className="text-foreground">{email}</strong>{' '}
-                      for a confirmation email with your ticket reference.
+                      {t('Check')}{' '}
+                      <strong className="text-foreground">{email}</strong>{' '}
+                      {t(
+                        'for a confirmation email with your ticket reference.',
+                      )}
                     </span>
                   </li>
                   <li className="flex gap-3 text-start">
                     <span className="text-muted-foreground/60 shrink-0">•</span>
                     <span>
-                      We typically respond within 24 hours during support hours
-                      (Mon–Fri).
+                      {t(
+                        'We typically respond within 24 hours during support hours (Mon–Fri).',
+                      )}
                     </span>
                   </li>
                   <li className="flex gap-3 text-start">
                     <span className="text-muted-foreground/60 shrink-0">•</span>
                     <span>
-                      Reply to the confirmation email to add more context or
-                      attachments.
+                      {t(
+                        'Reply to the confirmation email to add more context or attachments.',
+                      )}
                     </span>
                   </li>
                 </ul>
               </div>
               <div className="border-t border-border px-6 py-4 bg-muted/30">
                 <p className="text-[13px] text-muted-foreground">
-                  Need 24/7 or enterprise support?{' '}
+                  {t('Need 24/7 or enterprise support?')}{' '}
                   <a
                     href={CONTACT_SALES_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-foreground underline hover:no-underline"
                   >
-                    Contact sales
+                    {t('Contact sales')}
                   </a>
                 </p>
               </div>
@@ -410,7 +419,7 @@ export function SupportWizardFullscreen() {
 
   return (
     <WizardLayout
-      title="Support"
+      title={t('Support')}
       fullscreen
       useSidebar={true}
       sidebar={sidebar}
@@ -422,10 +431,10 @@ export function SupportWizardFullscreen() {
             onClick={handleCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
-            Submit ticket
+            {t('Submit ticket')}
           </Button>
         </>
       }
@@ -437,17 +446,17 @@ export function SupportWizardFullscreen() {
               <Alert variant="destructive">
                 <AlertTriangle aria-hidden />
                 <AlertTitle>
-                  We're sorry - we couldn't submit your support request
+                  {t("We're sorry - we couldn't submit your support request")}
                 </AlertTitle>
                 <AlertDescription className="text-[13px] prose-links-neutral">
                   <p>
-                    We're having a temporary issue with the support portal,
-                    and our engineering team are aware. In the meantime,
-                    please reach out at{' '}
+                    {t(
+                      "We're having a temporary issue with the support portal, and our engineering team are aware. In the meantime, please reach out at",
+                    )}{' '}
                     <a href={`mailto:${APPWRITE_SUPPORT_EMAIL}`}>
                       {APPWRITE_SUPPORT_EMAIL}
                     </a>
-                    , on{' '}
+                    {t(', on')}{' '}
                     <a
                       href={SUPPORT_DISCORD_URL}
                       target="_blank"
@@ -455,7 +464,7 @@ export function SupportWizardFullscreen() {
                     >
                       Discord
                     </a>
-                    , or on{' '}
+                    {t(', or on')}{' '}
                     <a
                       href={SUPPORT_GITHUB_ISSUES_URL}
                       target="_blank"
@@ -471,7 +480,7 @@ export function SupportWizardFullscreen() {
             {submitError.kind === 'attachment' && (
               <Alert variant="destructive">
                 <AlertTriangle aria-hidden />
-                <AlertTitle>Couldn't use this attachment</AlertTitle>
+                <AlertTitle>{t("Couldn't use this attachment")}</AlertTitle>
                 <AlertDescription className="text-[13px]">
                   {submitError.message}
                 </AlertDescription>
@@ -482,10 +491,10 @@ export function SupportWizardFullscreen() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              Details
+              {t('Details')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Subject and message are required.
+              {t('Subject and message are required.')}
             </p>
           </div>
           <div className="border-t border-border px-6 py-4 space-y-4">
@@ -494,7 +503,7 @@ export function SupportWizardFullscreen() {
                 htmlFor="support-subject"
                 className="text-[13px] font-medium"
               >
-                Subject
+                {t('Subject')}
               </Label>
               <Input
                 id="support-subject"
@@ -502,12 +511,12 @@ export function SupportWizardFullscreen() {
                 onChange={(e) =>
                   setSubject(e.target.value.slice(0, SUBJECT_MAX))
                 }
-                placeholder={SUBJECT_PLACEHOLDER}
+                placeholder={t(SUBJECT_PLACEHOLDER)}
                 className="mt-2 h-9"
                 maxLength={SUBJECT_MAX}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                {subject.length}/{SUBJECT_MAX} characters
+                {subject.length}/{SUBJECT_MAX} {t('characters')}
               </p>
             </div>
             <div>
@@ -515,14 +524,14 @@ export function SupportWizardFullscreen() {
                 htmlFor="support-project"
                 className="text-[13px] font-medium"
               >
-                Project (optional)
+                {t('Project (optional)')}
               </Label>
               <Select value={projectId} onValueChange={setProjectId}>
                 <SelectTrigger id="support-project" className="mt-2 h-9 w-full">
-                  <SelectValue placeholder="None" />
+                  <SelectValue placeholder={t('None')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_PROJECT_VALUE}>None</SelectItem>
+                  <SelectItem value={NO_PROJECT_VALUE}>{t('None')}</SelectItem>
                   {projectList.map((p: { $id: string; name: string }) => (
                     <SelectItem key={p.$id} value={p.$id}>
                       {p.name}
@@ -536,7 +545,7 @@ export function SupportWizardFullscreen() {
                 htmlFor="support-message"
                 className="text-[13px] font-medium"
               >
-                Message
+                {t('Message')}
               </Label>
               <Textarea
                 id="support-message"
@@ -544,12 +553,12 @@ export function SupportWizardFullscreen() {
                 onChange={(e) =>
                   setMessage(e.target.value.slice(0, MESSAGE_MAX))
                 }
-                placeholder={MESSAGE_PLACEHOLDER}
+                placeholder={t(MESSAGE_PLACEHOLDER)}
                 className="mt-2 min-h-[140px] resize-y"
                 maxLength={MESSAGE_MAX}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
-                {message.length}/{MESSAGE_MAX} characters
+                {message.length}/{MESSAGE_MAX} {t('characters')}
               </p>
             </div>
             <div className="space-y-2">
@@ -557,7 +566,7 @@ export function SupportWizardFullscreen() {
                 htmlFor="support-attachment"
                 className="text-[13px] font-medium"
               >
-                Attachment (optional)
+                {t('Attachment (optional)')}
               </Label>
               <div
                 onDragOver={handleAttachmentDragOver}
@@ -586,10 +595,10 @@ export function SupportWizardFullscreen() {
                   <span className="text-[13px] text-foreground">
                     {attachment
                       ? attachment.name
-                      : 'Click to upload or drag and drop'}
+                      : t('Click to upload or drag and drop')}
                   </span>
                   <span className="text-[12px] text-muted-foreground">
-                    Max size: {ATTACHMENT_MAX_MB} MB
+                    {t('Max size:')} {ATTACHMENT_MAX_MB} MB
                   </span>
                 </label>
               </div>

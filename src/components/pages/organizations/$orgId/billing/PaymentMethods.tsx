@@ -38,6 +38,7 @@ import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { CannotRemovePrimaryPaymentMethodModal } from './CannotRemovePrimaryPaymentMethodModal'
 import { OrgPaymentMethodContextMenu } from './OrgPaymentMethodContextMenu'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * PaymentMethods Component
@@ -66,6 +67,7 @@ interface PaymentMethodsProps {
 export function PaymentMethods({
   onAddPaymentMethod,
   orgId}: PaymentMethodsProps) {
+  const t = useT()
   const { organization } = useOrganizationById(orgId)
   const { plan } = useOrganizationPlan(orgId)
   const { plans: billingPlans } = useBillingPlans()
@@ -144,12 +146,12 @@ export function PaymentMethods({
       await updatePaymentMethodMutation.mutateAsync({
         organizationId: orgId,
         paymentMethodId})
-      toast.success('Primary payment method updated')
+      toast.success(t('Primary payment method updated'))
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to update payment method',
+          : t('Failed to update payment method'),
       )
     }
   }
@@ -161,12 +163,12 @@ export function PaymentMethods({
       await updatePaymentMethodMutation.mutateAsync({
         organizationId: orgId,
         backupPaymentMethodId: paymentMethodId})
-      toast.success('Backup payment method updated')
+      toast.success(t('Backup payment method updated'))
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to update backup payment method',
+          : t('Failed to update backup payment method'),
       )
     }
   }
@@ -203,12 +205,12 @@ export function PaymentMethods({
           organizationId: orgId,
           backupPaymentMethodId: null})
       }
-      toast.success('Payment method removed')
+      toast.success(t('Payment method removed'))
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to remove payment method',
+          : t('Failed to remove payment method'),
       )
     }
   }
@@ -218,12 +220,12 @@ export function PaymentMethods({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment methods
+            {t('Payment methods')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
-            Loading payment methods...
+            {t('Loading payment methods...')}
           </p>
         </div>
       </div>
@@ -235,7 +237,7 @@ export function PaymentMethods({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4 flex items-center justify-between gap-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Payment methods
+            {t('Payment methods')}
           </h3>
           <Button
             variant="outline"
@@ -244,7 +246,7 @@ export function PaymentMethods({
             onClick={() => onAddPaymentMethod?.()}
 >
             <Plus className="h-4 w-4" />
-            Add payment method
+            {t('Add payment method')}
           </Button>
         </div>
         <div className="border-t border-border px-6 py-8">
@@ -252,10 +254,10 @@ export function PaymentMethods({
             <CreditCard className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-[13px] text-muted-foreground text-center mb-1">
-            No payment method on file
+            {t('No payment method on file')}
           </p>
           <p className="text-[13px] text-muted-foreground text-center mb-4">
-            Add a new credit card to pay for your organization.
+            {t('Add a new credit card to pay for your organization.')}
           </p>
           <div className="flex justify-center">
             <Button
@@ -265,7 +267,7 @@ export function PaymentMethods({
               onClick={() => onAddPaymentMethod?.()}
 >
               <Plus className="h-4 w-4" />
-              Add payment method
+              {t('Add payment method')}
             </Button>
           </div>
         </div>
@@ -279,7 +281,7 @@ export function PaymentMethods({
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between gap-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Payment methods
+          {t('Payment methods')}
         </h3>
         {!hasPrimaryAssigned && (
           <Button
@@ -289,7 +291,7 @@ export function PaymentMethods({
             onClick={() => onAddPaymentMethod?.()}
 >
             <Plus className="h-4 w-4" />
-            Add payment method
+            {t('Add payment method')}
           </Button>
         )}
       </div>
@@ -301,15 +303,15 @@ export function PaymentMethods({
             <CreditCard className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-[13px] text-muted-foreground text-center mb-1">
-            No payment method on file
+            {t('No payment method on file')}
           </p>
           <p className="text-[13px] text-muted-foreground text-center mb-4">
-            Use an existing card or add a new one for this organization.
+            {t('Use an existing card or add a new one for this organization.')}
           </p>
           {availableMethods.length > 0 ? (
             <div className="space-y-3 max-w-md mx-auto">
               <p className="text-[12px] font-medium text-foreground">
-                Use existing card
+                {t('Use existing card')}
               </p>
               <div className="flex flex-col gap-2">
                 {availableMethods.map((pm: Models.PaymentMethod) => (
@@ -325,7 +327,7 @@ export function PaymentMethods({
                         </p>
                         {pm.expiryMonth && pm.expiryYear && (
                           <p className="text-[12px] text-muted-foreground truncate">
-                            Expires{' '}
+                            {t('Expires')}{' '}
                             {formatCardExpiry(pm.expiryMonth, pm.expiryYear)}
                           </p>
                         )}
@@ -337,13 +339,13 @@ export function PaymentMethods({
                       onClick={() => handleSetPrimary(pm.$id)}
                       disabled={updatePaymentMethodMutation.isPending}
 >
-                      Use as primary
+                      {t('Use as primary')}
                     </Button>
                   </div>
                 ))}
               </div>
               <p className="text-[12px] font-medium text-foreground pt-1">
-                Or add a new card
+                {t('Or add a new card')}
               </p>
               <Button
                 variant="outline"
@@ -352,7 +354,7 @@ export function PaymentMethods({
                 onClick={() => onAddPaymentMethod?.()}
 >
                 <Plus className="h-4 w-4" />
-                Add new card
+                {t('Add new card')}
               </Button>
             </div>
           ) : (
@@ -364,7 +366,7 @@ export function PaymentMethods({
                 onClick={() => onAddPaymentMethod?.()}
 >
                 <Plus className="h-4 w-4" />
-                Add payment method
+                {t('Add payment method')}
               </Button>
             </div>
           )}
@@ -401,7 +403,7 @@ export function PaymentMethods({
         <div className="border-t border-border">
           <div className="px-6 py-2 bg-muted/30">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Backup methods
+              {t('Backup methods')}
             </p>
           </div>
           <PaymentMethodCard
@@ -423,7 +425,7 @@ export function PaymentMethods({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <p className="text-[12px] text-muted-foreground">
-                No backup payment method
+                {t('No backup payment method')}
               </p>
               <TooltipProvider>
                 <Tooltip>
@@ -432,8 +434,7 @@ export function PaymentMethods({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-[12px]">
-                      A backup payment method ensures uninterrupted service if
-                      your primary method fails.
+                      {t('A backup payment method ensures uninterrupted service if your primary method fails.')}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -448,7 +449,7 @@ export function PaymentMethods({
                     className="h-9 gap-2 text-[13px]"
 >
                     <Plus className="h-4 w-4" />
-                    Add backup
+                    {t('Add backup')}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -457,7 +458,7 @@ export function PaymentMethods({
 >
                   <div className="px-2 py-1.5">
                     <p className="text-[11px] font-medium text-muted-foreground mb-1">
-                      Choose existing card
+                      {t('Choose existing card')}
                     </p>
                   </div>
                   {availableMethods.map((availableMethod) => (
@@ -476,7 +477,7 @@ export function PaymentMethods({
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(true)}
 >
-                    Add
+                    {t('Add')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -488,7 +489,7 @@ export function PaymentMethods({
                 onClick={() => onAddPaymentMethod?.(true)}
 >
                 <Plus className="h-4 w-4" />
-                Add backup
+                {t('Add backup')}
               </Button>
             )}
           </div>
@@ -529,6 +530,7 @@ function PaymentMethodCard({
   onRemove,
   availableMethods,
   onAddPaymentMethod}: PaymentMethodCardProps) {
+  const t = useT()
   const isExpiringSoon =
     method.expiryMonth && method.expiryYear
       ? isCardExpiringSoon(method.expiryMonth, method.expiryYear)
@@ -537,7 +539,7 @@ function PaymentMethodCard({
   const hasError = method.failed || method.expired
   const errorMessage =
     method.lastError ||
-    (method.expired ? 'Card expired' : method.failed ? 'Payment failed' : null)
+    (method.expired ? t('Card expired') : method.failed ? t('Payment failed') : null)
 
   return (
     <OrgPaymentMethodContextMenu
@@ -560,23 +562,23 @@ function PaymentMethodCard({
             </p>
             {isPrimary && (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                Primary
+                {t('Primary')}
               </span>
             )}
             {isExpiringSoon && (
               <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-yellow-600 dark:text-yellow-400">
-                Expiring soon
+                {t('Expiring soon')}
               </span>
             )}
             {hasError && (
               <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-600 dark:text-red-400">
-                {method.expired ? 'Expired' : 'Failed'}
+                {method.expired ? t('Expired') : t('Failed')}
               </span>
             )}
           </div>
           {method.expiryMonth && method.expiryYear && (
             <p className="text-[12px] text-muted-foreground">
-              Expires {formatCardExpiry(method.expiryMonth, method.expiryYear)}
+              {t('Expires')} {formatCardExpiry(method.expiryMonth, method.expiryYear)}
             </p>
           )}
           {errorMessage && (
@@ -607,7 +609,7 @@ function PaymentMethodCard({
               className="text-[13px]"
               onClick={() => onSetPrimary(method.$id)}
             >
-              <MenuItemContent icon={Star}>Primary</MenuItemContent>
+              <MenuItemContent icon={Star}>{t('Primary')}</MenuItemContent>
             </DropdownMenuItem>
           )}
           {((isPrimary && onReplacePrimary) ||
@@ -617,7 +619,7 @@ function PaymentMethodCard({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="text-[13px]">
                   <MenuItemIcon icon={ArrowLeftRight} />
-                  Replace
+                  {t('Replace')}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent
                   className="w-52"
@@ -626,7 +628,7 @@ function PaymentMethodCard({
                     <>
                       <div className="px-2 py-1.5">
                         <p className="text-[11px] font-medium text-muted-foreground">
-                          Choose existing card
+                          {t('Choose existing card')}
                         </p>
                       </div>
                       {availableMethods.map((availableMethod) => (
@@ -655,7 +657,7 @@ function PaymentMethodCard({
                     className="text-[13px]"
                     onClick={() => onAddPaymentMethod?.(!isPrimary)}
                   >
-                    <MenuItemContent icon={Plus}>Add</MenuItemContent>
+                    <MenuItemContent icon={Plus}>{t('Add')}</MenuItemContent>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
@@ -666,7 +668,7 @@ function PaymentMethodCard({
             className="text-[13px]"
             onClick={onRemove}
           >
-            <MenuItemContent icon={Trash2}>Remove</MenuItemContent>
+            <MenuItemContent icon={Trash2}>{t('Remove')}</MenuItemContent>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

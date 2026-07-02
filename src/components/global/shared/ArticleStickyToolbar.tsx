@@ -5,6 +5,7 @@ import { DOCS_STICKY_TITLE_CLASS } from '@/lib/docs/prose-typography'
 import { DOCS_SECTION_HEADER_CLASS } from '@/lib/docs/nav-styles'
 import type { StickyOverlayBounds } from '@/lib/layout/sticky-overlay-bounds'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 type ArticleStickyToolbarProps = {
   pinned: boolean
@@ -23,6 +24,7 @@ export function ArticleStickyToolbar({
   actions,
   titleClassName = DOCS_STICKY_TITLE_CLASS,
 }: ArticleStickyToolbarProps) {
+  const t = useT()
   if (!pinned || !bounds) return null
 
   const contentInsetInlineStart = bounds.contentLeft - bounds.shellLeft
@@ -35,7 +37,7 @@ export function ArticleStickyToolbar({
         left: bounds.shellLeft,
         width: bounds.shellWidth,
       }}
-      aria-label="Article toolbar"
+      aria-label={t('Article toolbar')}
     >
       <div
         aria-hidden
@@ -54,7 +56,7 @@ export function ArticleStickyToolbar({
       >
         <div className="flex w-full min-w-0 items-center justify-between gap-4">
           <p className={cn(titleClassName, 'min-w-0 text-start')}>
-            {title}
+            {t(title)}
             {titleSuffix}
           </p>
           {actions ? (

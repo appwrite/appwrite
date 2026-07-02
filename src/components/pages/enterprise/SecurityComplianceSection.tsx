@@ -6,6 +6,7 @@ import {
   enterpriseSecurityControls,
   enterpriseSecuritySection,
 } from '@/lib/enterprise/content'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
@@ -14,11 +15,12 @@ type SecurityComplianceSectionProps = {
 }
 
 function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps) {
+  const t = useT()
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
       <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
         <DocsRouteLink href="/docs/advanced/security">
-          Security docs
+          {t('Security docs')}
           <ArrowRight className="ms-1.5 size-3.5" aria-hidden />
         </DocsRouteLink>
       </Button>
@@ -29,7 +31,7 @@ function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps
           className="h-9 text-[13px] text-muted-foreground"
           onClick={onContactSales}
         >
-          Contact sales
+          {t('Contact sales')}
         </Button>
       ) : null}
     </div>
@@ -37,21 +39,22 @@ function SecuritySectionLinks({ onContactSales }: SecurityComplianceSectionProps
 }
 
 export function SecurityComplianceSection({ onContactSales }: SecurityComplianceSectionProps) {
+  const t = useT()
   return (
     <section className="relative isolate overflow-hidden border-b border-border py-16 sm:py-20">
       <SectionSoftLight tone="purple" position="left" />
       <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            {enterpriseSecuritySection.eyebrow}
+            {t(enterpriseSecuritySection.eyebrow)}
             <span className="text-[var(--brand-cta)]">_</span>
           </p>
           <h2 className="mt-3 font-aeonik-pro text-balance text-[30px] font-normal leading-none tracking-tight text-foreground sm:text-[36px]">
-            {enterpriseSecuritySection.title}
+            {t(enterpriseSecuritySection.title)}
             <span className="text-[var(--brand-cta)]">_</span>
           </h2>
           <p className="mt-4 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-            {enterpriseSecuritySection.description}
+            {t(enterpriseSecuritySection.description)}
           </p>
           <div className="mt-6">
             <SecuritySectionLinks onContactSales={onContactSales} />
@@ -62,7 +65,7 @@ export function SecurityComplianceSection({ onContactSales }: SecurityCompliance
           {enterpriseComplianceFrameworks.map((framework) => (
             <li key={framework.name}>
               <span
-                title={framework.summary}
+                title={framework.summary ? t(framework.summary) : undefined}
                 className="inline-flex items-center rounded-full border border-border/80 bg-muted/25 px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-muted/40"
               >
                 {framework.name}
@@ -81,13 +84,13 @@ export function SecurityComplianceSection({ onContactSales }: SecurityCompliance
             >
               <div className="border-b border-border bg-muted/15 px-4 py-3">
                 <h3 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-foreground">
-                  {control.title}
+                  {t(control.title)}
                 </h3>
               </div>
               <ul className="space-y-2 px-4 py-4">
                 {control.items.map((item) => (
                   <li key={item} className="text-[13px] leading-5 text-muted-foreground">
-                    {item}
+                    {t(item)}
                   </li>
                 ))}
               </ul>

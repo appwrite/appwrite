@@ -39,12 +39,14 @@ import {
 import { copyToClipboard } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 function maskClientSecret(hint: string) {
   return `client_secret_${'•'.repeat(18)}${hint}`
 }
 
 export function View() {
+  const t = useT()
   const { orgId, appId } = useParams({ strict: false })
   const { app } = useOrganizationApp(appId)
   const { secrets, isLoading } = useOrganizationAppSecrets(appId)
@@ -68,12 +70,12 @@ export function View() {
             </div>
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Public client
+                {t('Public client')}
               </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Public clients use PKCE and do not require OAuth secrets. Switch
-                to a confidential client on the OAuth client tab if you need
-                server-side secret authentication.
+                {t(
+                  'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.',
+                )}
               </p>
             </div>
           </div>
@@ -86,9 +88,9 @@ export function View() {
     try {
       const created = await createSecretMutation.mutateAsync()
       setNewSecretPlaintext(created.secret)
-      toast.success('OAuth secret created')
+      toast.success(t('OAuth secret created'))
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to create OAuth secret'))
+      toast.error(getErrorMessage(error, t('Failed to create OAuth secret')))
     }
   }
 
@@ -96,10 +98,10 @@ export function View() {
     if (!deleteTargetId) return
     try {
       await deleteSecretMutation.mutateAsync(deleteTargetId)
-      toast.success('OAuth secret deleted')
+      toast.success(t('OAuth secret deleted'))
       setDeleteTargetId(null)
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to delete OAuth secret'))
+      toast.error(getErrorMessage(error, t('Failed to delete OAuth secret')))
     }
   }
 
@@ -117,17 +119,18 @@ export function View() {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
-                OAuth secrets
+                {t('OAuth secrets')}
               </h3>
               {!isLoading && secrets.length > 0 && (
                 <Badge variant="info" className="text-[10px] shrink-0">
-                  {secrets.length} active
+                  {secrets.length} {t('active')}
                 </Badge>
               )}
             </div>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Confidential clients authenticate token exchanges with a secret.
-              Rotate regularly and store values in a secrets manager.
+              {t(
+                'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.',
+              )}
             </p>
           </div>
           <Button
@@ -141,7 +144,7 @@ export function View() {
             ) : (
               <Plus className="me-1.5 h-3.5 w-3.5" />
             )}
-            Create secret
+            {t('Create secret')}
           </Button>
         </div>
         <div className="border-t border-border" />
@@ -149,11 +152,12 @@ export function View() {
           <Alert className="border-border bg-muted/30">
             <Lock className="h-4 w-4 text-muted-foreground" />
             <AlertTitle className="text-[13px] font-medium text-foreground">
-              Server-side only
+              {t('Server-side only')}
             </AlertTitle>
             <AlertDescription className="text-[12px] text-muted-foreground">
-              Never embed OAuth secrets in mobile apps, SPAs, or public
-              repositories. Use environment variables such as{' '}
+              {t(
+                'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as',
+              )}{' '}
               <span className="whitespace-nowrap">
                 <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
                   OAUTH_CLIENT_SECRET
@@ -170,8 +174,10 @@ export function View() {
           ) : secrets.length === 0 ? (
             <EmptyState
               icon={Key}
-              title="No OAuth secrets"
-              description="Create a secret for confidential OAuth flows such as authorization code with server-side token exchange."
+              title={t('No OAuth secrets')}
+              description={t(
+                'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.',
+              )}
               variant="card"
             />
           ) : (
@@ -189,7 +195,7 @@ export function View() {
                           secret_{secret.hint}
                         </p>
                         <Badge variant="success" className="text-[10px] shrink-0">
-                          Active
+                          {t('Active')}
                         </Badge>
                       </div>
                       <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
@@ -200,7 +206,7 @@ export function View() {
                         </code>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
                           <span className="whitespace-nowrap">
-                            Created{' '}
+                            {t('Created')}{' '}
                             <DateTooltip
                               date={secret.$createdAt}
                               className="text-[12px] text-muted-foreground"
@@ -224,7 +230,7 @@ export function View() {
                         <DropdownMenuItem
                           onClick={() => setDeleteTargetId(secret.$id)}
                         >
-                          <MenuItemContent icon={Trash2}>Delete</MenuItemContent>
+                          <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -244,10 +250,11 @@ export function View() {
       >
         <DialogContent className="sm:max-w-lg p-0 max-h-[90dvh] flex flex-col overflow-hidden">
           <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
-            <DialogTitle>OAuth secret created</DialogTitle>
+            <DialogTitle>{t('OAuth secret created')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Copy this value now. For security, the full secret cannot be
-              retrieved after you close this dialog.
+              {t(
+                'Copy this value now. For security, the full secret cannot be retrieved after you close this dialog.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="shrink-0 border-t border-border" />
@@ -255,12 +262,12 @@ export function View() {
             <Alert className="border-amber-500/20 bg-amber-500/10 text-foreground">
               <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               <AlertTitle className="text-[13px] font-medium">
-                One-time display
+                {t('One-time display')}
               </AlertTitle>
               <AlertDescription className="text-[12px] text-muted-foreground">
-                Store this secret in your deployment environment before
-                continuing. Active sessions using a deleted secret will fail
-                token refresh immediately.
+                {t(
+                  'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.',
+                )}
               </AlertDescription>
             </Alert>
 
@@ -268,7 +275,7 @@ export function View() {
               <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <Terminal className="h-3.5 w-3.5 shrink-0" />
-                  Secret value
+                  {t('Secret value')}
                 </div>
                 <Button
                   type="button"
@@ -282,7 +289,7 @@ export function View() {
                   ) : (
                     <Copy className="me-1.5 h-3.5 w-3.5" />
                   )}
-                  Copy
+                  {t('Copy')}
                 </Button>
               </div>
               <pre
@@ -297,7 +304,7 @@ export function View() {
             </div>
           </div>
           <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-            <Button onClick={() => setNewSecretPlaintext(null)}>Done</Button>
+            <Button onClick={() => setNewSecretPlaintext(null)}>{t('Done')}</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -310,10 +317,11 @@ export function View() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete OAuth secret</DialogTitle>
+            <DialogTitle>{t('Delete OAuth secret')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Token refresh and authorization flows using this secret will stop
-              working immediately. This cannot be undone.
+              {t(
+                'Token refresh and authorization flows using this secret will stop working immediately. This cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -321,7 +329,7 @@ export function View() {
             {deleteTargetId && (
               <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
                 <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Secret ID
+                  {t('Secret ID')}
                 </p>
                 <p className="mt-1 font-mono text-[13px] text-foreground break-all">
                   {deleteTargetId}
@@ -335,14 +343,14 @@ export function View() {
               onClick={() => setDeleteTargetId(null)}
               disabled={deleteSecretMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               disabled={deleteSecretMutation.isPending}
               onClick={() => void handleDeleteSecret()}
             >
-              Delete
+              {t('Delete')}
             </Button>
           </div>
         </DialogContent>

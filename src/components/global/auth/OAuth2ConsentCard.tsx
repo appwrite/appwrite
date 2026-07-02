@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { sdk } from '@/lib/appwrite/sdk'
 import { describeConsentScopes } from '@/lib/oauth2/scopes'
+import { useT } from '@/lib/i18n/translate'
 
 export type OAuth2Flow = 'authorization' | 'device'
 
@@ -74,6 +75,7 @@ export function OAuth2ConsentCard({
   flow,
   onDeviceDone,
 }: OAuth2ConsentCardProps) {
+  const t = useT()
   const [error, setError] = useState<string | null>(null)
 
   const scopes = useMemo(
@@ -97,7 +99,10 @@ export function OAuth2ConsentCard({
       window.location.assign(result.redirectUrl)
     },
     onError: (e: unknown) => {
-      const message = getErrorMessage(e, 'Failed to authorize the application')
+      const message = getErrorMessage(
+        e,
+        t('Failed to authorize the application'),
+      )
       setError(message)
       toast.error(message)
     },
@@ -113,7 +118,7 @@ export function OAuth2ConsentCard({
       window.location.assign(result.redirectUrl)
     },
     onError: (e: unknown) => {
-      const message = getErrorMessage(e, 'Failed to cancel the request')
+      const message = getErrorMessage(e, t('Failed to cancel the request'))
       setError(message)
       toast.error(message)
     },
@@ -128,18 +133,18 @@ export function OAuth2ConsentCard({
           <AppLogo app={app} />
           <div className="space-y-1">
             <h1 className="text-xl font-semibold tracking-tight">
-              Authorize {app.name}
+              {t('Authorize')} {app.name}
             </h1>
             <p className="text-muted-foreground text-sm">
               {app.tagline ||
-                `${app.name} wants to access your Appwrite account.`}
+                `${app.name} ${t('wants to access your Appwrite account.')}`} {/* pragma: allowlist secret */}
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
           <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-            This will allow {app.name} to
+            {t('This will allow')} {app.name} {t('to')}
           </p>
           <ul className="space-y-3">
             {scopes.map((scope) => {
@@ -151,10 +156,10 @@ export function OAuth2ConsentCard({
                   </span>
                   <span className="space-y-0.5">
                     <span className="block text-sm font-medium">
-                      {scope.title}
+                      {t(scope.title)}
                     </span>
                     <span className="text-muted-foreground block text-xs">
-                      {scope.description}
+                      {t(scope.description)}
                     </span>
                   </span>
                 </li>
@@ -166,7 +171,7 @@ export function OAuth2ConsentCard({
         {details.length > 0 && (
           <div className="space-y-2">
             <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-              Requested resources
+              {t('Requested resources')}
             </p>
             <ul className="space-y-1.5">
               {details.map((detail, index) => (
@@ -201,7 +206,7 @@ export function OAuth2ConsentCard({
               }}
             >
               <Check className="me-1.5 size-4" />
-              {approveMutation.isPending ? 'Authorizing…' : 'Authorize'}
+              {approveMutation.isPending ? t('Authorizing…') : t('Authorize')}
             </Button>
             <Button
               variant="outline"
@@ -212,22 +217,25 @@ export function OAuth2ConsentCard({
                 rejectMutation.mutate()
               }}
             >
-              {rejectMutation.isPending ? 'Cancelling…' : 'Cancel'}
+              {rejectMutation.isPending ? t('Cancelling…') : t('Cancel')}
             </Button>
           </div>
 
           <p className="text-muted-foreground text-center text-xs">
             {accountLabel ? (
               <>
-                Signed in as <span className="font-medium">{accountLabel}</span>
+                {t('Signed in as')}{' '}
+                <span className="font-medium">{accountLabel}</span>
                 .{' '}
               </>
             ) : null}
             {flow === 'authorization' && redirectHost ? (
-              <>You'll be redirected to {redirectHost}.</>
+              <>
+                {t("You'll be redirected to")} {redirectHost}.
+              </>
             ) : null}
             {flow === 'device'
-              ? 'After authorizing, return to your device.'
+              ? t('After authorizing, return to your device.')
               : null}
           </p>
 
@@ -240,7 +248,7 @@ export function OAuth2ConsentCard({
                   rel="noreferrer"
                   className="link-neutral"
                 >
-                  Privacy Policy
+                  {t('Privacy Policy')}
                 </a>
               )}
               {app.privacyPolicyUrl && app.termsUrl ? ' · ' : null}
@@ -251,7 +259,7 @@ export function OAuth2ConsentCard({
                   rel="noreferrer"
                   className="link-neutral"
                 >
-                  Terms of Service
+                  {t('Terms of Service')}
                 </a>
               )}
             </p>

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 export interface SortOption {
   id: string
@@ -46,6 +47,7 @@ export function SortPopover({
   onSortChange,
   triggerLabel = 'Sort',
 }: SortPopoverProps) {
+  const t = useT()
   const currentOption = options.find((o) => o.id === sortBy) ?? options[0]
   const currentLabel = currentOption?.label ?? sortBy
 
@@ -59,9 +61,9 @@ export function SortPopover({
           className="h-9 shrink-0 gap-1.5 text-[13px]"
         >
           <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
-          {triggerLabel}
+          {t(triggerLabel)}
           <span className="text-muted-foreground">
-            {currentLabel}
+            {t(currentLabel)}
             <SortIcon order={sortOrder} />
           </span>
         </Button>
@@ -88,7 +90,7 @@ export function SortPopover({
                 sortBy === opt.id && 'bg-muted/50',
               )}
             >
-              <span>{opt.label}</span>
+              <span>{t(opt.label)}</span>
               {sortBy === opt.id ? (
                 <SortIcon order={sortOrder} />
               ) : (

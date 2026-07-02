@@ -22,6 +22,7 @@ import {
   CircleDashed,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 export interface BuildLogsCardProps {
   buildLogs: string
@@ -38,17 +39,19 @@ export interface BuildLogsCardProps {
 export function BuildLogsCard({
   buildLogs,
   durationDisplay = null,
-  emptyMessage = (
-    <div className="flex items-center gap-2">
-      <CircleDashed className="h-3.5 w-3.5 shrink-0" />
-      Waiting for build logs...
-    </div>
-  ),
+  emptyMessage,
   downloadFilename = 'build-logs.txt',
   hideWhenEmpty = false,
   title = 'Build logs',
   hideTitle = false,
 }: BuildLogsCardProps) {
+  const t = useT()
+  const resolvedEmptyMessage = emptyMessage ?? (
+    <div className="flex items-center gap-2">
+      <CircleDashed className="h-3.5 w-3.5 shrink-0" />
+      {t('Waiting for build logs...')}
+    </div>
+  )
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const hasUserScrolledRef = useRef(false)
   const isFollowingRef = useRef(false)
@@ -115,20 +118,20 @@ export function BuildLogsCard({
 
   const handleCopyLogs = useCallback(async () => {
     if (!buildLogs) {
-      toast.error('No logs to copy')
+      toast.error(t('No logs to copy'))
       return
     }
     try {
       await navigator.clipboard.writeText(buildLogs)
-      toast.success('Logs copied to clipboard')
+      toast.success(t('Logs copied to clipboard'))
     } catch {
-      toast.error('Failed to copy logs')
+      toast.error(t('Failed to copy logs'))
     }
-  }, [buildLogs])
+  }, [buildLogs, t])
 
   const handleDownloadLogs = useCallback(() => {
     if (!buildLogs) {
-      toast.error('No logs to download')
+      toast.error(t('No logs to download'))
       return
     }
     const blob = new Blob([buildLogs], { type: 'text/plain' })
@@ -140,8 +143,8 @@ export function BuildLogsCard({
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast.success('Logs downloaded')
-  }, [buildLogs, downloadFilename])
+    toast.success(t('Logs downloaded'))
+  }, [buildLogs, downloadFilename, t])
 
   if (hideWhenEmpty && !buildLogs) return null
 
@@ -149,10 +152,12 @@ export function BuildLogsCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {!hideTitle && (
         <div className="px-6 py-4 flex items-center justify-between gap-3">
-          <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {t(title)}
+          </h3>
           {durationDisplay && (
             <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
-              Duration:{' '}
+              {t('Duration:')}{' '}
               <span className="font-medium text-foreground">
                 {durationDisplay}
               </span>
@@ -168,7 +173,7 @@ export function BuildLogsCard({
             <div className="relative flex-1 min-w-0">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search logs..."
+                placeholder={t('Search logs...')}
                 value={logsSearch}
                 onChange={(e) => setLogsSearch(e.target.value)}
                 className="ps-9 h-9 text-[13px]"
@@ -187,7 +192,7 @@ export function BuildLogsCard({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Download logs</p>
+                <p>{t('Download logs')}</p>
               </TooltipContent>
             </TooltipPrimitive.Root>
             <TooltipPrimitive.Root>
@@ -203,7 +208,7 @@ export function BuildLogsCard({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Copy logs</p>
+                <p>{t('Copy logs')}</p>
               </TooltipContent>
             </TooltipPrimitive.Root>
           </div>
@@ -219,7 +224,7 @@ export function BuildLogsCard({
             buildLogs={buildLogs}
             searchTerm={logsSearch}
             highlightLineOnHover
-            emptyMessage={emptyMessage}
+            emptyMessage={resolvedEmptyMessage}
           />
         </div>
         {buildLogs && (
@@ -238,7 +243,7 @@ export function BuildLogsCard({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>Scroll to top</p>
+                  <p>{t('Scroll to top')}</p>
                 </TooltipContent>
               </TooltipPrimitive.Root>
               <TooltipPrimitive.Root>
@@ -254,7 +259,7 @@ export function BuildLogsCard({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>Scroll to bottom</p>
+                  <p>{t('Scroll to bottom')}</p>
                 </TooltipContent>
               </TooltipPrimitive.Root>
             </TooltipProvider>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 
 /** Red warning card — use whenever copy is shown in destructive/warning red. */
 export const warningAlertContainerClassName =
@@ -34,6 +35,7 @@ export function WarningAlert({
   icon: Icon = AlertTriangle,
   descriptionClassName,
 }: WarningAlertProps) {
+  const t = useT()
   return (
     <Alert
       variant="default"
@@ -41,7 +43,9 @@ export function WarningAlert({
     >
       <Icon className={warningAlertIconClassName} />
       {title ? (
-        <AlertTitle className={warningAlertTitleClassName}>{title}</AlertTitle>
+        <AlertTitle className={warningAlertTitleClassName}>
+          {typeof title === 'string' ? t(title) : title}
+        </AlertTitle>
       ) : null}
       <AlertDescription
         className={cn(
@@ -50,7 +54,7 @@ export function WarningAlert({
           descriptionClassName,
         )}
       >
-        {children}
+        {typeof children === 'string' ? t(children) : children}
       </AlertDescription>
     </Alert>
   )

@@ -42,6 +42,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 // Dependencies for query invalidation
 const Dependencies = {
@@ -133,6 +134,7 @@ function BrowserIcon({
 }
 
 export function AccountSessions() {
+  const t = useT()
   const { data, isLoading } = useAccountSessions()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -164,7 +166,7 @@ export function AccountSessions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.SESSIONS })
-      toast.success('Session has been deleted')
+      toast.success(t('Session has been deleted'))
       setLogoutDialogOpen(false)
 
       const wasCurrentSession = isCurrentSession
@@ -177,7 +179,7 @@ export function AccountSessions() {
       }
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete session')
+      toast.error(error.message || t('Failed to delete session'))
     },
   })
 
@@ -187,13 +189,13 @@ export function AccountSessions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.SESSIONS })
-      toast.success('All sessions have been deleted')
+      toast.success(t('All sessions have been deleted'))
       setDeleteAllDialogOpen(false)
       // Redirect to sign-in when all sessions are deleted
       navigate({ to: '/sign-in' })
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete sessions')
+      toast.error(error.message || t('Failed to delete sessions'))
     },
   })
 
@@ -243,16 +245,16 @@ export function AccountSessions() {
         : session.deviceModel || session.deviceBrand || null
 
     return {
-      primary: parts.length > 0 ? parts.join(' ') : 'Unknown device',
+      primary: parts.length > 0 ? parts.join(' ') : t('Unknown device'),
       secondary: osInfo || deviceInfo || null,
     }
   }
 
   const getProviderName = (provider?: string) => {
-    if (!provider) return 'Unknown'
+    if (!provider) return t('Unknown')
     const nameMap: Record<string, string> = {
-      email: 'Email',
-      phone: 'Phone',
+      email: t('Email'),
+      phone: t('Phone'),
       github: 'GitHub',
       google: 'Google',
       apple: 'Apple',
@@ -291,7 +293,9 @@ export function AccountSessions() {
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
           <Monitor className="h-6 w-6 text-muted-foreground" />
         </div>
-        <p className="text-[13px] text-muted-foreground">Loading sessions...</p>
+        <p className="text-[13px] text-muted-foreground">
+          {t('Loading sessions...')}
+        </p>
       </div>
     )
   }
@@ -300,8 +304,8 @@ export function AccountSessions() {
     return (
       <EmptyState
         icon={Monitor}
-        title="No active sessions"
-        description="You don't have any active sessions at the moment."
+        title={t('No active sessions')}
+        description={t("You don't have any active sessions at the moment.")}
         isEmpty={true}
         variant="card"
         iconSize="md"
@@ -322,7 +326,7 @@ export function AccountSessions() {
               disabled={deleteAllSessionsMutation.isPending}
             >
               <LogOut className="me-1.5 h-4 w-4" />
-              Delete all sessions
+              {t('Delete all sessions')}
             </Button>
           </div>
         )}
@@ -331,19 +335,19 @@ export function AccountSessions() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[320px]">
-                  Device & Auth
+                  {t('Device & Auth')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  Location
+                  {t('Location')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                  IP Address
+                  {t('IP Address')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[160px]">
-                  Created
+                  {t('Created')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  Expires
+                  {t('Expires')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[80px]"></TableHead>
               </TableRow>
@@ -374,7 +378,7 @@ export function AccountSessions() {
                                 variant="success"
                                 className="text-[10px] font-medium shrink-0 px-1.5 py-0 h-4"
                               >
-                                Current
+                                {t('Current')}
                               </Badge>
                             )}
                             {hasMFA && (
@@ -445,7 +449,7 @@ export function AccountSessions() {
                           session.countryCode &&
                           session.countryCode !== '--'
                             ? session.countryName
-                            : 'Unknown'}
+                            : t('Unknown')}
                         </span>
                       </div>
                     </TableCell>
@@ -479,8 +483,8 @@ export function AccountSessions() {
                         className="h-8 w-8 p-0"
                         onClick={() => handleDeleteClick(session.$id)}
                         disabled={deleteSessionMutation.isPending}
-                        title="Revoke session"
-                        aria-label="Revoke session"
+                        title={t('Revoke session')}
+                        aria-label={t('Revoke session')}
                       >
                         <LogOut className="h-4 w-4" />
                       </Button>
@@ -506,11 +510,15 @@ export function AccountSessions() {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Logout from device</DialogTitle>
+            <DialogTitle>{t('Logout from device')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {isCurrentSession
-                ? 'Are you sure you want to logout from this device? You will be redirected to the sign-in page and will need to sign in again to access your account.'
-                : 'Are you sure you want to logout from this device? You will need to sign in again to access your account from this device.'}
+                ? t(
+                    'Are you sure you want to logout from this device? You will be redirected to the sign-in page and will need to sign in again to access your account.',
+                  )
+                : t(
+                    'Are you sure you want to logout from this device? You will need to sign in again to access your account from this device.',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -519,14 +527,14 @@ export function AccountSessions() {
               onClick={() => setLogoutDialogOpen(false)}
               disabled={deleteSessionMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmLogout}
               disabled={deleteSessionMutation.isPending}
             >
-              Logout
+              {t('Logout')}
             </Button>
           </div>
         </DialogContent>
@@ -536,10 +544,11 @@ export function AccountSessions() {
       <Dialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Logout from all devices</DialogTitle>
+            <DialogTitle>{t('Logout from all devices')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to logout from all devices? You will need to
-              sign in again to access your account from any device.
+              {t(
+                'Are you sure you want to logout from all devices? You will need to sign in again to access your account from any device.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -548,14 +557,14 @@ export function AccountSessions() {
               onClick={() => setDeleteAllDialogOpen(false)}
               disabled={deleteAllSessionsMutation.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDeleteAll}
               disabled={deleteAllSessionsMutation.isPending}
             >
-              Logout from all devices
+              {t('Logout from all devices')}
             </Button>
           </div>
         </DialogContent>

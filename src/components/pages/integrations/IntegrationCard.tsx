@@ -3,6 +3,7 @@ import { BadgeCheck } from 'lucide-react'
 import { getIntegrationCategoryHeading } from '@/lib/integrations/categories'
 import type { IntegrationMeta } from '@/lib/integrations/types'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { IntegrationIcon } from './IntegrationIcon'
 import { IntegrationPill } from './IntegrationPill'
 
@@ -17,6 +18,7 @@ export function IntegrationCard({
   variant = 'default',
   className,
 }: IntegrationCardProps) {
+  const t = useT()
   const isFeatured = variant === 'featured'
 
   return (
@@ -54,7 +56,7 @@ export function IntegrationCard({
               {integration.isPartner ? (
                 <BadgeCheck
                   className="ms-1.5 inline-block size-4 translate-y-[-1px] align-middle text-emerald-600 dark:text-emerald-400"
-                  aria-label="Verified"
+                  aria-label={t('Verified')}
                 />
               ) : null}
             </h3>
@@ -69,7 +71,7 @@ export function IntegrationCard({
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <IntegrationPill>{getIntegrationCategoryHeading(integration.category)}</IntegrationPill>
+          <IntegrationPill>{t(getIntegrationCategoryHeading(integration.category))}</IntegrationPill>
           {integration.platform.map((platform) => (
             <IntegrationPill key={platform}>{platform}</IntegrationPill>
           ))}

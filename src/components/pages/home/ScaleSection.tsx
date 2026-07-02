@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const SCALE_QUOTE = {
@@ -11,6 +12,7 @@ const SCALE_QUOTE = {
 } as const
 
 function ScaleQuoteBelowChart() {
+  const t = useT()
   return (
     <figure className="mx-auto flex w-full max-w-[21rem] flex-col items-center text-center sm:max-w-[24rem]">
       <span
@@ -20,8 +22,8 @@ function ScaleQuoteBelowChart() {
         &ldquo;
       </span>
       <blockquote className="mt-3 text-sm leading-snug text-muted-foreground sm:text-[15px] sm:leading-6">
-        <span className="block">{SCALE_QUOTE.lineOne}</span>
-        <span className="mt-1 block">{SCALE_QUOTE.lineTwo}</span>
+        <span className="block">{t(SCALE_QUOTE.lineOne)}</span>
+        <span className="mt-1 block">{t(SCALE_QUOTE.lineTwo)}</span>
       </blockquote>
       <figcaption className="mt-7 flex items-center justify-center gap-2.5 sm:mt-8">
         <Avatar className="size-8">
@@ -32,7 +34,7 @@ function ScaleQuoteBelowChart() {
           <span className="font-medium text-foreground">{SCALE_QUOTE.name}</span>
           <span className="text-muted-foreground">
             {' '}
-            · {SCALE_QUOTE.title}, {SCALE_QUOTE.company}
+            · {t(SCALE_QUOTE.title)}, {SCALE_QUOTE.company}
           </span>
         </p>
       </figcaption>
@@ -69,6 +71,7 @@ function ScaleStatCard({
   suffix: string
   label: string
 }) {
+  const t = useT()
   return (
     <div className="flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 px-2.5 py-2.5 sm:px-3 sm:py-3">
       <p className="text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-lg lg:text-xl">
@@ -76,7 +79,7 @@ function ScaleStatCard({
         {suffix}
       </p>
       <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
-        {label}
+        {t(label)}
       </p>
     </div>
   )
@@ -167,6 +170,7 @@ function ScaleChart() {
 }
 
 export function ScaleSection() {
+  const t = useT()
   return (
     <section
       id="scale"
@@ -174,7 +178,7 @@ export function ScaleSection() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <h2 className="font-aeonik-pro max-w-3xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-          Over half a million developers scale with Appwrite
+          {t('Over half a million developers scale with Appwrite')} {/* pragma: allowlist secret */}
           <span className="text-[var(--brand-cta)]">_</span>
         </h2>
 

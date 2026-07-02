@@ -1,6 +1,7 @@
 import { ArrowRight, Globe } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 
 const DELIVERY_STEPS = [
   {
@@ -27,13 +28,13 @@ const DELIVERY_STEPS = [
 ] as const
 
 export function StorageCdnVisual() {
+  const t = useT()
   return (
     <ProductFeatureVisualFrame eyebrow="Network" title="Storage delivery">
       <div className="space-y-4">
         <div className="rounded-lg border border-border bg-muted/15 px-3 py-2.5">
           <p className="text-[12px] font-medium leading-6 text-foreground">
-            Global CDN included. Transformed images cached in your project region before
-            they reach the edge.
+            {t('Global CDN included. Transformed images cached in your project region before they reach the edge.')}
           </p>
         </div>
 
@@ -42,10 +43,10 @@ export function StorageCdnVisual() {
             <span className="flex size-7 items-center justify-center rounded-md border border-border bg-background">
               <Globe className="size-3.5 text-muted-foreground" aria-hidden />
             </span>
-            <p className="text-[13px] font-semibold text-foreground">Delivery path</p>
+            <p className="text-[13px] font-semibold text-foreground">{t('Delivery path')}</p>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
-            120+ edge locations
+            {t('120+ edge locations')}
           </Badge>
         </div>
 
@@ -60,13 +61,13 @@ export function StorageCdnVisual() {
                 }
               >
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {step.label}
+                  {t(step.label)}
                 </p>
-                <p className="mt-1 text-[12px] font-medium text-foreground">{step.title}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{step.detail}</p>
+                <p className="mt-1 text-[12px] font-medium text-foreground">{t(step.title)}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t(step.detail)}</p>
                 {step.highlight ? (
                   <Badge variant="success" className="mt-2 text-[10px]">
-                    Cache hit
+                    {t('Cache hit')}
                   </Badge>
                 ) : null}
               </div>
@@ -81,8 +82,7 @@ export function StorageCdnVisual() {
 
         <div className="rounded-lg border border-dashed border-border bg-muted/10 px-3 py-2.5">
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Storage files and transformed previews inherit Appwrite CDN delivery and
-            regional caching automatically. No separate CDN setup required.
+            {t('Storage files and transformed previews inherit Appwrite CDN delivery and regional caching automatically. No separate CDN setup required.')} {/* pragma: allowlist secret */}
           </p>
         </div>
       </div>

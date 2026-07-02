@@ -9,6 +9,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ProductFeatureVisualFrame } from '@/components/pages/products/features/_components/ProductFeatureVisualFrame'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const EVENT_TRIGGERS = [
@@ -36,6 +37,7 @@ function UseCaseCard({
   outcome,
   className,
 }: UseCaseCardProps) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -47,27 +49,28 @@ function UseCaseCard({
         <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
           <Icon className="size-3.5 text-muted-foreground" aria-hidden />
         </span>
-        <p className="text-[12px] font-medium leading-snug text-foreground">{trigger}</p>
+        <p className="text-[12px] font-medium leading-snug text-foreground">{t(trigger)}</p>
       </div>
       <div className="mt-2 flex items-start gap-2 ps-0.5 text-[11px] leading-5 text-muted-foreground">
         <ArrowRight
           className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/70"
           aria-hidden
         />
-        <span>{outcome}</span>
+        <span>{t(outcome)}</span>
       </div>
     </div>
   )
 }
 
 function ComparisonDivider({ className }: { className?: string }) {
+  const t = useT()
   return (
     <div
       className={cn('flex shrink-0 items-center justify-center py-1', className)}
       aria-hidden
     >
       <span className="rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        or
+        {t('or')}
       </span>
     </div>
   )
@@ -131,34 +134,35 @@ export function FunctionsTriggersVisual() {
 }
 
 function ExecutionModesSubsection() {
+  const t = useT()
   return (
     <div className="mt-16 overflow-hidden rounded-xl border border-border bg-card/45 sm:mt-20">
       <div className="border-b border-border px-4 py-3 sm:px-5">
         <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Execution modes
+          {t('Execution modes')}
         </p>
       </div>
       <div className="grid sm:grid-cols-2 sm:divide-x sm:divide-border">
         <div className="px-4 py-3.5 sm:px-5">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[12px] font-semibold text-foreground">Sync</p>
+            <p className="text-[12px] font-semibold text-foreground">{t('Sync')}</p>
             <Badge variant="outline" className="text-[10px]">
-              30s limit
+              {t('30s limit')}
             </Badge>
           </div>
           <p className="mt-1.5 text-[11px] leading-5 text-muted-foreground">
-            HTTP domains and SDK calls with async disabled. Response body returned to the caller.
+            {t('HTTP domains and SDK calls with async disabled. Response body returned to the caller.')}
           </p>
         </div>
         <div className="border-t border-border px-4 py-3.5 sm:border-t-0 sm:px-5">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[12px] font-semibold text-foreground">Async</p>
+            <p className="text-[12px] font-semibold text-foreground">{t('Async')}</p>
             <Badge variant="info" className="text-[10px]">
-              Background
+              {t('Background')}
             </Badge>
           </div>
           <p className="mt-1.5 text-[11px] leading-5 text-muted-foreground">
-            Platform events, cron schedules, and queued executions. Uses your configured timeout.
+            {t('Platform events, cron schedules, and queued executions. Uses your configured timeout.')}
           </p>
         </div>
       </div>
@@ -167,13 +171,14 @@ function ExecutionModesSubsection() {
 }
 
 function EventTriggersContent() {
+  const t = useT()
   return (
     <>
       <div className="mb-1">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Event triggers
+          {t('Event triggers')}
         </p>
-        <p className="mt-0.5 text-[13px] font-semibold text-foreground">When something happens</p>
+        <p className="mt-0.5 text-[13px] font-semibold text-foreground">{t('When something happens')}</p>
       </div>
 
       <div className="mb-3 flex items-start gap-2.5">
@@ -182,13 +187,13 @@ function EventTriggersContent() {
         </span>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[12px] font-medium text-foreground">Event-driven</p>
+            <p className="text-[12px] font-medium text-foreground">{t('Event-driven')}</p>
             <Badge variant="info" className="text-[10px]">
-              Async
+              {t('Async')}
             </Badge>
           </div>
           <p className="mt-0.5 text-[11px] leading-5 text-muted-foreground">
-            React to platform events as they occur.
+            {t('React to platform events as they occur.')}
           </p>
         </div>
       </div>
@@ -208,20 +213,21 @@ function EventTriggersContent() {
       </div>
 
       <p className="mt-auto pt-3 text-[11px] leading-5 text-muted-foreground">
-        Webhooks, sync jobs, and reactive workflows.
+        {t('Webhooks, sync jobs, and reactive workflows.')}
       </p>
     </>
   )
 }
 
 function ScheduleContent() {
+  const t = useT()
   return (
     <>
       <div className="mb-1">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Scheduled executions
+          {t('Scheduled executions')}
         </p>
-        <p className="mt-0.5 text-[13px] font-semibold text-foreground">When the clock hits</p>
+        <p className="mt-0.5 text-[13px] font-semibold text-foreground">{t('When the clock hits')}</p>
       </div>
 
       <div className="mb-3 flex items-start gap-2.5">
@@ -229,18 +235,18 @@ function ScheduleContent() {
           <CalendarClock className="size-4 text-muted-foreground" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="text-[12px] font-medium text-foreground">Time-based</p>
+          <p className="text-[12px] font-medium text-foreground">{t('Time-based')}</p>
           <p className="mt-0.5 text-[11px] leading-5 text-muted-foreground">
-            Pick a preset or write a custom cron expression.
+            {t('Pick a preset or write a custom cron expression.')}
           </p>
         </div>
       </div>
 
       <div className="rounded-lg border border-border bg-background/80 px-3 py-2.5">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Preset
+          {t('Preset')}
         </p>
-        <p className="mt-1 text-[12px] font-medium text-foreground">Every hour</p>
+        <p className="mt-1 text-[12px] font-medium text-foreground">{t('Every hour')}</p>
         <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">0 * * * *</p>
       </div>
 
@@ -253,14 +259,14 @@ function ScheduleContent() {
               preset.active && 'border border-foreground/10 bg-muted/40',
             )}
           >
-            <span className="text-[11px]">{preset.label}</span>
+            <span className="text-[11px]">{t(preset.label)}</span>
             <span className="font-mono text-[10px] text-muted-foreground">{preset.cron}</span>
           </div>
         ))}
       </div>
 
       <p className="mt-auto pt-3 text-[11px] leading-5 text-muted-foreground">
-        Reports, cleanups, and recurring background jobs.
+        {t('Reports, cleanups, and recurring background jobs.')}
       </p>
     </>
   )

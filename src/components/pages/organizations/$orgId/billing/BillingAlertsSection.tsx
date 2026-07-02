@@ -14,6 +14,7 @@ import {
   useUpdateOrganizationBudget,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
 
 /**
  * BillingAlertsSection Component
@@ -37,6 +38,7 @@ interface BillingAlertsSectionProps {
 }
 
 export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
+  const t = useT()
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const updateBudgetMutation = useUpdateOrganizationBudget()
   const [showAddAlert, setShowAddAlert] = useState(false)
@@ -49,7 +51,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
 
   const usedThresholds = alerts
   const availableThresholds = AVAILABLE_THRESHOLDS.filter(
-    (t) => !usedThresholds.includes(t),
+    (th) => !usedThresholds.includes(th),
   )
 
   const handleAddAlert = async () => {
@@ -64,12 +66,12 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
         budget,
         alerts: newAlerts,
       })
-      toast.success('Alert added')
+      toast.success(t('Alert added'))
       setNewThreshold('')
       setShowAddAlert(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to add alert',
+        error instanceof Error ? error.message : t('Failed to add alert'),
       )
     }
   }
@@ -77,7 +79,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
   const handleRemoveAlert = async (threshold: number) => {
     if (!orgId) return
 
-    const newAlerts = alerts.filter((t) => t !== threshold)
+    const newAlerts = alerts.filter((th) => th !== threshold)
 
     try {
       await updateBudgetMutation.mutateAsync({
@@ -85,10 +87,10 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
         budget,
         alerts: newAlerts,
       })
-      toast.success('Alert removed')
+      toast.success(t('Alert removed'))
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to remove alert',
+        error instanceof Error ? error.message : t('Failed to remove alert'),
       )
     }
   }
@@ -98,11 +100,11 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Billing alerts
+            {t('Billing alerts')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading...</p>
+          <p className="text-[13px] text-muted-foreground">{t('Loading...')}</p>
         </div>
       </div>
     )
@@ -113,14 +115,14 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Billing alerts
+            {t('Billing alerts')}
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
-              Enable budget cap to configure billing alerts.
+              {t('Enable budget cap to configure billing alerts.')}
             </AlertDescription>
           </Alert>
         </div>
@@ -133,15 +135,14 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
       {/* Header */}
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          Billing alerts
+          {t('Billing alerts')}
         </h3>
       </div>
 
       {/* Description */}
       <div className="border-t border-border px-6 py-4">
         <p className="text-[13px] text-muted-foreground">
-          Get notified when your spending reaches certain thresholds of your
-          budget.
+          {t('Get notified when your spending reaches certain thresholds of your budget.')}
         </p>
       </div>
 
@@ -159,10 +160,11 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
                 </div>
                 <div>
                   <p className="text-[13px] font-medium text-foreground">
-                    {threshold}% threshold
+                    {threshold}% {t('threshold')}
                   </p>
                   <p className="text-[12px] text-muted-foreground">
-                    Alert when spending reaches {threshold}% of budget
+                    {t('Alert when spending reaches')} {threshold}%{' '}
+                    {t('of budget')}
                   </p>
                 </div>
               </div>
@@ -187,7 +189,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
             <Bell className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-[13px] text-muted-foreground">
-            No billing alerts configured
+            {t('No billing alerts configured')}
           </p>
         </div>
       )}
@@ -198,7 +200,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
           <div className="flex items-center gap-3">
             <Select value={newThreshold} onValueChange={setNewThreshold}>
               <SelectTrigger className="w-40 h-9 text-[13px]">
-                <SelectValue placeholder="Select threshold" />
+                <SelectValue placeholder={t('Select threshold')} />
               </SelectTrigger>
               <SelectContent>
                 {availableThresholds.map((threshold) => (
@@ -218,7 +220,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
               onClick={handleAddAlert}
               disabled={!newThreshold || updateBudgetMutation.isPending}
             >
-              Add alert
+              {t('Add alert')}
             </Button>
             <Button
               variant="ghost"
@@ -229,7 +231,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
                 setNewThreshold('')
               }}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </div>
@@ -245,7 +247,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
             onClick={() => setShowAddAlert(true)}
           >
             <Plus className="h-4 w-4" />
-            Add alert
+            {t('Add alert')}
           </Button>
         </div>
       )}

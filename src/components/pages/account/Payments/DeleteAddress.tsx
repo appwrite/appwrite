@@ -18,6 +18,7 @@ import { Link } from '@tanstack/react-router'
 import { useDeleteBillingAddress } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { useT } from '@/lib/i18n/translate'
 
 interface DeleteAddressModalProps {
   open: boolean
@@ -34,6 +35,7 @@ export function DeleteAddressModal({
   linkedOrganizations,
   onSuccess,
 }: DeleteAddressModalProps) {
+  const t = useT()
   const deleteAddressMutation = useDeleteBillingAddress()
 
   const handleDelete = async () => {
@@ -42,14 +44,14 @@ export function DeleteAddressModal({
         billingAddressId: address.$id,
       })
 
-      toast.success('Billing address deleted')
+      toast.success(t('Billing address deleted'))
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Failed to delete billing address',
+          : t('Failed to delete billing address'),
       )
     }
   }
@@ -61,11 +63,13 @@ export function DeleteAddressModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>Delete billing address</DialogTitle>
+          <DialogTitle>{t('Delete billing address')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {isLinked
-              ? `This billing address is linked to ${linkedOrganizations.length} organization${linkedOrganizations.length > 1 ? 's' : ''}. Deleting it will remove it from those organizations.`
-              : 'Are you sure you want to delete this billing address? This action cannot be undone.'}
+              ? `${t('This billing address is linked to')} ${linkedOrganizations.length} ${linkedOrganizations.length > 1 ? t('organizations') : t('organization')}. ${t('Deleting it will remove it from those organizations.')}`
+              : t(
+                  'Are you sure you want to delete this billing address? This action cannot be undone.',
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -75,7 +79,7 @@ export function DeleteAddressModal({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-[12px] mt-2">
                 <div className="space-y-1">
-                  <p className="font-medium">Linked to:</p>
+                  <p className="font-medium">{t('Linked to:')}</p>
                   <ul className="list-disc list-inside space-y-0.5">
                     {linkedOrganizations.map((org) => (
                       <li key={org.$id}>
@@ -103,7 +107,7 @@ export function DeleteAddressModal({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -111,7 +115,7 @@ export function DeleteAddressModal({
             onClick={handleDelete}
             disabled={isLoading}
           >
-            Delete
+            {t('Delete')}
           </Button>
         </div>
       </DialogContent>

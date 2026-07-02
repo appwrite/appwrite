@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { getPlatformDisplayName } from '@/lib/utils/platform'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 /** Fixed row height for org project list table (matches size-8 avatars + vertical rhythm). */
@@ -81,11 +82,12 @@ function PlatformAvatarsLoading({
   className?: string
   variant?: 'card' | 'table'
 }) {
+  const t = useT()
   if (variant === 'table') {
     return (
       <div
         className={cn('flex items-center', PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS, className)}
-        aria-label="Loading platforms"
+        aria-label={t('Loading platforms')}
         aria-busy
       >
         <div className={cn(avatarClassName, 'animate-pulse bg-border/60')} aria-hidden />
@@ -96,7 +98,7 @@ function PlatformAvatarsLoading({
   return (
     <ul
       className={cn('inline-flex items-center ps-0', className)}
-      aria-label="Loading platforms"
+      aria-label={t('Loading platforms')}
       aria-busy
     >
       {Array.from({ length: 3 }).map((_, index) => (
@@ -120,6 +122,7 @@ export function ProjectListPlatformAvatars({
   className,
   variant = 'card',
 }: ProjectListPlatformAvatarsProps) {
+  const t = useT()
   if (isLoading) {
     return <PlatformAvatarsLoading className={className} variant={variant} />
   }
@@ -140,7 +143,7 @@ export function ProjectListPlatformAvatars({
               to="/projects/$projectId/apps"
               params={{ projectId }}
               className={emptyAvatarClassName}
-              aria-label="Add platform"
+              aria-label={t('Add platform')}
               onClick={(event) => event.stopPropagation()}
             >
               <Plus
@@ -150,7 +153,7 @@ export function ProjectListPlatformAvatars({
             </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-[12px]">
-            Add platform
+            {t('Add platform')}
           </TooltipContent>
         </Tooltip>
       </div>
@@ -197,7 +200,7 @@ export function ProjectListPlatformAvatars({
               avatarClassName,
               'text-[10px] font-medium tabular-nums text-muted-foreground',
             )}
-            aria-label={`${overflowCount} more platforms`}
+            aria-label={`${overflowCount} ${t('more platforms')}`}
           >
             +{overflowCount}
           </div>

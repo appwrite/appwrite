@@ -8,6 +8,7 @@ import { HomeSoftLights, SectionSoftLight } from '@/components/pages/home/HomeSo
 import { PricingSectionHeading } from '@/components/pages/pricing/_components/PricingSectionHeading'
 import { Button } from '@/components/ui/button'
 import { COMPANY_SECTION_IDS } from '@/lib/company/sections'
+import { useT } from '@/lib/i18n/translate'
 import {
   angelInvestors,
   ventureInvestors,
@@ -27,6 +28,7 @@ function XIcon({ className }: { className?: string }) {
 }
 
 export function View() {
+  const t = useT()
   return (
     <div className="relative overflow-x-hidden">
       <HomeSoftLights variant="hero" />
@@ -48,8 +50,10 @@ export function View() {
         <SectionSoftLight tone="purple" />
         <div className="relative z-[1] mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
           <PricingSectionHeading
-            title="Backed by top investors"
-            description="Appwrite is proudly backed by some of the top investors in the industry."
+            title={t('Backed by top investors')}
+            description={t(
+              'Appwrite is proudly backed by some of the top investors in the industry.', // pragma: allowlist secret
+            )}
             size="md"
           />
 
@@ -73,7 +77,7 @@ export function View() {
           </ul>
 
           <h3 className="mt-14 text-center font-aeonik-pro text-[22px] font-normal text-foreground">
-            Angel Investors
+            {t('Angel Investors')}
           </h3>
 
           <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -85,7 +89,7 @@ export function View() {
                 <h4 className="text-[14px] font-semibold text-foreground">
                   {investor.name}
                 </h4>
-                <p className="mt-1 text-[13px] text-muted-foreground">{investor.role}</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">{t(investor.role)}</p>
                 {investor.organization ? (
                   <p className="text-[13px] text-muted-foreground">
                     {investor.organization}
@@ -98,7 +102,7 @@ export function View() {
                         href={investor.github}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`${investor.name} on GitHub`}
+                        aria-label={`${investor.name} ${t('on GitHub')}`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
                         <Github className="h-4 w-4" />
@@ -109,7 +113,7 @@ export function View() {
                         href={investor.twitter}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`${investor.name} on X`}
+                        aria-label={`${investor.name} ${t('on X')}`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
                         <XIcon className="h-3.5 w-3.5" />
@@ -130,12 +134,13 @@ export function View() {
         <HomeSoftLights variant="testimonials" className="opacity-50" />
         <div className="relative mx-auto max-w-xl px-4 py-16 text-center sm:px-6 sm:py-20">
           <h2 className="font-aeonik-pro text-[28px] font-normal leading-tight text-foreground sm:text-[36px]">
-            Join the team
+            {t('Join the team')}
             <span className="text-[var(--brand-cta)]">_</span>
           </h2>
           <p className="mt-4 text-[14px] leading-7 text-muted-foreground">
-            Find your next career at Appwrite and join a remote team building
-            the platform developers and agents rely on.
+            {t(
+              'Find your next career at Appwrite and join a remote team building the platform developers and agents rely on.', // pragma: allowlist secret
+            )}
           </p>
           <Button variant="outline" className="mt-6" asChild>
             <a
@@ -143,7 +148,7 @@ export function View() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Careers
+              {t('Careers')}
             </a>
           </Button>
         </div>
