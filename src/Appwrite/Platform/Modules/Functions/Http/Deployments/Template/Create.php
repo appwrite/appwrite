@@ -12,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -25,7 +26,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter;
 
 class Create extends Base
 {
@@ -80,7 +81,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcs')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -101,7 +102,7 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        Resolver $vcs,
         Authorization $authorization,
         array $platform
     ) {
@@ -125,6 +126,7 @@ class Create extends Base
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
+            $adapter = $vcs->getAdapter($installation, $dbForPlatform);
 
             $deployment = $this->redeployVcsFunction(
                 request: $request,
@@ -134,7 +136,7 @@ class Create extends Base
                 dbForProject: $dbForProject,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                github: $adapter,
                 activate: $activate,
                 platform: $platform,
                 referenceType: $type,
@@ -170,7 +172,7 @@ class Create extends Base
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
+            'providerBranch' => $type == Adapter::CLONE_TYPE_BRANCH ? $reference : '',
             'type' => 'vcs',
             'activate' => $activate,
         ]));

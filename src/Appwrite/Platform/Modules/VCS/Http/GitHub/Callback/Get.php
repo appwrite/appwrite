@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
-use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -15,7 +15,6 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Get extends Action
 {
@@ -40,7 +39,7 @@ class Get extends Action
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
             ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-            ->inject('gitHub')
+            ->inject('vcs')
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -53,7 +52,7 @@ class Get extends Action
         string $setupAction,
         string $state,
         string $code,
-        GitHub $github,
+        Resolver $vcs,
         Document $project,
         Response $response,
         Database $dbForPlatform,
@@ -101,10 +100,10 @@ class Get extends Action
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId);
+            $provider = $vcs->getProvider('github');
+            $adapter = $vcs->createAdapter('github');
+            $adapter->initializeVariables($providerInstallationId, $provider->getEnv('PRIVATE_KEY'), $provider->getEnv('APP_ID'));
+            $owner = $adapter->getOwnerName($providerInstallationId);
 
             $projectInternalId = $project->getSequence();
 
@@ -119,13 +118,13 @@ class Get extends Action
             $accessTokenExpiry = null;
 
             if (!empty($code)) {
-                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                $oauth2 = $provider->createOAuth2();
 
                 $accessToken = $oauth2->getAccessToken($code);
                 $refreshToken = $oauth2->getRefreshToken($code);
                 $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
 
-                $personalSlug = $oauth2->getUserSlug($accessToken);
+                $personalSlug = \method_exists($oauth2, 'getUserSlug') ? $oauth2->getUserSlug($accessToken) : '';
                 $personal = $personalSlug === $owner;
             }
 

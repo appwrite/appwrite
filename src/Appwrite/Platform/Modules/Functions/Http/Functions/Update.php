@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -34,7 +35,6 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Update extends Base
 {
@@ -112,7 +112,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
-            ->inject('gitHub')
+            ->inject('vcs')
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
@@ -149,7 +149,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        GitHub $github,
+        Resolver $vcs,
         Executor $executor,
         Authorization $authorization,
         array $platform
@@ -241,6 +241,8 @@ class Update extends Base
                 'providerPullRequestIds' => [],
             ]));
 
+            $vcs->ensureRepositoryWebhook($installation, $dbForPlatform, $providerRepositoryId);
+
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
         }
@@ -309,7 +311,8 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform);
+            $adapter = $vcs->getAdapter($installation, $dbForPlatform);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $adapter, true, $platform);
         }
 
         // Inform scheduler if function is still active

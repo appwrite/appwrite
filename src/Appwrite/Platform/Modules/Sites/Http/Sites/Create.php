@@ -215,6 +215,7 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
+            $vcs->ensureRepositoryWebhook($installation, $dbForPlatform, $providerRepositoryId);
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
 
