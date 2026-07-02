@@ -653,4 +653,104 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Preparing export...': 'מכין ייצוא...',
   'rows exported': 'שורות יוצאו',
   'View details': 'הצגת פרטים',
+
+  // Auth route pages (join, sign-in, sign-up, recovery, verify-email, reset)
+  'Successfully joined the organization!': 'הצטרפתם לארגון בהצלחה!',
+  'Failed to accept invitation': 'אישור ההזמנה נכשל',
+  'Welcome to the organization!': 'ברוכים הבאים לארגון!',
+  'You\'ve successfully joined. Redirecting you now...':
+    'הצטרפתם בהצלחה. מעבירים אתכם כעת...',
+  'Unable to accept invitation': 'לא ניתן לאשר את ההזמנה',
+  'Go to Sign In': 'מעבר להתחברות',
+  'Invalid invitation link': 'קישור הזמנה לא תקין',
+  'This invitation link is missing required parameters. Please use the link from your invitation email.':
+    'בקישור ההזמנה חסרים פרמטרים נדרשים. אנא השתמשו בקישור מאימייל ההזמנה שקיבלתם.',
+  'Accept invitation': 'אישור ההזמנה',
+  'You\'ve been invited to join': 'הוזמנתם להצטרף אל',
+  'Accept the invitation to get started.': 'אשרו את ההזמנה כדי להתחיל.',
+  'You\'ve been invited to join an organization. Accept the invitation to get started.':
+    'הוזמנתם להצטרף לארגון. אשרו את ההזמנה כדי להתחיל.',
+  'By accepting this invitation, you agree to our':
+    'באישור הזמנה זו, אתם מקבלים את',
+  'By clicking continue, you agree to our':
+    'בלחיצה על המשך, אתם מקבלים את',
+  'By continuing, you agree to our': 'בהמשך התהליך, אתם מקבלים את',
+  'Failed to initiate GitHub login': 'התחלת ההתחברות עם GitHub נכשלה',
+  'Signed in but could not open the console':
+    'ההתחברות הצליחה אך לא ניתן היה לפתוח את הקונסולה',
+  'Could not open MFA verification': 'לא ניתן היה לפתוח את אימות ה-MFA',
+  'Failed to sign in': 'ההתחברות נכשלה',
+  'Account created but verification email could not be sent':
+    'החשבון נוצר אך לא ניתן היה לשלוח את אימייל האימות',
+  'Failed to sign up': 'ההרשמה נכשלה',
+  'Recovery email sent': 'אימייל השחזור נשלח',
+  'Failed to send recovery email': 'שליחת אימייל השחזור נכשלה',
+  'Email verified successfully': 'האימייל אומת בהצלחה',
+  'Verification link is invalid or has expired.':
+    'קישור האימות אינו תקין או שפג תוקפו.',
+  'Verification email sent': 'אימייל האימות נשלח',
+  'Password reset successfully': 'הסיסמה אופסה בהצלחה',
+  'Failed to reset password': 'איפוס הסיסמה נכשל',
+  'Invalid reset link': 'קישור איפוס לא תקין',
+  'This password reset link is invalid or has expired. Please request a new one.':
+    'קישור איפוס הסיסמה אינו תקין או שפג תוקפו. אנא בקשו קישור חדש.',
+  'Request new reset link': 'בקשת קישור איפוס חדש',
+  'Continue to sign in': 'המשך להתחברות',
+
+  // OAuth2 consent and device pages
+  'This authorization request is invalid or has expired.':
+    'בקשת ההרשאה אינה תקינה או שפג תוקפה.',
+  'Could not start authorization.': 'לא ניתן היה להתחיל את תהליך ההרשאה.',
+  'Missing authorization request. Open this page from an application sign-in.':
+    'חסרה בקשת הרשאה. פתחו דף זה מתוך התחברות לאפליקציה.',
+  'Authorization failed': 'ההרשאה נכשלה',
+  'That code is invalid or has expired. Check your device and try again.':
+    'הקוד אינו תקין או שפג תוקפו. בדקו את המכשיר ונסו שוב.',
+  'Could not verify that code.': 'לא ניתן היה לאמת את הקוד.',
+  'Confirm your code': 'אשרו את הקוד שלכם',
+  'Connect a device': 'חיבור מכשיר',
+  'Make sure this matches the code shown on your device, then continue.':
+    'ודאו שהקוד תואם לקוד המוצג במכשיר שלכם, ואז המשיכו.',
+  'Enter the code shown on your device to continue.':
+    'הזינו את הקוד המוצג במכשיר שלכם כדי להמשיך.',
+  'Device code': 'קוד מכשיר',
+  'Verifying…': 'מאמת…',
+  'Device connected': 'המכשיר חובר',
+  'You\'ve authorized': 'אישרתם את הגישה עבור',
+  'the application': 'האפליקציה',
+  'You can return to your device, it will continue automatically.':
+    'תוכלו לחזור למכשיר שלכם, הוא ימשיך באופן אוטומטי.',
+  'Request cancelled': 'הבקשה בוטלה',
+  'No access was granted. You can close this page.':
+    'לא ניתנה גישה. תוכלו לסגור דף זה.',
+
+  // Cloud status banner
+  'Some Appwrite Cloud services are temporarily unavailable.': // pragma: allowlist secret
+    'חלק משירותי Appwrite Cloud אינם זמינים זמנית.', // pragma: allowlist secret
+  'Scheduled maintenance is in progress.': 'תחזוקה מתוכננת מתבצעת כעת.',
+  'We’re experiencing issues with some services.':
+    'אנחנו חווים תקלות בחלק מהשירותים.',
+  'You may have trouble accessing some services. We’re working to restore full access.':
+    'ייתכן שתיתקלו בקשיים בגישה לחלק מהשירותים. אנחנו פועלים לשחזור גישה מלאה.',
+  'A subset of Appwrite Cloud services is degraded.': // pragma: allowlist secret
+    'חלק משירותי Appwrite Cloud פועלים באופן חלקי.', // pragma: allowlist secret
+  'View Status': 'הצגת סטטוס',
+
+  // Paused project curtain
+  'Project resumed successfully': 'הפרויקט חודש בהצלחה',
+  'Failed to resume project. Please try again.':
+    'חידוש הפרויקט נכשל. אנא נסו שוב.',
+  'Failed to resume project.': 'חידוש הפרויקט נכשל.',
+  'Project paused': 'הפרויקט מושהה',
+  'This project has been paused due to inactivity. Your data is safe and will remain intact.':
+    'הפרויקט הזה הושהה עקב חוסר פעילות. הנתונים שלכם בטוחים ויישארו ללא פגע.',
+  'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':
+    'שדרגו את התוכנית כדי להימנע מהשהיה, או שחזרו את הפרויקט כדי להמשיך להשתמש בו כעת.',
+  'Resuming…': 'מחדש…',
+  'Restore project': 'שחזור הפרויקט',
+  'Back to organization': 'חזרה לארגון',
+
+  // Global shell
+  'Skip to content': 'דילוג לתוכן',
+  'Loading wizard...': 'טוען אשף...',
 }

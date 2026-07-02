@@ -14,6 +14,7 @@ import { AppwriteException, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
   refreshConsoleAccountAfterAuth,
@@ -53,6 +54,7 @@ export const Route = createFileRoute('/_auth/sign-in')({
 })
 
 function SignInPage() {
+  const t = useT()
   const search = useSearch({ from: '/_auth/sign-in' })
   const navigate = useNavigate()
   const router = useRouter()
@@ -87,7 +89,7 @@ function SignInPage() {
       // If void, the SDK has already initiated the redirect, so we don't need to do anything
     } catch (error: unknown) {
       setIsGitHubLoading(false)
-      toast.error(getErrorMessage(error, 'Failed to initiate GitHub login'))
+      toast.error(getErrorMessage(error, t('Failed to initiate GitHub login')))
       console.error('GitHub OAuth error:', error)
     }
   }
@@ -140,7 +142,9 @@ function SignInPage() {
         }
       } catch (error: unknown) {
         console.error('Post sign-in navigation error:', error)
-        toast.error(getErrorMessage(error, 'Signed in but could not open the console'))
+        toast.error(
+          getErrorMessage(error, t('Signed in but could not open the console')),
+        )
       }
     },
     onError: async (error: unknown) => {
@@ -161,14 +165,17 @@ function SignInPage() {
         } catch (navigationError: unknown) {
           setIsOpeningMfa(false)
           toast.error(
-            getErrorMessage(navigationError, 'Could not open MFA verification'),
+            getErrorMessage(
+              navigationError,
+              t('Could not open MFA verification'),
+            ),
           )
         }
         return
       }
 
       // Show error for other failures
-      toast.error(getErrorMessage(error, 'Failed to sign in'))
+      toast.error(getErrorMessage(error, t('Failed to sign in')))
       console.error('Sign in error:', error)
     },
   })
@@ -185,19 +192,19 @@ function SignInPage() {
           redirect={search.redirect}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By clicking continue, you agree to our{' '}
+          {t('By clicking continue, you agree to our')}{' '}
           <a
             href="#"
             className="link-neutral"
           >
-            Terms of Service
+            {t('Terms of Service')}
           </a>{' '}
-          and{' '}
+          {t('and')}{' '}
           <a
             href="#"
             className="link-neutral"
           >
-            Privacy Policy
+            {t('Privacy Policy')}
           </a>
           .
         </p>

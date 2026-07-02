@@ -815,7 +815,7 @@ export function CreateDatabaseWizardView() {
                           </TableCell>
                           <TableCell className="px-4 py-3.5">
                             <span className="text-[13px] font-medium text-foreground">
-                              {spec.label}
+                              {t(spec.label)}
                             </span>
                           </TableCell>
                           <TableCell className="px-4 py-3.5 text-[13px] text-muted-foreground">

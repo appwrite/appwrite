@@ -293,7 +293,7 @@ export function PostgresQueriesSidebarPanel({
               >
                 {POSTGRES_SAVED_QUERIES_SORT_OPTIONS.map((option) => (
                   <DropdownMenuRadioItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>

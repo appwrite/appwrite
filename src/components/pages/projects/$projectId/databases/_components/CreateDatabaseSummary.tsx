@@ -187,7 +187,7 @@ export function CreateDatabaseSummary({
           <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[13px] font-semibold text-foreground">
-                {selectedSpec.label}
+                {t(selectedSpec.label)}
               </span>
               <span className="text-[13px] font-semibold tabular-nums text-foreground">
                 {selectedSpec.price}
@@ -214,16 +214,16 @@ export function CreateDatabaseSummary({
                   <CostLine
                     label={
                       replicaCount === 0
-                        ? 'Replicas'
-                        : `Replicas (${replicaCount})`
+                        ? t('Replicas')
+                        : `${t('Replicas')} (${replicaCount})`
                     }
                     amountUsd={monthlyCost.haReplicasUsd}
-                    zeroLabel="None"
+                    zeroLabel={t('None')}
                   />
                   <CostLine
-                    label={pitrEnabled ? 'PITR' : 'PITR (off)'}
+                    label={pitrEnabled ? 'PITR' : `PITR (${t('off')})`}
                     amountUsd={monthlyCost.pitrUsd}
-                    zeroLabel="Off"
+                    zeroLabel={t('Off')}
                   />
                   <CostLine
                     label={t('Total')}
@@ -232,7 +232,7 @@ export function CreateDatabaseSummary({
                   />
                 </div>
                 <div className="space-y-1.5 text-[12px] leading-relaxed text-muted-foreground">
-                  <p>{DATABASE_COMPUTE_CREDITS_NOTE}</p>
+                  <p>{t(DATABASE_COMPUTE_CREDITS_NOTE)}</p>
                   <p>{t('Storage and bandwidth overages billed separately.')}</p>
                 </div>
               </>

@@ -14,6 +14,7 @@ import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
@@ -55,6 +56,7 @@ export const Route = createFileRoute('/_auth/sign-up')({
 })
 
 function SignUpPage() {
+  const t = useT()
   const search = useSearch({ from: '/_auth/sign-up' })
   const navigate = useNavigate()
   const router = useRouter()
@@ -89,7 +91,7 @@ function SignUpPage() {
       // If void, the SDK has already initiated the redirect, so we don't need to do anything
     } catch (error: unknown) {
       setIsGitHubLoading(false)
-      toast.error(getErrorMessage(error, 'Failed to initiate GitHub login'))
+      toast.error(getErrorMessage(error, t('Failed to initiate GitHub login')))
       console.error('GitHub OAuth error:', error)
     }
   }
@@ -148,7 +150,7 @@ function SignUpPage() {
           toast.error(
             getErrorMessage(
               err,
-              'Account created but verification email could not be sent',
+              t('Account created but verification email could not be sent'),
             ),
           )
         }
@@ -196,13 +198,16 @@ function SignUpPage() {
         } catch (navigationError: unknown) {
           setIsOpeningMfa(false)
           toast.error(
-            getErrorMessage(navigationError, 'Could not open MFA verification'),
+            getErrorMessage(
+              navigationError,
+              t('Could not open MFA verification'),
+            ),
           )
         }
         return
       }
 
-      toast.error(getErrorMessage(error, 'Failed to sign up'))
+      toast.error(getErrorMessage(error, t('Failed to sign up')))
       console.error('Sign up error:', error)
     },
   })
@@ -219,13 +224,13 @@ function SignUpPage() {
           redirect={search.redirect}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By clicking continue, you agree to our{' '}
+          {t('By clicking continue, you agree to our')}{' '}
           <MarketingSiteLink className="link-neutral" href="/terms">
-            Terms of Service
+            {t('Terms of Service')}
           </MarketingSiteLink>{' '}
-          and{' '}
+          {t('and')}{' '}
           <MarketingSiteLink className="link-neutral" href="/privacy">
-            Privacy Policy
+            {t('Privacy Policy')}
           </MarketingSiteLink>
           .
         </p>

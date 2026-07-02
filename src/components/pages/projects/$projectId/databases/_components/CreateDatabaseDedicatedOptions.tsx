@@ -92,11 +92,11 @@ export function CreateDatabaseDedicatedOptions({
                     {t('Replica count')}
                   </Label>
                   <span className="text-[12px] text-muted-foreground">
-                    {replicaOption.label} · 0–{MAX_DEDICATED_DB_HA_REPLICA_COUNT}
+                    {t(replicaOption.label)} · 0–{MAX_DEDICATED_DB_HA_REPLICA_COUNT}
                   </span>
                 </div>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  {replicaOption.description}
+                  {t(replicaOption.description)}
                 </p>
               </div>
 

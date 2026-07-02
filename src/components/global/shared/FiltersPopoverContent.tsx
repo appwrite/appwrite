@@ -576,7 +576,7 @@ export function FiltersPopoverContent({
                 onValueChange={setFilterSizeUnit}
                 items={SIZE_FILTER_UNITS.map((u) => ({
                   value: u.value,
-                  label: u.label,
+                  label: t(u.label),
                 }))}
                 placeholder={t('Unit')}
                 searchPlaceholder={t('Search units…')}
@@ -710,7 +710,7 @@ export function FiltersPopoverContent({
               onValueChange={setFilterSizeUnit}
               items={SIZE_FILTER_UNITS.map((u) => ({
                 value: u.value,
-                label: u.label,
+                label: t(u.label),
               }))}
               placeholder={t('Unit')}
               searchPlaceholder={t('Search units…')}

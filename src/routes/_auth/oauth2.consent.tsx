@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { OAuth2ConsentCard } from '@/components/global/auth/OAuth2ConsentCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 
 // Loose validation: the consent screen receives either a `grant_id` or the full
@@ -32,6 +33,7 @@ export const Route = createFileRoute('/_auth/oauth2/consent')({
 type Phase = 'loading' | 'ready' | 'error'
 
 function OAuth2ConsentPage() {
+  const t = useT()
   const navigate = useNavigate()
   const search = Route.useSearch()
   const [phase, setPhase] = useState<Phase>('loading')
@@ -100,7 +102,7 @@ function OAuth2ConsentPage() {
           setError(
             getErrorMessage(
               e,
-              'This authorization request is invalid or has expired.',
+              t('This authorization request is invalid or has expired.'),
             ),
           )
           setPhase('error')
@@ -146,18 +148,20 @@ function OAuth2ConsentPage() {
             await loadConsent(result.grantId, loggedInAccount)
             return
           }
-          setError('Could not start authorization.')
+          setError(t('Could not start authorization.'))
           setPhase('error')
         } catch (e: unknown) {
           if (cancelled) return
-          setError(getErrorMessage(e, 'Could not start authorization.'))
+          setError(getErrorMessage(e, t('Could not start authorization.')))
           setPhase('error')
         }
         return
       }
 
       setError(
-        'Missing authorization request. Open this page from an application sign-in.',
+        t(
+          'Missing authorization request. Open this page from an application sign-in.',
+        ),
       )
       setPhase('error')
     }
@@ -185,14 +189,14 @@ function OAuth2ConsentPage() {
                 <TriangleAlert className="text-destructive size-6" />
               </div>
               <h1 className="text-xl font-semibold tracking-tight">
-                Authorization failed
+                {t('Authorization failed')}
               </h1>
               <p className="text-muted-foreground text-sm">{error}</p>
               <Button
                 variant="outline"
                 onClick={() => navigate({ to: '/', replace: true })}
               >
-                Go to console
+                {t('Go to console')}
               </Button>
             </div>
           </Card>

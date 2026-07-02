@@ -305,7 +305,7 @@ export function SchemaTablesSidebar({
                           key={option.value}
                           value={option.value}
                         >
-                          {option.label}
+                          {t(option.label)}
                         </DropdownMenuRadioItem>
                       ))}
                     </DropdownMenuRadioGroup>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useT } from '@/lib/i18n/translate'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import {
   getMockReportTitle,
@@ -39,6 +40,7 @@ function CloudStatusBannerInner({
   mockCloudStatusAlert,
   skipEnterAnimation,
 }: CloudStatusBannerInnerProps) {
+  const t = useT()
   const enterAnimationRecordedRef = useRef(false)
 
   const handleAnimationComplete = () => {
@@ -93,11 +95,13 @@ function CloudStatusBannerInner({
           <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
             <Icon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" />
             <p className="text-[13px] font-medium leading-snug">
-              {presentation.title}
+              {t(presentation.title)}
               {activeReportTitle ? (
                 <>
                   {' '}
-                  <span className="text-foreground">{activeReportTitle}</span>
+                  <span className="text-foreground">
+                    {t(activeReportTitle)}
+                  </span>
                 </>
               ) : null}
               {maintenanceWindow ? (
@@ -109,7 +113,7 @@ function CloudStatusBannerInner({
               {regionsLine ? (
                 <>
                   {' '}
-                  <span className="text-foreground/70">{regionsLine}</span>
+                  <span className="text-foreground/70">{t(regionsLine)}</span>
                 </>
               ) : null}
             </p>
@@ -120,8 +124,8 @@ function CloudStatusBannerInner({
               presentation.buttonClassName,
             )}
           >
-            <span className="hidden sm:inline">View Status</span>
-            <span className="sm:hidden">Status</span>
+            <span className="hidden sm:inline">{t('View Status')}</span>
+            <span className="sm:hidden">{t('Status')}</span>
             <ExternalLink className="h-3.5 w-3.5" />
           </span>
         </a>

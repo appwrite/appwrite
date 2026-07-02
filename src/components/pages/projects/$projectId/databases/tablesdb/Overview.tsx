@@ -1578,7 +1578,7 @@ export function Overview({
                                 <TableCell className="px-4 py-3">
                                   <span className="flex items-center gap-2 flex-wrap">
                                     <span className="text-[13px] font-medium text-foreground">
-                                      {spec.label}
+                                      {t(spec.label)}
                                     </span>
                                     {isCurrent && (
                                       <Badge
