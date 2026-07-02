@@ -1090,7 +1090,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Row actions menu (⋯)   | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                   |
 | Delete styling         | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                        |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
-| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add a Hebrew entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/he/*.ts` file. English inline is the source of truth. See "Internationalization (i18n)".                                    |
+| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add a Hebrew entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/he/*.ts` file. English inline is the source of truth. Translate standalone product names in menus; keep `Appwrite …` compounds in Latin. See "Internationalization (i18n)".                                    |
 
 ---
 
@@ -1397,12 +1397,27 @@ Each language's dictionaries are merged into a single map, so an English key can
 
 When two dictionaries define the same key, the merge order in the language's `dictionaries/<lang>/index.ts` decides the winner - keep values for shared keys **identical across files** so the result is deterministic.
 
+### Product names
+
+Appwrite product names follow two rules depending on whether the English source includes the `Appwrite` brand prefix:
+
+| English source | Rule | Example (Hebrew) |
+| --- | --- | --- |
+| `Appwrite …` compound | Keep the **full string** in Latin script | `Appwrite Network` stays `Appwrite Network`; `Appwrite Sites` stays `Appwrite Sites` |
+| Standalone product name (nav, tabs, menus, section titles) | **Translate** using the target language's standalone product glossary | `Sites` → `אתרים`, `Databases` → `מסדי נתונים`, `Storage` → `אחסון` |
+| Sub-brand proper nouns | Always Latin, regardless of context | TablesDB, Command Center, Magic URL |
+| Generic usage in sentences | Natural target-language phrasing | "your databases" → `מסדי הנתונים שלכם` |
+
+When the same product word appears both standalone and inside an `Appwrite …` compound, they are **different translation keys** (`Sites` vs `Appwrite Sites`). Never reuse a standalone translation inside a branded compound string.
+
+If a standalone product name collides with a generic English word (`Network`, `Storage`), reword the English source to disambiguate (see "One key, one meaning") rather than picking a compromise translation.
+
 ### Translation quality workflow (every language, every batch)
 
 Follow this process whenever adding or updating translations:
 
 1. **Read the render site first.** A one-word key can be a status badge, a button, a column header, or a chart label - grep the key in `src/components` and read the surrounding JSX before translating. Never translate from the key alone.
-2. **Apply the language's glossary** (see the per-language sections below). Product names and glossary terms are non-negotiable; do not invent alternatives.
+2. **Apply the language's glossary** (see the per-language sections below). Branded compound names, sub-brand proper nouns, and glossary terms are non-negotiable; do not invent alternatives. Standalone product names in menus may be translated using the glossary forms below.
 3. **Translate meaning, not words.** No literal calques; write what a native product team at a major tech company would ship. If a natural translation needs restructuring the sentence, restructure it.
 4. **Respect grammar agreement** (gender, number, definiteness) with the noun the string describes; for statuses next to mixed-gender nouns prefer neutral forms.
 5. **Re-read assembled sentences.** When copy is built from fragments plus dynamic values, compose the final sentence mentally (in the language's reading direction) and confirm it flows.
@@ -1425,9 +1440,14 @@ English is not translated; it IS the source. Rules for writing it:
 - **Files**: structured catalog `src/lib/i18n/messages/he.ts`; dictionaries `src/lib/i18n/dictionaries/he/*.ts` (merged in `dictionaries/he/index.ts`). <!-- pragma: allowlist secret -->
 - **Direction**: RTL. Selecting Hebrew auto-enables the RTL page direction; verify fragment-assembled sentences read correctly right-to-left.
 - **Keep in English (Latin script)**:
-  - Appwrite product and feature names: Appwrite, Appwrite Cloud/Network, Auth, Databases, Storage, Functions, Messaging, Sites, Realtime, Firewall, Advisor, Explorer, Distribution, TablesDB/DocumentsDB/VectorsDB, Magic URL, Email OTP, Presences, Agent Skills, AI Arena, Command Center, and plan names (Free, Pro, Scale, Enterprise). Generic sentence usage stays Hebrew ("מסדי הנתונים שלכם" for "your databases"); names/nav items/section titles stay English. <!-- pragma: allowlist secret -->
-  - Technical terms Israeli developers keep in English: API, SDK, CLI, OAuth, MFA, TOTP, JWT, SSR, CSR, CDN, DNS, TLS, WAF, DDoS, REST, GraphQL, Webhook, Endpoint, Serverless, Cron, Git, Branch, Build, Timeout, SQL, JSON, CSV, framework and runtime names.
-- **Glossary (do not deviate)**: Bucket = 'באקט' (never 'דלי'), Session = 'סשן' (never 'הפעלות'), Token = 'טוקן' (never 'אסימון'), Logs = 'לוגים' (never 'יומנים'), Deployment = 'פריסה', Migrations = 'מיגרציות', Certificate = 'תעודה', Expired = 'פג תוקף', Timeout = 'Timeout' or 'חריגת זמן' (never 'פג תוקף'), Production = 'פרודקשן', Scale (growth) = 'צמיחה'/'קנה מידה' (never 'סקייל'), Members = 'חברים', Billing = 'חיוב', 'Open in new tab' = 'פתיחה בכרטיסייה חדשה'.
+  - **Brand name**: `Appwrite` always stays Latin.
+  - **Branded compound names** (include the `Appwrite` prefix): `Appwrite Cloud`, `Appwrite Network`, `Appwrite Sites`, and any other `Appwrite …` product title. Keep the full string in Latin; do not translate the product word after `Appwrite`.
+  - **Sub-brand and feature proper nouns** (regardless of context): TablesDB, DocumentsDB, VectorsDB, Magic URL, Email OTP, Command Center, AI Arena, Agent Skills, Advisor, Explorer, Distribution, Firewall, Presences, and plan names (Free, Pro, Scale, Enterprise).
+  - **Technical terms** Israeli developers keep in English: API, SDK, CLI, OAuth, MFA, TOTP, JWT, SSR, CSR, CDN, DNS, TLS, WAF, DDoS, REST, GraphQL, Webhook, Endpoint, Serverless, Cron, Git, Branch, Build, Timeout, SQL, JSON, CSV, framework and runtime names.
+- **Standalone product names (translate in menus and titles)**: When the English source is just the product name with no `Appwrite` prefix (sidebar nav, service tabs, section titles, command-center labels), translate using the glossary forms below. In running copy and descriptions, prefer natural Hebrew phrasing ("מסדי הנתונים שלכם" for "your databases") even when the standalone nav label uses the shorter glossary form.
+- **Glossary (do not deviate)**:
+  - **Standalone product names**: Auth = 'אימות', Databases = 'מסדי נתונים', Storage = 'אחסון', Functions = 'פונקציות', Messaging = 'הודעות', Sites = 'אתרים', Realtime = 'Realtime'.
+  - **Other terms**: Bucket = 'באקט' (never 'דלי'), Session = 'סשן' (never 'הפעלות'), Token = 'טוקן' (never 'אסימון'), Logs = 'לוגים' (never 'יומנים'), Deployment = 'פריסה', Migrations = 'מיגרציות', Certificate = 'תעודה', Expired = 'פג תוקף', Timeout = 'Timeout' or 'חריגת זמן' (never 'פג תוקף'), Production = 'פרודקשן', Scale (growth) = 'צמיחה'/'קנה מידה' (never 'סקייל'), Members = 'חברים', Billing = 'חיוב', 'Open in new tab' = 'פתיחה בכרטיסייה חדשה'.
 - **Statuses**: standard Hebrew status words - נכשל, מוכן, בעיבוד, בבנייה, פעיל, בוטל.
 - **Filter operators**: standard Hebrew filter UI - 'שווה ל-', 'שונה מ-', 'מכיל', 'מתחיל ב-', 'ריק'/'אינו ריק'.
 - **Voice and register**: address users in plural (בחרו, נסו שוב, הזינו); buttons use nominal form (יצירת פרויקט, מחיקה, שמירה, ביטול, עדכון); drop 'אנא' from validation copy; confident, concise product Hebrew - never literal calques (bad: 'הצפנה במנוחה' for "at rest"; good: 'הצפנה במצב מנוחה').
@@ -1440,7 +1460,7 @@ English is not translated; it IS the source. Rules for writing it:
 2. **Dictionaries**: create `src/lib/i18n/dictionaries/<lang>/` mirroring the `he/` per-domain files (databases, sites, functions, auth-storage, project-misc, organizations, account-global, shared-ui, marketing) plus an `index.ts` that merges them.
 3. **Wiring**: add the language to `SupportedLanguage` and the resolver in `src/lib/i18n/active-language.ts` (include browser-locale auto-detection), register the catalog in `src/lib/i18n/index.tsx`, add the dictionary to `LANGUAGE_DICTIONARIES` in `src/lib/i18n/translate.ts`, and add the option to the debug menu language submenu (set `pageDirection: 'rtl'` on selection if the language is RTL).
 4. **SDK locale**: no change needed - `setLocale` uses the resolved language automatically.
-5. **Glossary first**: before translating in bulk, write this section's per-language block for the new language (product names stay English; which technical terms stay Latin; terminology standards; voice/register; grammar rules). Translate against that glossary, then run the quality workflow and coverage check above.
+5. **Glossary first**: before translating in bulk, write this section's per-language block for the new language (which branded compound names and sub-brands stay Latin; recommended translations for standalone menu product names; which technical terms stay Latin; terminology standards; voice/register; grammar rules). Translate against that glossary, then run the quality workflow and coverage check above.
 6. **Document it**: add the new "Language: X" block to this file.
 
 ---
