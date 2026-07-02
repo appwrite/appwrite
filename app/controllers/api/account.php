@@ -199,28 +199,12 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    $isAllowedTokenType = match ($verifiedToken->getAttribute('type')) {
-        TOKEN_TYPE_MAGIC_URL,
-        TOKEN_TYPE_EMAIL => false,
-        default => true
-    };
-
-    $hasUserEmail = $user->getAttribute('email', false) !== false;
-
-    $isSessionAlertsEnabled = $project->getAttribute('auths', [])['sessionAlerts'] ?? false;
-
-    $isNotFirstSession = $dbForProject->count('sessions', [
-        Query::equal('userId', [$user->getId()]),
-    ]) !== 1;
-
-    if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
-        $bus->dispatch(new SessionCreated(
-            user: $user->getArrayCopy(),
-            project: $project->getArrayCopy(),
-            session: $session->getArrayCopy(),
-            locale: $locale->default,
-        ));
-    }
+    $bus->dispatch(new SessionCreated(
+        user: $user->getArrayCopy(),
+        project: $project->getArrayCopy(),
+        session: $session->getArrayCopy(),
+        locale: $locale->default,
+    ));
 
     $queueForEvents
         ->setParam('userId', $user->getId())
@@ -1057,20 +1041,12 @@ Http::post('/v1/account/sessions/email')
             ->setParam('sessionId', $session->getId())
         ;
 
-        if ($project->getAttribute('auths', [])['sessionAlerts'] ?? false) {
-            if (
-                $dbForProject->count('sessions', [
-                    Query::equal('userId', [$user->getId()]),
-                ]) !== 1
-            ) {
-                $bus->dispatch(new SessionCreated(
-                    user: $user->getArrayCopy(),
-                    project: $project->getArrayCopy(),
-                    session: $session->getArrayCopy(),
-                    locale: $locale->default,
-                ));
-            }
-        }
+        $bus->dispatch(new SessionCreated(
+            user: $user->getArrayCopy(),
+            project: $project->getArrayCopy(),
+            session: $session->getArrayCopy(),
+            locale: $locale->default,
+        ));
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
