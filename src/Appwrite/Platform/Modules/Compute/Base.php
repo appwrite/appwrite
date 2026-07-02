@@ -74,6 +74,9 @@ class Base extends Action
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
@@ -166,6 +169,9 @@ class Base extends Action
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
