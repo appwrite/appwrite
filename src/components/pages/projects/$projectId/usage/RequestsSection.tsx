@@ -411,7 +411,6 @@ export function RequestsSection({
                 items={items}
                 labelVariant={section.labelVariant}
                 countryLookups={countryLookups}
-                projectId={projectId}
                 computeLookup={
                   section.dimension === 'resourceId' ? computeLookup : undefined
                 }

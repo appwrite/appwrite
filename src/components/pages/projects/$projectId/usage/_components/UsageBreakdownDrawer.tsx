@@ -312,7 +312,6 @@ export function UsageBreakdownDrawer({
               computeLookup={computeLookup}
               storageLookup={storageLookup}
               tableLookup={tableLookup}
-              projectId={projectId}
               variant="drawer"
               formatValue={formatValue}
             />

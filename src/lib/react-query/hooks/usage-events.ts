@@ -46,7 +46,10 @@ import {
   type BandwidthBreakdownSection,
 } from '@/lib/usage/bandwidth-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
-import { USAGE_BREAKDOWN_DRAWER_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  USAGE_BREAKDOWN_DRAWER_LIMIT,
+} from '@/lib/usage/breakdown-limits'
 import {
   fetchProjectImageTransformationsUsageOverview,
   fetchProjectStorageBuildsOverview,
@@ -129,6 +132,13 @@ import {
   fetchProjectWebhooksEventsSentOverview,
   type WebhooksUsageChartOverview,
 } from '@/lib/usage/webhooks-usage'
+import {
+  appendUsageFiltersToQueryKey,
+  mergeUsageFetchOptions,
+  type UsageFilterQueries,
+  usageBreakdownQueries,
+} from '@/lib/usage/usage-filter-queries'
+import { useUsageSectionFilterQueries } from '@/hooks/use-usage-section-filter-queries'
 
 function normalizeDateRangeKey(dateRange: DateRange | undefined): {
   rangeKeyPart: string
@@ -221,11 +231,12 @@ export function bandwidthOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'bandwidth',
       usageOverviewQueryScope(includeBreakdown),
@@ -233,13 +244,13 @@ export function bandwidthOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectBandwidthOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -256,11 +267,12 @@ export function requestsOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'requests',
       usageOverviewQueryScope(includeBreakdown),
@@ -268,13 +280,13 @@ export function requestsOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectRequestsOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -291,11 +303,12 @@ export function executionsOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'executions',
       usageOverviewQueryScope(includeBreakdown),
@@ -303,13 +316,13 @@ export function executionsOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectExecutionsOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -326,11 +339,12 @@ export function functionExecutionsOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'function-executions',
       usageOverviewQueryScope(includeBreakdown),
@@ -338,13 +352,13 @@ export function functionExecutionsOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectFunctionExecutionsOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -361,11 +375,12 @@ export function siteExecutionsOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'site-executions',
       usageOverviewQueryScope(includeBreakdown),
@@ -373,13 +388,13 @@ export function siteExecutionsOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectSiteExecutionsOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -396,11 +411,12 @@ export function gbHoursOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'gb-hours',
       usageOverviewQueryScope(includeBreakdown),
@@ -408,13 +424,13 @@ export function gbHoursOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectGbHoursOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -431,11 +447,12 @@ export function functionGbHoursOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'function-gb-hours',
       usageOverviewQueryScope(includeBreakdown),
@@ -443,13 +460,13 @@ export function functionGbHoursOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectFunctionGbHoursOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -466,11 +483,12 @@ export function siteGbHoursOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'site-gb-hours',
       usageOverviewQueryScope(includeBreakdown),
@@ -478,13 +496,13 @@ export function siteGbHoursOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectSiteGbHoursOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -501,11 +519,12 @@ export function storageOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'storage',
       usageOverviewQueryScope(includeBreakdown),
@@ -513,13 +532,13 @@ export function storageOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectStorageOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -536,11 +555,12 @@ export function overviewStorageOverviewQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'storage',
       'overview',
@@ -549,13 +569,13 @@ export function overviewStorageOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectOverviewStorageOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -572,11 +592,12 @@ export function requestsChartOverviewQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'requests',
       'chart',
@@ -584,12 +605,13 @@ export function requestsChartOverviewQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectRequestsChartOverview(
         projectId!,
         getBounds(),
         interval,
+        usageBreakdownQueries(filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -643,6 +665,8 @@ export function useProjectBandwidthOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -651,6 +675,7 @@ export function useProjectBandwidthOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectBandwidthOverview>(
@@ -661,6 +686,7 @@ export function useProjectBandwidthOverview(
         dateRange,
         interval,
         !includeBreakdown,
+        filterQueries,
       ).queryKey,
     ),
   })
@@ -673,6 +699,8 @@ export function useProjectRequestsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -691,6 +719,7 @@ export function useProjectRequestsOverview(
         dateRange,
         interval,
         !includeBreakdown,
+        filterQueries,
       ).queryKey,
     ),
   })
@@ -703,6 +732,8 @@ export function useProjectExecutionsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -711,6 +742,7 @@ export function useProjectExecutionsOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectExecutionsOverview>(
@@ -733,6 +765,8 @@ export function useProjectFunctionExecutionsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -741,6 +775,7 @@ export function useProjectFunctionExecutionsOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectExecutionsOverview>(
@@ -763,6 +798,8 @@ export function useProjectSiteExecutionsOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -771,6 +808,7 @@ export function useProjectSiteExecutionsOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectExecutionsOverview>(
@@ -793,6 +831,8 @@ export function useProjectGbHoursOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -801,6 +841,7 @@ export function useProjectGbHoursOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
@@ -823,6 +864,8 @@ export function useProjectFunctionGbHoursOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -831,6 +874,7 @@ export function useProjectFunctionGbHoursOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
@@ -853,6 +897,8 @@ export function useProjectSiteGbHoursOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -861,6 +907,7 @@ export function useProjectSiteGbHoursOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectGbHoursOverview>(
@@ -883,6 +930,8 @@ export function useProjectStorageOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -891,6 +940,7 @@ export function useProjectStorageOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectStorageOverview>(
@@ -913,6 +963,8 @@ export function useProjectOverviewStorageOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -921,6 +973,7 @@ export function useProjectOverviewStorageOverview(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<ProjectOverviewStorageOverview>(
@@ -941,12 +994,13 @@ function storageFilesUsageQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
     normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'storage',
       'files',
@@ -955,13 +1009,13 @@ function storageFilesUsageQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectStorageFilesUsageOverview(
         projectId!,
         getBounds(),
         interval,
-        { includeBreakdown },
+        mergeUsageFetchOptions({ includeBreakdown }, filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -978,12 +1032,13 @@ function storageGaugeChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
     normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'storage',
       scope,
@@ -992,15 +1047,21 @@ function storageGaugeChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       scope === 'deployments'
         ? fetchProjectStorageDeploymentsOverview(
             projectId!,
             getBounds(),
             interval,
+            mergeUsageFetchOptions(undefined, filterQueries),
           )
-        : fetchProjectStorageBuildsOverview(projectId!, getBounds(), interval),
+        : fetchProjectStorageBuildsOverview(
+            projectId!,
+            getBounds(),
+            interval,
+            mergeUsageFetchOptions(undefined, filterQueries),
+          ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1016,12 +1077,13 @@ function imageTransformationsUsageQueryOptions(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
     normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'storage',
       'image-transformations',
@@ -1030,7 +1092,7 @@ function imageTransformationsUsageQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectImageTransformationsUsageOverview(
         projectId!,
@@ -1055,6 +1117,8 @@ export function useProjectStorageFilesUsage(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -1063,6 +1127,7 @@ export function useProjectStorageFilesUsage(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData: usageOverviewPlaceholderData<StorageFilesUsageOverview>(
@@ -1084,8 +1149,10 @@ export function useProjectStorageDeploymentsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...storageGaugeChartQueryOptions('deployments', projectId, dateRange, interval),
+    ...storageGaugeChartQueryOptions('deployments', projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1096,8 +1163,10 @@ export function useProjectStorageBuildsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...storageGaugeChartQueryOptions('builds', projectId, dateRange, interval),
+    ...storageGaugeChartQueryOptions('builds', projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1109,6 +1178,8 @@ export function useProjectImageTransformationsUsage(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   includeBreakdown = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   const queryClient = useQueryClient()
 
   return useQuery({
@@ -1117,6 +1188,7 @@ export function useProjectImageTransformationsUsage(
       dateRange,
       interval,
       includeBreakdown,
+      filterQueries,
     ),
     enabled: !!projectId && enabled,
     placeholderData:
@@ -1301,19 +1373,21 @@ export function requestsChartOnlyQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
-  return requestsChartOverviewQueryOptions(projectId, dateRange, interval)
+  return requestsChartOverviewQueryOptions(projectId, dateRange, interval, filterQueries)
 }
 
 export function requestsBreakdownQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'requests',
       'breakdown',
@@ -1321,9 +1395,9 @@ export function requestsBreakdownQueryOptions(
       projectId,
       dimension,
       rangeKeyPart,
-    ],
+    ], filterQueries),
     queryFn: () =>
-      fetchProjectRequestsBreakdown(projectId!, getBounds(), dimension),
+      fetchProjectRequestsBreakdown(projectId!, getBounds(), dimension, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT, usageBreakdownQueries(filterQueries)),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1338,11 +1412,12 @@ export function requestsBreakdownDrawerQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'requests',
       'breakdown',
@@ -1352,13 +1427,14 @@ export function requestsBreakdownDrawerQueryOptions(
       dimension,
       rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectRequestsBreakdown(
         projectId!,
         getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
+        usageBreakdownQueries(filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -1376,11 +1452,14 @@ export function useProjectRequestsBreakdownDrawer(
   dimension: UsageEventBreakdownDimension | null | undefined,
   enabled = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
     ...requestsBreakdownDrawerQueryOptions(
       projectId,
       dateRange,
       dimension ?? 'path',
+      filterQueries,
     ),
     enabled: enabled && !!projectId && !!dimension,
   })
@@ -1392,8 +1471,10 @@ export function useProjectRequestsChartOnly(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...requestsChartOnlyQueryOptions(projectId, dateRange, interval),
+    ...requestsChartOnlyQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1411,9 +1492,11 @@ export function useProjectRequestsBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ): RequestsBreakdownQueryEntry[] {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queries = useQueries({
     queries: REQUESTS_BREAKDOWN_SECTIONS.map((section) => ({
-      ...requestsBreakdownQueryOptions(projectId, dateRange, section.dimension),
+      ...requestsBreakdownQueryOptions(projectId, dateRange, section.dimension, filterQueries),
       enabled: enabled && !!projectId,
     })),
   })
@@ -1452,8 +1535,9 @@ export function bandwidthChartOnlyQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
-  return bandwidthOverviewQueryOptions(projectId, dateRange, interval, false)
+  return bandwidthOverviewQueryOptions(projectId, dateRange, interval, false, filterQueries)
 }
 
 export function useProjectBandwidthChartOnly(
@@ -1462,8 +1546,10 @@ export function useProjectBandwidthChartOnly(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...bandwidthChartOnlyQueryOptions(projectId, dateRange, interval),
+    ...bandwidthChartOnlyQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1472,11 +1558,12 @@ export function bandwidthBreakdownQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'bandwidth',
       'breakdown',
@@ -1484,9 +1571,9 @@ export function bandwidthBreakdownQueryOptions(
       projectId,
       dimension,
       rangeKeyPart,
-    ],
+    ], filterQueries),
     queryFn: () =>
-      fetchProjectBandwidthBreakdown(projectId!, getBounds(), dimension),
+      fetchProjectBandwidthBreakdown(projectId!, getBounds(), dimension, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT, usageBreakdownQueries(filterQueries)),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1501,11 +1588,12 @@ export function bandwidthBreakdownDrawerQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'bandwidth',
       'breakdown',
@@ -1515,13 +1603,14 @@ export function bandwidthBreakdownDrawerQueryOptions(
       dimension,
       rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectBandwidthBreakdown(
         projectId!,
         getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
+        usageBreakdownQueries(filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -1539,11 +1628,14 @@ export function useProjectBandwidthBreakdownDrawer(
   dimension: UsageEventBreakdownDimension | null | undefined,
   enabled = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
     ...bandwidthBreakdownDrawerQueryOptions(
       projectId,
       dateRange,
       dimension ?? 'path',
+      filterQueries,
     ),
     enabled: enabled && !!projectId && !!dimension,
   })
@@ -1562,9 +1654,11 @@ export function useProjectBandwidthBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ): BandwidthBreakdownQueryEntry[] {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queries = useQueries({
     queries: BANDWIDTH_BREAKDOWN_SECTIONS.map((section) => ({
-      ...bandwidthBreakdownQueryOptions(projectId, dateRange, section.dimension),
+      ...bandwidthBreakdownQueryOptions(projectId, dateRange, section.dimension, filterQueries),
       enabled: enabled && !!projectId,
     })),
   })
@@ -1671,11 +1765,12 @@ function databaseReadsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'databases',
       'reads',
@@ -1684,7 +1779,7 @@ function databaseReadsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectDatabaseReadsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -1701,11 +1796,12 @@ function databaseWritesChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'databases',
       'writes',
@@ -1714,7 +1810,7 @@ function databaseWritesChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectDatabaseWritesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -1731,11 +1827,12 @@ function databaseCollectionsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'databases',
       'collections',
@@ -1744,7 +1841,7 @@ function databaseCollectionsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectDatabaseCollectionsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -1761,11 +1858,12 @@ function databaseDocumentsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'databases',
       'documents',
@@ -1774,7 +1872,7 @@ function databaseDocumentsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectDatabaseDocumentsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -1793,8 +1891,10 @@ export function useProjectDatabaseReadsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...databaseReadsChartQueryOptions(projectId, dateRange, interval),
+    ...databaseReadsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1805,8 +1905,10 @@ export function useProjectDatabaseWritesChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...databaseWritesChartQueryOptions(projectId, dateRange, interval),
+    ...databaseWritesChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1817,8 +1919,10 @@ export function useProjectDatabaseCollectionsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...databaseCollectionsChartQueryOptions(projectId, dateRange, interval),
+    ...databaseCollectionsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1829,8 +1933,10 @@ export function useProjectDatabaseDocumentsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...databaseDocumentsChartQueryOptions(projectId, dateRange, interval),
+    ...databaseDocumentsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -1839,11 +1945,12 @@ function databaseReadsBreakdownQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'databases',
       'reads',
@@ -1852,9 +1959,9 @@ function databaseReadsBreakdownQueryOptions(
       projectId,
       dimension,
       rangeKeyPart,
-    ],
+    ], filterQueries),
     queryFn: () =>
-      fetchProjectDatabaseReadsBreakdown(projectId!, getBounds(), dimension),
+      fetchProjectDatabaseReadsBreakdown(projectId!, getBounds(), dimension, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT, usageBreakdownQueries(filterQueries)),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1869,11 +1976,12 @@ function databaseWritesBreakdownQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'databases',
       'writes',
@@ -1882,9 +1990,9 @@ function databaseWritesBreakdownQueryOptions(
       projectId,
       dimension,
       rangeKeyPart,
-    ],
+    ], filterQueries),
     queryFn: () =>
-      fetchProjectDatabaseWritesBreakdown(projectId!, getBounds(), dimension),
+      fetchProjectDatabaseWritesBreakdown(projectId!, getBounds(), dimension, OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT, usageBreakdownQueries(filterQueries)),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1899,11 +2007,12 @@ function databaseReadsBreakdownDrawerQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'databases',
       'reads',
@@ -1914,13 +2023,14 @@ function databaseReadsBreakdownDrawerQueryOptions(
       dimension,
       rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectDatabaseReadsBreakdown(
         projectId!,
         getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
+        usageBreakdownQueries(filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -1936,11 +2046,12 @@ function databaseWritesBreakdownDrawerQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'databases',
       'writes',
@@ -1951,13 +2062,14 @@ function databaseWritesBreakdownDrawerQueryOptions(
       dimension,
       rangeKeyPart,
       USAGE_BREAKDOWN_DRAWER_LIMIT,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectDatabaseWritesBreakdown(
         projectId!,
         getBounds(),
         dimension,
         USAGE_BREAKDOWN_DRAWER_LIMIT,
+        usageBreakdownQueries(filterQueries),
       ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
@@ -1975,11 +2087,14 @@ export function useProjectDatabaseReadsBreakdownDrawer(
   dimension: UsageEventBreakdownDimension | null | undefined,
   enabled = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
     ...databaseReadsBreakdownDrawerQueryOptions(
       projectId,
       dateRange,
       dimension ?? 'resourceId',
+      filterQueries,
     ),
     enabled: enabled && !!projectId && !!dimension,
   })
@@ -1991,11 +2106,14 @@ export function useProjectDatabaseWritesBreakdownDrawer(
   dimension: UsageEventBreakdownDimension | null | undefined,
   enabled = true,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
     ...databaseWritesBreakdownDrawerQueryOptions(
       projectId,
       dateRange,
       dimension ?? 'resourceId',
+      filterQueries,
     ),
     enabled: enabled && !!projectId && !!dimension,
   })
@@ -2013,12 +2131,15 @@ export function useProjectDatabaseReadsBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ): DatabaseReadsBreakdownQueryEntry[] {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queries = useQueries({
     queries: DATABASE_OPERATIONS_BREAKDOWN_SECTIONS.map((section) => ({
       ...databaseReadsBreakdownQueryOptions(
         projectId,
         dateRange,
         section.dimension,
+        filterQueries,
       ),
       enabled: enabled && !!projectId,
     })),
@@ -2051,12 +2172,15 @@ export function useProjectDatabaseWritesBreakdowns(
   dateRange: DateRange | undefined,
   enabled = true,
 ): DatabaseWritesBreakdownQueryEntry[] {
+  const filterQueries = useUsageSectionFilterQueries()
+
   const queries = useQueries({
     queries: DATABASE_OPERATIONS_BREAKDOWN_SECTIONS.map((section) => ({
       ...databaseWritesBreakdownQueryOptions(
         projectId,
         dateRange,
         section.dimension,
+        filterQueries,
       ),
       enabled: enabled && !!projectId,
     })),
@@ -2191,11 +2315,12 @@ function realtimeConnectionsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'realtime',
       'connections',
@@ -2204,7 +2329,7 @@ function realtimeConnectionsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectRealtimeConnectionsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2221,11 +2346,12 @@ function realtimeMessagesChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'realtime',
       'messages',
@@ -2234,7 +2360,7 @@ function realtimeMessagesChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectRealtimeMessagesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2251,11 +2377,12 @@ function realtimeBandwidthChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'realtime',
       'bandwidth',
@@ -2264,7 +2391,7 @@ function realtimeBandwidthChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectRealtimeBandwidthOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2283,8 +2410,10 @@ export function useProjectRealtimeConnectionsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...realtimeConnectionsChartQueryOptions(projectId, dateRange, interval),
+    ...realtimeConnectionsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2295,8 +2424,10 @@ export function useProjectRealtimeMessagesChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...realtimeMessagesChartQueryOptions(projectId, dateRange, interval),
+    ...realtimeMessagesChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2307,8 +2438,10 @@ export function useProjectRealtimeBandwidthChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...realtimeBandwidthChartQueryOptions(projectId, dateRange, interval),
+    ...realtimeBandwidthChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2332,11 +2465,12 @@ function authMauChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'auth',
       'mau',
@@ -2345,7 +2479,7 @@ function authMauChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectAuthMauOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2362,11 +2496,12 @@ function authOtpChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'auth',
       'otp',
@@ -2375,7 +2510,7 @@ function authOtpChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectAuthOtpOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2392,11 +2527,12 @@ function authSignupsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'auth',
       'signups',
@@ -2405,7 +2541,7 @@ function authSignupsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectAuthSignupsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2424,8 +2560,10 @@ export function useProjectAuthMauChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...authMauChartQueryOptions(projectId, dateRange, interval),
+    ...authMauChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2436,8 +2574,10 @@ export function useProjectAuthOtpChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...authOtpChartQueryOptions(projectId, dateRange, interval),
+    ...authOtpChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2448,8 +2588,10 @@ export function useProjectAuthSignupsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...authSignupsChartQueryOptions(projectId, dateRange, interval),
+    ...authSignupsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2473,11 +2615,12 @@ function avatarsScreenshotsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'avatars',
       'screenshots',
@@ -2486,7 +2629,7 @@ function avatarsScreenshotsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectAvatarsScreenshotsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2505,8 +2648,10 @@ export function useProjectAvatarsScreenshotsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...avatarsScreenshotsChartQueryOptions(projectId, dateRange, interval),
+    ...avatarsScreenshotsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2530,11 +2675,12 @@ function messagingMessagesChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'messaging',
       'messages',
@@ -2543,7 +2689,7 @@ function messagingMessagesChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectMessagingMessagesOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2560,11 +2706,12 @@ function messagingSmsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'messaging',
       'sms',
@@ -2573,7 +2720,7 @@ function messagingSmsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectMessagingSmsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2590,11 +2737,12 @@ function messagingTopicsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'messaging',
       'topics',
@@ -2603,7 +2751,7 @@ function messagingTopicsChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectMessagingTopicsOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2622,8 +2770,10 @@ export function useProjectMessagingMessagesChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...messagingMessagesChartQueryOptions(projectId, dateRange, interval),
+    ...messagingMessagesChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2634,8 +2784,10 @@ export function useProjectMessagingSmsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...messagingSmsChartQueryOptions(projectId, dateRange, interval),
+    ...messagingSmsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2646,8 +2798,10 @@ export function useProjectMessagingTopicsChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...messagingTopicsChartQueryOptions(projectId, dateRange, interval),
+    ...messagingTopicsChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2673,11 +2827,12 @@ function webhooksEventsSentChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'webhooks',
       'events-sent',
@@ -2686,7 +2841,7 @@ function webhooksEventsSentChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectWebhooksEventsSentOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2703,11 +2858,12 @@ function webhooksEventsFailedChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-events',
       'webhooks',
       'events-failed',
@@ -2716,7 +2872,7 @@ function webhooksEventsFailedChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectWebhooksEventsFailedOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2733,11 +2889,12 @@ function webhooksCountChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  filterQueries?: UsageFilterQueries,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } = normalizeDateRangeKey(dateRange)
 
   return queryOptions({
-    queryKey: [
+    queryKey: appendUsageFiltersToQueryKey([
       'usage-gauges',
       'webhooks',
       'count',
@@ -2746,7 +2903,7 @@ function webhooksCountChartQueryOptions(
       projectId,
       rangeKeyPart,
       interval,
-    ],
+    ], filterQueries),
     queryFn: () =>
       fetchProjectWebhooksCountOverview(projectId!, getBounds(), interval),
     enabled: !!projectId,
@@ -2765,8 +2922,10 @@ export function useProjectWebhooksEventsSentChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...webhooksEventsSentChartQueryOptions(projectId, dateRange, interval),
+    ...webhooksEventsSentChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2777,8 +2936,10 @@ export function useProjectWebhooksEventsFailedChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries()
+
   return useQuery({
-    ...webhooksEventsFailedChartQueryOptions(projectId, dateRange, interval),
+    ...webhooksEventsFailedChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }
@@ -2789,8 +2950,10 @@ export function useProjectWebhooksCountChart(
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ) {
+  const filterQueries = useUsageSectionFilterQueries('gauges')
+
   return useQuery({
-    ...webhooksCountChartQueryOptions(projectId, dateRange, interval),
+    ...webhooksCountChartQueryOptions(projectId, dateRange, interval, filterQueries),
     enabled: !!projectId && enabled,
   })
 }

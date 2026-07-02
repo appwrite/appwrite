@@ -1,11 +1,14 @@
 import type { DateRange } from 'react-day-picker'
 import {
+  fetchProjectUsageEventBreakdown,
   fetchProjectUsageMetricsOverview,
   type FetchUsageOverviewOptions,
+  type UsageBreakdownItem,
   type UsageChartInterval,
   type UsageChartPoint,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
+import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT } from '@/lib/usage/breakdown-limits'
 import {
@@ -42,6 +45,7 @@ export interface ProjectGbHoursOverview {
   changePercent: number
   chartPoints: GbHoursChartPoint[]
   topConsumers: GbHoursTopConsumer[]
+  resourceTypeBreakdown: UsageBreakdownItem[]
 }
 
 export {
@@ -70,6 +74,15 @@ function convertTopConsumersToGbHours(
   }))
 }
 
+function convertBreakdownItemsToGbHours(
+  items: UsageBreakdownItem[],
+): UsageBreakdownItem[] {
+  return items.map((item) => ({
+    ...item,
+    count: mbSecondsToGbHours(item.count),
+  }))
+}
+
 async function fetchGbHoursOverviewForMetrics(
   projectId: string,
   dateRange: DateRange | undefined,
@@ -77,19 +90,38 @@ async function fetchGbHoursOverviewForMetrics(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<ProjectGbHoursOverview> {
-  const overview = await fetchProjectUsageMetricsOverview(
-    projectId,
-    dateRange,
-    metrics,
-    interval,
-    GB_HOURS_BREAKDOWN_DIMENSIONS,
-    COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
-    options,
-  )
+  const includeBreakdown =
+    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const queries = options?.queries
+
+  const [overview, resourceTypeBreakdown] = await Promise.all([
+    fetchProjectUsageMetricsOverview(
+      projectId,
+      dateRange,
+      metrics,
+      interval,
+      GB_HOURS_BREAKDOWN_DIMENSIONS,
+      COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
+      options,
+    ),
+    includeBreakdown && metrics.length > 0
+      ? fetchProjectUsageEventBreakdown(
+          projectId,
+          metrics[0],
+          dateRange,
+          'resource',
+          COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
+          queries,
+        )
+      : Promise.resolve([]),
+  ])
 
   return {
     chartPoints: convertChartPointsToGbHours(overview.chartPoints),
     topConsumers: convertTopConsumersToGbHours(overview.topEndpoints),
+    resourceTypeBreakdown: convertBreakdownItemsToGbHours(
+      resourceTypeBreakdown,
+    ),
     changePercent: overview.changePercent,
   }
 }

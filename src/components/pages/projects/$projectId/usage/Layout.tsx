@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
-import { Link, Outlet, useLocation } from '@tanstack/react-router'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { refetchProjectBandwidthUsageQueries, refetchProjectDatabaseUsageQueries, refetchProjectAuthUsageQueries, refetchProjectAvatarsUsageQueries, refetchProjectMessagingUsageQueries, refetchProjectWebhooksUsageQueries, refetchProjectComputeUsageQueries, refetchProjectRealtimeUsageQueries, refetchProjectRequestsUsageQueries, refetchProjectStorageUsageQueries } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
@@ -60,6 +60,25 @@ import {
   type UsageNavGroup,
 } from './usage-nav'
 import { UsageFiltersProvider } from './usage-filters-context'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import {
+  buildFilterQueryString,
+  mapToQueryParam,
+  queryParamToMap,
+  type CompactFilterKey,
+} from '@/lib/table-filters'
+import {
+  categorySupportsUsageFilters,
+  getUsageFilterColumnsForCategory,
+  getUsageSavedFilterScope,
+  isUsageFilterDimensionAllowed,
+  USAGE_FILTER_EXCLUDED_ATTRIBUTES,
+} from '@/lib/usage/usage-filter-configs'
+import {
+  getUsageFilterQueriesForSurface,
+  sanitizeUsageFilterMap,
+} from '@/lib/usage/usage-filter-queries'
+import type { UsageBreakdownFilterEntry } from '@/lib/usage/usage-resource-filters'
 import {
   RefreshProvider,
   useRefresh,
@@ -119,6 +138,7 @@ function UsageCategoryNavLink({
     <Link
       to="/projects/$projectId/usage/$categoryId"
       params={{ projectId, categoryId: category.id }}
+      search={{ query: undefined }}
       className={cn(
         secondarySidebarNavLinkClassName(isActive),
         SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
@@ -339,9 +359,112 @@ function UsageLayoutContent({
 }: UsageLayoutProps) {
   const t = useT()
   const location = useLocation()
+  const navigate = useNavigate()
   const categoryId = resolveUsageCategoryId(
     getUsageCategoryIdFromPathname(location.pathname),
     plan,
+  )
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const usageFilterMap = useMemo(() => {
+    const search = location.search
+    const queryParam =
+      typeof search === 'object' && search !== null && 'query' in search
+        ? ((search as { query?: string }).query ?? null)
+        : null
+    return sanitizeUsageFilterMap(queryParamToMap(queryParam), categoryId)
+  }, [location.search, categoryId])
+
+  const usageFilterColumns = useMemo(
+    () => getUsageFilterColumnsForCategory(categoryId),
+    [categoryId],
+  )
+  const usageEventFilterQueries = useMemo(
+    () => getUsageFilterQueriesForSurface(usageFilterMap, categoryId, 'events'),
+    [usageFilterMap, categoryId],
+  )
+  const usageGaugeFilterQueries = useMemo(
+    () => getUsageFilterQueriesForSurface(usageFilterMap, categoryId, 'gauges'),
+    [usageFilterMap, categoryId],
+  )
+  const usageFilterScope = getUsageSavedFilterScope(categoryId)
+  const showUsageFilters = categorySupportsUsageFilters(categoryId)
+
+  const navigateUsageFilters = useCallback(
+    (query: string | undefined) => {
+      navigate({
+        to: '/projects/$projectId/usage/$categoryId',
+        params: { projectId, categoryId },
+        search: query ? { query } : { query: undefined },
+        replace: true,
+      })
+    },
+    [navigate, projectId, categoryId],
+  )
+
+  const applyUsageFilter = useCallback(
+    (key: CompactFilterKey, queryStr: string, replaceKey?: CompactFilterKey) => {
+      if (USAGE_FILTER_EXCLUDED_ATTRIBUTES.has(String(key.c))) return
+      if (!isUsageFilterDimensionAllowed(categoryId, String(key.c))) return
+      const newMap = new Map(usageFilterMap)
+      if (replaceKey) newMap.delete(replaceKey)
+      newMap.set(key, queryStr)
+      navigateUsageFilters(
+        mapToQueryParam(sanitizeUsageFilterMap(newMap, categoryId)),
+      )
+    },
+    [usageFilterMap, navigateUsageFilters, categoryId],
+  )
+
+  const removeUsageFilter = useCallback(
+    (key: CompactFilterKey) => {
+      const newMap = new Map(usageFilterMap)
+      newMap.delete(key)
+      navigateUsageFilters(newMap.size > 0 ? mapToQueryParam(newMap) : undefined)
+    },
+    [usageFilterMap, navigateUsageFilters],
+  )
+
+  const clearAllUsageFilters = useCallback(() => {
+    navigateUsageFilters(undefined)
+  }, [navigateUsageFilters])
+
+  const applySavedUsageFilterQuery = useCallback(
+    (queryParam: string | undefined) => {
+      if (!queryParam) {
+        navigateUsageFilters(undefined)
+        return
+      }
+      const sanitizedMap = sanitizeUsageFilterMap(
+        queryParamToMap(queryParam),
+        categoryId,
+      )
+      navigateUsageFilters(
+        sanitizedMap.size > 0 ? mapToQueryParam(sanitizedMap) : undefined,
+      )
+    },
+    [navigateUsageFilters, categoryId],
+  )
+
+  const addBreakdownUsageFilter = useCallback(
+    (filters: UsageBreakdownFilterEntry[]) => {
+      if (filters.length === 0) return
+
+      let newMap = new Map(usageFilterMap)
+      for (const { dimension, value } of filters) {
+        if (USAGE_FILTER_EXCLUDED_ATTRIBUTES.has(dimension)) continue
+        if (!isUsageFilterDimensionAllowed(categoryId, dimension)) continue
+        const trimmed = value.trim()
+        if (!trimmed) continue
+        const key: CompactFilterKey = { c: dimension, o: 'equal', v: trimmed }
+        newMap.set(key, buildFilterQueryString('equal', dimension, trimmed))
+      }
+
+      navigateUsageFilters(
+        mapToQueryParam(sanitizeUsageFilterMap(newMap, categoryId)),
+      )
+    },
+    [usageFilterMap, navigateUsageFilters, categoryId],
   )
 
   const {
@@ -469,6 +592,20 @@ function UsageLayoutContent({
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-3">
+              {showUsageFilters ? (
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={usageFilterColumns}
+                  filterMap={usageFilterMap}
+                  onRemoveFilter={removeUsageFilter}
+                  onClearAll={clearAllUsageFilters}
+                  onApplyFilter={applyUsageFilter}
+                  resourceLabel="usage metrics"
+                  filterScope={usageFilterScope}
+                  onApplyQuery={applySavedUsageFilterQuery}
+                />
+              ) : null}
               {showChartIntervalToggle ? (
                 <UsageChartIntervalToggle
                   value={chartInterval}
@@ -551,6 +688,16 @@ function UsageLayoutContent({
                     plan,
                     dateRange: usageDateRange,
                     chartInterval,
+                    filterMap: usageFilterMap,
+                    eventFilterQueries: usageEventFilterQueries,
+                    gaugeFilterQueries: usageGaugeFilterQueries,
+                    filterColumns: usageFilterColumns,
+                    filterScope: usageFilterScope,
+                    onApplyFilter: applyUsageFilter,
+                    onRemoveFilter: removeUsageFilter,
+                    onClearAllFilters: clearAllUsageFilters,
+                    onApplySavedFilterQuery: applySavedUsageFilterQuery,
+                    onAddBreakdownFilter: addBreakdownUsageFilter,
                   }}
                 >
                   <Outlet />

@@ -4,12 +4,15 @@ import {
   formatCompactCountAxis,
 } from '@/lib/usage/format-metric'
 import {
+  fetchProjectUsageEventBreakdown,
   fetchProjectUsageMetricsOverview,
   type FetchUsageOverviewOptions,
+  type UsageBreakdownItem,
   type UsageChartInterval,
   type UsageChartPoint,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
+import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { COMPUTE_BREAKDOWN_RESOURCE_LIMIT } from '@/lib/usage/breakdown-limits'
 
@@ -31,6 +34,7 @@ export interface ProjectExecutionsOverview {
   changePercent: number
   chartPoints: ExecutionsChartPoint[]
   topConsumers: ExecutionsTopConsumer[]
+  resourceTypeBreakdown: UsageBreakdownItem[]
 }
 
 export function formatExecutionsTotal(count: number): string {
@@ -51,20 +55,37 @@ async function fetchExecutionsOverviewForMetrics(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   options?: FetchUsageOverviewOptions,
 ): Promise<ProjectExecutionsOverview> {
-  const overview = await fetchProjectUsageMetricsOverview(
-    projectId,
-    dateRange,
-    metrics,
-    interval,
-    EXECUTIONS_BREAKDOWN_DIMENSIONS,
-    COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
-    options,
-  )
+  const includeBreakdown =
+    options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const queries = options?.queries
+
+  const [overview, resourceTypeBreakdown] = await Promise.all([
+    fetchProjectUsageMetricsOverview(
+      projectId,
+      dateRange,
+      metrics,
+      interval,
+      EXECUTIONS_BREAKDOWN_DIMENSIONS,
+      COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
+      options,
+    ),
+    includeBreakdown && metrics.length > 0
+      ? fetchProjectUsageEventBreakdown(
+          projectId,
+          metrics[0],
+          dateRange,
+          'resource',
+          COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
+          queries,
+        )
+      : Promise.resolve([]),
+  ])
 
   return {
     changePercent: overview.changePercent,
     chartPoints: overview.chartPoints,
     topConsumers: overview.topEndpoints,
+    resourceTypeBreakdown,
   }
 }
 

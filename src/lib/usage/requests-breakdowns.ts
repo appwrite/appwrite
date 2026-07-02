@@ -96,10 +96,17 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
   },
   {
     dimension: 'resourceId',
-    title: 'Resources',
+    title: 'Resource IDs',
     description: 'Request volume grouped by resource ID.',
-    metricId: 'breakdown-resource',
+    metricId: 'breakdown-resource-id',
     labelVariant: 'mono',
+  },
+  {
+    dimension: 'resource',
+    title: 'Resource types',
+    description: 'Request volume grouped by resource type.',
+    metricId: 'breakdown-resource-type',
+    labelVariant: 'default',
   },
 ] as const
 
@@ -108,6 +115,7 @@ export async function fetchProjectRequestsBreakdown(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageBreakdownItem[]> {
   return fetchProjectUsageEventBreakdown(
     projectId,
@@ -115,6 +123,7 @@ export async function fetchProjectRequestsBreakdown(
     dateRange,
     dimension,
     limit,
+    queries,
   )
 }
 

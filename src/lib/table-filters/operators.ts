@@ -221,6 +221,21 @@ export function getOperatorsForType(
   return base
 }
 
+/** Operators for a filter column, honoring optional allowedOperators allowlists. */
+export function getOperatorsForColumn(
+  column: FilterColumn,
+  valueTypeOverride?: FilterColumnType,
+): FilterOperatorDef[] {
+  const columnType = valueTypeOverride ?? column.type
+  const base = getOperatorsForType(columnType, {
+    fulltextSearchable: column.customAttributeSlot ? false : !!column.fulltextSearchable,
+    enumOptional: columnType === 'enum' ? column.optional : undefined,
+  })
+  if (!column.allowedOperators?.length) return base
+  const allowed = new Set(column.allowedOperators)
+  return base.filter((op) => allowed.has(op.key))
+}
+
 /** Parse "start,end" for between/notBetween; returns [start, end] or null if invalid. */
 function parseBetweenValue(
   value: string | number | string[] | boolean | null | undefined,
@@ -359,7 +374,7 @@ export function buildFilterTagFromCompactKey(
     }
     return buildFilterTag(String(key.c), opLabel, tagDisplayVal || undefined)
   }
-  const ops = getOperatorsForType(col.type)
+  const ops = getOperatorsForColumn(col)
   const op = ops.find((o) => o.key === key.o)
   const opLabel = op?.label ?? key.o
   if (op?.noValue) return buildFilterTag(col.title, opLabel, undefined)

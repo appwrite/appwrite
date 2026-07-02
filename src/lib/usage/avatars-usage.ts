@@ -6,6 +6,7 @@ import {
   computeChangePercent,
   fetchProjectUsageMetricSeriesOverview,
   sumUsageChartPoints,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
@@ -45,6 +46,7 @@ export async function fetchProjectAvatarsScreenshotsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<AvatarsUsageChartOverview> {
   const overview = await fetchProjectUsageMetricSeriesOverview(
     projectId,
@@ -53,6 +55,7 @@ export async function fetchProjectAvatarsScreenshotsOverview(
     interval,
     [],
     0,
+    options,
   )
 
   return {

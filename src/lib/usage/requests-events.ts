@@ -76,12 +76,14 @@ export async function fetchProjectRequestsChartOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
 ): Promise<ProjectRequestsChartOverview> {
   const overview = await fetchProjectUsageChartOverview(
     projectId,
     dateRange,
     REQUESTS_EVENT_METRICS,
     interval,
+    queries,
   )
 
   return {

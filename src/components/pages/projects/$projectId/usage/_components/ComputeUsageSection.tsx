@@ -23,6 +23,7 @@ import {
   COMPUTE_FUNCTIONS_DOCS_HREF,
   COMPUTE_GB_HOURS_BREAKDOWN_TITLE,
   COMPUTE_GB_HOURS_DESCRIPTION,
+  COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE,
   COMPUTE_SITE_EXECUTIONS_BREAKDOWN_TITLE,
   COMPUTE_SITE_EXECUTIONS_DESCRIPTION,
   COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE,
@@ -235,6 +236,12 @@ export function ComputeUsageSection({
                 executionsQuery.data?.topConsumers ?? [],
               )
         }
+        resourceTypeBreakdownTitle={COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE}
+        resourceTypeBreakdownItems={
+          executionsQuery.isError
+            ? []
+            : (executionsQuery.data?.resourceTypeBreakdown ?? [])
+        }
         breakdownLookup={breakdownResources?.resources}
         onRetry={handleRetryAll}
         docsHref={docsHref}
@@ -264,6 +271,12 @@ export function ComputeUsageSection({
           gbHoursQuery.isError
             ? []
             : topConsumersToBreakdownItems(gbHoursQuery.data?.topConsumers ?? [])
+        }
+        resourceTypeBreakdownTitle={COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE}
+        resourceTypeBreakdownItems={
+          gbHoursQuery.isError
+            ? []
+            : (gbHoursQuery.data?.resourceTypeBreakdown ?? [])
         }
         breakdownLookup={breakdownResources?.resources}
         breakdownTitleAddon={<GbHoursUnitInfo />}

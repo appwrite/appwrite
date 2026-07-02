@@ -63,6 +63,7 @@ export type UsageEventBreakdownDimension =
   | 'deviceName'
   | 'teamId'
   | 'resourceId'
+  | 'resource'
 
 export interface UsageBreakdownItem {
   id: string
@@ -101,6 +102,8 @@ function getUsageDataPointBreakdownLabel(
       return point.teamId?.trim() || 'Unknown'
     case 'resourceId':
       return point.resourceId?.trim() || 'Unknown'
+    case 'resource':
+      return point.resource?.trim() || 'Unknown'
     default:
       return 'Unknown'
   }
@@ -154,6 +157,7 @@ export async function fetchProjectUsageEventBreakdown(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageBreakdownItem[]> {
   if (!projectId) {
     return []
@@ -165,6 +169,7 @@ export async function fetchProjectUsageEventBreakdown(
     dimensions: [dimension],
     startAt: from.toISOString(),
     endAt: to.toISOString(),
+    queries,
   })
 
   return mapBreakdownGroupsForDimension(groups, dimension, breakdownLimit)
@@ -240,6 +245,7 @@ function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
 
 export interface FetchUsageOverviewOptions {
   includeBreakdown?: boolean
+  queries?: string[]
 }
 
 interface ListUsageEventGroupsParams {
@@ -248,6 +254,7 @@ interface ListUsageEventGroupsParams {
   startAt: string
   endAt: string
   dimensions?: string[]
+  queries?: string[]
   resource?: string
   resourceId?: string
 }
@@ -383,6 +390,17 @@ function mapBreakdownGroupsToEndpoints(
         count: group.value,
       }
     })
+  } else if (dimensions.length === 1 && dimensions[0] === 'resource') {
+    items = groups.map((group, index) => {
+      const resource = group.resource?.trim() || ''
+      return {
+        id: resource || `resource-type-${index}`,
+        method: '',
+        statusCode: 0,
+        path: resource,
+        count: group.value,
+      }
+    })
   } else {
     items = groups.map((group, index) => {
       const path = group.path || '/'
@@ -404,6 +422,7 @@ export async function fetchUsageMetricsChartSeriesByMetric(
   metrics: readonly string[],
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
 ): Promise<
   Map<string, Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>>
 > {
@@ -425,12 +444,14 @@ export async function fetchUsageMetricsChartSeriesByMetric(
       interval: resolvedInterval,
       startAt: from.toISOString(),
       endAt: to.toISOString(),
+      queries,
     }),
     listUsageEventGroupsByMetric(projectId, {
       metrics,
       interval: resolvedInterval,
       startAt: previousFrom.toISOString(),
       endAt: previousTo.toISOString(),
+      queries,
     }),
   ])
 
@@ -466,12 +487,14 @@ async function fetchUsageMetricChartSeries(
   metric: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
 ): Promise<Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>> {
   const chartSeriesByMetric = await fetchUsageMetricsChartSeriesByMetric(
     projectId,
     [metric],
     dateRange,
     interval,
+    queries,
   )
 
   return (
@@ -488,6 +511,7 @@ export async function fetchUsageMetricsBreakdownByMetric(
   dateRange: DateRange | undefined,
   dimensions: readonly string[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<Map<string, UsageTopEndpoint[]>> {
   if (metrics.length === 0) {
     return new Map()
@@ -499,6 +523,7 @@ export async function fetchUsageMetricsBreakdownByMetric(
     dimensions: [...dimensions],
     startAt: from.toISOString(),
     endAt: to.toISOString(),
+    queries,
   })
 
   const result = new Map<string, UsageTopEndpoint[]>()
@@ -522,6 +547,7 @@ async function fetchUsageMetricBreakdown(
   dateRange: DateRange | undefined,
   dimensions: readonly string[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageTopEndpoint[]> {
   const breakdownByMetric = await fetchUsageMetricsBreakdownByMetric(
     projectId,
@@ -529,6 +555,7 @@ async function fetchUsageMetricBreakdown(
     dateRange,
     dimensions,
     breakdownLimit,
+    queries,
   )
 
   return breakdownByMetric.get(metric) ?? []
@@ -545,8 +572,9 @@ async function fetchUsageMetricSeries(
 ): Promise<UsageMetricSeriesResult> {
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const queries = options?.queries
   const [chartSeries, topEndpoints] = await Promise.all([
-    fetchUsageMetricChartSeries(projectId, metric, dateRange, interval),
+    fetchUsageMetricChartSeries(projectId, metric, dateRange, interval, queries),
     dimensions.length > 0 && includeBreakdown
       ? fetchUsageMetricBreakdown(
           projectId,
@@ -554,6 +582,7 @@ async function fetchUsageMetricSeries(
           dateRange,
           dimensions,
           breakdownLimit,
+          queries,
         )
       : Promise.resolve([]),
   ])
@@ -582,9 +611,16 @@ export async function fetchProjectUsageMetricsOverview(
 
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const queries = options?.queries
 
   const [chartSeriesByMetric, breakdownByMetric] = await Promise.all([
-    fetchUsageMetricsChartSeriesByMetric(projectId, metrics, dateRange, interval),
+    fetchUsageMetricsChartSeriesByMetric(
+      projectId,
+      metrics,
+      dateRange,
+      interval,
+      queries,
+    ),
     includeBreakdown && dimensions.length > 0
       ? fetchUsageMetricsBreakdownByMetric(
           projectId,
@@ -592,6 +628,7 @@ export async function fetchProjectUsageMetricsOverview(
           dateRange,
           dimensions,
           breakdownLimit,
+          queries,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])
@@ -706,6 +743,7 @@ async function listUsageEventGroupsByMetric(
     startAt: string
     endAt: string
     dimensions?: string[]
+    queries?: string[]
     resource?: string
     resourceId?: string
   } = {
@@ -719,6 +757,9 @@ async function listUsageEventGroupsByMetric(
   }
   if (params.dimensions?.length) {
     request.dimensions = params.dimensions
+  }
+  if (params.queries?.length) {
+    request.queries = params.queries
   }
   if (params.resource) {
     request.resource = params.resource
@@ -784,6 +825,7 @@ export async function fetchProjectUsageChartOverview(
   dateRange: DateRange | undefined,
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId) {
     return {
@@ -805,11 +847,13 @@ export async function fetchProjectUsageChartOverview(
       interval: resolvedInterval,
       startAt: from.toISOString(),
       endAt: to.toISOString(),
+      queries,
     }),
     listUsageEventGroupsForMetrics(projectId, metrics, {
       interval: resolvedInterval,
       startAt: previousFrom.toISOString(),
       endAt: previousTo.toISOString(),
+      queries,
     }),
   ])
 

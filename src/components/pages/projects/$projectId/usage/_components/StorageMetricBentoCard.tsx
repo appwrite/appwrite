@@ -17,6 +17,9 @@ const STORAGE_USAGE_ERROR = {
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const
 
+const breakdownRowGridClass =
+  'grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0'
+
 type StorageMetricBentoCardProps = {
   projectId: string
   title: string
@@ -34,6 +37,8 @@ type StorageMetricBentoCardProps = {
   showBreakdown: boolean
   breakdownTitle: string
   breakdownItems: UsageBreakdownItem[]
+  resourceTypeBreakdownTitle: string
+  resourceTypeBreakdownItems: UsageBreakdownItem[]
   breakdownLookup: StorageBreakdownResourceMap | undefined
   onRetry: () => void
   docsHref?: string
@@ -56,39 +61,35 @@ export function StorageMetricBentoCard({
   showBreakdown,
   breakdownTitle,
   breakdownItems,
+  resourceTypeBreakdownTitle,
+  resourceTypeBreakdownItems,
   breakdownLookup,
   onRetry,
   docsHref,
 }: StorageMetricBentoCardProps) {
   return (
     <UsageMetricCardShell>
-      <div
-        className={cn(
-          'grid grid-cols-1 divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
-        )}
-      >
-        <div className="lg:col-span-2">
-          <UsageTimeSeriesChartCard
-            embedded
-            title={title}
-            description={description}
-            unitLabel={unitLabel}
-            chartGradientId={chartGradientId}
-            total={total}
-            changePercent={changePercent}
-            chartPoints={chartPoints}
-            isLoading={isLoading}
-            isError={isError}
-            errorTitle={STORAGE_USAGE_ERROR.title}
-            errorMessage={STORAGE_USAGE_ERROR.message}
-            formatTotal={formatTotal}
-            formatValue={formatValue}
-            axisFormat={axisFormat}
-            onRetry={onRetry}
-          />
-        </div>
+      <UsageTimeSeriesChartCard
+        embedded
+        title={title}
+        description={description}
+        unitLabel={unitLabel}
+        chartGradientId={chartGradientId}
+        total={total}
+        changePercent={changePercent}
+        chartPoints={chartPoints}
+        isLoading={isLoading}
+        isError={isError}
+        errorTitle={STORAGE_USAGE_ERROR.title}
+        errorMessage={STORAGE_USAGE_ERROR.message}
+        formatTotal={formatTotal}
+        formatValue={formatValue}
+        axisFormat={axisFormat}
+        onRetry={onRetry}
+      />
 
-        {showBreakdown ? (
+      {showBreakdown ? (
+        <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
           <UsageBreakdownCard
             embedded
             title={breakdownTitle}
@@ -98,7 +99,6 @@ export function StorageMetricBentoCard({
             labelVariant="mono"
             countryLookups={null}
             storageLookup={breakdownLookup}
-            projectId={projectId}
             isLoading={isLoading}
             isError={isError}
             errorTitle={STORAGE_USAGE_ERROR.title}
@@ -106,8 +106,24 @@ export function StorageMetricBentoCard({
             formatValue={formatValue}
             onRetry={onRetry}
           />
-        ) : null}
-      </div>
+          <UsageBreakdownCard
+            embedded
+            title={resourceTypeBreakdownTitle}
+            description={description}
+            dimension="resource"
+            items={resourceTypeBreakdownItems}
+            labelVariant="default"
+            countryLookups={null}
+            storageLookup={breakdownLookup}
+            isLoading={isLoading}
+            isError={isError}
+            errorTitle={STORAGE_USAGE_ERROR.title}
+            errorMessage={STORAGE_USAGE_ERROR.message}
+            formatValue={formatValue}
+            onRetry={onRetry}
+          />
+        </div>
+      ) : null}
 
       <UsageMetricCardFooter description={description} docsHref={docsHref} />
     </UsageMetricCardShell>

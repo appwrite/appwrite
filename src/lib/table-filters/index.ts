@@ -41,6 +41,7 @@ export type { ListSearchParams, ListSortParams } from './url'
 export {
   FILTER_OPERATORS,
   getOperatorsForType,
+  getOperatorsForColumn,
   buildFilterQueryString,
   buildFilterTag,
   buildFilterTagFromCompactKey,

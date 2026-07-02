@@ -2,6 +2,7 @@ import type { DateRange } from 'react-day-picker'
 import { formatCompactCount } from '@/lib/usage/format-metric'
 import {
   fetchProjectUsageMetricSeriesOverview,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
@@ -59,6 +60,7 @@ export async function fetchProjectWebhooksEventsSentOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<WebhooksUsageChartOverview> {
   const overview = await fetchProjectUsageMetricSeriesOverview(
     projectId,
@@ -67,6 +69,7 @@ export async function fetchProjectWebhooksEventsSentOverview(
     interval,
     [],
     0,
+    options,
   )
 
   return {
@@ -79,6 +82,7 @@ export async function fetchProjectWebhooksEventsFailedOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<WebhooksUsageChartOverview> {
   const overview = await fetchProjectUsageMetricSeriesOverview(
     projectId,
@@ -87,6 +91,7 @@ export async function fetchProjectWebhooksEventsFailedOverview(
     interval,
     [],
     0,
+    options,
   )
 
   return {
@@ -99,12 +104,14 @@ export async function fetchProjectWebhooksCountOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<WebhooksUsageChartOverview> {
   const overview = await fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     WEBHOOKS_GAUGE_METRICS,
     interval,
+    options?.queries,
   )
 
   return {

@@ -64,6 +64,8 @@ export interface FilterColumn {
    * Used for Documents DB where payload keys are not fixed by schema. Omit on Tables DB.
    */
   customAttributeSlot?: boolean
+  /** When set, only these operator keys are shown for this column (e.g. usage API allowlists). */
+  allowedOperators?: string[]
 }
 
 export type FilterColumnType =

@@ -117,7 +117,6 @@ export function DatabaseOperationBentoCard({
               countryLookups={null}
               databaseLookup={databaseLookup}
               tableLookup={tableLookup}
-              projectId={projectId}
               isLoading={isLoading}
               isError={isError}
               errorTitle={DATABASE_USAGE_ERROR.title}

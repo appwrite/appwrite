@@ -97,10 +97,17 @@ export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] 
   },
   {
     dimension: 'resourceId',
-    title: 'Resources',
+    title: 'Resource IDs',
     description: 'Bandwidth grouped by resource ID.',
-    metricId: 'breakdown-resource',
+    metricId: 'breakdown-resource-id',
     labelVariant: 'mono',
+  },
+  {
+    dimension: 'resource',
+    title: 'Resource types',
+    description: 'Bandwidth grouped by resource type.',
+    metricId: 'breakdown-resource-type',
+    labelVariant: 'default',
   },
 ] as const
 
@@ -109,6 +116,7 @@ export async function fetchProjectBandwidthBreakdown(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageBreakdownItem[]> {
   const breakdowns = await Promise.all(
     BANDWIDTH_EVENT_METRICS.map((metric) =>
@@ -118,6 +126,7 @@ export async function fetchProjectBandwidthBreakdown(
         dateRange,
         dimension,
         limit,
+        queries,
       ),
     ),
   )

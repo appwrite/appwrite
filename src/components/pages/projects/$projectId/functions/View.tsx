@@ -6,7 +6,7 @@ import {
   useSearch,
   Link,
 } from '@tanstack/react-router'
-import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
@@ -15,6 +15,14 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import {
   useProjectFunctions,
@@ -22,9 +30,12 @@ import {
   useOrganizationPlan,
   useOrganizationScopes,
   fetchProjectFunctions,
+  Dependencies,
   FUNCTIONS_DEFAULT_SORT_BY,
   FUNCTIONS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
@@ -101,7 +112,7 @@ export function View() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
-  useQueryClient()
+  const queryClient = useQueryClient()
   const search = useSearch({ strict: false })
 
   const isFunctionsIndex =
@@ -183,6 +194,10 @@ export function View() {
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [selectedFunctions, setSelectedFunctions] = useState<Set<string>>(
+    new Set(),
+  )
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { viewMode, setViewMode } = useServiceListViewMode('functions')
 
   useEffect(() => {
@@ -536,10 +551,73 @@ export function View() {
     }
   }, [location.search, navigate, projectId, t])
 
+  useEffect(() => {
+    setSelectedFunctions(new Set())
+    setDeleteDialogOpen(false)
+  }, [location.pathname, projectId, urlSearch, filterQueryString])
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (functionIds: string[]) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      await Promise.all(
+        functionIds.map((functionId) =>
+          projectSdk.functions.delete({ functionId }),
+        ),
+      )
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: Dependencies.FUNCTIONS,
+      })
+      toast.success(
+        `Successfully deleted ${selectedFunctions.size} function${selectedFunctions.size > 1 ? 's' : ''}`,
+      )
+      setSelectedFunctions(new Set())
+      setDeleteDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to delete functions')
+    },
+  })
+
+  const handleBulkDelete = () => {
+    if (selectedFunctions.size === 0) return
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmBulkDelete = () => {
+    if (selectedFunctions.size === 0) return
+    bulkDeleteMutation.mutate(Array.from(selectedFunctions))
+  }
+
+  const toggleFunction = (functionId: string) => {
+    const newSelected = new Set(selectedFunctions)
+    if (newSelected.has(functionId)) {
+      newSelected.delete(functionId)
+    } else {
+      newSelected.add(functionId)
+    }
+    setSelectedFunctions(newSelected)
+  }
+
+  const toggleAllFunctions = () => {
+    if (selectedFunctions.size === functions.length) {
+      setSelectedFunctions(new Set())
+    } else {
+      setSelectedFunctions(
+        new Set(functions.map((func) => (func as Models.Function).$id)),
+      )
+    }
+  }
+
   const handleSearchChange = (value: string) => {
     setSearchInput(value)
     setRequestedPage(1)
     setDisplayedPage(1)
+    setSelectedFunctions(new Set())
     // URL is updated by the debounced effect so we don't fetch on every keystroke
   }
 
@@ -761,6 +839,9 @@ export function View() {
                   <FunctionsListTable
                     projectId={projectId!}
                     functions={functions as Models.Function[]}
+                    selectedFunctionIds={selectedFunctions}
+                    onToggleFunction={toggleFunction}
+                    onToggleAll={toggleAllFunctions}
                   />
                 ) : (
                   <div className={RESOURCE_CARD_GRID_CLASSNAME}>
@@ -834,6 +915,7 @@ export function View() {
                   pageSizeOptions={[12, 18, 36, 72]}
                   onPageChange={(page) => {
                     setRequestedPage(page)
+                    setSelectedFunctions(new Set())
                     navigateToFunctionsList({
                       search: urlSearch ?? undefined,
                       query: filterQueryString || undefined,
@@ -849,6 +931,7 @@ export function View() {
                   onPageSizeChange={(size) => {
                     setRequestedPage(1)
                     setDisplayedPage(1)
+                    setSelectedFunctions(new Set())
                     navigateToFunctionsList({
                       search: urlSearch ?? undefined,
                       query: filterQueryString || undefined,
@@ -866,6 +949,66 @@ export function View() {
               </>
             )}
         </>
+
+        {selectedFunctions.size > 0 && (
+          <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
+            <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+              <Badge variant="secondary" className="h-6 px-2.5">
+                {selectedFunctions.size} function
+                {selectedFunctions.size > 1 ? 's' : ''} selected
+              </Badge>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedFunctions(new Set())}
+                  className="h-8 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleteMutation.isPending}
+                  className="h-8 gap-2"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 text-start">
+              <DialogTitle>Delete functions</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                Are you sure you want to delete {selectedFunctions.size}{' '}
+                function{selectedFunctions.size > 1 ? 's' : ''}? This action
+                cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmBulkDelete}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

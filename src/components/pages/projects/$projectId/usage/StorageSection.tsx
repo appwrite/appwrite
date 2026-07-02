@@ -13,6 +13,7 @@ import {
   STORAGE_DOCS_HREF,
   STORAGE_FILE_BREAKDOWN_TITLE,
   STORAGE_FILE_DESCRIPTION,
+  STORAGE_RESOURCE_TYPES_BREAKDOWN_TITLE,
   formatImageTransformationsTotal,
   formatImageTransformationsValue,
   formatStorageBytesTotal,
@@ -140,6 +141,13 @@ export function StorageSection({
     : topConsumersToBreakdownItems(
         imageTransformationsQuery.data?.topConsumers ?? [],
       )
+  const filesResourceTypeBreakdownItems = filesQuery.isError
+    ? []
+    : (filesQuery.data?.resourceTypeBreakdown ?? [])
+  const imageTransformationsResourceTypeBreakdownItems =
+    imageTransformationsQuery.isError
+      ? []
+      : (imageTransformationsQuery.data?.resourceTypeBreakdown ?? [])
 
   return (
     <div className="space-y-6">
@@ -164,6 +172,8 @@ export function StorageSection({
         showBreakdown={showBreakdown}
         breakdownTitle={STORAGE_FILE_BREAKDOWN_TITLE}
         breakdownItems={filesBreakdownItems}
+        resourceTypeBreakdownTitle={STORAGE_RESOURCE_TYPES_BREAKDOWN_TITLE}
+        resourceTypeBreakdownItems={filesResourceTypeBreakdownItems}
         breakdownLookup={storageBreakdownResources?.resources}
         onRetry={handleRetryAll}
         docsHref={STORAGE_DOCS_HREF}
@@ -236,6 +246,8 @@ export function StorageSection({
         showBreakdown={showBreakdown}
         breakdownTitle={IMAGE_TRANSFORMATIONS_BREAKDOWN_TITLE}
         breakdownItems={imageTransformationsBreakdownItems}
+        resourceTypeBreakdownTitle={STORAGE_RESOURCE_TYPES_BREAKDOWN_TITLE}
+        resourceTypeBreakdownItems={imageTransformationsResourceTypeBreakdownItems}
         breakdownLookup={storageBreakdownResources?.resources}
         onRetry={handleRetryAll}
         docsHref={IMAGE_TRANSFORMATIONS_DOCS_HREF}

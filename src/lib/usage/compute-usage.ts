@@ -23,14 +23,14 @@ export const COMPUTE_FUNCTIONS_DOCS_HREF = '/docs/products/functions'
 export const COMPUTE_SITES_DOCS_HREF = '/docs/products/sites'
 export const COMPUTE_DOCS_HREF = COMPUTE_FUNCTIONS_DOCS_HREF
 
-export const COMPUTE_EXECUTIONS_BREAKDOWN_TITLE = 'Top compute consumers'
-export const COMPUTE_GB_HOURS_BREAKDOWN_TITLE = 'Top compute consumers'
+export const COMPUTE_RESOURCE_TYPES_BREAKDOWN_TITLE = 'Resource types'
+export const COMPUTE_EXECUTIONS_BREAKDOWN_TITLE = 'Resource IDs'
+export const COMPUTE_GB_HOURS_BREAKDOWN_TITLE = 'Resource IDs'
 export const COMPUTE_EXECUTIONS_CHART_TITLE = 'Executions over time'
-export const COMPUTE_FUNCTION_EXECUTIONS_BREAKDOWN_TITLE = 'Top executed functions'
-export const COMPUTE_SITE_EXECUTIONS_BREAKDOWN_TITLE = 'Top executed sites'
-export const COMPUTE_FUNCTION_GB_HOURS_BREAKDOWN_TITLE =
-  'Top function compute consumers'
-export const COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE = 'Top site compute consumers'
+export const COMPUTE_FUNCTION_EXECUTIONS_BREAKDOWN_TITLE = 'Resource IDs'
+export const COMPUTE_SITE_EXECUTIONS_BREAKDOWN_TITLE = 'Resource IDs'
+export const COMPUTE_FUNCTION_GB_HOURS_BREAKDOWN_TITLE = 'Resource IDs'
+export const COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE = 'Resource IDs'
 
 export function topConsumersToBreakdownItems(
   topConsumers: UsageTopEndpoint[],

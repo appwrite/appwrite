@@ -10,6 +10,7 @@ import {
   fetchProjectUsageMetricSeriesOverview,
   mergeChartPointsSeries,
   sumUsageChartPoints,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
@@ -101,6 +102,7 @@ export async function fetchProjectRealtimeConnectionsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<RealtimeUsageChartOverview> {
   const overview = await fetchProjectUsageMetricSeriesOverview(
     projectId,
@@ -109,6 +111,7 @@ export async function fetchProjectRealtimeConnectionsOverview(
     interval,
     [],
     0,
+    options,
   )
 
   return {
@@ -125,6 +128,7 @@ export async function fetchProjectRealtimeMessagesOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<RealtimeUsageChartOverview> {
   const overview = await fetchProjectUsageMetricSeriesOverview(
     projectId,
@@ -133,6 +137,7 @@ export async function fetchProjectRealtimeMessagesOverview(
     interval,
     [],
     0,
+    options,
   )
 
   return {
@@ -146,6 +151,7 @@ export async function fetchProjectRealtimeBandwidthOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<RealtimeBandwidthOverview> {
   const [inbound, outbound] = await Promise.all([
     fetchProjectUsageMetricSeriesOverview(
@@ -155,6 +161,7 @@ export async function fetchProjectRealtimeBandwidthOverview(
       interval,
       [],
       0,
+      options,
     ),
     fetchProjectUsageMetricSeriesOverview(
       projectId,
@@ -163,6 +170,7 @@ export async function fetchProjectRealtimeBandwidthOverview(
       interval,
       [],
       0,
+      options,
     ),
   ])
 

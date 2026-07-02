@@ -1,9 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { Flag } from '@appwrite.io/console'
 import { ChevronRight, Globe } from 'lucide-react'
+import { useOptionalUsageFilters } from '@/components/pages/projects/$projectId/usage/usage-filters-context'
 import { HostnameFaviconIcon } from '@/components/global/shared/HostnameFaviconIcon'
 import { useT } from '@/lib/i18n/translate'
 import { cn, truncateMiddle } from '@/lib/utils'
@@ -23,25 +23,21 @@ import {
   getUsageServiceIcon,
 } from '@/lib/usage/appwrite-service-icons'
 import {
-  getComputeBreakdownResourceRoute,
   getComputeBreakdownResourceTypeLabel,
   resolveComputeBreakdownResource,
   type ComputeBreakdownResourceMap,
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
-  getStorageBreakdownResourceRoute,
   getStorageBreakdownResourceTypeLabel,
   resolveStorageBreakdownResource,
   type StorageBreakdownResourceMap,
 } from '@/lib/usage/resolve-storage-breakdown-resources'
 import {
-  getDatabaseBreakdownResourceRoute,
   getDatabaseBreakdownServiceLabel,
   resolveDatabaseBreakdownResource,
   type DatabaseBreakdownResourceMap,
 } from '@/lib/usage/resolve-database-breakdown-resources'
 import {
-  getTableBreakdownResourceRoute,
   getTableBreakdownResourceTypeLabel,
   resolveTableBreakdownResource,
   type TableBreakdownResourceMap,
@@ -59,6 +55,11 @@ import {
   formatHttpMethodBadgeLabel,
   getHttpMethodBadgeVariant,
 } from '@/lib/http-method-badge'
+import {
+  formatUsageResourceTypeLabel,
+  getUsageResourceFilterEntries,
+  type UsageBreakdownFilterEntry,
+} from '@/lib/usage/usage-resource-filters'
 
 export const PATH_DISPLAY_MAX = 42
 
@@ -106,6 +107,9 @@ export function formatBreakdownLabel(
   }
   if (dimension === 'service') {
     return formatUsageServiceLabel(label)
+  }
+  if (dimension === 'resource') {
+    return formatUsageResourceTypeLabel(label)
   }
   if (labelVariant === 'mono') {
     return truncateMiddle(compactUsagePathIds(label), PATH_DISPLAY_MAX)
@@ -171,23 +175,16 @@ function UsageServiceIcon({ service }: { service: string }) {
 type BreakdownResourceRowLabelProps = {
   typeLabel: string
   name: string
-  route?: {
-    to: string
-    params: Record<string, string>
-  } | null
   fullTitle?: string
 }
 
 function BreakdownResourceRowLabel({
   typeLabel,
   name,
-  route,
   fullTitle,
 }: BreakdownResourceRowLabelProps) {
   const t = useT()
   const title = fullTitle ?? `${typeLabel} / ${name}`
-  const nameClassName =
-    'min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary'
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
@@ -198,20 +195,12 @@ function BreakdownResourceRowLabel({
         className="h-3 w-3 shrink-0 text-muted-foreground/70"
         aria-hidden
       />
-      {route ? (
-        <Link
-          to={route.to}
-          params={route.params}
-          className={nameClassName}
-          title={title}
-        >
-          {name}
-        </Link>
-      ) : (
-        <span className={nameClassName} title={title}>
-          {name}
-        </span>
-      )}
+      <span
+        className="min-w-0 truncate text-[12px] font-medium text-foreground/70"
+        title={title}
+      >
+        {name}
+      </span>
     </div>
   )
 }
@@ -225,9 +214,9 @@ type UsageBreakdownRowProps = {
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
   tableLookup?: TableBreakdownResourceMap | null
-  projectId?: string
   maxCount: number
   formatValue?: (value: number) => string
+  onAddFilter?: (filters: UsageBreakdownFilterEntry[]) => void
 }
 
 export function UsageBreakdownRow({
@@ -239,9 +228,9 @@ export function UsageBreakdownRow({
   computeLookup,
   storageLookup,
   tableLookup,
-  projectId,
   maxCount,
   formatValue = formatRequestsValue,
+  onAddFilter,
 }: UsageBreakdownRowProps) {
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
@@ -284,29 +273,46 @@ export function UsageBreakdownRow({
       ? resolveCountryCode(item.label, countryLookups)
       : null
   const showFavicon = showHostnameFavicons
-  const databaseRoute =
-    databaseResource && projectId
-      ? getDatabaseBreakdownResourceRoute(projectId, databaseResource)
-      : null
-  const computeRoute =
-    computeResource && projectId
-      ? getComputeBreakdownResourceRoute(projectId, computeResource)
-      : null
-  const storageRoute =
-    storageResource && projectId
-      ? getStorageBreakdownResourceRoute(projectId, storageResource)
-      : null
-  const tableRoute =
-    tableResource && projectId
-      ? getTableBreakdownResourceRoute(projectId, tableResource)
-      : null
+  const canAddFilter = !!onAddFilter && !!item.label.trim()
+  const handleAddFilter = () => {
+    if (!canAddFilter || !onAddFilter) return
+
+    if (dimension === 'resourceId') {
+      onAddFilter(
+        getUsageResourceFilterEntries(item.label, {
+          computeResource,
+          storageResource,
+          tableResource,
+          databaseResource,
+        }),
+      )
+      return
+    }
+
+    onAddFilter([{ dimension, value: item.label }])
+  }
 
   return (
     <div
       className={cn(
         overviewTopBreakdownRowClass,
         'group relative overflow-hidden transition-colors hover:bg-accent/50',
+        canAddFilter && 'cursor-pointer',
       )}
+      onClick={canAddFilter ? handleAddFilter : undefined}
+      onKeyDown={
+        canAddFilter
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                handleAddFilter()
+              }
+            }
+          : undefined
+      }
+      role={canAddFilter ? 'button' : undefined}
+      tabIndex={canAddFilter ? 0 : undefined}
+      title={canAddFilter ? `Filter by ${displayLabel}` : displayLabel}
     >
       <div
         className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
@@ -334,27 +340,11 @@ export function UsageBreakdownRow({
                 computeResource.type,
               )}
               name={computeResource.name}
-              route={
-                computeRoute
-                  ? {
-                      to: computeRoute.to,
-                      params: computeRoute.params as Record<string, string>,
-                    }
-                  : null
-              }
             />
           ) : storageResource ? (
             <BreakdownResourceRowLabel
               typeLabel={getStorageBreakdownResourceTypeLabel()}
               name={storageResource.name}
-              route={
-                storageRoute
-                  ? {
-                      to: storageRoute.to,
-                      params: storageRoute.params as Record<string, string>,
-                    }
-                  : null
-              }
             />
           ) : tableResource ? (
             <BreakdownResourceRowLabel
@@ -362,14 +352,6 @@ export function UsageBreakdownRow({
                 tableResource.databaseType,
               )}
               name={tableResource.name}
-              route={
-                tableRoute
-                  ? {
-                      to: tableRoute.to,
-                      params: tableRoute.params,
-                    }
-                  : null
-              }
             />
           ) : databaseResource ? (
             <BreakdownResourceRowLabel
@@ -377,14 +359,6 @@ export function UsageBreakdownRow({
                 databaseResource.databaseType,
               )}
               name={databaseResource.name}
-              route={
-                databaseRoute
-                  ? {
-                      to: databaseRoute.to,
-                      params: databaseRoute.params as Record<string, string>,
-                    }
-                  : null
-              }
             />
           ) : showMethodBadges ? (
             <Badge
@@ -475,10 +449,10 @@ type UsageBreakdownRowsListProps = {
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
   tableLookup?: TableBreakdownResourceMap | null
-  projectId?: string
   variant?: 'card' | 'drawer'
   className?: string
   formatValue?: (value: number) => string
+  onAddFilter?: (filters: UsageBreakdownFilterEntry[]) => void
 }
 
 export function UsageBreakdownRowsList({
@@ -490,11 +464,14 @@ export function UsageBreakdownRowsList({
   computeLookup,
   storageLookup,
   tableLookup,
-  projectId,
   variant = 'card',
   className,
   formatValue,
+  onAddFilter,
 }: UsageBreakdownRowsListProps) {
+  const usageFilters = useOptionalUsageFilters()
+  const handleAddFilter =
+    onAddFilter ?? usageFilters?.onAddBreakdownFilter
   const maxCount = Math.max(...items.map((item) => item.count), 1)
 
   const itemSlots = useMemo(() => {
@@ -532,9 +509,9 @@ export function UsageBreakdownRowsList({
             computeLookup={computeLookup}
             storageLookup={storageLookup}
             tableLookup={tableLookup}
-            projectId={projectId}
             maxCount={maxCount}
             formatValue={formatValue}
+            onAddFilter={handleAddFilter}
           />
         )
       })}

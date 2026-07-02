@@ -24,10 +24,17 @@ export const DATABASE_OPERATIONS_BREAKDOWN_SECTIONS: readonly DatabaseOperations
   [
     {
       dimension: 'resourceId',
-      title: 'Databases',
-      description: 'Operations grouped by database.',
-      metricId: 'breakdown-databases',
+      title: 'Resource IDs',
+      description: 'Operations grouped by database resource ID.',
+      metricId: 'breakdown-resource-id',
       labelVariant: 'mono',
+    },
+    {
+      dimension: 'resource',
+      title: 'Resource types',
+      description: 'Operations grouped by resource type.',
+      metricId: 'breakdown-resource-type',
+      labelVariant: 'default',
     },
     {
       dimension: 'service',
@@ -51,6 +58,7 @@ export async function fetchProjectDatabaseReadsBreakdown(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageBreakdownItem[]> {
   const breakdowns = await Promise.all(
     DATABASE_READS_EVENT_METRICS.map((metric) =>
@@ -60,6 +68,7 @@ export async function fetchProjectDatabaseReadsBreakdown(
         dateRange,
         dimension,
         limit,
+        queries,
       ),
     ),
   )
@@ -72,6 +81,7 @@ export async function fetchProjectDatabaseWritesBreakdown(
   dateRange: DateRange | undefined,
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageBreakdownItem[]> {
   const breakdowns = await Promise.all(
     DATABASE_WRITES_EVENT_METRICS.map((metric) =>
@@ -81,6 +91,7 @@ export async function fetchProjectDatabaseWritesBreakdown(
         dateRange,
         dimension,
         limit,
+        queries,
       ),
     ),
   )

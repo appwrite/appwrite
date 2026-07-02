@@ -8,6 +8,7 @@ import {
   fetchProjectUsageMetricSeriesOverview,
   mergeChartPointsSeries,
   sumUsageChartPoints,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
@@ -134,6 +135,7 @@ async function fetchMergedEventMetricsChartOverview(
   dateRange: DateRange | undefined,
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<DatabaseUsageChartOverview> {
   const results = await Promise.all(
     metrics.map((metric) =>
@@ -144,6 +146,7 @@ async function fetchMergedEventMetricsChartOverview(
         interval,
         [],
         0,
+        options,
       ),
     ),
   )
@@ -169,12 +172,14 @@ export async function fetchProjectDatabaseReadsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<DatabaseUsageChartOverview> {
   return fetchMergedEventMetricsChartOverview(
     projectId,
     dateRange,
     DATABASE_READS_EVENT_METRICS,
     interval,
+    options,
   )
 }
 
@@ -183,12 +188,14 @@ export async function fetchProjectDatabaseWritesOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<DatabaseUsageChartOverview> {
   return fetchMergedEventMetricsChartOverview(
     projectId,
     dateRange,
     DATABASE_WRITES_EVENT_METRICS,
     interval,
+    options,
   )
 }
 
@@ -197,12 +204,14 @@ export async function fetchProjectDatabaseCollectionsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<DatabaseUsageChartOverview> {
   return fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     DATABASE_COLLECTIONS_GAUGE_METRICS,
     interval,
+    options?.queries,
   )
 }
 
@@ -211,11 +220,13 @@ export async function fetchProjectDatabaseDocumentsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<DatabaseUsageChartOverview> {
   return fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     DATABASE_DOCUMENTS_GAUGE_METRICS,
     interval,
+    options?.queries,
   )
 }

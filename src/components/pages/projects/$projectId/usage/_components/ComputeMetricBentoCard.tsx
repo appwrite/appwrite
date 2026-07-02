@@ -17,6 +17,9 @@ const COMPUTE_USAGE_ERROR = {
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const
 
+const breakdownRowGridClass =
+  'grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0'
+
 type ComputeMetricBentoCardProps = {
   projectId: string
   title: string
@@ -34,6 +37,8 @@ type ComputeMetricBentoCardProps = {
   showBreakdown: boolean
   breakdownTitle: string
   breakdownItems: UsageBreakdownItem[]
+  resourceTypeBreakdownTitle: string
+  resourceTypeBreakdownItems: UsageBreakdownItem[]
   breakdownLookup: ComputeBreakdownResourceMap | undefined
   breakdownTitleAddon?: React.ReactNode
   onRetry: () => void
@@ -57,6 +62,8 @@ export function ComputeMetricBentoCard({
   showBreakdown,
   breakdownTitle,
   breakdownItems,
+  resourceTypeBreakdownTitle,
+  resourceTypeBreakdownItems,
   breakdownLookup,
   breakdownTitleAddon,
   onRetry,
@@ -64,33 +71,27 @@ export function ComputeMetricBentoCard({
 }: ComputeMetricBentoCardProps) {
   return (
     <UsageMetricCardShell>
-      <div
-        className={cn(
-          'grid grid-cols-1 divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
-        )}
-      >
-        <div className="lg:col-span-2">
-          <UsageTimeSeriesChartCard
-            embedded
-            title={title}
-            description={description}
-            unitLabel={unitLabel}
-            chartGradientId={chartGradientId}
-            total={total}
-            changePercent={changePercent}
-            chartPoints={chartPoints}
-            isLoading={isLoading}
-            isError={isError}
-            errorTitle={COMPUTE_USAGE_ERROR.title}
-            errorMessage={COMPUTE_USAGE_ERROR.message}
-            formatTotal={formatTotal}
-            formatValue={formatValue}
-            axisFormat={axisFormat}
-            onRetry={onRetry}
-          />
-        </div>
+      <UsageTimeSeriesChartCard
+        embedded
+        title={title}
+        description={description}
+        unitLabel={unitLabel}
+        chartGradientId={chartGradientId}
+        total={total}
+        changePercent={changePercent}
+        chartPoints={chartPoints}
+        isLoading={isLoading}
+        isError={isError}
+        errorTitle={COMPUTE_USAGE_ERROR.title}
+        errorMessage={COMPUTE_USAGE_ERROR.message}
+        formatTotal={formatTotal}
+        formatValue={formatValue}
+        axisFormat={axisFormat}
+        onRetry={onRetry}
+      />
 
-        {showBreakdown ? (
+      {showBreakdown ? (
+        <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
           <UsageBreakdownCard
             embedded
             title={breakdownTitle}
@@ -100,7 +101,6 @@ export function ComputeMetricBentoCard({
             labelVariant="mono"
             countryLookups={null}
             computeLookup={breakdownLookup}
-            projectId={projectId}
             isLoading={isLoading}
             isError={isError}
             errorTitle={COMPUTE_USAGE_ERROR.title}
@@ -109,8 +109,24 @@ export function ComputeMetricBentoCard({
             onRetry={onRetry}
             titleAddon={breakdownTitleAddon}
           />
-        ) : null}
-      </div>
+          <UsageBreakdownCard
+            embedded
+            title={resourceTypeBreakdownTitle}
+            description={description}
+            dimension="resource"
+            items={resourceTypeBreakdownItems}
+            labelVariant="default"
+            countryLookups={null}
+            computeLookup={breakdownLookup}
+            isLoading={isLoading}
+            isError={isError}
+            errorTitle={COMPUTE_USAGE_ERROR.title}
+            errorMessage={COMPUTE_USAGE_ERROR.message}
+            formatValue={formatValue}
+            onRetry={onRetry}
+          />
+        </div>
+      ) : null}
 
       <UsageMetricCardFooter description={description} docsHref={docsHref} />
     </UsageMetricCardShell>

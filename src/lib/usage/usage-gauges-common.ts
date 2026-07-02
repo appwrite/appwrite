@@ -28,6 +28,7 @@ interface ListUsageGaugeGroupsParams {
   startAt: string
   endAt: string
   dimensions?: string[]
+  queries?: string[]
   resourceId?: string
   teamId?: string
 }
@@ -47,6 +48,7 @@ async function listUsageGaugeGroupsByMetric(
     startAt: string
     endAt: string
     dimensions?: string[]
+    queries?: string[]
     resourceId?: string
     teamId?: string
   } = {
@@ -60,6 +62,9 @@ async function listUsageGaugeGroupsByMetric(
   }
   if (params.dimensions?.length) {
     request.dimensions = params.dimensions
+  }
+  if (params.queries?.length) {
+    request.queries = params.queries
   }
   if (params.resourceId) {
     request.resourceId = params.resourceId
@@ -93,33 +98,45 @@ async function listUsageGaugeGroups(
   return groupsByMetric.get(params.metric) ?? []
 }
 
+function mapGaugeBreakdownGroups(
+  groups: Models.UsageDataPoint[],
+  dimension: 'resourceId' | 'resource',
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): UsageTopEndpoint[] {
+  const latestByKey = new Map<string, { value: number; timeMs: number }>()
+
+  for (const group of groups) {
+    const key =
+      dimension === 'resource'
+        ? group.resource?.trim()
+        : group.resourceId?.trim()
+    if (!key) continue
+
+    const timeMs = parseISO(group.time).getTime()
+    const existing = latestByKey.get(key)
+    if (!existing || timeMs >= existing.timeMs) {
+      latestByKey.set(key, { value: group.value, timeMs })
+    }
+  }
+
+  return Array.from(latestByKey.entries())
+    .sort((a, b) => b[1].value - a[1].value)
+    .slice(0, limit)
+    .map(([key, { value }]) => ({
+      id: key,
+      method: '',
+      statusCode: 0,
+      path: key,
+      count: value,
+    }))
+}
+
+/** @deprecated Use mapGaugeBreakdownGroups */
 function mapGaugeResourceBreakdownGroups(
   groups: Models.UsageDataPoint[],
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
-  const latestByResource = new Map<string, { value: number; timeMs: number }>()
-
-  for (const group of groups) {
-    const resourceId = group.resourceId?.trim()
-    if (!resourceId) continue
-
-    const timeMs = parseISO(group.time).getTime()
-    const existing = latestByResource.get(resourceId)
-    if (!existing || timeMs >= existing.timeMs) {
-      latestByResource.set(resourceId, { value: group.value, timeMs })
-    }
-  }
-
-  return Array.from(latestByResource.entries())
-    .sort((a, b) => b[1].value - a[1].value)
-    .slice(0, limit)
-    .map(([resourceId, { value }]) => ({
-      id: resourceId,
-      method: '',
-      statusCode: 0,
-      path: resourceId,
-      count: value,
-    }))
+  return mapGaugeBreakdownGroups(groups, 'resourceId', limit)
 }
 
 /** Latest gauge snapshot in a window (most recent by time, client-side). */
@@ -172,15 +189,21 @@ export async function fetchUsageGaugeBreakdown(
   endAt: Date,
   dimensions: readonly string[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  queries?: string[],
 ): Promise<UsageTopEndpoint[]> {
   const groups = await listUsageGaugeGroups(projectId, {
     metric,
     dimensions: [...dimensions],
     startAt: startAt.toISOString(),
     endAt: endAt.toISOString(),
+    queries,
   })
 
-  return mapGaugeResourceBreakdownGroups(groups, breakdownLimit)
+  return mapGaugeBreakdownGroups(
+    groups,
+    dimensions[0] === 'resource' ? 'resource' : 'resourceId',
+    breakdownLimit,
+  )
 }
 
 async function listUsageGaugeGroupsForMetrics(
@@ -212,6 +235,7 @@ export async function fetchProjectUsageGaugeChartSeries(
   dateRange: DateRange | undefined,
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
 ): Promise<{
   chartPoints: ProjectUsageChartOverview['chartPoints']
   previousChartPoints: ProjectUsageChartOverview['chartPoints']
@@ -233,11 +257,13 @@ export async function fetchProjectUsageGaugeChartSeries(
       interval: resolvedInterval,
       startAt: from.toISOString(),
       endAt: to.toISOString(),
+      queries,
     }),
     listUsageGaugeGroupsForMetrics(projectId, metrics, {
       interval: resolvedInterval,
       startAt: previousFrom.toISOString(),
       endAt: previousTo.toISOString(),
+      queries,
     }),
   ])
 
@@ -266,6 +292,7 @@ export async function fetchProjectUsageGaugesChartOverview(
   dateRange: DateRange | undefined,
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  queries?: string[],
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId || metrics.length === 0) {
     return { changePercent: 0, chartPoints: [] }
@@ -277,6 +304,7 @@ export async function fetchProjectUsageGaugesChartOverview(
       dateRange,
       metrics,
       interval,
+      queries,
     )
 
   const currentLatest =
@@ -302,7 +330,7 @@ export async function fetchProjectUsageGaugeSnapshotOverview(
     dimensions: readonly string[]
     limit?: number
   },
-  options?: { includeBreakdown?: boolean },
+  options?: { includeBreakdown?: boolean; queries?: string[] },
 ): Promise<ProjectUsageGaugeOverview> {
   if (!projectId) {
     return { changePercent: 0, latestValue: 0, topConsumers: [] }
@@ -317,12 +345,14 @@ export async function fetchProjectUsageGaugeSnapshotOverview(
     options?.includeBreakdown !== false &&
     breakdown != null &&
     areUsageBreakdownQueriesEnabled()
+  const queries = options?.queries
 
   const [snapshotGroups, topConsumers] = await Promise.all([
     listUsageGaugeGroups(projectId, {
       metric,
       startAt: previousFrom.toISOString(),
       endAt: to.toISOString(),
+      queries,
     }),
     includeBreakdown
       ? fetchUsageGaugeBreakdown(
@@ -332,6 +362,7 @@ export async function fetchProjectUsageGaugeSnapshotOverview(
           to,
           breakdown!.dimensions,
           breakdown!.limit ?? OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+          queries,
         )
       : Promise.resolve([]),
   ])

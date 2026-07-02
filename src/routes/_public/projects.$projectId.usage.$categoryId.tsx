@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { UsageCategoryView } from '@/components/pages/projects/$projectId/usage/CategoryView'
 import { useUsageFilters } from '@/components/pages/projects/$projectId/usage/usage-filters-context'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 import {
   findUsageCategory,
   getDefaultUsageCategoryId,
@@ -12,6 +13,7 @@ import {
 export const Route = createFileRoute(
   '/_public/projects/$projectId/usage/$categoryId',
 )({
+  validateSearch: listSearchSchema,
   beforeLoad: ({ params }) => {
     const { projectId, categoryId } = params
     if (!isValidUsageCategory(categoryId)) {

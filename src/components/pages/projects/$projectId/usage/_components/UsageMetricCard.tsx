@@ -109,7 +109,6 @@ type UsageBreakdownCardProps = {
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
   tableLookup?: TableBreakdownResourceMap | null
-  projectId?: string
   isLoading: boolean
   isError: boolean
   errorTitle: string
@@ -134,7 +133,6 @@ export function UsageBreakdownCard({
   computeLookup,
   storageLookup,
   tableLookup,
-  projectId,
   isLoading,
   isError,
   errorTitle,
@@ -214,7 +212,6 @@ export function UsageBreakdownCard({
               computeLookup={computeLookup}
               storageLookup={storageLookup}
               tableLookup={tableLookup}
-              projectId={projectId}
               variant="card"
               formatValue={formatValue}
             />

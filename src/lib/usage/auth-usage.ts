@@ -7,6 +7,7 @@ import {
   computeChangePercent,
   fetchProjectUsageMetricSeriesOverview,
   sumUsageChartPoints,
+  type FetchUsageOverviewOptions,
   type UsageChartInterval,
   type UsageChartPoint,
 } from '@/lib/usage/usage-events-common'
@@ -107,12 +108,14 @@ export async function fetchProjectAuthMauOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<AuthUsageChartOverview> {
   const overview = await fetchProjectUsageGaugesChartOverview(
     projectId,
     dateRange,
     AUTH_MAU_GAUGE_METRICS,
     interval,
+    options?.queries,
   )
 
   return {
@@ -126,6 +129,7 @@ export async function fetchProjectAuthOtpOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<AuthUsageChartOverview> {
   const overview = await fetchProjectUsageMetricSeriesOverview(
     projectId,
@@ -134,6 +138,7 @@ export async function fetchProjectAuthOtpOverview(
     interval,
     [],
     0,
+    options,
   )
 
   return {
@@ -147,6 +152,7 @@ export async function fetchProjectAuthSignupsOverview(
   projectId: string,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  options?: FetchUsageOverviewOptions,
 ): Promise<AuthUsageChartOverview> {
   const { chartPoints, previousChartPoints } =
     await fetchProjectUsageGaugeChartSeries(
@@ -154,6 +160,7 @@ export async function fetchProjectAuthSignupsOverview(
       dateRange,
       [AUTH_USERS_GAUGE_METRIC],
       interval,
+      options?.queries,
     )
 
   const previousBaseline =

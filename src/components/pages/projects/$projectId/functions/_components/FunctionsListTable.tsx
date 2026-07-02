@@ -9,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -90,11 +92,17 @@ export {
 type FunctionsListTableProps = {
   projectId: string
   functions: Models.Function[]
+  selectedFunctionIds: Set<string>
+  onToggleFunction: (functionId: string) => void
+  onToggleAll: () => void
 }
 
 export function FunctionsListTable({
   projectId,
   functions,
+  selectedFunctionIds,
+  onToggleFunction,
+  onToggleAll,
 }: FunctionsListTableProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -104,6 +112,15 @@ export function FunctionsListTable({
       <Table>
         <TableHeader>
           <TableRow className="border-b border-border hover:bg-transparent">
+            <TableHead className="w-[40px] px-4">
+              <Checkbox
+                checked={
+                  functions.length > 0 &&
+                  selectedFunctionIds.size === functions.length
+                }
+                onCheckedChange={onToggleAll}
+              />
+            </TableHead>
             <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('Function')}
             </TableHead>
@@ -135,7 +152,12 @@ export function FunctionsListTable({
                 func={{ $id: func.$id, name: func.name }}
               >
                 <TableRow
-                  className="cursor-pointer border-b border-border/50 transition-colors hover:bg-muted/30"
+                  className={cn(
+                    'cursor-pointer border-b border-border/50 transition-colors',
+                    selectedFunctionIds.has(func.$id)
+                      ? 'bg-muted'
+                      : 'hover:bg-muted/30',
+                  )}
                   onClick={(event) => {
                     const target = event.target as HTMLElement
                     if (
@@ -151,6 +173,15 @@ export function FunctionsListTable({
                     })
                   }}
                 >
+                  <TableCell
+                    onClick={(event) => event.stopPropagation()}
+                    className="px-4 py-3"
+                  >
+                    <Checkbox
+                      checked={selectedFunctionIds.has(func.$id)}
+                      onCheckedChange={() => onToggleFunction(func.$id)}
+                    />
+                  </TableCell>
                   <TableCell className="px-4 py-3">
                     <Link
                       to="/projects/$projectId/functions/$functionId"

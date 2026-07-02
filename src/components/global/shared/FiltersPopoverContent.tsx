@@ -11,6 +11,7 @@ import {
   bytesToSizeFilterInput,
   encodeSort,
   getOperatorsForType,
+  getOperatorsForColumn,
   SIZE_FILTER_UNITS,
   sizeFilterToBytes,
 } from '@/lib/table-filters'
@@ -193,11 +194,7 @@ export function FiltersPopoverContent({
   const firstColumnId = columns[0]?.id ?? ''
   const firstCol = columns[0]
   const firstOperatorKey = firstColumnId
-    ? (getOperatorsForType(firstCol!.type, {
-        fulltextSearchable: !!firstCol!.fulltextSearchable,
-        enumOptional:
-          firstCol!.type === 'enum' ? firstCol!.optional : undefined,
-      })[0]?.key ?? '')
+    ? (getOperatorsForColumn(firstCol!)[0]?.key ?? '')
     : ''
   const [filterColumnId, setFilterColumnId] = useState<string>(
     () => firstColumnId,
@@ -219,10 +216,7 @@ export function FiltersPopoverContent({
     const first = columns[0]
     if (first) {
       setFilterColumnId(first.id)
-      const ops = getOperatorsForType(first.type, {
-        fulltextSearchable: !!first.fulltextSearchable,
-        enumOptional: first.type === 'enum' ? first.optional : undefined,
-      })
+      const ops = getOperatorsForColumn(first)
       setFilterOperatorKey(ops[0]?.key ?? '')
     }
     setFilterValue('')
@@ -236,10 +230,7 @@ export function FiltersPopoverContent({
   useEffect(() => {
     if (columns.length > 0 && !filterColumnId) {
       const first = columns[0]
-      const ops = getOperatorsForType(first.type, {
-        fulltextSearchable: !!first.fulltextSearchable,
-        enumOptional: first.type === 'enum' ? first.optional : undefined,
-      })
+      const ops = getOperatorsForColumn(first)
       setFilterColumnId(first.id)
       setFilterOperatorKey(ops[0]?.key ?? '')
     }
@@ -499,11 +490,9 @@ export function FiltersPopoverContent({
       ? customDocumentAttrType
       : (col?.type ?? 'string')
   const op = col
-    ? getOperatorsForType(valueColumnType, {
-        fulltextSearchable:
-          col.customAttributeSlot === true ? false : !!col.fulltextSearchable,
-        enumOptional: valueColumnType === 'enum' ? col.optional : undefined,
-      }).find((o) => o.key === filterOperatorKey)
+    ? getOperatorsForColumn(col, valueColumnType).find(
+        (operator) => operator.key === filterOperatorKey,
+      )
     : null
   const needsValue = col && op && !op.noValue
   const isBetweenOp =
@@ -952,16 +941,7 @@ export function FiltersPopoverContent({
                     column?.customAttributeSlot === true
                       ? customDocumentAttrType
                       : (column?.type ?? 'string')
-                  const firstOp = column
-                    ? getOperatorsForType(vt, {
-                        fulltextSearchable:
-                          column.customAttributeSlot === true
-                            ? false
-                            : !!column.fulltextSearchable,
-                        enumOptional:
-                          vt === 'enum' ? column.optional : undefined,
-                      })[0]
-                    : null
+                  const firstOp = column ? getOperatorsForColumn(column, vt)[0] : null
                   setFilterOperatorKey(firstOp?.key ?? '')
                 }}
                 items={columns.map((c) => ({ value: c.id, label: t(c.title) }))}
@@ -990,14 +970,10 @@ export function FiltersPopoverContent({
                           column.customAttributeSlot === true
                             ? customDocumentAttrType
                             : column.type
-                        return getOperatorsForType(vt, {
-                          fulltextSearchable:
-                            column.customAttributeSlot === true
-                              ? false
-                              : !!column.fulltextSearchable,
-                          enumOptional:
-                            vt === 'enum' ? column.optional : undefined,
-                        }).map((op) => ({ value: op.key, label: t(op.label) }))
+                        return getOperatorsForColumn(column, vt).map((operator) => ({
+                          value: operator.key,
+                          label: t(operator.label),
+                        }))
                       })()
                     : []
                 }
