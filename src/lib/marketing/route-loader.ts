@@ -1,8 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import type { Models } from '@appwrite.io/console'
 import {
   ensureConsoleAccountQueryData,
+  getConsoleAccountFromCache,
   isConsoleAccountQuerySettled,
   refreshConsoleAccountAfterAuth,
   shouldRevalidateConsoleAccount,
@@ -15,21 +17,26 @@ export function assertMarketingProfileEnabled() {
   }
 }
 
+async function prefetchOptionalAuthOrganizationPlan(
+  queryClient: QueryClient,
+  account: Models.User,
+) {
+  const orgId = account.prefs?.organization as string | undefined
+  if (!orgId) return
+  await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
+}
+
 export async function prefetchOptionalAuthHeaderData(
   queryClient: QueryClient,
 ) {
   if (typeof window === 'undefined') return
 
-  if (shouldRevalidateConsoleAccount(queryClient)) {
-    try {
-      const account = await refreshConsoleAccountAfterAuth(queryClient)
-      const orgId = account.prefs?.organization as string | undefined
-      if (orgId) {
-        await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
-      }
-    } catch {
-      // Unauthenticated or optional fetch errors — header handles guest state.
-    }
+  const cachedAccount = getConsoleAccountFromCache(queryClient)
+  if (cachedAccount && '$id' in cachedAccount) {
+    await prefetchOptionalAuthOrganizationPlan(
+      queryClient,
+      cachedAccount as Models.User,
+    )
     return
   }
 
@@ -37,13 +44,20 @@ export async function prefetchOptionalAuthHeaderData(
     return
   }
 
+  if (shouldRevalidateConsoleAccount(queryClient)) {
+    try {
+      const account = await refreshConsoleAccountAfterAuth(queryClient)
+      await prefetchOptionalAuthOrganizationPlan(queryClient, account)
+    } catch {
+      // Unauthenticated or optional fetch errors — header handles guest state.
+    }
+    return
+  }
+
   try {
     const account = await ensureConsoleAccountQueryData(queryClient)
     if (!account) return
-    const orgId = account.prefs?.organization as string | undefined
-    if (orgId) {
-      await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
-    }
+    await prefetchOptionalAuthOrganizationPlan(queryClient, account)
   } catch {
     // Unauthenticated or optional fetch errors — header handles guest state.
   }

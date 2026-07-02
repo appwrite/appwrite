@@ -8,14 +8,11 @@ import {
   getThreadsCanonicalUrl,
 } from '@/lib/threads/seo'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 
-export const Route = createFileRoute('/threads/authors/$authorId')({
+export const Route = createFileRoute('/_marketing/threads/authors/$authorId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ context, params }) => {
-    await marketingPageLoader(context.queryClient)
 
     let author
     try {
@@ -79,9 +76,6 @@ export const Route = createFileRoute('/threads/authors/$authorId')({
 function ThreadsAuthorPage() {
   const pageData = Route.useLoaderData()
 
-  return (
-    <MarketingPageShell>
-      <AuthorView {...pageData} />
-    </MarketingPageShell>
-  )
+  return (<AuthorView {...pageData} />
+    )
 }

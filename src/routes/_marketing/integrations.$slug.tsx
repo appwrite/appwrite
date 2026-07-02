@@ -3,14 +3,11 @@ import { DetailView } from '@/components/pages/integrations/DetailView'
 import { getIntegration } from '@/lib/integrations/content'
 import { getIntegrationDetailRouteMetaTags } from '@/lib/integrations/route-meta'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 
-export const Route = createFileRoute('/integrations/$slug')({
+export const Route = createFileRoute('/_marketing/integrations/$slug')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ context, params }) => {
-    await marketingPageLoader(context.queryClient)
 
     const integration = getIntegration(params.slug)
     if (!integration) {
@@ -31,9 +28,6 @@ export const Route = createFileRoute('/integrations/$slug')({
 function IntegrationDetailPage() {
   const { integration } = Route.useLoaderData()
 
-  return (
-    <MarketingPageShell>
-      <DetailView integration={integration} />
-    </MarketingPageShell>
-  )
+  return (<DetailView integration={integration} />
+    )
 }

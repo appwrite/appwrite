@@ -65,6 +65,7 @@ import {
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { getSeoRobotsMetaTags } from '@/lib/seo/indexing'
 import { I18nProvider } from '@/lib/i18n'
+import { MarketingSiteLayoutGate } from '@/lib/marketing/MarketingSiteLayoutGate'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -456,7 +457,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                               <PromoBannerProvider>
                                 <div className="flex w-full min-w-0 overflow-hidden root-container">
                                   <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                    {children}
+                                    <MarketingSiteLayoutGate>
+                                      {children}
+                                    </MarketingSiteLayoutGate>
                                   </div>
                                   <ConsoleRightPane />
                                 </div>
@@ -471,7 +474,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                             <PromoBannerProvider>
                               <div className="flex w-full min-w-0 overflow-hidden root-container">
                                 <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                  {children}
+                                  <MarketingSiteLayoutGate>
+                                    {children}
+                                  </MarketingSiteLayoutGate>
                                 </div>
                                 <ConsoleRightPane />
                               </div>

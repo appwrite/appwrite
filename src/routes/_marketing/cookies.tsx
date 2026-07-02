@@ -2,12 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { LegalPolicyView } from '@/components/pages/legal/View'
 import cookiesContent from '@/content/legal/cookies.md?raw'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import { useT } from '@/lib/i18n/translate'
 
-export const Route = createFileRoute('/cookies')({
+export const Route = createFileRoute('/_marketing/cookies')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
@@ -18,20 +16,16 @@ export const Route = createFileRoute('/cookies')({
     }),
   }),
   loader: async ({ context }) => {
-    await marketingPageLoader(context.queryClient)
   },
   component: CookiesPage,
 })
 
 function CookiesPage() {
   const t = useT()
-  return (
-    <MarketingPageShell>
-      <LegalPolicyView
+  return (<LegalPolicyView
         title={t('Cookies Policy')}
         content={cookiesContent}
         currentPolicy="cookies"
       />
-    </MarketingPageShell>
-  )
+    )
 }

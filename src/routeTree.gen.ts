@@ -9,44 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as StartupsRouteImport } from './routes/startups'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PartnersRouteImport } from './routes/partners'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as GeneratorRouteImport } from './routes/generator'
-import { Route as EnterpriseRouteImport } from './routes/enterprise'
-import { Route as EducationRouteImport } from './routes/education'
-import { Route as DomainsRouteImport } from './routes/domains'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DiscordRouteImport } from './routes/discord'
-import { Route as CookiesRouteImport } from './routes/cookies'
-import { Route as CompanyRouteImport } from './routes/company'
-import { Route as CommunityRouteImport } from './routes/community'
-import { Route as BaaRouteImport } from './routes/baa'
-import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as ProtectedRouteImport } from './routes/_protected'
+import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AuthRouteImport } from './routes/_auth'
-import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
-import { Route as IntegrationsIndexRouteImport } from './routes/integrations.index'
 import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
-import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
-import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
-import { Route as ThreadsThreadIdRouteImport } from './routes/threads.$threadId'
-import { Route as ProductsProductIdRouteImport } from './routes/products.$productId'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
-import { Route as IntegrationsSlugRouteImport } from './routes/integrations.$slug'
 import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
 import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as DocsTutorialsRouteImport } from './routes/docs/tutorials'
 import { Route as DocsQuickStartsRouteImport } from './routes/docs/quick-starts'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
-import { Route as BlogPageRouteImport } from './routes/blog.$page'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicInitRouteImport } from './routes/_public/init'
@@ -55,6 +34,20 @@ import { Route as PublicCacheRouteImport } from './routes/_public/cache'
 import { Route as PublicBlocksRouteImport } from './routes/_public/blocks'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
+import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
+import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
+import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
+import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
+import { Route as MarketingPartnersRouteImport } from './routes/_marketing/partners'
+import { Route as MarketingHomeRouteImport } from './routes/_marketing/home'
+import { Route as MarketingEnterpriseRouteImport } from './routes/_marketing/enterprise'
+import { Route as MarketingEducationRouteImport } from './routes/_marketing/education'
+import { Route as MarketingDomainsRouteImport } from './routes/_marketing/domains'
+import { Route as MarketingCookiesRouteImport } from './routes/_marketing/cookies'
+import { Route as MarketingCompanyRouteImport } from './routes/_marketing/company'
+import { Route as MarketingCommunityRouteImport } from './routes/_marketing/community'
+import { Route as MarketingBaaRouteImport } from './routes/_marketing/baa'
+import { Route as MarketingAssetsRouteImport } from './routes/_marketing/assets'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
@@ -66,12 +59,11 @@ import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as GeneratorDiagramsIndexRouteImport } from './routes/generator/diagrams/index'
 import { Route as DocsPartnersIndexRouteImport } from './routes/docs/partners.index'
 import { Route as PublicAccountIndexRouteImport } from './routes/_public/account.index'
-import { Route as ThreadsAuthorsAuthorIdRouteImport } from './routes/threads.authors.$authorId'
+import { Route as MarketingThreadsIndexRouteImport } from './routes/_marketing/threads.index'
+import { Route as MarketingIntegrationsIndexRouteImport } from './routes/_marketing/integrations.index'
+import { Route as MarketingChangelogIndexRouteImport } from './routes/_marketing/changelog.index'
+import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
-import { Route as ChangelogEntryEntryRouteImport } from './routes/changelog.entry.$entry'
-import { Route as BlogPostSlugRouteImport } from './routes/blog.post.$slug'
-import { Route as BlogCategoryCategoryRouteImport } from './routes/blog.category.$category'
-import { Route as BlogAuthorAuthorRouteImport } from './routes/blog.author.$author'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
@@ -81,6 +73,10 @@ import { Route as PublicAccountSecurityRouteImport } from './routes/_public/acco
 import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
 import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
+import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
+import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
+import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
+import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
@@ -113,6 +109,11 @@ import { Route as PublicOrganizationsOrgIdMarketplaceRouteImport } from './route
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
 import { Route as PublicOrganizationsOrgIdAppsRouteImport } from './routes/_public/organizations.$orgId.apps'
+import { Route as MarketingThreadsAuthorsAuthorIdRouteImport } from './routes/_marketing/threads.authors.$authorId'
+import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_marketing/changelog.entry.$entry'
+import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
+import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_marketing/blog.category.$category'
+import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/generator/cover.encode'
@@ -323,54 +324,9 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCol
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.columns'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.backups'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StartupsRoute = StartupsRouteImport.update({
-  id: '/startups',
-  path: '/startups',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PartnersRoute = PartnersRouteImport.update({
-  id: '/partners',
-  path: '/partners',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EnterpriseRoute = EnterpriseRouteImport.update({
-  id: '/enterprise',
-  path: '/enterprise',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EducationRoute = EducationRouteImport.update({
-  id: '/education',
-  path: '/education',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DomainsRoute = DomainsRouteImport.update({
-  id: '/domains',
-  path: '/domains',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -383,31 +339,6 @@ const DiscordRoute = DiscordRouteImport.update({
   path: '/discord',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CookiesRoute = CookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompanyRoute = CompanyRouteImport.update({
-  id: '/company',
-  path: '/company',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CommunityRoute = CommunityRouteImport.update({
-  id: '/community',
-  path: '/community',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BaaRoute = BaaRouteImport.update({
-  id: '/baa',
-  path: '/baa',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssetsRoute = AssetsRouteImport.update({
-  id: '/assets',
-  path: '/assets',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
@@ -416,18 +347,12 @@ const ProtectedRoute = ProtectedRouteImport.update({
   id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketingRoute = MarketingRouteImport.update({
+  id: '/_marketing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
-  id: '/threads/',
-  path: '/threads/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrationsIndexRoute = IntegrationsIndexRouteImport.update({
-  id: '/integrations/',
-  path: '/integrations/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GeneratorIndexRoute = GeneratorIndexRouteImport.update({
@@ -440,30 +365,10 @@ const DocsIndexRoute = DocsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DocsRoute,
 } as any)
-const ChangelogIndexRoute = ChangelogIndexRouteImport.update({
-  id: '/changelog/',
-  path: '/changelog/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogIndexRoute = BlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicRoute,
-} as any)
-const ThreadsThreadIdRoute = ThreadsThreadIdRouteImport.update({
-  id: '/threads/$threadId',
-  path: '/threads/$threadId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
-  id: '/products/$productId',
-  path: '/products/$productId',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsTxtRoute = LlmsTxtRouteImport.update({
   id: '/llms/txt',
@@ -475,20 +380,15 @@ const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
   path: '/llms-full/txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IntegrationsSlugRoute = IntegrationsSlugRouteImport.update({
-  id: '/integrations/$slug',
-  path: '/integrations/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
   id: '/$generationId',
   path: '/$generationId',
   getParentRoute: () => GeneratorRoute,
 } as any)
 const DomainsContinueRoute = DomainsContinueRouteImport.update({
-  id: '/continue',
-  path: '/continue',
-  getParentRoute: () => DomainsRoute,
+  id: '/domains/continue',
+  path: '/domains/continue',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DocsTutorialsRoute = DocsTutorialsRouteImport.update({
   id: '/tutorials',
@@ -504,11 +404,6 @@ const DocsSplatRoute = DocsSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => DocsRoute,
-} as any)
-const BlogPageRoute = BlogPageRouteImport.update({
-  id: '/blog/$page',
-  path: '/blog/$page',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   id: '/upgrade',
@@ -551,6 +446,76 @@ const ProtectedExampleProtectedRouteRoute =
     path: '/example-protected-route',
     getParentRoute: () => ProtectedRoute,
   } as any)
+const MarketingTermsRoute = MarketingTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingStartupsRoute = MarketingStartupsRouteImport.update({
+  id: '/startups',
+  path: '/startups',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPrivacyRoute = MarketingPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPricingRoute = MarketingPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPartnersRoute = MarketingPartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingHomeRoute = MarketingHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingEnterpriseRoute = MarketingEnterpriseRouteImport.update({
+  id: '/enterprise',
+  path: '/enterprise',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingEducationRoute = MarketingEducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingDomainsRoute = MarketingDomainsRouteImport.update({
+  id: '/domains',
+  path: '/domains',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingCookiesRoute = MarketingCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingCompanyRoute = MarketingCompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingCommunityRoute = MarketingCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingBaaRoute = MarketingBaaRouteImport.update({
+  id: '/baa',
+  path: '/baa',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingAssetsRoute = MarketingAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
@@ -606,10 +571,26 @@ const PublicAccountIndexRoute = PublicAccountIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PublicAccountRoute,
 } as any)
-const ThreadsAuthorsAuthorIdRoute = ThreadsAuthorsAuthorIdRouteImport.update({
-  id: '/threads/authors/$authorId',
-  path: '/threads/authors/$authorId',
-  getParentRoute: () => rootRouteImport,
+const MarketingThreadsIndexRoute = MarketingThreadsIndexRouteImport.update({
+  id: '/threads/',
+  path: '/threads/',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingIntegrationsIndexRoute =
+  MarketingIntegrationsIndexRouteImport.update({
+    id: '/integrations/',
+    path: '/integrations/',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingChangelogIndexRoute = MarketingChangelogIndexRouteImport.update({
+  id: '/changelog/',
+  path: '/changelog/',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingBlogIndexRoute = MarketingBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => MarketingRoute,
 } as any)
 const GeneratorDiagramsGenerationIdRoute =
   GeneratorDiagramsGenerationIdRouteImport.update({
@@ -617,26 +598,6 @@ const GeneratorDiagramsGenerationIdRoute =
     path: '/diagrams/$generationId',
     getParentRoute: () => GeneratorRoute,
   } as any)
-const ChangelogEntryEntryRoute = ChangelogEntryEntryRouteImport.update({
-  id: '/changelog/entry/$entry',
-  path: '/changelog/entry/$entry',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogPostSlugRoute = BlogPostSlugRouteImport.update({
-  id: '/blog/post/$slug',
-  path: '/blog/post/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogCategoryCategoryRoute = BlogCategoryCategoryRouteImport.update({
-  id: '/blog/category/$category',
-  path: '/blog/category/$category',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogAuthorAuthorRoute = BlogAuthorAuthorRouteImport.update({
-  id: '/blog/author/$author',
-  path: '/blog/author/$author',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PublicProjectsProjectIdRoute = PublicProjectsProjectIdRouteImport.update({
   id: '/projects/$projectId',
   path: '/projects/$projectId',
@@ -686,6 +647,29 @@ const PublicAccountBillingAddressesRoute =
     path: '/billing-addresses',
     getParentRoute: () => PublicAccountRoute,
   } as any)
+const MarketingThreadsThreadIdRoute =
+  MarketingThreadsThreadIdRouteImport.update({
+    id: '/threads/$threadId',
+    path: '/threads/$threadId',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingProductsProductIdRoute =
+  MarketingProductsProductIdRouteImport.update({
+    id: '/products/$productId',
+    path: '/products/$productId',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingIntegrationsSlugRoute =
+  MarketingIntegrationsSlugRouteImport.update({
+    id: '/integrations/$slug',
+    path: '/integrations/$slug',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingBlogPageRoute = MarketingBlogPageRouteImport.update({
+  id: '/blog/$page',
+  path: '/blog/$page',
+  getParentRoute: () => MarketingRoute,
+} as any)
 const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   id: '/oauth2/device',
   path: '/oauth2/device',
@@ -872,6 +856,35 @@ const PublicOrganizationsOrgIdAppsRoute =
     id: '/apps',
     path: '/apps',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const MarketingThreadsAuthorsAuthorIdRoute =
+  MarketingThreadsAuthorsAuthorIdRouteImport.update({
+    id: '/threads/authors/$authorId',
+    path: '/threads/authors/$authorId',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingChangelogEntryEntryRoute =
+  MarketingChangelogEntryEntryRouteImport.update({
+    id: '/changelog/entry/$entry',
+    path: '/changelog/entry/$entry',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingBlogPostSlugRoute = MarketingBlogPostSlugRouteImport.update({
+  id: '/blog/post/$slug',
+  path: '/blog/post/$slug',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingBlogCategoryCategoryRoute =
+  MarketingBlogCategoryCategoryRouteImport.update({
+    id: '/blog/category/$category',
+    path: '/blog/category/$category',
+    getParentRoute: () => MarketingRoute,
+  } as any)
+const MarketingBlogAuthorAuthorRoute =
+  MarketingBlogAuthorAuthorRouteImport.update({
+    id: '/blog/author/$author',
+    path: '/blog/author/$author',
+    getParentRoute: () => MarketingRoute,
   } as any)
 const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   id: '/_api/init/ticket/$eventSlug',
@@ -2280,23 +2293,9 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
   )
 
 export interface FileRoutesByFullPath {
-  '/assets': typeof AssetsRoute
-  '/baa': typeof BaaRoute
-  '/community': typeof CommunityRoute
-  '/company': typeof CompanyRoute
-  '/cookies': typeof CookiesRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
-  '/domains': typeof DomainsRouteWithChildren
-  '/education': typeof EducationRoute
-  '/enterprise': typeof EnterpriseRoute
   '/generator': typeof GeneratorRouteWithChildren
-  '/home': typeof HomeRoute
-  '/partners': typeof PartnersRoute
-  '/pricing': typeof PricingRoute
-  '/privacy': typeof PrivacyRoute
-  '/startups': typeof StartupsRoute
-  '/terms': typeof TermsRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2305,6 +2304,20 @@ export interface FileRoutesByFullPath {
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/assets': typeof MarketingAssetsRoute
+  '/baa': typeof MarketingBaaRoute
+  '/community': typeof MarketingCommunityRoute
+  '/company': typeof MarketingCompanyRoute
+  '/cookies': typeof MarketingCookiesRoute
+  '/domains': typeof MarketingDomainsRoute
+  '/education': typeof MarketingEducationRoute
+  '/enterprise': typeof MarketingEnterpriseRoute
+  '/home': typeof MarketingHomeRoute
+  '/partners': typeof MarketingPartnersRoute
+  '/pricing': typeof MarketingPricingRoute
+  '/privacy': typeof MarketingPrivacyRoute
+  '/startups': typeof MarketingStartupsRoute
+  '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/blocks': typeof PublicBlocksRoute
@@ -2313,29 +2326,25 @@ export interface FileRoutesByFullPath {
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
-  '/blog/$page': typeof BlogPageRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
-  '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/products/$productId': typeof ProductsProductIdRoute
-  '/threads/$threadId': typeof ThreadsThreadIdRoute
   '/': typeof PublicIndexRoute
-  '/blog': typeof BlogIndexRoute
-  '/changelog': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
-  '/integrations': typeof IntegrationsIndexRoute
-  '/threads': typeof ThreadsIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/blog/$page': typeof MarketingBlogPageRoute
+  '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
+  '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2345,18 +2354,22 @@ export interface FileRoutesByFullPath {
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
-  '/blog/author/$author': typeof BlogAuthorAuthorRoute
-  '/blog/category/$category': typeof BlogCategoryCategoryRoute
-  '/blog/post/$slug': typeof BlogPostSlugRoute
-  '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
-  '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
+  '/blog': typeof MarketingBlogIndexRoute
+  '/changelog': typeof MarketingChangelogIndexRoute
+  '/integrations': typeof MarketingIntegrationsIndexRoute
+  '/threads': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
+  '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
+  '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
+  '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
   '/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -2592,21 +2605,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/assets': typeof AssetsRoute
-  '/baa': typeof BaaRoute
-  '/community': typeof CommunityRoute
-  '/company': typeof CompanyRoute
-  '/cookies': typeof CookiesRoute
   '/discord': typeof DiscordRoute
-  '/domains': typeof DomainsRouteWithChildren
-  '/education': typeof EducationRoute
-  '/enterprise': typeof EnterpriseRoute
-  '/home': typeof HomeRoute
-  '/partners': typeof PartnersRoute
-  '/pricing': typeof PricingRoute
-  '/privacy': typeof PrivacyRoute
-  '/startups': typeof StartupsRoute
-  '/terms': typeof TermsRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
@@ -2615,6 +2614,20 @@ export interface FileRoutesByTo {
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/assets': typeof MarketingAssetsRoute
+  '/baa': typeof MarketingBaaRoute
+  '/community': typeof MarketingCommunityRoute
+  '/company': typeof MarketingCompanyRoute
+  '/cookies': typeof MarketingCookiesRoute
+  '/domains': typeof MarketingDomainsRoute
+  '/education': typeof MarketingEducationRoute
+  '/enterprise': typeof MarketingEnterpriseRoute
+  '/home': typeof MarketingHomeRoute
+  '/partners': typeof MarketingPartnersRoute
+  '/pricing': typeof MarketingPricingRoute
+  '/privacy': typeof MarketingPrivacyRoute
+  '/startups': typeof MarketingStartupsRoute
+  '/terms': typeof MarketingTermsRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
@@ -2622,29 +2635,25 @@ export interface FileRoutesByTo {
   '/init': typeof PublicInitRoute
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
-  '/blog/$page': typeof BlogPageRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
-  '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/products/$productId': typeof ProductsProductIdRoute
-  '/threads/$threadId': typeof ThreadsThreadIdRoute
   '/': typeof PublicIndexRoute
-  '/blog': typeof BlogIndexRoute
-  '/changelog': typeof ChangelogIndexRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
-  '/integrations': typeof IntegrationsIndexRoute
-  '/threads': typeof ThreadsIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/blog/$page': typeof MarketingBlogPageRoute
+  '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
+  '/products/$productId': typeof MarketingProductsProductIdRoute
+  '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2652,18 +2661,22 @@ export interface FileRoutesByTo {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
-  '/blog/author/$author': typeof BlogAuthorAuthorRoute
-  '/blog/category/$category': typeof BlogCategoryCategoryRoute
-  '/blog/post/$slug': typeof BlogPostSlugRoute
-  '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
-  '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
+  '/blog': typeof MarketingBlogIndexRoute
+  '/changelog': typeof MarketingChangelogIndexRoute
+  '/integrations': typeof MarketingIntegrationsIndexRoute
+  '/threads': typeof MarketingThreadsIndexRoute
   '/account': typeof PublicAccountIndexRoute
   '/docs/partners': typeof DocsPartnersIndexRoute
   '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
+  '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
+  '/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
+  '/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
@@ -2867,25 +2880,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteWithChildren
+  '/_marketing': typeof MarketingRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
-  '/assets': typeof AssetsRoute
-  '/baa': typeof BaaRoute
-  '/community': typeof CommunityRoute
-  '/company': typeof CompanyRoute
-  '/cookies': typeof CookiesRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
-  '/domains': typeof DomainsRouteWithChildren
-  '/education': typeof EducationRoute
-  '/enterprise': typeof EnterpriseRoute
   '/generator': typeof GeneratorRouteWithChildren
-  '/home': typeof HomeRoute
-  '/partners': typeof PartnersRoute
-  '/pricing': typeof PricingRoute
-  '/privacy': typeof PrivacyRoute
-  '/startups': typeof StartupsRoute
-  '/terms': typeof TermsRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
@@ -2894,6 +2894,20 @@ export interface FileRoutesById {
   '/_auth/sign-out': typeof AuthSignOutRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
+  '/_marketing/assets': typeof MarketingAssetsRoute
+  '/_marketing/baa': typeof MarketingBaaRoute
+  '/_marketing/community': typeof MarketingCommunityRoute
+  '/_marketing/company': typeof MarketingCompanyRoute
+  '/_marketing/cookies': typeof MarketingCookiesRoute
+  '/_marketing/domains': typeof MarketingDomainsRoute
+  '/_marketing/education': typeof MarketingEducationRoute
+  '/_marketing/enterprise': typeof MarketingEnterpriseRoute
+  '/_marketing/home': typeof MarketingHomeRoute
+  '/_marketing/partners': typeof MarketingPartnersRoute
+  '/_marketing/pricing': typeof MarketingPricingRoute
+  '/_marketing/privacy': typeof MarketingPrivacyRoute
+  '/_marketing/startups': typeof MarketingStartupsRoute
+  '/_marketing/terms': typeof MarketingTermsRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/blocks': typeof PublicBlocksRoute
@@ -2902,29 +2916,25 @@ export interface FileRoutesById {
   '/_public/init': typeof PublicInitRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
-  '/blog/$page': typeof BlogPageRoute
   '/docs/$': typeof DocsSplatRoute
   '/docs/quick-starts': typeof DocsQuickStartsRoute
   '/docs/tutorials': typeof DocsTutorialsRoute
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
-  '/integrations/$slug': typeof IntegrationsSlugRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/products/$productId': typeof ProductsProductIdRoute
-  '/threads/$threadId': typeof ThreadsThreadIdRoute
   '/_public/': typeof PublicIndexRoute
-  '/blog/': typeof BlogIndexRoute
-  '/changelog/': typeof ChangelogIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
-  '/integrations/': typeof IntegrationsIndexRoute
-  '/threads/': typeof ThreadsIndexRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_marketing/blog/$page': typeof MarketingBlogPageRoute
+  '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
+  '/_marketing/products/$productId': typeof MarketingProductsProductIdRoute
+  '/_marketing/threads/$threadId': typeof MarketingThreadsThreadIdRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
@@ -2934,18 +2944,22 @@ export interface FileRoutesById {
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
-  '/blog/author/$author': typeof BlogAuthorAuthorRoute
-  '/blog/category/$category': typeof BlogCategoryCategoryRoute
-  '/blog/post/$slug': typeof BlogPostSlugRoute
-  '/changelog/entry/$entry': typeof ChangelogEntryEntryRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
-  '/threads/authors/$authorId': typeof ThreadsAuthorsAuthorIdRoute
+  '/_marketing/blog/': typeof MarketingBlogIndexRoute
+  '/_marketing/changelog/': typeof MarketingChangelogIndexRoute
+  '/_marketing/integrations/': typeof MarketingIntegrationsIndexRoute
+  '/_marketing/threads/': typeof MarketingThreadsIndexRoute
   '/_public/account/': typeof PublicAccountIndexRoute
   '/docs/partners/': typeof DocsPartnersIndexRoute
   '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
+  '/_marketing/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
+  '/_marketing/blog/post/$slug': typeof MarketingBlogPostSlugRoute
+  '/_marketing/changelog/entry/$entry': typeof MarketingChangelogEntryEntryRoute
+  '/_marketing/threads/authors/$authorId': typeof MarketingThreadsAuthorsAuthorIdRoute
   '/_public/organizations/$orgId/apps': typeof PublicOrganizationsOrgIdAppsRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
@@ -3183,23 +3197,9 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/assets'
-    | '/baa'
-    | '/community'
-    | '/company'
-    | '/cookies'
     | '/discord'
     | '/docs'
-    | '/domains'
-    | '/education'
-    | '/enterprise'
     | '/generator'
-    | '/home'
-    | '/partners'
-    | '/pricing'
-    | '/privacy'
-    | '/startups'
-    | '/terms'
     | '/hello'
     | '/join'
     | '/mfa'
@@ -3208,6 +3208,20 @@ export interface FileRouteTypes {
     | '/sign-out'
     | '/sign-up'
     | '/verify-email'
+    | '/assets'
+    | '/baa'
+    | '/community'
+    | '/company'
+    | '/cookies'
+    | '/domains'
+    | '/education'
+    | '/enterprise'
+    | '/home'
+    | '/partners'
+    | '/pricing'
+    | '/privacy'
+    | '/startups'
+    | '/terms'
     | '/example-protected-route'
     | '/account'
     | '/blocks'
@@ -3216,29 +3230,25 @@ export interface FileRouteTypes {
     | '/init'
     | '/reset'
     | '/upgrade'
-    | '/blog/$page'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
-    | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/products/$productId'
-    | '/threads/$threadId'
     | '/'
-    | '/blog'
-    | '/changelog'
     | '/docs/'
     | '/generator/'
-    | '/integrations'
-    | '/threads'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/blog/$page'
+    | '/integrations/$slug'
+    | '/products/$productId'
+    | '/threads/$threadId'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3248,18 +3258,22 @@ export interface FileRouteTypes {
     | '/debug/org-setup-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
-    | '/blog/author/$author'
-    | '/blog/category/$category'
-    | '/blog/post/$slug'
-    | '/changelog/entry/$entry'
     | '/generator/diagrams/$generationId'
-    | '/threads/authors/$authorId'
+    | '/blog'
+    | '/changelog'
+    | '/integrations'
+    | '/threads'
     | '/account/'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/blog/author/$author'
+    | '/blog/category/$category'
+    | '/blog/post/$slug'
+    | '/changelog/entry/$entry'
+    | '/threads/authors/$authorId'
     | '/organizations/$orgId/apps'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/domains'
@@ -3495,12 +3509,20 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/discord'
+    | '/hello'
+    | '/join'
+    | '/mfa'
+    | '/recovery'
+    | '/sign-in'
+    | '/sign-out'
+    | '/sign-up'
+    | '/verify-email'
     | '/assets'
     | '/baa'
     | '/community'
     | '/company'
     | '/cookies'
-    | '/discord'
     | '/domains'
     | '/education'
     | '/enterprise'
@@ -3510,14 +3532,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
-    | '/hello'
-    | '/join'
-    | '/mfa'
-    | '/recovery'
-    | '/sign-in'
-    | '/sign-out'
-    | '/sign-up'
-    | '/verify-email'
     | '/example-protected-route'
     | '/blocks'
     | '/cache'
@@ -3525,29 +3539,25 @@ export interface FileRouteTypes {
     | '/init'
     | '/reset'
     | '/upgrade'
-    | '/blog/$page'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
-    | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/products/$productId'
-    | '/threads/$threadId'
     | '/'
-    | '/blog'
-    | '/changelog'
     | '/docs'
     | '/generator'
-    | '/integrations'
-    | '/threads'
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/blog/$page'
+    | '/integrations/$slug'
+    | '/products/$productId'
+    | '/threads/$threadId'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3555,18 +3565,22 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
-    | '/blog/author/$author'
-    | '/blog/category/$category'
-    | '/blog/post/$slug'
-    | '/changelog/entry/$entry'
     | '/generator/diagrams/$generationId'
-    | '/threads/authors/$authorId'
+    | '/blog'
+    | '/changelog'
+    | '/integrations'
+    | '/threads'
     | '/account'
     | '/docs/partners'
     | '/generator/diagrams'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/blog/author/$author'
+    | '/blog/category/$category'
+    | '/blog/post/$slug'
+    | '/changelog/entry/$entry'
+    | '/threads/authors/$authorId'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
@@ -3769,25 +3783,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_auth'
+    | '/_marketing'
     | '/_protected'
     | '/_public'
-    | '/assets'
-    | '/baa'
-    | '/community'
-    | '/company'
-    | '/cookies'
     | '/discord'
     | '/docs'
-    | '/domains'
-    | '/education'
-    | '/enterprise'
     | '/generator'
-    | '/home'
-    | '/partners'
-    | '/pricing'
-    | '/privacy'
-    | '/startups'
-    | '/terms'
     | '/_api/hello'
     | '/_auth/join'
     | '/_auth/mfa'
@@ -3796,6 +3797,20 @@ export interface FileRouteTypes {
     | '/_auth/sign-out'
     | '/_auth/sign-up'
     | '/_auth/verify-email'
+    | '/_marketing/assets'
+    | '/_marketing/baa'
+    | '/_marketing/community'
+    | '/_marketing/company'
+    | '/_marketing/cookies'
+    | '/_marketing/domains'
+    | '/_marketing/education'
+    | '/_marketing/enterprise'
+    | '/_marketing/home'
+    | '/_marketing/partners'
+    | '/_marketing/pricing'
+    | '/_marketing/privacy'
+    | '/_marketing/startups'
+    | '/_marketing/terms'
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/blocks'
@@ -3804,29 +3819,25 @@ export interface FileRouteTypes {
     | '/_public/init'
     | '/_public/reset'
     | '/_public/upgrade'
-    | '/blog/$page'
     | '/docs/$'
     | '/docs/quick-starts'
     | '/docs/tutorials'
     | '/domains/continue'
     | '/generator/$generationId'
-    | '/integrations/$slug'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/products/$productId'
-    | '/threads/$threadId'
     | '/_public/'
-    | '/blog/'
-    | '/changelog/'
     | '/docs/'
     | '/generator/'
-    | '/integrations/'
-    | '/threads/'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_marketing/blog/$page'
+    | '/_marketing/integrations/$slug'
+    | '/_marketing/products/$productId'
+    | '/_marketing/threads/$threadId'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
@@ -3836,18 +3847,22 @@ export interface FileRouteTypes {
     | '/_public/debug/org-setup-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
-    | '/blog/author/$author'
-    | '/blog/category/$category'
-    | '/blog/post/$slug'
-    | '/changelog/entry/$entry'
     | '/generator/diagrams/$generationId'
-    | '/threads/authors/$authorId'
+    | '/_marketing/blog/'
+    | '/_marketing/changelog/'
+    | '/_marketing/integrations/'
+    | '/_marketing/threads/'
     | '/_public/account/'
     | '/docs/partners/'
     | '/generator/diagrams/'
     | '/_api/generator/cover/encode'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_marketing/blog/author/$author'
+    | '/_marketing/blog/category/$category'
+    | '/_marketing/blog/post/$slug'
+    | '/_marketing/changelog/entry/$entry'
+    | '/_marketing/threads/authors/$authorId'
     | '/_public/organizations/$orgId/apps'
     | '/_public/organizations/$orgId/billing'
     | '/_public/organizations/$orgId/domains'
@@ -4085,118 +4100,30 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
+  MarketingRoute: typeof MarketingRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
-  AssetsRoute: typeof AssetsRoute
-  BaaRoute: typeof BaaRoute
-  CommunityRoute: typeof CommunityRoute
-  CompanyRoute: typeof CompanyRoute
-  CookiesRoute: typeof CookiesRoute
   DiscordRoute: typeof DiscordRoute
   DocsRoute: typeof DocsRouteWithChildren
-  DomainsRoute: typeof DomainsRouteWithChildren
-  EducationRoute: typeof EducationRoute
-  EnterpriseRoute: typeof EnterpriseRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
-  HomeRoute: typeof HomeRoute
-  PartnersRoute: typeof PartnersRoute
-  PricingRoute: typeof PricingRoute
-  PrivacyRoute: typeof PrivacyRoute
-  StartupsRoute: typeof StartupsRoute
-  TermsRoute: typeof TermsRoute
   ApiHelloRoute: typeof ApiHelloRoute
-  BlogPageRoute: typeof BlogPageRoute
-  IntegrationsSlugRoute: typeof IntegrationsSlugRoute
+  DomainsContinueRoute: typeof DomainsContinueRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
-  ProductsProductIdRoute: typeof ProductsProductIdRoute
-  ThreadsThreadIdRoute: typeof ThreadsThreadIdRoute
-  BlogIndexRoute: typeof BlogIndexRoute
-  ChangelogIndexRoute: typeof ChangelogIndexRoute
-  IntegrationsIndexRoute: typeof IntegrationsIndexRoute
-  ThreadsIndexRoute: typeof ThreadsIndexRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
-  BlogAuthorAuthorRoute: typeof BlogAuthorAuthorRoute
-  BlogCategoryCategoryRoute: typeof BlogCategoryCategoryRoute
-  BlogPostSlugRoute: typeof BlogPostSlugRoute
-  ChangelogEntryEntryRoute: typeof ChangelogEntryEntryRoute
-  ThreadsAuthorsAuthorIdRoute: typeof ThreadsAuthorsAuthorIdRoute
   ApiInitCalendarEventSlugRoute: typeof ApiInitCalendarEventSlugRoute
   ApiInitTicketEventSlugRoute: typeof ApiInitTicketEventSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/startups': {
-      id: '/startups'
-      path: '/startups'
-      fullPath: '/startups'
-      preLoaderRoute: typeof StartupsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/partners': {
-      id: '/partners'
-      path: '/partners'
-      fullPath: '/partners'
-      preLoaderRoute: typeof PartnersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/generator': {
       id: '/generator'
       path: '/generator'
       fullPath: '/generator'
       preLoaderRoute: typeof GeneratorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/enterprise': {
-      id: '/enterprise'
-      path: '/enterprise'
-      fullPath: '/enterprise'
-      preLoaderRoute: typeof EnterpriseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/education': {
-      id: '/education'
-      path: '/education'
-      fullPath: '/education'
-      preLoaderRoute: typeof EducationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/domains': {
-      id: '/domains'
-      path: '/domains'
-      fullPath: '/domains'
-      preLoaderRoute: typeof DomainsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -4213,41 +4140,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiscordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/company': {
-      id: '/company'
-      path: '/company'
-      fullPath: '/company'
-      preLoaderRoute: typeof CompanyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/community': {
-      id: '/community'
-      path: '/community'
-      fullPath: '/community'
-      preLoaderRoute: typeof CommunityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/baa': {
-      id: '/baa'
-      path: '/baa'
-      fullPath: '/baa'
-      preLoaderRoute: typeof BaaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assets': {
-      id: '/assets'
-      path: '/assets'
-      fullPath: '/assets'
-      preLoaderRoute: typeof AssetsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_public': {
       id: '/_public'
       path: ''
@@ -4262,25 +4154,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_marketing': {
+      id: '/_marketing'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof MarketingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_auth': {
       id: '/_auth'
       path: ''
       fullPath: ''
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/threads/': {
-      id: '/threads/'
-      path: '/threads'
-      fullPath: '/threads'
-      preLoaderRoute: typeof ThreadsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrations/': {
-      id: '/integrations/'
-      path: '/integrations'
-      fullPath: '/integrations'
-      preLoaderRoute: typeof IntegrationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generator/': {
@@ -4297,40 +4182,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRoute
     }
-    '/changelog/': {
-      id: '/changelog/'
-      path: '/changelog'
-      fullPath: '/changelog'
-      preLoaderRoute: typeof ChangelogIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog/': {
-      id: '/blog/'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_public/': {
       id: '/_public/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRoute
-    }
-    '/threads/$threadId': {
-      id: '/threads/$threadId'
-      path: '/threads/$threadId'
-      fullPath: '/threads/$threadId'
-      preLoaderRoute: typeof ThreadsThreadIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/$productId': {
-      id: '/products/$productId'
-      path: '/products/$productId'
-      fullPath: '/products/$productId'
-      preLoaderRoute: typeof ProductsProductIdRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/llms/txt': {
       id: '/llms/txt'
@@ -4346,13 +4203,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LlmsFullTxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/integrations/$slug': {
-      id: '/integrations/$slug'
-      path: '/integrations/$slug'
-      fullPath: '/integrations/$slug'
-      preLoaderRoute: typeof IntegrationsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/generator/$generationId': {
       id: '/generator/$generationId'
       path: '/$generationId'
@@ -4362,10 +4212,10 @@ declare module '@tanstack/react-router' {
     }
     '/domains/continue': {
       id: '/domains/continue'
-      path: '/continue'
+      path: '/domains/continue'
       fullPath: '/domains/continue'
       preLoaderRoute: typeof DomainsContinueRouteImport
-      parentRoute: typeof DomainsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/docs/tutorials': {
       id: '/docs/tutorials'
@@ -4387,13 +4237,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/docs/$'
       preLoaderRoute: typeof DocsSplatRouteImport
       parentRoute: typeof DocsRoute
-    }
-    '/blog/$page': {
-      id: '/blog/$page'
-      path: '/blog/$page'
-      fullPath: '/blog/$page'
-      preLoaderRoute: typeof BlogPageRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_public/upgrade': {
       id: '/_public/upgrade'
@@ -4450,6 +4293,104 @@ declare module '@tanstack/react-router' {
       fullPath: '/example-protected-route'
       preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
       parentRoute: typeof ProtectedRoute
+    }
+    '/_marketing/terms': {
+      id: '/_marketing/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof MarketingTermsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/startups': {
+      id: '/_marketing/startups'
+      path: '/startups'
+      fullPath: '/startups'
+      preLoaderRoute: typeof MarketingStartupsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/privacy': {
+      id: '/_marketing/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof MarketingPrivacyRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/pricing': {
+      id: '/_marketing/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof MarketingPricingRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/partners': {
+      id: '/_marketing/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof MarketingPartnersRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/home': {
+      id: '/_marketing/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof MarketingHomeRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/enterprise': {
+      id: '/_marketing/enterprise'
+      path: '/enterprise'
+      fullPath: '/enterprise'
+      preLoaderRoute: typeof MarketingEnterpriseRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/education': {
+      id: '/_marketing/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof MarketingEducationRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/domains': {
+      id: '/_marketing/domains'
+      path: '/domains'
+      fullPath: '/domains'
+      preLoaderRoute: typeof MarketingDomainsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/cookies': {
+      id: '/_marketing/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof MarketingCookiesRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/company': {
+      id: '/_marketing/company'
+      path: '/company'
+      fullPath: '/company'
+      preLoaderRoute: typeof MarketingCompanyRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/community': {
+      id: '/_marketing/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof MarketingCommunityRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/baa': {
+      id: '/_marketing/baa'
+      path: '/baa'
+      fullPath: '/baa'
+      preLoaderRoute: typeof MarketingBaaRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/assets': {
+      id: '/_marketing/assets'
+      path: '/assets'
+      fullPath: '/assets'
+      preLoaderRoute: typeof MarketingAssetsRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/_auth/verify-email': {
       id: '/_auth/verify-email'
@@ -4528,12 +4469,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicAccountIndexRouteImport
       parentRoute: typeof PublicAccountRoute
     }
-    '/threads/authors/$authorId': {
-      id: '/threads/authors/$authorId'
-      path: '/threads/authors/$authorId'
-      fullPath: '/threads/authors/$authorId'
-      preLoaderRoute: typeof ThreadsAuthorsAuthorIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_marketing/threads/': {
+      id: '/_marketing/threads/'
+      path: '/threads'
+      fullPath: '/threads'
+      preLoaderRoute: typeof MarketingThreadsIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/integrations/': {
+      id: '/_marketing/integrations/'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof MarketingIntegrationsIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/changelog/': {
+      id: '/_marketing/changelog/'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof MarketingChangelogIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/': {
+      id: '/_marketing/blog/'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof MarketingBlogIndexRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/generator/diagrams/$generationId': {
       id: '/generator/diagrams/$generationId'
@@ -4541,34 +4503,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/generator/diagrams/$generationId'
       preLoaderRoute: typeof GeneratorDiagramsGenerationIdRouteImport
       parentRoute: typeof GeneratorRoute
-    }
-    '/changelog/entry/$entry': {
-      id: '/changelog/entry/$entry'
-      path: '/changelog/entry/$entry'
-      fullPath: '/changelog/entry/$entry'
-      preLoaderRoute: typeof ChangelogEntryEntryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog/post/$slug': {
-      id: '/blog/post/$slug'
-      path: '/blog/post/$slug'
-      fullPath: '/blog/post/$slug'
-      preLoaderRoute: typeof BlogPostSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog/category/$category': {
-      id: '/blog/category/$category'
-      path: '/blog/category/$category'
-      fullPath: '/blog/category/$category'
-      preLoaderRoute: typeof BlogCategoryCategoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog/author/$author': {
-      id: '/blog/author/$author'
-      path: '/blog/author/$author'
-      fullPath: '/blog/author/$author'
-      preLoaderRoute: typeof BlogAuthorAuthorRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_public/projects/$projectId': {
       id: '/_public/projects/$projectId'
@@ -4632,6 +4566,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/billing-addresses'
       preLoaderRoute: typeof PublicAccountBillingAddressesRouteImport
       parentRoute: typeof PublicAccountRoute
+    }
+    '/_marketing/threads/$threadId': {
+      id: '/_marketing/threads/$threadId'
+      path: '/threads/$threadId'
+      fullPath: '/threads/$threadId'
+      preLoaderRoute: typeof MarketingThreadsThreadIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/products/$productId': {
+      id: '/_marketing/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof MarketingProductsProductIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/integrations/$slug': {
+      id: '/_marketing/integrations/$slug'
+      path: '/integrations/$slug'
+      fullPath: '/integrations/$slug'
+      preLoaderRoute: typeof MarketingIntegrationsSlugRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/$page': {
+      id: '/_marketing/blog/$page'
+      path: '/blog/$page'
+      fullPath: '/blog/$page'
+      preLoaderRoute: typeof MarketingBlogPageRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/_auth/oauth2/device': {
       id: '/_auth/oauth2/device'
@@ -4856,6 +4818,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/apps'
       preLoaderRoute: typeof PublicOrganizationsOrgIdAppsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_marketing/threads/authors/$authorId': {
+      id: '/_marketing/threads/authors/$authorId'
+      path: '/threads/authors/$authorId'
+      fullPath: '/threads/authors/$authorId'
+      preLoaderRoute: typeof MarketingThreadsAuthorsAuthorIdRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/changelog/entry/$entry': {
+      id: '/_marketing/changelog/entry/$entry'
+      path: '/changelog/entry/$entry'
+      fullPath: '/changelog/entry/$entry'
+      preLoaderRoute: typeof MarketingChangelogEntryEntryRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/post/$slug': {
+      id: '/_marketing/blog/post/$slug'
+      path: '/blog/post/$slug'
+      fullPath: '/blog/post/$slug'
+      preLoaderRoute: typeof MarketingBlogPostSlugRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/category/$category': {
+      id: '/_marketing/blog/category/$category'
+      path: '/blog/category/$category'
+      fullPath: '/blog/category/$category'
+      preLoaderRoute: typeof MarketingBlogCategoryCategoryRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/blog/author/$author': {
+      id: '/_marketing/blog/author/$author'
+      path: '/blog/author/$author'
+      fullPath: '/blog/author/$author'
+      preLoaderRoute: typeof MarketingBlogAuthorAuthorRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/_api/init/ticket/$eventSlug': {
       id: '/_api/init/ticket/$eventSlug'
@@ -6349,6 +6346,70 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface MarketingRouteChildren {
+  MarketingAssetsRoute: typeof MarketingAssetsRoute
+  MarketingBaaRoute: typeof MarketingBaaRoute
+  MarketingCommunityRoute: typeof MarketingCommunityRoute
+  MarketingCompanyRoute: typeof MarketingCompanyRoute
+  MarketingCookiesRoute: typeof MarketingCookiesRoute
+  MarketingDomainsRoute: typeof MarketingDomainsRoute
+  MarketingEducationRoute: typeof MarketingEducationRoute
+  MarketingEnterpriseRoute: typeof MarketingEnterpriseRoute
+  MarketingHomeRoute: typeof MarketingHomeRoute
+  MarketingPartnersRoute: typeof MarketingPartnersRoute
+  MarketingPricingRoute: typeof MarketingPricingRoute
+  MarketingPrivacyRoute: typeof MarketingPrivacyRoute
+  MarketingStartupsRoute: typeof MarketingStartupsRoute
+  MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingBlogPageRoute: typeof MarketingBlogPageRoute
+  MarketingIntegrationsSlugRoute: typeof MarketingIntegrationsSlugRoute
+  MarketingProductsProductIdRoute: typeof MarketingProductsProductIdRoute
+  MarketingThreadsThreadIdRoute: typeof MarketingThreadsThreadIdRoute
+  MarketingBlogIndexRoute: typeof MarketingBlogIndexRoute
+  MarketingChangelogIndexRoute: typeof MarketingChangelogIndexRoute
+  MarketingIntegrationsIndexRoute: typeof MarketingIntegrationsIndexRoute
+  MarketingThreadsIndexRoute: typeof MarketingThreadsIndexRoute
+  MarketingBlogAuthorAuthorRoute: typeof MarketingBlogAuthorAuthorRoute
+  MarketingBlogCategoryCategoryRoute: typeof MarketingBlogCategoryCategoryRoute
+  MarketingBlogPostSlugRoute: typeof MarketingBlogPostSlugRoute
+  MarketingChangelogEntryEntryRoute: typeof MarketingChangelogEntryEntryRoute
+  MarketingThreadsAuthorsAuthorIdRoute: typeof MarketingThreadsAuthorsAuthorIdRoute
+}
+
+const MarketingRouteChildren: MarketingRouteChildren = {
+  MarketingAssetsRoute: MarketingAssetsRoute,
+  MarketingBaaRoute: MarketingBaaRoute,
+  MarketingCommunityRoute: MarketingCommunityRoute,
+  MarketingCompanyRoute: MarketingCompanyRoute,
+  MarketingCookiesRoute: MarketingCookiesRoute,
+  MarketingDomainsRoute: MarketingDomainsRoute,
+  MarketingEducationRoute: MarketingEducationRoute,
+  MarketingEnterpriseRoute: MarketingEnterpriseRoute,
+  MarketingHomeRoute: MarketingHomeRoute,
+  MarketingPartnersRoute: MarketingPartnersRoute,
+  MarketingPricingRoute: MarketingPricingRoute,
+  MarketingPrivacyRoute: MarketingPrivacyRoute,
+  MarketingStartupsRoute: MarketingStartupsRoute,
+  MarketingTermsRoute: MarketingTermsRoute,
+  MarketingBlogPageRoute: MarketingBlogPageRoute,
+  MarketingIntegrationsSlugRoute: MarketingIntegrationsSlugRoute,
+  MarketingProductsProductIdRoute: MarketingProductsProductIdRoute,
+  MarketingThreadsThreadIdRoute: MarketingThreadsThreadIdRoute,
+  MarketingBlogIndexRoute: MarketingBlogIndexRoute,
+  MarketingChangelogIndexRoute: MarketingChangelogIndexRoute,
+  MarketingIntegrationsIndexRoute: MarketingIntegrationsIndexRoute,
+  MarketingThreadsIndexRoute: MarketingThreadsIndexRoute,
+  MarketingBlogAuthorAuthorRoute: MarketingBlogAuthorAuthorRoute,
+  MarketingBlogCategoryCategoryRoute: MarketingBlogCategoryCategoryRoute,
+  MarketingBlogPostSlugRoute: MarketingBlogPostSlugRoute,
+  MarketingChangelogEntryEntryRoute: MarketingChangelogEntryEntryRoute,
+  MarketingThreadsAuthorsAuthorIdRoute: MarketingThreadsAuthorsAuthorIdRoute,
+}
+
+const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
+  MarketingRouteChildren,
+)
+
 interface ProtectedRouteChildren {
   ProtectedExampleProtectedRouteRoute: typeof ProtectedExampleProtectedRouteRoute
 }
@@ -7696,17 +7757,6 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
-interface DomainsRouteChildren {
-  DomainsContinueRoute: typeof DomainsContinueRoute
-}
-
-const DomainsRouteChildren: DomainsRouteChildren = {
-  DomainsContinueRoute: DomainsContinueRoute,
-}
-
-const DomainsRouteWithChildren =
-  DomainsRoute._addFileChildren(DomainsRouteChildren)
-
 interface GeneratorRouteChildren {
   GeneratorGenerationIdRoute: typeof GeneratorGenerationIdRoute
   GeneratorIndexRoute: typeof GeneratorIndexRoute
@@ -7738,44 +7788,19 @@ const ApiGeneratorCoverRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
+  MarketingRoute: MarketingRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
-  AssetsRoute: AssetsRoute,
-  BaaRoute: BaaRoute,
-  CommunityRoute: CommunityRoute,
-  CompanyRoute: CompanyRoute,
-  CookiesRoute: CookiesRoute,
   DiscordRoute: DiscordRoute,
   DocsRoute: DocsRouteWithChildren,
-  DomainsRoute: DomainsRouteWithChildren,
-  EducationRoute: EducationRoute,
-  EnterpriseRoute: EnterpriseRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
-  HomeRoute: HomeRoute,
-  PartnersRoute: PartnersRoute,
-  PricingRoute: PricingRoute,
-  PrivacyRoute: PrivacyRoute,
-  StartupsRoute: StartupsRoute,
-  TermsRoute: TermsRoute,
   ApiHelloRoute: ApiHelloRoute,
-  BlogPageRoute: BlogPageRoute,
-  IntegrationsSlugRoute: IntegrationsSlugRoute,
+  DomainsContinueRoute: DomainsContinueRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
-  ProductsProductIdRoute: ProductsProductIdRoute,
-  ThreadsThreadIdRoute: ThreadsThreadIdRoute,
-  BlogIndexRoute: BlogIndexRoute,
-  ChangelogIndexRoute: ChangelogIndexRoute,
-  IntegrationsIndexRoute: IntegrationsIndexRoute,
-  ThreadsIndexRoute: ThreadsIndexRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
-  BlogAuthorAuthorRoute: BlogAuthorAuthorRoute,
-  BlogCategoryCategoryRoute: BlogCategoryCategoryRoute,
-  BlogPostSlugRoute: BlogPostSlugRoute,
-  ChangelogEntryEntryRoute: ChangelogEntryEntryRoute,
-  ThreadsAuthorsAuthorIdRoute: ThreadsAuthorsAuthorIdRoute,
   ApiInitCalendarEventSlugRoute: ApiInitCalendarEventSlugRoute,
   ApiInitTicketEventSlugRoute: ApiInitTicketEventSlugRoute,
 }

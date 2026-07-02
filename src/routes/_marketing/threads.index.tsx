@@ -5,15 +5,12 @@ import { getThreadsIndexRouteMetaTags } from '@/lib/threads/route-meta'
 import { getThreadsIndexPageSchema } from '@/lib/threads/seo'
 import { parseThreadsTags, threadsSearchSchema } from '@/lib/threads/search'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 
-export const Route = createFileRoute('/threads/')({
+export const Route = createFileRoute('/_marketing/threads/')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   validateSearch: threadsSearchSchema,
   loader: async ({ context, location }) => {
-    await marketingPageLoader(context.queryClient)
 
     const search = threadsSearchSchema.parse(location.search)
     const tags = parseThreadsTags(search.tags)
@@ -46,9 +43,6 @@ export const Route = createFileRoute('/threads/')({
 function ThreadsIndexPage() {
   const pageData = Route.useLoaderData()
 
-  return (
-    <MarketingPageShell>
-      <View {...pageData} />
-    </MarketingPageShell>
-  )
+  return (<View {...pageData} />
+    )
 }

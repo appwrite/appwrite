@@ -256,22 +256,7 @@ export const heCatalog: EnCatalog = {
       messagePrefix: 'הפכו רעיונות למוצרים פעילים. Vibe coding מופעל על ידי',
       dismiss: 'הסתר באנר',
     },
-    debugMenu: {
-      ...enCatalog.app.debugMenu,
-      language: {
-        ...enCatalog.app.debugMenu.language,
-        label: 'שפה',
-        autoLabel: 'אוטומטי (דפדפן)',
-        autoDescription: 'השתמש בשפת הדפדפן.',
-        englishLabel: 'אנגלית',
-        englishDescription: 'הצג ממשק באנגלית.',
-        hebrewLabel: 'עברית',
-        hebrewDescription: 'הצג ממשק בעברית ובכיוון RTL.',
-        activeAuto: 'אוטומטי',
-        activeEnglish: 'אנגלית',
-        activeHebrew: 'עברית (RTL)',
-      },
-    },
+    debugMenu: enCatalog.app.debugMenu,
   },
   website: {
     ...enCatalog.website,

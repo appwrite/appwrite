@@ -15,10 +15,8 @@ import {
 import { getBlogPostRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 
-export const Route = createFileRoute('/blog/post/$slug')({
+export const Route = createFileRoute('/_marketing/blog/post/$slug')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   server: {
@@ -45,7 +43,6 @@ export const Route = createFileRoute('/blog/post/$slug')({
     },
   },
   loader: async ({ context, params }) => {
-    await marketingPageLoader(context.queryClient)
 
     if (params.slug.endsWith('.md')) {
       throw notFound()
@@ -102,9 +99,6 @@ export const Route = createFileRoute('/blog/post/$slug')({
 function BlogPostPage() {
   const { post } = Route.useLoaderData()
 
-  return (
-    <MarketingPageShell>
-      <PostView post={post} />
-    </MarketingPageShell>
-  )
+  return (<PostView post={post} />
+    )
 }

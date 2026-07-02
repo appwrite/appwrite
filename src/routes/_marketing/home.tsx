@@ -22,9 +22,7 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { MarketingProductPills } from '@/components/pages/marketing/MarketingProductPills'
-import { InitOrgPromoBanner } from '@/components/pages/organizations/$orgId/overview/_components/InitOrgPromoBanner'
 import { AiSection } from '@/components/pages/home/AiSection'
 import { InitSection } from '@/components/pages/home/InitSection'
 import { NetworkSection } from '@/components/pages/home/NetworkSection'
@@ -40,12 +38,10 @@ import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection
 import { ProductBentoVisualDeferred } from '@/components/pages/home/product-bento/ProductBentoVisualDeferred'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
-import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import {
   getMarketingHomeOgImage,
   getMarketingPageMetaTags,
@@ -230,8 +226,11 @@ function getSecurityItems(homeCopy: HomeCopy) {
   ] as const
 }
 
-export const Route = createFileRoute('/home')({
-  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
+export const Route = createFileRoute('/_marketing/home')({
+  staticData: {
+    ...MARKETING_PAGE_ROUTE_STATIC_DATA,
+    headerBanner: 'init-org-promo',
+  },
   ssr: true,
   head: () => ({
     meta: getMarketingPageMetaTags({
@@ -255,7 +254,6 @@ export const Route = createFileRoute('/home')({
     ],
   }),
   loader: async ({ context }) => {
-    await marketingPageLoader(context.queryClient)
   },
   component: HomePage,
 })
@@ -273,16 +271,8 @@ function HomePage() {
   )
 
   return (
-    <StandaloneCommandCenterScope context="account">
-      <ConsoleLayout
-        header={{
-          marketingNav: true,
-        }}
-        headerBanner={<InitOrgPromoBanner />}
-        showFooter
-        footer={{ expanded: true }}
-      >
-        <HomeHashScroll />
+    <>
+      <HomeHashScroll />
         <section className="relative isolate overflow-hidden border-b border-border bg-background">
           <HomeSoftLights />
           <div
@@ -580,7 +570,6 @@ function HomePage() {
         <ScaleSection />
 
         <PricingSection />
-      </ConsoleLayout>
-    </StandaloneCommandCenterScope>
+    </>
   )
 }

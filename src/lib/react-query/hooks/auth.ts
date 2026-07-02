@@ -361,6 +361,9 @@ export function shouldRevalidateConsoleAccount(
   queryClient: QueryClient,
   revision: number = getConsoleAccountQueryRevision(),
 ): boolean {
+  const cachedAccount = getConsoleAccountFromCache(queryClient)
+  if (cachedAccount && isConsoleAccountUser(cachedAccount)) return false
+
   if (getConsoleAccountUnauthenticatedError(revision)) return true
 
   const { queryKey } = consoleAccountQueryOptions({ revision })

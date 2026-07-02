@@ -2,12 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { LegalPolicyView } from '@/components/pages/legal/View'
 import baaContent from '@/content/legal/baa.md?raw'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import { useT } from '@/lib/i18n/translate'
 
-export const Route = createFileRoute('/baa')({
+export const Route = createFileRoute('/_marketing/baa')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
@@ -18,16 +16,12 @@ export const Route = createFileRoute('/baa')({
     }),
   }),
   loader: async ({ context }) => {
-    await marketingPageLoader(context.queryClient)
   },
   component: BaaPage,
 })
 
 function BaaPage() {
   const t = useT()
-  return (
-    <MarketingPageShell>
-      <LegalPolicyView title={t('Business Associate Agreement')} content={baaContent} />
-    </MarketingPageShell>
-  )
+  return (<LegalPolicyView title={t('Business Associate Agreement')} content={baaContent} />
+    )
 }

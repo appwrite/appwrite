@@ -2,9 +2,7 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { ProductPageLayout } from '@/components/pages/products/ProductPageLayout'
 import { getProductContent } from '@/lib/products/content'
 import { isProductId, PRODUCT_REGISTRY } from '@/lib/products/registry'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 import {
   marketingSiteTemplatesQueryOptions,
@@ -13,7 +11,7 @@ import {
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
 
-export const Route = createFileRoute('/products/$productId')({
+export const Route = createFileRoute('/_marketing/products/$productId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   beforeLoad: ({ params }) => {
@@ -43,7 +41,6 @@ export const Route = createFileRoute('/products/$productId')({
     }
   },
   loader: async ({ params, context }) => {
-    await marketingPageLoader(context.queryClient)
 
     if (typeof window !== 'undefined' && params.productId === 'sites') {
       const { queryClient } = context
@@ -71,9 +68,6 @@ function ProductPage() {
 
   const content = getProductContent(productId)
 
-  return (
-    <MarketingPageShell>
-      <ProductPageLayout content={content} />
-    </MarketingPageShell>
-  )
+  return (<ProductPageLayout content={content} />
+    )
 }

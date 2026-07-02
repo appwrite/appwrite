@@ -8,14 +8,11 @@ import {
 import { getBlogAuthorRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 
-export const Route = createFileRoute('/blog/author/$author')({
+export const Route = createFileRoute('/_marketing/blog/author/$author')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ context, params }) => {
-    await marketingPageLoader(context.queryClient)
 
     const author = getBlogAuthor(params.author)
     if (!author) {
@@ -42,9 +39,6 @@ export const Route = createFileRoute('/blog/author/$author')({
 function BlogAuthorPage() {
   const { author, posts, authors } = Route.useLoaderData()
 
-  return (
-    <MarketingPageShell>
-      <AuthorView author={author} posts={posts} authors={authors} />
-    </MarketingPageShell>
-  )
+  return (<AuthorView author={author} posts={posts} authors={authors} />
+    )
 }

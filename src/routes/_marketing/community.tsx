@@ -2,11 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/community/View'
 import { fetchCommunityGitHubIssues } from '@/lib/community/github-issues'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
-export const Route = createFileRoute('/community')({
+export const Route = createFileRoute('/_marketing/community')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
@@ -17,7 +15,6 @@ export const Route = createFileRoute('/community')({
     }),
   }),
   loader: async ({ context }) => {
-    await marketingPageLoader(context.queryClient)
 
     const issues = await fetchCommunityGitHubIssues()
     return { issues }
@@ -27,9 +24,6 @@ export const Route = createFileRoute('/community')({
 
 function CommunityPage() {
   const { issues } = Route.useLoaderData()
-  return (
-    <MarketingPageShell>
-      <View issues={issues} />
-    </MarketingPageShell>
-  )
+  return (<View issues={issues} />
+    )
 }

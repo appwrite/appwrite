@@ -8,14 +8,11 @@ import {
 import { getBlogCategoryRouteMetaTags } from '@/lib/blog/route-meta'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
 import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 
-export const Route = createFileRoute('/blog/category/$category')({
+export const Route = createFileRoute('/_marketing/blog/category/$category')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ context, params }) => {
-    await marketingPageLoader(context.queryClient)
 
     const category = getBlogCategory(params.category)
     if (!category) {
@@ -42,9 +39,6 @@ export const Route = createFileRoute('/blog/category/$category')({
 function BlogCategoryPage() {
   const { category, posts, authors } = Route.useLoaderData()
 
-  return (
-    <MarketingPageShell>
-      <CategoryView category={category} posts={posts} authors={authors} />
-    </MarketingPageShell>
-  )
+  return (<CategoryView category={category} posts={posts} authors={authors} />
+    )
 }

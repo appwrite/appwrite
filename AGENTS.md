@@ -1355,7 +1355,7 @@ All user-facing copy in the app and website is translatable. **English is the on
 
 ### Architecture (two layers)
 
-1. **Structured catalog** (`src/lib/i18n/messages/en.ts` + `he.ts`): typed nested catalogs for the global shell (header, footer, sidebar, home page, product navigation, debug menu). Access via `useI18n().catalog`. Use this only for shell-level copy that benefits from a typed structure. <!-- pragma: allowlist secret -->
+1. **Structured catalog** (`src/lib/i18n/messages/en.ts` + `he.ts`): typed nested catalogs for the global shell (header, footer, sidebar, home page, product navigation). Access via `useI18n().catalog`. Use this only for shell-level copy that benefits from a typed structure. <!-- pragma: allowlist secret -->
 2. **`t()` API** (`src/lib/i18n/translate.ts`) - the default for everything else:
    - Components keep their English copy **inline** as the source of truth, wrapped in `t('...')`.
    - `useT()` is a React hook returning `t(text) => string`; call it at the top level of function components only.
@@ -1363,6 +1363,15 @@ All user-facing copy in the app and website is translatable. **English is the on
    - Translations live in per-domain dictionaries at `src/lib/i18n/dictionaries/he/*.ts`, keyed by the **exact English string**. Unknown strings fall back to English, so partial coverage never breaks the UI.
 
 Language selection: debug menu (press `.`) → Settings → Language (Auto / English / Hebrew). Hebrew automatically enables the RTL page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
+
+### Debug menu (English + LTR only)
+
+The debug menu (`src/components/global/providers/DebugMenu.tsx` and its `DebugMenu*Panel` subcomponents) is **developer tooling**, not product UI. It must **always** stay **English** and **LTR**, even when the rest of the app is Hebrew/RTL.
+
+- **Do not translate** debug menu labels, descriptions, tooltips, or panel copy. Keep English strings inline; never wrap them in `t()` or add them to Hebrew dictionaries.
+- **Do not override** `app.debugMenu` in `he.ts` or other language catalogs. English strings live in `en.ts` only; `DebugMenu` reads them via `getEnglishCatalog()`, not `useI18n().catalog`.
+- **Force isolation**: the debug menu root and popover use `dir="ltr"` and `lang="en"` so page-level RTL does not mirror the menu.
+- **New languages**: wire language options in `DebugMenu.tsx` with English copy only. Do not add debug menu entries to per-language dictionaries.
 
 **SDK locale**: `src/lib/appwrite/sdk.ts` calls `client.setLocale(activeLanguage)` on all clients and re-applies it on language change, so server-provided content matches the UI language. Keep this wiring intact when touching SDK client creation. <!-- pragma: allowlist secret -->
 
@@ -1375,7 +1384,7 @@ Language selection: debug menu (press `.`) → Settings → Language (Auto / Eng
 
 ### What NOT to wrap
 
-Code snippets/samples, URLs, IDs, CSS classes, query keys, analytics event names, `console.*` messages, values sent to APIs, enum values used in logic, SQL keywords (CHECK, GROUP BY), cron expressions, HTTP methods, file extensions, MIME types, keyboard key names, date format strings, mock/sample data (person names like "John Doe", company names like "Acme"), terminal output that mimics real CLI output, and **dynamic API error messages** (translate only static fallback copy). <!-- pragma: allowlist secret -->
+Code snippets/samples, URLs, IDs, CSS classes, query keys, analytics event names, `console.*` messages, values sent to APIs, enum values used in logic, SQL keywords (CHECK, GROUP BY), cron expressions, HTTP methods, file extensions, MIME types, keyboard key names, date format strings, mock/sample data (person names like "John Doe", company names like "Acme"), terminal output that mimics real CLI output, **the debug menu and all DebugMenu panels** (see "Debug menu (English + LTR only)"), and **dynamic API error messages** (translate only static fallback copy). <!-- pragma: allowlist secret -->
 
 ### Interpolated strings
 
@@ -1458,7 +1467,7 @@ English is not translated; it IS the source. Rules for writing it:
 
 1. **Catalog**: create `src/lib/i18n/messages/<lang>.ts` exporting a catalog typed as `EnCatalog`, spreading `enCatalog` and overriding translated sections. <!-- pragma: allowlist secret -->
 2. **Dictionaries**: create `src/lib/i18n/dictionaries/<lang>/` mirroring the `he/` per-domain files (databases, sites, functions, auth-storage, project-misc, organizations, account-global, shared-ui, marketing) plus an `index.ts` that merges them.
-3. **Wiring**: add the language to `SupportedLanguage` and the resolver in `src/lib/i18n/active-language.ts` (include browser-locale auto-detection), register the catalog in `src/lib/i18n/index.tsx`, add the dictionary to `LANGUAGE_DICTIONARIES` in `src/lib/i18n/translate.ts`, and add the option to the debug menu language submenu (set `pageDirection: 'rtl'` on selection if the language is RTL).
+3. **Wiring**: add the language to `SupportedLanguage` and the resolver in `src/lib/i18n/active-language.ts` (include browser-locale auto-detection), register the catalog in `src/lib/i18n/index.tsx`, add the dictionary to `LANGUAGE_DICTIONARIES` in `src/lib/i18n/translate.ts`, and add the option to the debug menu language submenu in `DebugMenu.tsx` using **English-only** labels (set `pageDirection: 'rtl'` on selection if the language is RTL). Do not translate the debug menu itself.
 4. **SDK locale**: no change needed - `setLocale` uses the resolved language automatically.
 5. **Glossary first**: before translating in bulk, write this section's per-language block for the new language (which branded compound names and sub-brands stay Latin; recommended translations for standalone menu product names; which technical terms stay Latin; terminology standards; voice/register; grammar rules). Translate against that glossary, then run the quality workflow and coverage check above.
 6. **Document it**: add the new "Language: X" block to this file.

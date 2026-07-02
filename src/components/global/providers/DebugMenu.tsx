@@ -107,9 +107,11 @@ import {
   writeDebugMenuPosition,
   type DebugMenuPosition,
 } from '@/lib/debug-menu-position'
-import { useI18n } from '@/lib/i18n'
+import { getEnglishCatalog } from '@/lib/i18n'
 
 const DEBUG_MENU_DRAG_THRESHOLD_PX = 6
+/** Debug menu stays English + LTR regardless of app language (developer tooling). */
+const DEBUG_MENU_LANGUAGE_COPY = getEnglishCatalog().app.debugMenu.language
 
 function DebugMenuBrandMark({ className }: { className?: string }) {
   return (
@@ -652,8 +654,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const [featureFlagsSearch, setFeatureFlagsSearch] = useState('')
-  const { catalog } = useI18n()
-  const languageCopy = catalog.app.debugMenu.language
+  const languageCopy = DEBUG_MENU_LANGUAGE_COPY
   const { profileId, features } = useConsoleProfile()
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
@@ -1798,6 +1799,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
   return (
     <DismissableLayerBranch
+      dir="ltr"
+      lang="en"
       className="pointer-events-auto fixed z-[10060]"
       style={{
         left: displayPosition.x,
@@ -1833,6 +1836,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           </TooltipContent>
         </Tooltip>
         <PopoverContent
+          dir="ltr"
+          lang="en"
           side={popoverPlacement.side}
           align={popoverPlacement.align}
           sideOffset={8}

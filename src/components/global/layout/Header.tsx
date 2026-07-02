@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
 import { formatDateMonthYear } from '@/lib/date-utils'
@@ -37,6 +39,13 @@ import {
   useAuth,
   isOptionalAuthPage,
 } from '@/components/global/auth/RequireAuth'
+import { getConsoleAccountUnauthenticatedError } from '@/lib/console-account-cache'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
+import {
+  getConsoleAccountFromCache,
+  getConsoleAccountSync,
+  isConsoleAccountQuerySettled,
+} from '@/lib/react-query/hooks/auth'
 import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -262,13 +271,18 @@ export function ConsoleHeader({
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
   const { toggleChat } = useAIChat()
+  const queryClient = useQueryClient()
   const {
     account,
     signOut,
     isAuthenticated,
     isFetched: isAuthFetched,
   } = useAuth()
-  const operatorAccount = account as OperatorAccount | undefined
+  const headerAccount =
+    (account as Models.User | undefined) ??
+    (getConsoleAccountFromCache(queryClient) as Models.User | undefined) ??
+    getConsoleAccountSync()
+  const operatorAccount = headerAccount as OperatorAccount | undefined
   const showAdminSection = isOperatorAccount(operatorAccount)
   const location = useLocation()
   const navigate = useNavigate()
@@ -299,7 +313,8 @@ export function ConsoleHeader({
   const orgIdFromRoute = params?.orgId as string | undefined
   const orgId = projectId
     ? (project?.teamId ?? undefined)
-    : (orgIdFromRoute ?? (account?.prefs?.organization as string | undefined))
+    : (orgIdFromRoute ??
+      (headerAccount?.prefs?.organization as string | undefined))
   const { features } = useConsoleProfile()
   const { catalog } = useI18n()
   const headerCopy = catalog.app.header
@@ -366,25 +381,31 @@ export function ConsoleHeader({
   }
 
   // Get user display name (prefer name, fallback to email)
-  const displayName = account?.name || account?.email || headerCopy.accountMenu.user
-  const userEmail = account?.email || ''
-  const accountId = account?.$id || ''
+  const displayName =
+    headerAccount?.name ||
+    headerAccount?.email ||
+    headerCopy.accountMenu.user
+  const userEmail = headerAccount?.email || ''
+  const accountId = headerAccount?.$id || ''
 
   // Format member since date using consistent formatting
   // Account registration can be in various formats (Unix timestamp, ISO string, etc.)
   const memberSince = formatDateMonthYear(
-    account?.registration || account?.createdAt || account?.$createdAt,
+    headerAccount?.registration ||
+      headerAccount?.createdAt ||
+      headerAccount?.$createdAt,
   )
 
   // Account status (active if account exists)
-  const accountStatus = account
+  const accountStatus = headerAccount
     ? headerCopy.accountMenu.active
     : headerCopy.accountMenu.inactive
 
   // Check if 2FA is enabled
   // Appwrite account object may have mfa or twoFactorAuthenticatorEnabled property
   const is2FAEnabled =
-    account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
+    headerAccount?.mfa === true ||
+    headerAccount?.twoFactorAuthenticatorEnabled === true
 
   const hasSidebar = !isOrgOverview
   const isAccountScope = location.pathname.startsWith('/account')
@@ -393,9 +414,16 @@ export function ConsoleHeader({
     ? resolveInitHeaderNavCta({ mockCurrentDay: overrides.mockInitCurrentDay })
     : null
   const isOptionalAuth = isOptionalAuthPage(location.pathname)
-  const optionalAuthPending = isOptionalAuth && !isAuthFetched
+  const optionalAuthResolved =
+    isAuthFetched ||
+    isConsoleAccountQuerySettled(queryClient) ||
+    !!headerAccount ||
+    getConsoleAccountUnauthenticatedError(getConsoleAccountQueryRevision()) !==
+      undefined
+  const optionalAuthPending = isOptionalAuth && !optionalAuthResolved
+  const headerAuthenticated = isAuthenticated || !!headerAccount
   const showGuestHeader =
-    isOptionalAuth && isAuthFetched && !isAuthenticated
+    isOptionalAuth && optionalAuthResolved && !headerAuthenticated
   const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
   const showChangelogBadge = useChangelogNavBadge()
@@ -478,7 +506,7 @@ export function ConsoleHeader({
           {(() => {
             const linkOrgId =
               project?.teamId ||
-              (account?.prefs?.organization as string | undefined)
+              (headerAccount?.prefs?.organization as string | undefined)
             const logoDestination = showMarketingNav
               ? ({ to: '/home' } as const)
               : showGuestHeader && features.init
@@ -699,7 +727,7 @@ export function ConsoleHeader({
                           onClick={() => {
                             const orgId =
                               project?.teamId ||
-                              (account?.prefs?.organization as
+                              (headerAccount?.prefs?.organization as
                                 | string
                                 | undefined)
                             if (orgId) {
@@ -724,7 +752,7 @@ export function ConsoleHeader({
                           onClick={() => {
                             const orgId =
                               project?.teamId ||
-                              (account?.prefs?.organization as
+                              (headerAccount?.prefs?.organization as
                                 | string
                                 | undefined)
                             openCreateOrganizationFlow(navigate, {
@@ -1227,7 +1255,7 @@ export function ConsoleHeader({
                   {/* Account Details */}
                   <div className="px-3 py-2 space-y-4 text-start">
                     {/* Member Since */}
-                    {account?.registration && (
+                    {headerAccount?.registration && (
                       <div>
                         <p className="text-[11px] text-muted-foreground mb-1.5">
                           {headerCopy.accountMenu.memberSince}

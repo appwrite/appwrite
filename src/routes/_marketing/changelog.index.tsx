@@ -3,11 +3,9 @@ import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-d
 import { ChangelogSeenSync } from '@/components/pages/changelog/ChangelogSeenSync'
 import { View } from '@/components/pages/changelog/View'
 import { getChangelogEntriesPage } from '@/lib/changelog/content'
-import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
-import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import { getMarketingPageMetaTags } from '@/lib/marketing/route-meta'
 
-export const Route = createFileRoute('/changelog/')({
+export const Route = createFileRoute('/_marketing/changelog/')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   head: () => ({
@@ -19,7 +17,6 @@ export const Route = createFileRoute('/changelog/')({
     }),
   }),
   loader: async ({ context }) => {
-    await marketingPageLoader(context.queryClient)
     return getChangelogEntriesPage(1)
   },
   component: ChangelogPage,
@@ -29,9 +26,9 @@ function ChangelogPage() {
   const { entries, nextPage } = Route.useLoaderData()
 
   return (
-    <MarketingPageShell>
+    <>
       <ChangelogSeenSync />
       <View entries={entries} nextPage={nextPage} />
-    </MarketingPageShell>
+    </>
   )
 }
