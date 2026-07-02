@@ -343,6 +343,52 @@ export const enCatalog = {
           'Build with controls that help protect sensitive user data.',
       },
     },
+    products: {
+      pageLayout: {
+        startBuilding: 'Start building',
+        viewDocs: 'View docs',
+        viewPricing: 'View pricing',
+      },
+      explore: {
+        title: 'Explore Appwrite', // pragma: allowlist secret
+        description:
+          'Modular backend services that share the same project, permissions model, and console.',
+      },
+      tools: {
+        headingTitle: 'Tools built for developers and agents',
+        headingDescription:
+          'API-first by design. Use the Console, Realtime, SDKs, CLI, Terraform, MCP, and agent skills on the same project.',
+        developerExperienceTitle: 'Developer and agent experience',
+        developerExperienceFallbackCaption: 'A typical integration in TypeScript.',
+        everythingApiTitle: 'Everything is an API',
+        everythingApiDescription:
+          'REST, GraphQL, and SDKs for every service. Automate and integrate without console-only workflows.',
+        consoleTitle: 'Console',
+        consoleDescription:
+          'Manage every service in your project from a unified Console. Optimized keyboard access and a Command Center keep you moving fast.',
+        commandCenter: 'Command Center',
+        realtimeTitle: 'Realtime',
+        realtimeDescription:
+          'Subscribe to live events and react to changes as they happen.',
+        mcpTitle: 'MCP',
+        mcpDescription:
+          'Connect AI agents to your Appwrite project, APIs, and docs through MCP servers.', // pragma: allowlist secret
+        terraformTitle: 'Terraform',
+        terraformDescription:
+          'Manage Appwrite infrastructure as code with the official provider.', // pragma: allowlist secret
+        agentSkillsTitle: 'Agent skills',
+        agentSkillsDescription:
+          'Give AI agents SDK-accurate knowledge of Appwrite services and APIs.', // pragma: allowlist secret
+        sdksTitle: 'SDKs',
+        sdksDescriptionPrefix:
+          'Client and server SDKs for the platforms your team already uses.',
+        sdksDescriptionSuffix:
+          'official SDKs available across client and server runtimes.',
+        cliTitle: 'CLI',
+        cliDescription:
+          'Deploy resources, manage projects, and generate typed SDKs from your terminal.',
+      },
+    },
   },
 } as const
 

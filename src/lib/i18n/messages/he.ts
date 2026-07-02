@@ -355,5 +355,55 @@ export const heCatalog: EnCatalog = {
         firewallNewLabel: 'חדש',
       },
     },
+    products: {
+      ...enCatalog.website.products,
+      pageLayout: {
+        ...enCatalog.website.products.pageLayout,
+        startBuilding: 'התחילו לבנות',
+        viewDocs: 'צפייה בתיעוד',
+        viewPricing: 'צפייה בתמחור',
+      },
+      explore: {
+        ...enCatalog.website.products.explore,
+        title: 'גלו את Appwrite', // pragma: allowlist secret
+        description:
+          'שירותי Backend מודולריים שחולקים את אותו פרויקט, מודל הרשאות וקונסול.',
+      },
+      tools: {
+        ...enCatalog.website.products.tools,
+        headingTitle: 'כלים שנבנו למפתחים ולסוכני AI',
+        headingDescription:
+          'API-first כברירת מחדל. השתמשו בקונסול, Realtime, SDKs, CLI, Terraform, MCP ויכולות סוכנים על אותו פרויקט.',
+        developerExperienceTitle: 'חוויית מפתחים וסוכני AI',
+        developerExperienceFallbackCaption: 'אינטגרציה טיפוסית ב-TypeScript.',
+        everythingApiTitle: 'הכל הוא API',
+        everythingApiDescription:
+          'REST, GraphQL ו-SDKs לכל שירות. אוטומציה ואינטגרציה ללא תלות בזרימות של קונסול בלבד.',
+        consoleTitle: 'קונסול',
+        consoleDescription:
+          'ניהול כל השירותים בפרויקט מקונסול אחוד. גישת מקלדת מהירה ו-Command Center שומרים על קצב עבודה גבוה.',
+        commandCenter: 'Command Center',
+        realtimeTitle: 'Realtime',
+        realtimeDescription:
+          'הרשמה לאירועים חיים ותגובה לשינויים בזמן שהם קורים.',
+        mcpTitle: 'MCP',
+        mcpDescription:
+          'חיבור סוכני AI לפרויקט, ל-APIs ולתיעוד של Appwrite דרך שרתי MCP.', // pragma: allowlist secret
+        terraformTitle: 'Terraform',
+        terraformDescription:
+          'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret
+        agentSkillsTitle: 'יכולות סוכן',
+        agentSkillsDescription:
+          'ספקו לסוכני AI ידע מדויק ל-SDK על שירותי Appwrite וה-APIs.', // pragma: allowlist secret
+        sdksTitle: 'SDKs',
+        sdksDescriptionPrefix:
+          'SDKs לצד לקוח וצד שרת לפלטפורמות שהצוות שלכם כבר משתמש בהן.',
+        sdksDescriptionSuffix:
+          'SDKs רשמיים זמינים בסביבות Client ו-Server.',
+        cliTitle: 'CLI',
+        cliDescription:
+          'פריסה של משאבים, ניהול פרויקטים ויצירת SDKs מוקלדים ישירות מהטרמינל.',
+      },
+    },
   },
 }

@@ -6,6 +6,7 @@ import { scrollMarketingMainToTop } from '@/lib/marketing/MarketingScrollToTop'
 import { PRODUCT_IDS, PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 
 type ProductExploreSectionProps = {
   currentProductId: ProductId
@@ -57,12 +58,15 @@ function ProductExploreCard({
 }
 
 export function ProductExploreSection({ currentProductId }: ProductExploreSectionProps) {
+  const { catalog } = useI18n()
+  const exploreCopy = catalog.website.products.explore
+
   return (
     <section className="border-t border-border bg-muted/20 py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <MarketingSectionHeading
-          title="Explore Appwrite"
-          description="Modular backend services that share the same project, permissions model, and console."
+          title={exploreCopy.title}
+          description={exploreCopy.description}
           size="md"
         />
 
