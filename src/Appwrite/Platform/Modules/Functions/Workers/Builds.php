@@ -749,7 +749,7 @@ class Builds extends Action
                         } else {
                             $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
-                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '');
+                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '', $resource->getAttribute('framework', ''));
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
@@ -1399,7 +1399,7 @@ class Builds extends Action
         return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
     }
 
-    protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
+    protected function prepareSiteBuildCommand(string $command, string $outputDirectory, string $framework): string
     {
         $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
 
@@ -1407,7 +1407,11 @@ class Builds extends Action
             $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
         }
 
-        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+        foreach (SSR::FRAMEWORK_FILES[$framework] ?? [] as $file) {
+            $listFilesCommand .= ' && ( [ -e ' . \escapeshellarg($file) . ' ] && echo ' . \escapeshellarg($file) . ' || true )';
+        }
+
+        $listFilesCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
 
         if (empty($command)) {
             return $listFilesCommand;
