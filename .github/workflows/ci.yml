@@ -424,7 +424,7 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
@@ -545,7 +545,7 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
@@ -623,7 +623,7 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
@@ -706,7 +706,7 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   benchmark:
     name: Benchmark
