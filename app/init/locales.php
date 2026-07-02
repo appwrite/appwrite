@@ -13,9 +13,12 @@ foreach ($locales as $locale) {
     $path = __DIR__ . '/../config/locale/translations/' . $code . '.json';
 
     if (!\file_exists($path)) {
-        $path = __DIR__ . '/../config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
+        // Only try 2-char prefix for locale variants (e.g., ar-ae -> ar), not standalone 3-char codes (e.g., ase)
+        if (\str_contains($code, '-')) {
+            $path = __DIR__ . '/../config/locale/translations/' . \substr($code, 0, 2) . '.json';
+        }
         if (!\file_exists($path)) {
-            $path = __DIR__ . '/../config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
+            $path = __DIR__ . '/../config/locale/translations/en.json'; // if no translation exists, use default from `en.json`
         }
     }
 
