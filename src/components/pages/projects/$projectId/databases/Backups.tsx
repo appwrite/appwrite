@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ID } from '@appwrite.io/console'
+import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
@@ -166,7 +166,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     mutationFn: async (
       policies: Array<{
         policyId: string
-        services: string[]
+        services: BackupServices[]
         retention: number
         schedule: string
         name?: string
@@ -242,7 +242,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     mutationFn: async () => {
       const projectSdk = sdk.forProject(projectId)
       return projectSdk.backups.createArchive({
-        services: ['databases'],
+        services: [BackupServices.Databases],
         resourceId: databaseId})
     },
     onSuccess: () => {
@@ -320,7 +320,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const createRestorationMutation = useMutation({
     mutationFn: async (params: {
       archiveId: string
-      services: string[]
+      services: BackupServices[]
       newResourceId?: string
       newResourceName?: string
     }) => {
@@ -1010,7 +1010,7 @@ interface CreatePolicyDialogProps {
   onSubmit: (
     policies: Array<{
       policyId: string
-      services: string[]
+      services: BackupServices[]
       retention: number
       schedule: string
       name?: string
@@ -1058,7 +1058,7 @@ function CreatePolicyDialog({
   const handleSubmit = () => {
     const policies: Array<{
       policyId: string
-      services: string[]
+      services: BackupServices[]
       retention: number
       schedule: string
       name?: string
@@ -1070,7 +1070,7 @@ function CreatePolicyDialog({
     if (selectedPresets.includes('hourly')) {
       policies.push({
         policyId: ID.unique(),
-        services: ['databases'],
+        services: [BackupServices.Databases],
         retention: 1,
         schedule: '0 * * * *',
         name: 'Hourly backup',
@@ -1080,7 +1080,7 @@ function CreatePolicyDialog({
     if (selectedPresets.includes('daily')) {
       policies.push({
         policyId: ID.unique(),
-        services: ['databases'],
+        services: [BackupServices.Databases],
         retention: 7,
         schedule: '0 2 * * *',
         name: 'Daily backup',
@@ -1127,7 +1127,7 @@ function CreatePolicyDialog({
 
       policies.push({
         policyId: ID.unique(),
-        services: ['databases'],
+        services: [BackupServices.Databases],
         retention,
         schedule,
         name: custom.name || `${custom.frequency} backup`,
@@ -1507,7 +1507,7 @@ interface RestoreBackupDialogProps {
   databaseId: string
   onSubmit: (params: {
     archiveId: string
-    services: string[]
+    services: BackupServices[]
     newResourceId?: string
     newResourceName?: string
   }) => void
@@ -1541,14 +1541,14 @@ function RestoreBackupDialog({
       if (!newDatabaseName) return
       onSubmit({
         archiveId: backup.$id,
-        services: ['databases'],
+        services: [BackupServices.Databases],
         newResourceId: newDatabaseId || undefined,
         newResourceName: newDatabaseName})
     } else {
       if (!confirmSameDbRestore) return
       onSubmit({
         archiveId: backup.$id,
-        services: ['databases'],
+        services: [BackupServices.Databases],
         newResourceId: databaseId})
     }
   }

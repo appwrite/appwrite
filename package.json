@@ -33,7 +33,7 @@
     "socials": "bun run scripts/socials.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@d126cd9",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9b5dcc6",
     "@appwrite.io/specs": "github:appwrite/specs",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

@@ -3221,7 +3221,9 @@ export function productDatabasesQueryOptions(
 }
 
 function mapProjectDatabaseListItems(
-  databasesData: { databases?: Models.Database[] } | undefined,
+  databasesData:
+    | { databases?: Models.Database[]; total?: number }
+    | undefined,
   limit: number,
 ) {
   const databases = (databasesData?.databases ?? []).map((db: unknown) => {

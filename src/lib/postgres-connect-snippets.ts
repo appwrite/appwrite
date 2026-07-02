@@ -1,3 +1,4 @@
+import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 import type { Models } from '@appwrite.io/console'
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import {
@@ -21,7 +22,7 @@ export type PostgresConnectionEndpointInfo = {
 }
 
 export type PostgresConnectSnippetContext = {
-  credentials: Models.DedicatedDatabaseCredentials
+  credentials: DedicatedDatabaseCredentials
   endpointInfo: PostgresConnectionEndpointInfo
 }
 
@@ -406,11 +407,12 @@ export function buildPostgresConnectSnippetDisplayCode(
 }
 
 export function buildPostgresConnectionEndpointInfo(
-  credentials: Models.DedicatedDatabaseCredentials,
+  credentials: DedicatedDatabaseCredentials,
   pooler: Models.DedicatedDatabasePooler | null | undefined,
 ): PostgresConnectionEndpointInfo {
   const pooledHost = credentials.host
-  const pooledPort = credentials.port
+  const pooledPort =
+    pooler?.enabled === true && pooler.port ? pooler.port : credentials.port
   const directHost = credentials.tcpHost || credentials.host
   const directPort = credentials.tcpPort || credentials.port
   const poolerEnabled = pooler?.enabled === true
@@ -431,7 +433,7 @@ export function buildPostgresConnectionEndpointInfo(
 }
 
 export function buildPostgresCopyAllText(
-  credentials: Models.DedicatedDatabaseCredentials,
+  credentials: DedicatedDatabaseCredentials,
   endpointInfo: PostgresConnectionEndpointInfo,
 ): string {
   const databaseName = credentials.database || credentials.tcpDatabase

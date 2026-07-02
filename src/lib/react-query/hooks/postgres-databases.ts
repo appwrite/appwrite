@@ -13,7 +13,9 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEDICATED_FEATURE_UNAVAILABLE,
+  mapDedicatedDatabaseCredentials,
   type DedicatedDatabaseConnectionList,
+  type DedicatedDatabaseCredentials,
 } from '@/lib/databases/dedicated-engine'
 import {
   explainPostgresDatabaseQuery,
@@ -726,10 +728,12 @@ export async function fetchPostgresDatabaseConnections(
 export async function fetchPostgresDatabaseCredentials(
   projectId: string,
   databaseId: string,
-): Promise<Models.DedicatedDatabaseCredentials> {
-  return await sdk.forProject(projectId).postgresql.getCredentials({
-    databaseId,
-  })
+): Promise<DedicatedDatabaseCredentials> {
+  const database = await fetchPostgresDatabase(projectId, databaseId)
+  if (!database) {
+    throw new Error('Database not found')
+  }
+  return mapDedicatedDatabaseCredentials(database)
 }
 
 export function postgresDatabaseConnectionsQueryOptions(

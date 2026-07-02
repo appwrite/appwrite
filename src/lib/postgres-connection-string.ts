@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 
 const MASKED_PASSWORD = '••••••••'
 
@@ -41,7 +41,7 @@ export function maskPostgresConnectionStringPassword(
 }
 
 type PostgresConnectionStringCredentials = Pick<
-  Models.DedicatedDatabaseCredentials,
+  DedicatedDatabaseCredentials,
   | 'connectionString'
   | 'host'
   | 'port'

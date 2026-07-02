@@ -52,7 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import type { Models } from '@appwrite.io/console'
+import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 import { PostgresCopyableField } from './PostgresCopyableField'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
@@ -113,7 +113,7 @@ type PostgresConnectDetailsProps = {
   projectId: string
   databaseId: string
   database: NonNullable<ReturnType<typeof usePostgresDatabase>['database']>
-  credentials: Models.DedicatedDatabaseCredentials
+  credentials: DedicatedDatabaseCredentials
   endpointInfo: PostgresConnectionEndpointInfo
   snippets: ReturnType<typeof buildPostgresConnectSnippets> | null
   onClose: () => void
@@ -225,7 +225,7 @@ function PostgresConnectDetails({
 }
 
 type PostgresConnectDsnProps = {
-  credentials: Models.DedicatedDatabaseCredentials
+  credentials: DedicatedDatabaseCredentials
 }
 
 function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
