@@ -41,7 +41,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
-use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -60,10 +59,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -3234,70 +3230,6 @@ Http::get('/v1/account/prefs')
         $prefs = $user->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
-    });
-
-Http::get('/v1/account/logs')
-    ->desc('List logs')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'logs',
-        name: 'listLogs',
-        description: '/docs/references/account/list-logs.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_LOG_LIST,
-            )
-        ],
-        contentType: ContentType::JSON,
-    ))
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('user')
-    ->inject('getGeoForIp')
-    ->inject('dbForProject')
-    ->inject('audit')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, callable $getGeoForIp, Database $dbForProject, Audit $audit) {
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
-        $logs = $audit->getLogsByUser($user->getSequence(), offset: $offset, limit: $limit);
-
-        $output = [];
-
-        foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-            $detector = new Detector($log['userAgent']);
-
-            $output[$i] = new Document(array_merge(
-                $log->getArrayCopy(),
-                $log['data'],
-                $detector->getOS(),
-                $detector->getClient(),
-                $detector->getDevice()
-            ));
-
-            $logGeo = $getGeoForIp($log['ip'] ?? '');
-            $output[$i]['countryCode'] = $logGeo->getCountryCode();
-            $output[$i]['countryName'] = $logGeo->getCountryName();
-        }
-
-        $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
-            'logs' => $output,
-        ]), Response::MODEL_LOG_LIST);
     });
 
 Http::patch('/v1/account/name')

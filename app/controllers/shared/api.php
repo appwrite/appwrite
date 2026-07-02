@@ -1181,11 +1181,3 @@ Http::shutdown()
             // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
         }
     });
-
-Http::init()
-    ->groups(['usage'])
-    ->action(function () {
-        if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
-    });

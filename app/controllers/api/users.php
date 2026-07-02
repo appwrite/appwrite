@@ -31,7 +31,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Audit\Audit;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Bcrypt;
@@ -44,7 +43,6 @@ use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -55,11 +53,8 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -992,90 +987,6 @@ Http::get('/v1/users/:userId/memberships')
             'memberships' => $memberships,
             'total' => $includeTotal ? count($memberships) : 0,
         ]), Response::MODEL_MEMBERSHIP_LIST);
-    });
-
-Http::get('/v1/users/:userId/logs')
-    ->desc('List user logs')
-    ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'logs',
-        name: 'listLogs',
-        description: '/docs/references/users/list-user-logs.md',
-        auth: [AuthType::ADMIN, AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_LOG_LIST,
-            )
-        ]
-    ))
-    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('getGeoForIp')
-    ->inject('audit')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, callable $getGeoForIp, Audit $audit) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
-
-        $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
-        $output = [];
-        foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-            $detector = new Detector($log['userAgent']);
-            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            $os = $detector->getOS();
-            $client = $detector->getClient();
-            $device = $detector->getDevice();
-            $output[$i] = new Document([
-                'event' => $log['event'],
-                'userId' => ID::custom($log['data']['userId']),
-                'userEmail' => $log['data']['userEmail'] ?? null,
-                'userName' => $log['data']['userName'] ?? null,
-                'mode' => $log['data']['mode'] ?? null,
-                'userType' => $log['data']['userType'] ?? null,
-                'ip' => $log['ip'],
-                'time' => $log['time'],
-                'osCode' => $os['osCode'],
-                'osName' => $os['osName'],
-                'osVersion' => $os['osVersion'],
-                'clientType' => $client['clientType'],
-                'clientCode' => $client['clientCode'],
-                'clientName' => $client['clientName'],
-                'clientVersion' => $client['clientVersion'],
-                'clientEngine' => $client['clientEngine'],
-                'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName' => $device['deviceName'],
-                'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
-            ]);
-
-            $logGeo = $getGeoForIp($log['ip'] ?? '');
-            $output[$i]['countryCode'] = $logGeo->getCountryCode();
-            $output[$i]['countryName'] = $logGeo->getCountryName();
-        }
-
-        $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
-            'logs' => $output,
-        ]), Response::MODEL_LOG_LIST);
     });
 
 Http::get('/v1/users/:userId/targets')
@@ -2818,89 +2729,4 @@ Http::post('/v1/users/:userId/jwts')
                 'userId' => $user->getId(),
                 'sessionId' => $session->isEmpty() ? '' : $session->getId()
             ])]), Response::MODEL_JWT);
-    });
-
-Http::get('/v1/users/usage')
-    ->desc('Get users usage stats')
-    ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: null,
-        name: 'getUsage',
-        description: '/docs/references/users/get-usage.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USAGE_USERS,
-            )
-        ]
-    ))
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(name: 'UsageRange'))
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $authorization) {
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            METRIC_USERS,
-            METRIC_SESSIONS,
-        ];
-
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $count => $metric) {
-                $result =  $dbForProject->findOne('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
-                ]);
-
-                $stats[$metric]['total'] = $result['value'] ?? 0;
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('metric', [$metric]),
-                    Query::equal('period', [$period]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric]['data'] = [];
-                foreach ($results as $result) {
-                    $stats[$metric]['data'][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-            default => throw new \LogicException('Unsupported period: ' . $days['period']),
-        };
-
-        foreach ($metrics as $metric) {
-            $usage[$metric]['total'] =  $stats[$metric]['total'];
-            $usage[$metric]['data'] = [];
-            $leap = time() - ($days['limit'] * $days['factor']);
-            while ($leap < time()) {
-                $leap += $days['factor'];
-                $formatDate = date($format, $leap);
-                $usage[$metric]['data'][] = [
-                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                    'date' => $formatDate,
-                ];
-            }
-        }
-
-        $response->dynamic(new Document([
-            'range' => $range,
-            'usersTotal'   => $usage[$metrics[0]]['total'],
-            'sessionsTotal' => $usage[$metrics[1]]['total'],
-            'users'   => $usage[$metrics[0]]['data'],
-            'sessions' => $usage[$metrics[1]]['data'],
-        ]), Response::MODEL_USAGE_USERS);
     });

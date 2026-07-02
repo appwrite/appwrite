@@ -2521,17 +2521,6 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertCount(1, $executions['body']['executions']);
         });
 
-        $this->assertEventually(function () use ($functionId) {
-            $response = $this->getUsage($functionId, [
-                'range' => '24h'
-            ]);
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertCount(24, $response['body']);
-            $this->assertEquals('24h', $response['body']['range']);
-            $this->assertEquals(1, $response['body']['executionsTotal']);
-        }, 25000, 500);
-
         $this->cleanupFunction($functionId);
     }
 

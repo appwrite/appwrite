@@ -119,44 +119,46 @@ jobs:
         id: install
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
-      - name: Install Node dependencies
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm ci
+      - parallel:
+          - name: Install Node dependencies
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: npm ci
 
-      - name: Cache PHPStan result cache
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: .phpstan-cache
-          key: phpstan-${{ github.sha }}
-          restore-keys: |
-            phpstan-
+          - name: Cache PHPStan result cache
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+            with:
+              path: .phpstan-cache
+              key: phpstan-${{ github.sha }}
+              restore-keys: |
+                phpstan-
 
-      - name: Audit dependencies
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        env:
-          COMPOSER_NO_AUDIT: 0
-        run: composer audit
+      - parallel:
+          - name: Audit dependencies
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            env:
+              COMPOSER_NO_AUDIT: 0
+            run: composer audit
 
-      - name: Run Linter
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: composer lint
+          - name: Run Linter
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: composer lint
 
-      - name: Check Docker Compose formatting
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npm run lint:compose
+          - name: Check Docker Compose formatting
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: npm run lint:compose
 
-      - name: Run Rector
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: composer refactor:check
+          - name: Run Rector
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: composer refactor:check
 
-      - name: Run PHPStan
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: composer analyze -- --no-progress
+          - name: Run PHPStan
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: composer analyze -- --no-progress
 
-      - name: Generate specs
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
+          - name: Generate specs
+            if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            run: _APP_STORAGE_LIMIT=5368709120 php app/cli.php specs --version=latest --git=no
 
   locale:
     name: Checks / Locale
@@ -213,6 +215,7 @@ jobs:
               { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 15 },
               { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 15 },
               { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 15 },
@@ -298,28 +301,32 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
-        run: |
-          # Docker Hub registry timeouts are a common transient CI failure
-          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-          # keep `up` single-shot so genuine container health failures still surface.
-          for attempt in 1 2 3; do
-            if docker compose pull --quiet --ignore-buildable; then
-              break
-            elif [ "$attempt" -eq 3 ]; then
-              echo "::error::docker compose pull failed after 3 attempts; aborting"
-              exit 1
-            fi
-            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-            sleep 15
-          done
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Environment Variables
         run: docker compose exec -T appwrite vars
@@ -357,28 +364,32 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
-        run: |
-          # Docker Hub registry timeouts are a common transient CI failure
-          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-          # keep `up` single-shot so genuine container health failures still surface.
-          for attempt in 1 2 3; do
-            if docker compose pull --quiet --ignore-buildable; then
-              break
-            elif [ "$attempt" -eq 3 ]; then
-              echo "::error::docker compose pull failed after 3 attempts; aborting"
-              exit 1
-            fi
-            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-            sleep 15
-          done
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -454,10 +465,28 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -466,21 +495,7 @@ jobs:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: |
-          # Docker Hub registry timeouts are a common transient CI failure
-          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-          # keep `up` single-shot so genuine container health failures still surface.
-          for attempt in 1 2 3; do
-            if docker compose pull --quiet --ignore-buildable; then
-              break
-            elif [ "$attempt" -eq 3 ]; then
-              echo "::error::docker compose pull failed after 3 attempts; aborting"
-              exit 1
-            fi
-            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-            sleep 15
-          done
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -549,10 +564,28 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -561,21 +594,7 @@ jobs:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: |
-          # Docker Hub registry timeouts are a common transient CI failure
-          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-          # keep `up` single-shot so genuine container health failures still surface.
-          for attempt in 1 2 3; do
-            if docker compose pull --quiet --ignore-buildable; then
-              break
-            elif [ "$attempt" -eq 3 ]; then
-              echo "::error::docker compose pull failed after 3 attempts; aborting"
-              exit 1
-            fi
-            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-            sleep 15
-          done
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Run tests
         timeout-minutes: 15
@@ -620,10 +639,28 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Docker Image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+      - parallel:
+          - name: Pull Docker Image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              # Docker Hub registry timeouts are a common transient CI failure
+              # (e.g. a traefik manifest fetch timing out). Retry the image pull;
+              # keep `up` single-shot so genuine container health failures still surface.
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+                sleep 15
+              done
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
@@ -631,21 +668,7 @@ jobs:
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
-        run: |
-          # Docker Hub registry timeouts are a common transient CI failure
-          # (e.g. a traefik manifest fetch timing out). Retry the image pull;
-          # keep `up` single-shot so genuine container health failures still surface.
-          for attempt in 1 2 3; do
-            if docker compose pull --quiet --ignore-buildable; then
-              break
-            elif [ "$attempt" -eq 3 ]; then
-              echo "::error::docker compose pull failed after 3 attempts; aborting"
-              exit 1
-            fi
-            echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
-            sleep 15
-          done
-          docker compose up -d --quiet-pull --wait
+        run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -699,16 +722,17 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Pull Appwrite image
-        run: |
-          docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
-          docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}:after
+      - parallel:
+          - name: Pull Appwrite image
+            run: |
+              docker pull ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}
+              docker tag ${{ env.RUNS_ON_ECR_CACHE }}:${{ env.IMAGE }}-${{ github.sha }} ${{ env.IMAGE }}:after
 
-      - name: Setup k6
-        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
-        with:
-          k6-version: ${{ env.K6_VERSION }}
+          - name: Setup k6
+            uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1.2.1
+            with:
+              k6-version: ${{ env.K6_VERSION }}
 
       - name: Prepare benchmark before
         id: benchmark_before_prepare
