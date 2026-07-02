@@ -92,7 +92,7 @@ import {
   SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
   secondarySidebarNavLinkClassName,
 } from '@/lib/layout/secondary-sidebar-nav'
-import { useDebugOverrides } from '@/lib/debug-overrides'
+import { usePageDirection } from '@/lib/layout/page-direction'
 
 const iconMap: Record<string, LucideIcon> = {
   Zap,
@@ -215,7 +215,7 @@ function MobileCategoryDrawer({
   const t = useT()
   const [open, setOpen] = useState(false)
   const location = useLocation()
-  const { pageDirection } = useDebugOverrides()
+  const pageDirection = usePageDirection()
   const categories = useMemo(
     () => navGroups.flatMap((group) => group.categories),
     [navGroups],
@@ -241,7 +241,7 @@ function MobileCategoryDrawer({
             <Menu className="h-4 w-4" />
             {activeLabel}
           </span>
-          <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] p-0">
@@ -478,7 +478,7 @@ function UsageLayoutContent({
   const [state, setState] = useState<UsageState>('success')
   const contentScrollRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
-  const { pageDirection } = useDebugOverrides()
+  const pageDirection = usePageDirection()
   const {
     triggerRefresh,
     hasRefreshHandler,

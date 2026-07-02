@@ -101,7 +101,7 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
-import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Card } from '@/components/ui/card'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -174,7 +174,7 @@ import { PointEditor, LineEditor, PolygonEditor } from './spatial'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
 
 const DB_KIND = 'vectorsdb' as const satisfies DatabaseRouteKind
 
@@ -533,7 +533,7 @@ function getRelationshipRowLabel(
     return `${labelValue} (${row.$id})`
   }
 
-  return String(row.$id ?? 'Unknown row')
+  return String(row.$id ?? translate('Unknown row'))
 }
 
 interface RelationshipFieldProps {
@@ -622,11 +622,11 @@ function RelationshipField({
           }}
           items={availableItems}
           placeholder={
-            relatedRowsLoading ? 'Loading related rows…' : 'Add related row'
+            relatedRowsLoading ? t('Loading related rows…') : t('Add related row')
           }
           searchPlaceholder={t('Search related rows…')}
           emptyMessage={
-            relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+            relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
           }
           disabled={isSaving || relatedRowsLoading || availableItems.length === 0}
         />
@@ -687,11 +687,11 @@ function RelationshipField({
         onValueChange={(value) => onChange(value)}
         items={options}
         placeholder={
-          relatedRowsLoading ? 'Loading related rows…' : 'Select related row'
+          relatedRowsLoading ? t('Loading related rows…') : t('Select related row')
         }
         searchPlaceholder={t('Search related rows…')}
         emptyMessage={
-          relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+          relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
         }
         disabled={isSaving || relatedRowsLoading}
       />
@@ -731,7 +731,7 @@ function RowEditDrawer({
     : ('left' as const)
   const params = useParams({ strict: false })
   const projectId = params.projectId as string | undefined
-  const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const isCreateMode = !row
   const hideSequenceInEditor = false
 
@@ -1302,7 +1302,7 @@ function RowEditDrawer({
     })
 
     if (missingRequiredFields.length > 0) {
-      toast.error(`Required: ${missingRequiredFields.join(', ')}`)
+      toast.error(`${t('Required fields')}: ${missingRequiredFields.join(', ')}`)
       return
     }
 
@@ -1386,7 +1386,7 @@ function RowEditDrawer({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{linkCopied ? 'Link copied!' : 'Copy link'}</p>
+          <p>{linkCopied ? t('Link copied!') : t('Copy link')}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -1533,7 +1533,7 @@ function RowEditDrawer({
                           <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>
                               {documentJsonCopied
-                                ? 'Copied!'
+                                ? t('Copied!')
                                 : t('Copy JSON')}
                             </p>
                           </TooltipContent>
@@ -1713,7 +1713,7 @@ function RowEditDrawer({
                                   }
                                 />
                                 <span className="text-[12px] text-muted-foreground">
-                                  {currentValue ? 'True' : 'False'}
+                                  {currentValue ? t('True') : t('False')}
                                 </span>
                               </div>
                             ) : fieldType === 'enum' ? (
@@ -2004,8 +2004,8 @@ function RowEditDrawer({
                                                     />
                                                     <span className="text-[12px] text-muted-foreground">
                                                       {item === true
-                                                        ? 'True'
-                                                        : 'False'}
+                                                        ? t('True')
+                                                        : t('False')}
                                                     </span>
                                                   </div>
                                                 ) : isEnumType ? (
@@ -2536,7 +2536,7 @@ function RowEditDrawer({
                       disabled={isSaving}
                       className="h-8 text-xs"
                     >
-                      {isCreateMode ? dbLabels.createRecord : 'Update'}
+                      {isCreateMode ? dbLabels.createRecord : t('Update')}
                     </Button>
                   </div>
                 </div>
@@ -2548,7 +2548,7 @@ function RowEditDrawer({
         {presentation !== 'inline' ? (
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button onClick={handleSave} disabled={isSaving}>
-              {isCreateMode ? dbLabels.createRecord : 'Update'}
+              {isCreateMode ? dbLabels.createRecord : t('Update')}
             </Button>
             <Button
               variant="outline"
@@ -2783,7 +2783,7 @@ export function RowsSpreadsheet({
   })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
-  const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const { features } = useConsoleProfile()
   const hideSampleData = false
   const hideSequenceColumn = false
@@ -3694,7 +3694,7 @@ export function RowsSpreadsheet({
       await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
-      toast.success(`${dbLabels.recordSingularTitle} duplicated`)
+      toast.success(`${dbLabels.recordSingularTitle} ${t('duplicated')}`)
     },
     onError: (error: Error) => {
       toast.error(
@@ -3774,7 +3774,7 @@ export function RowsSpreadsheet({
         (typeof error?.message === 'string' &&
           error.message.toLowerCase().includes('cancel'))
       if (!isCanceled) {
-        toast.error(error.message || 'Failed to generate sample data')
+        toast.error(error.message || t('Failed to generate sample data'))
       }
     },
   })
@@ -5081,7 +5081,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
       toast.success(t('Permissions have been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update permissions')
+      toast.error(error.message || t('Failed to update permissions'))
     },
   })
 
@@ -5103,7 +5103,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
       toast.success(t('Security has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update security')
+      toast.error(error.message || t('Failed to update security'))
     },
   })
 
@@ -5324,10 +5324,10 @@ export function TableSettings({
       queryClient.invalidateQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${tableData?.name || 'Table'} has been updated`)
+      toast.success(`${tableData?.name || dbLabels.containerSingularTitle} ${t('has been updated')}`)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update table')
+      toast.error(error.message || t('Failed to update table'))
     },
   })
 
@@ -5352,7 +5352,7 @@ export function TableSettings({
       toast.success(t('Name has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update name')
+      toast.error(error.message || t('Failed to update name'))
     },
   })
 
@@ -5379,7 +5379,7 @@ export function TableSettings({
       toast.success(t('Display names have been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update display names')
+      toast.error(error.message || t('Failed to update display names'))
     },
   })
 
@@ -5433,7 +5433,7 @@ export function TableSettings({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${tableData?.name || 'Table'} has been deleted`)
+      toast.success(`${tableData?.name || dbLabels.containerSingularTitle} ${t('has been deleted')}`)
       setShowDelete(false)
       setDeleteError(null)
 
@@ -5448,7 +5448,7 @@ export function TableSettings({
       })
     },
     onError: (error: Error) => {
-      setDeleteError(error.message || 'Failed to delete table')
+      setDeleteError(error.message || t('Failed to delete table'))
     },
   })
 

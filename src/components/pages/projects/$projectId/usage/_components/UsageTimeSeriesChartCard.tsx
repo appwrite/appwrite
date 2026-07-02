@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from 'react'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
-import { format } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
   Area,
   AreaChart,
@@ -122,7 +122,7 @@ export function UsageTimeSeriesChartCard({
     () =>
       chartPoints.map((point) => ({
         date: point.date,
-        fullDate: format(point.day, 'MMM d, yyyy HH:mm'),
+        fullDate: formatLocalizedDate(point.day, 'MMM d, yyyy HH:mm'),
         value: point.total,
       })),
     [chartPoints],

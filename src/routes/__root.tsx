@@ -84,8 +84,32 @@ const THEME_SCRIPT = `(function(){
     ['light','dark','system','crazy','stealth','classic','premium','high-contrast','barbie','nineties','legacy'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
     try {
-      var pd = localStorage.getItem('debug:pageDirection');
-      e.setAttribute('dir', pd === 'rtl' ? 'rtl' : 'ltr');
+      var langPref = localStorage.getItem('debug:language');
+      var resolvedLang = 'en';
+      var dir = 'ltr';
+      if (langPref === 'he') {
+        resolvedLang = 'he';
+        dir = 'rtl';
+      } else if (langPref === 'en') {
+        resolvedLang = 'en';
+        dir = 'ltr';
+      } else {
+        var locales = navigator.languages && navigator.languages.length
+          ? navigator.languages
+          : [navigator.language];
+        var prefersHebrew = locales.some(function(l) {
+          return typeof l === 'string' && l.toLowerCase().startsWith('he');
+        });
+        if (prefersHebrew) {
+          resolvedLang = 'he';
+          dir = 'rtl';
+        } else {
+          var pd = localStorage.getItem('debug:pageDirection');
+          if (pd === 'rtl') dir = 'rtl';
+        }
+      }
+      e.setAttribute('lang', resolvedLang);
+      e.setAttribute('dir', dir);
     } catch (e3) {}
   } catch (e) {}
 })()`
@@ -127,6 +151,13 @@ function getHeadFontPreloads() {
     {
       rel: 'preload' as const,
       href: '/fonts/aeonik-pro/AeonikPro-Regular.woff2',
+      as: 'font' as const,
+      type: 'font/woff2',
+      crossOrigin: 'anonymous' as const,
+    },
+    {
+      rel: 'preload' as const,
+      href: '/fonts/inter/inter-latin-400-normal.woff2',
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,

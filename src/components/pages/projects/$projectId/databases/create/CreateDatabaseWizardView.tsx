@@ -66,7 +66,7 @@ import {
 } from '@/lib/dedicated-database-id'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
 import {
-  getDedicatedDatabaseRegionUnavailableDescription,
+  formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
 } from '@/lib/databases/dedicated-database-regions'
 import { useT } from '@/lib/i18n/translate'
@@ -213,7 +213,7 @@ export function CreateDatabaseWizardView() {
     isDocumentsDB || isVectorsDB || isNativeDb
 
   const regionUnavailableMessage =
-    getDedicatedDatabaseRegionUnavailableDescription()
+    formatDedicatedDatabaseRegionUnavailableDescription(t)
 
   const dbTypeOptions = useMemo((): DbTypeOptionMeta[] => {
     return DB_TYPE_OPTIONS.map((opt) => {
@@ -483,7 +483,7 @@ export function CreateDatabaseWizardView() {
         dbType === 'VectorsDB'
           ? formatDedicatedDatabaseCreateError(error, fallback)
           : getErrorMessage(error) || fallback
-      toast.error(message)
+      toast.error(t(message))
     },
   })
 
@@ -494,7 +494,7 @@ export function CreateDatabaseWizardView() {
       const dedicatedIdError = databaseId?.trim()
         ? getDedicatedDatabaseIdError(databaseId)
         : null
-      if (dedicatedIdError) newErrors.databaseId = dedicatedIdError
+      if (dedicatedIdError) newErrors.databaseId = t(dedicatedIdError)
     } else if (databaseId?.trim() && !validateDatabaseId(databaseId)) {
       newErrors.databaseId = t(
         'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.',
@@ -715,7 +715,9 @@ export function CreateDatabaseWizardView() {
                           )}
                         </span>
                         <p className="text-[12px] leading-5 text-muted-foreground">
-                          {optionMeta.comingSoonMessage ?? t(opt.description)}
+                          {optionMeta.comingSoonMessage
+                            ? optionMeta.comingSoonMessage
+                            : t(opt.description)}
                         </p>
                       </div>
                     </button>

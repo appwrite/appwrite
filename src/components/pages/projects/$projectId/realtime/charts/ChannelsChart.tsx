@@ -8,7 +8,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { DateRange } from 'react-day-picker'
-import { format } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { Info } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -52,7 +52,7 @@ const CustomTooltip = ({
     return (
       <div className="rounded-md border border-border bg-popover px-3 py-2">
         <p className="text-[11px] text-muted-foreground mb-1">
-          {format(new Date(data.timestamp), 'MMM d, yyyy HH:mm')}
+          {formatLocalizedDate(new Date(data.timestamp), 'MMM d, yyyy HH:mm')}
         </p>
         <p className="text-[13px] font-medium text-foreground">
           {data.activeChannels.toLocaleString()}{' '}
@@ -75,8 +75,8 @@ export function RealtimeChannelsChart({
   const chartData = useMemo(() => {
     return data.map((point) => ({
       ...point,
-      date: format(new Date(point.timestamp), 'MMM d'),
-      fullDate: format(new Date(point.timestamp), 'MMM d, yyyy'),
+      date: formatLocalizedDate(new Date(point.timestamp), 'MMM d'),
+      fullDate: formatLocalizedDate(new Date(point.timestamp), 'MMM d, yyyy'),
     }))
   }, [data])
 

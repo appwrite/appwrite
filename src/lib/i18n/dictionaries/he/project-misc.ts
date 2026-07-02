@@ -68,10 +68,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Learn more about API key scopes': 'למידע נוסף על היקפי גישה של מפתחות API',
 
   // Explorer
-  Explorer: 'Explorer',
+  Explorer: 'אקספלורר',
+  APIs: 'ממשקי API',
+  Other: 'אחר',
 
-  // Onboarding (Get started)
-  'Get started': 'תחילת העבודה',
+  // Onboarding
   'Progress by product': 'התקדמות לפי מוצר',
   'Connect your app first.': 'חברו את האפליקציה שלכם תחילה.',
   'Connect this project, then complete each product area - one clear action at a time.':
@@ -99,7 +100,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הוסיפו סוד עם היקף מוגדר לשרתים ול-CI; אפליקציות לקוח משתמשות בסשנים במקום.',
   'Add API key': 'הוספת מפתח API',
   'Manage keys': 'ניהול מפתחות',
-  Auth: 'Auth',
+  Auth: 'אימות',
   'Sign users in, organize teams, and control who can access each part of your product.':
     'אפשרו למשתמשים להתחבר, ארגנו צוותים ושלטו במי שיכול לגשת לכל חלק במוצר שלכם.',
   'Add your first user': 'הוספת המשתמש הראשון שלכם',
@@ -112,7 +113,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קבצו משתמשים והקצו תפקידים לבקרת גישה.',
   'Create team': 'יצירת צוות',
   'Manage teams': 'ניהול צוותים',
-  Databases: 'Databases',
+  Databases: 'מסדי נתונים',
   'Store and query structured data - add indexes and vector search when you need them.':
     'אחסנו נתונים מובנים והריצו עליהם שאילתות, והוסיפו אינדקסים וחיפוש וקטורי כשצריך.',
   'Create a database': 'יצירת מסד נתונים',
@@ -124,7 +125,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Add collections or tables, attributes, and indexes; then insert rows.':
     'הוסיפו אוספים או טבלאות, מאפיינים ואינדקסים; לאחר מכן הכניסו שורות.',
   'Set up schema': 'הגדרת סכימה',
-  Storage: 'Storage',
+  Storage: 'אחסון',
   'Upload files to buckets and serve or download them with secure, scoped access.':
     'העלו קבצים לבאקטים והגישו או הורידו אותם עם גישה מאובטחת ומוגדרת היקף.',
   'Create a bucket': 'יצירת באקט',
@@ -137,7 +138,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הכניסו אובייקט לבאקט; השתמשו בכתובות URL חתומות או בתצוגות מקדימות לפי הצורך.',
   'Upload files': 'העלאת קבצים',
   'Open storage': 'פתיחת האחסון',
-  Functions: 'Functions',
+  Functions: 'פונקציות',
   'Run backend code on HTTP requests, schedules, or events from other services.':
     'הריצו קוד צד שרת בתגובה לבקשות HTTP, תזמונים או אירועים משירותים אחרים.',
   'Create a function': 'יצירת פונקציה',
@@ -150,7 +151,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פרסו את הקוד שלכם כדי שההרצות יוכלו לפעול.',
   'Open deployments': 'פתיחת פריסות',
   'View function': 'צפייה בפונקציה',
-  Messaging: 'Messaging',
+  Messaging: 'הודעות',
   'Send email, push, and SMS by routing messages through topics and providers.': // pragma: allowlist secret
     'שלחו אימייל, פוש ו-SMS על ידי ניתוב הודעות דרך נושאים וספקים.',
   'Create a topic': 'יצירת נושא',
@@ -163,12 +164,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'חברו SMTP, FCM, APNS או ספק אחר כדי לשלוח הודעות.',
   'Add provider': 'הוספת ספק',
   'Manage providers': 'ניהול ספקים',
-  Sites: 'Sites',
+  Sites: 'אתרים',
   'Connect a Git repo and ship your frontend with builds, deploys, and custom domains.':
-    'חברו מאגר Git ושחררו את צד הלקוח שלכם עם בניות, פריסות ודומיינים מותאמים אישית.',
+    'חברו Git repo ושחררו את צד הלקוח שלכם עם בניות, פריסות ודומיינים מותאמים אישית.',
   'Create a site': 'יצירת אתר',
   'Connect a repository and configure your build.':
-    'חברו מאגר והגדירו את הבנייה שלכם.',
+    'חברו repo והגדירו את הבנייה שלכם.',
   'Create site': 'יצירת אתר',
   'Manage sites': 'ניהול אתרים',
   'Run a production deploy': 'פריסה לסביבת ייצור',
@@ -241,7 +242,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'SaaS landing page': 'דף נחיתה ל-SaaS',
   'Visit Imagine.dev': 'מעבר ל-Imagine.dev',
   'Sign in': 'התחברות',
-  'Sign up': 'הרשמה',
+  'Sign up': 'הירשמו',
   'Community projects': 'פרויקטים של הקהילה',
   'View all': 'הצגת הכול',
   'Recipe manager': 'מנהל מתכונים',
@@ -263,7 +264,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'You are not signed in.': 'אינכם מחוברים.',
 
   // Firewall
-  Firewall: 'Firewall',
+  Firewall: 'חומת אש',
   Rules: 'כללים',
   Analytics: 'אנליטיקה',
   Logs: 'לוגים',
@@ -552,7 +553,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'of human conversions came from users who discovered you via AI agents':
     'מההמרות האנושיות הגיעו ממשתמשים שגילו אתכם באמצעות סוכני AI',
   'Optimize docs and key pages for AI visibility to increase discovery-driven sign-ups':
-    'בצעו אופטימיזציה של התיעוד ודפים מרכזיים לנראות AI כדי להגדיל הרשמות שמקורן בגילוי',
+    'בצעו אופטימיזציה של הדוקומנטציה ודפים מרכזיים לנראות AI כדי להגדיל הרשמות שמקורן בגילוי',
   'Top AI platforms crawling and accessing your site':
     'פלטפורמות AI מובילות שסורקות וניגשות לאתר שלכם',
   'Traffic sources': 'מקורות תנועה',
@@ -902,8 +903,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Triggers: 'טריגרים',
   'Limit which pushes trigger deployments. Use globs; prefix with': 'הגבילו אילו פעולות push מפעילות פריסות. השתמשו בתבניות glob; הוסיפו את התחילית',
   'to exclude.': 'כדי להחריג.',
-  'Learn more': 'מידע נוסף',
-  'Connect a repository in': 'חברו מאגר ב',
+  'Learn more': 'למדו עוד',
+  'Connect a repository in': 'חברו repo ב',
   'Git settings': 'הגדרות Git',
   Preview: 'תצוגה מקדימה',
   'Current behavior': 'התנהגות נוכחית',
@@ -927,7 +928,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Server and backend code need an API key with the right scopes. Create and manage keys in your project.': 'קוד שרת ו-backend זקוק למפתח API עם ההרשאות המתאימות. צרו ונהלו מפתחות בפרויקט שלכם.',
   'View API keys': 'הצגת מפתחות API',
   'Server setup guide': 'מדריך הקמת שרת',
-  'Read the docs': 'קריאת התיעוד',
+  'Read the docs': 'קריאת הדוקומנטציה',
   'Use the Appwrite CLI to manage your project from the terminal. Install the CLI, log in, then point it at this project.': 'השתמשו ב-CLI של Appwrite כדי לנהל את הפרויקט מהטרמינל. התקינו את ה-CLI, התחברו, ואז כוונו אותו לפרויקט הזה.', // pragma: allowlist secret
   'Install the CLI': 'התקנת ה-CLI',
   'Install script': 'סקריפט התקנה',
@@ -942,7 +943,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Give your AI agent accurate Appwrite SDK context-method signatures, patterns, and best practices for your language. Install once per project or globally; works in Cursor, Claude Code, and other compatible tools.': 'תנו לסוכן ה-AI שלכם הקשר מדויק של Appwrite SDK: חתימות מתודות, תבניות ושיטות עבודה מומלצות לשפה שלכם. התקינו פעם אחת לכל פרויקט או גלובלית; עובד ב-Cursor, ב-Claude Code ובכלים תואמים נוספים.', // pragma: allowlist secret
   'Skills are available for': 'מיומנויות (Skills) זמינות עבור',
   'pick what you use during setup.': 'בחרו במה אתם משתמשים במהלך ההתקנה.',
-  Docs: 'תיעוד',
+  Docs: 'דוקומנטציה',
   'Install command': 'פקודת התקנה',
   "Run in project root. You'll pick SDKs, tools, and scope.": 'הריצו בתיקיית השורש של הפרויקט. תבחרו SDK, כלים והיקף.',
   'Then the CLI will ask:': 'לאחר מכן ה-CLI ישאל:',
@@ -950,7 +951,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'which SDKs to install (e.g. TypeScript, Go).': 'אילו SDK להתקין (למשל TypeScript, Go).',
   Tools: 'כלים',
   'which AI tools use them (Cursor, Claude, etc.).': 'אילו כלי AI ישתמשו בהן (Cursor, Claude ועוד).',
-  'project (this repo) or global.': 'פרויקט (המאגר הזה) או גלובלי.',
+  'project (this repo) or global.': 'פרויקט (ה-repo הזה) או גלובלי.',
   'prefer symlink so skills stay up to date.': 'עדיף קישור סימבולי כדי שהמיומנויות יישארו מעודכנות.',
   'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.': 'השתמשו בנקודת קצה HTTPS ברמת הפרויקט עם חתימה תואמת SigV4 כדי לחבר את האחסון ל-rclone, ל-IaC או לצינורות מותאמים אישית. נקודת קצה, מפתח גישה וסוד הניתנים להעתקה יופיעו כאן כשהאינטגרציה תהיה מוכנה.',
   'Work in progress - nothing to copy yet.': 'עבודה בתהליך, אין עדיין מה להעתיק.',
@@ -965,18 +966,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Deployment is in progress. It will be automatically activated after build step completes.': 'הפריסה בתהליך. היא תופעל אוטומטית לאחר השלמת שלב הבנייה.',
   'Deployment is in progress. You can activate it after build step completes.': 'הפריסה בתהליך. תוכלו להפעיל אותה לאחר השלמת שלב הבנייה.',
   'Failed to create deployment': 'יצירת הפריסה נכשלה',
-  'Please select an installation and repository': 'בחרו התקנה ומאגר',
+  'Please select an installation and repository': 'בחרו התקנה ו-repo',
   'Please select a branch': 'בחרו ענף',
   'Create git deployment': 'יצירת פריסת Git',
-  'Select a repository to deploy from. You can change it later in settings.': 'בחרו מאגר לפריסה. אפשר לשנות אותו מאוחר יותר בהגדרות.',
+  'Select a repository to deploy from. You can change it later in settings.': 'בחרו repo לפריסה. אפשר לשנות אותו מאוחר יותר בהגדרות.',
   'Choose the production branch and whether to activate the deployment after the build completes.': 'בחרו את ענף הייצור והאם להפעיל את הפריסה לאחר השלמת הבנייה.',
-  Repository: 'מאגר',
+  Repository: 'Repo',
   'Last updated': 'עודכן לאחרונה',
-  'Change repository': 'החלפת מאגר',
+  'Change repository': 'החלפת repo',
   'Production branch': 'Branch פרודקשן',
   'Select branch': 'בחירת Branch',
   'Activate deployment after build': 'הפעלת הפריסה לאחר הבנייה',
-  'Deployment docs': 'תיעוד פריסות',
+  'Deployment docs': 'דוקומנטציית פריסות',
   Back: 'חזרה',
   'Only .tar.gz files are allowed.': 'מותרים רק קובצי ‎.tar.gz.',
   'File size exceeds': 'גודל הקובץ חורג מ',
@@ -1005,7 +1006,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Target: 'יעד',
   'Active deployment': 'פריסה פעילה',
   'Serves the active deployment': 'מגיש את הפריסה הפעילה',
-  'Connect repository first': 'חברו מאגר תחילה',
+  'Connect repository first': 'חברו repo תחילה',
   Branch: 'Branch',
   'Serve a specific branch': 'הגשת ענף ספציפי',
   Redirect: 'הפניה מחדש',
@@ -1023,13 +1024,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Schedule a meeting': 'קביעת פגישה',
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our': 'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
   'priority support portal': 'פורטל התמיכה בעדיפות גבוהה',
-  "Appwrite offers two MCP servers that allow LLMs to interact with Appwrite's API and documentation. Deploy with a single click or view the": 'Appwrite מציעה שני שרתי MCP שמאפשרים למודלי שפה לתקשר עם ה-API והתיעוד של Appwrite. פרסו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
-  docs: 'תיעוד',
+  "Appwrite offers two MCP servers that allow LLMs to interact with Appwrite's API and documentation. Deploy with a single click or view the": 'Appwrite מציעה שני שרתי MCP שמאפשרים למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. פרסו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
+  docs: 'דוקומנטציה',
   'for instructions.': 'להוראות.',
   'MCP for API': 'MCP עבור API',
   'Interact with your Appwrite project directly. Create users, manage databases, and perform operations using natural language.': 'תקשרו ישירות עם פרויקט ה-Appwrite שלכם. צרו משתמשים, נהלו מסדי נתונים ובצעו פעולות בשפה טבעית.', // pragma: allowlist secret
-  'MCP for Docs': 'MCP עבור תיעוד',
-  'Access comprehensive Appwrite documentation. Get code examples, troubleshooting help, and implementation guidance.': 'גשו לתיעוד המקיף של Appwrite. קבלו דוגמאות קוד, עזרה בפתרון בעיות והנחיות יישום.', // pragma: allowlist secret
+  'MCP for Docs': 'MCP עבור דוקומנטציה',
+  'Access comprehensive Appwrite documentation. Get code examples, troubleshooting help, and implementation guidance.': 'גשו לדוקומנטציה המקיפה של Appwrite. קבלו דוגמאות קוד, עזרה בפתרון בעיות והנחיות יישום.', // pragma: allowlist secret
   'MCP servers': 'שרתי MCP',
   "You've reached the limit of": 'הגעתם למגבלה של',
   'Approaching the limit for': 'מתקרבים למגבלה של',
@@ -1070,10 +1071,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Terraform needs an API key with scopes for the resources you manage. Pass it with': 'Terraform זקוק למפתח API עם הרשאות למשאבים שאתם מנהלים. העבירו אותו באמצעות',
   or: 'או',
   'never commit secrets to Git.': 'לעולם אל תבצעו commit לסודות ב-Git.',
-  'Provider docs on Terraform Registry': 'תיעוד הספק ב-Terraform Registry',
+  'Provider docs on Terraform Registry': 'דוקומנטציית הספק ב-Terraform Registry',
   "Provider uses this project's endpoint and project ID. Run": 'הספק משתמש בנקודת הקצה ובמזהה של הפרויקט הזה. הריצו',
   then: 'ואז',
-  'Shell exports matching APPWRITE_* provider options. When set, you can skip duplicate fields in provider {}. Use secrets in CI, not committed files.': 'ייצוא משתני מעטפת התואמים לאפשרויות הספק APPWRITE_*. כשהם מוגדרים, אפשר לדלג על שדות כפולים ב-provider {}. השתמשו בסודות ב-CI, לא בקבצים שנשמרים במאגר.', // pragma: allowlist secret
+  'Shell exports matching APPWRITE_* provider options. When set, you can skip duplicate fields in provider {}. Use secrets in CI, not committed files.': 'ייצוא משתני מעטפת התואמים לאפשרויות הספק APPWRITE_*. כשהם מוגדרים, אפשר לדלג על שדות כפולים ב-provider {}. השתמשו בסודות ב-CI, לא בקבצים שנשמרים ב-repo.', // pragma: allowlist secret
   'Example database, table, columns, and index. Add alongside your provider configuration.': 'דוגמה למסד נתונים, טבלה, עמודות ואינדקס. הוסיפו לצד תצורת הספק שלכם.',
   'Install the Web SDK': 'התקנת ה-SDK לווב',
   'Install the Node.js SDK': 'התקנת ה-SDK ל-Node.js',
@@ -1099,6 +1100,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bandwidth over time': 'רוחב פס לאורך זמן',
   'Buckets': 'באקטים',
   'Chart interval': 'מרווח תרשים',
+  '15m': '15 דק׳',
+  '1h': '1 שע׳',
+  '1d': '1 יום',
+  'Use a date range of': 'השתמשו בטווח תאריכים של',
+  'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
+  'days or less for this interval.': 'ימים או פחות למרווח הזה.',
   'Compute': 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',
@@ -1197,7 +1204,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'GB': 'GB',
   'operations': 'פעולות',
   'Couldn\'t load auth usage': 'לא ניתן היה לטעון נתוני שימוש של אימות',
-  'Couldn\'t load avatars usage': 'לא ניתן היה לטעון נתוני שימוש של Avatars',
+  'Couldn\'t load avatars usage': 'לא ניתן היה לטעון נתוני שימוש של אווטארים',
   'Couldn\'t load compute usage': 'לא ניתן היה לטעון נתוני שימוש של חישוב',
   'Couldn\'t load database usage': 'לא ניתן היה לטעון נתוני שימוש של מסד הנתונים',
   'Couldn\'t load messaging usage': 'לא ניתן היה לטעון נתוני שימוש של הודעות',
@@ -1277,7 +1284,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).': 'פעולות מקובצות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
   'API endpoint paths driving database operations.': 'נתיבי נקודות קצה של API שמניעים פעולות מסד נתונים.',
   'Products': 'מוצרים',
-  'Avatars': 'Avatars',
+  'Avatars': 'אווטארים',
+  avatars: 'אווטארים',
   'API request volume and breakdowns across paths, methods, status codes, and client attributes.': 'נפח בקשות API ופילוחים לפי נתיבים, מתודות, קודי סטטוס ומאפייני לקוח.',
   'Network bandwidth consumption with breakdowns across paths, services, and client attributes.': 'צריכת רוחב פס ברשת עם פילוחים לפי נתיבים, שירותים ומאפייני לקוח.',
   'Database operations including reads, writes, and resource counts.': 'פעולות מסד נתונים כולל קריאות, כתיבות וספירת משאבים.',
@@ -1345,9 +1353,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Account': 'חשבון',
   'Actions for': 'פעולות עבור',
   'Add API domain': 'הוספת דומיין API',
-  'Add a Git installation to your project so you can connect repositories later through your function or site settings.': 'הוסיפו התקנת Git לפרויקט כדי שתוכלו לחבר מאגרים בהמשך דרך הגדרות הפונקציה או האתר.',
+  'Add a Git installation to your project so you can connect repositories later through your function or site settings.': 'הוסיפו התקנת Git לפרויקט כדי שתוכלו לחבר repos בהמשך דרך הגדרות הפונקציה או האתר.',
   'Add a custom domain to serve your Appwrite API on your own domain': 'הוסיפו דומיין מותאם אישית כדי להגיש את ה-API של Appwrite מהדומיין שלכם', // pragma: allowlist secret
-  'Add an installation to connect repositories': 'הוסיפו התקנה כדי לחבר מאגרים',
+  'Add an installation to connect repositories': 'הוסיפו התקנה כדי לחבר repos',
   'Add installation': 'הוספת התקנה',
   'Add the following nameservers on your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.': 'הוסיפו את שרתי השמות הבאים אצל ספק ה-DNS שלכם. שימו לב ששינויי DNS עשויים להימשך עד 48 שעות עד שיופצו במלואם.',
   'Add the following record(s) to your DNS provider. Note that DNS changes may take up to 48 hours to propagate fully.': 'הוסיפו את הרשומות הבאות אצל ספק ה-DNS שלכם. שימו לב ששינויי DNS עשויים להימשך עד 48 שעות עד שיופצו במלואם.',
@@ -1631,7 +1639,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'API secret': 'סוד API',
   'Account SID': 'Account SID',
   'Add attachment': 'הוספת קובץ מצורף',
-  'Add files from your project\'s Storage buckets.': 'הוסיפו קבצים מבאקטים של Storage בפרויקט שלכם.',
+  'Add files from your project\'s Storage buckets.': 'הוסיפו קבצים מבאקטי האחסון בפרויקט שלכם.',
   'Add project users to deliver to every matching channel target on their account (email, SMS, or push), alongside any topics you selected.': 'הוסיפו משתמשי פרויקט כדי לשלוח לכל יעד ערוץ תואם בחשבונם (אימייל, SMS או Push), בנוסף לנושאים שבחרתם.',
   'Add subscriber': 'הוספת מנוי',
   'Add subscriber functionality coming soon': 'אפשרות הוספת מנויים תגיע בקרוב',
@@ -1768,7 +1776,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Paste the contents of the FCM service account JSON file from the Firebase console.': 'הדביקו את תוכן קובץ ה-JSON של חשבון השירות של FCM מקונסולת Firebase.',
   'Permanently delete this message. This action cannot be undone.': 'מחיקה לצמיתות של ההודעה הזו. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this topic and all its subscribers. This action cannot be undone.': 'מחיקה לצמיתות של הנושא הזה וכל המנויים שלו. פעולה זו אינה ניתנת לביטול.',
-  'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.': 'בחרו באקט וקובץ מ-Storage. הקובץ יצוין בהודעה בתור bucketId:fileId.',
+  'Pick a bucket and file from Storage. It will be referenced as bucketId:fileId on the message.': 'בחרו באקט וקובץ מאחסון. הקובץ יצוין בהודעה בתור bucketId:fileId.',
   'Pick specific channel targets for this message. Targets must match the message provider (email, SMS, or push).': 'בחרו יעדי ערוץ ספציפיים להודעה זו. היעדים חייבים להתאים לספק ההודעה (אימייל, SMS או Push).',
   'Please confirm you want to send this message now. It will be delivered to an estimated': 'אנא אשרו שברצונכם לשלוח את ההודעה כעת. היא תימסר לכ-',
   'Provider ID, channel type, and timestamps.': 'מזהה הספק, סוג הערוץ וחותמות זמן.',
@@ -1869,11 +1877,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Update your provider\'s display name. This will be visible to all organization members.': 'עדכנו את שם התצוגה של הספק. השם יהיה גלוי לכל חברי הארגון.',
   'Update your topic\'s display name. This will be visible to all organization members.': 'עדכנו את שם התצוגה של הנושא. השם יהיה גלוי לכל חברי הארגון.',
   'Upload bucket': 'באקט העלאה',
-  'Uploading replaces the push image with a Storage file reference (bucket:file).': 'העלאה מחליפה את תמונת ה-Push בהפניה לקובץ Storage (באקט:קובץ).',
+  'Uploading replaces the push image with a Storage file reference (bucket:file).': 'העלאה מחליפה את תמונת ה-Push בהפניה לקובץ באחסון (באקט:קובץ).',
   'Use sandbox environment': 'שימוש בסביבת sandbox',
   'Users receive this message on every target matching the message channel for their account.': 'משתמשים יקבלו את ההודעה בכל יעד בחשבונם התואם את ערוץ ההודעה.',
   'When delivery fails, API errors are included below when available.': 'כאשר המסירה נכשלת, שגיאות API יוצגו למטה כשהן זמינות.',
-  'Write the subject and body, enable HTML if your content uses tags, add optional CC and BCC targets, and attach files from Storage.': 'כתבו את הנושא והגוף, הפעילו HTML אם התוכן משתמש בתגיות, הוסיפו יעדי CC ו-BCC אופציונליים וצרפו קבצים מ-Storage.',
+  'Write the subject and body, enable HTML if your content uses tags, add optional CC and BCC targets, and attach files from Storage.': 'כתבו את הנושא והגוף, הפעילו HTML אם התוכן משתמש בתגיות, הוסיפו יעדי CC ו-BCC אופציונליים וצרפו קבצים מאחסון.',
   'You do not have permission to create this resource.': 'אין לכם הרשאה ליצור את המשאב הזה.',
   'You don\'t have permission to create messages.': 'אין לכם הרשאה ליצור הודעות.', // pragma: allowlist secret
   'You don\'t have permission to create providers.': 'אין לכם הרשאה ליצור ספקים.',

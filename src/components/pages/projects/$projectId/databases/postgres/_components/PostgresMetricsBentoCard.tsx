@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 export type PostgresMetricsBentoTile = {
   id: string
@@ -56,11 +57,12 @@ function PostgresMetricBentoTile({
   progressTone = 'normal',
   progressCaption,
 }: Omit<PostgresMetricsBentoTile, 'id'>) {
+  const t = useT()
   return (
     <div className="min-w-0 px-4 py-4">
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
+          {t(label)}
         </p>
         {description ? (
           <TooltipProvider delayDuration={0}>
@@ -77,7 +79,7 @@ function PostgresMetricBentoTile({
                 side="top"
                 className="max-w-xs text-[12px] leading-relaxed"
               >
-                <p>{description}</p>
+                <p>{t(description)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -106,7 +108,9 @@ function PostgresMetricBentoTile({
             )}
           />
           <p className="text-[11px] text-muted-foreground">
-            {progressCaption ?? `${progress.toFixed(1)}% of limit`}
+            {progressCaption
+              ? t(progressCaption)
+              : `${progress.toFixed(1)}% ${t('of limit')}`}
           </p>
         </div>
       ) : null}

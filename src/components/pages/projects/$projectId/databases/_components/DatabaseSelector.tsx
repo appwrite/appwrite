@@ -322,7 +322,7 @@ export function DatabaseSelector({
   const resolvedEmptyLabel =
     emptyLabel ??
     (isNative && resolvedNativeEngine
-      ? getNativeDatabaseEmptyLabel(resolvedNativeEngine)
+      ? t(getNativeDatabaseEmptyLabel(resolvedNativeEngine))
       : t('No databases found'))
 
   const bothCreateDisabled = createDatabaseDisabled && createTableDisabled

@@ -16,7 +16,7 @@ export const heSitesDictionary: Record<string, string> = {
     'הגדירו את רשומות ה-DNS כדי לאמת את הדומיין שלכם',
 
   // Sites list (View.tsx)
-  Sites: 'Sites',
+  Sites: 'אתרים',
   'Search sites...': 'חיפוש אתרים...',
   'Create site': 'יצירת אתר',
   "You don't have permission to create sites.": 'אין לכם הרשאה ליצור אתרים.',
@@ -76,7 +76,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Content Delivery Network': 'רשת אספקת תוכן (CDN)',
   "Appwrite's CDN provides global coverage with 120+ points of presence worldwide, reducing latency through edge caching and content optimization. All content is delivered over TLS for secure, encrypted connections.": // pragma: allowlist secret
     'ה-CDN של Appwrite מספק כיסוי גלובלי עם יותר מ-120 נקודות נוכחות ברחבי העולם, ומפחית זמני תגובה באמצעות מטמון קצה ואופטימיזציית תוכן. כל התוכן מועבר באמצעות TLS לחיבורים מאובטחים ומוצפנים.', // pragma: allowlist secret
-  'Learn more →': 'למידע נוסף ←',
+  'Learn more →': 'למדו עוד ←',
   Connected: 'מחובר',
   'DDoS protection': 'הגנת DDoS',
   'DDoS Mitigation': 'מיגון DDoS',
@@ -156,7 +156,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Deployed from': 'נפרס מ-',
   'SSL certificate is being issued. This usually takes a couple of minutes.':
     'תעודת ה-SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות.',
-  'View logs': 'צפייה בלוגים',
+  'View logs': 'צפו בלוגים',
   Retry: 'ניסיון חוזר',
   Logs: 'לוגים',
   Records: 'רשומות',
@@ -195,20 +195,20 @@ export const heSitesDictionary: Record<string, string> = {
   'Failed to delete site': 'מחיקת האתר נכשלה',
 
   // Settings: repository card
-  Repository: 'מאגר',
+  Repository: 'Repo',
   'Connect your site to a Git repository for automatic deployments':
-    'חברו את האתר שלכם למאגר Git לפריסות אוטומטיות',
-  'No repository connected': 'לא מחובר מאגר',
+    'חברו את האתר שלכם ל-Git repo לפריסות אוטומטיות',
+  'No repository connected': 'לא מחובר repo',
   'Connect a repository to enable automatic deployments':
-    'חברו מאגר כדי לאפשר פריסות אוטומטיות',
-  'Connect repository': 'חיבור מאגר',
+    'חברו repo כדי לאפשר פריסות אוטומטיות',
+  'Connect repository': 'חיבור repo',
   'Select a GitHub installation and repository to connect to this site. You can connect an existing repository or create a new site from a template.':
-    'בחרו התקנת GitHub ומאגר לחיבור לאתר הזה. אפשר לחבר מאגר קיים או ליצור אתר חדש מתבנית.',
+    'בחרו התקנת GitHub ו-repo לחיבור לאתר הזה. אפשר לחבר repo קיים או ליצור אתר חדש מתבנית.',
   Connect: 'חיבור',
   'Last updated': 'עודכן לאחרונה',
-  'Open repository in new tab': 'פתיחת המאגר בכרטיסייה חדשה',
+  'Open repository in new tab': 'פתיחת ה-repo בכרטיסייה חדשה',
   Disconnect: 'ניתוק',
-  'Disconnect repository': 'ניתוק מאגר',
+  'Disconnect repository': 'ניתוק repo',
   'Are you sure you want to disconnect': 'האם אתם בטוחים שברצונכם לנתק את',
   "from this site? This will remove the Git integration but won't affect your deployments.":
     'מהאתר הזה? פעולה זו תסיר את האינטגרציה עם Git אך לא תשפיע על הפריסות שלכם.',
@@ -217,17 +217,17 @@ export const heSitesDictionary: Record<string, string> = {
   'Root directory': 'תיקיית שורש',
   'Choose the directory containing your site code':
     'בחרו את התיקייה המכילה את קוד האתר שלכם',
-  'Repository settings updated successfully': 'הגדרות המאגר עודכנו בהצלחה',
-  'Failed to update repository settings': 'עדכון הגדרות המאגר נכשל',
-  'Repository connected successfully': 'המאגר חובר בהצלחה',
-  'Failed to connect repository': 'חיבור המאגר נכשל',
-  'Repository disconnected successfully': 'המאגר נותק בהצלחה',
-  'Failed to disconnect repository': 'ניתוק המאגר נכשל',
+  'Repository settings updated successfully': 'הגדרות ה-repo עודכנו בהצלחה',
+  'Failed to update repository settings': 'עדכון הגדרות ה-repo נכשל',
+  'Repository connected successfully': 'ה-repo חובר בהצלחה',
+  'Failed to connect repository': 'חיבור ה-repo נכשל',
+  'Repository disconnected successfully': 'ה-repo נותק בהצלחה',
+  'Failed to disconnect repository': 'ניתוק ה-repo נכשל',
   'No changes to save': 'אין שינויים לשמירה',
-  'Please select an installation and repository': 'בחרו התקנה ומאגר',
+  'Please select an installation and repository': 'בחרו התקנה ו-repo',
 
   // Settings: framework card
-  'Learn more': 'למידע נוסף',
+  'Learn more': 'למדו עוד',
   'Server side rendering': 'רינדור בצד השרת',
   'Static site': 'אתר סטטי',
   Adapter: 'Adapter',
@@ -323,7 +323,7 @@ export const heSitesDictionary: Record<string, string> = {
   // Settings: silent mode card
   'Silent mode': 'מצב שקט',
   'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.': // pragma: allowlist secret
-    'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים במאגר ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
+    'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
   'Disable automated commit comments': 'השבתת תגובות אוטומטיות על קומיטים',
 
   // Settings: variables card
@@ -375,7 +375,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Invalid URL': 'כתובת URL לא תקינה',
   'Enter URL': 'הזינו כתובת URL',
   'Select branch': 'בחירת Branch',
-  'Connect repository first': 'חברו מאגר קודם',
+  'Connect repository first': 'חברו repo קודם',
 
   // Template gallery
   'Search templates...': 'חיפוש תבניות...',
@@ -389,29 +389,29 @@ export const heSitesDictionary: Record<string, string> = {
   'All use cases': 'כל תרחישי השימוש',
   Starter: 'ערכת התחלה',
   AI: 'AI',
-  Databases: 'Databases',
-  Messaging: 'Messaging',
+  Databases: 'מסדי נתונים',
+  Messaging: 'הודעות',
   'Dev tools': 'כלי פיתוח',
   Utilities: 'כלי עזר',
 
   // Create wizard: entry view
-  'Import repository': 'ייבוא מאגר',
+  'Import repository': 'ייבוא repo',
   'Connect Git provider': 'חיבור ספק Git',
   'Import repositories for automatic deployments':
-    'ייבאו מאגרים לפריסות אוטומטיות',
+    'ייבאו repos לפריסות אוטומטיות',
   'Connect GitHub': 'חיבור GitHub',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',
   'Search...': 'חיפוש...',
-  'No repositories found': 'לא נמצאו מאגרים',
-  'No repositories available': 'אין מאגרים זמינים',
-  "Can't find a repository?": 'לא מוצאים מאגר?',
+  'No repositories found': 'לא נמצאו repos',
+  'No repositories available': 'אין repos זמינים',
+  "Can't find a repository?": 'לא מוצאים repo?',
   'If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.':
-    'אם בחרתם מאגרים ספציפיים במהלך ההגדרה, ייתכן שתצטרכו לעדכן את הרשאות ה-GitHub שלכם כדי לכלול מאגרים נוספים.',
+    'אם בחרתם repos ספציפיים במהלך ההגדרה, ייתכן שתצטרכו לעדכן את הרשאות ה-GitHub שלכם כדי לכלול repos נוספים.',
   'Update GitHub permissions': 'עדכון הרשאות GitHub',
   'Clone template': 'שכפול תבנית',
   'Want to deploy without connecting a repository or using a template?':
-    'רוצים לפרוס בלי לחבר מאגר או להשתמש בתבנית?',
+    'רוצים לפרוס בלי לחבר repo או להשתמש בתבנית?',
   'Upload your website manually': 'העלו את האתר שלכם ידנית',
   Deploy: 'פריסה',
   Back: 'חזרה',
@@ -446,22 +446,22 @@ export const heSitesDictionary: Record<string, string> = {
   'Could not detect framework. Select one manually.':
     'לא ניתן לזהות את ה-framework. בחרו אחד ידנית.',
   'Repository not connected. Go back and select a repository.':
-    'המאגר אינו מחובר. חזרו אחורה ובחרו מאגר.',
+    'ה-repo אינו מחובר. חזרו אחורה ובחרו repo.',
   'Repository information is missing from the URL.':
-    'פרטי המאגר חסרים בכתובת ה-URL.',
-  'GitHub Repository': 'מאגר GitHub',
-  'View on GitHub': 'צפייה ב-GitHub',
-  'View repository': 'צפייה במאגר',
+    'פרטי ה-repo חסרים בכתובת ה-URL.',
+  'GitHub Repository': 'GitHub repo',
+  'View on GitHub': 'צפו ב-GitHub',
+  'View repository': 'צפייה ב-repo',
   'Detecting framework...': 'מזהה framework...',
   Detect: 'זיהוי',
   'Git configuration': 'תצורת Git',
   Branch: 'Branch',
   'Production branch for the repo linked to the site. Successful deployments from this branch get activated automatically.':
-    'ה-Branch של הפרודקשן במאגר המקושר לאתר. פריסות מוצלחות מה-Branch הזה מופעלות אוטומטית.',
+    'ה-Branch של הפרודקשן בה-repo המקושר לאתר. פריסות מוצלחות מה-Branch הזה מופעלות אוטומטית.',
   'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).':
-    'הנתיב לקוד האתר במאגר המקושר. השתמשו בשורש המאגר (./) או בתת-תיקייה שמכילה את האפליקציה שלכם (למשל ./apps/web).',
+    'הנתיב לקוד האתר בה-repo המקושר. השתמשו בשורש ה-repo (./) או בתת-תיקייה שמכילה את האפליקציה שלכם (למשל ./apps/web).',
   'Disable automated comments on repository commits':
-    'השבתת תגובות אוטומטיות על קומיטים במאגר',
+    'השבתת תגובות אוטומטיות על קומיטים ב-repo',
   configured: 'הוגדרו',
   'Ready to deploy': 'מוכן לפריסה',
 
@@ -471,21 +471,21 @@ export const heSitesDictionary: Record<string, string> = {
 
   // Create wizard: template config
   'Template not found': 'התבנית לא נמצאה',
-  'Please select a repository': 'בחרו מאגר',
-  'Template is missing repository information': 'לתבנית חסרים פרטי מאגר',
+  'Please select a repository': 'בחרו repo',
+  'Template is missing repository information': 'לתבנית חסרים פרטי repo',
   Version: 'גרסה',
   required: 'חובה',
   'View source': 'צפייה בקוד המקור',
   'Live demo': 'הדגמה חיה',
-  'Connect your repository': 'חיבור המאגר שלכם',
+  'Connect your repository': 'חיבור ה-repo שלכם',
   'Clone this template into a new Git repository or link it to an existing one.':
-    'שכפלו את התבנית הזו למאגר Git חדש או קשרו אותה למאגר קיים.',
+    'שכפלו את התבנית הזו ל-Git repo חדש או קשרו אותה ל-repo קיים.',
   'Connect later': 'חיבור מאוחר יותר',
   'Deploy now and connect your version control later via CLI or Git integration in your settings.':
     'פרסו עכשיו וחברו את ניהול הגרסאות שלכם מאוחר יותר דרך ה-CLI או אינטגרציית Git בהגדרות.',
-  'Connect Git repository': 'חיבור מאגר Git',
+  'Connect Git repository': 'חיבור Git repo',
   'Create and deploy a Site with a connected git repository.':
-    'צרו ופרסו אתר עם מאגר Git מחובר.',
+    'צרו ופרסו אתר עם Git repo מחובר.',
   'Template variables': 'משתני תבנית',
   'Configure the environment variables for this template':
     'הגדירו את משתני הסביבה עבור התבנית הזו',
@@ -506,10 +506,10 @@ export const heSitesDictionary: Record<string, string> = {
   'Next steps': 'הצעדים הבאים',
   'Configure your site or share it with others':
     'הגדירו את האתר שלכם או שתפו אותו עם אחרים',
-  'Add repository': 'הוספת מאגר',
+  'Add repository': 'הוספת repo',
   'Connect Git for automatic deployments': 'חברו Git לפריסות אוטומטיות',
   'Connect a Git repository for automatic deployments':
-    'חברו מאגר Git לפריסות אוטומטיות',
+    'חברו Git repo לפריסות אוטומטיות',
   'Add custom domain': 'הוספת דומיין מותאם אישית',
   'Use your own domain name': 'השתמשו בשם הדומיין שלכם',
   'Configure your own domain name': 'הגדירו שם דומיין משלכם',

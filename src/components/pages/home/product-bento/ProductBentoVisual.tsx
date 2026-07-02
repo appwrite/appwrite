@@ -9,19 +9,33 @@ import { RealtimeProductVisual } from './RealtimeProductVisual'
 import { SitesProductVisual } from './SitesProductVisual'
 import { StorageProductVisual } from './StorageProductVisual'
 
-const PRODUCT_VISUALS: Record<string, ComponentType> = {
-  Auth: AuthProductVisual,
-  Databases: DatabasesProductVisual,
-  Firewall: FirewallProductVisual,
-  Functions: FunctionsProductVisual,
-  Messaging: MessagingProductVisual,
-  Realtime: RealtimeProductVisual,
-  Sites: SitesProductVisual,
-  Storage: StorageProductVisual,
+type ProductBentoVisualId =
+  | 'auth'
+  | 'databases'
+  | 'storage'
+  | 'functions'
+  | 'sites'
+  | 'messaging'
+  | 'firewall'
+  | 'realtime'
+
+const PRODUCT_VISUALS: Record<ProductBentoVisualId, ComponentType> = {
+  auth: AuthProductVisual,
+  databases: DatabasesProductVisual,
+  firewall: FirewallProductVisual,
+  functions: FunctionsProductVisual,
+  messaging: MessagingProductVisual,
+  realtime: RealtimeProductVisual,
+  sites: SitesProductVisual,
+  storage: StorageProductVisual,
 }
 
-export function ProductBentoVisual({ title }: { title: string }) {
-  const Visual = PRODUCT_VISUALS[title]
+export function ProductBentoVisual({
+  productId,
+}: {
+  productId: ProductBentoVisualId
+}) {
+  const Visual = PRODUCT_VISUALS[productId]
 
   if (Visual) {
     return <Visual />

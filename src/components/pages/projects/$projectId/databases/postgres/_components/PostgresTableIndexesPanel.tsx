@@ -32,7 +32,6 @@ import { buildPostgresDropIndexSql } from '@/lib/postgres-table-ddl'
 import { parsePostgresTableId } from '@/lib/postgres-database-routes'
 import {
   formatPostgresIndexMetadataPreview,
-  getPostgresIndexAlgorithmLabel,
   parsePostgresIndexIncludeColumns} from '@/lib/postgres-index-metadata'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -42,6 +41,7 @@ import { Key, Trash2 } from 'lucide-react'
 import { PostgresTableIndexDrawer } from './PostgresTableIndexDrawer'
 import { PostgresIndexContextMenu } from './PostgresIndexContextMenu'
 import { useT } from '@/lib/i18n/translate'
+import { localizePostgresIndexAlgorithmLabel } from '@/lib/i18n/resource-status-labels'
 import {
   matchesPostgresLocalSearch,
   parsePostgresIndexColumnsFromDefinition,
@@ -110,7 +110,7 @@ export function PostgresTableIndexesPanel({
       setIndexToDelete(null)
       await refetch()
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to delete index')
+      toast.error(getErrorMessage(error) ?? t('Failed to delete index'))
     }
   }
 
@@ -332,7 +332,10 @@ export function PostgresTableIndexesPanel({
                     </td>
                     <td className={cn('px-3 py-2', POSTGRES_BODY_CELL_BORDER_CLASS)}>
                       <Badge variant="outline" className="text-[11px] font-medium border">
-                        {getPostgresIndexAlgorithmLabel(index.index_algorithm)}
+                        {localizePostgresIndexAlgorithmLabel(
+                          index.index_algorithm,
+                          t,
+                        )}
                       </Badge>
                     </td>
                     <td className={cn('px-3 py-2', POSTGRES_BODY_CELL_BORDER_CLASS)}>

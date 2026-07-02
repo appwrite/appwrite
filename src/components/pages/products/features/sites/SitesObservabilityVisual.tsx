@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState, type ReactNode } from 'react'
-import { format, subDays } from 'date-fns'
+import { subDays } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
   Area,
   AreaChart,
@@ -135,7 +136,7 @@ function buildChartSeries(bars: readonly number[], periodTotal: number) {
   rounded[rounded.length - 1] += periodTotal - roundedSum
 
   return rounded.map((value, index) => ({
-    date: format(subDays(today, CHART_DAYS - 1 - index), 'MMM d'),
+    date: formatLocalizedDate(subDays(today, CHART_DAYS - 1 - index), 'MMM d'),
     value,
   }))
 }

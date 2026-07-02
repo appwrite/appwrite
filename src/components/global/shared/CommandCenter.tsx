@@ -88,6 +88,7 @@ import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
 import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
+import { useNavigationHistorySafe } from '@/components/global/providers/NavigationHistoryProvider'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
@@ -203,6 +204,19 @@ const RESOURCE_SEARCH_SPECS: ResourceSearchSpec[] = [
   },
 ]
 
+const RESOURCE_SEARCH_PLACEHOLDERS: Record<ResourceScope, string> = {
+  databases: 'Search databases...',
+  users: 'Search users...',
+  teams: 'Search teams...',
+  buckets: 'Search buckets...',
+  functions: 'Search functions...',
+  sites: 'Search sites...',
+  messages: 'Search messages...',
+  topics: 'Search topics...',
+  providers: 'Search providers...',
+  projects: 'Search projects...',
+}
+
 function commandCenterDialogClass(isMobile: boolean, page?: string) {
   return cn(
     'overflow-hidden border-border bg-popover p-0 shadow-2xl',
@@ -292,6 +306,7 @@ export function CommandCenter({
   const { isMac } = usePlatform()
   const navigate = useNavigate()
   const location = useLocation()
+  const navigationHistory = useNavigationHistorySafe()
   const { features } = useConsoleProfile()
   const { setTheme } = useTheme()
   const isOrgContext = context === 'org'
@@ -548,25 +563,39 @@ export function CommandCenter({
     }))
   }, [context])
 
-  // Recent items - placeholder; kept lightweight (project context for now).
   const recentCommands: RuntimeCommand[] = useMemo(() => {
-    if (!isProjectContext) return []
-    return [
-      {
-        id: 'recent.project-databases',
-        label: 'Production database',
-        description: 'Recently opened',
+    const backStack = navigationHistory?.getBackStack() ?? []
+    if (backStack.length === 0) return []
+
+    return [...backStack]
+      .reverse()
+      .slice(0, 3)
+      .map((entry, index) => ({
+        id: `recent.${index}.${entry.path}`,
+        label: entry.title || entry.path,
+        description: entry.path,
         icon: Clock,
-        kind: 'action',
+        kind: 'action' as CommandKind,
         group: 'Recent',
         select: () => {
           onOpenChange(false)
-          if (projectId)
-            navigateToHref(navigate, `/projects/${projectId}/databases`)
+          const target = navigationHistory?.popUntil(entry.path)
+          if (target) {
+            navigationHistory?.skipNextPush()
+            navigateToHref(navigate, target)
+            return
+          }
+          navigateToHref(navigate, entry.path)
         },
-      },
-    ]
-  }, [isProjectContext, navigate, projectId, onOpenChange])
+      }))
+  }, [
+    navigationHistory,
+    location.pathname,
+    location.searchStr,
+    open,
+    navigate,
+    onOpenChange,
+  ])
 
   // ── Dynamic resource fetching (search by user-typed term) ────────────────
   const hasSearch = search.trim().length > 0
@@ -1443,7 +1472,7 @@ export function CommandCenter({
 
   const placeholder = t(
     searchScope
-      ? `Search ${searchScope}...`
+      ? RESOURCE_SEARCH_PLACEHOLDERS[searchScope]
       : currentPage === 'sql-tabs'
         ? 'Search query tabs…'
         : context === 'docs'

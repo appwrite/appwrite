@@ -269,7 +269,7 @@ export function ProductBentoSoftLights({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-0 z-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:group-hover:opacity-100',
+        'pointer-events-none absolute inset-0 z-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-100',
         blend
           ? cn(
               'overflow-visible',
@@ -308,7 +308,7 @@ export function ProductBentoHoverLight({
   return (
     <div
       className={cn(
-        'product-bento-hover-light pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-0 dark:group-hover:opacity-55',
+        'product-bento-hover-light pointer-events-none absolute inset-0 invisible opacity-0 transition-opacity duration-300 group-hover:visible group-hover:opacity-70 motion-reduce:transition-none motion-reduce:invisible motion-reduce:group-hover:invisible motion-reduce:group-hover:opacity-0 dark:group-hover:opacity-55',
         unclipped ? 'overflow-visible' : 'overflow-hidden',
       )}
       aria-hidden

@@ -107,6 +107,7 @@ import { EmailsPolicies } from './policies/Emails'
 import { PasswordsPolicies } from './policies/Passwords'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { formatRelativeDuration } from '@/lib/i18n/relative-time'
 import { UserContextMenu } from './_components/UserContextMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
@@ -939,16 +940,13 @@ export function View({
     } else if (isYesterday) {
       return t('Yesterday')
     } else if (diffDays < 7) {
-      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
+      return formatRelativeDuration(diffDays, 'day', { t })
     } else if (diffDays < 30) {
-      const weeks = Math.floor(diffDays / 7)
-      return `${weeks} week${weeks !== 1 ? 's' : ''} ago`
+      return formatRelativeDuration(Math.floor(diffDays / 7), 'week', { t })
     } else if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30)
-      return `${months} month${months !== 1 ? 's' : ''} ago`
+      return formatRelativeDuration(Math.floor(diffDays / 30), 'month', { t })
     } else {
-      const years = Math.floor(diffDays / 365)
-      return `${years} year${years !== 1 ? 's' : ''} ago`
+      return formatRelativeDuration(Math.floor(diffDays / 365), 'year', { t })
     }
   }
 

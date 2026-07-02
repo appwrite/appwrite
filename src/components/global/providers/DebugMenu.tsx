@@ -951,11 +951,17 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         setOverrides((prev) => ({
           ...prev,
           language: option.value,
-          ...(option.value === 'he' ? { pageDirection: 'rtl' as const } : {}),
+          ...(option.value === 'he'
+            ? { pageDirection: 'rtl' as const }
+            : option.value === 'en'
+              ? { pageDirection: 'ltr' as const }
+              : {}),
         }))
         setDebugOverride('language', option.value)
         if (option.value === 'he') {
           setDebugOverride('pageDirection', 'rtl')
+        } else if (option.value === 'en') {
+          setDebugOverride('pageDirection', 'ltr')
         }
       },
       active: overrides.language === option.value,

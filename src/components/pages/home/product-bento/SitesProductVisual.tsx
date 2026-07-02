@@ -93,7 +93,7 @@ export function SitesProductVisual() {
     }
 
     tick()
-    const tickId = window.setInterval(tick, 50)
+    const tickId = window.setInterval(tick, 200)
 
     return () => {
       window.clearInterval(tickId)

@@ -3,16 +3,21 @@ import { useT } from '@/lib/i18n/translate'
 import type { ReactNode } from 'react'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
 import {
-  getComputeBreakdownResourceRoute,
   getComputeBreakdownResourceTypeLabel,
   resolveComputeBreakdownResource,
   type ComputeBreakdownResourceMap,
 } from '@/lib/usage/resolve-compute-breakdown-resources'
 import {
-  getStorageBreakdownResourceRoute,
   resolveStorageBreakdownResource,
   type StorageBreakdownResourceMap,
 } from '@/lib/usage/resolve-storage-breakdown-resources'
+import {
+  getOverviewBreakdownUsageCategoryId,
+  getOverviewBreakdownUsageLinkProps,
+  getOverviewEndpointBreakdownFilters,
+  getOverviewResourceBreakdownFilters,
+  type OverviewBreakdownMetric,
+} from '@/lib/usage/usage-breakdown-links'
 import { Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import {
@@ -40,12 +45,7 @@ function formatBreakdownPath(path: string): string {
   return truncateMiddle(compactUsagePathIds(path), PATH_DISPLAY_MAX)
 }
 
-type MetricType =
-  | 'bandwidth'
-  | 'requests'
-  | 'storage'
-  | 'executions'
-  | 'gbhours'
+type MetricType = OverviewBreakdownMetric
 
 interface TopRequestsProps {
   className?: string
@@ -196,13 +196,20 @@ export function TopRequests({
         </div>
         {headerAddon ? (
           <div className="w-full min-w-0">{headerAddon}</div>
-        ) : (
+        ) : projectId && metric ? (
           <div className={overviewChartPanelHeaderActionsClass}>
-            <button className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+            <Link
+              to="/projects/$projectId/usage/$categoryId"
+              params={{
+                projectId,
+                categoryId: getOverviewBreakdownUsageCategoryId(metric),
+              }}
+              className="shrink-0 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+            >
               {t('View all')}
-            </button>
+            </Link>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className={overviewChartPanelBodyClass}>
@@ -221,105 +228,125 @@ export function TopRequests({
                 {t('No data for this date range')}
               </div>
             )}
-            {itemSlots.map((request, index) =>
-              request ? (
-                <div
-                  key={request.id}
-                  className={cn(
-                    overviewTopBreakdownRowClass,
-                    'group relative overflow-hidden transition-colors hover:bg-accent/50',
-                  )}
-                >
+            {itemSlots.map((request, index) => {
+              if (!request) {
+                return (
+                  <div
+                    key={`empty-slot-${index}`}
+                    className={overviewTopBreakdownRowClass}
+                    aria-hidden
+                  />
+                )
+              }
+
+              const resourceKey = request.path || request.id
+              const storageResource = useStorageBucketLookup
+                ? resolveStorageBreakdownResource(resourceKey, storageLookup)
+                : undefined
+              const computeResource = useComputeResourceLookup
+                ? resolveComputeBreakdownResource(resourceKey, resourceLookup)
+                : undefined
+              const fallbackLabel = formatBreakdownPath(request.path)
+              const breakdownFilters = isResourceBreakdown
+                ? getOverviewResourceBreakdownFilters(resourceKey, {
+                    computeResource,
+                    storageResource,
+                  })
+                : getOverviewEndpointBreakdownFilters(request.path)
+              const usageLinkProps =
+                projectId && metric && breakdownFilters.length > 0
+                  ? getOverviewBreakdownUsageLinkProps(
+                      projectId,
+                      metric,
+                      breakdownFilters,
+                    )
+                  : null
+
+              const rowClassName = cn(
+                overviewTopBreakdownRowClass,
+                'group relative overflow-hidden transition-colors hover:bg-accent/50',
+                usageLinkProps && 'cursor-pointer',
+              )
+
+              const labelContent = (() => {
+                if (storageResource) {
+                  return (
+                    <span
+                      className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground transition-colors group-hover:text-primary"
+                      title={storageResource.name}
+                    >
+                      {storageResource.name}
+                    </span>
+                  )
+                }
+
+                if (computeResource) {
+                  const typeLabel = getComputeBreakdownResourceTypeLabel(
+                    computeResource.type,
+                  )
+                  return (
+                    <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {t(typeLabel)}
+                      </span>
+                      <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                      <span
+                        className="min-w-0 truncate text-[12px] font-medium text-foreground transition-colors group-hover:text-primary"
+                        title={`${typeLabel} / ${computeResource.name}`}
+                      >
+                        {computeResource.name}
+                      </span>
+                    </div>
+                  )
+                }
+
+                return (
+                  <span
+                    className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground/70 transition-colors group-hover:text-primary"
+                    title={request.path}
+                  >
+                    {fallbackLabel}
+                  </span>
+                )
+              })()
+
+              const rowContent = (
+                <>
                   <div
                     className="absolute inset-y-0 start-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
                     style={{ width: `${(request.count / maxCount) * 100}%` }}
                   />
 
                   <div className="relative flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-                    {(() => {
-                      const resourceKey = request.path || request.id
-                      const storageResource =
-                        useStorageBucketLookup
-                          ? resolveStorageBreakdownResource(
-                              resourceKey,
-                              storageLookup,
-                            )
-                          : undefined
-                      const computeResource = useComputeResourceLookup
-                        ? resolveComputeBreakdownResource(
-                            resourceKey,
-                            resourceLookup,
-                          )
-                        : undefined
-                      const fallbackLabel = formatBreakdownPath(request.path)
-
-                      if (storageResource && projectId) {
-                        const route = getStorageBreakdownResourceRoute(
-                          projectId,
-                          storageResource,
-                        )
-                        return (
-                          <Link
-                            to={route.to}
-                            params={route.params}
-                            className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
-                            title={storageResource.name}
-                          >
-                            {storageResource.name}
-                          </Link>
-                        )
-                      }
-
-                      if (computeResource && projectId) {
-                        const route = getComputeBreakdownResourceRoute(
-                          projectId,
-                          computeResource,
-                        )
-                        const typeLabel = getComputeBreakdownResourceTypeLabel(
-                          computeResource.type,
-                        )
-                        return (
-                          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
-                            <span className="shrink-0 text-[11px] text-muted-foreground">
-                              {t(typeLabel)}
-                            </span>
-                            <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-                            <Link
-                              to={route.to}
-                              params={route.params}
-                              className="min-w-0 truncate text-[12px] font-medium text-foreground transition-colors hover:text-primary"
-                              title={`${typeLabel} / ${computeResource.name}`}
-                            >
-                              {computeResource.name}
-                            </Link>
-                          </div>
-                        )
-                      }
-
-                      return (
-                        <span
-                          className="min-w-0 flex-1 truncate font-mono text-[12px] text-foreground/70"
-                          title={request.path}
-                        >
-                          {fallbackLabel}
-                        </span>
-                      )
-                    })()}
+                    {labelContent}
                     <MetricValueWithUnit
                       value={formatValue(request.count)}
                       className="shrink-0 text-[12px] font-medium tabular-nums text-muted-foreground"
                       unitClassName="text-muted-foreground/80"
                     />
                   </div>
+                </>
+              )
+
+              if (usageLinkProps) {
+                return (
+                  <Link
+                    key={request.id}
+                    {...usageLinkProps}
+                    className={rowClassName}
+                    title={request.path}
+                  >
+                    {rowContent}
+                  </Link>
+                )
+              }
+
+              return (
+                <div key={request.id} className={rowClassName}>
+                  {rowContent}
                 </div>
-              ) : (
-                <div
-                  key={`empty-slot-${index}`}
-                  className={overviewTopBreakdownRowClass}
-                  aria-hidden
-                />
-              ),
-            )}
+              )
+            })}
           </div>
         )}
       </div>

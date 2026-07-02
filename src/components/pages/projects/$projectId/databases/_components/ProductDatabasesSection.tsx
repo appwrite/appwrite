@@ -194,7 +194,9 @@ function ProductDatabasesSectionContent({
             {errorMessage ? (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Couldn&apos;t refresh {title.toLowerCase()}</AlertTitle>
+                <AlertTitle>
+                {t("Couldn't refresh databases")}
+              </AlertTitle>
                 <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-[13px]">{errorMessage}</p>
                   <Button
@@ -285,8 +287,8 @@ function ProductDatabasesSectionContent({
                               >
                                 <CheckCircle2 className="h-3 w-3" />
                                 {db.backupPolicyCount && db.backupPolicyCount > 0
-                                  ? `${db.backupPolicyCount} ${db.backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                  : db.backupPolicy?.name || 'Enabled'}
+                                  ? `${db.backupPolicyCount} ${db.backupPolicyCount === 1 ? t('policy') : t('policies')}`
+                                  : db.backupPolicy?.name || t('Enabled')}
                               </Badge>
                             ) : (
                               <Badge
@@ -325,8 +327,10 @@ function ProductDatabasesSectionContent({
         ) : (
           <EmptyState
             icon={Icon}
-            title={`No ${title.toLowerCase()} yet`}
-            description={`Create a ${title} database from the create database wizard.`}
+            title={t('No product databases yet')}
+            description={t(
+              'Create a database from the create database wizard.',
+            )}
             isEmpty
             variant="card"
           />
@@ -336,7 +340,9 @@ function ProductDatabasesSectionContent({
           {errorMessage ? (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Couldn&apos;t refresh {title.toLowerCase()}</AlertTitle>
+              <AlertTitle>
+                {t("Couldn't refresh databases")}
+              </AlertTitle>
               <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[13px]">{errorMessage}</p>
                 <Button
@@ -411,8 +417,10 @@ function ProductDatabasesSectionContent({
               <div className="col-span-full">
                 <EmptyState
                   icon={Icon}
-                  title={`No ${title.toLowerCase()} yet`}
-                  description={`Create a ${title} database from the create database wizard.`}
+                  title={`${t('No databases yet for')} ${title}`}
+                  description={t(
+                    'Create this product database from the create database wizard.',
+                  )}
                   isEmpty
                   variant="card"
                 />

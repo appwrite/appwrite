@@ -125,14 +125,20 @@ export function TableSelector({
                 className="h-8 w-8 shrink-0"
                 onClick={onCreateClick}
                 disabled={createDisabled}
-                aria-label={createTooltip}
+                aria-label={
+                  createDisabled
+                    ? t(createDisabledTooltip)
+                    : t(createTooltip)
+                }
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {createDisabled ? createDisabledTooltip : createTooltip}
+            {createDisabled
+              ? t(createDisabledTooltip)
+              : t(createTooltip)}
           </TooltipContent>
         </Tooltip>
       </div>
@@ -214,14 +220,16 @@ export function TableSelector({
               className="h-8 w-8 shrink-0"
               onClick={onCreateClick}
               disabled={createDisabled}
-              aria-label={createTooltip}
+              aria-label={
+                createDisabled ? t(createDisabledTooltip) : t(createTooltip)
+              }
             >
               <Plus className="h-4 w-4" />
             </Button>
           </span>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          {createDisabled ? createDisabledTooltip : createTooltip}
+          {createDisabled ? t(createDisabledTooltip) : t(createTooltip)}
         </TooltipContent>
       </Tooltip>
     </div>

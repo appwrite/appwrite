@@ -15,7 +15,7 @@ import {
 import { useProjectDatabase, useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  getDedicatedDatabaseRegionUnavailableDescription,
+  formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
 } from '@/lib/databases/dedicated-database-regions'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
@@ -120,7 +120,7 @@ export function DatabaseMonitorHeaderActions({
                 </span>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs text-[12px]">
-                {getDedicatedDatabaseRegionUnavailableDescription()}
+                {formatDedicatedDatabaseRegionUnavailableDescription(t)}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

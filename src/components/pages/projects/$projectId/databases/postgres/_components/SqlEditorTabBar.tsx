@@ -313,7 +313,9 @@ export function SqlEditorTabBar({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>{headerCollapsed ? 'Expand header' : 'Collapse header'}</p>
+                <p>
+                  {headerCollapsed ? t('Expand header') : t('Collapse header')}
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

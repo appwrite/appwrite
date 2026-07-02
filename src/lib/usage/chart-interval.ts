@@ -78,19 +78,41 @@ export function getUsageChartIntervalDisabledReason(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
 ): string | undefined {
+  const details = getUsageChartIntervalDisabledReasonDetails(
+    interval,
+    dateRange,
+  )
+  if (!details) return undefined
+
+  if (details.kind === 'hours') {
+    return `Use a date range of ${details.maxHours} hours or less for this interval.`
+  }
+
+  return `Use a date range of ${details.maxDays} days or less for this interval.`
+}
+
+export type UsageChartIntervalDisabledReasonDetails =
+  | { kind: 'hours'; maxHours: number }
+  | { kind: 'days'; maxDays: number }
+
+export function getUsageChartIntervalDisabledReasonDetails(
+  interval: UsageChartInterval,
+  dateRange: DateRange | undefined,
+): UsageChartIntervalDisabledReasonDetails | undefined {
   if (isUsageChartIntervalValidForRange(interval, dateRange)) {
     return undefined
   }
 
   const maxHours = getUsageChartIntervalMaxRangeHours(interval)
   if (maxHours !== null) {
-    return `Use a date range of ${maxHours} hours or less for this interval.`
+    return { kind: 'hours', maxHours }
   }
 
   const maxDays = getUsageChartIntervalMaxRangeDays(interval)
   if (maxDays !== null) {
-    return `Use a date range of ${maxDays} days or less for this interval.`
+    return { kind: 'days', maxDays }
   }
+
   return undefined
 }
 

@@ -233,7 +233,7 @@ function ProductNavLink({
 
       {!isActive && !isDense && !isCompact ? (
         <ArrowRight
-          className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground/70 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+          className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground/70 rtl:group-hover:-translate-x-0.5"
           aria-hidden
         />
       ) : null}
@@ -338,7 +338,7 @@ function DesktopProductsNavPanel({
           className="inline-flex cursor-pointer items-center gap-1.5 text-start text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           {navigationCopy.viewOverview}
-          <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden />
+          <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       </div>
     </div>
@@ -379,7 +379,7 @@ function MobileProductsNavPanel({
               className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {navigationCopy.viewOverview}
-              <ArrowRight className="size-3.5 rtl:rotate-180" aria-hidden />
+              <ArrowRight className="size-3.5" aria-hidden />
             </Link>
           </SheetClose>
         </div>

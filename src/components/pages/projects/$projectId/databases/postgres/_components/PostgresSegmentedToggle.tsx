@@ -1,5 +1,6 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import { POSTGRES_SEGMENTED_TOGGLE_ITEM_CLASS } from './postgres-chrome'
 
 type PostgresSegmentedToggleOption<T extends string> = {
@@ -25,6 +26,7 @@ export function PostgresSegmentedToggle<T extends string>({
   variant = 'inline',
   className,
 }: PostgresSegmentedToggleProps<T>) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -46,7 +48,7 @@ export function PostgresSegmentedToggle<T extends string>({
           }
         }}
         className={cn(variant === 'bar' ? 'w-full' : 'shrink-0')}
-        aria-label={ariaLabel}
+        aria-label={t(ariaLabel)}
       >
         {options.map((option) => (
           <ToggleGroupItem
@@ -57,7 +59,7 @@ export function PostgresSegmentedToggle<T extends string>({
               variant === 'inline' && 'min-w-[5.5rem] px-3',
             )}
           >
-            {option.label}
+            {t(option.label)}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>

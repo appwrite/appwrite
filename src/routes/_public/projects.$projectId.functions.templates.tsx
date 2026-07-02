@@ -46,7 +46,8 @@ export const Route = createFileRoute(
     meta: [{ title: pageTitle('Templates', 'Functions') }],
   }),
   validateSearch: templatesSearchSchema,
-  loader: async ({ params, context, search: routeSearch }) => {
+  loaderDeps: ({ search }) => search,
+  loader: async ({ params, context, deps: routeSearch }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params

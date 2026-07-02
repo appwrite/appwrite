@@ -20,6 +20,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import { useMemo } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { MarketingProductPills } from '@/components/pages/marketing/MarketingProductPills'
@@ -36,12 +37,14 @@ import {
 } from '@/components/pages/home/HomeSoftLights'
 import { HomeHashScroll } from '@/components/pages/home/HomeHashScroll'
 import { TestimonialsSection } from '@/components/pages/home/TestimonialsSection'
-import { ProductBentoVisual } from '@/components/pages/home/product-bento/ProductBentoVisual'
+import { ProductBentoVisualDeferred } from '@/components/pages/home/product-bento/ProductBentoVisualDeferred'
 import { ProductBentoCardLink } from '@/components/pages/home/product-bento/ProductBentoCardLink'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { StandaloneCommandCenterScope } from '@/components/global/providers/KeyboardShortcuts'
 import { Button } from '@/components/ui/button'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
+import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
+import type { ProductNavItemId } from '@/lib/products/types'
 import { marketingPageLoader } from '@/lib/marketing/route-loader'
 import {
   getMarketingHomeOgImage,
@@ -74,28 +77,39 @@ const aiDocLinks = [
   { label: HOME_COPY.aiDocLinks.aiArena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
 ] as const
 
-const productBentoItems: {
-  title: string
-  description: string
+type ProductBentoProductId = Extract<
+  ProductNavItemId,
+  | 'auth'
+  | 'databases'
+  | 'storage'
+  | 'functions'
+  | 'sites'
+  | 'messaging'
+  | 'firewall'
+  | 'realtime'
+>
+
+type ProductBentoLayoutItem = {
+  id: ProductBentoProductId
   icon: LucideIcon
   className: string
-  label?: string
   tall?: boolean
   /** Tighter copy block so the visual gets more room (bottom row). */
   compact?: boolean
   /** Taller article + visual min-heights below lg (complex stacked visuals). */
   mobileVisualTall?: boolean
-}[] = [
+  badgeLabelKey?: 'firewallNewLabel'
+}
+
+const productBentoLayout: ProductBentoLayoutItem[] = [
   {
-    title: HOME_COPY.productBento.authTitle,
-    description: HOME_COPY.productBento.authDescription,
+    id: 'auth',
     icon: Users,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:row-span-2',
   },
   {
-    title: HOME_COPY.productBento.databasesTitle,
-    description: HOME_COPY.productBento.databasesDescription,
+    id: 'databases',
     icon: Database,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',
@@ -103,48 +117,41 @@ const productBentoItems: {
     mobileVisualTall: true,
   },
   {
-    title: HOME_COPY.productBento.storageTitle,
-    description: HOME_COPY.productBento.storageDescription,
+    id: 'storage',
     icon: Folder,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-3 lg:row-span-2',
   },
   {
-    title: HOME_COPY.productBento.functionsTitle,
-    description: HOME_COPY.productBento.functionsDescription,
+    id: 'functions',
     icon: Zap,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-5 lg:row-span-2',
   },
   {
-    title: HOME_COPY.productBento.sitesTitle,
-    description: HOME_COPY.productBento.sitesDescription,
+    id: 'sites',
     icon: Globe,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-4 lg:row-span-3',
     tall: true,
   },
   {
-    title: HOME_COPY.productBento.messagingTitle,
-    description:
-      'Send email, SMS, and push messages through a unified messaging service.',
+    id: 'messaging',
     icon: MessageSquare,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-7 lg:row-span-2',
     compact: true,
   },
   {
-    title: HOME_COPY.productBento.firewallTitle,
-    label: HOME_COPY.productBento.firewallNewLabel,
-    description: HOME_COPY.productBento.firewallDescription,
+    id: 'firewall',
     icon: Shield,
     className:
       'lg:col-span-4 lg:col-start-5 lg:row-start-7 lg:row-span-2',
     compact: true,
+    badgeLabelKey: 'firewallNewLabel',
   },
   {
-    title: HOME_COPY.productBento.realtimeTitle,
-    description: HOME_COPY.productBento.realtimeDescription,
+    id: 'realtime',
     icon: Radio,
     className:
       'lg:col-span-4 lg:col-start-9 lg:row-start-7 lg:row-span-2',
@@ -152,13 +159,21 @@ const productBentoItems: {
   },
 ]
 
-const productBentoHrefByTitle = Object.fromEntries(
-  [
-    ...marketingProductToolkit.build,
-    ...marketingProductToolkit.deploy,
-    ...marketingProductToolkit.protect,
-  ].map((item) => [item.label, item.href]),
-) as Record<string, string>
+type HomeCopy = ReturnType<typeof getEnglishCatalog>['website']['home']
+
+function getProductBentoItems(homeCopy: HomeCopy) {
+  const productBento = homeCopy.productBento
+
+  return productBentoLayout.map((item) => ({
+    ...item,
+    title: productBento[`${item.id}Title` as keyof typeof productBento] as string,
+    description: productBento[
+      `${item.id}Description` as keyof typeof productBento
+    ] as string,
+    label: item.badgeLabelKey ? productBento[item.badgeLabelKey] : undefined,
+    href: PRODUCT_NAV_REGISTRY[item.id].href,
+  }))
+}
 
 const securityItems: {
   title: string
@@ -240,6 +255,10 @@ export const Route = createFileRoute('/home')({
 function HomePage() {
   const { catalog } = useI18n()
   const homeCopy = catalog.website.home
+  const productBentoItems = useMemo(
+    () => getProductBentoItems(homeCopy),
+    [homeCopy],
+  )
 
   return (
     <StandaloneCommandCenterScope context="account">
@@ -274,7 +293,9 @@ function HomePage() {
             </Button>
 
             <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-6xl pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] lg:text-[76px]">
-              {homeCopy.heroTitle}
+              {homeCopy.heroTitleLineOne}
+              <br />
+              {homeCopy.heroTitleLineTwo}
               <span className="text-[var(--brand-cta)]">_</span>
             </h1>
 
@@ -362,7 +383,7 @@ function HomePage() {
                   <img
                     src={tool.icon}
                     alt=""
-                    className="size-8 object-contain opacity-90 [filter:grayscale(1)_brightness(0.38)] transition duration-200 group-hover:opacity-100 group-hover:[filter:grayscale(1)_brightness(0)] dark:opacity-55 dark:[filter:grayscale(1)] dark:group-hover:opacity-100 dark:group-hover:[filter:grayscale(1)]"
+                    className="size-8 object-contain opacity-45 transition-opacity duration-200 group-hover:opacity-100 dark:opacity-40 dark:group-hover:opacity-100"
                   />
                 </MarketingSiteLink>
               ))}
@@ -425,12 +446,12 @@ function HomePage() {
             <div className="product-bento-grid mt-10 grid gap-3 sm:gap-4 lg:grid-cols-12 lg:grid-rows-[repeat(8,minmax(0,1fr))] lg:min-h-[960px]">
               {productBentoItems.map((item) => {
                 const Icon = item.icon
-                const href = productBentoHrefByTitle[item.title]
+                const href = item.href
 
                 return (
                   <article
-                    key={item.title}
-                    className={`${item.className} group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card/50 transition-colors hover:bg-accent/10 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
+                    key={item.id}
+                    className={`${item.className} group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card/50 hover:bg-accent/10 ${item.mobileVisualTall ? 'min-h-[540px]' : 'min-h-[380px]'} ${item.tall ? 'lg:min-h-0' : ''}`}
                   >
                     {href ? (
                       <ProductBentoCardLink href={href} title={item.title} />
@@ -452,7 +473,7 @@ function HomePage() {
                           <h3 className="font-aeonik-pro text-[16px] font-normal text-foreground">
                             {item.title}
                           </h3>
-                          {'label' in item ? (
+                          {item.label ? (
                             <span className="rounded-full border border-[var(--brand-cta)]/20 bg-[var(--brand-cta)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-cta)]">
                               {item.label}
                             </span>
@@ -469,7 +490,7 @@ function HomePage() {
                         className={`relative flex min-h-0 flex-1 flex-col px-3 pb-3 sm:px-3.5 sm:pb-3.5 ${item.mobileVisualTall ? 'max-lg:min-h-[460px]' : ''}`}
                       >
                         <div
-                          className={`relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/20 ${
+                          className={`relative isolate min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-muted/20 contain-paint ${
                             item.mobileVisualTall
                               ? 'min-h-[280px] lg:min-h-[15rem]'
                               : item.compact
@@ -482,9 +503,7 @@ function HomePage() {
                         >
                           <ProductBentoSoftLights />
                           <div className="absolute inset-0 p-2 sm:p-2.5">
-                            <div className="relative h-full min-h-0 w-full opacity-[0.94] transition-opacity duration-300 group-hover:opacity-100 motion-reduce:opacity-100">
-                              <ProductBentoVisual title={item.title} />
-                            </div>
+                            <ProductBentoVisualDeferred productId={item.id} />
                           </div>
                         </div>
                       </div>

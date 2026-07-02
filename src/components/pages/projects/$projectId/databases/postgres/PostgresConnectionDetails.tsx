@@ -20,10 +20,8 @@ import {
   backendTypeBadgeVariant,
   connectionStateBadgeVariant,
   formatPostgresApplicationName,
-  formatPostgresBackendTypeLabel,
   formatPostgresClientAddress,
   formatPostgresConnectionDatabase,
-  formatPostgresConnectionStateLabel,
   formatPostgresConnectionUsername,
   formatPostgresDurationSince,
   formatPostgresWaitEvent,
@@ -72,6 +70,10 @@ import { PostgresConnectionContextMenu } from './_components/PostgresConnectionC
 import { PostgresConnectionRowActionsMenu } from './_components/PostgresConnectionRowActionsMenu'
 import { PostgresSegmentedToggle } from './_components/PostgresSegmentedToggle'
 import { useT } from '@/lib/i18n/translate'
+import {
+  localizePostgresBackendTypeLabel,
+  localizePostgresConnectionStateLabel,
+} from '@/lib/i18n/resource-status-labels'
 
 type PostgresConnectionDetailsProps = {
   projectId: string
@@ -474,7 +476,7 @@ export function PostgresConnectionDetails({
                       <span className="inline-flex">{bulkTerminateButton}</span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      <p className="text-[12px]">{manageDisabledTooltip}</p>
+                      <p className="text-[12px]">{t(manageDisabledTooltip)}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -543,12 +545,14 @@ export function PostgresConnectionDetails({
                       const applicationLabel = formatPostgresApplicationName(
                         connection.applicationName,
                       )
-                      const stateLabel = formatPostgresConnectionStateLabel(
+                      const stateLabel = localizePostgresConnectionStateLabel(
                         connection.state,
                         connection.backendType,
+                        t,
                       )
-                      const typeLabel = formatPostgresBackendTypeLabel(
+                      const typeLabel = localizePostgresBackendTypeLabel(
                         connection.backendType,
+                        t,
                       )
 
                       return (

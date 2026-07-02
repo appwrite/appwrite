@@ -37,6 +37,7 @@ import {
   DedicatedDatabaseRegionUnavailableCard,
 } from './DedicatedDatabaseRegionUnavailableCard'
 import { useT } from '@/lib/i18n/translate'
+import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 
 type DedicatedDatabasesSectionProps = {
   projectId: string
@@ -80,18 +81,14 @@ function dedicatedStatusVariant(
   }
 }
 
-function formatStatusLabel(status: string): string {
-  if (!status) return 'Unknown'
-  return status.charAt(0).toUpperCase() + status.slice(1)
-}
-
 function DedicatedDatabaseStatusBadge({ status }: { status: string }) {
+  const t = useT()
   return (
     <Badge
       variant={dedicatedStatusVariant(status)}
       className="text-[11px] font-medium border px-2 py-0.5 capitalize"
     >
-      {formatStatusLabel(status)}
+      {localizeResourceStatusLabel(status, t)}
     </Badge>
   )
 }
@@ -105,6 +102,7 @@ function DedicatedDatabaseCard({
   projectId: string
   productRouteKindByDedicatedId: Map<string, DatabaseRouteKind>
 }) {
+  const t = useT()
   const link = dedicatedDatabaseHomeLink(
     projectId,
     db,
@@ -118,7 +116,7 @@ function DedicatedDatabaseCard({
       icon={Cpu}
       iconColor="bg-muted text-muted-foreground"
       status={dedicatedStatusVariant(db.status)}
-      statusLabel={formatStatusLabel(db.status)}
+      statusLabel={localizeResourceStatusLabel(db.status, t)}
       metadata={[
         {
           label: 'Engine',
@@ -333,7 +331,7 @@ function DedicatedDatabasesSectionContent({
                         {formatEngineLabel(db.engine)}
                       </TableCell>
                       <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                        {db.specification || 'Not set'}
+                        {db.specification || t('Not set')}
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">

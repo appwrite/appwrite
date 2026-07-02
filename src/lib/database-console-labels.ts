@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
+import { useT, type Translator } from '@/lib/i18n/translate'
 
 /**
  * User-facing copy aligned with Appwrite Console SDK service APIs:
@@ -175,4 +177,56 @@ export function getDatabaseConsoleLabels(
   if (kind === 'documentsdb') return DOCUMENTS
   if (kind === 'vectorsdb') return VECTORS
   return TABLES
+}
+
+const TRANSLATABLE_DATABASE_LABEL_KEYS = [
+  'containerSingularTitle',
+  'containerPluralTitle',
+  'recordSingularTitle',
+  'recordPluralTitle',
+  'gridDataTabLabel',
+  'jsonDocumentsTabLabel',
+  'schemaSingularTitle',
+  'schemaPluralTitle',
+  'createContainer',
+  'createRecord',
+  'createSchema',
+  'createIndex',
+  'searchContainersPlaceholder',
+  'sortContainersMenu',
+  'sortContainersAriaLabel',
+  'emptyContainersTitle',
+  'emptyContainersDescription',
+  'selectContainerHint',
+  'databaseOverviewTabLabel',
+  'disabledContainerTitle',
+  'disabledContainerBodyPrefix',
+  'paginationItemLabel',
+  'debugCreateManyContainers',
+] as const satisfies readonly (keyof DatabaseConsoleLabels)[]
+
+/** Returns user-facing database labels translated for the active language. */
+export function getLocalizedDatabaseConsoleLabels(
+  t: Translator,
+  kind: DatabaseRouteKind,
+): DatabaseConsoleLabels {
+  const base = getDatabaseConsoleLabels(kind)
+  const localized = { ...base }
+  for (const key of TRANSLATABLE_DATABASE_LABEL_KEYS) {
+    const value = base[key]
+    if (typeof value === 'string' && value.length > 0) {
+      localized[key] = t(value)
+    }
+  }
+  return localized
+}
+
+export function useDatabaseConsoleLabels(
+  kind: DatabaseRouteKind,
+): DatabaseConsoleLabels {
+  const t = useT()
+  return useMemo(
+    () => getLocalizedDatabaseConsoleLabels(t, kind),
+    [t, kind],
+  )
 }

@@ -279,7 +279,7 @@ export function CreateProjectDialog({
                               if (!region) return t('Select a region')
                               const flagCode = region.flag || ''
                               const regionName =
-                                region.name || region.$id || 'Unknown'
+                                region.name || region.$id || t('Unknown')
                               const flagUrl = flagCode
                                 ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
                                 : null
@@ -313,7 +313,7 @@ export function CreateProjectDialog({
                       {sortedRegions.map((region: unknown, index: number) => {
                         const flagCode = region.flag || ''
                         const regionName =
-                          region.name || region.$id || 'Unknown'
+                          region.name || region.$id || t('Unknown')
                         const flagUrl = flagCode
                           ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
                           : null

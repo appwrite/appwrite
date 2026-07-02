@@ -1,12 +1,6 @@
 import { useMemo } from 'react'
-import {
-  format,
-  startOfYear,
-  endOfYear,
-  eachDayOfInterval,
-  getDay,
-  getMonth,
-} from 'date-fns'
+import { startOfYear, endOfYear, eachDayOfInterval, getDay, getMonth } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -107,7 +101,7 @@ export function ActivityPunchcard({
           if (dayOfMonth === 1 && !monthsSeen.has(month)) {
             monthsSeen.add(month)
             labels.push({
-              month: format(day, 'MMM'),
+              month: formatLocalizedDate(day, 'MMM'),
               weekIndex,
             })
           }
@@ -155,7 +149,7 @@ export function ActivityPunchcard({
     if (!date) return ''
     const dateKey = format(date, 'yyyy-MM-dd')
     const count = activityMap.get(dateKey) || 0
-    const formattedDate = format(date, 'MMM d, yyyy')
+    const formattedDate = formatLocalizedDate(date, 'MMM d, yyyy')
 
     if (count === 0) {
       return `${t('No activity on')} ${formattedDate}`

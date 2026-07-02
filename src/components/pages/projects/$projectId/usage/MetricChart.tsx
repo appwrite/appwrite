@@ -19,7 +19,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts'
-import { format } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { AlertTriangle } from 'lucide-react'
 import {
   type UsageMetric,
@@ -39,8 +39,8 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
   // Transform time series data for recharts
   const chartData = useMemo(() => {
     return metric.timeSeries.map((point) => ({
-      date: format(new Date(point.timestamp), 'MMM d'),
-      fullDate: format(new Date(point.timestamp), 'MMM d, yyyy'),
+      date: formatLocalizedDate(new Date(point.timestamp), 'MMM d'),
+      fullDate: formatLocalizedDate(new Date(point.timestamp), 'MMM d, yyyy'),
       value: point.value,
     }))
   }, [metric.timeSeries])

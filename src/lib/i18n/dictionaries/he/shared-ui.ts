@@ -49,7 +49,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'already exists': 'כבר קיים',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
   'contact sales': 'צרו קשר עם מכירות',
-  'to include more repos.': 'כדי לכלול מאגרים נוספים.',
+  'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
   // Common actions and labels
@@ -97,7 +97,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
   'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.': // pragma: allowlist secret
     'פריסות CLI נוצרות באמצעות כלי שורת הפקודה של Appwrite, שימושי לתהליכי עבודה של מפתחים ולאוטומציה בסקריפטים.', // pragma: allowlist secret
-  "Can't find a repository?": 'לא מוצאים מאגר?',
+  "Can't find a repository?": 'לא מוצאים repo?',
   Cancel: 'ביטול',
   'Cancel build': 'ביטול בנייה',
   'Cancel build is not available': 'ביטול הבנייה אינו זמין',
@@ -127,7 +127,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Community and enterprise resources for self-hosting':
     'משאבי קהילה וארגונים לאירוח עצמי',
   Connect: 'חיבור',
-  'Connect existing repository': 'חיבור מאגר קיים',
+  'Connect existing repository': 'חיבור repo קיים',
   'Connect to GitHub': 'התחברות ל-GitHub',
   'Console user': 'משתמש קונסולה',
   'Contact Support': 'פנייה לתמיכה',
@@ -150,8 +150,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Could not start impersonation.': 'לא ניתן היה להתחיל התחזות.',
   Create: 'יצירה',
   'Create a new Git repository and clone the template into it.':
-    'יצירת מאגר Git חדש ושכפול התבנית לתוכו.',
-  'Create new repository': 'יצירת מאגר חדש',
+    'יצירת Git repo חדש ושכפול התבנית לתוכו.',
+  'Create new repository': 'יצירת repo חדש',
   'Create variable': 'יצירת משתנה',
   Created: 'נוצר',
   Customize: 'התאמה אישית',
@@ -185,7 +185,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Domain: 'דומיין',
   'Domain is available': 'הדומיין זמין',
   Done: 'סיום',
-  Download: 'הורדה',
+  Download: 'הורידו',
   'Download build output': 'הורדת פלט הבנייה',
   'Download logs': 'הורדת לוגים',
   'Download source code': 'הורדת קוד המקור',
@@ -219,7 +219,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Failed to copy logs': 'העתקת הלוגים נכשלה',
   'Failed to copy prompt': 'העתקת הפרומפט נכשלה',
   'Failed to copy to clipboard': 'ההעתקה ללוח נכשלה',
-  'Failed to create repository': 'יצירת המאגר נכשלה',
+  'Failed to create repository': 'יצירת ה-repo נכשלה',
   'Failed to create variable': 'יצירת המשתנה נכשלה',
   'Failed to delete deployment': 'מחיקת הפריסה נכשלה',
   'Failed to delete variable': 'מחיקת המשתנה נכשלה',
@@ -247,13 +247,13 @@ export const heSharedUiDictionary: Record<string, string> = {
   'For me': 'עבורי',
   'For team': 'עבור הצוות',
   Function: 'פונקציה',
-  Functions: 'Functions',
+  Functions: 'פונקציות',
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.': 'התחילו ביצירת הפריט הראשון שלכם.',
   'Git organization': 'ארגון Git',
-  'Git repository': 'מאגר Git',
+  'Git repository': 'Git repo',
   'GitHub Issues': 'GitHub Issues',
-  'GitHub repository': 'מאגר GitHub',
+  'GitHub repository': 'GitHub repo',
   'Go to first page': 'לעמוד הראשון',
   'Go to last page': 'לעמוד האחרון',
   'Go to next page': 'לעמוד הבא',
@@ -276,14 +276,28 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Invalid format': 'פורמט לא תקין',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
   'Just now': 'הרגע',
+  'Ago relative time': 'לפני',
+  'In relative time': 'בעוד',
+  minute: 'דקה',
+  minutes: 'דקות',
+  hour: 'שעה',
+  hours: 'שעות',
+  day: 'יום',
+  days: 'ימים',
+  week: 'שבוע',
+  weeks: 'שבועות',
+  month: 'חודש',
+  months: 'חודשים',
+  year: 'שנה',
+  years: 'שנים',
   'Keep building': 'המשך בנייה',
-  'Keep repository private': 'השארת המאגר פרטי',
+  'Keep repository private': 'השארת ה-repo פרטי',
   Key: 'מפתח',
   'Keyboard shortcuts': 'קיצורי מקלדת',
-  'Learn more': 'למידע נוסף',
+  'Learn more': 'למדו עוד',
   'Light screenshot': 'צילום מסך בהיר',
   Line: 'שורה',
-  'Link this deployment to an existing repository.': 'קישור הפריסה הזו למאגר קיים.',
+  'Link this deployment to an existing repository.': 'קישור הפריסה הזו ל-repo קיים.',
   'List order': 'סדר הרשימה',
   'Live traffic uses the active deployment until you activate this one.':
     'תעבורה חיה משתמשת בפריסה הפעילה עד שתפעילו את הפריסה הזו.',
@@ -343,8 +357,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No proxy rules reference this deployment.': 'אין כללי פרוקסי המפנים לפריסה זו.',
   'No query tabs found': 'לא נמצאו לשוניות שאילתה',
   'No query tabs found.': 'לא נמצאו לשוניות שאילתה.',
-  'No repositories available for this installation': 'אין מאגרים זמינים להתקנה זו',
-  'No repositories found': 'לא נמצאו מאגרים',
+  'No repositories available for this installation': 'אין repos זמינים להתקנה זו',
+  'No repositories found': 'לא נמצאו repos',
   'No results': 'אין תוצאות',
   'No results found': 'לא נמצאו תוצאות',
   'No results found.': 'לא נמצאו תוצאות.',
@@ -392,7 +406,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Redeploy is not available for this deployment type':
     'פריסה מחדש אינה זמינה לסוג פריסה זה',
   Refresh: 'רענון',
-  'Refresh repositories': 'רענון מאגרים',
+  'Refresh repositories': 'רענון repos',
   'Reject non-essential': 'דחיית עוגיות לא חיוניות',
   'Remove filter': 'הסרת סינון',
   'Remove scope': 'הסרת הרשאה',
@@ -400,8 +414,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Rename saved filter': 'שינוי שם סינון שמור',
   'Rename saved preset': 'שינוי שם פריסט שמור',
   'Report bugs or request features': "דיווח על באגים או בקשת פיצ'רים",
-  Repository: 'מאגר',
-  'Repository name': 'שם המאגר',
+  Repository: 'Repo',
+  'Repository name': 'שם ה-repo',
   'Required for sign-in, security, and remembering your preferences.':
     'נדרשות להתחברות, לאבטחה ולשמירת ההעדפות שלכם.',
   Reset: 'איפוס',
@@ -427,15 +441,15 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Search anything - pages, tabs, settings, resources…':
     'חיפוש בכל מקום - עמודים, לשוניות, הגדרות, משאבים…',
   'Search columns…': 'חיפוש עמודות…',
-  'Search commands and documentation pages…': 'חיפוש פקודות ועמודי תיעוד…',
-  'Search documentation': 'חיפוש בתיעוד',
+  'Search commands and documentation pages…': 'חיפוש פקודות ועמודי דוקומנטציה…',
+  'Search documentation': 'חיפוש בדוקומנטציה',
   'Search files': 'חיפוש קבצים',
   'Search logs...': 'חיפוש בלוגים...',
   'Search operators…': 'חיפוש אופרטורים…',
   'Search projects, settings, members…': 'חיפוש פרויקטים, הגדרות, חברי צוות…',
   'Search projects…': 'חיפוש פרויקטים…',
   'Search query tabs…': 'חיפוש לשוניות שאילתה…',
-  'Search repositories...': 'חיפוש מאגרים...',
+  'Search repositories...': 'חיפוש repos...',
   'Search scopes…': 'חיפוש הרשאות…',
   'Search templates...': 'חיפוש תבניות...',
   'Search units…': 'חיפוש יחידות…',
@@ -529,7 +543,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'השתמשו בעמודות מוגדרות מראש עבור ‎$id ושדות מערכת אחרים. שמות מותאמים אישית אסור שיתחילו ב-$.',
   User: 'משתמש',
   'VCS (Version Control System) deployments are triggered from a connected Git repository and enable automatic deployments on code pushes.':
-    'פריסות VCS (מערכת ניהול גרסאות) מופעלות ממאגר Git מחובר ומאפשרות פריסות אוטומטיות בעת דחיפת קוד.',
+    'פריסות VCS (מערכת ניהול גרסאות) מופעלות מ-Git repo מחובר ומאפשרות פריסות אוטומטיות בעת דחיפת קוד.',
   Value: 'ערך',
   'Value type': 'סוג ערך',
   Variable: 'משתנה',
@@ -777,15 +791,15 @@ export const heSharedUiDictionary: Record<string, string> = {
     'פנייה לתמיכה, Discord, GitHub וסטטוס מערכת',
 
   // Command center: docs entries
-  'Find guides, API references, and tutorials': 'חיפוש מדריכים, תיעוד API והדרכות',
-  'Docs home': 'עמוד הבית של התיעוד',
-  'Appwrite documentation home': 'עמוד הבית של תיעוד Appwrite', // pragma: allowlist secret
+  'Find guides, API references, and tutorials': 'חיפוש מדריכים, דוקומנטציית API והדרכות',
+  'Docs home': 'עמוד הבית של הדוקומנטציה',
+  'Appwrite documentation home': 'עמוד הבית של דוקומנטציית Appwrite', // pragma: allowlist secret
   'Quick starts': 'התחלה מהירה',
   'Get started with Appwrite in minutes': 'התחילו עם Appwrite תוך דקות', // pragma: allowlist secret
-  'API references': 'תיעוד API',
-  'Browse API references documentation': 'עיון בתיעוד ה-API',
+  'API references': 'דוקומנטציית API',
+  'Browse API references documentation': 'עיון בדוקומנטציית API',
   SDKs: 'ערכות SDK',
-  'Client and server SDK documentation': 'תיעוד SDK ללקוח ולשרת',
+  'Client and server SDK documentation': 'דוקומנטציית SDK ללקוח ולשרת',
 
   // Command center: project navigation entries
   'Toggle the built-in Appwrite CLI terminal': // pragma: allowlist secret
@@ -873,6 +887,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Settings · SMTP': 'הגדרות · SMTP',
   'Custom SMTP server for outgoing emails':
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
+  Advisor: 'יועץ',
+  Firewall: 'חומת אש',
   'Security · Firewall rules': 'אבטחה · כללי חומת אש',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
@@ -911,6 +927,47 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Spin up a new project in this organization': 'הקמת פרויקט חדש בארגון הזה',
   'Create a new organization': 'יצירת ארגון חדש',
   'Invite a new member to this organization': 'הזמנת חבר צוות חדש לארגון הזה',
+
+  // Command center: create command descriptions
+  'Create a new database': 'יצירת מסד נתונים חדש',
+  'Create a new bucket': 'יצירת באקט חדש',
+  'Create a new function': 'יצירת פונקציה חדשה',
+  'Create a new site': 'יצירת אתר חדש',
+  'Create a new team': 'יצירת צוות חדש',
+  'Create a new user': 'יצירת משתמש חדש',
+
+  // Command center: organization navigation
+  'DPA, BAA, SOC 2, HIPAA, GDPR': 'DPA, BAA, SOC 2, HIPAA, GDPR',
+
+  // Command center: resource search commands
+  'Search databases': 'חיפוש מסדי נתונים',
+  'Search users': 'חיפוש משתמשים',
+  'Search teams': 'חיפוש צוותים',
+  'Search buckets': 'חיפוש באקטים',
+  'Search buckets...': 'חיפוש באקטים...',
+  'Search functions': 'חיפוש פונקציות',
+  'Search sites': 'חיפוש אתרים',
+  'Search messages': 'חיפוש הודעות',
+  'Search topics': 'חיפוש נושאים',
+  'Search providers': 'חיפוש ספקים',
+  'Search projects': 'חיפוש פרויקטים',
+  'Find a database by name or ID': 'חיפוש מסד נתונים לפי שם או מזהה',
+  'Find a user by name, email or ID': 'חיפוש משתמש לפי שם, אימייל או מזהה',
+  'Find a team by name or ID': 'חיפוש צוות לפי שם או מזהה',
+  'Find a storage bucket by name or ID': 'חיפוש באקט אחסון לפי שם או מזהה',
+  'Find a function by name or ID': 'חיפוש פונקציה לפי שם או מזהה',
+  'Find a site by name or ID': 'חיפוש אתר לפי שם או מזהה',
+  'Find a message by content or ID': 'חיפוש הודעה לפי תוכן או מזהה',
+  'Find a topic by name or ID': 'חיפוש נושא לפי שם או מזהה',
+  'Find a provider by name or ID': 'חיפוש ספק לפי שם או מזהה',
+  'Find a project in this organization': 'חיפוש פרויקט בארגון הזה',
+
+  // Command center: local actions and groups
+  'See all keyboard shortcuts': 'הצגת כל קיצורי המקלדת',
+  'Pick a function to execute': 'בחירת פונקציה להרצה',
+  'Open project activity log': 'פתיחת יומן הפעילות של הפרויקט',
+  'View activity log': 'צפייה ביומן הפעילות',
+  Results: 'תוצאות',
 
   // Database create wizard: compute tiers, replicas, and pricing
   Micro: 'מיקרו',
@@ -1028,8 +1085,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Page not found': 'הדף לא נמצא',
   'The page you requested does not exist, may have been moved, or is temporarily unavailable.':
     'הדף שביקשתם אינו קיים, ייתכן שהועבר או שאינו זמין באופן זמני.',
-  'Looking for product docs?': 'מחפשים את תיעוד המוצר?',
-  'Browse documentation': 'עיון בתיעוד',
+  'Looking for product docs?': 'מחפשים את דוקומנטציית המוצר?',
+  'Browse documentation': 'עיון בדוקומנטציה',
 
   // Screenshot frames (cover generator, perspective cards)
   'Screenshot preview': 'תצוגה מקדימה של צילום מסך',

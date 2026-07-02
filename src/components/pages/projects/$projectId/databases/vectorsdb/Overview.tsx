@@ -65,7 +65,7 @@ import {
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  getDedicatedDatabaseRegionUnavailableDescription,
+  formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
 } from '@/lib/databases/dedicated-database-regions'
 import { DedicatedDatabaseRegionUnavailableBadge } from '../_components/DedicatedDatabaseRegionUnavailableCard'
@@ -77,7 +77,7 @@ import {
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import type { Models } from '@appwrite.io/console'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
-import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -198,7 +198,7 @@ export function Overview({
   )
 
   /** Vectors DB - product is fixed in this module. */
-  const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const ContainerListIcon =
     dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const overviewDbNav = useMemo(() => dbNavLink(DB_KIND), [])
@@ -423,7 +423,7 @@ export function Overview({
       toast.success(t('Database name updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update database name')
+      toast.error(error.message || t('Failed to update database name'))
     },
   })
 
@@ -438,7 +438,9 @@ export function Overview({
       })
     },
     onSuccess: () => {
-      toast.success(`Database has been ${enabled ? 'enabled' : 'disabled'}`)
+      toast.success(
+        enabled ? t('Database has been enabled') : t('Database has been disabled'),
+      )
       invalidateDatabaseModel(projectId, databaseId)
       queryClient.invalidateQueries({
         queryKey: ['database', 'project', projectId, databaseId],
@@ -485,7 +487,7 @@ export function Overview({
       })
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete database')
+      toast.error(error.message || t('Failed to delete database'))
     },
   })
 
@@ -669,7 +671,7 @@ export function Overview({
     mutationFn: (data: { tableId?: string; name: string }) =>
       createProjectTable(projectId!, databaseId!, data),
     onSuccess: async (table) => {
-      toast.success(`${table.name} has been created`)
+      toast.success(`${table.name} ${t('has been created')}`)
       // Refetch tables and wait for it to complete before navigating
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
@@ -710,7 +712,7 @@ export function Overview({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
       toast.success(
-        `Successfully deleted ${selectedTables.size} ${
+        `${t('Successfully deleted')} ${selectedTables.size} ${
           selectedTables.size === 1
             ? dbLabels.containerSingular
             : dbLabels.containerPlural
@@ -721,7 +723,8 @@ export function Overview({
     },
     onError: (error: Error) => {
       toast.error(
-        error.message || `Failed to delete ${dbLabels.containerPlural}`,
+        error.message ||
+          `${t('Failed to delete')} ${dbLabels.containerPlural}`,
       )
     },
   })
@@ -1208,7 +1211,7 @@ export function Overview({
                         {selectedTables.size === 1
                           ? dbLabels.containerSingular
                           : dbLabels.containerPlural}{' '}
-                        selected
+                        {t('selected')}
                       </Badge>
                       <div className="flex items-center gap-2">
                         <Button
@@ -1241,14 +1244,15 @@ export function Overview({
                   <DialogContent className="sm:max-w-md p-0">
                     <DialogHeader className="px-6 pt-6 text-start">
                       <DialogTitle>
-                        Delete {dbLabels.containerPluralTitle}
+                        {t('Delete')} {dbLabels.containerPluralTitle}
                       </DialogTitle>
                       <DialogDescription className="text-[13px] mt-2">
-                        Are you sure you want to delete {selectedTables.size}{' '}
+                        {t('Are you sure you want to delete')}{' '}
+                        {selectedTables.size}{' '}
                         {selectedTables.size === 1
                           ? dbLabels.containerSingular
                           : dbLabels.containerPlural}
-                        ? This action cannot be undone.
+                        ? {t('This action cannot be undone.')}
                       </DialogDescription>
                     </DialogHeader>
 
@@ -1335,7 +1339,9 @@ export function Overview({
           <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
             <ComingSoonCurtain
               featureId="database-insights"
-              message="Get powerful analytics and insights about your database performance and usage patterns."
+              message={t(
+                'Get powerful analytics and insights about your database performance and usage patterns.',
+              )}
             >
               <div className="space-y-6">
                 {/* Placeholder content for coming soon feature */}
@@ -1646,7 +1652,7 @@ export function Overview({
                       <DedicatedDatabaseRegionUnavailableBadge />
                     </div>
                     <p className="text-[13px] text-muted-foreground mt-2">
-                      {getDedicatedDatabaseRegionUnavailableDescription()}
+                      {formatDedicatedDatabaseRegionUnavailableDescription(t)}
                     </p>
                   </div>
                 </div>

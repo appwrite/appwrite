@@ -169,8 +169,9 @@ function ServiceHeaderCreateButton({
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <p>
-              {createDisabledTooltip ??
-                t("You've reached the limit for this resource on your plan")}
+              {createDisabledTooltip
+                ? t(createDisabledTooltip)
+                : t("You've reached the limit for this resource on your plan")}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -297,7 +298,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           const isActive = activeTab === tab.id
           const tabContent = (
             <>
-              {tab.label}
+              {t(tab.label)}
               {tab.count !== undefined && (
                 <span
                   className={cn(
@@ -430,7 +431,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   const isActive = activeTab === tab.id
                   const tabContent = (
                     <>
-                      {tab.label}
+                      {t(tab.label)}
                       {isActive && (
                         <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
                       )}
@@ -603,7 +604,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>{importTooltip ?? t('Import')}</p>
+                      <p>{t(importTooltip ?? 'Import')}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -623,7 +624,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>{exportTooltip ?? t('Export')}</p>
+                      <p>{t(exportTooltip ?? 'Export')}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}

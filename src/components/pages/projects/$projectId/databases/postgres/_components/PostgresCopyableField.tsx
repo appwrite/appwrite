@@ -41,7 +41,7 @@ export function PostgresCopyableField({
     try {
       await navigator.clipboard.writeText(value)
       setCopied(true)
-      toast.success(`${label} copied`)
+      toast.success(`${label} ${t('copied')}`)
       setTimeout(() => setCopied(false), 2000)
     } catch {
       toast.error(t('Failed to copy'))

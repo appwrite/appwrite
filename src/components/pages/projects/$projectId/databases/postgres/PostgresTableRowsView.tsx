@@ -316,7 +316,7 @@ export function PostgresTableRowsView({
     createDisabled: !canWrite,
     createDisabledTooltip: canWrite
       ? undefined
-      : "You don't have permission to modify rows.",
+      : t("You don't have permission to modify rows."),
     showRefresh: true,
     onRefresh: handleRefresh,
     isRefreshing: isFetching,

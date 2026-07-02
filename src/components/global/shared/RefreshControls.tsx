@@ -115,11 +115,11 @@ export function RefreshControls({
           <SelectItem value="30s">30s</SelectItem>
           <SelectItem value="1m">1m</SelectItem>
           <SelectItem value="5m">5m</SelectItem>
-          <SelectItem value="15m">15m</SelectItem>
+          <SelectItem value="15m">{t('15m')}</SelectItem>
           <SelectItem value="30m">30m</SelectItem>
-          <SelectItem value="1h">1h</SelectItem>
+          <SelectItem value="1h">{t('1h')}</SelectItem>
           <SelectItem value="2h">2h</SelectItem>
-          <SelectItem value="1d">1d</SelectItem>
+          <SelectItem value="1d">{t('1d')}</SelectItem>
         </SelectContent>
       </Select>
     </div>

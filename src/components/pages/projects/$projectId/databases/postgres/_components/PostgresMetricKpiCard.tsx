@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useT } from '@/lib/i18n/translate'
 
 type PostgresMetricKpiCardProps = {
   label: string
@@ -30,6 +31,7 @@ export function PostgresMetricKpiCard({
   progressCaption,
   className,
 }: PostgresMetricKpiCardProps) {
+  const t = useT()
   return (
     <div
       className={cn(
@@ -39,7 +41,7 @@ export function PostgresMetricKpiCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
+          {t(label)}
         </p>
         <TooltipProvider delayDuration={0}>
           <Tooltip>
@@ -55,7 +57,7 @@ export function PostgresMetricKpiCard({
               side="top"
               className="max-w-xs text-[12px] leading-relaxed"
             >
-              <p>{description}</p>
+              <p>{t(description)}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -83,7 +85,7 @@ export function PostgresMetricKpiCard({
             )}
           />
           <p className="text-[11px] text-muted-foreground">
-            {progressCaption ?? `${progress.toFixed(1)}% of limit`}
+            {progressCaption ?? `${progress.toFixed(1)}% ${t('of limit')}`}
           </p>
         </div>
       ) : null}

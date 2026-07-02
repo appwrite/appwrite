@@ -63,7 +63,7 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
-import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { getDatabaseServiceLucideIcon } from '@/lib/databases/database-service-icons'
 import { projectSupportsDedicatedDatabaseCompute } from '@/lib/databases/dedicated-database-regions'
 
@@ -1260,7 +1260,7 @@ export function DatabaseDetailLayout({
   const projectId = params.projectId as string
   const dbKind = (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const createTableVariantFromRoute = createTableVariantForDbRoute(dbKind)
-  const dbLabels = getDatabaseConsoleLabels(dbKind)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind)
   const ContainerListIcon =
     dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const layoutNav = useMemo(() => dbNavLink(dbKind), [dbKind])
@@ -1551,7 +1551,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   const projectId = params.projectId as string
   const dbKind = (params.dbKind as DatabaseRouteKind | undefined) ?? 'tablesdb'
   const createTableVariant = createTableVariantForDbRoute(dbKind)
-  const dbLabels = getDatabaseConsoleLabels(dbKind)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind)
   const ContainerListIcon =
     dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const emptyStateNav = useMemo(() => dbNavLink(dbKind), [dbKind])

@@ -61,7 +61,7 @@ export const productBentoIdle = {
   ctaBlock:
     'bg-muted-foreground/25 transition-colors duration-300 group-hover:bg-[var(--brand-cta)]/85',
   providerIcon:
-    'opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 motion-reduce:group-hover:opacity-50 motion-reduce:group-hover:grayscale',
+    'opacity-45 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:group-hover:opacity-45',
 } as const
 
 /** Shared container surfaces so idle mock cards match across product tiles. */

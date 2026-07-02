@@ -7,6 +7,7 @@ import {
   startOfDay,
   subDays,
 } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -755,7 +756,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           id: 'commits',
                           label: 'Commits',
                           value: formatCompactCount(snapshot.xactCommit),
-                          subValue: 'since stats reset',
+                          subValue: t('since stats reset'),
                           description:
                             'Committed transactions since PostgreSQL statistics were last reset.',
                         },
@@ -765,7 +766,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           value: formatCompactCount(snapshot.xactRollback),
                           subValue:
                             rollbackRatio != null
-                              ? `${rollbackRatio.toFixed(1)}% of transactions`
+                              ? `${rollbackRatio.toFixed(1)}% ${t('of transactions')}`
                               : t('since stats reset'),
                           description:
                             'Rolled back transactions since PostgreSQL statistics were last reset.',
@@ -794,7 +795,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                         {
                           id: 'last-sample',
                           label: 'Last sample',
-                          value: format(
+                          value: formatLocalizedDate(
                             new Date(snapshot.timestamp),
                             'MMM d, HH:mm',
                           ),
@@ -816,7 +817,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                       {t('Sample data')}
                     </Badge>
                     <p className="text-[12px] leading-relaxed text-muted-foreground">
-                      {POSTGRES_USAGE_PLACEHOLDER_NOTE}
+                      {t(POSTGRES_USAGE_PLACEHOLDER_NOTE)}
                     </p>
                   </div>
                 </div>

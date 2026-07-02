@@ -5,6 +5,8 @@
  * status helpers, and calculations.
  */
 
+import { formatLocalizedDateTime } from '@/lib/i18n/date-format'
+
 /**
  * Format a number as currency
  * @param amount - The amount to format
@@ -37,7 +39,7 @@ export function formatDate(
     year: 'numeric',
   },
 ): string {
-  return new Date(date).toLocaleDateString('en-US', options)
+  return formatLocalizedDateTime(new Date(date), options)
 }
 
 /**

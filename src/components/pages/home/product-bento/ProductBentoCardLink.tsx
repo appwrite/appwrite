@@ -13,7 +13,7 @@ type ProductBentoCardLinkProps = {
 
 export function ProductBentoCardLink({ href, title }: ProductBentoCardLinkProps) {
   const t = useT()
-  const label = `${t('Learn more about')} ${t(title)}`
+  const label = `${t('Learn more about')} ${title}`
 
   return (
     <MarketingSiteLink href={href} className={linkClassName} aria-label={label}>

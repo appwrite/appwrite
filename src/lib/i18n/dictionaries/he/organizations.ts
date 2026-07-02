@@ -127,7 +127,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Are you sure you want to remove the billing address from':
     'האם אתם בטוחים שברצונכם להסיר את כתובת החיוב מ',
   'Attachment (optional)': 'קובץ מצורף (אופציונלי)',
-  Auth: 'Auth',
+  Auth: 'אימות',
   Authentication: 'אימות',
   'Authentication failed': 'האימות נכשל',
   'Authorization code': 'קוד הרשאה',
@@ -142,7 +142,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
-  Avatars: 'Avatars',
+  Avatars: 'אווטארים',
   Back: 'חזרה',
   'Back to OAuth apps': 'חזרה לאפליקציות OAuth',
   'Back to domains': 'חזרה לדומיינים',
@@ -317,7 +317,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'DNS records from': 'רשומות DNS מתוך',
   'Data deletion': 'מחיקת נתונים',
   'Data processing agreement (DPA)': 'הסכם עיבוד נתונים (DPA)',
-  Databases: 'Databases',
+  Databases: 'מסדי נתונים',
   'Databases, storage, users, functions. One project per key.':
     'מסדי נתונים, אחסון, משתמשים, פונקציות. פרויקט אחד לכל מפתח.',
   'Dedicated databases': 'מסדי נתונים ייעודיים',
@@ -346,9 +346,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Disabled: 'מושבת',
   Discount: 'הנחה',
   Discover: 'גילוי',
-  Docs: 'תיעוד',
-  'Docs, status, and community': 'תיעוד, סטטוס וקהילה',
-  Documentation: 'תיעוד',
+  Docs: 'דוקומנטציה',
+  'Docs, status, and community': 'דוקומנטציה, סטטוס וקהילה',
+  Documentation: 'דוקומנטציה',
   Domain: 'דומיין',
   'Domain limit reached': 'הגעתם למגבלת הדומיינים',
   'Domain name': 'שם דומיין',
@@ -502,7 +502,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Full description for the listing page': 'תיאור מלא לדף האפליקציה במרקטפלייס',
   'Full hostname and the auth code your registrar provided.':
     'שם מארח מלא וקוד ההרשאה שסיפק הרשם שלכם.',
-  Functions: 'Functions',
+  Functions: 'פונקציות',
   General: 'כללי',
   'Generate an authorization code to move this domain to a different registrar. You will provide this code at the receiving registrar.':
     'צרו קוד הרשאה כדי להעביר את הדומיין הזה לרשם אחר. את הקוד תזינו אצל הרשם הקולט.',
@@ -554,7 +554,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Last name': 'שם משפחה',
   'Launch week is live. Follow daily drops, live sessions, and giveaways.':
     'שבוע ההשקות בשידור חי. עקבו אחרי השקות יומיות, מפגשים חיים והגרלות.',
-  'Learn more': 'מידע נוסף',
+  'Learn more': 'למדו עוד',
   'Learn more about DNS settings': 'מידע נוסף על הגדרות DNS',
   'Learn more about migration': 'מידע נוסף על העברה',
   'Leave blank to auto-generate': 'השאירו ריק ליצירה אוטומטית',
@@ -606,7 +606,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Members who are not part of the destination organization must be invited to gain access to this domain.':
     'חברים שאינם חלק מארגון היעד יצטרכו לקבל הזמנה כדי לקבל גישה לדומיין הזה.',
   Message: 'הודעה',
-  Messaging: 'Messaging',
+  Messaging: 'הודעות',
   'Monthly Charges for Extra Organization Members':
     'חיובים חודשיים עבור חברי ארגון נוספים',
   'Mon–Fri': "ב'-ו'",
@@ -635,7 +635,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זקוקים לציות, הסכמי SLA מותאמים או תמחור לפי היקף?',
   Network: 'רשת',
   'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as':
-    'לעולם אל תטמיעו סודות OAuth באפליקציות מובייל, ב-SPA או במאגרים ציבוריים. השתמשו במשתני סביבה כגון',
+    'לעולם אל תטמיעו סודות OAuth באפליקציות מובייל, ב-SPA או ב-repos ציבוריים. השתמשו במשתני סביבה כגון',
   'New organization': 'ארגון חדש',
   Next: 'הבא',
   'Next page': 'הדף הבא',
@@ -945,7 +945,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Show code': 'הצגת קוד',
   'Show less': 'הצגת פחות',
   Showing: 'מציג',
-  Sites: 'Sites',
+  Sites: 'אתרים',
   Slug: 'מזהה כתובת (slug)',
   'Space or ↑ to jump · R to restart · click arena to jump':
     'רווח או ↑ לקפיצה · R להתחלה מחדש · לחצו על הזירה לקפיצה',
@@ -957,7 +957,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Start transfer': 'התחלת העברה',
   State: 'מדינה/מחוז',
   Status: 'סטטוס',
-  Storage: 'Storage',
+  Storage: 'אחסון',
   'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.':
     'אחסנו את הסוד הזה בסביבת הפריסה שלכם לפני שתמשיכו. סשנים פעילים שמשתמשים בסוד שנמחק ייכשלו מיד ברענון אסימונים.',
   'Street address': 'כתובת רחוב',

@@ -137,7 +137,7 @@ export function CreateTable({
         : t('Create a new table to store structured data with columns and rows.')
 
   const namePlaceholder = isCollection
-    ? t(`Enter ${resourceWord} name`)
+    ? t('Enter collection name')
     : t('Enter table name')
 
   return (

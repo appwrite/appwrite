@@ -168,7 +168,7 @@ function SessionRow({
           />
         ) : (
           <TerminalIcon
-            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+            className="h-3.5 w-3.5 shrink-0 text-muted-foreground rtl:-scale-x-100"
             strokeWidth={isHighlighted ? 3 : 2}
           />
         )}

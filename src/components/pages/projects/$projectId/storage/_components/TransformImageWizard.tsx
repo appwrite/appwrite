@@ -88,6 +88,7 @@ import {
 import { TransformImageDesignOverlay } from './TransformImageDesignOverlay'
 import { TransformImagePresetsPopover } from './TransformImagePresetsPopover'
 import { useT } from '@/lib/i18n/translate'
+import { ICON_NO_RTL_FLIP_CLASS } from '@/lib/layout/force-ltr'
 
 type TransformWizardCanvasMode = 'edit' | 'compare'
 
@@ -1422,6 +1423,7 @@ export function TransformImageWizard({
                                 <Icon
                                   className={cn(
                                     'size-[15px] shrink-0',
+                                    ICON_NO_RTL_FLIP_CLASS,
                                     selected ? 'opacity-100' : 'opacity-[0.72]',
                                   )}
                                   strokeWidth={selected ? 2.25 : 1.85}

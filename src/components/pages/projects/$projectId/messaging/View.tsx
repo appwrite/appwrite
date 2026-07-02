@@ -45,6 +45,7 @@ import {
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -493,7 +494,7 @@ export function View() {
     }
     return (
       <Badge variant="info" className="text-[10px] shrink-0 capitalize">
-        {status}
+        {localizeResourceStatusLabel(status, t)}
       </Badge>
     )
   }

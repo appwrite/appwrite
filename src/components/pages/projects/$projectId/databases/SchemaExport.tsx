@@ -97,12 +97,6 @@ export function SchemaExportDialog({
     toast.success(t('Schema downloaded'))
   }
 
-  const formatLabels = {
-    json: 'JSON',
-    markdown: 'Markdown',
-    typescript: 'TypeScript',
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl p-0 max-h-[90dvh] flex flex-col">
@@ -165,7 +159,11 @@ export function SchemaExportDialog({
                   <div className="space-y-3 flex-1 min-h-0 flex flex-col">
                     <div className="flex items-center justify-between">
                       <span className="text-[13px] text-muted-foreground">
-                        {t(`${formatLabels[format]} format`)}
+                        {format === 'json'
+                          ? t('JSON format')
+                          : format === 'markdown'
+                            ? t('Markdown format')
+                            : t('TypeScript format')}
                       </span>
                       <div className="flex items-center gap-2">
                         <Button

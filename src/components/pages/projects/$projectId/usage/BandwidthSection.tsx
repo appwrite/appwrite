@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { format } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import {
   Area,
@@ -156,7 +156,7 @@ function BandwidthChartCard({
     () =>
       dualChartPoints.map((point) => ({
         date: point.date,
-        fullDate: format(point.day, 'MMM d, yyyy HH:mm'),
+        fullDate: formatLocalizedDate(point.day, 'MMM d, yyyy HH:mm'),
         inbound: point.inbound,
         outbound: point.outbound,
         total: point.total,

@@ -77,7 +77,7 @@ const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
-  head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
+  head: () => ({ meta: [{ title: pageTitle('Dashboard') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
     const { projectId } = params

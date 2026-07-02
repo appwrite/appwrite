@@ -48,7 +48,7 @@ const PROJECT_NAV: CommandEntry[] = [
     id: 'project.nav.overview',
     scopes: ['project'],
     kind: 'navigation',
-    label: 'Overview',
+    label: 'Dashboard',
     description: 'Project dashboard and key metrics',
     icon: LayoutDashboard,
     shortcut: 'G O',

@@ -54,19 +54,19 @@ export function overviewChartContentRowClassName(
   withBreakdown = true,
 ): string {
   return withBreakdown
-    ? `flex min-h-[660px] min-w-0 flex-col ${FORCE_LTR_CLASS} @[700px]:h-[348px] @[700px]:min-h-[348px] @[700px]:max-h-[348px] @[700px]:flex-row @[700px]:items-stretch`
-    : `flex min-h-[312px] min-w-0 flex-col ${FORCE_LTR_CLASS} @[700px]:h-[312px] @[700px]:min-h-[312px] @[700px]:max-h-[312px] @[700px]:flex-row @[700px]:items-stretch`
+    ? 'flex min-h-[660px] min-w-0 flex-col @[700px]:h-[348px] @[700px]:min-h-[348px] @[700px]:max-h-[348px] @[700px]:flex-row @[700px]:items-stretch'
+    : 'flex min-h-[312px] min-w-0 flex-col @[700px]:h-[312px] @[700px]:min-h-[312px] @[700px]:max-h-[312px] @[700px]:flex-row @[700px]:items-stretch'
 }
 
 /** @deprecated Use overviewChartContentRowClassName(withBreakdown) */
 export const overviewChartContentRowClass =
   overviewChartContentRowClassName(true)
 
-/** Left chart column — grows to fill space not used by the breakdown panel. */
+/** Main chart column — grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
   'flex h-full w-full min-w-0 flex-col border-b border-border px-5 pb-5 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
 
-/** Right breakdown column (top endpoints / consumers). */
+/** Breakdown column (top endpoints / consumers). */
 export const overviewBreakdownColumnClass =
   'flex h-full min-h-0 w-full min-w-0 flex-col px-5 pb-5 pt-3 @[700px]:w-[400px] @[700px]:shrink-0'
 

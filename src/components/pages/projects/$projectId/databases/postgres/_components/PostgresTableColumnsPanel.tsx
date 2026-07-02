@@ -121,7 +121,7 @@ export function PostgresTableColumnsPanel({
       setColumnToDelete(null)
       await refetch()
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to delete column')
+      toast.error(getErrorMessage(error) ?? t('Failed to delete column'))
     }
   }
 

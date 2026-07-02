@@ -74,8 +74,8 @@ export function CreateDatabaseDedicatedOptions({
               {t('Add read-only instances to scale query traffic and improve failover resilience alongside your primary database.')}
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-              Each replica is billed at {haReplicaRatePercent}% of your compute
-              tier per month.
+              {t('Each replica is billed at')} {haReplicaRatePercent}%{' '}
+              {t('of your compute tier per month.')}
             </p>
           </div>
 
@@ -180,8 +180,8 @@ export function CreateDatabaseDedicatedOptions({
               {t('Restore your database to a specific moment in time, beyond the latest scheduled backup. Useful for recovering from accidental deletes, failed migrations, or bad writes.')}
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-              Billed at {pitrRatePercent}% of your compute tier per month when
-              enabled.
+              {t('Billed at')} {pitrRatePercent}%{' '}
+              {t('of your compute tier per month when enabled.')}
             </p>
           </div>
 

@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 /** Chevrons mirror in RTL so prev/next point along inline progression. */
-const paginationChevronClass = 'h-4 w-4 rtl:rotate-180'
+const paginationChevronClass = 'h-4 w-4'
 
 // ============================================================================
 // SIMPLE PAGINATION (when total is unknown)

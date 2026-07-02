@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 
 type CollectionAttributesSpreadsheetProps = {
   table: Models.Collection | { $id: string; name?: string }
@@ -123,7 +124,7 @@ export function CollectionAttributesSpreadsheet({
                       }
                       className="text-[10px] shrink-0"
                     >
-                      {status}
+                      {localizeResourceStatusLabel(status, t)}
                     </Badge>
                   </TableCell>
                 </TableRow>

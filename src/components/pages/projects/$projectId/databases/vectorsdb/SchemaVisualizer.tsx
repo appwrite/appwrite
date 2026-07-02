@@ -349,7 +349,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
       nodes.push({
         id: table.$id,
-        name: table.name || 'Unnamed Table',
+        name: table.name || t('Unnamed Table'),
         x,
         y,
         width,
@@ -1322,7 +1322,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {copiedLink ? 'Link copied!' : 'Copy link'}
+            {copiedLink ? t('Link copied!') : t('Copy link')}
           </TooltipContent>
         </Tooltip>
 
@@ -1659,7 +1659,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                                         variant="outline"
                                         className="h-4 px-1.5 text-[10px] font-normal"
                                       >
-                                        required
+                                        {t('Required')}
                                       </Badge>
                                     )}
                                     <Badge

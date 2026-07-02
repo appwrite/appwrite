@@ -227,7 +227,7 @@ export function PostgresRowEditDrawer({
       }
       onOpenChange(false)
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to save row')
+      toast.error(getErrorMessage(error) ?? t('Failed to save row'))
     }
   }
 
@@ -309,7 +309,7 @@ export function PostgresRowEditDrawer({
                             }
                           />
                           <span className="text-[12px] text-muted-foreground">
-                            {stringValue === 'true' ? 'True' : 'False'}
+                            {stringValue === 'true' ? t('True') : t('False')}
                           </span>
                         </div>
                       ) : isDateTimeInlineFieldType(fieldType) ? (
@@ -434,7 +434,7 @@ export function PostgresRowEditDrawer({
               onClick={() => void handleSave()}
               disabled={!canWrite || isSaving}
             >
-              {isCreate ? 'Create' : 'Update'}
+              {isCreate ? t('Create') : t('Update')}
             </Button>
             <Button
               variant="outline"

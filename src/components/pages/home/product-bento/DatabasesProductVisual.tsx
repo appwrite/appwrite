@@ -352,41 +352,47 @@ function TablesDbPanel({ playKey }: { playKey: number }) {
 
 function DocumentsDbPanel({ playKey }: { playKey: number }) {
   const t = useT()
+  const shouldAnimate = playKey > 0
+  const revealClass = shouldAnimate ? 'product-bento-db-reveal motion-reduce:opacity-100' : undefined
+
   return (
     <div
       key={playKey}
       className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', productBentoContainer.panel)}
     >
       <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/5 px-3.5 py-2.5">
-        <div className="min-w-0 product-bento-db-reveal" style={{ animationDelay: '0ms' }}>
+        <div className={cn('min-w-0', revealClass)} style={shouldAnimate ? { animationDelay: '0ms' } : undefined}>
           <p className={cn('text-[12px] font-medium', productBentoIdle.text)}>race_briefings</p>
           <p className="truncate text-[10px] text-muted-foreground">Monaco GP strategy</p>
         </div>
         <Badge
           variant="inactive"
-          className="product-bento-db-reveal h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400"
-          style={{ animationDelay: '420ms' }}
+          className={cn(
+            'h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400',
+            revealClass,
+          )}
+          style={shouldAnimate ? { animationDelay: '420ms' } : undefined}
         >
           {t('Live')}
         </Badge>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden p-3 font-mono text-[11px] leading-relaxed sm:text-[12px]">
-        <div className="product-bento-db-reveal" style={{ animationDelay: '60ms' }}>
+        <div className={revealClass} style={shouldAnimate ? { animationDelay: '60ms' } : undefined}>
           <Syn tone="punctuation">{'{'}</Syn>
         </div>
-        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '120ms' }}>
+        <div className={cn(revealClass, 'ps-2')} style={shouldAnimate ? { animationDelay: '120ms' } : undefined}>
           <Syn tone="property">&quot;event&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Monaco GP&quot;</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '180ms' }}>
+        <div className={cn(revealClass, 'ps-2')} style={shouldAnimate ? { animationDelay: '180ms' } : undefined}>
           <Syn tone="property">&quot;session&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Race&quot;</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '260ms' }}>
+        <div className={cn(revealClass, 'ps-2')} style={shouldAnimate ? { animationDelay: '260ms' } : undefined}>
           <Syn tone="property">&quot;weather&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="punctuation">{'{ '}</Syn>
@@ -400,12 +406,12 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
           <Syn tone="punctuation">{' }'}</Syn>
           <Syn tone="punctuation">,</Syn>
         </div>
-        <div className="product-bento-db-reveal ps-2" style={{ animationDelay: '340ms' }}>
+        <div className={cn(revealClass, 'ps-2')} style={shouldAnimate ? { animationDelay: '340ms' } : undefined}>
           <Syn tone="property">&quot;strategy&quot;</Syn>
           <Syn tone="punctuation">: </Syn>
           <Syn tone="string">&quot;Medium stint, pit 14-17&quot;</Syn>
         </div>
-        <div className="product-bento-db-reveal" style={{ animationDelay: '400ms' }}>
+        <div className={revealClass} style={shouldAnimate ? { animationDelay: '400ms' } : undefined}>
           <Syn tone="punctuation">{'}'}</Syn>
         </div>
       </div>
@@ -413,7 +419,15 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
   )
 }
 
-function VectorScoreBar({ score, delayMs }: { score: number; delayMs: number }) {
+function VectorScoreBar({
+  score,
+  delayMs,
+  shouldAnimate,
+}: {
+  score: number
+  delayMs: number
+  shouldAnimate: boolean
+}) {
   const width = `${Math.round(score * 100)}%`
 
   return (
@@ -423,10 +437,13 @@ function VectorScoreBar({ score, delayMs }: { score: number; delayMs: number }) 
       </span>
       <div className="h-1 w-full overflow-hidden rounded-full bg-muted/40">
         <div
-          className="product-bento-db-reveal h-full rounded-full bg-muted-foreground/25 transition-[width,background-color] duration-500 group-hover:bg-[var(--brand-cta)]/75 motion-reduce:group-hover:bg-muted-foreground/25"
+          className={cn(
+            'h-full rounded-full bg-muted-foreground/25 transition-[width,background-color] duration-500 group-hover:bg-[var(--brand-cta)]/75 motion-reduce:group-hover:bg-muted-foreground/25',
+            shouldAnimate && 'product-bento-db-reveal motion-reduce:opacity-100',
+          )}
           style={{
             width,
-            animationDelay: `${delayMs}ms`,
+            ...(shouldAnimate ? { animationDelay: `${delayMs}ms` } : {}),
             transitionDelay: `${delayMs}ms`,
           }}
         />
@@ -437,14 +454,20 @@ function VectorScoreBar({ score, delayMs }: { score: number; delayMs: number }) 
 
 function VectorsDbPanel({ playKey }: { playKey: number }) {
   const t = useT()
+  const shouldAnimate = playKey > 0
+  const revealClass = shouldAnimate ? 'product-bento-db-reveal motion-reduce:opacity-100' : undefined
+  const resultRevealClass = shouldAnimate
+    ? 'product-bento-db-result-reveal motion-reduce:opacity-100'
+    : undefined
+
   return (
     <div
       key={playKey}
       className={cn('flex min-h-0 flex-1 flex-col overflow-hidden', productBentoContainer.panel)}
     >
       <div
-        className="product-bento-db-reveal border-b border-border bg-muted/10 px-3 py-2"
-        style={{ animationDelay: '0ms' }}
+        className={cn('border-b border-border bg-muted/10 px-3 py-2', revealClass)}
+        style={shouldAnimate ? { animationDelay: '0ms' } : undefined}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -472,8 +495,11 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
 
       <div className="space-y-2 border-b border-border px-3 py-2.5">
         <div
-          className="product-bento-db-reveal rounded-md border border-border/80 bg-muted/8 px-2.5 py-2"
-          style={{ animationDelay: '60ms' }}
+          className={cn(
+            'rounded-md border border-border/80 bg-muted/8 px-2.5 py-2',
+            revealClass,
+          )}
+          style={shouldAnimate ? { animationDelay: '60ms' } : undefined}
         >
           <p className="text-[9px] uppercase tracking-wider text-muted-foreground sm:text-[10px]">
             {t('Query')}
@@ -483,8 +509,8 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
           </p>
         </div>
         <div
-          className="product-bento-db-reveal flex flex-wrap gap-1"
-          style={{ animationDelay: '120ms' }}
+          className={cn('flex flex-wrap gap-1', revealClass)}
+          style={shouldAnimate ? { animationDelay: '120ms' } : undefined}
         >
           {VECTOR_FILTERS.map((filter, index) => (
             <span
@@ -505,8 +531,11 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
         {VECTOR_RESULTS.map((row, index) => (
           <div
             key={`${row.title}-${playKey}`}
-            className="product-bento-db-result-reveal rounded-md border border-border/70 bg-muted/5 px-2.5 py-2 motion-reduce:opacity-100"
-            style={{ animationDelay: `${120 + index * 160}ms` }}
+            className={cn(
+              'rounded-md border border-border/70 bg-muted/5 px-2.5 py-2',
+              resultRevealClass,
+            )}
+            style={shouldAnimate ? { animationDelay: `${120 + index * 160}ms` } : undefined}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -522,7 +551,7 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
                   {row.snippet}
                 </p>
               </div>
-              <VectorScoreBar score={row.score} delayMs={row.delayMs} />
+              <VectorScoreBar score={row.score} delayMs={row.delayMs} shouldAnimate={shouldAnimate} />
             </div>
             <p className="mt-1.5 truncate font-mono text-[9px] text-muted-foreground sm:text-[10px]">
               <span className={cn('transition-colors duration-300', productBentoIdle.text)}>
@@ -534,8 +563,11 @@ function VectorsDbPanel({ playKey }: { playKey: number }) {
       </div>
 
       <div
-        className="product-bento-db-reveal flex items-end justify-between gap-2 border-t border-border bg-muted/5 px-3 py-1.5"
-        style={{ animationDelay: '560ms' }}
+        className={cn(
+          'flex items-end justify-between gap-2 border-t border-border bg-muted/5 px-3 py-1.5',
+          revealClass,
+        )}
+        style={shouldAnimate ? { animationDelay: '560ms' } : undefined}
       >
         <div className="min-w-0">
           <VectorsDbSearchSnippet />
@@ -669,7 +701,7 @@ export function DatabasesProductVisual() {
         </TabsContent>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-0.5">
-          <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border/45 bg-background/25 p-1 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/15">
+          <TabsList className="pointer-events-auto inline-flex h-auto w-auto gap-1 rounded-lg border border-border/45 bg-background/80 p-1 shadow-sm">
             {APPWRITE_TABS.map((tab) => {
               const Icon = tab.Icon
 
@@ -677,7 +709,7 @@ export function DatabasesProductVisual() {
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="h-auto gap-1.5 rounded-md border border-transparent px-2.5 py-1.5 text-[10px] text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-300 data-[state=active]:border-border/40 data-[state=active]:bg-background/35 data-[state=active]:text-muted-foreground data-[state=active]:shadow-sm data-[state=active]:backdrop-blur-sm data-[state=active]:supports-[backdrop-filter]:bg-background/25 sm:text-[11px] group-hover:data-[state=active]:border-border/55 group-hover:data-[state=active]:bg-background/50 group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
+                  className="h-auto gap-1.5 rounded-md border border-transparent px-2.5 py-1.5 text-[10px] text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-300 data-[state=active]:border-border/40 data-[state=active]:bg-background/70 data-[state=active]:text-muted-foreground data-[state=active]:shadow-sm sm:text-[11px] group-hover:data-[state=active]:border-border/55 group-hover:data-[state=active]:bg-background/90 group-hover:data-[state=active]:text-foreground [&_svg:not([class*='size-'])]:size-3"
                 >
                   <Icon aria-hidden />
                   <span className="truncate">{tab.label}</span>

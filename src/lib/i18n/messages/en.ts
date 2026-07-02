@@ -249,7 +249,8 @@ export const enCatalog = {
         'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.', // pragma: allowlist secret
       announcementNew: 'New',
       announcementText: 'Announcing the Presences API',
-      heroTitle: 'Build faster and scale bigger than ever',
+      heroTitleLineOne: 'Build faster and scale',
+      heroTitleLineTwo: 'bigger than ever',
       heroDescription:
         'Appwrite is an open-source platform for building and scaling applications faster, offering Auth, Databases, Storage, Functions, Messaging, Realtime, and web hosting. All in one place.', // pragma: allowlist secret
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret

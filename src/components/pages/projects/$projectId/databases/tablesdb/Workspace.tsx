@@ -83,7 +83,7 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
-import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadsheet'
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
@@ -195,7 +195,7 @@ export function Workspace({
     databaseId,
   )
 
-  const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const ContainerListIcon =
     dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const dbNav = useMemo(() => dbNavLink(DB_KIND), [])
@@ -321,7 +321,7 @@ export function Workspace({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`Created 50 ${dbLabels.containerPlural}`)
+      toast.success(`${t('Created 50')} ${dbLabels.containerPlural}`)
     },
     onError: (error: Error) => {
       toast.error(
@@ -419,7 +419,7 @@ export function Workspace({
       dimension?: number
     }) => createProjectTable(projectId!, databaseId!, data),
     onSuccess: async (table) => {
-      toast.success(`${table.name} has been created`)
+      toast.success(`${table.name} ${t('has been created')}`)
       // Refetch tables and wait for it to complete before navigating
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
@@ -435,7 +435,7 @@ export function Workspace({
       })
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to create table')
+      toast.error(getErrorMessage(error) || t('Failed to create table'))
     },
   })
 
@@ -444,7 +444,7 @@ export function Workspace({
     mutationFn: (data: { databaseId?: string; name: string }) =>
       createProjectDatabase(projectId!, data),
     onSuccess: async (database) => {
-      toast.success(`${database.name} has been created`)
+      toast.success(`${database.name} ${t('has been created')}`)
       await queryClient.refetchQueries({
         queryKey: ['databases', 'project', projectId],
       })
@@ -500,7 +500,7 @@ export function Workspace({
       }
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to create database')
+      toast.error(getErrorMessage(error) || t('Failed to create database'))
     },
   })
 
@@ -1082,7 +1082,7 @@ export function Workspace({
                 </span>
               </TooltipTrigger>
               <TooltipContent side="right">
-                {createPermissionTooltip}
+                {t(createPermissionTooltip)}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -1493,7 +1493,7 @@ export function Workspace({
                       `${dbLabels.recordPluralTitle} refreshed successfully`,
                     )
                   } catch {
-                    toast.error(`Failed to refresh ${dbLabels.recordPlural}`)
+                    toast.error(`${t('Failed to refresh')} ${dbLabels.recordPlural}`)
                   } finally {
                     setIsRefreshingRows(false)
                     refreshStartTimeRef.current = null
@@ -1538,12 +1538,12 @@ export function Workspace({
                 >
                   <Lightbulb className="h-3.5 w-3.5 shrink-0 @[640px]:me-1.5" />
                   <span className="hidden @[640px]:inline">
-                    Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
+                    {`${t('Suggest')} ${dbLabels.schemaPluralTitle.toLowerCase()}`}
                   </span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                Suggest {dbLabels.schemaPluralTitle.toLowerCase()}
+                {`${t('Suggest')} ${dbLabels.schemaPluralTitle.toLowerCase()}`}
               </TooltipContent>
             </Tooltip>
           ) : activeTab === 'indexes' && features.aiAssistant ? (

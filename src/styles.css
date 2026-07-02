@@ -53,6 +53,30 @@ html[dir='rtl'] textarea.font-mono {
   unicode-bidi: isolate;
 }
 
+/*
+ * RTL: mirror horizontal Lucide icons (chevrons, arrows, panels, etc.).
+ * Uses the `scale` property so `translate` / `rotate` utilities on the same node still compose.
+ * Skips bidirectional icons and LTR-only enclaves (.force-ltr, [dir='ltr']).
+ * Opt out a specific icon: .icon-no-rtl-flip
+ */
+html[dir='rtl']
+  svg.lucide[class*='lucide-'][class*='-left']:not([class*='lucide-arrow-left-right']):not(
+    [class*='lucide-arrow-right-left']
+  ):not([class*='lucide-arrows-left-right']):not(.icon-no-rtl-flip),
+html[dir='rtl']
+  svg.lucide[class*='lucide-'][class*='-right']:not([class*='lucide-arrow-left-right']):not(
+    [class*='lucide-arrow-right-left']
+  ):not([class*='lucide-arrows-left-right']):not(.icon-no-rtl-flip) {
+  scale: -1 1;
+}
+
+html[dir='rtl'] :is(.force-ltr, [dir='ltr'])
+  svg.lucide[class*='lucide-'][class*='-left']:not(.icon-no-rtl-flip),
+html[dir='rtl'] :is(.force-ltr, [dir='ltr'])
+  svg.lucide[class*='lucide-'][class*='-right']:not(.icon-no-rtl-flip) {
+  scale: 1;
+}
+
 /* Sonner uses physical offsets; anchor our toaster stack to inline end. */
 html .toaster-at-inline-end[data-sonner-toaster] {
   right: auto !important;
@@ -120,6 +144,14 @@ html .toaster-at-inline-end[data-sonner-toaster] [data-sonner-toast] {
   --font-inter: 'Inter', arial, sans-serif;
   /* Self-hosted / non-cloud project overview title */
   --font-inter-overview: var(--font-inter);
+}
+
+/*
+ * Aeonik Pro is Latin-only. For Hebrew and other non-English UI, brand typography
+ * uses Inter (the regular console font) so scripts render correctly.
+ */
+html:not([lang='en']) {
+  --font-aeonik-pro: var(--font-inter);
 }
 
 .dark {
@@ -1425,6 +1457,19 @@ html[data-init-ticket-video-capturing] [data-init-ticket-video-capture] * {
 .product-bento-hover-light {
   z-index: 20;
   border-radius: calc(0.75rem - 1px);
+}
+
+/* Skip layout/paint for off-screen bento tiles while scrolling the home page. */
+.product-bento-grid > article {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+  contain: layout paint style;
+}
+
+@media (min-width: 1024px) {
+  .product-bento-grid > article {
+    contain-intrinsic-size: auto 240px;
+  }
 }
 
 /* Home product bento mock UI */

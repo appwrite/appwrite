@@ -5,7 +5,7 @@ import { Flag } from '@appwrite.io/console'
 import { ChevronRight, Globe } from 'lucide-react'
 import { useOptionalUsageFilters } from '@/components/pages/projects/$projectId/usage/usage-filters-context'
 import { HostnameFaviconIcon } from '@/components/global/shared/HostnameFaviconIcon'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
 import { cn, truncateMiddle } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
 import { compactUsagePathIds } from '@/lib/usage/format-usage-path'
@@ -71,6 +71,10 @@ export const REQUESTS_BREAKDOWN_ROW_COUNT = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT
 
 const COUNTRY_FLAG_FETCH_PX = 40
 
+function translateUnknownBreakdownLabel(value: string): string {
+  return value.trim() === 'Unknown' ? translate('Unknown') : value
+}
+
 export function formatBreakdownLabel(
   label: string,
   labelVariant: 'mono' | 'default',
@@ -103,18 +107,20 @@ export function formatBreakdownLabel(
     }
   }
   if (dimension === 'country' && countryLookups) {
-    return resolveCountryDisplayName(label, countryLookups)
+    return translateUnknownBreakdownLabel(
+      resolveCountryDisplayName(label, countryLookups),
+    )
   }
   if (dimension === 'service') {
-    return formatUsageServiceLabel(label)
+    return translateUnknownBreakdownLabel(formatUsageServiceLabel(label))
   }
   if (dimension === 'resource') {
-    return formatUsageResourceTypeLabel(label)
+    return translateUnknownBreakdownLabel(formatUsageResourceTypeLabel(label))
   }
   if (labelVariant === 'mono') {
     return truncateMiddle(compactUsagePathIds(label), PATH_DISPLAY_MAX)
   }
-  return label
+  return translateUnknownBreakdownLabel(label)
 }
 
 function CountryFlagIcon({ countryCode }: { countryCode: string }) {

@@ -175,7 +175,7 @@ function CliShellHeaderTitle({
   return (
     <div className="flex min-w-0 items-center gap-2">
       <TerminalIcon
-        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+        className="h-3.5 w-3.5 shrink-0 text-muted-foreground rtl:-scale-x-100"
         strokeWidth={2.5}
         aria-hidden="true"
       />

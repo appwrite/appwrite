@@ -37,3 +37,10 @@ export function getDedicatedDatabaseSupportedRegionsLabel(): string {
 export function getDedicatedDatabaseRegionUnavailableDescription(): string {
   return `Coming soon in your project region. Available in ${getDedicatedDatabaseSupportedRegionsLabel()}.`
 }
+
+/** User-facing region unavailable copy with `t()` applied to the translatable prefix. */
+export function formatDedicatedDatabaseRegionUnavailableDescription(
+  t: (text: string) => string,
+): string {
+  return `${t('Coming soon in your project region. Available in')} ${getDedicatedDatabaseSupportedRegionsLabel()}.`
+}

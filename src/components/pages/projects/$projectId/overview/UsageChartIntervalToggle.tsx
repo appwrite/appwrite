@@ -8,16 +8,30 @@ import {
 } from '@/components/ui/tooltip'
 import {
   USAGE_CHART_INTERVAL_OPTIONS,
-  getUsageChartIntervalDisabledReason,
+  getUsageChartIntervalDisabledReasonDetails,
   type UsageChartInterval,
+  type UsageChartIntervalDisabledReasonDetails,
 } from '@/lib/usage/chart-interval'
-import { useT } from '@/lib/i18n/translate'
+import { useT, type Translator } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 const TOGGLE_ITEM_CLASS =
   'h-full w-full min-w-[2.75rem] px-2 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
 
 const TOGGLE_CELL_CLASS = 'flex min-w-0 flex-1 h-full'
+
+function formatUsageChartIntervalDisabledReason(
+  details: UsageChartIntervalDisabledReasonDetails | undefined,
+  t: Translator,
+): string | undefined {
+  if (!details) return undefined
+
+  if (details.kind === 'hours') {
+    return `${t('Use a date range of')} ${details.maxHours} ${t('hours or less for this interval.')}`
+  }
+
+  return `${t('Use a date range of')} ${details.maxDays} ${t('days or less for this interval.')}`
+}
 
 type UsageChartIntervalToggleProps = {
   value: UsageChartInterval
@@ -56,9 +70,12 @@ export function UsageChartIntervalToggle({
         {USAGE_CHART_INTERVAL_OPTIONS.map((option, index) => {
           const isFirst = index === 0
           const isLast = index === optionCount - 1
-          const disabledReason = getUsageChartIntervalDisabledReason(
-            option.value,
-            dateRange,
+          const disabledReason = formatUsageChartIntervalDisabledReason(
+            getUsageChartIntervalDisabledReasonDetails(
+              option.value,
+              dateRange,
+            ),
+            t,
           )
 
           const item = (
@@ -73,7 +90,7 @@ export function UsageChartIntervalToggle({
                 !isFirst && '!border-s-0',
               )}
             >
-              {option.label}
+              {t(option.label)}
             </ToggleGroupItem>
           )
 

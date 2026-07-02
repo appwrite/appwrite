@@ -18,10 +18,8 @@ import {
   backendTypeBadgeVariant,
   connectionStateBadgeVariant,
   formatPostgresApplicationName,
-  formatPostgresBackendTypeLabel,
   formatPostgresClientAddress,
   formatPostgresConnectionDatabase,
-  formatPostgresConnectionStateLabel,
   formatPostgresConnectionUsername,
   formatPostgresDurationSince,
   formatPostgresWaitEvent,
@@ -30,6 +28,10 @@ import {
   type PostgresActiveConnectionRow,
 } from '@/lib/postgres-metrics'
 import { useT } from '@/lib/i18n/translate'
+import {
+  localizePostgresBackendTypeLabel,
+  localizePostgresConnectionStateLabel,
+} from '@/lib/i18n/resource-status-labels'
 
 type PostgresConnectionDrawerProps = {
   open: boolean
@@ -125,11 +127,12 @@ export function PostgresConnectionDrawer({
   const applicationLabel = formatPostgresApplicationName(
     connection.applicationName,
   )
-  const stateLabel = formatPostgresConnectionStateLabel(
+  const stateLabel = localizePostgresConnectionStateLabel(
     connection.state,
     connection.backendType,
+    t,
   )
-  const typeLabel = formatPostgresBackendTypeLabel(connection.backendType)
+  const typeLabel = localizePostgresBackendTypeLabel(connection.backendType, t)
   const waitEventLabel = formatPostgresWaitEvent(
     connection.waitEventType,
     connection.waitEvent,
@@ -165,7 +168,7 @@ export function PostgresConnectionDrawer({
               <span className="inline-flex">{button}</span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs text-[12px]">
-              <p>{manageDisabledTooltip}</p>
+              <p>{t(manageDisabledTooltip)}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

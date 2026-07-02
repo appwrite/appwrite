@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { differenceInCalendarDays, endOfDay, format, startOfDay } from 'date-fns'
+import { differenceInCalendarDays, endOfDay, startOfDay } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import {
   Area,
@@ -152,8 +153,8 @@ function MonitorChart({
   const chartData = useMemo(
     () =>
       data.map((point) => ({
-        date: format(new Date(point.timestamp), 'MMM d'),
-        fullDate: format(new Date(point.timestamp), 'MMM d, yyyy'),
+        date: formatLocalizedDate(new Date(point.timestamp), 'MMM d'),
+        fullDate: formatLocalizedDate(new Date(point.timestamp), 'MMM d, yyyy'),
         value: point.value,
       })),
     [data],

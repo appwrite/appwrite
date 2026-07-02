@@ -12,6 +12,7 @@ import {
   startOfMinute,
   subDays,
 } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -282,9 +283,11 @@ function formatChartPointLabel(
 ): string {
   if (interval === '15m' || interval === '1h') {
     const spansMultipleDays = !isSameDay(rangeFrom, rangeTo)
-    return spansMultipleDays ? format(day, 'd MMM HH:mm') : format(day, 'HH:mm')
+    return spansMultipleDays
+      ? formatLocalizedDate(day, 'd MMM HH:mm')
+      : format(day, 'HH:mm')
   }
-  return format(day, 'd MMM')
+  return formatLocalizedDate(day, 'd MMM')
 }
 
 function buildBucketLookup(

@@ -8,7 +8,7 @@ import {
   type Group,
 } from 'three'
 import ThreeGlobe from 'three-globe'
-import { useThree, Canvas, extend } from '@react-three/fiber'
+import { useThree, Canvas, extend, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import countries from '@/data/globe.json'
 
@@ -106,6 +106,33 @@ interface WorldProps {
   globeConfig: GlobeConfig
   data: Position[]
   markers?: GlobeMarker[]
+  /** When false, pauses the WebGL render loop (e.g. globe scrolled off-screen). */
+  active?: boolean
+  maxPixelRatio?: number
+  /** Fires once after the first rendered frame. */
+  onReady?: () => void
+}
+
+function FirstFrameNotifier({ onReady }: { onReady?: () => void }) {
+  const notified = useRef(false)
+
+  useFrame(() => {
+    if (notified.current || !onReady) return
+    notified.current = true
+    onReady()
+  })
+
+  return null
+}
+
+function GlobeRenderControl({ active }: { active: boolean }) {
+  const invalidate = useThree((state) => state.invalidate)
+
+  useEffect(() => {
+    if (active) invalidate()
+  }, [active, invalidate])
+
+  return null
 }
 
 type ResolvedGlobeProps = Required<
@@ -147,14 +174,14 @@ function resolveGlobeProps(globeConfig: GlobeConfig): ResolvedGlobeProps {
   }
 }
 
-function WebGLRendererConfig() {
+function WebGLRendererConfig({ maxPixelRatio = 1.5 }: { maxPixelRatio?: number }) {
   const { gl, size } = useThree()
 
   useEffect(() => {
-    gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    gl.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
     gl.setSize(size.width, size.height)
     gl.setClearColor(0x000000, 0)
-  }, [gl, size.height, size.width])
+  }, [gl, maxPixelRatio, size.height, size.width])
 
   return null
 }
@@ -171,7 +198,12 @@ function CameraSync() {
   return null
 }
 
-export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
+export function Globe({
+  globeConfig,
+  data,
+  markers = [],
+  active = true,
+}: WorldProps) {
   const globeRef = useRef<ThreeGlobe | null>(null)
   const groupRef = useRef<Group | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
@@ -329,7 +361,7 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
   }, [data, isInitialized, markers])
 
   useEffect(() => {
-    if (!globeRef.current || !isInitialized) return
+    if (!active || !globeRef.current || !isInitialized) return
     if (data.length === 0 && markers.length === 0) return
 
     const interval = window.setInterval(() => {
@@ -378,7 +410,7 @@ export function Globe({ globeConfig, data, markers = [] }: WorldProps) {
     }, 2000)
 
     return () => window.clearInterval(interval)
-  }, [data, isInitialized, markers])
+  }, [active, data, isInitialized, markers])
 
   return <group ref={groupRef} />
 }
@@ -427,12 +459,25 @@ function GlobeLights({ globeConfig }: { globeConfig: GlobeConfig }) {
   )
 }
 
-export function World({ globeConfig, data, markers }: WorldProps) {
+export function World({
+  globeConfig,
+  data,
+  markers,
+  active = true,
+  maxPixelRatio = 1.5,
+  onReady,
+}: WorldProps) {
   return (
     <Canvas
       className="h-full w-full"
-      dpr={[1, 2]}
-      gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+      dpr={[1, maxPixelRatio]}
+      frameloop={active ? 'always' : 'never'}
+      gl={{
+        alpha: true,
+        antialias: true,
+        powerPreference: 'high-performance',
+        preserveDrawingBuffer: true,
+      }}
       camera={{
         fov: 50,
         position: [0, 0, CAMERA_Z],
@@ -440,20 +485,22 @@ export function World({ globeConfig, data, markers }: WorldProps) {
         far: 1800,
       }}
     >
-      <WebGLRendererConfig />
+      <WebGLRendererConfig maxPixelRatio={maxPixelRatio} />
       <CameraSync />
+      <FirstFrameNotifier onReady={onReady} />
+      <GlobeRenderControl active={active} />
       <GlobeLights
         key={`${globeConfig.evenLighting ? 'even' : 'dir'}-${globeConfig.ambientLight}-${globeConfig.directionalLeftLight}-${globeConfig.pointLight}`}
         globeConfig={globeConfig}
       />
-      <Globe globeConfig={globeConfig} data={data} markers={markers} />
+      <Globe globeConfig={globeConfig} data={data} markers={markers} active={active} />
       <OrbitControls
         enablePan={false}
         enableZoom={false}
         minDistance={CAMERA_Z}
         maxDistance={CAMERA_Z}
         autoRotateSpeed={globeConfig.autoRotateSpeed ?? 1}
-        autoRotate={globeConfig.autoRotate ?? true}
+        autoRotate={active && (globeConfig.autoRotate ?? true)}
         minPolarAngle={Math.PI / 3.5}
         maxPolarAngle={Math.PI - Math.PI / 3}
       />

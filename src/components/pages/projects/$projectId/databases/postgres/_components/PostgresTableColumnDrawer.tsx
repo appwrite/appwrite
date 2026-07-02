@@ -237,13 +237,15 @@ export function PostgresTableColumnDrawer({
       }
 
       await executeSql.mutateAsync(statements.join(';\n'))
-      toast.success(isEditing ? 'Column updated' : 'Column created')
+      toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
       onSuccess()
     } catch (error) {
       toast.error(
         getErrorMessage(error) ??
-          (isEditing ? 'Failed to update column' : 'Failed to create column'),
+          t(
+            isEditing ? 'Failed to update column' : 'Failed to create column',
+          ),
       )
     }
   }
@@ -373,7 +375,7 @@ export function PostgresTableColumnDrawer({
           </div>
           <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
             <Button type="submit" disabled={executeSql.isPending || !name.trim()}>
-              {isEditing ? 'Update' : 'Create'}
+              {isEditing ? t('Update') : t('Create')}
             </Button>
             <Button
               type="button"

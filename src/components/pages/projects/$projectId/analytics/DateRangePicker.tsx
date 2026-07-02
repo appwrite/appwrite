@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { format, isSameDay } from 'date-fns'
+import { isSameDay } from 'date-fns'
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 
@@ -20,6 +20,7 @@ import {
 } from '@/lib/usage/usage-date-range-presets'
 import { isFullCalendarDayRange } from '@/lib/usage/usage-date-range'
 import { useT } from '@/lib/i18n/translate'
+import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 
 export type DateRangePreset = UsageDateRangePreset
 
@@ -46,6 +47,7 @@ export function DateRangePicker({
   popoverContentAlign = 'end',
 }: DateRangePickerProps) {
   const t = useT()
+  const { formatDate } = useLocalizedDateFormat()
   const [isOpen, setIsOpen] = React.useState(false)
   const [pendingDateRange, setPendingDateRange] = React.useState<
     DateRange | undefined
@@ -112,18 +114,18 @@ export function DateRangePicker({
   const formatDateRange = (range: DateRange | undefined): string => {
     if (!range?.from) return t('Select date range')
     if (!range.to) {
-      return format(range.from, 'MMM d, yyyy')
+      return formatDate(range.from, 'MMM d, yyyy')
     }
     if (isSameDay(range.from, range.to)) {
       if (isFullCalendarDayRange(range.from, range.to)) {
-        return format(range.from, 'MMM d, yyyy')
+        return formatDate(range.from, 'MMM d, yyyy')
       }
-      return `${format(range.from, 'MMM d · h:mm a')} – ${format(range.to, 'h:mm a')}`
+      return `${formatDate(range.from, 'MMM d · h:mm a')} – ${formatDate(range.to, 'h:mm a')}`
     }
     if (isFullCalendarDayRange(range.from, range.to)) {
-      return `${format(range.from, 'MMM d')} - ${format(range.to, 'MMM d, yyyy')}`
+      return `${formatDate(range.from, 'MMM d')} - ${formatDate(range.to, 'MMM d, yyyy')}`
     }
-    return `${format(range.from, 'MMM d, h:mm a')} - ${format(range.to, 'MMM d, h:mm a')}`
+    return `${formatDate(range.from, 'MMM d, h:mm a')} - ${formatDate(range.to, 'MMM d, h:mm a')}`
   }
 
   const triggerLabel = matchingPreset

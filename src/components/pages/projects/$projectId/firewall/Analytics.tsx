@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { subHours } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import {
   ShieldCheck,
@@ -23,7 +24,6 @@ import {
   YAxis,
   Legend,
 } from 'recharts'
-import { format } from 'date-fns'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -173,8 +173,8 @@ function buildFirewallChartData(
     const allowed = Math.floor(baseRequests - blocked - challenged)
 
     rows.push({
-      time: useHourly ? format(ts, 'HH:mm') : format(ts, 'MMM d'),
-      fullTime: format(ts, 'MMM d, yyyy HH:mm'),
+      time: useHourly ? formatLocalizedDate(ts, 'HH:mm') : formatLocalizedDate(ts, 'MMM d'),
+      fullTime: formatLocalizedDate(ts, 'MMM d, yyyy HH:mm'),
       requests: Math.floor(baseRequests),
       blocked,
       allowed,

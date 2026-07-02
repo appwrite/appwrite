@@ -988,6 +988,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       className="min-h-0 flex-1"
                       title="Top bandwidth consumers"
                       metric="bandwidth"
+                      projectId={projectId}
                       items={
                         isBandwidthError ? [] : bandwidthUsage?.topConsumers
                       }
@@ -1034,6 +1035,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       className="min-h-0 flex-1"
                       title="Top requested endpoints"
                       metric="requests"
+                      projectId={projectId}
                       items={
                         isRequestsError ? [] : requestsUsage?.topEndpoints
                       }

@@ -181,7 +181,7 @@ function PostgresConnectDetails({
           <PostgresCopyableField label={t('Database')} value={databaseName} />
         ) : null}
         <PostgresCopyableField
-          label="SSL"
+          label={t('SSL')}
           value={endpointInfo.sslLabel}
           mono={false}
         />
@@ -264,7 +264,7 @@ function PostgresConnectDsn({ credentials }: PostgresConnectDsnProps) {
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
-              <p className="text-[12px] leading-relaxed">{DSN_TOOLTIP}</p>
+              <p className="text-[12px] leading-relaxed">{t(DSN_TOOLTIP)}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -387,7 +387,7 @@ function PostgresConnectPsql({
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
-              <p className="text-[12px] leading-relaxed">{PSQL_TOOLTIP}</p>
+              <p className="text-[12px] leading-relaxed">{t(PSQL_TOOLTIP)}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -408,7 +408,7 @@ function PostgresConnectPsql({
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
                 )}
               >
-                {file.label}
+                {t(file.label)}
               </button>
             ))}
           </div>
@@ -552,7 +552,7 @@ export function PostgresConnectDialog({
                         : 'text-muted-foreground hover:text-foreground/80',
                     )}
                   >
-                    {tab.label}
+                    {t(tab.label)}
                     {isActive ? (
                       <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
                     ) : null}

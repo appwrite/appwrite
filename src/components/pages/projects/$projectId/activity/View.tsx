@@ -65,7 +65,7 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
 import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 
@@ -439,7 +439,8 @@ function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
     $id: event.$id,
     actorId: event.actorId,
     actorType: event.actorType || '',
-    actorName: event.actorName || event.actorEmail || 'Unknown',
+    actorName:
+      event.actorName || event.actorEmail || translate('Unknown'),
     actorEmail: event.actorEmail || '',
     action: eventToActionType(event.event),
     resourceType: eventToResourceType(

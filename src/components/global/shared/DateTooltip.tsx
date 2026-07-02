@@ -6,7 +6,16 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n/translate'
+import { useT, translate } from '@/lib/i18n/translate'
+import { formatLocalizedDateShort } from '@/lib/i18n/date-format'
+import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
+import {
+  formatRelativeDuration,
+  formatRelativeDurationBreakdown,
+  formatShortRelativeTime,
+  pickPrimaryRelativeUnit,
+  type RelativeTimeUnit,
+} from '@/lib/i18n/relative-time'
 
 function parseTooltipDate(date: string | Date): Date | null {
   const dateObj = typeof date === 'string' ? new Date(date) : date
@@ -76,6 +85,8 @@ function DateTooltipContent({
   disableTooltip = false,
 }: DateTooltipContentProps) {
   const t = useT()
+  const { formatDateTime: formatLocalizedDateTimeForLanguage } =
+    useLocalizedDateFormat()
   const [nowMs, setNowMs] = useState(() => Date.now())
 
   useEffect(() => {
@@ -105,32 +116,23 @@ function DateTooltipContent({
   const getSimpleRelativeTime = (): string => {
     if (diffSeconds < 60) return t('Just now')
 
-    // Find the most appropriate unit to display, skipping zero values
-    let timeStr: string
+    const { count, unit } = pickPrimaryRelativeUnit({
+      diffYears,
+      diffMonths,
+      diffWeeks,
+      diffDays,
+      diffHours,
+      diffMinutes,
+    })
 
-    if (diffYears > 0) {
-      timeStr = `${diffYears} year${diffYears !== 1 ? 's' : ''}`
-    } else if (diffMonths > 0) {
-      timeStr = `${diffMonths} month${diffMonths !== 1 ? 's' : ''}`
-    } else if (diffWeeks > 0) {
-      timeStr = `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''}`
-    } else if (diffDays > 0) {
-      timeStr = `${diffDays} day${diffDays !== 1 ? 's' : ''}`
-    } else if (diffHours > 0) {
-      timeStr = `${diffHours} hour${diffHours !== 1 ? 's' : ''}`
-    } else {
-      timeStr = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`
-    }
-
-    return isFuture ? `in ${timeStr}` : `${timeStr} ago`
+    return formatRelativeDuration(count, unit, { isFuture, t })
   }
 
   // Detailed breakdown for tooltip
   const getDetailedRelativeTime = (): string => {
-    const parts: string[] = []
+    const parts: Array<{ count: number; unit: RelativeTimeUnit }> = []
     let remaining = absDiffMs
 
-    // Calculate all time units
     const years = Math.floor(remaining / (365 * 24 * 60 * 60 * 1000))
     remaining -= years * 365 * 24 * 60 * 60 * 1000
 
@@ -148,17 +150,15 @@ function DateTooltipContent({
 
     const minutes = Math.floor(remaining / (60 * 1000))
 
-    // Build array of time units with their values
-    const timeUnits: Array<{ value: number; label: string }> = [
-      { value: years, label: 'year' },
-      { value: months, label: 'month' },
-      { value: weeks, label: 'week' },
-      { value: days, label: 'day' },
-      { value: hours, label: 'hour' },
-      { value: minutes, label: 'minute' },
+    const timeUnits: Array<{ value: number; unit: RelativeTimeUnit }> = [
+      { value: years, unit: 'year' },
+      { value: months, unit: 'month' },
+      { value: weeks, unit: 'week' },
+      { value: days, unit: 'day' },
+      { value: hours, unit: 'hour' },
+      { value: minutes, unit: 'minute' },
     ]
 
-    // Find the first non-zero unit to start from
     let startIndex = 0
     for (let i = 0; i < timeUnits.length; i++) {
       if (timeUnits[i].value > 0) {
@@ -167,24 +167,21 @@ function DateTooltipContent({
       }
     }
 
-    // Add parts starting from the first non-zero unit, up to 3 parts max
     for (let i = startIndex; i < timeUnits.length && parts.length < 3; i++) {
       const unit = timeUnits[i]
       if (
         unit.value > 0 ||
         (i === timeUnits.length - 1 && parts.length === 0)
       ) {
-        const plural = unit.value !== 1 ? 's' : ''
-        parts.push(`${unit.value} ${unit.label}${plural}`)
+        parts.push({ count: unit.value, unit: unit.unit })
       }
     }
 
-    return isFuture ? `in ${parts.join(', ')}` : `${parts.join(', ')} ago`
+    return formatRelativeDurationBreakdown(parts, { isFuture, t })
   }
 
-  // Format date in international format: "Dec 11, 2025, 07:22"
   const formatDateTime = (d: Date, timeZone?: string): string => {
-    return d.toLocaleString('en-GB', {
+    return formatLocalizedDateTimeForLanguage(d, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -337,35 +334,13 @@ function DateTooltipContent({
  */
 export function formatDate(date: string | Date): string {
   const dateObj = parseTooltipDate(date)
-  if (!dateObj) return 'Unknown'
-  return dateObj.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  if (!dateObj) return translate('Unknown')
+  return formatLocalizedDateShort(dateObj)
 }
 
 /**
  * Utility function to get simple relative time string
  */
 export function getRelativeTimeString(date: string | Date): string {
-  const dateObj = parseTooltipDate(date)
-  if (!dateObj) return 'Unknown'
-  const now = new Date()
-  const diffMs = now.getTime() - dateObj.getTime()
-  const diffMinutes = Math.floor(diffMs / 60000)
-
-  if (diffMinutes < 1) return 'Just now'
-  if (diffMinutes < 60) return `${diffMinutes}m ago`
-
-  const diffHours = Math.floor(diffMinutes / 60)
-  if (diffHours < 24) return `${diffHours}h ago`
-
-  const diffDays = Math.floor(diffHours / 24)
-  if (diffDays < 7) return `${diffDays}d ago`
-
-  const diffWeeks = Math.floor(diffDays / 7)
-  if (diffWeeks < 4) return `${diffWeeks}w ago`
-
-  return formatDate(dateObj)
+  return formatShortRelativeTime(date)
 }

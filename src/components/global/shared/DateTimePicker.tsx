@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { useT } from '@/lib/i18n/translate'
+import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 
 export interface DateTimePickerProps {
   /** ISO string or null/empty for unset */
@@ -63,6 +64,7 @@ export function DateTimePicker({
   onFocus,
 }: DateTimePickerProps) {
   const t = useT()
+  const { formatDate } = useLocalizedDateFormat()
   const [open, setOpen] = React.useState(false)
   const date = React.useMemo(() => parseISO(value), [value])
   const [timeStr, setTimeStr] = React.useState(() =>
@@ -73,7 +75,7 @@ export function DateTimePicker({
     setTimeStr(date ? format(date, 'HH:mm') : '')
   }, [date])
 
-  const formatted = date ? format(date, "MMM d, yyyy '·' HH:mm") : ''
+  const formatted = date ? formatDate(date, "MMM d, yyyy '·' HH:mm") : ''
 
   function commit(next: Date) {
     onChange(next.toISOString())

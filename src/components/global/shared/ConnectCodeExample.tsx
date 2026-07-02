@@ -55,7 +55,10 @@ export function ConnectCodePanel({
         showCopy={false}
         fixedHeight={fixedHeight}
         wrapLines={wrapLines}
-        className="flex min-h-0 w-full flex-1 flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0 [&>div:last-child]:border-0"
+        className={cn(
+          'flex min-h-0 w-full flex-1 flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0',
+          headless && '[&>div:last-child]:border-0',
+        )}
       />
     </div>
   )

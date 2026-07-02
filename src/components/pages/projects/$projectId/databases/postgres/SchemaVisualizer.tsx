@@ -388,12 +388,12 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
   }
 
   const loadingLabel = useMemo(() => {
-    if (!selectedSchema) return 'Select a schema to visualize'
+    if (!selectedSchema) return t('Select a schema to visualize')
     if (totalRelations > 0) {
-      return `Loading schema (${loadedRelations}/${totalRelations})`
+      return `${t('Loading schema')} (${loadedRelations}/${totalRelations})`
     }
-    return 'Loading schema...'
-  }, [loadedRelations, selectedSchema, totalRelations])
+    return t('Loading schema...')
+  }, [loadedRelations, selectedSchema, totalRelations, t])
 
   const minimapBounds = useMemo(() => {
     if (nodes.length === 0) return null
@@ -491,7 +491,7 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
       <div className="flex h-full flex-col">
         {toolbar}
         <div className="flex flex-1 items-center justify-center px-6 text-center text-[13px] text-destructive">
-          {error.message || 'Failed to load schema visualizer'}
+          {error.message || t('Failed to load schema visualizer')}
         </div>
       </div>
     )
@@ -622,6 +622,8 @@ function VisualizerToolbar({
   loadingLabel,
   showProgress,
 }: VisualizerToolbarProps) {
+  const t = useT()
+
   return (
     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 py-2">
       {showProgress ? (
@@ -648,38 +650,55 @@ function VisualizerToolbar({
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{copiedLink ? 'Link copied' : 'Copy link'}</TooltipContent>
+          <TooltipContent>
+            {copiedLink ? t('Link copied') : t('Copy link')}
+          </TooltipContent>
         </Tooltip>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={zoomIn}
-          disabled={zoomInDisabled}
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={zoomIn}
+              disabled={zoomInDisabled}
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('Zoom in')}</TooltipContent>
+        </Tooltip>
         <div className="flex h-8 min-w-[64px] items-center justify-center rounded-md border border-border px-3">
           <span className="text-[12px] font-medium">{zoomPercentage}%</span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={zoomOut}
-          disabled={zoomOutDisabled}
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={resetView}
-        >
-          <Maximize2 className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={zoomOut}
+              disabled={zoomOutDisabled}
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('Zoom out')}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={resetView}
+            >
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('Fit to view')}</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   )
@@ -778,7 +797,7 @@ function RelationNodeCard({
                               variant="outline"
                               className="h-4 px-1.5 text-[10px] font-normal"
                             >
-                              required
+                              {t('Required')}
                             </Badge>
                           ) : null}
                           <Badge

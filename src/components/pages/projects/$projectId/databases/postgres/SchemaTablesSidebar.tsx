@@ -202,7 +202,7 @@ export function SchemaTablesSidebar({
         className={POSTGRES_TOP_HEADER_BAR_CLASS}
         value={panel}
         onValueChange={(value) => setPanel(value as PostgresSidebarPanel)}
-        ariaLabel="Sidebar panel"
+        ariaLabel={t('Sidebar panel')}
         options={[
           { value: 'schemas', label: 'Data' },
           { value: 'queries', label: 'Queries' },

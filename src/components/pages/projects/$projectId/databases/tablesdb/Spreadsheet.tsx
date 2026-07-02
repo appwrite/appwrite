@@ -127,7 +127,7 @@ import {
   dbNavLink,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
-import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Card } from '@/components/ui/card'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -213,7 +213,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
-import { useT } from '@/lib/i18n/translate'
+import { translate, useT } from '@/lib/i18n/translate'
+import {
+  localizeResourceStatusLabel,
+  localizeTableIndexTypeLabel,
+} from '@/lib/i18n/resource-status-labels'
 
 const DB_KIND = 'tablesdb' as const satisfies DatabaseRouteKind
 
@@ -589,7 +593,7 @@ function getRelationshipRowLabel(
     return `${labelValue} (${row.$id})`
   }
 
-  return String(row.$id ?? 'Unknown row')
+  return String(row.$id ?? translate('Unknown row'))
 }
 
 interface RelationshipFieldProps {
@@ -678,11 +682,11 @@ function RelationshipField({
           }}
           items={availableItems}
           placeholder={
-            relatedRowsLoading ? 'Loading related rows…' : 'Add related row'
+            relatedRowsLoading ? t('Loading related rows…') : t('Add related row')
           }
           searchPlaceholder={t('Search related rows…')}
           emptyMessage={
-            relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+            relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
           }
           disabled={isSaving || relatedRowsLoading || availableItems.length === 0}
         />
@@ -743,11 +747,11 @@ function RelationshipField({
         onValueChange={(value) => onChange(value)}
         items={options}
         placeholder={
-          relatedRowsLoading ? 'Loading related rows…' : 'Select related row'
+          relatedRowsLoading ? t('Loading related rows…') : t('Select related row')
         }
         searchPlaceholder={t('Search related rows…')}
         emptyMessage={
-          relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+          relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
         }
         disabled={isSaving || relatedRowsLoading}
       />
@@ -787,7 +791,7 @@ function RowEditDrawer({
     : ('left' as const)
   const params = useParams({ strict: false })
   const projectId = params.projectId as string | undefined
-  const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const isCreateMode = !row
   const hideSequenceInEditor = false
 
@@ -1358,7 +1362,7 @@ function RowEditDrawer({
     })
 
     if (missingRequiredFields.length > 0) {
-      toast.error(`Required: ${missingRequiredFields.join(', ')}`)
+      toast.error(`${t('Required fields')}: ${missingRequiredFields.join(', ')}`)
       return
     }
 
@@ -1442,7 +1446,7 @@ function RowEditDrawer({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{linkCopied ? 'Link copied!' : 'Copy link'}</p>
+          <p>{linkCopied ? t('Link copied!') : t('Copy link')}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -1589,7 +1593,7 @@ function RowEditDrawer({
                           <TooltipContent side={jsonToolbarTooltipSide}>
                             <p>
                               {documentJsonCopied
-                                ? 'Copied!'
+                                ? t('Copied!')
                                 : t('Copy JSON')}
                             </p>
                           </TooltipContent>
@@ -1769,7 +1773,7 @@ function RowEditDrawer({
                                   }
                                 />
                                 <span className="text-[12px] text-muted-foreground">
-                                  {currentValue ? 'True' : 'False'}
+                                  {currentValue ? t('True') : t('False')}
                                 </span>
                               </div>
                             ) : fieldType === 'enum' ? (
@@ -2060,8 +2064,8 @@ function RowEditDrawer({
                                                     />
                                                     <span className="text-[12px] text-muted-foreground">
                                                       {item === true
-                                                        ? 'True'
-                                                        : 'False'}
+                                                        ? t('True')
+                                                        : t('False')}
                                                     </span>
                                                   </div>
                                                 ) : isEnumType ? (
@@ -2592,7 +2596,7 @@ function RowEditDrawer({
                       disabled={isSaving}
                       className="h-8 text-xs"
                     >
-                      {isCreateMode ? dbLabels.createRecord : 'Update'}
+                      {isCreateMode ? dbLabels.createRecord : t('Update')}
                     </Button>
                   </div>
                 </div>
@@ -2604,7 +2608,7 @@ function RowEditDrawer({
         {presentation !== 'inline' ? (
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button onClick={handleSave} disabled={isSaving}>
-              {isCreateMode ? dbLabels.createRecord : 'Update'}
+              {isCreateMode ? dbLabels.createRecord : t('Update')}
             </Button>
             <Button
               variant="outline"
@@ -2844,7 +2848,7 @@ export function RowsSpreadsheet({
   })
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
-  const dbLabels = getDatabaseConsoleLabels(DB_KIND)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const { features } = useConsoleProfile()
   const hideSampleData = false
   const hideSequenceColumn = false
@@ -3280,7 +3284,7 @@ export function RowsSpreadsheet({
       toast.success(t('Column created successfully'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create column')
+      toast.error(error.message || t('Failed to create column'))
     },
   })
 
@@ -4193,7 +4197,7 @@ export function RowsSpreadsheet({
       await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
-      toast.success(`${dbLabels.recordSingularTitle} duplicated`)
+      toast.success(`${dbLabels.recordSingularTitle} ${t('duplicated')}`)
     },
     onError: (error: Error) => {
       toast.error(
@@ -4273,7 +4277,7 @@ export function RowsSpreadsheet({
         (typeof error?.message === 'string' &&
           error.message.toLowerCase().includes('cancel'))
       if (!isCanceled) {
-        toast.error(error.message || 'Failed to generate sample data')
+        toast.error(error.message || t('Failed to generate sample data'))
       }
     },
   })
@@ -5130,7 +5134,7 @@ export function RowsSpreadsheet({
                   <TooltipContent side="bottom">
                     {canWriteTables
                       ? dbLabels.createSchema
-                      : "You don't have permission to perform this action."}
+                      : t("You don't have permission to perform this action.")}
                   </TooltipContent>
                 </Tooltip>
               </th>
@@ -5834,6 +5838,25 @@ export function ColumnsSpreadsheet({
     columnsLimit,
   )
 
+  // Reuses indexes prefetched by the columns route / Workspace (same query key, no extra fetch)
+  const { indexes: tableIndexes } = useProjectTableIndexes(
+    projectId,
+    databaseId,
+    tableId,
+  )
+
+  const indexedColumnKeys = useMemo(() => {
+    const keys = new Set<string>(['$id'])
+    for (const index of tableIndexes) {
+      const columns = (index as { columns?: string[] }).columns
+      if (!columns?.length) continue
+      for (const columnKey of columns) {
+        if (columnKey) keys.add(columnKey)
+      }
+    }
+    return keys
+  }, [tableIndexes])
+
   const hasPendingColumnStatuses = useMemo(
     () =>
       apiColumns.some((col) =>
@@ -5899,7 +5922,7 @@ export function ColumnsSpreadsheet({
       setSelectedColumn(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create column')
+      toast.error(error.message || t('Failed to create column'))
     },
   })
 
@@ -5931,7 +5954,7 @@ export function ColumnsSpreadsheet({
       setSelectedColumn(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update column')
+      toast.error(error.message || t('Failed to update column'))
     },
   })
 
@@ -5978,7 +6001,7 @@ export function ColumnsSpreadsheet({
       toast.success(t('Column deleted'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete column')
+      toast.error(error.message || t('Failed to delete column'))
     },
   })
 
@@ -6028,7 +6051,9 @@ export function ColumnsSpreadsheet({
 
       setSuggestedColumns(mapped)
       setContextDialogOpen(false)
-      toast.success(`Generated ${mapped.length} column suggestions`)
+      toast.success(
+        `${t('Generated')} ${mapped.length} ${t('column suggestions')}`,
+      )
 
       // Scroll to first suggestion after DOM updates
       setTimeout(() => {
@@ -6099,7 +6124,9 @@ export function ColumnsSpreadsheet({
       // Remove from suggestions
       setSuggestedColumns((prev) => prev.filter((s) => s.key !== suggestionKey))
 
-      toast.success(`Column "${suggestion.key}" created successfully`)
+      toast.success(
+        `${t('Column')} "${suggestion.key}" ${t('created successfully')}`,
+      )
     } catch (error) {
       toast.error(getErrorMessage(error))
     }
@@ -6371,6 +6398,16 @@ export function ColumnsSpreadsheet({
                   </th>
                   <th
                     className={cn(
+                      'min-w-[80px] px-3 py-2 text-start',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      {t('Index')}
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
                       'min-w-[120px] px-3 py-2 text-start',
                       headerCellBorderClass,
                     )}
@@ -6511,7 +6548,7 @@ export function ColumnsSpreadsheet({
                                   )}
                                   className="max-w-full truncate text-[11px] font-medium capitalize"
                                 >
-                                  {columnStatus}
+                                  {localizeResourceStatusLabel(columnStatus, t)}
                                 </Badge>
                               </span>
                             </TooltipTrigger>
@@ -6566,6 +6603,19 @@ export function ColumnsSpreadsheet({
                       </td>
                       <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                         {col.encrypt ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                             - 
+                          </span>
+                        )}
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        {isSuggestion ? (
+                          <span className="text-[12px] text-muted-foreground">
+                            -
+                          </span>
+                        ) : indexedColumnKeys.has(col.key) ? (
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         ) : (
                           <span className="text-[12px] text-muted-foreground">
@@ -6982,7 +7032,7 @@ export function IndexesSpreadsheet({
       setSelectedIndex(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create index')
+      toast.error(error.message || t('Failed to create index'))
     },
   })
 
@@ -7007,7 +7057,7 @@ export function IndexesSpreadsheet({
       setIndexToDelete(null)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete index')
+      toast.error(error.message || t('Failed to delete index'))
     },
   })
 
@@ -7052,7 +7102,9 @@ export function IndexesSpreadsheet({
 
       setSuggestedIndexes(mapped)
       setContextDialogOpen(false)
-      toast.success(`Generated ${mapped.length} index suggestions`)
+      toast.success(
+        `${t('Generated')} ${mapped.length} ${t('index suggestions')}`,
+      )
 
       // Scroll to first suggestion after DOM updates
       setTimeout(() => {
@@ -7151,7 +7203,9 @@ export function IndexesSpreadsheet({
       // Remove from suggestions
       setSuggestedIndexes((prev) => prev.filter((s) => s.key !== suggestionKey))
 
-      toast.success(`Index "${suggestion.key}" created successfully`)
+      toast.success(
+        `${t('Index')} "${suggestion.key}" ${t('created successfully')}`,
+      )
     } catch (error) {
       toast.error(getErrorMessage(error))
     }
@@ -7426,7 +7480,7 @@ export function IndexesSpreadsheet({
                             getIndexTypeColor(index.type),
                           )}
                         >
-                          {index.type}
+                          {localizeTableIndexTypeLabel(index.type, t)}
                         </Badge>
                       </td>
                       <td className={cn('px-3 py-2', bodyCellBorderClass)}>
@@ -7466,7 +7520,7 @@ export function IndexesSpreadsheet({
                           }
                           className="text-[11px] font-medium capitalize"
                         >
-                          {index.status}
+                          {localizeResourceStatusLabel(index.status, t)}
                         </Badge>
                       </td>
                       <td className={cn('px-2 py-2', lastCellBorderClass)}>
@@ -7753,7 +7807,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
       toast.success(t('Permissions have been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update permissions')
+      toast.error(error.message || t('Failed to update permissions'))
     },
   })
 
@@ -7775,7 +7829,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
       toast.success(t('Security has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update security')
+      toast.error(error.message || t('Failed to update security'))
     },
   })
 
@@ -7996,10 +8050,10 @@ export function TableSettings({
       queryClient.invalidateQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${tableData?.name || 'Table'} has been updated`)
+      toast.success(`${tableData?.name || dbLabels.containerSingularTitle} ${t('has been updated')}`)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update table')
+      toast.error(error.message || t('Failed to update table'))
     },
   })
 
@@ -8024,7 +8078,7 @@ export function TableSettings({
       toast.success(t('Name has been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update name')
+      toast.error(error.message || t('Failed to update name'))
     },
   })
 
@@ -8051,7 +8105,7 @@ export function TableSettings({
       toast.success(t('Display names have been updated'))
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update display names')
+      toast.error(error.message || t('Failed to update display names'))
     },
   })
 
@@ -8126,7 +8180,7 @@ export function TableSettings({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${tableData?.name || 'Table'} has been deleted`)
+      toast.success(`${tableData?.name || dbLabels.containerSingularTitle} ${t('has been deleted')}`)
       setShowDelete(false)
       setDeleteError(null)
 
@@ -8141,7 +8195,7 @@ export function TableSettings({
       })
     },
     onError: (error: Error) => {
-      setDeleteError(error.message || 'Failed to delete table')
+      setDeleteError(error.message || t('Failed to delete table'))
     },
   })
 

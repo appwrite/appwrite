@@ -118,7 +118,7 @@ export function PostgresTableIndexDrawer({
       onOpenChange(false)
       onSuccess()
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to create index')
+      toast.error(getErrorMessage(error) ?? t('Failed to create index'))
     }
   }
 

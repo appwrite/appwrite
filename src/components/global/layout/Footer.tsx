@@ -31,6 +31,7 @@ import {
   footerShowTrustBadge,
 } from '@/components/global/layout/footer-container'
 import { useI18n } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/translate'
 
 type FooterLink = {
   label: string
@@ -246,6 +247,7 @@ function FooterGroupLinks({ links }: { links: readonly FooterLink[] }) {
  * <ConsoleFooter />
  */
 export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
+  const t = useT()
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
   const { catalog } = useI18n()
@@ -423,7 +425,7 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
                     : {})}
                   className="link-unstyled whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
-                  {link.label}
+                  {t(link.label)}
                 </a>
                 {index < legalLinks.length - 1 && (
                   <span className="text-border">·</span>

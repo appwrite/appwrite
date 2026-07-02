@@ -1,6 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { Badge } from '@/components/ui/badge'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -158,7 +157,10 @@ export function StorageProductVisual() {
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden sm:flex-row">
           <div className="relative min-h-[5rem] min-w-0 flex-1 overflow-hidden bg-background sm:min-h-[7rem]">
-            <SchemaBlueprintMat density="dense" />
+            <div
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:22px_22px]"
+              aria-hidden
+            />
             <div className="relative z-[1] flex h-full items-center justify-center p-2 sm:p-3">
               <MockImagePreview />
             </div>

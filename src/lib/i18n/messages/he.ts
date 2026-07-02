@@ -6,12 +6,12 @@ export const heCatalog: EnCatalog = {
     ...enCatalog.app,
     header: {
       ...enCatalog.app.header,
-      centerSearchPlaceholder: 'חיפוש בתיעוד',
+      centerSearchPlaceholder: 'חיפוש בדוקומנטציה',
       marketingNav: {
         ...enCatalog.app.header.marketingNav,
         products: 'מוצרים',
-        docs: 'תיעוד',
-        pricing: 'תמחור',
+        docs: 'דוקומנטציה',
+        pricing: 'מחירים',
         enterprise: 'אנטרפרייז',
         customers: 'לקוחות',
         blog: 'בלוג',
@@ -27,8 +27,8 @@ export const heCatalog: EnCatalog = {
         connect: 'חיבור',
         assistant: 'עוזר',
         upgrade: 'שדרוג',
-        signIn: 'התחברות',
-        signUp: 'הרשמה',
+        signIn: 'התחברו',
+        signUp: 'הירשמו',
         signOut: 'התנתקות',
         backToOrganization: 'חזרה לארגון',
       },
@@ -73,7 +73,7 @@ export const heCatalog: EnCatalog = {
         disabled: 'כבוי',
         console: 'קונסול',
         home: 'בית',
-        docs: 'תיעוד',
+        docs: 'דוקומנטציה',
         changelog: 'יומן שינויים',
         admin: 'ניהול',
         cache: 'Cache',
@@ -97,7 +97,7 @@ export const heCatalog: EnCatalog = {
       },
       links: {
         ...enCatalog.app.footer.links,
-        docs: 'תיעוד',
+        docs: 'דוקומנטציה',
         store: 'חנות',
         status: 'סטטוס',
         cookieSettings: 'הגדרות עוגיות',
@@ -135,19 +135,19 @@ export const heCatalog: EnCatalog = {
         },
         products: {
           ...enCatalog.app.footer.expanded.products,
-          auth: 'Auth',
-          databases: 'Databases',
-          storage: 'Storage',
-          functions: 'Functions',
-          messaging: 'Messaging',
+          auth: 'אימות',
+          databases: 'מסדי נתונים',
+          storage: 'אחסון',
+          functions: 'פונקציות',
+          messaging: 'הודעות',
           realtime: 'Realtime',
           hosting: 'אירוח',
-          network: 'Network',
+          network: 'רשת',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
           blog: 'בלוג',
-          docs: 'תיעוד',
+          docs: 'דוקומנטציה',
           integrations: 'אינטגרציות',
           community: 'קהילה',
           init: 'Init',
@@ -168,7 +168,7 @@ export const heCatalog: EnCatalog = {
         about: {
           ...enCatalog.app.footer.expanded.about,
           company: 'החברה',
-          pricing: 'תמחור',
+          pricing: 'מחירים',
           careers: 'קריירה',
           contactUs: 'צור קשר',
           assets: 'נכסים',
@@ -176,6 +176,13 @@ export const heCatalog: EnCatalog = {
         },
         compare: {
           ...enCatalog.app.footer.expanded.compare,
+          vsSupabase: 'Appwrite מול Supabase', // pragma: allowlist secret
+          vsFirebase: 'Appwrite מול Firebase', // pragma: allowlist secret
+          vsNeon: 'Appwrite מול Neon', // pragma: allowlist secret
+          vsVercel: 'Appwrite מול Vercel', // pragma: allowlist secret
+          vsNetlify: 'Appwrite מול Netlify', // pragma: allowlist secret
+          vsCloudinary: 'Appwrite מול Cloudinary', // pragma: allowlist secret
+          vsAuth0: 'Appwrite מול Auth0', // pragma: allowlist secret
           baas: 'Backend as a service (BaaS)',
         },
       },
@@ -192,25 +199,25 @@ export const heCatalog: EnCatalog = {
       },
       items: {
         ...enCatalog.app.sidebar.items,
-        overview: 'סקירה כללית',
+        overview: 'לוח בקרה',
         apps: 'אפליקציות',
         apiKeys: 'מפתחות API',
-        explorer: 'Explorer',
-        auth: 'Auth',
-        databases: 'Databases',
-        storage: 'Storage',
-        functions: 'Functions',
-        messaging: 'Messaging',
-        sites: 'Sites',
-        distribution: 'Distribution',
+        explorer: 'אקספלורר',
+        auth: 'אימות',
+        databases: 'מסדי נתונים',
+        storage: 'אחסון',
+        functions: 'פונקציות',
+        messaging: 'הודעות',
+        sites: 'אתרים',
+        distribution: 'הפצה',
         activity: 'פעילות',
         realtime: 'Realtime',
         logs: 'לוגים',
         usage: 'שימוש',
         analytics: 'אנליטיקס',
         errors: 'שגיאות',
-        firewall: 'Firewall',
-        advisor: 'Advisor',
+        firewall: 'חומת אש',
+        advisor: 'יועץ',
         settings: 'הגדרות',
       },
       badges: {
@@ -228,7 +235,7 @@ export const heCatalog: EnCatalog = {
       },
       onboarding: {
         ...enCatalog.app.sidebar.onboarding,
-        getStarted: 'תחילת העבודה',
+        getStarted: 'צעדים ראשונים',
         progress: 'התקדמות',
         loading: 'טוען...',
         of: 'מתוך',
@@ -271,21 +278,22 @@ export const heCatalog: EnCatalog = {
     home: {
       ...enCatalog.website.home,
       seoDescription:
-        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם Auth, Databases, Storage, Functions, Messaging ו-Sites. לבנות כמו צוות של מאות מפתחים.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. לבנות כמו צוות של מאות מפתחים.', // pragma: allowlist secret
       announcementNew: 'חדש',
       announcementText: 'מכריזים על Presences API',
-      heroTitle: 'לבנות מהר יותר, לצמוח רחוק יותר מאי פעם',
+      heroTitleLineOne: 'לבנות מהר יותר,',
+      heroTitleLineTwo: 'לצמוח רחוק מאי פעם',
       heroDescription:
-        'Appwrite היא פלטפורמת קוד פתוח לבנייה ולהרחבה מהירה של אפליקציות, עם Auth, Databases, Storage, Functions, Messaging, Realtime ואירוח אתרים. הכל במקום אחד.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת קוד פתוח לבנייה ולהרחבה מהירה של אפליקציות, עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח אתרים. הכל במקום אחד.', // pragma: allowlist secret
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
       heroPreviewOrganization: 'Acme Corp',
       heroPreviewProject: 'פרויקט Appwrite ראשון', // pragma: allowlist secret
       heroImageAlt:
         'תצוגת הקונסול של Appwrite עם גרפי שימוש, אפליקציות ומפתחות API', // pragma: allowlist secret
-      startProject: 'התחלת פרויקט',
-      requestDemo: 'בקשת דמו',
+      startProject: 'התחילו פרויקט',
+      requestDemo: 'בקשו דמו',
       toolsHeading: 'מותאם לפריימוורקים, לשפות ולסוכני ה-AI שאתם אוהבים',
-      aiDocsNavLabel: 'תיעוד AI ו-MCP',
+      aiDocsNavLabel: 'דוקומנטציית AI ו-MCP',
       productsHeadingLineOne: 'כל השירותים שאתם צריכים',
       productsHeadingLineTwo: 'בפלטפורמה אחת',
       productsDescription:
@@ -328,13 +336,13 @@ export const heCatalog: EnCatalog = {
       },
       productBento: {
         ...enCatalog.website.home.productBento,
-        authTitle: 'Auth',
-        databasesTitle: 'Databases',
-        storageTitle: 'Storage',
-        functionsTitle: 'Functions',
-        sitesTitle: 'Sites',
-        messagingTitle: 'Messaging',
-        firewallTitle: 'Firewall',
+        authTitle: 'אימות',
+        databasesTitle: 'מסדי נתונים',
+        storageTitle: 'אחסון',
+        functionsTitle: 'פונקציות',
+        sitesTitle: 'אתרים',
+        messagingTitle: 'הודעות',
+        firewallTitle: 'חומת אש',
         realtimeTitle: 'Realtime',
         authDescription:
           'אימות מאובטח של משתמשים עם אימייל, SMS, OAuth, סשנים אנונימיים ו-Magic URLs.',
@@ -360,17 +368,17 @@ export const heCatalog: EnCatalog = {
       pageLayout: {
         ...enCatalog.website.products.pageLayout,
         startBuilding: 'התחילו לבנות',
-        viewDocs: 'צפייה בתיעוד',
-        viewPricing: 'צפייה בתמחור',
+        viewDocs: 'צפו בדוקומנטציה',
+        viewPricing: 'צפו במחירים',
       },
       productNames: {
         ...enCatalog.website.products.productNames,
-        auth: 'Auth',
-        databases: 'Databases',
-        storage: 'Storage',
-        functions: 'Functions',
-        messaging: 'Messaging',
-        sites: 'Sites',
+        auth: 'אימות',
+        databases: 'מסדי נתונים',
+        storage: 'אחסון',
+        functions: 'פונקציות',
+        messaging: 'הודעות',
+        sites: 'אתרים',
       },
       explore: {
         ...enCatalog.website.products.explore,
@@ -383,7 +391,7 @@ export const heCatalog: EnCatalog = {
         triggerLabel: 'מוצרים',
         desktopTitle: 'מוצרי הפלטפורמה',
         desktopSubtitle: 'לבנות, לפרוס ולהתרחב על פלטפורמת Backend אחת',
-        viewOverview: 'צפייה בסקירת הפלטפורמה',
+        viewOverview: 'צפו בסקירת הפלטפורמה',
         categories: {
           ...enCatalog.website.products.navigation.categories,
           build: 'פיתוח',
@@ -402,9 +410,9 @@ export const heCatalog: EnCatalog = {
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',
           domainsName: 'Domains',
           domainsTagline: 'רכישת דומיינים, DNS, TLS וחיבורי אפליקציות.',
-          firewallName: 'Firewall',
+          firewallName: 'חומת אש',
           firewallTagline: 'WAF מנוהל לתעבורה זדונית.',
-          advisorName: 'Advisor',
+          advisorName: 'יועץ',
           advisorTagline: 'תובנות אבטחה וביצועים.',
         },
       },
@@ -427,7 +435,7 @@ export const heCatalog: EnCatalog = {
           'הרשמה לאירועים חיים ותגובה לשינויים בזמן שהם קורים.',
         mcpTitle: 'MCP',
         mcpDescription:
-          'חיבור סוכני AI לפרויקט, ל-APIs ולתיעוד של Appwrite דרך שרתי MCP.', // pragma: allowlist secret
+          'חיבור סוכני AI לפרויקט, ל-APIs ולדוקומנטציה של Appwrite דרך שרתי MCP.', // pragma: allowlist secret
         terraformTitle: 'Terraform',
         terraformDescription:
           'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret

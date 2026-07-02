@@ -110,8 +110,8 @@ export function SqlEditorActionBar({
         <div className="flex items-center gap-0.5">
           <ShortcutTooltip
             enabled={canUndo}
-            disabledReason="Nothing to undo."
-            enabledLabel={`Undo (${undoShortcut})`}
+            disabledReason={t('Nothing to undo.')}
+            enabledLabel={`${t('Undo')} (${undoShortcut})`}
           >
             <Button
               type="button"
@@ -129,8 +129,8 @@ export function SqlEditorActionBar({
 
           <ShortcutTooltip
             enabled={canRedo}
-            disabledReason="Nothing to redo."
-            enabledLabel={`Redo (${redoShortcut})`}
+            disabledReason={t('Nothing to redo.')}
+            enabledLabel={`${t('Redo')} (${redoShortcut})`}
           >
             <Button
               type="button"
@@ -150,8 +150,8 @@ export function SqlEditorActionBar({
         <div className={cn('flex items-center gap-1')}>
           <ShortcutTooltip
             enabled={canSave}
-            disabledReason="Write SQL before saving a query."
-            enabledLabel={`Save query (${saveShortcut})`}
+            disabledReason={t('Write SQL before saving a query.')}
+            enabledLabel={`${t('Save query')} (${saveShortcut})`}
           >
             <Button
               type="button"
@@ -170,8 +170,8 @@ export function SqlEditorActionBar({
 
           <ShortcutTooltip
             enabled={canFormat}
-            disabledReason="Write SQL before formatting."
-            enabledLabel={`Format SQL (${formatShortcut})`}
+            disabledReason={t('Write SQL before formatting.')}
+            enabledLabel={`${t('Format SQL')} (${formatShortcut})`}
           >
             <Button
               type="button"
@@ -197,7 +197,7 @@ export function SqlEditorActionBar({
                   ? t('Query is running.')
                   : t('Write SQL before explaining a query.')
             }
-            enabledLabel={`Explain (${explainShortcut})`}
+            enabledLabel={`${t('Explain')} (${explainShortcut})`}
           >
             <Button
               type="button"
@@ -212,7 +212,7 @@ export function SqlEditorActionBar({
               ) : (
                 <ListTree className="h-3.5 w-3.5 shrink-0" />
               )}
-              Explain
+              {t('Explain')}
             </Button>
           </ShortcutTooltip>
 
@@ -227,7 +227,7 @@ export function SqlEditorActionBar({
                   ? t('Query explanation is running.')
                   : t('Write SQL before running a query.')
             }
-            enabledLabel={`Run (${runShortcut})`}
+            enabledLabel={`${t('Run')} (${runShortcut})`}
           >
             <Button
               type="button"
@@ -242,7 +242,7 @@ export function SqlEditorActionBar({
               ) : (
                 <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
               )}
-              Run
+              {t('Run')}
             </Button>
           </ShortcutTooltip>
         </div>

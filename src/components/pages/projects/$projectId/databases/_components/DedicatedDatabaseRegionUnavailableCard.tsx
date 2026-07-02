@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
-import { getDedicatedDatabaseRegionUnavailableDescription } from '@/lib/databases/dedicated-database-regions'
+import { formatDedicatedDatabaseRegionUnavailableDescription } from '@/lib/databases/dedicated-database-regions'
 import { useT } from '@/lib/i18n/translate'
 
 type DedicatedDatabaseRegionUnavailableCardProps = {
@@ -13,12 +13,13 @@ export function DedicatedDatabaseRegionUnavailableCard({
   icon,
   title = 'Coming soon',
 }: DedicatedDatabaseRegionUnavailableCardProps) {
+  const t = useT()
   return (
     <div className="rounded-lg border border-border bg-card/50 opacity-80">
       <EmptyState
         icon={icon}
-        title={title}
-        description={getDedicatedDatabaseRegionUnavailableDescription()}
+        title={t(title)}
+        description={formatDedicatedDatabaseRegionUnavailableDescription(t)}
         isEmpty
         variant="centered"
         iconSize="md"

@@ -22,6 +22,7 @@ import {
   Zap,
 } from '@/lib/icons'
 import { getScopeCategoryIcon } from '@/lib/console-project-scopes'
+import { translate } from '@/lib/i18n/translate'
 import {
   formatDatabaseServiceLabel,
   getDatabaseServiceLucideIcon,
@@ -89,10 +90,10 @@ export function getUsageServiceIcon(service: string): LucideIcon {
 
 export function formatUsageServiceLabel(service: string): string {
   const key = normalizeUsageServiceKey(service)
-  if (!key || key === 'unknown') return 'Unknown'
+  if (!key || key === 'unknown') return translate('Unknown')
 
   const databaseLabel = formatDatabaseServiceLabel(key)
   if (databaseLabel) return databaseLabel
 
-  return USAGE_SERVICE_LABEL_MAP[key] ?? service.trim()
+  return translate(USAGE_SERVICE_LABEL_MAP[key] ?? service.trim())
 }

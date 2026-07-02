@@ -43,6 +43,7 @@ import {
   pickEncouragementForBand,
 } from '@/lib/onboarding/progress-encouragement'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
 
 type OnboardingStepRow = OnboardingConnectStepDef | OnboardingSubStepDef
@@ -547,6 +548,8 @@ function SubStepRow({
 
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
+  const { catalog } = useI18n()
+  const getStartedTitle = catalog.app.sidebar.onboarding.getStarted
   const { projectId } = useParams({ strict: false })
   const { data: snapshotFromHook, isLoading } =
     useProjectOnboardingSnapshot(projectId)
@@ -584,7 +587,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   return (
     <div className="flex flex-col">
-      <ServiceHeader title={t('Get started')} fullWidthBorder />
+      <ServiceHeader title={getStartedTitle} fullWidthBorder />
 
       <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-1 flex-col gap-6 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6 lg:grid lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:items-start lg:gap-8">
         <aside className="w-full min-w-0 lg:sticky lg:top-4 lg:z-10">

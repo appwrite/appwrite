@@ -33,7 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { getDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 import {
   isDatabaseRouteKind,
   type DatabaseRouteKind,
@@ -98,7 +98,7 @@ export function DocumentsJsonSpreadsheet({
   const dbKindParam = params.dbKind as string | undefined
   const dbKind: DatabaseRouteKind =
     dbKindParam && isDatabaseRouteKind(dbKindParam) ? dbKindParam : 'tablesdb'
-  const dbLabels = getDatabaseConsoleLabels(dbKind)
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind)
   const prevTableIdForPreviewRef = useRef<string | null>(null)
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -312,7 +312,7 @@ export function DocumentsJsonSpreadsheet({
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete documents')
+      toast.error(error.message || t('Failed to delete documents'))
     },
   })
 

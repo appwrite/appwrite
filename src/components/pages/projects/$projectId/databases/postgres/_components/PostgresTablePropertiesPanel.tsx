@@ -87,7 +87,7 @@ export function PostgresTablePropertiesPanel({
         replace: true,
       })
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to rename table')
+      toast.error(getErrorMessage(error) ?? t('Failed to rename table'))
     }
   }
 
@@ -97,7 +97,7 @@ export function PostgresTablePropertiesPanel({
       toast.success(t('Comment updated'))
       await refetch()
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to update comment')
+      toast.error(getErrorMessage(error) ?? t('Failed to update comment'))
     }
   }
 
@@ -111,7 +111,7 @@ export function PostgresTablePropertiesPanel({
         replace: true,
       })
     } catch (error) {
-      toast.error(getErrorMessage(error) ?? 'Failed to delete table')
+      toast.error(getErrorMessage(error) ?? t('Failed to delete table'))
     }
   }
 

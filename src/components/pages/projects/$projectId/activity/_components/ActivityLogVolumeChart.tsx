@@ -10,7 +10,7 @@ import {
   useState,
   type SyntheticEvent,
 } from 'react'
-import { format } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { ChevronDown } from 'lucide-react'
 import {
   Bar,
@@ -260,10 +260,10 @@ function buildMockVolumeByResource(from: Date, to: Date): ChartRow[] {
     const t = new Date(from.getTime() + i * step)
     const label =
       spanMs < 48 * 60 * 60 * 1000
-        ? format(t, 'MMM d, HH:mm')
+        ? formatLocalizedDate(t, 'MMM d, HH:mm')
         : spanMs < 14 * 24 * 60 * 60 * 1000
-          ? format(t, 'EEE d')
-          : format(t, 'MMM d')
+          ? formatLocalizedDate(t, 'EEE d')
+          : formatLocalizedDate(t, 'MMM d')
 
     const base = 12 + (i % 4) * 6
     const row = {

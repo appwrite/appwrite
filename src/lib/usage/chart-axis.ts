@@ -1,4 +1,5 @@
 import { format, isSameDay } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 
 /** Target tick count for overview charts (narrow chart column beside breakdown). */
@@ -131,7 +132,7 @@ export function formatUsageChartXAxisLabel(
         return format(day, 'HH:mm')
       }
       if (isDayStart(day, interval) || isNewDay) {
-        return format(day, 'd MMM')
+        return formatLocalizedDate(day, 'd MMM')
       }
       return format(day, 'HH:mm')
 
@@ -140,18 +141,18 @@ export function formatUsageChartXAxisLabel(
         return format(day, 'HH:mm')
       }
       if (isDayStart(day, interval) || isNewDay) {
-        return format(day, 'd MMM')
+        return formatLocalizedDate(day, 'd MMM')
       }
       return format(day, 'HH:mm')
 
     case '1d':
       if (spansMultipleYears(rangeFrom, rangeTo)) {
-        return format(day, 'd MMM yy')
+        return formatLocalizedDate(day, 'd MMM yy')
       }
-      return format(day, 'd MMM')
+      return formatLocalizedDate(day, 'd MMM')
 
     default:
-      return format(day, 'd MMM')
+      return formatLocalizedDate(day, 'd MMM')
   }
 }
 

@@ -17,13 +17,13 @@ import {
 } from '@/components/ui/popover'
 import {
   getPostgresIndexAlgorithmDefinition,
-  getPostgresIndexAlgorithmLabel,
   getPostgresIndexAlgorithmSearchValue,
   POSTGRES_INDEX_ALGORITHMS,
   type PostgresIndexAlgorithm,
 } from '@/lib/postgres-index-metadata'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { localizePostgresIndexAlgorithmLabel } from '@/lib/i18n/resource-status-labels'
 
 type PostgresIndexAlgorithmSelectorProps = {
   value: PostgresIndexAlgorithm
@@ -54,7 +54,9 @@ export function PostgresIndexAlgorithmSelector({
               aria-expanded={open}
               className="h-9 w-full justify-between gap-2 text-[13px] font-normal"
             >
-              <span className="truncate">{getPostgresIndexAlgorithmLabel(value)}</span>
+              <span className="truncate">
+                {localizePostgresIndexAlgorithmLabel(value, t)}
+              </span>
               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -93,7 +95,7 @@ export function PostgresIndexAlgorithmSelector({
                       />
                       <div className="min-w-0 flex-1 space-y-1">
                         <p className="text-[13px] font-medium leading-none text-foreground">
-                          {entry.label}
+                          {t(entry.label)}
                         </p>
                         <p className="text-[12px] leading-relaxed text-muted-foreground">
                           {entry.description}
@@ -113,7 +115,7 @@ export function PostgresIndexAlgorithmSelector({
           {t('About this algorithm')}
         </p>
         <p className="mt-2 text-[12px] font-medium text-foreground">
-          {selected.label}
+          {t(selected.label)}
         </p>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
           {selected.description}

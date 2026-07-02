@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { format } from 'date-fns'
+import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
   Area,
   AreaChart,
@@ -142,9 +143,9 @@ export function PostgresMetricChart({
   const chartData = useMemo(
     () =>
       data.map((point) => ({
-        date: format(new Date(point.timestamp), 'MMM d'),
+        date: formatLocalizedDate(new Date(point.timestamp), 'MMM d'),
         time: format(new Date(point.timestamp), 'HH:mm'),
-        fullDate: format(new Date(point.timestamp), 'MMM d, yyyy HH:mm'),
+        fullDate: formatLocalizedDate(new Date(point.timestamp), 'MMM d, yyyy HH:mm'),
         value: point.value,
         secondaryValue: point.secondaryValue,
       })),
