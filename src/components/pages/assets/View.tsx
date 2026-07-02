@@ -248,16 +248,16 @@ export function View() {
               <div className="grid gap-4 md:grid-cols-2">
                 <LogoPreview
                   src="/assets/logotype/white.svg"
-                  alt="Appwrite logo with black text"
-                  label="Light background"
+                  alt={t('Appwrite logo with black text') /* pragma: allowlist secret */}
+                  label={t('Light background')}
                   previewClassName="bg-[#EDEDF0]"
                   svgHref="/assets/logotype/white.svg"
                   rasterHref="/assets/logotype/white.avif"
                 />
                 <LogoPreview
                   src="/assets/logotype/black.svg"
-                  alt="Appwrite logo with white text"
-                  label="Dark background"
+                  alt={t('Appwrite logo with white text') /* pragma: allowlist secret */}
+                  label={t('Dark background')}
                   previewClassName="bg-[#19191D]"
                   svgHref="/assets/logotype/black.svg"
                   rasterHref="/assets/logotype/black.avif"
@@ -275,8 +275,8 @@ export function View() {
                 </p>
                 <CoBrandPreview
                   src="/assets/logotype/co-brand.svg"
-                  alt="Appwrite logo besides a generic logo"
-                  label="Co-branding logotype example"
+                  alt={t('Appwrite logo besides a generic logo') /* pragma: allowlist secret */}
+                  label={t('Co-branding logotype example')}
                 />
               </div>
             </section>
@@ -293,16 +293,16 @@ export function View() {
               <div className="grid gap-4 md:grid-cols-2">
                 <LogoPreview
                   src="/assets/logomark/logo.svg"
-                  alt="Appwrite logomark"
-                  label="Light background"
+                  alt={t('Appwrite logomark') /* pragma: allowlist secret */}
+                  label={t('Light background')}
                   previewClassName="bg-[#EDEDF0]"
                   svgHref="/assets/logomark/logo.svg"
                   rasterHref="/assets/logomark/logo.avif"
                 />
                 <LogoPreview
                   src="/assets/logomark/logo.svg"
-                  alt="Appwrite logomark on dark background"
-                  label="Dark background"
+                  alt={t('Appwrite logomark on dark background') /* pragma: allowlist secret */}
+                  label={t('Dark background')}
                   previewClassName="bg-[#19191D]"
                   svgHref="/assets/logomark/logo.svg"
                   rasterHref="/assets/logomark/logo.avif"
@@ -320,8 +320,8 @@ export function View() {
                 </p>
                 <CoBrandPreview
                   src="/assets/logomark/co-brand.svg"
-                  alt="Logomark cobrand example"
-                  label="Co-branding lockup example"
+                  alt={t('Logomark cobrand example')}
+                  label={t('Co-branding lockup example')}
                 />
               </div>
             </section>

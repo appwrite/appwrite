@@ -216,41 +216,46 @@ export function IndexDrawer({
 
     // Key validation
     if (!formData.key.trim()) {
-      newErrors.key = 'Key is required'
+      newErrors.key = t('Key is required')
     } else if (!/^[A-Za-z0-9][A-Za-z0-9._\-]*$/.test(formData.key)) {
-      newErrors.key = 'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _'
+      newErrors.key = t('Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _')
     } else if (
       !isEditMode &&
       existingIndexes.some((idx) => idx.key === formData.key)
     ) {
-      newErrors.key = 'Index with this key already exists'
+      newErrors.key = t('Index with this key already exists')
     }
 
     // Column validation
     if (formData.type === 'spatial') {
       // Spatial: exactly one column required
       if (formData.columns.length !== 1 || !formData.columns[0].column) {
-        newErrors.columns = 'Spatial index requires exactly one spatial column'
+        newErrors.columns = t(
+          'Spatial index requires exactly one spatial column',
+        )
       } else {
         const col = filteredColumns.find(
           (c) => c.key === formData.columns[0].column,
         )
         if (!col || !['point', 'linestring', 'polygon'].includes(col.type)) {
-          newErrors.columns =
-            'Selected column must be a spatial type (point, linestring, or polygon)'
+          newErrors.columns = t(
+            'Selected column must be a spatial type (point, linestring, or polygon)',
+          )
         }
       }
     } else {
       // Other types: at least one column required
       if (formData.columns.length === 0) {
-        newErrors.columns = 'At least one column is required'
+        newErrors.columns = t('At least one column is required')
       } else {
         const incompleteColumns = formData.columns.filter(
           (col) =>
             !col.column || (col.order === null && formData.type !== 'spatial'),
         )
         if (incompleteColumns.length > 0) {
-          newErrors.columns = 'All columns must have a value and order selected'
+          newErrors.columns = t(
+            'All columns must have a value and order selected',
+          )
         }
       }
     }
@@ -285,7 +290,7 @@ export function IndexDrawer({
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to save index',
+        error instanceof Error ? error.message : t('Failed to save index'),
       )
     }
   }
@@ -365,7 +370,7 @@ export function IndexDrawer({
             {/* Key */}
             <div className="space-y-2">
               <Label htmlFor="index-key" className="text-[12px] font-medium">
-                Index Key <span className="text-destructive">*</span>
+                {t('Index Key')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="index-key"
@@ -383,7 +388,7 @@ export function IndexDrawer({
               )}
               {suggestedKey && !formData.key && (
                 <p className="text-[11px] text-muted-foreground">
-                  Suggested:{' '}
+                  {t('Suggested:')}{' '}
                   <button
                     type="button"
                     onClick={() =>
@@ -403,7 +408,7 @@ export function IndexDrawer({
             {/* Type */}
             <div className="space-y-2">
               <Label htmlFor="index-type" className="text-[12px] font-medium">
-                Index Type <span className="text-destructive">*</span>
+                {t('Index Type')} <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={formData.type}
@@ -610,7 +615,7 @@ export function IndexDrawer({
 
           <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
             <Button type="submit" disabled={isLoading}>
-              {isEditMode ? 'Update' : 'Create Index'}
+              {isEditMode ? t('Update') : t('Create Index')}
             </Button>
             <Button
               type="button"

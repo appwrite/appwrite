@@ -76,8 +76,8 @@ export const heCatalog: EnCatalog = {
         docs: 'תיעוד',
         changelog: 'יומן שינויים',
         admin: 'ניהול',
-        cache: 'מטמון',
-        blocks: 'חסימות',
+        cache: 'Cache',
+        blocks: 'Blocks',
       },
       search: {
         ...enCatalog.app.header.search,
@@ -135,14 +135,14 @@ export const heCatalog: EnCatalog = {
         },
         products: {
           ...enCatalog.app.footer.expanded.products,
-          auth: 'אימות',
-          databases: 'מסדי נתונים',
-          storage: 'אחסון',
-          functions: 'פונקציות',
-          messaging: 'הודעות',
+          auth: 'Auth',
+          databases: 'Databases',
+          storage: 'Storage',
+          functions: 'Functions',
+          messaging: 'Messaging',
           realtime: 'Realtime',
           hosting: 'אירוח',
-          network: 'רשת',
+          network: 'Network',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -195,22 +195,22 @@ export const heCatalog: EnCatalog = {
         overview: 'סקירה כללית',
         apps: 'אפליקציות',
         apiKeys: 'מפתחות API',
-        explorer: 'סייר',
-        auth: 'אימות',
-        databases: 'מסדי נתונים',
-        storage: 'אחסון',
-        functions: 'פונקציות',
-        messaging: 'הודעות',
-        sites: 'אתרים',
-        distribution: 'הפצה',
+        explorer: 'Explorer',
+        auth: 'Auth',
+        databases: 'Databases',
+        storage: 'Storage',
+        functions: 'Functions',
+        messaging: 'Messaging',
+        sites: 'Sites',
+        distribution: 'Distribution',
         activity: 'פעילות',
         realtime: 'Realtime',
         logs: 'לוגים',
         usage: 'שימוש',
-        analytics: 'אנליטיקות',
+        analytics: 'אנליטיקס',
         errors: 'שגיאות',
-        firewall: 'חומת אש',
-        advisor: 'יועץ',
+        firewall: 'Firewall',
+        advisor: 'Advisor',
         settings: 'הגדרות',
       },
       badges: {
@@ -228,7 +228,7 @@ export const heCatalog: EnCatalog = {
       },
       onboarding: {
         ...enCatalog.app.sidebar.onboarding,
-        getStarted: 'התחלה',
+        getStarted: 'תחילת העבודה',
         progress: 'התקדמות',
         loading: 'טוען...',
         of: 'מתוך',
@@ -271,14 +271,14 @@ export const heCatalog: EnCatalog = {
     home: {
       ...enCatalog.website.home,
       seoDescription:
-        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. לבנות כמו צוות של מאות אנשים.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם Auth, Databases, Storage, Functions, Messaging ו-Sites. לבנות כמו צוות של מאות מפתחים.', // pragma: allowlist secret
       announcementNew: 'חדש',
       announcementText: 'מכריזים על Presences API',
-      heroTitle: 'לבנות מהר יותר ולגדול יותר מאי פעם',
+      heroTitle: 'לבנות מהר יותר, לצמוח רחוק יותר מאי פעם',
       heroDescription:
-        'Appwrite היא פלטפורמת קוד פתוח לבנייה ולהתרחבות מהירה יותר של אפליקציות, עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח אתרים. הכל במקום אחד.', // pragma: allowlist secret
+        'Appwrite היא פלטפורמת קוד פתוח לבנייה ולהרחבה מהירה של אפליקציות, עם Auth, Databases, Storage, Functions, Messaging, Realtime ואירוח אתרים. הכל במקום אחד.', // pragma: allowlist secret
       heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
-      heroPreviewOrganization: 'אקמי קורפ',
+      heroPreviewOrganization: 'Acme Corp',
       heroPreviewProject: 'פרויקט Appwrite ראשון', // pragma: allowlist secret
       heroImageAlt:
         'תצוגת הקונסול של Appwrite עם גרפי שימוש, אפליקציות ומפתחות API', // pragma: allowlist secret
@@ -289,15 +289,15 @@ export const heCatalog: EnCatalog = {
       productsHeadingLineOne: 'כל השירותים שאתם צריכים',
       productsHeadingLineTwo: 'בפלטפורמה אחת',
       productsDescription:
-        'לבנות עם מוצרים מודולריים שמרגישים אחידים מהאב-טיפוס הראשון ועד לסקייל בפרודקשן.',
+        'לבנות עם מוצרים מודולריים שמרגישים אחידים, מהאב-טיפוס הראשון ועד לקנה מידה מלא בפרודקשן.',
       securityHeading: 'אבטחה מובנית בכל שכבות הארכיטקטורה',
       securityDescription:
         'עם גישה שמתחילה מאבטחה, Appwrite עוזרת לשמור על המוצר ועל המשתמשים בטוחים כברירת מחדל, ומקלה על עמידה במדיניות מחמירה.', // pragma: allowlist secret
       aiDocLinks: {
         ...enCatalog.website.home.aiDocLinks,
         mcpServers: 'שרתי MCP',
-        skills: 'יכולות Appwrite', // pragma: allowlist secret
-        aiArena: 'זירת AI',
+        skills: 'Appwrite Skills', // pragma: allowlist secret
+        aiArena: 'AI Arena',
       },
       securityItems: {
         ...enCatalog.website.home.securityItems,
@@ -328,16 +328,16 @@ export const heCatalog: EnCatalog = {
       },
       productBento: {
         ...enCatalog.website.home.productBento,
-        authTitle: 'אימות',
-        databasesTitle: 'מסדי נתונים',
-        storageTitle: 'אחסון',
-        functionsTitle: 'פונקציות',
-        sitesTitle: 'אתרים',
-        messagingTitle: 'הודעות',
-        firewallTitle: 'חומת אש',
+        authTitle: 'Auth',
+        databasesTitle: 'Databases',
+        storageTitle: 'Storage',
+        functionsTitle: 'Functions',
+        sitesTitle: 'Sites',
+        messagingTitle: 'Messaging',
+        firewallTitle: 'Firewall',
         realtimeTitle: 'Realtime',
         authDescription:
-          'אימות מאובטח של משתמשים עם אימייל, SMS, OAuth, סשנים אנונימיים וקישורי קסם.',
+          'אימות מאובטח של משתמשים עם אימייל, SMS, OAuth, סשנים אנונימיים ו-Magic URLs.',
         databasesDescription:
           'מודלים, שאילתות וסקייל עם מסדי הנתונים של Appwrite או עם PostgreSQL ו-MySQL ייעודיים, כדי להתאים לתרחיש העבודה ולצורכי הצוות.', // pragma: allowlist secret
         storageDescription:
@@ -365,12 +365,12 @@ export const heCatalog: EnCatalog = {
       },
       productNames: {
         ...enCatalog.website.products.productNames,
-        auth: 'אימות',
-        databases: 'מסדי נתונים',
-        storage: 'אחסון',
-        functions: 'פונקציות',
-        messaging: 'הודעות',
-        sites: 'אתרים',
+        auth: 'Auth',
+        databases: 'Databases',
+        storage: 'Storage',
+        functions: 'Functions',
+        messaging: 'Messaging',
+        sites: 'Sites',
       },
       explore: {
         ...enCatalog.website.products.explore,
@@ -394,17 +394,17 @@ export const heCatalog: EnCatalog = {
           ...enCatalog.website.products.navigation.items,
           authTagline: 'אימייל, OAuth, SMS, אימות דו-שלבי, צוותים וסשנים.',
           databasesTagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
-          storageTagline: 'העלאה, המרה והפצה של קבצים על CDN.',
-          functionsTagline: 'APIs, משימות cron ומנהלי אירועים בקנה מידה רחב.',
+          storageTagline: 'העלאה, עיבוד והגשה של קבצים דרך CDN.',
+          functionsTagline: 'APIs, משימות Cron ומטפלי אירועים בקנה מידה רחב.',
           messagingTagline: 'אימייל, SMS ו-Push עם נושאים ויעדים.',
           sitesTagline: 'פריסות סטטיות, SSR ו-CSR מ-Git.',
           realtimeName: 'Realtime',
           realtimeTagline: 'אירועים חיים, ערוצים ונוכחות.',
-          domainsName: 'דומיינים',
+          domainsName: 'Domains',
           domainsTagline: 'רכישת דומיינים, DNS, TLS וחיבורי אפליקציות.',
-          firewallName: 'חומת אש',
+          firewallName: 'Firewall',
           firewallTagline: 'WAF מנוהל לתעבורה זדונית.',
-          advisorName: 'יועץ',
+          advisorName: 'Advisor',
           advisorTagline: 'תובנות אבטחה וביצועים.',
         },
       },
@@ -412,7 +412,7 @@ export const heCatalog: EnCatalog = {
         ...enCatalog.website.products.tools,
         headingTitle: 'כלים שנבנו למפתחים ולסוכני AI',
         headingDescription:
-          'API-first כברירת מחדל. השתמשו בקונסול, Realtime, SDKs, CLI, Terraform, MCP ויכולות סוכנים על אותו פרויקט.',
+          'API-first כברירת מחדל. השתמשו בקונסול, Realtime, SDKs, CLI, Terraform, MCP ו-Agent Skills על אותו פרויקט.',
         developerExperienceTitle: 'חוויית מפתחים וסוכני AI',
         developerExperienceFallbackCaption: 'אינטגרציה טיפוסית ב-TypeScript.',
         everythingApiTitle: 'הכל הוא API',
@@ -431,7 +431,7 @@ export const heCatalog: EnCatalog = {
         terraformTitle: 'Terraform',
         terraformDescription:
           'ניהול תשתיות Appwrite כקוד עם הספק הרשמי.', // pragma: allowlist secret
-        agentSkillsTitle: 'יכולות סוכן',
+        agentSkillsTitle: 'Agent Skills',
         agentSkillsDescription:
           'ספקו לסוכני AI ידע מדויק ל-SDK על שירותי Appwrite וה-APIs.', // pragma: allowlist secret
         sdksTitle: 'SDKs',

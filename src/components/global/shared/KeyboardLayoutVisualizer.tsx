@@ -1,5 +1,6 @@
 import { Fingerprint } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { KeyId } from '@/lib/keyboard-shortcuts/display'
 import {
   ARROW_CLUSTER,
@@ -142,6 +143,7 @@ export function KeyboardLayoutVisualizer({
   className,
   compact = false,
 }: KeyboardLayoutVisualizerProps) {
+  const t = useT()
   const mainRows = getMainKeyboardRows(isMac)
   const modifierRow = isMac ? getMacModifierRow() : getWinModifierRow()
   const highlighted = new Set(highlightedKeys)
@@ -161,11 +163,11 @@ export function KeyboardLayoutVisualizer({
     >
       <div className="mb-2 flex shrink-0 items-center justify-between px-0.5">
         <span className="text-[11px] font-medium uppercase tracking-wider text-foreground/60 dark:text-muted-foreground">
-          Keyboard layout
+          {t('Keyboard layout')}
         </span>
         {sequential.length > 1 && (
           <span className="text-[11px] text-muted-foreground">
-            Press keys in order
+            {t('Press keys in order')}
           </span>
         )}
       </div>

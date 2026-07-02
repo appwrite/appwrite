@@ -3,6 +3,7 @@ import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
+import { useT } from '@/lib/i18n/translate'
 
 export type FaqItem = {
   question: string
@@ -12,23 +13,29 @@ export type FaqItem = {
 const linkClassName =
   'link-neutral'
 
+/** Translates a text fragment inside JSX answers at render time. */
+function T({ children }: { children: string }) {
+  const t = useT()
+  return <>{t(children)}</>
+}
+
 export const pricingFaqItems: readonly FaqItem[] = [
   {
     question: 'What payment methods does Appwrite support?',
     answer: (
       <>
-        Appwrite currently supports{' '}
+        <T>Appwrite currently supports</T>{' '} {/* pragma: allowlist secret */}
         <DocsRouteLink
           className={linkClassName}
           href="/docs/advanced/billing/payments#payment-methods"
         >
-          credit and debit card payments
+          <T>credit and debit card payments</T>
         </DocsRouteLink>
-        . We are actively working on adding support for more methods. Please{' '}
+        . <T>We are actively working on adding support for more methods. Please</T>{' '}
         <MarketingSiteLink className={linkClassName} href={CONTACT_ENTERPRISE_URL}>
-          contact us
+          <T>contact us</T>
         </MarketingSiteLink>{' '}
-        in case this is an issue for you.
+        <T>in case this is an issue for you.</T>
       </>
     ),
   },
@@ -36,23 +43,21 @@ export const pricingFaqItems: readonly FaqItem[] = [
     question: 'What happens if I reach a resource limit in my Pro plan?',
     answer: (
       <>
-        Your project will continue to run, and additional charges will apply. You
-        can find the costs for additional resources in the pricing plans
-        comparison below. We will also send you email reminders when you hit 75%
-        and 100% of your resource limits. To avoid unexpected payments, you can
-        set up a{' '}
+        <T>
+          Your project will continue to run, and additional charges will apply. You can find the costs for additional resources in the pricing plans comparison below. We will also send you email reminders when you hit 75% and 100% of your resource limits. To avoid unexpected payments, you can set up a
+        </T>{' '}
         <DocsRouteLink
           className={linkClassName}
           href="/docs/advanced/billing/pro#budget-cap"
         >
-          budget cap
+          <T>budget cap</T>
         </DocsRouteLink>{' '}
-        on your organization.{' '}
+        <T>on your organization.</T>{' '}
         <DocsRouteLink
           className={linkClassName}
           href="/docs/advanced/billing/pro#reaching-resource-limits"
         >
-          Learn more in our docs
+          <T>Learn more in our docs</T>
         </DocsRouteLink>
         .
       </>
@@ -62,15 +67,14 @@ export const pricingFaqItems: readonly FaqItem[] = [
     question: 'What happens if I reach a resource limit in my Free plan?',
     answer: (
       <>
-        Your project will freeze, and Appwrite Console will continue running in
-        read-only mode. You need to upgrade to Pro, remove resources that exceed
-        their limit, or wait for the next billing cycle, which resets usage
-        limits.{' '}
+        <T>
+          Your project will freeze, and Appwrite Console will continue running in read-only mode. You need to upgrade to Pro, remove resources that exceed their limit, or wait for the next billing cycle, which resets usage limits. {/* pragma: allowlist secret */}
+        </T>{' '}
         <DocsRouteLink
           className={linkClassName}
           href="/docs/advanced/billing/pro#reaching-resource-limits"
         >
-          Learn more in our docs
+          <T>Learn more in our docs</T>
         </DocsRouteLink>
         .
       </>
@@ -80,13 +84,11 @@ export const pricingFaqItems: readonly FaqItem[] = [
     question: 'Why does Appwrite ask for payment verification for up to $150?',
     answer: (
       <>
-        The Reserve Bank of India (RBI) mandates additional security measures for
-        recurring payments on Indian cards. Appwrite is obligated to ask for
-        verification before billing your card. Appwrite asks for verification for
-        up to $150 in case you use add-ons, but will not charge more than the
-        actual amount used or your budget cap. If you need higher limits,{' '}
+        <T>
+          The Reserve Bank of India (RBI) mandates additional security measures for recurring payments on Indian cards. Appwrite is obligated to ask for verification before billing your card. Appwrite asks for verification for up to $150 in case you use add-ons, but will not charge more than the actual amount used or your budget cap. If you need higher limits, // pragma: allowlist secret
+        </T>{' '}
         <a className={linkClassName} href="mailto:billing@appwrite.io">
-          contact us
+          <T>contact us</T>
         </a>
         .
       </>
@@ -96,14 +98,14 @@ export const pricingFaqItems: readonly FaqItem[] = [
     question: 'How can I join the OSS program?',
     answer: (
       <>
-        The OSS program is exclusively for active open-source maintainers using
-        Appwrite Cloud. You can find more information on how to join the program
-        in our{' '}
+        <T>
+          The OSS program is exclusively for active open-source maintainers using Appwrite Cloud. You can find more information on how to join the program in our {/* pragma: allowlist secret */}
+        </T>{' '}
         <BlogPageAnchor
           className={linkClassName}
           href="/blog/post/announcing-the-appwrite-oss-program"
         >
-          announcement blog
+          <T>announcement blog</T>
         </BlogPageAnchor>
         .
       </>
@@ -113,10 +115,11 @@ export const pricingFaqItems: readonly FaqItem[] = [
     question: 'How can I join the Startups program?',
     answer: (
       <>
-        Are you a founder looking to build with Appwrite? Learn more about our
-        Startups program on our Startups{' '}
+        <T>
+          Are you a founder looking to build with Appwrite? Learn more about our Startups program on our Startups {/* pragma: allowlist secret */}
+        </T>{' '}
         <MarketingSiteLink className={linkClassName} href="/startups">
-          landing page
+          <T>landing page</T>
         </MarketingSiteLink>
         .
       </>
@@ -148,10 +151,11 @@ export const pricingFaqItems: readonly FaqItem[] = [
       'I work with sensitive data and need to sign a BAA. Does Appwrite provide this?',
     answer: (
       <>
-        Yes, you can sign a BAA with Appwrite. Learn more about our security and
-        compliance in our{' '}
+        <T>
+          Yes, you can sign a BAA with Appwrite. Learn more about our security and compliance in our {/* pragma: allowlist secret */}
+        </T>{' '}
         <DocsRouteLink className={linkClassName} href="/docs/advanced/security">
-          documentation
+          <T>documentation</T>
         </DocsRouteLink>
         .
       </>

@@ -6,13 +6,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   '(optional)': '(אופציונלי)',
   ', all billable services will be paused until the next billing cycle or until you increase your limit.':
     ', כל השירותים בתשלום יושהו עד מחזור החיוב הבא או עד שתגדילו את המגבלה.',
-  ', on': ', בערוץ',
-  ', or on': ', או בערוץ',
+  ', on': ', דרך',
+  ', or on': ', או דרך',
   '1 year': 'שנה אחת',
   '3rd party': 'צד שלישי',
   '@ or subdomain': '@ או תת-דומיין',
   "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.":
-    'הסכם BAA נדרש לפי HIPAA כאשר ספק שירות מטפל במידע רפואי מוגן (PHI) עבור גוף מכוסה. אם האפליקציה שלכם מעבדת, מאחסנת או משדרת נתוני בריאות של מטופלים בארה"ב, תצטרכו הסכם BAA.',
+    'הסכם BAA נדרש לפי HIPAA כאשר ספק שירות מטפל במידע רפואי מוגן (PHI) עבור גוף מכוסה. אם האפליקציה שלכם מעבדת, מאחסנת או משדרת נתוני בריאות של מטופלים בארה"ב, תצטרכו הסכם BAA בתוקף.',
   'A DPA is a legally binding document that outlines how':
     'הסכם DPA הוא מסמך מחייב משפטית המגדיר כיצד',
   'A backup payment method ensures uninterrupted service if your primary method fails.':
@@ -35,7 +35,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Account keys': 'מפתחות חשבון',
   'Account settings': 'הגדרות חשבון',
   'Account-level ops, CLI auth, sessions. Per-user credentials.':
-    'פעולות ברמת החשבון, אימות CLI, סשנים. הרשאות לכל משתמש.',
+    'פעולות ברמת החשבון, אימות CLI, סשנים. פרטי גישה אישיים לכל משתמש.',
   'Action required': 'נדרשת פעולה',
   'Activating plan': 'מפעיל תוכנית',
   Active: 'פעיל',
@@ -51,7 +51,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Add a payment method to see your estimated total.':
     'הוסיפו אמצעי תשלום כדי לראות את הסכום המשוער.',
   'Add alert': 'הוספת התראה',
-  'Add another member': 'הוספת חבר צוות נוסף',
+  'Add another member': 'הוספת חבר נוסף',
   'Add app': 'הוספת אפליקציה',
   'Add backup': 'הוספת גיבוי',
   'Add billing address': 'הוספת כתובת חיוב',
@@ -72,7 +72,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הוסיפו את רשומת ה-DNS הראשונה שלכם כדי להתחיל',
   'Add your first app to share it with other organizations.':
     'הוסיפו את האפליקציה הראשונה שלכם כדי לשתף אותה עם ארגונים אחרים.',
-  'Additional members': 'חברי צוות נוספים',
+  'Additional members': 'חברים נוספים',
   'Additional projects': 'פרויקטים נוספים',
   Address: 'כתובת',
   'Address line 2': 'שורת כתובת 2',
@@ -82,7 +82,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Alert when spending reaches': 'התראה כשההוצאה מגיעה ל',
   'All projects': 'כל הפרויקטים',
   'All resources except team management and billing writes.':
-    'כל המשאבים מלבד ניהול צוות וכתיבת חיובים.',
+    'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
   Amount: 'סכום',
@@ -101,7 +101,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.': // pragma: allowlist secret
     'החילו קרדיטים של Appwrite על הארגון שלכם. תוקף הקרדיטים פג לאחר תקופה מוגדרת והם אינם נצברים.', // pragma: allowlist secret
   'Apply coupon': 'החלת קופון',
-  'Approaching member limit': 'מתקרבים למגבלת חברי הצוות',
+  'Approaching member limit': 'מתקרבים למגבלת החברים',
   Apps: 'אפליקציות',
   'Apps in ai & ml.': 'אפליקציות בקטגוריית AI ולמידת מכונה.',
   'Apps in analytics.': 'אפליקציות בקטגוריית אנליטיקה.',
@@ -127,11 +127,11 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Are you sure you want to remove the billing address from':
     'האם אתם בטוחים שברצונכם להסיר את כתובת החיוב מ',
   'Attachment (optional)': 'קובץ מצורף (אופציונלי)',
-  Auth: 'אימות',
+  Auth: 'Auth',
   Authentication: 'אימות',
   'Authentication failed': 'האימות נכשל',
-  'Authorization code': 'קוד אישור',
-  'Authorization code is required': 'קוד אישור הוא שדה חובה',
+  'Authorization code': 'קוד הרשאה',
+  'Authorization code is required': 'קוד הרשאה הוא שדה חובה',
   Authorize: 'אישור',
   'Authorize payment': 'אישור תשלום',
   'Authorizing...': 'מאשר...',
@@ -142,14 +142,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
-  Avatars: 'אווטארים',
+  Avatars: 'Avatars',
   Back: 'חזרה',
   'Back to OAuth apps': 'חזרה לאפליקציות OAuth',
   'Back to domains': 'חזרה לדומיינים',
-  'Backup methods': 'אמצעי גיבוי',
+  'Backup methods': 'אמצעי תשלום לגיבוי',
   'Backup payment method updated': 'אמצעי התשלום לגיבוי עודכן',
   'Balance:': 'יתרה:',
-  Best: 'מומלץ',
+  Best: 'שיא',
   Billing: 'חיוב',
   'Billing address': 'כתובת חיוב',
   'Billing address has been created and set for your organization':
@@ -162,10 +162,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Billing, team, cross-project. One key for the whole org.':
     'חיוב, צוות, חוצה-פרויקטים. מפתח אחד לכל הארגון.',
   Branding: 'מיתוג',
-  'Brief summary of your issue': 'תקציר קצר של הבעיה שלכם',
+  'Brief summary of your issue': 'סיכום קצר של הבעיה שלכם',
   'Browse by category': 'עיון לפי קטגוריה',
   'Browse files': 'עיון בקבצים',
-  Buckets: 'דליים',
+  Buckets: 'באקטים',
   'Budget cap': 'תקרת תקציב',
   'Budget cap (USD)': 'תקרת תקציב (USD)',
   'Budget cap applies only to additional usage beyond your plan limits':
@@ -204,14 +204,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Check: 'בדקו את',
   'Choose File': 'בחירת קובץ',
   'Choose a PNG from the Apps bucket or upload a new one.':
-    'בחרו קובץ PNG מדלי האפליקציות או העלו חדש.',
+    'בחרו קובץ PNG מהבאקט Apps או העלו קובץ חדש.',
   'Choose a paid plan for the new organization instead.':
     'בחרו תוכנית בתשלום עבור הארגון החדש במקום זאת.',
   'Choose domains to keep': 'בחרו דומיינים לשמירה',
   'Choose exactly': 'בחרו בדיוק',
   'Choose existing address': 'בחירת כתובת קיימת',
   'Choose existing card': 'בחירת כרטיס קיים',
-  'Choose members to keep': 'בחרו חברי צוות לשמירה',
+  'Choose members to keep': 'בחרו חברים לשמירה',
   'Choose projects to keep': 'בחרו פרויקטים לשמירה',
   'Choose the plan that best fits your needs.':
     'בחרו את התוכנית המתאימה ביותר לצרכים שלכם.',
@@ -241,20 +241,20 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Compute: 'מחשוב',
   Confidential: 'חסוי',
   'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.':
-    'לקוחות חסויים מאמתים החלפת אסימונים באמצעות סוד. החליפו באופן קבוע ואחסנו ערכים במנהל סודות.',
+    'לקוחות חסויים מאמתים החלפת אסימונים באמצעות סוד. בצעו רוטציה לסודות באופן קבוע ואחסנו את הערכים במנהל סודות.',
   'Confirmation email with ticket ID. Typically within 24h during support hours.':
     'אימייל אישור עם מזהה פנייה. בדרך כלל בתוך 24 שעות בשעות התמיכה.',
   'Confirming payment': 'מאשר תשלום',
   'Contact emails': 'אימיילים ליצירת קשר',
   'Contact for price': 'צרו קשר לקבלת מחיר',
-  'Contact sales': 'צרו קשר עם מכירות',
+  'Contact sales': 'צרו קשר עם צוות המכירות',
   'Copied to clipboard': 'הועתק ללוח',
   Copy: 'העתקה',
   'Copy ID': 'העתקת מזהה',
   'Copy as JSON': 'העתקה כ-JSON',
   'Copy code': 'העתקת קוד',
   'Copy domain': 'העתקת דומיין',
-  'Copy endpoint': 'העתקת נקודת קצה',
+  'Copy endpoint': 'העתקת Endpoint',
   'Copy link': 'העתקת קישור',
   'Copy name': 'העתקת שם',
   'Copy this code and submit it at your new registrar to complete the transfer out.':
@@ -279,7 +279,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
     'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת אסימונים בצד השרת.',
   'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.':
-    'צרו רישום אפליקציית OAuth2 עבור המרקטפלייס. הוא נשמר כטיוטה עד שתפרסמו אותו.',
+    'צרו דף אפליקציית OAuth2 למרקטפלייס. הדף נשמר כטיוטה עד שתפרסמו אותו.',
   'Create an app to share it with other organizations on the marketplace.':
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
@@ -317,7 +317,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'DNS records from': 'רשומות DNS מתוך',
   'Data deletion': 'מחיקת נתונים',
   'Data processing agreement (DPA)': 'הסכם עיבוד נתונים (DPA)',
-  Databases: 'מסדי נתונים',
+  Databases: 'Databases',
   'Databases, storage, users, functions. One project per key.':
     'מסדי נתונים, אחסון, משתמשים, פונקציות. פרויקט אחד לכל מפתח.',
   'Dedicated databases': 'מסדי נתונים ייעודיים',
@@ -332,7 +332,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Delete organization': 'מחיקת ארגון',
   'Delete project': 'מחיקת פרויקט',
   Deleted: 'נמחק',
-  'Deleting members': 'מוחק חברי צוות',
+  'Deleting members': 'מסיר חברים',
   'Deleting organization': 'מוחק ארגון',
   'Deleting projects': 'מוחק פרויקטים',
   'Deleting resources': 'מוחק משאבים',
@@ -342,7 +342,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Details: 'פרטים',
   Developer: 'מפתח',
   'Developer tools': 'כלי פיתוח',
-  'Device flow': 'תהליך מכשיר',
+  'Device flow': 'Device flow',
   Disabled: 'מושבת',
   Discount: 'הנחה',
   Discover: 'גילוי',
@@ -366,7 +366,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Done: 'סיום',
   'Downgrade impact': 'השפעת השנמוך',
   Downgraded: 'שונמך',
-  'Downgrading to Free Plan': 'שנמוך לתוכנית החינמית',
+  'Downgrading to Free Plan': 'שנמוך לתוכנית Free',
   'Downgrading your plan': 'משנמך את התוכנית שלכם',
   'Download DPA': 'הורדת DPA',
   'Download invoice': 'הורדת חשבונית',
@@ -397,7 +397,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Enter organization name': 'הזינו שם ארגון',
   'Enter project name': 'הזינו שם פרויקט',
   'Enter street address': 'הזינו כתובת רחוב',
-  'Enter tax ID (e.g., VAT, GST, EIN)': 'הזינו מספר עוסק (למשל VAT, GST, EIN)',
+  'Enter tax ID (e.g., VAT, GST, EIN)':
+    'הזינו מספר זיהוי מס (למשל VAT, GST, EIN)',
   'Enter tax identification number': 'הזינו מספר זיהוי מס',
   'Enter the domain name without protocol (e.g., example.com)':
     'הזינו את שם הדומיין ללא פרוטוקול (למשל example.com)',
@@ -411,14 +412,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Estimate, subject to change based on usage':
     'הערכה, עשויה להשתנות בהתאם לשימוש',
   'Estimated fees from the registry before you pay.':
-    'עמלות משוערות מהרישום לפני התשלום.',
+    'עמלות משוערות מהמרשם לפני התשלום.',
   'Estimated total': 'סכום משוער',
   Expired: 'פג תוקף',
-  Expires: 'פג תוקף בתאריך',
-  'Expires soon': 'פג בקרוב',
-  'Expiring soon': 'פג בקרוב',
+  Expires: 'בתוקף עד',
+  'Expires soon': 'יפוג בקרוב',
+  'Expiring soon': 'יפוג בקרוב',
   'Expiry date': 'תאריך תפוגה',
-  Explore: 'גילוי',
+  Explore: 'סקירה',
   'Explore all apps available in the marketplace.':
     'גלו את כל האפליקציות הזמינות במרקטפלייס.',
   Export: 'ייצוא',
@@ -442,14 +443,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to download invoice': 'הורדת החשבונית נכשלה',
   'Failed to initialize payment form': 'אתחול טופס התשלום נכשל',
   'Failed to invite': 'ההזמנה נכשלה עבור',
-  'Failed to invite members': 'הזמנת חברי הצוות נכשלה',
+  'Failed to invite members': 'הזמנת החברים נכשלה',
   'Failed to load credits': 'טעינת הקרדיטים נכשלה',
   'Failed to load domain price': 'טעינת מחיר הדומיין נכשלה',
   'Failed to load domain prices. Please try again.':
     'טעינת מחירי הדומיינים נכשלה. נסו שוב.',
   'Failed to load invoices': 'טעינת החשבוניות נכשלה',
   'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
-  'Failed to load members': 'טעינת חברי הצוות נכשלה',
+  'Failed to load members': 'טעינת החברים נכשלה',
   'Failed to load page': 'טעינת הדף נכשלה',
   'Failed to load projects': 'טעינת הפרויקטים נכשלה',
   'Failed to load regions': 'טעינת האזורים נכשלה',
@@ -458,7 +459,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to read file. Please try again.': 'קריאת הקובץ נכשלה. נסו שוב.',
   'Failed to remove alert': 'הסרת ההתראה נכשלה',
   'Failed to remove billing address': 'הסרת כתובת החיוב נכשלה',
-  'Failed to remove member': 'הסרת חבר הצוות נכשלה',
+  'Failed to remove member': 'הסרת החבר נכשלה',
   'Failed to remove payment method': 'הסרת אמצעי התשלום נכשלה',
   'Failed to reorder pinned projects': 'שינוי סדר הפרויקטים המוצמדים נכשל',
   'Failed to resend invitation': 'שליחת ההזמנה מחדש נכשלה',
@@ -475,7 +476,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to update pinned projects': 'עדכון הפרויקטים המוצמדים נכשל',
   'Failed to update plan': 'עדכון התוכנית נכשל',
   'Failed to update role': 'עדכון התפקיד נכשל',
-  'Failed to update tax ID': 'עדכון מספר העוסק נכשל',
+  'Failed to update tax ID': 'עדכון מספר זיהוי המס נכשל',
   'Failed to upload logo': 'העלאת הלוגו נכשלה',
   'Failed to validate payment': 'אימות התשלום נכשל',
   'Failed to view invoice': 'הצגת החשבונית נכשלה',
@@ -498,13 +499,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'From your current registrar': 'מהרשם הנוכחי שלכם',
   'Full control over all aspects including team and billing.':
     'שליטה מלאה בכל ההיבטים כולל צוות וחיוב.',
-  'Full description for the listing page': 'תיאור מלא לדף הרישום',
+  'Full description for the listing page': 'תיאור מלא לדף האפליקציה במרקטפלייס',
   'Full hostname and the auth code your registrar provided.':
-    'שם מארח מלא וקוד האישור שסיפק הרשם שלכם.',
-  Functions: 'פונקציות',
+    'שם מארח מלא וקוד ההרשאה שסיפק הרשם שלכם.',
+  Functions: 'Functions',
   General: 'כללי',
   'Generate an authorization code to move this domain to a different registrar. You will provide this code at the receiving registrar.':
-    'צרו קוד אישור להעברת הדומיין הזה לרשם אחר. תספקו את הקוד הזה אצל הרשם הקולט.',
+    'צרו קוד הרשאה כדי להעביר את הדומיין הזה לרשם אחר. את הקוד תזינו אצל הרשם הקולט.',
   'Generate code': 'יצירת קוד',
   'Generated by Appwrite': 'נוצר על ידי Appwrite', // pragma: allowlist secret
   'Get dedicated support and SLAs for your organization.':
@@ -522,7 +523,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Homepage URL': 'כתובת דף הבית',
   'Homepage:': 'דף הבית:',
   'How users can get help with your app during OAuth2 consent.':
-    'כיצד משתמשים יכולים לקבל עזרה עם האפליקציה שלכם במהלך הסכמת OAuth2.',
+    'כיצד משתמשים יכולים לקבל עזרה בנוגע לאפליקציה שלכם במהלך תהליך ההסכמה של OAuth2.',
   'Image URLs': 'כתובות תמונות',
   Import: 'ייבוא',
   'Import Zone File': 'ייבוא קובץ Zone',
@@ -531,14 +532,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'שבוע Init הסתיים. גלו כל השקה וצפו בהקלטות המפגשים.',
   'Initial term': 'תקופה ראשונית',
   'Install app': 'התקנת אפליקציה',
-  'Invalid Selection': 'בחירה לא חוקית',
-  'Invalid email address': 'כתובת אימייל לא חוקית',
-  'Invalid payment method response': 'תגובת אמצעי תשלום לא חוקית',
+  'Invalid Selection': 'בחירה לא תקינה',
+  'Invalid email address': 'כתובת אימייל לא תקינה',
+  'Invalid payment method response': 'התקבלה תגובה לא תקינה מאמצעי התשלום',
   'Invitation cancelled successfully': 'ההזמנה בוטלה בהצלחה',
   'Invitation resent successfully': 'ההזמנה נשלחה מחדש בהצלחה',
   Invite: 'הזמנה',
-  'Invite Members': 'הזמנת חברי צוות',
-  'Invite member': 'הזמנת חבר צוות',
+  'Invite Members': 'הזמנת חברים',
+  'Invite member': 'הזמנת חבר',
   'Invite organization members to collaborate on your projects':
     'הזמינו חברי ארגון לשיתוף פעולה בפרויקטים שלכם',
   "Invite organization members to your organization. They'll receive an email invitation to join.":
@@ -546,8 +547,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Invited: 'הוזמן',
   'Inviting...': 'מזמין...',
   Invoice: 'חשבונית',
-  Joined: 'הצטרף',
-  Keep: 'שמירה',
+  Joined: 'הצטרפות',
+  Keep: 'שמירת',
   'Keys apply at different levels. Each key has its own permissions (scopes) to control access.':
     'מפתחות חלים ברמות שונות. לכל מפתח יש הרשאות (scopes) משלו לשליטה בגישה.',
   'Last name': 'שם משפחה',
@@ -560,13 +561,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Legal: 'משפטי',
   'Lightning Collector': 'אספן ברקים',
   'Lightning Collector game arena': 'זירת המשחק אספן ברקים',
-  Live: 'חי',
+  Live: 'Live',
   'Loading address...': 'טוען כתובת...',
   'Loading credits...': 'טוען קרדיטים...',
   'Loading domains...': 'טוען דומיינים...',
   'Loading files…': 'טוען קבצים…',
   'Loading invoices...': 'טוען חשבוניות...',
-  'Loading members...': 'טוען חברי צוות...',
+  'Loading members...': 'טוען חברים...',
   'Loading organization resources...': 'טוען משאבי ארגון...',
   'Loading organizations...': 'טוען ארגונים...',
   'Loading payment form...': 'טוען טופס תשלום...',
@@ -596,16 +597,16 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Marketplace navigation': 'ניווט מרקטפלייס',
   'Marketplace section': 'מקטע מרקטפלייס',
   'Max size:': 'גודל מרבי:',
-  Member: 'חבר צוות',
-  'Member limit reached': 'הגעתם למגבלת חברי הצוות',
+  Member: 'חבר',
+  'Member limit reached': 'הגעתם למגבלת החברים',
   'Member limit reached for your plan.':
-    'הגעתם למגבלת חברי הצוות של התוכנית שלכם.',
-  'Member removed successfully': 'חבר הצוות הוסר בהצלחה',
-  Members: 'חברי צוות',
+    'הגעתם למגבלת החברים בתוכנית שלכם.',
+  'Member removed successfully': 'החבר הוסר בהצלחה',
+  Members: 'חברים',
   'Members who are not part of the destination organization must be invited to gain access to this domain.':
-    'חברי צוות שאינם חלק מארגון היעד חייבים להיות מוזמנים כדי לקבל גישה לדומיין הזה.',
+    'חברים שאינם חלק מארגון היעד יצטרכו לקבל הזמנה כדי לקבל גישה לדומיין הזה.',
   Message: 'הודעה',
-  Messaging: 'הודעות',
+  Messaging: 'Messaging',
   'Monthly Charges for Extra Organization Members':
     'חיובים חודשיים עבור חברי ארגון נוספים',
   'Mon–Fri': "ב'-ו'",
@@ -622,7 +623,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'רשומות NS מגדירות את שרתי ה-DNS המוסמכים עבור דומיין, ומפנות שאילתות לשרתים שמנהלים את הגדרות ה-DNS של הדומיין.',
   Name: 'שם',
   'Name and descriptions shown on the marketplace listing and OAuth2 consent screen.':
-    'שם ותיאורים המוצגים ברישום במרקטפלייס ובמסך הסכמת OAuth2.',
+    'השם והתיאורים המוצגים בדף האפליקציה במרקטפלייס ובמסך ההסכמה של OAuth2.',
   'Name is required': 'שם הוא שדה חובה',
   'Name must be no longer than': 'השם חייב להיות באורך של עד',
   Nameserver: 'שרת שמות',
@@ -660,7 +661,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אין עדיין חשבוניות. לאחר שתבצעו תשלום, החשבוניות שלכם יופיעו כאן.',
   'No items match your search.': 'אין פריטים התואמים לחיפוש שלכם.',
   'No logo files yet': 'אין עדיין קובצי לוגו',
-  'No members found': 'לא נמצאו חברי צוות',
+  'No members found': 'לא נמצאו חברים',
   'No other organizations available': 'אין ארגונים אחרים זמינים',
   'No payment method available. Please add a payment method first.':
     'אין אמצעי תשלום זמין. הוסיפו אמצעי תשלום תחילה.',
@@ -669,10 +670,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'No plans available. Please try refreshing the page.':
     'אין תוכניות זמינות. נסו לרענן את הדף.',
   'No projects to review. Confirm your member and domain selections above, then continue.':
-    'אין פרויקטים לסקירה. אשרו את בחירות חברי הצוות והדומיינים למעלה, ואז המשיכו.',
+    'אין פרויקטים לסקירה. אשרו את בחירת החברים והדומיינים למעלה, ואז המשיכו.',
   'No projects yet': 'אין עדיין פרויקטים',
   'No projects, members, domains, or resources will be deleted.':
-    'לא יימחקו פרויקטים, חברי צוות, דומיינים או משאבים.',
+    'לא יימחקו פרויקטים, חברים, דומיינים או משאבים.',
   'No records match your filters': 'אין רשומות התואמות למסננים שלכם',
   'No regions available': 'אין אזורים זמינים',
   'No resource types match your search.':
@@ -696,7 +697,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'מותר ארגון חינמי אחד בלבד לכל חשבון.',
   'Only one free organization per account.': 'ארגון חינמי אחד בלבד לכל חשבון.',
   Open: 'פתיחה',
-  'Open in new tab': 'פתיחה בלשונית חדשה',
+  'Open in new tab': 'פתיחה בכרטיסייה חדשה',
   'Open in new window': 'פתיחה בחלון חדש',
   'Optional comment': 'הערה אופציונלית',
   Or: 'או',
@@ -714,7 +715,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Organization name updated successfully': 'שם הארגון עודכן בהצלחה',
   'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
     'מפתחות ברמת הארגון יהיו ניתנים לניהול כאן כשיהיו זמינים. בינתיים, השתמשו במפתחות פרויקט לגישה בצד השרת.',
-  Overview: 'סקירה',
+  Overview: 'סקירה כללית',
   Owner: 'בעלים',
   Page: 'דף',
   Paused: 'מושהה',
@@ -741,7 +742,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Pending: 'ממתין',
   'Pending admin approval': 'ממתין לאישור מנהל',
   'Pending owner approval': 'ממתין לאישור בעלים',
-  'Pending registry': 'ממתין לרישום',
+  'Pending registry': 'ממתין למרשם',
   'Permanently delete this app and revoke all associated tokens. This action cannot be undone.':
     'מחקו לצמיתות את האפליקציה הזו ובטלו את כל האסימונים המשויכים. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this domain and all associated DNS records.':
@@ -775,7 +776,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך...',
   'Please try again.': 'נסו שוב.',
   'Policy links shown on the OAuth2 consent screen.':
-    'קישורי מדיניות המוצגים במסך הסכמת OAuth2.',
+    'קישורי מדיניות המוצגים במסך ההסכמה של OAuth2.',
   'Popular integrations from the marketplace catalog.':
     'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
   Port: 'פורט',
@@ -783,14 +784,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Postal code': 'מיקוד',
   Premium: 'פרימיום',
   'Preparing your organization dashboard.': 'מכין את לוח הבקרה של הארגון שלכם.',
-  Preset: 'תבנית',
+  Preset: 'Preset',
   Previous: 'הקודם',
   'Previous page': 'הדף הקודם',
   'Previous projects page': 'דף הפרויקטים הקודם',
   'Pricing is confirmed when you submit payment.':
     'המחיר מאושר בעת ביצוע התשלום.',
   'Pricing is confirmed when you submit payment. Premium and specialty names may require manual review from the registry.':
-    'המחיר מאושר בעת ביצוע התשלום. שמות פרימיום ושמות מיוחדים עשויים לדרוש בדיקה ידנית מהרישום.',
+    'המחיר מאושר בעת ביצוע התשלום. שמות פרימיום ושמות מיוחדים עשויים לדרוש בדיקה ידנית של המרשם.',
   Primary: 'ראשי',
   'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
   Priority: 'עדיפות',
@@ -825,7 +826,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה להשלים את הרכישה. נסו שוב.',
   'Read-only access across all resources.': 'גישת קריאה בלבד לכל המשאבים.',
   'Ready to start': 'מוכן להתחלה',
-  Realtime: 'זמן אמת',
+  Realtime: 'Realtime',
   Recap: 'סיכום',
   Recommended: 'מומלץ',
   'Recurring Charge': 'חיוב חוזר',
@@ -833,20 +834,20 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Redirect URIs and client type for OAuth2 and OpenID Connect.':
     'כתובות URI להפניה וסוג לקוח עבור OAuth2 ו-OpenID Connect.',
   Region: 'אזור',
-  'Registrant contact': 'פרטי הרושם',
+  'Registrant contact': 'פרטי בעל הדומיין',
   'Registrant details must match your domain registry requirements.':
-    'פרטי הרושם חייבים להתאים לדרישות רישום הדומיין שלכם.',
+    'פרטי בעל הדומיין חייבים להתאים לדרישות מרשם הדומיינים.',
   Registrar: 'רשם',
   Registration: 'רישום',
-  'Registry transfer': 'העברת רישום',
+  'Registry transfer': 'העברה במרשם',
   Remaining: 'נותר',
   Remove: 'הסרה',
   'Remove billing address': 'הסרת כתובת חיוב',
   'Remove coupon': 'הסרת קופון',
-  'Remove from Team': 'הסרה מהצוות',
-  'Remove from team': 'הסרה מהצוות',
+  'Remove from Team': 'הסרה מהארגון',
+  'Remove from team': 'הסרה מהארגון',
   'Removing members that are not kept for the target plan.':
-    'מסיר חברי צוות שלא נשמרו עבור תוכנית היעד.',
+    'מסיר חברים שלא נשמרו עבור תוכנית היעד.',
   'Removing projects that are not kept for the target plan.':
     'מסיר פרויקטים שלא נשמרו עבור תוכנית היעד.',
   'Removing resources that are not kept for the target plan.':
@@ -863,7 +864,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Reply to the confirmation email to add more context or attachments.':
     'השיבו לאימייל האישור כדי להוסיף הקשר או קבצים מצורפים.',
   'Request a transfer into this organization using the authorization code from your current registrar. Registry fees are shown in the summary as you type the domain name.':
-    'בקשו העברה לארגון הזה באמצעות קוד האישור מהרשם הנוכחי שלכם. עמלות הרישום מוצגות בסיכום בזמן הקלדת שם הדומיין.',
+    'בקשו העברה לארגון הזה באמצעות קוד ההרשאה מהרשם הנוכחי שלכם. עמלות המרשם מוצגות בסיכום בזמן הקלדת שם הדומיין.',
   Requests: 'בקשות',
   Resend: 'שליחה מחדש',
   'Resending...': 'שולח מחדש...',
@@ -875,9 +876,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'משאבים שהוסרו כדי להתאים למגבלות תוכנית היעד.',
   Restart: 'התחלה מחדש',
   Retry: 'ניסיון חוזר',
-  'Retry Verification': 'ניסיון אימות חוזר',
+  'Retry Verification': 'אימות מחדש',
   'Retry payment': 'ניסיון תשלום חוזר',
-  'Retry verification': 'ניסיון אימות חוזר',
+  'Retry verification': 'אימות מחדש',
   'Retrying...': 'מנסה שוב...',
   'Review charges before you complete payment.':
     'סקרו את החיובים לפני השלמת התשלום.',
@@ -896,13 +897,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Search apps...': 'חיפוש אפליקציות...',
   'Search domains...': 'חיפוש דומיינים...',
   'Search files': 'חיפוש קבצים',
-  'Search members...': 'חיפוש חברי צוות...',
+  'Search members...': 'חיפוש חברים...',
   'Search projects...': 'חיפוש פרויקטים...',
   'Search resource types...': 'חיפוש סוגי משאבים...',
   'Secret ID': 'מזהה סוד',
   'Secret value': 'ערך הסוד',
   'Securing your subscription with your payment method.':
-    'מאבטח את המנוי שלכם באמצעות אמצעי התשלום.',
+    'מסדיר את המנוי שלכם באמצעות אמצעי התשלום.',
   Select: 'בחרו',
   'Select a billing address': 'בחרו כתובת חיוב',
   'Select a country': 'בחרו מדינה',
@@ -916,7 +917,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Select a state': 'בחרו מדינה/מחוז',
   'Select an email provider preset to automatically add the required DNS records.':
     'בחרו תבנית ספק אימייל להוספה אוטומטית של רשומות ה-DNS הנדרשות.',
-  'Select an organization to invite members.': 'בחרו ארגון להזמנת חברי צוות.',
+  'Select an organization to invite members.': 'בחרו ארגון להזמנת חברים.',
   'Select an organization you own to move this domain.':
     'בחרו ארגון שבבעלותכם להעברת הדומיין הזה.',
   'Select app logo': 'בחירת לוגו אפליקציה',
@@ -939,11 +940,12 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Setting up your organization': 'מגדיר את הארגון שלכם',
   Settings: 'הגדרות',
   'Short description': 'תיאור קצר',
-  'Short summary for listings and consent': 'תקציר קצר לרישומים ולמסך ההסכמה',
+  'Short summary for listings and consent':
+    'תקציר קצר לדף האפליקציה ולמסך ההסכמה',
   'Show code': 'הצגת קוד',
   'Show less': 'הצגת פחות',
   Showing: 'מציג',
-  Sites: 'אתרים',
+  Sites: 'Sites',
   Slug: 'מזהה כתובת (slug)',
   'Space or ↑ to jump · R to restart · click arena to jump':
     'רווח או ↑ לקפיצה · R להתחלה מחדש · לחצו על הזירה לקפיצה',
@@ -955,7 +957,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Start transfer': 'התחלת העברה',
   State: 'מדינה/מחוז',
   Status: 'סטטוס',
-  Storage: 'אחסון',
+  Storage: 'Storage',
   'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.':
     'אחסנו את הסוד הזה בסביבת הפריסה שלכם לפני שתמשיכו. סשנים פעילים שמשתמשים בסוד שנמחק ייכשלו מיד ברענון אסימונים.',
   'Street address': 'כתובת רחוב',
@@ -978,9 +980,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'רשומות TXT מאחסנות נתוני טקסט חופשי ב-DNS, ומשמשות בדרך כלל לצורכי אימות, כמו בעלות על דומיין או הגדרות אבטחת אימייל.',
   Tagline: 'סלוגן',
   Taken: 'תפוס',
-  'Tax ID': 'מספר עוסק',
-  'Tax ID (Optional)': 'מספר עוסק (אופציונלי)',
-  'Tax ID updated': 'מספר העוסק עודכן',
+  'Tax ID': 'מספר זיהוי מס',
+  'Tax ID (Optional)': 'מספר זיהוי מס (אופציונלי)',
+  'Tax ID updated': 'מספר זיהוי המס עודכן',
   'Team ID is required': 'מזהה צוות הוא שדה חובה',
   'Terms of service': 'תנאי שירות',
   'The address will remain on your account; only the link to this organization will be removed.':
@@ -1009,12 +1011,12 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
-    'פעולה זו תיצור קוד אישור העברה עבור הדומיין שלכם. שמרו אותו חסוי עד לשימוש אצל הרשם הקולט.',
+    'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',
   'Ticket submitted': 'הפנייה נשלחה',
   'Tickets can be submitted anytime; we reply during support hours.':
     'ניתן לשלוח פניות בכל עת; אנו משיבים בשעות התמיכה.',
   'Time to live in seconds (default: 3600)':
-    'זמן חיים בשניות (ברירת מחדל: 3600)',
+    'זמן החיים (TTL) בשניות (ברירת מחדל: 3600)',
   'To remove this card, replace it with another payment method on your account first. Once a new primary card is set, you can remove this one.':
     'כדי להסיר את הכרטיס הזה, החליפו אותו תחילה באמצעי תשלום אחר בחשבון שלכם. לאחר הגדרת כרטיס ראשי חדש, תוכלו להסיר את הכרטיס הזה.',
   'Token refresh and authorization flows using this secret will stop working immediately. This cannot be undone.':
@@ -1026,16 +1028,16 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Total impact': 'השפעה כוללת',
   Transfer: 'העברה',
   'Transfer an existing domain': 'העברת דומיין קיים',
-  'Transfer authorization code generated': 'קוד אישור ההעברה נוצר',
+  'Transfer authorization code generated': 'קוד ההרשאה להעברה נוצר',
   'Transfer cancelled': 'ההעברה בוטלה',
   'Transfer completed': 'ההעברה הושלמה',
   'Transfer could not be completed': 'לא ניתן היה להשלים את ההעברה',
   'Transfer could not be completed. Please try again.':
     'לא ניתן היה להשלים את ההעברה. נסו שוב.',
-  'Transfer domain in': 'העברת דומיין פנימה',
+  'Transfer domain in': 'העברת דומיין אל Appwrite', // pragma: allowlist secret
   'Transfer fees are charged to the selected payment method.':
     'עמלות ההעברה נגבות מאמצעי התשלום שנבחר.',
-  'Transfer in': 'העברה פנימה',
+  'Transfer in': 'העברה אל Appwrite', // pragma: allowlist secret
   'Transfer in progress': 'העברה בתהליך',
   'Transfer payment confirmed': 'תשלום ההעברה אושר',
   'Transfer summary': 'סיכום העברה',
@@ -1051,7 +1053,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Type at least 2 characters to see suggestions':
     'הקלידו לפחות 2 תווים לקבלת הצעות',
   'URLs shown on the OAuth2 consent screen.':
-    'כתובות URL המוצגות במסך הסכמת OAuth2.',
+    'כתובות URL המוצגות במסך ההסכמה של OAuth2.',
   'Unable to load estimation': 'לא ניתן לטעון את ההערכה',
   'Unable to load estimation.': 'לא ניתן לטעון את ההערכה.',
   Unavailable: 'לא זמין',
@@ -1064,7 +1066,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Unpin project': 'ביטול הצמדת פרויקט',
   'Unselected domains will be deleted.': 'דומיינים שלא נבחרו יימחקו.',
   'Unselected members will be removed from the organization.':
-    'חברי צוות שלא נבחרו יוסרו מהארגון.',
+    'חברים שלא נבחרו יוסרו מהארגון.',
   'Unselected projects and everything in them will be deleted.':
     'פרויקטים שלא נבחרו וכל מה שבתוכם יימחקו.',
   Unverified: 'לא מאומת',
@@ -1088,7 +1090,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.':
     'העלו קובץ DNS zone (בפורמט txt.) לייבוא רשומות DNS. גודל הקובץ המרבי הוא 5MB.',
   'Upload a PNG logo or pick an existing file from the Apps bucket. Logos are publicly readable and writable by your team.':
-    'העלו לוגו PNG או בחרו קובץ קיים מדלי האפליקציות. הלוגואים ניתנים לקריאה ציבורית ולכתיבה על ידי הצוות שלכם.',
+    'העלו לוגו PNG או בחרו קובץ קיים מהבאקט Apps. הלוגואים פתוחים לקריאה ציבורית ולכתיבה על ידי הצוות שלכם.',
   'Upload a PNG logo to get started.': 'העלו לוגו PNG כדי להתחיל.',
   Usage: 'שימוש',
   'Usage details': 'פרטי שימוש',
@@ -1104,8 +1106,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'השתמשו במזהה הזה בעת אינטגרציה עם Appwrite API, webhooks או ערכות SDK. גם התמיכה עשויה לבקש את המזהה הזה בעת טיפול בבעיות.', // pragma: allowlist secret
   'Use this address': 'שימוש בכתובת הזו',
   'Used for registry contact and invoicing.':
-    'משמש ליצירת קשר עם הרישום ולהנפקת חשבוניות.',
-  'Used in the public listing URL': 'משמש בכתובת הרישום הציבורי',
+    'משמש כפרטי הקשר במרשם ולהנפקת חשבוניות.',
+  'Used in the public listing URL':
+    'משמש בכתובת הציבורית של דף האפליקציה',
   Value: 'ערך',
   Verified: 'מאומת',
   Verify: 'אימות',
@@ -1113,7 +1116,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'View charges breakdown': 'צפייה בפירוט החיובים',
   'View detailed pricing': 'צפייה בתמחור מפורט',
   'View invoice': 'צפייה בחשבונית',
-  'View members': 'צפייה בחברי צוות',
+  'View members': 'צפייה בחברים',
   'View project': 'צפייה בפרויקט',
   "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
     'לא הצלחנו לטעון הצעת מחיר לדומיין הזה. עדיין אפשר להמשיך, הסכום לתשלום מאושר בעת השלמת התשלום.',
@@ -1136,7 +1139,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'When your additional usage spending (beyond plan limits) reaches':
     'כשההוצאה על שימוש נוסף (מעבר למגבלות התוכנית) מגיעה ל',
   'Who needs this:': 'למי זה נחוץ:',
-  'Who should reach out': 'מי כדאי שיפנה',
+  'Who should reach out': 'מי צריך לפנות',
   'Why it matters:': 'למה זה חשוב:',
   'Will delete': 'יימחק',
   You: 'אתם',
@@ -1147,9 +1150,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   "You don't have permission to create projects.":
     'אין לכם הרשאה ליצור פרויקטים.',
   "You don't have permission to invite members.":
-    'אין לכם הרשאה להזמין חברי צוות.',
+    'אין לכם הרשאה להזמין חברים.',
   'You have': 'יש לכם',
-  'You have reached your member limit.': 'הגעתם למגבלת חברי הצוות שלכם.',
+  'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
   'You will be charged': 'תחויבו בסך',
   'You will be charged for each organization member beyond the plan limit.':
     'תחויבו עבור כל חבר ארגון מעבר למגבלת התוכנית.',
@@ -1200,7 +1203,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'for a confirmation email with your ticket reference.':
     'לקבלת אימייל אישור עם מספר הפנייה שלכם.',
   'from the team? They will lose access to all organization resources.':
-    'מהצוות? הוא יאבד גישה לכל משאבי הארגון.',
+    'מהארגון? הגישה לכל משאבי הארגון תיחסם עבורו.',
   'has been created': 'נוצר',
   'has been deleted': 'נמחק',
   'has been transferred to': 'הועבר אל',
@@ -1214,10 +1217,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   items: 'פריטים',
   'maintains rigorous security practices for data protection, availability, and confidentiality.':
     'מקיימת נהלי אבטחה קפדניים להגנת נתונים, זמינות וסודיות.',
-  member: 'חבר צוות',
-  'member slot': 'מקום לחבר צוות',
-  'member slots': 'מקומות לחברי צוות',
-  members: 'חברי צוות',
+  member: 'חבר',
+  'member slot': 'מקום לחבר',
+  'member slots': 'מקומות לחברים',
+  members: 'חברים',
   month: 'חודש',
   'more platforms': 'פלטפורמות נוספות',
   "now. Then you'll be charged": 'כעת. לאחר מכן תחויבו בסך',
@@ -1250,14 +1253,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'the end of your billing period': 'סוף תקופת החיוב שלכם',
   'the selected organization': 'הארגון שנבחר',
   'this app': 'האפליקציה הזו',
-  'this member': 'חבר הצוות הזה',
+  'this member': 'החבר הזה',
   threshold: 'סף',
   to: 'אל',
   'to buy another domain.': 'כדי לרכוש דומיין נוסף.',
   'to confirm': 'לאישור',
   'to continue.': 'כדי להמשיך.',
   'to delete': 'למחיקה',
-  'to invite more members.': 'כדי להזמין חברי צוות נוספים.',
+  'to invite more members.': 'כדי להזמין חברים נוספים.',
   'to keep': 'לשמירה',
   'to keep.': 'לשמירה.',
   'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.': // pragma: allowlist secret
@@ -1287,4 +1290,5 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'במהלך סקירת ספקים, הערכת אבטחה או רכש ארגוני',
   'When pay-as-you-go plans do not meet your support or billing needs':
     'כשתוכניות תשלום לפי שימוש אינן עונות על צורכי התמיכה או החיוב שלכם',
+  'Payment setup did not complete': 'הגדרת התשלום לא הושלמה',
 }

@@ -24,7 +24,7 @@ export function SitesGitPreviewsVisual() {
   return (
     <ProductFeatureVisualFrame
       eyebrow="GitHub"
-      title="Pull request"
+      title={t('Pull request')}
       headerIconSrc="/icons/github.svg"
     >
       <div className="flex gap-3">

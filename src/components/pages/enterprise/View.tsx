@@ -136,8 +136,10 @@ export function View() {
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <MarketingSectionHeading
-            title="Why enterprise teams choose Appwrite"
-            description="Give your developers a complete backend platform so they can focus on product innovation instead of infrastructure glue code."
+            title={t('Why enterprise teams choose Appwrite') /* pragma: allowlist secret */}
+            description={t(
+              'Give your developers a complete backend platform so they can focus on product innovation instead of infrastructure glue code.',
+            )}
             size="md"
           />
           <div className="mt-10">
@@ -149,8 +151,10 @@ export function View() {
       <section className="border-b border-border bg-muted/20 py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <MarketingSectionHeading
-            title="Trusted by teams at scale"
-            description="From global enterprises to fast-growing product companies, teams rely on Appwrite to ship secure applications."
+            title={t('Trusted by teams at scale')}
+            description={t(
+              'From global enterprises to fast-growing product companies, teams rely on Appwrite to ship secure applications.', // pragma: allowlist secret
+            )}
             size="md"
           />
           <div className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
@@ -202,8 +206,10 @@ export function View() {
         <SectionSoftLight tone="teal" position="right" />
         <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
           <MarketingSectionHeading
-            title="Everything in Pro, plus enterprise capabilities"
-            description="Operational and pricing features for teams that need more than standard Pro limits."
+            title={t('Everything in Pro, plus enterprise capabilities')}
+            description={t(
+              'Operational and pricing features for teams that need more than standard Pro limits.',
+            )}
             size="md"
           />
           <div className="mt-10">
@@ -238,8 +244,10 @@ export function View() {
       <SecurityComplianceSection onContactSales={scrollToForm} />
 
       <MarketingFaqSection
-        title="Enterprise FAQ"
-        description="Common questions about pricing, support, compliance, and getting started."
+        title={t('Enterprise FAQ')}
+        description={t(
+          'Common questions about pricing, support, compliance, and getting started.',
+        )}
         items={enterpriseFaqItems}
       />
 
@@ -251,8 +259,10 @@ export function View() {
               <MarketingSectionHeading
                 align="left"
                 size="md"
-                title="Talk to our enterprise team"
-                description="Ready to explore a custom plan? Share your requirements and one of our experts will follow up with a tailored proposal."
+                title={t('Talk to our enterprise team')}
+                description={t(
+                  'Ready to explore a custom plan? Share your requirements and one of our experts will follow up with a tailored proposal.',
+                )}
               />
               <ul className="mt-6 space-y-3">
                 {enterpriseFormBullets.map((item) => (
@@ -268,9 +278,11 @@ export function View() {
               <MarketingApplicationForm
                 fields={ENTERPRISE_FORM_FIELDS}
                 defaultValues={formDefaultValues}
-                submitLabel="Submit"
-                successTitle="Thank you for your submission"
-                successDescription="Your details have been sent successfully. Our team will get back to you as soon as possible."
+                submitLabel={t('Submit')}
+                successTitle={t('Thank you for your submission')}
+                successDescription={t(
+                  'Your details have been sent successfully. Our team will get back to you as soon as possible.',
+                )}
                 onSubmit={async (values) => {
                   await submitEnterpriseApplication({
                     firstName: values.firstName ?? '',

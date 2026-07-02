@@ -155,7 +155,7 @@ function ConnectionsTableHead() {
           {t('Client')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
-          {t('State')}
+          {t('Connection state')}
         </TableHead>
         <TableHead className="sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]">
           {t('Duration')}

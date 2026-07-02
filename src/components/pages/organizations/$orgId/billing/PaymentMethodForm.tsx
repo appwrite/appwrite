@@ -453,7 +453,7 @@ export function PaymentMethodForm({
             finalIntent?.last_setup_error?.message ??
               (finalIntent?.status === 'requires_payment_method'
                 ? t('The card was declined or authentication was cancelled. Please try again or use a different card.')
-                : `Payment setup did not complete (status: ${finalIntent?.status ?? 'unknown'}).`),
+                : `${t('Payment setup did not complete')} (status: ${finalIntent?.status ?? 'unknown'}).`),
           )
         }
 

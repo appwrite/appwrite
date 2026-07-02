@@ -3,6 +3,8 @@
  * Handles various error types including API errors, code errors, not found errors, etc.
  */
 
+import { translate } from '@/lib/i18n/translate'
+
 export interface FormattedError {
   title: string
   message: string
@@ -80,8 +82,8 @@ export function formatError(
   // Handle null/undefined
   if (!error) {
     return {
-      title: 'Error',
-      message: fallbackMessage,
+      title: translate('Error'),
+      message: translate(fallbackMessage),
       isUserFriendly: true,
     }
   }
@@ -101,9 +103,9 @@ export function formatError(
       lowerMessage.includes('does not exist')
     ) {
       return {
-        title: 'Not Found',
+        title: translate('Not Found'),
         message:
-          'The requested resource could not be found. It may have been deleted or you may not have permission to access it.',
+          translate('The requested resource could not be found. It may have been deleted or you may not have permission to access it.'),
         isUserFriendly: true,
       }
     }
@@ -126,10 +128,10 @@ export function formatError(
         !message.includes('TypeError')
       const messageToShow = isUserFriendlyMessage
         ? message
-        : 'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.'
+        : translate('You do not have permission to perform this action. Please contact your administrator if you believe this is an error.')
       return {
-        title: 'Access Denied',
-        message: messageToShow,
+        title: translate('Access Denied'),
+        message: translate(messageToShow),
         isUserFriendly: true,
       }
     }
@@ -137,8 +139,8 @@ export function formatError(
     // Check for forbidden errors
     if (code === 403 || lowerMessage.includes('forbidden')) {
       return {
-        title: 'Forbidden',
-        message: 'You do not have permission to access this resource.',
+        title: translate('Forbidden'),
+        message: translate('You do not have permission to access this resource.'),
         isUserFriendly: true,
       }
     }
@@ -154,11 +156,11 @@ export function formatError(
       const specificMessage =
         message.length > 0 && !message.includes('400')
           ? message
-          : 'The request is invalid. Please check your input and try again.'
+          : translate('The request is invalid. Please check your input and try again.')
 
       return {
-        title: 'Invalid Request',
-        message: specificMessage,
+        title: translate('Invalid Request'),
+        message: translate(specificMessage),
         isUserFriendly: true,
       }
     }
@@ -172,9 +174,9 @@ export function formatError(
       lowerMessage.includes('internal error')
     ) {
       return {
-        title: 'Server Error',
+        title: translate('Server Error'),
         message:
-          'An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.',
+          translate('An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.'),
         isUserFriendly: true,
       }
     }
@@ -188,9 +190,9 @@ export function formatError(
       lowerMessage.includes('connection')
     ) {
       return {
-        title: 'Connection Error',
+        title: translate('Connection Error'),
         message:
-          'Unable to connect to the server. Please check your internet connection and try again.',
+          translate('Unable to connect to the server. Please check your internet connection and try again.'),
         isUserFriendly: true,
       }
     }
@@ -198,8 +200,8 @@ export function formatError(
     // Check for timeout errors
     if (error.name === 'TimeoutError' || lowerMessage.includes('timeout')) {
       return {
-        title: 'Request Timeout',
-        message: 'The request took too long to complete. Please try again.',
+        title: translate('Request Timeout'),
+        message: translate('The request took too long to complete. Please try again.'),
         isUserFriendly: true,
       }
     }
@@ -215,16 +217,16 @@ export function formatError(
 
     if (isTechnicalError) {
       return {
-        title: 'Error',
-        message: fallbackMessage,
+        title: translate('Error'),
+        message: translate(fallbackMessage),
         isUserFriendly: true,
       }
     }
 
     // Message seems user-friendly, use it
     return {
-      title: 'Error',
-      message: message || fallbackMessage,
+      title: translate('Error'),
+      message: translate(message || fallbackMessage),
       isUserFriendly: true,
     }
   }
@@ -244,8 +246,8 @@ export function formatError(
 
   // Fallback for unknown error types
   return {
-    title: 'Error',
-    message: fallbackMessage,
+    title: translate('Error'),
+    message: translate(fallbackMessage),
     isUserFriendly: true,
   }
 }
@@ -275,7 +277,7 @@ export function getErrorTitle(
   fallbackTitle: string = 'Error',
 ): string {
   const formatted = formatError(error, '')
-  return formatted.title || fallbackTitle
+  return formatted.title || translate(fallbackTitle)
 }
 
 /**

@@ -22,13 +22,13 @@ export function AuthSecurityVisual() {
     <div className="space-y-4">
       <div className="grid gap-3 xl:grid-cols-4">
         <MockPolicyCard
-          title="Session length"
-          description="Session validity duration."
+          title={t('Session length')}
+          description={t('Session validity duration.')}
           footer={<p className="text-[12px] font-medium text-foreground">{t('30 days')}</p>}
         />
         <MockPolicyCard
-          title="Sessions limit"
-          description="Concurrent sessions per user."
+          title={t('Sessions limit')}
+          description={t('Concurrent sessions per user.')}
           footer={
             <p className="text-[12px] font-medium text-foreground">
               {t('10 active sessions')}
@@ -36,8 +36,8 @@ export function AuthSecurityVisual() {
           }
         />
         <MockPolicyCard
-          title="Session alerts"
-          description="Notify on new sign-in."
+          title={t('Session alerts')}
+          description={t('Notify on new sign-in.')}
           footer={
             <div className="flex items-center justify-between gap-2">
               <Badge variant="success" className="text-[10px]">
@@ -53,8 +53,8 @@ export function AuthSecurityVisual() {
           }
         />
         <MockPolicyCard
-          title="Invalidate sessions"
-          description="Revoke after password change."
+          title={t('Invalidate sessions')}
+          description={t('Revoke after password change.')}
           footer={
             <div className="flex items-center justify-between gap-2">
               <Badge variant="success" className="text-[10px]">
@@ -80,8 +80,8 @@ export function AuthSecurityVisual() {
             {t('Strength presets, compliance checks, and reuse rules.')}
           </p>
           <div className="mt-3 space-y-2">
-            <MockSwitchRow label="Dictionary check" checked />
-            <MockSwitchRow label="Personal data check" checked />
+            <MockSwitchRow label={t('Dictionary check')} checked />
+            <MockSwitchRow label={t('Personal data check')} checked />
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Badge variant="inactive" className="text-[10px]">
@@ -104,9 +104,9 @@ export function AuthSecurityVisual() {
             {t('Email policies')}
           </p>
           <div className="mt-3 space-y-2">
-            <MockSwitchRow label="Block disposable emails" checked />
-            <MockSwitchRow label="Block aliased emails" checked />
-            <MockSwitchRow label="Block free providers" />
+            <MockSwitchRow label={t('Block disposable emails')} checked />
+            <MockSwitchRow label={t('Block aliased emails')} checked />
+            <MockSwitchRow label={t('Block free providers')} />
           </div>
         </div>
 

@@ -7,7 +7,7 @@ import { useT } from '@/lib/i18n/translate'
 export function AuthMfaVisual() {
   const t = useT()
   return (
-    <ProductFeatureVisualFrame title="Multi-factor authentication" eyebrow="Security">
+    <ProductFeatureVisualFrame title={t('Multi-factor authentication')} eyebrow={t('Security')}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -54,8 +54,8 @@ export function AuthMfaVisual() {
             </div>
 
             <MockSwitchRow
-              label="Require MFA for sensitive actions"
-              description="Extra verification before account changes"
+              label={t('Require MFA for sensitive actions')}
+              description={t('Extra verification before account changes')}
               checked
               icon={ShieldCheck}
             />

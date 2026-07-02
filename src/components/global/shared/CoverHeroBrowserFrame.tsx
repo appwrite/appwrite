@@ -6,6 +6,7 @@ import {
   getCoverScreenshotGlassPreviewStyles,
 } from '@/lib/cover-generator/cover-screenshot-frame'
 import type { CoverThemeId } from '@/lib/cover-generator/themes'
+import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
 type CoverHeroBrowserFrameProps = {
@@ -71,6 +72,7 @@ export function CoverHeroBrowserFrame({
   className,
   placeholder,
 }: CoverHeroBrowserFrameProps) {
+  const t = useT()
   const glass = getCoverScreenshotGlassPreviewStyles(themeId)
   const layout = buildCoverScreenshotFrameShellLayout(
     0,
@@ -135,7 +137,7 @@ export function CoverHeroBrowserFrame({
         {src ? (
           <img
             src={src}
-            alt={alt}
+            alt={t(alt)}
             draggable={false}
             className="block h-full w-full object-cover"
             style={{
@@ -147,7 +149,7 @@ export function CoverHeroBrowserFrame({
         ) : (
           placeholder ?? (
             <div className="flex h-full w-full items-center justify-center bg-[#17171c] text-[13px] text-white/45">
-              Screenshot preview
+              {t('Screenshot preview')}
             </div>
           )
         )}

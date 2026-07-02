@@ -29,7 +29,7 @@ function TerminalLine({ text, tone }: (typeof TERMINAL_LINES)[number]) {
 export function FunctionsLocalVisual() {
   const t = useT()
   return (
-    <ProductFeatureVisualFrame eyebrow="Local dev" title="Appwrite CLI">
+    <ProductFeatureVisualFrame eyebrow={t('Local dev')} title="Appwrite CLI"> {/* pragma: allowlist secret */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>

@@ -229,6 +229,7 @@ function FileTreeNodes({
   canDelete: boolean
   depth: number
 }) {
+  const t = useT()
   return (
     <>
       {nodes.map((node) => {
@@ -310,7 +311,7 @@ function FileTreeNodes({
                   e.stopPropagation()
                   onDeleteFile(node.path)
                 }}
-                aria-label={`Remove ${node.name}`}
+                aria-label={`${t('Remove')} ${node.name}`}
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -627,8 +628,8 @@ export function View() {
       if (paths.some((p) => p.startsWith('src/'))) next.add('src')
       return next
     })
-    toast.success(`Loaded template: ${template.label}`)
-  }, [])
+    toast.success(`${t('Loaded template:')} ${t(template.label)}`)
+  }, [t])
 
   const activeContent = files[activeFile] ?? ''
   const activeLang = getLanguageFromPath(activeFile)
@@ -769,8 +770,8 @@ export function View() {
     setDirtyFiles((prev) => new Set(prev).add(activeFile))
     setGzipSize(null)
     runFindInFile()
-    toast.success('Replaced')
-  }, [findMatches, findMatchIndex, replaceValue, activeFile, runFindInFile])
+    toast.success(t('Replaced'))
+  }, [findMatches, findMatchIndex, replaceValue, activeFile, runFindInFile, t])
 
   const replaceAll = useCallback(() => {
     const editor = editorRef.current
@@ -795,9 +796,9 @@ export function View() {
     setGzipSize(null)
     runFindInFile()
     toast.success(
-      `Replaced ${findMatches.length} occurrence${findMatches.length === 1 ? '' : 's'}`,
+      `${t('Replaced')} ${findMatches.length} ${findMatches.length === 1 ? t('occurrence') : t('occurrences')}`,
     )
-  }, [findMatches, replaceValue, activeFile, runFindInFile])
+  }, [findMatches, replaceValue, activeFile, runFindInFile, t])
 
   const handleEditorChange = useCallback(
     (value: string | undefined) => {
@@ -816,7 +817,7 @@ export function View() {
     const path = newFilePath.trim()
     if (!path) return
     if (files[path]) {
-      toast.error('A file with this path already exists')
+      toast.error(t('A file with this path already exists'))
       return
     }
     setCurrentTemplateLabel(null)
@@ -825,13 +826,13 @@ export function View() {
     setOpenFiles((prev) => (prev.includes(path) ? prev : [...prev, path]))
     setNewFilePath('')
     setAddFileOpen(false)
-    toast.success('File added')
-  }, [newFilePath, files])
+    toast.success(t('File added'))
+  }, [newFilePath, files, t])
 
   const deleteFile = useCallback(
     (path: string) => {
       if (filePaths.length <= 1) {
-        toast.error('Keep at least one file')
+        toast.error(t('Keep at least one file'))
         return
       }
       setCurrentTemplateLabel(null)
@@ -851,9 +852,9 @@ export function View() {
         return next
       })
       setDeleteConfirmPath(null)
-      toast.success('File removed')
+      toast.success(t('File removed'))
     },
-    [filePaths, activeFile],
+    [filePaths, activeFile, t],
   )
 
   const bundleForExport = useCallback(() => {
@@ -862,7 +863,7 @@ export function View() {
 
   const compressAndPrepare = useCallback(async () => {
     if (typeof CompressionStream === 'undefined') {
-      toast.error('Gzip compression is not supported in this browser')
+      toast.error(t('Gzip compression is not supported in this browser'))
       return
     }
     setIsCompressing(true)
@@ -870,18 +871,18 @@ export function View() {
       const payload = bundleForExport()
       const gzipBytes = await gzipString(payload)
       setGzipSize(gzipBytes.byteLength)
-      toast.success(`Compressed to ${gzipBytes.byteLength} bytes`)
+      toast.success(`${t('Compressed to')} ${gzipBytes.byteLength} ${t('bytes')}`)
     } catch (e) {
-      toast.error('Failed to compress code')
+      toast.error(t('Failed to compress code'))
       console.error(e)
     } finally {
       setIsCompressing(false)
     }
-  }, [bundleForExport])
+  }, [bundleForExport, t])
 
   const downloadGzip = useCallback(async () => {
     if (typeof CompressionStream === 'undefined') {
-      toast.error('Gzip compression is not supported in this browser')
+      toast.error(t('Gzip compression is not supported in this browser'))
       return
     }
     setIsCompressing(true)
@@ -896,14 +897,14 @@ export function View() {
       a.click()
       URL.revokeObjectURL(url)
       setGzipSize(gzipBytes.byteLength)
-      toast.success('Downloaded function.tar.gz')
+      toast.success(t('Downloaded function.tar.gz'))
     } catch (e) {
-      toast.error('Failed to create gzip file')
+      toast.error(t('Failed to create gzip file'))
       console.error(e)
     } finally {
       setIsCompressing(false)
     }
-  }, [bundleForExport])
+  }, [bundleForExport, t])
 
   const handleEditorAreaKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -937,7 +938,7 @@ export function View() {
 
   const copyGzipBase64 = useCallback(async () => {
     if (typeof CompressionStream === 'undefined') {
-      toast.error('Gzip compression is not supported in this browser')
+      toast.error(t('Gzip compression is not supported in this browser'))
       return
     }
     setIsCompressing(true)
@@ -947,14 +948,14 @@ export function View() {
       const base64 = uint8ArrayToBase64(gzipBytes)
       await navigator.clipboard.writeText(base64)
       setGzipSize(gzipBytes.byteLength)
-      toast.success('Gzip (base64) copied to clipboard')
+      toast.success(t('Gzip (base64) copied to clipboard'))
     } catch (e) {
-      toast.error('Failed to copy')
+      toast.error(t('Failed to copy'))
       console.error(e)
     } finally {
       setIsCompressing(false)
     }
-  }, [bundleForExport])
+  }, [bundleForExport, t])
 
   return (
     <div className="flex flex-1 min-h-0 flex-col bg-background">
@@ -969,7 +970,7 @@ export function View() {
                   size="icon"
                   className="h-8 w-8 shrink-0"
                   asChild
-                  aria-label="Back to functions"
+                  aria-label={t('Back to functions')}
                 >
                   <Link
                     to="/projects/$projectId/functions"
@@ -980,14 +981,14 @@ export function View() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>Back to functions</p>
+                <p>{t('Back to functions')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <span className="text-[13px] font-medium text-foreground truncate">
             {currentTemplateLabel
-              ? `Function editor – ${currentTemplateLabel}`
-              : 'Function editor'}
+              ? `${t('Function editor')} – ${t(currentTemplateLabel)}`
+              : t('Function editor')}
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -1000,7 +1001,7 @@ export function View() {
               disabled={isCompressing}
             >
               <Download className="h-4 w-4" />
-              Prepare for deployment
+              {t('Prepare for deployment')}
             </Button>
             <Button
               variant="outline"
@@ -1010,7 +1011,7 @@ export function View() {
               disabled={isCompressing}
             >
               <Download className="h-4 w-4" />
-              Download gzip
+              {t('Download gzip')}
             </Button>
             <Button
               variant="outline"
@@ -1020,7 +1021,7 @@ export function View() {
               disabled={isCompressing}
             >
               <Copy className="h-4 w-4" />
-              Copy gzip (base64)
+              {t('Copy gzip (base64)')}
             </Button>
           </TooltipProvider>
           <TooltipProvider delayDuration={0}>
@@ -1036,11 +1037,13 @@ export function View() {
                   }}
                 >
                   <Search className="h-4 w-4" />
-                  Find
+                  {t('Find')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>Find in file ({shortcutFind})</p>
+                <p>
+                  {t('Find in file')} ({shortcutFind})
+                </p>
               </TooltipContent>
             </Tooltip>
             <Tooltip>
@@ -1055,11 +1058,13 @@ export function View() {
                   }}
                 >
                   <Replace className="h-4 w-4" />
-                  Replace
+                  {t('Replace')}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>Find and replace ({shortcutReplace})</p>
+                <p>
+                  {t('Find and replace')} ({shortcutReplace})
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -1071,7 +1076,7 @@ export function View() {
                 className="h-9 gap-1.5 text-[13px]"
               >
                 <FileCode className="h-4 w-4" />
-                Templates
+                {t('Templates')}
                 <ChevronDownIcon className="h-3.5 w-3.5 opacity-70" />
               </Button>
             </DropdownMenuTrigger>
@@ -1081,7 +1086,7 @@ export function View() {
                   key={template.id}
                   onClick={() => applyTemplate(template)}
                 >
-                  {template.label}
+                  {t(template.label)}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -1091,11 +1096,12 @@ export function View() {
 
       {gzipSize !== null && (
         <div className="shrink-0 border-b border-border bg-muted/20 px-3 py-1.5 text-[12px] text-muted-foreground sm:px-4">
-          Compressed:{' '}
+          {t('Compressed:')}{' '}
           <span className="font-medium text-foreground tabular-nums">
             {gzipSize}
           </span>{' '}
-          bytes ({filePaths.length} file{filePaths.length === 1 ? '' : 's'})
+          {t('bytes')} ({filePaths.length}{' '}
+          {filePaths.length === 1 ? t('file') : t('files')})
         </div>
       )}
 
@@ -1120,7 +1126,7 @@ export function View() {
                 {/* Explorer header – no close button (moved to left of tabs) */}
                 <div className="flex h-8 shrink-0 items-center justify-between border-b border-border px-2">
                   <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                    Explorer
+                    {t('Explorer')}
                   </span>
                   <TooltipProvider delayDuration={0}>
                     <div className="flex items-center gap-0.5">
@@ -1130,13 +1136,13 @@ export function View() {
                             type="button"
                             className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             onClick={() => setExpandedFolders(new Set())}
-                            aria-label="Collapse all"
+                            aria-label={t('Collapse all')}
                           >
                             <ListCollapse className="h-3.5 w-3.5" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom">
-                          <p>Collapse all</p>
+                          <p>{t('Collapse all')}</p>
                         </TooltipContent>
                       </Tooltip>
                       <Tooltip>
@@ -1145,13 +1151,13 @@ export function View() {
                             type="button"
                             className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             onClick={() => setAddFileOpen(true)}
-                            aria-label="New file"
+                            aria-label={t('New file')}
                           >
                             <Plus className="h-3.5 w-3.5" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom">
-                          <p>New file</p>
+                          <p>{t('New file')}</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -1162,20 +1168,23 @@ export function View() {
                     <Search className="absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     <Input
                       type="search"
-                      placeholder="Search files..."
+                      placeholder={t('Search files...')}
                       value={fileSearchQuery}
                       onChange={(e) => setFileSearchQuery(e.target.value)}
                       className="h-7 ps-7 pe-2 text-[12px] font-normal"
-                      aria-label="Search files"
+                      aria-label={t('Search files')}
                     />
                   </div>
                 </div>
                 <ScrollArea className="flex-1">
-                  <nav className="py-1 pe-1 ps-0.5" aria-label="Project files">
+                  <nav
+                    className="py-1 pe-1 ps-0.5"
+                    aria-label={t('Project files')}
+                  >
                     {fileTree.length === 0 ? (
                       <div className="px-3 py-4 text-center">
                         <p className="text-[12px] text-muted-foreground">
-                          No files yet
+                          {t('No files yet')}
                         </p>
                         <Button
                           variant="ghost"
@@ -1184,13 +1193,13 @@ export function View() {
                           onClick={() => setAddFileOpen(true)}
                         >
                           <Plus className="h-3 w-3 me-1.5" />
-                          New file
+                          {t('New file')}
                         </Button>
                       </div>
                     ) : filteredFileTree.length === 0 ? (
                       <div className="px-3 py-4 text-center">
                         <p className="text-[12px] text-muted-foreground">
-                          No matching files
+                          {t('No matching files')}
                         </p>
                       </div>
                     ) : (
@@ -1237,13 +1246,13 @@ export function View() {
                           type="button"
                           className="flex h-8 w-8 shrink-0 items-center justify-center border-e border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
                           onClick={() => setExplorerOpen(false)}
-                          aria-label="Close explorer"
+                          aria-label={t('Close explorer')}
                         >
                           <PanelLeftClose className="h-3.5 w-3.5" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>Close explorer</p>
+                        <p>{t('Close explorer')}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -1311,7 +1320,7 @@ export function View() {
                             {isDirty && (
                               <Circle
                                 className="h-1 w-1 shrink-0 fill-current text-amber-500"
-                                aria-label="Unsaved"
+                                aria-label={t('Unsaved')}
                               />
                             )}
                             {canCloseTab && (
@@ -1320,7 +1329,7 @@ export function View() {
                                 className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground focus:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring text-muted-foreground"
                                 onClick={(e) => closeTab(path, e)}
                                 onDragStart={(e) => e.stopPropagation()}
-                                aria-label={`Close ${name}`}
+                                aria-label={`${t('Close')} ${name}`}
                               >
                                 <X className="h-3 w-3" />
                               </button>
@@ -1336,30 +1345,30 @@ export function View() {
                   <div className="flex h-[41px] shrink-0 items-center border-b border-border bg-muted/30 px-2 gap-2">
                     <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
                       <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
-                        Find
+                        {t('Find')}
                       </label>
                       <Input
                         ref={findInputRef}
                         type="search"
-                        placeholder={`Search in file (${shortcutFind})`}
+                        placeholder={`${t('Search in file')} (${shortcutFind})`}
                         value={findInFileQuery}
                         onChange={(e) => setFindInFileQuery(e.target.value)}
                         className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                        aria-label="Find in file"
+                        aria-label={t('Find in file')}
                       />
                     </div>
                     {findPanelMode === 'replace' && (
                       <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
                         <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
-                          Replace
+                          {t('Replace')}
                         </label>
                         <Input
                           type="text"
-                          placeholder="Replace with"
+                          placeholder={t('Replace with')}
                           value={replaceValue}
                           onChange={(e) => setReplaceValue(e.target.value)}
                           className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                          aria-label="Replace with"
+                          aria-label={t('Replace with')}
                         />
                       </div>
                     )}
@@ -1376,7 +1385,7 @@ export function View() {
                         className="h-7 w-7 shrink-0"
                         onClick={() => goToFindMatch(-1)}
                         disabled={findMatches.length === 0}
-                        aria-label="Previous match"
+                        aria-label={t('Previous match')}
                       >
                         <ChevronUp className="h-3.5 w-3.5" />
                       </Button>
@@ -1387,7 +1396,7 @@ export function View() {
                         className="h-7 w-7 shrink-0"
                         onClick={() => goToFindMatch(1)}
                         disabled={findMatches.length === 0}
-                        aria-label="Next match"
+                        aria-label={t('Next match')}
                       >
                         <ChevronDown className="h-3.5 w-3.5" />
                       </Button>
@@ -1401,7 +1410,7 @@ export function View() {
                             onClick={replaceCurrent}
                             disabled={findMatches.length === 0}
                           >
-                            Replace
+                            {t('Replace')}
                           </Button>
                           <Button
                             type="button"
@@ -1411,7 +1420,7 @@ export function View() {
                             onClick={replaceAll}
                             disabled={findMatches.length === 0}
                           >
-                            All
+                            {t('All')}
                           </Button>
                         </>
                       )}
@@ -1435,7 +1444,7 @@ export function View() {
                             findDecorationIdsRef.current = []
                           }
                         }}
-                        aria-label="Close find"
+                        aria-label={t('Close find')}
                       >
                         <X className="h-3.5 w-3.5" />
                       </Button>
@@ -1463,7 +1472,7 @@ export function View() {
                     }}
                     loading={
                       <div className="flex h-full items-center justify-center bg-background text-muted-foreground">
-                        Loading editor...
+                        {t('Loading editor...')}
                       </div>
                     }
                     className={cn('rounded-b-lg')}
@@ -1478,19 +1487,23 @@ export function View() {
                     <span className="shrink-0 capitalize">{activeLang}</span>
                     {dirtyFiles.has(activeFile) && (
                       <span className="shrink-0 text-amber-600 dark:text-amber-500">
-                        Unsaved
+                        {t('Unsaved')}
                       </span>
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-3 tabular-nums">
                     {cursorPosition && (
                       <span>
-                        Ln {cursorPosition.lineNumber}, Col{' '}
+                        {t('Ln')} {cursorPosition.lineNumber}, {t('Col')}{' '}
                         {cursorPosition.column}
                       </span>
                     )}
-                    <span>{lineCount} lines</span>
-                    <span>{activeContent.length} chars</span>
+                    <span>
+                      {lineCount} {t('lines')}
+                    </span>
+                    <span>
+                      {activeContent.length} {t('chars')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1512,13 +1525,13 @@ export function View() {
                       type="button"
                       className="flex h-8 w-8 shrink-0 items-center justify-center border-e border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
                       onClick={() => setExplorerOpen(true)}
-                      aria-label="Open explorer"
+                      aria-label={t('Open explorer')}
                     >
                       <PanelLeft className="h-3.5 w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Open explorer</p>
+                    <p>{t('Open explorer')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1580,7 +1593,7 @@ export function View() {
                         {isDirty && (
                           <Circle
                             className="h-1 w-1 shrink-0 fill-current text-amber-500"
-                            aria-label="Unsaved"
+                            aria-label={t('Unsaved')}
                           />
                         )}
                         {canCloseTab && (
@@ -1589,7 +1602,7 @@ export function View() {
                             className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground focus:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring text-muted-foreground"
                             onClick={(e) => closeTab(path, e)}
                             onDragStart={(e) => e.stopPropagation()}
-                            aria-label={`Close ${name}`}
+                            aria-label={`${t('Close')} ${name}`}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -1604,30 +1617,30 @@ export function View() {
               <div className="flex h-[41px] shrink-0 items-center border-b border-border bg-muted/30 px-2 gap-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
                   <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
-                    Find
+                    {t('Find')}
                   </label>
                   <Input
                     ref={findInputRef}
                     type="search"
-                    placeholder={`Search in file (${shortcutFind})`}
+                    placeholder={`${t('Search in file')} (${shortcutFind})`}
                     value={findInFileQuery}
                     onChange={(e) => setFindInFileQuery(e.target.value)}
                     className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                    aria-label="Find in file"
+                    aria-label={t('Find in file')}
                   />
                 </div>
                 {findPanelMode === 'replace' && (
                   <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
                     <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
-                      Replace
+                      {t('Replace')}
                     </label>
                     <Input
                       type="text"
-                      placeholder="Replace with"
+                      placeholder={t('Replace with')}
                       value={replaceValue}
                       onChange={(e) => setReplaceValue(e.target.value)}
                       className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                      aria-label="Replace with"
+                      aria-label={t('Replace with')}
                     />
                   </div>
                 )}
@@ -1644,7 +1657,7 @@ export function View() {
                     className="h-7 w-7 shrink-0"
                     onClick={() => goToFindMatch(-1)}
                     disabled={findMatches.length === 0}
-                    aria-label="Previous match"
+                    aria-label={t('Previous match')}
                   >
                     <ChevronUp className="h-3.5 w-3.5" />
                   </Button>
@@ -1655,7 +1668,7 @@ export function View() {
                     className="h-7 w-7 shrink-0"
                     onClick={() => goToFindMatch(1)}
                     disabled={findMatches.length === 0}
-                    aria-label="Next match"
+                    aria-label={t('Next match')}
                   >
                     <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
@@ -1669,7 +1682,7 @@ export function View() {
                         onClick={replaceCurrent}
                         disabled={findMatches.length === 0}
                       >
-                        Replace
+                        {t('Replace')}
                       </Button>
                       <Button
                         type="button"
@@ -1679,7 +1692,7 @@ export function View() {
                         onClick={replaceAll}
                         disabled={findMatches.length === 0}
                       >
-                        All
+                        {t('All')}
                       </Button>
                     </>
                   )}
@@ -1703,7 +1716,7 @@ export function View() {
                         findDecorationIdsRef.current = []
                       }
                     }}
-                    aria-label="Close find"
+                    aria-label={t('Close find')}
                   >
                     <X className="h-3.5 w-3.5" />
                   </Button>
@@ -1731,7 +1744,7 @@ export function View() {
                 }}
                 loading={
                   <div className="flex h-full items-center justify-center bg-background text-muted-foreground">
-                    Loading editor...
+                    {t('Loading editor...')}
                   </div>
                 }
                 className={cn('rounded-b-lg')}
@@ -1745,18 +1758,23 @@ export function View() {
                 <span className="shrink-0 capitalize">{activeLang}</span>
                 {dirtyFiles.has(activeFile) && (
                   <span className="shrink-0 text-amber-600 dark:text-amber-500">
-                    Unsaved
+                    {t('Unsaved')}
                   </span>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-3 tabular-nums">
                 {cursorPosition && (
                   <span>
-                    Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
+                    {t('Ln')} {cursorPosition.lineNumber}, {t('Col')}{' '}
+                    {cursorPosition.column}
                   </span>
                 )}
-                <span>{lineCount} lines</span>
-                <span>{activeContent.length} chars</span>
+                <span>
+                  {lineCount} {t('lines')}
+                </span>
+                <span>
+                  {activeContent.length} {t('chars')}
+                </span>
               </div>
             </div>
           </div>
@@ -1767,15 +1785,15 @@ export function View() {
       <Dialog open={addFileOpen} onOpenChange={setAddFileOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>Add file</DialogTitle>
+            <DialogTitle>{t('Add file')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Enter the file path (e.g. src/utils.js or lib/helper.ts).
+              {t('Enter the file path (e.g. src/utils.js or lib/helper.ts).')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-4">
             <Label htmlFor="new-file-path" className="text-[13px]">
-              File path
+              {t('File path')}
             </Label>
             <Input
               id="new-file-path"

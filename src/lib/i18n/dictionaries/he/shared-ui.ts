@@ -3,11 +3,36 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heSharedUiDictionary: Record<string, string> = {
+  // Error formatting (toast titles and static messages) // pragma: allowlist secret
+  Error: 'שגיאה',
+  'Not Found': 'לא נמצא',
+  'Access Denied': 'הגישה נדחתה',
+  Forbidden: 'אין הרשאה',
+  'Invalid Request': 'בקשה לא תקינה',
+  'Server Error': 'שגיאת שרת',
+  'Connection Error': 'שגיאת חיבור',
+  'Request Timeout': 'חריגת זמן בבקשה',
+  'Something went wrong. Please try again.': 'משהו השתבש. נסו שוב.',
+  'The requested resource could not be found. It may have been deleted or you may not have permission to access it.':
+    'המשאב המבוקש לא נמצא. ייתכן שהוא נמחק או שאין לכם הרשאה לגשת אליו.',
+  'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.':
+    'אין לכם הרשאה לבצע פעולה זו. פנו למנהל המערכת אם לדעתכם מדובר בטעות.',
+  'You do not have permission to access this resource.':
+    'אין לכם הרשאה לגשת למשאב זה.',
+  'The request is invalid. Please check your input and try again.':
+    'הבקשה אינה תקינה. בדקו את הקלט ונסו שוב.',
+  'An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.':
+    'אירעה שגיאה בשרת. נסו שוב בעוד מספר רגעים. אם הבעיה נמשכת, פנו לתמיכה.',
+  'Unable to connect to the server. Please check your internet connection and try again.':
+    'לא ניתן להתחבר לשרת. בדקו את חיבור האינטרנט ונסו שוב.',
+  'The request took too long to complete. Please try again.':
+    'הבקשה ארכה זמן רב מדי. נסו שוב.',
+
   // Punctuated fragments and short segments
   '(Paused)': '(מושהה)',
-  '(Shift for range, ⌘/Ctrl to toggle)': '(Shift לטווח, ⌘/Ctrl להחלפה)',
+  '(Shift for range, ⌘/Ctrl to toggle)': '(Shift לבחירת טווח, ⌘/Ctrl להחלפת בחירה)',
   '(empty)': '(ריק)',
-  '. Operator': '. מפעיל',
+  '. Operator': '. המפעיל:',
   copied: 'הועתק',
   'drag to reorder': 'גררו לשינוי הסדר',
   'e.g. email, score, tags': 'לדוגמה: email, score, tags',
@@ -15,7 +40,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   navigate: 'ניווט',
   of: 'מתוך',
   or: 'או',
-  'per page': 'לעמוד',
+  'per page': 'בעמוד',
   'scopes.': 'הרשאות.',
   select: 'בחירה',
   back: 'חזרה',
@@ -28,7 +53,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
   // Common actions and labels
-  'Accept all': 'אישור הכל',
+  'Accept all': 'אישור הכול',
   Actions: 'פעולות',
   Activate: 'הפעלה',
   'Activate deployment': 'הפעלת פריסה',
@@ -42,10 +67,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Add one or more environment variables. You can add multiple variables at once.':
     'הוסיפו משתנה סביבה אחד או יותר. אפשר להוסיף כמה משתנים בבת אחת.',
   'Add variable': 'הוספת משתנה',
-  All: 'הכל',
+  All: 'הכול',
   'All shortcuts': 'כל הקיצורים',
   'All variable keys are required': 'כל מפתחות המשתנים נדרשים',
-  'Always active': 'פעיל תמיד',
+  'Always active': 'פעילות תמיד',
   Amount: 'כמות',
   Analytics: 'אנליטיקה',
   Apply: 'החלה',
@@ -60,11 +85,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   Auto: 'אוטומטי',
   Back: 'חזרה',
   Boolean: 'בוליאני',
-  Branch: 'ענף',
+  Branch: 'Branch',
   'Branch copied': 'שם הענף הועתק',
   'Branch:': 'ענף:',
-  Bucket: 'דלי',
-  Buckets: 'דליים',
+  Bucket: 'באקט',
+  Buckets: 'באקטים',
   'Build cancelled': 'הבנייה בוטלה',
   'Build must be ready before activating.': 'הבנייה חייבת להיות מוכנה לפני ההפעלה.',
   'Build output': 'פלט בנייה',
@@ -85,14 +110,14 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Choose which optional cookies you allow. Read our':
     'בחרו אילו עוגיות אופציונליות לאשר. קראו את',
   Clear: 'ניקוי',
-  'Clear all': 'ניקוי הכל',
+  'Clear all': 'ניקוי הכול',
   'Clear search': 'ניקוי חיפוש',
   'Clear shown': 'ניקוי המוצגים',
   Close: 'סגירה',
   'Close wizard': 'סגירת האשף',
   'Code language': 'שפת קוד',
   Column: 'עמודה',
-  'Command center': 'מרכז הפקודות',
+  'Command center': 'Command Center',
   Commit: 'קומיט',
   'Commit copied': 'הקומיט הועתק',
   'Commit:': 'קומיט:',
@@ -100,7 +125,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Committer:': 'מבצע הקומיט:',
   'Community and enterprise resources': 'משאבי קהילה וארגונים',
   'Community and enterprise resources for self-hosting':
-    'משאבי קהילה וארגונים לאחסון עצמי',
+    'משאבי קהילה וארגונים לאירוח עצמי',
   Connect: 'חיבור',
   'Connect existing repository': 'חיבור מאגר קיים',
   'Connect to GitHub': 'התחברות ל-GitHub',
@@ -116,7 +141,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Copy ID': 'העתקת מזהה',
   'Copy as JSON': 'העתקה כ-JSON',
   'Copy branch name': 'העתקת שם הענף',
-  'Copy commit hash': 'העתקת גיבוב הקומיט',
+  'Copy commit hash': 'העתקת ה-hash של הקומיט',
   'Copy key': 'העתקת מפתח',
   'Copy link': 'העתקת קישור',
   'Copy logs': 'העתקת לוגים',
@@ -152,11 +177,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   Deprecated: 'הוצא משימוש',
   Desc: 'יורד',
   Descending: 'סדר יורד',
-  'Deselect all': 'ביטול בחירת הכל',
+  'Deselect all': 'ביטול בחירת הכול',
   Details: 'פרטים',
   Disabled: 'מושבת',
   'Discord Community': 'קהילת Discord',
-  Dismiss: 'הסרה',
+  Dismiss: 'סגירה',
   Domain: 'דומיין',
   'Domain is available': 'הדומיין זמין',
   Done: 'סיום',
@@ -167,7 +192,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Download started': 'ההורדה החלה',
   'Download, redeploy, activate, cancel or delete this deployment.':
     'הורדה, פריסה מחדש, הפעלה, ביטול או מחיקה של הפריסה הזו.',
-  Drawer: 'מגירה',
+  Drawer: 'חלונית צד',
   Duration: 'משך',
   'Duration:': 'משך:',
   'Edit all variables at once. Secret variables are not shown and will not be affected.':
@@ -178,9 +203,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   End: 'סוף',
   'Enter text that matches the start of a name, email, phone, or user ID.':
     'הזינו טקסט התואם את תחילת השם, האימייל, הטלפון או מזהה המשתמש.',
-  'Enter value': 'הזנת ערך',
-  'Enterprise & 24/7 support': 'תמיכה ארגונית ומסביב לשעון',
-  Essential: 'חיוני',
+  'Enter value': 'הזינו ערך',
+  'Enterprise & 24/7 support': 'תמיכת Enterprise מסביב לשעון',
+  Essential: 'חיוניות',
   'Execute function': 'הרצת פונקציה',
   'Execution ID': 'מזהה הרצה',
   Exit: 'יציאה',
@@ -208,7 +233,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Failed to submit feedback': 'שליחת המשוב נכשלה',
   'Failed to update variable': 'עדכון המשתנה נכשל',
 
-  False: 'שקר',
+  False: 'False',
   Feedback: 'משוב',
   'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.':
     'משוב אינו מוגדר. הגדירו VITE_GROWTH_ENDPOINT בקובץ ‎.env כדי לאפשר שליחה.',
@@ -217,12 +242,12 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
   'Find a branch...': 'חיפוש ענף...',
-  'Fix payment': 'תיקון תשלום',
+  'Fix payment': 'הסדרת התשלום',
   'Fix with an Agent': 'תיקון עם סוכן',
   'For me': 'עבורי',
   'For team': 'עבור הצוות',
   Function: 'פונקציה',
-  Functions: 'פונקציות',
+  Functions: 'Functions',
   'Get help from our support team': 'קבלו עזרה מצוות התמיכה שלנו',
   'Get started by creating your first item.': 'התחילו ביצירת הפריט הראשון שלכם.',
   'Git organization': 'ארגון Git',
@@ -250,12 +275,12 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
-  'Just now': 'ממש עכשיו',
+  'Just now': 'הרגע',
   'Keep building': 'המשך בנייה',
   'Keep repository private': 'השארת המאגר פרטי',
   Key: 'מפתח',
   'Keyboard shortcuts': 'קיצורי מקלדת',
-  'Learn more': 'מידע נוסף',
+  'Learn more': 'למידע נוסף',
   'Light screenshot': 'צילום מסך בהיר',
   Line: 'שורה',
   'Link this deployment to an existing repository.': 'קישור הפריסה הזו למאגר קיים.',
@@ -276,7 +301,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Manual: 'ידני',
   'Manual deployments are created by uploading code through the Console or API, or by redeploying an existing deployment. Useful for quick testing and re-running builds.':
     'פריסות ידניות נוצרות על ידי העלאת קוד דרך הקונסולה או ה-API, או על ידי פריסה מחדש של פריסה קיימת. שימושי לבדיקות מהירות ולהרצה חוזרת של בניות.',
-  'Mark all as secret': 'סימון הכל כסודי',
+  'Mark all as secret': 'סימון הכול כסודי',
   'Mark as secret': 'סימון כסודי',
   "Matches the start of name, email, phone, or user ID. The Console runs with the selected account's access until you end impersonation.":
     'מתאים לתחילת שם, אימייל, טלפון או מזהה משתמש. הקונסולה פועלת עם הרשאות החשבון הנבחר עד לסיום ההתחזות.',
@@ -297,12 +322,12 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No API key scopes are available from the server.': 'אין הרשאות מפתח API זמינות מהשרת.',
   'No branches available': 'אין ענפים זמינים',
   'No branches found': 'לא נמצאו ענפים',
-  'No buckets': 'אין דליים',
+  'No buckets': 'אין באקטים',
   'No build logs available.': 'אין לוגים של בנייה זמינים.',
   'No columns': 'אין עמודות',
   'No columns found': 'לא נמצאו עמודות',
   'No file selected': 'לא נבחר קובץ',
-  'No files in this bucket': 'אין קבצים בדלי הזה',
+  'No files in this bucket': 'אין קבצים בבאקט הזה',
   'No files match your search': 'אין קבצים התואמים את החיפוש',
   'No functions found': 'לא נמצאו פונקציות',
   'No functions found.': 'לא נמצאו פונקציות.',
@@ -340,13 +365,13 @@ export const heSharedUiDictionary: Record<string, string> = {
   Online: 'מקוון',
   'Only owners and developers can save team-level filters.':
     'רק בעלים ומפתחים יכולים לשמור סינונים ברמת הצוות.',
-  'Open in new tab': 'פתיחה בלשונית חדשה',
+  'Open in new tab': 'פתיחה בכרטיסייה חדשה',
   'Open in new window': 'פתיחה בחלון חדש',
   Operator: 'אופרטור',
   'Operator context was lost. Stop impersonating, then start again.':
-    'הקשר המפעיל אבד. הפסיקו את ההתחזות והתחילו שוב.',
-  'Order from the Appwrite Store': 'הזמנה מחנות Appwrite', // pragma: allowlist secret
-  Overview: 'סקירה',
+    'פרטי המפעיל אבדו. עצרו את ההתחזות והתחילו שוב.',
+  'Order from the Appwrite Store': 'הזמנה מה-Appwrite Store', // pragma: allowlist secret
+  Overview: 'סקירה כללית',
   Page: 'עמוד',
   Path: 'נתיב',
   'Payment failed - act now. Unresolved billing may interrupt your projects and services.':
@@ -378,10 +403,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   Repository: 'מאגר',
   'Repository name': 'שם המאגר',
   'Required for sign-in, security, and remembering your preferences.':
-    'נדרש לכניסה, לאבטחה ולזכירת ההעדפות שלכם.',
+    'נדרשות להתחברות, לאבטחה ולשמירת ההעדפות שלכם.',
   Reset: 'איפוס',
   Row: 'שורה',
-  'Rows per page': 'שורות לעמוד',
+  'Rows per page': 'שורות בעמוד',
   Runtime: 'סביבת ריצה',
   'Same as saved filter': 'זהה לסינון השמור',
   'Same name as a project variable': 'שם זהה למשתנה פרויקט',
@@ -392,15 +417,15 @@ export const heSharedUiDictionary: Record<string, string> = {
   Saved: 'שמורים',
   'Saved filter name': 'שם הסינון השמור',
   'Saved preset name': 'שם הפריסט השמור',
-  Scope: 'הרשאה',
-  Scopes: 'הרשאות',
+  Scope: 'הרשאת גישה',
+  Scopes: 'הרשאות גישה',
   'Scroll to bottom': 'גלילה לתחתית',
   'Scroll to top': 'גלילה לראש',
 
   // Search
   'Search account, sessions, security…': 'חיפוש חשבון, סשנים, אבטחה…',
   'Search anything - pages, tabs, settings, resources…':
-    'חיפוש הכל - עמודים, לשוניות, הגדרות, משאבים…',
+    'חיפוש בכל מקום - עמודים, לשוניות, הגדרות, משאבים…',
   'Search columns…': 'חיפוש עמודות…',
   'Search commands and documentation pages…': 'חיפוש פקודות ועמודי תיעוד…',
   'Search documentation': 'חיפוש בתיעוד',
@@ -421,9 +446,9 @@ export const heSharedUiDictionary: Record<string, string> = {
 
   Secret: 'סודי',
   Select: 'בחירה',
-  'Select a bucket to browse files': 'בחרו דלי כדי לעיין בקבצים',
+  'Select a bucket to browse files': 'בחרו באקט כדי לעיין בקבצים',
   'Select a service to build': 'בחרו שירות לבנייה',
-  'Select all': 'בחירת הכל',
+  'Select all': 'בחירת הכול',
   'Select function to execute...': 'בחרו פונקציה להרצה...',
   'Select line': 'בחירת שורה',
   'Select organization': 'בחירת ארגון',
@@ -473,7 +498,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'פעולה זו תחליף את הפריסה הפעילה לפריסה זו. כל התעבורה תנותב לפריסה זו לאחר ההפעלה.',
   Time: 'שעה',
   Trigger: 'טריגר',
-  True: 'אמת',
+  True: 'True',
   'Try a different prefix for name, email, phone, or user ID.':
     'נסו קידומת אחרת של שם, אימייל, טלפון או מזהה משתמש.',
   'Try a different search or upload a file.': 'נסו חיפוש אחר או העלו קובץ.',
@@ -499,7 +524,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Upload a .env file to import variables. Existing variables with the same key will be updated.':
     'העלו קובץ ‎.env כדי לייבא משתנים. משתנים קיימים עם אותו מפתח יעודכנו.',
   'Upload a file to this bucket or choose another bucket.':
-    'העלו קובץ לדלי הזה או בחרו דלי אחר.',
+    'העלו קובץ לבאקט הזה או בחרו באקט אחר.',
   'Use preset columns for $id and other system fields. Custom names must not start with $.':
     'השתמשו בעמודות מוגדרות מראש עבור ‎$id ושדות מערכת אחרים. שמות מותאמים אישית אסור שיתחילו ב-$.',
   User: 'משתמש',
@@ -523,7 +548,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'We value your privacy': 'הפרטיות שלכם חשובה לנו',
   'You cannot impersonate your own operator account.':
     'לא ניתן להתחזות לחשבון המפעיל של עצמכם.',
-  "You're offline": 'אתם לא מחוברים',
+  "You're offline": 'אין חיבור לאינטרנט',
   'Your feedback helps us improve.': 'המשוב שלכם עוזר לנו להשתפר.',
   'another console user': 'משתמש קונסולה אחר',
   '75% hot-swap mechanical keyboard with Gateron G Pro Yellow switches, tri-mode USB-C/2.4GHz/BT, and 84 dye-sublimated keycaps optimized for Console shortcuts.':
@@ -557,7 +582,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No matching settings': 'אין הגדרות תואמות',
   'Select project': 'בחירת פרויקט',
   'Select date & time': 'בחירת תאריך ושעה',
-  'Select branch': 'בחירת ענף',
+  'Select branch': 'בחירת Branch',
   'Clone template': 'שכפול תבנית',
   'Upgrade your plan': 'שדרגו את התוכנית',
   Screenshot: 'צילום מסך',
@@ -581,25 +606,25 @@ export const heSharedUiDictionary: Record<string, string> = {
   'A subset of services is degraded.': 'חלק מהשירותים פועלים באופן חלקי.',
 
   // Dynamic pass-through values: filter operator labels
-  equal: 'שווה',
-  'not equal': 'לא שווה',
-  'starts with': 'מתחיל ב',
-  'not starts with': 'לא מתחיל ב',
-  'ends with': 'מסתיים ב',
-  'not ends with': 'לא מסתיים ב',
+  equal: 'שווה ל-',
+  'not equal': 'שונה מ-',
+  'starts with': 'מתחיל ב-',
+  'not starts with': 'לא מתחיל ב-',
+  'ends with': 'מסתיים ב-',
+  'not ends with': 'לא מסתיים ב-',
   contains: 'מכיל',
   'not contains': 'לא מכיל',
-  search: 'חיפוש',
+  search: 'תואם חיפוש',
   'does not match search': 'לא תואם חיפוש',
   'matches regex': 'תואם ביטוי רגולרי',
-  'greater than': 'גדול מ',
-  'greater than or equal': 'גדול או שווה',
-  'less than': 'קטן מ',
-  'less than or equal': 'קטן או שווה',
+  'greater than': 'גדול מ-',
+  'greater than or equal': 'גדול או שווה ל-',
+  'less than': 'קטן מ-',
+  'less than or equal': 'קטן או שווה ל-',
   between: 'בין',
   'not between': 'לא בין',
-  'is null': 'ריק (null)',
-  'is not null': 'לא ריק (null)',
+  'is null': 'ריק',
+  'is not null': 'אינו ריק',
   exists: 'קיים',
   'does not exist': 'לא קיים',
   Bytes: 'בייטים',
@@ -643,10 +668,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Settings & cards': 'הגדרות וכרטיסים',
 
   // Keyboard shortcuts reference: global shortcut descriptions
-  'Open command center': 'פתיחת מרכז הפקודות',
+  'Open command center': 'פתיחת ה-Command Center',
   'Show keyboard shortcuts': 'הצגת קיצורי המקלדת',
   'Close / go back': 'סגירה / חזרה',
-  'Focus search': 'מיקוד בחיפוש',
+  'Focus search': 'מעבר לשדה החיפוש',
   'Set theme to light': 'החלפה לערכת נושא בהירה',
   'Set theme to dark': 'החלפה לערכת נושא כהה',
   'Set theme to system': 'החלפה לערכת נושא לפי המערכת',
@@ -775,17 +800,17 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
   'Manage databases, tables and collections': 'ניהול מסדי נתונים, טבלאות ואוספים',
-  'Buckets and files': 'דליים וקבצים',
+  'Buckets and files': 'באקטים וקבצים',
   'Serverless functions and executions': 'פונקציות serverless והרצות',
   'Push notifications, email and SMS messages': 'התראות פוש, הודעות אימייל ו-SMS', // pragma: allowlist secret
-  'Deployed websites and hosting': 'אתרים פרוסים ואחסון אתרים',
+  'Deployed websites and hosting': 'אתרים פרוסים ואירוח אתרים',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
   'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
   'Website analytics and traffic insights': 'אנליטיקת אתרים ותובנות תעבורה',
   'Project settings, custom domains, variables, webhooks':
     'הגדרות פרויקט, דומיינים מותאמים אישית, משתנים ו-webhooks',
-  'Project settings (comma shortcut)': 'הגדרות פרויקט (קיצור פסיק)',
+  'Project settings (comma shortcut)': 'הגדרות פרויקט (קיצור: פסיק)',
   'Create user': 'יצירת משתמש',
 
   // Command center: project tab entries (Auth, Messaging, Settings, Security)
@@ -798,7 +823,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'מדיניות משתמשים, סשנים, אימיילים, חברויות וסיסמאות',
   'Auth · Policies · Sessions': 'אימות · מדיניות · סשנים',
   'Session length, limits, alerts, and invalidation':
-    'אורך סשן, מגבלות, התראות וביטול תוקף',
+    'משך סשן, מגבלות, התראות וביטול תוקף',
   'Auth · Policies · Users': 'אימות · מדיניות · משתמשים',
   'Maximum number of users allowed in the project':
     'מספר המשתמשים המרבי המותר בפרויקט',
@@ -811,7 +836,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Auth · Policies · Passwords': 'אימות · מדיניות · סיסמאות',
   'Password history, dictionary, and personal data checks':
     'בדיקות היסטוריית סיסמאות, מילון ונתונים אישיים',
-  'Auth · Social providers': 'אימות · ספקים חברתיים',
+  'Auth · Social providers': 'אימות · ספקי התחברות חברתית',
   'Configure OAuth2 providers for social login':
     'הגדרת ספקי OAuth2 להתחברות חברתית',
   'Auth · OAuth2 server · Settings': 'אימות · שרת OAuth2 · הגדרות',
@@ -912,7 +937,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Maximum self-serve replica count for high-traffic production environments.':
     'מספר הרפליקות המרבי בשירות עצמי לסביבות ייצור עתירות תעבורה.',
   '$10 of compute credits for database usage included every month.':
-    '10$ של קרדיט מחשוב לשימוש במסד הנתונים כלולים מדי חודש.',
+    'כל חודש כלולים $10 של קרדיט מחשוב לשימוש במסד הנתונים.',
 
   // Command center: SQL editor action entries
   'Execute the current SQL in the editor': 'הרצת ה-SQL הנוכחי בעורך',
@@ -928,4 +953,84 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Open a new SQL editor tab': 'פתיחת לשונית חדשה בעורך ה-SQL',
   'Close the current SQL editor tab': 'סגירת הלשונית הנוכחית בעורך ה-SQL',
   'Pick a SQL editor tab to open': 'בחירת לשונית לפתיחה בעורך ה-SQL',
+
+  // Event editor
+  'All databases': 'כל מסדי הנתונים',
+  'All buckets': 'כל הבאקטים',
+  'All functions': 'כל הפונקציות',
+  'All teams': 'כל הצוותים',
+  'All topics': 'כל הנושאים',
+  'All tables': 'כל הטבלאות',
+  'All files': 'כל הקבצים',
+  'All rows': 'כל השורות',
+  'All columns': 'כל העמודות',
+  'All indexes': 'כל האינדקסים',
+  'Edit channel': 'עריכת ערוץ',
+  'Create channel': 'יצירת ערוץ',
+  'Edit event': 'עריכת אירוע',
+  'Create event': 'יצירת אירוע',
+  'Build a Realtime channel to subscribe to. Use wildcards (*) to match multiple resources.':
+    'בנו ערוץ Realtime להרשמה. השתמשו בתווים כלליים (*) כדי להתאים למספר משאבים.',
+  'Select events that will trigger your function or webhook.':
+    'בחרו אירועים שיפעילו את הפונקציה או ה-webhook שלכם.',
+  Service: 'שירות',
+  'Bucket (optional)': 'באקט (אופציונלי)',
+  'Function (optional)': 'פונקציה (אופציונלי)',
+  'Team (optional)': 'צוות (אופציונלי)',
+  'User (optional)': 'משתמש (אופציונלי)',
+  'Topic (optional)': 'נושא (אופציונלי)',
+  'Provider (optional)': 'ספק (אופציונלי)',
+  'Resource (optional)': 'משאב (אופציונלי)',
+  'Table (optional)': 'טבלה (אופציונלי)',
+  'File (optional)': 'קובץ (אופציונלי)',
+  'Row (optional)': 'שורה (אופציונלי)',
+  'Column (optional)': 'עמודה (אופציונלי)',
+  'Index (optional)': 'אינדקס (אופציונלי)',
+  'Action (optional)': 'פעולה (אופציונלי)',
+  'Attribute (optional)': 'מאפיין (אופציונלי)',
+  'e.g. account or databases.*.tables.*.rows.*':
+    'לדוגמה: account או databases.*.tables.*.rows.*',
+  'e.g. databases.*.tables.*.rows.*.create':
+    'לדוגמה: databases.*.tables.*.rows.*.create',
+
+  // Deployment detail, keyboard visualizer, code block
+  'Deployment details': 'פרטי פריסה',
+  'Keyboard layout': 'פריסת מקלדת',
+  'Press keys in order': 'לחצו על המקשים לפי הסדר',
+  example: 'דוגמה',
+
+  // Error pages
+  'Project Not Found': 'הפרויקט לא נמצא',
+  'This project could not be found or you do not have access to view it.':
+    'הפרויקט לא נמצא או שאין לכם גישה לצפות בו.',
+  'You do not have permission to access this project. Please contact your administrator if you believe this is an error.':
+    'אין לכם הרשאה לגשת לפרויקט הזה. פנו למנהל המערכת אם לדעתכם מדובר בטעות.',
+  'This page needs a connection to Appwrite. Reconnect to the internet, then try again - we can reload automatically when you are back online.': // pragma: allowlist secret
+    'הדף הזה זקוק לחיבור ל-Appwrite. התחברו מחדש לאינטרנט ונסו שוב, נטען מחדש אוטומטית כשתחזרו להיות מקוונים.', // pragma: allowlist secret
+  'Update available': 'עדכון זמין',
+  'A newer version of the console was deployed while you had this tab open. Reload the page to continue.':
+    'גרסה חדשה יותר של הקונסולה נפרסה בזמן שהלשונית הזו הייתה פתוחה. טענו מחדש את הדף כדי להמשיך.',
+  'An unexpected error occurred.': 'אירעה שגיאה בלתי צפויה.',
+  'Error details copied to clipboard': 'פרטי השגיאה הועתקו ללוח',
+  'If your connection looks fine, check our': 'אם החיבור שלכם נראה תקין, בדקו את',
+  'status page': 'דף הסטטוס שלנו',
+  'for service updates.': 'לעדכוני שירות.',
+  'No error details available': 'אין פרטי שגיאה זמינים',
+  'Copy error details': 'העתקת פרטי השגיאה',
+  'We’ve already logged it to our error system and will probably spin up a super agent any minute to hunt this bug down. If you think this might be more than a client-side hiccup, check our':
+    'כבר תיעדנו את זה במערכת השגיאות שלנו, וכנראה שבכל רגע יופעל סוכן-על שיצא לצוד את הבאג הזה. אם לדעתכם מדובר ביותר מתקלה רגעית בצד הלקוח, בדקו את',
+  'Until then - try again or head home. You’ve got this.':
+    'עד אז, נסו שוב או חזרו לדף הבית. אתם על זה.',
+  'Reload page': 'טעינת הדף מחדש',
+  'Try again': 'נסו שוב',
+  'Go back': 'חזרה',
+  'Go home': 'חזרה לדף הבית',
+  'Page not found': 'הדף לא נמצא',
+  'The page you requested does not exist, may have been moved, or is temporarily unavailable.':
+    'הדף שביקשתם אינו קיים, ייתכן שהועבר או שאינו זמין באופן זמני.',
+  'Looking for product docs?': 'מחפשים את תיעוד המוצר?',
+  'Browse documentation': 'עיון בתיעוד',
+
+  // Screenshot frames (cover generator, perspective cards)
+  'Screenshot preview': 'תצוגה מקדימה של צילום מסך',
 }

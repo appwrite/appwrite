@@ -16,7 +16,7 @@ export const heSitesDictionary: Record<string, string> = {
     'הגדירו את רשומות ה-DNS כדי לאמת את הדומיין שלכם',
 
   // Sites list (View.tsx)
-  Sites: 'אתרים',
+  Sites: 'Sites',
   'Search sites...': 'חיפוש אתרים...',
   'Create site': 'יצירת אתר',
   "You don't have permission to create sites.": 'אין לכם הרשאה ליצור אתרים.',
@@ -95,8 +95,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Build output is available after the deployment has completed.':
     'פלט הבנייה זמין לאחר שהפריסה הושלמה.',
   Redeploy: 'פריסה מחדש',
-  'Build logs': 'יומני בנייה',
-  Visit: 'ביקור באתר',
+  'Build logs': 'לוגי בנייה',
+  Visit: 'מעבר לאתר',
   'There is no active deployment': 'אין פריסה פעילה',
   'Create your first deployment to activate this site.':
     'צרו את הפריסה הראשונה שלכם כדי להפעיל את האתר הזה.',
@@ -136,13 +136,13 @@ export const heSitesDictionary: Record<string, string> = {
   Waiting: 'ממתין',
   Failed: 'נכשל',
   Canceled: 'בוטל',
-  Timeout: 'פג תוקף',
+  Timeout: 'Timeout',
 
   // Logs pages
-  'No logs yet': 'אין יומנים עדיין',
+  'No logs yet': 'אין לוגים עדיין',
   'Logs will appear here when your site runs.':
-    'יומנים יופיעו כאן כאשר האתר שלכם ירוץ.',
-  logs: 'יומנים',
+    'לוגים יופיעו כאן כאשר האתר שלכם ירוץ.',
+  logs: 'לוגים',
   'No executions yet': 'אין הרצות עדיין',
   'Executions will appear here when your site runs.':
     'הרצות יופיעו כאן כאשר האתר שלכם ירוץ.',
@@ -155,17 +155,17 @@ export const heSitesDictionary: Record<string, string> = {
   'Redirect to': 'הפניה אל',
   'Deployed from': 'נפרס מ-',
   'SSL certificate is being issued. This usually takes a couple of minutes.':
-    'אישור ה-SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות.',
-  'View logs': 'צפייה ביומנים',
+    'תעודת ה-SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות.',
+  'View logs': 'צפייה בלוגים',
   Retry: 'ניסיון חוזר',
-  Logs: 'יומנים',
+  Logs: 'לוגים',
   Records: 'רשומות',
   'Domain has been deleted': 'הדומיין נמחק',
   'Loading domains...': 'טוען דומיינים...',
   Verified: 'מאומת',
-  'Generating certificate': 'מנפיק אישור',
+  'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
-  'Certificate generation failed': 'הנפקת האישור נכשלה',
+  'Certificate generation failed': 'הנפקת התעודה נכשלה',
 
   // Site layout and settings shell
   Deployments: 'פריסות',
@@ -212,8 +212,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Are you sure you want to disconnect': 'האם אתם בטוחים שברצונכם לנתק את',
   "from this site? This will remove the Git integration but won't affect your deployments.":
     'מהאתר הזה? פעולה זו תסיר את האינטגרציה עם Git אך לא תשפיע על הפריסות שלכם.',
-  'Branch Settings': 'הגדרות ענף',
-  'Production branch': 'ענף פרודקשן',
+  'Branch Settings': 'הגדרות Branch',
+  'Production branch': 'Branch פרודקשן',
   'Root directory': 'תיקיית שורש',
   'Choose the directory containing your site code':
     'בחרו את התיקייה המכילה את קוד האתר שלכם',
@@ -230,12 +230,12 @@ export const heSitesDictionary: Record<string, string> = {
   'Learn more': 'למידע נוסף',
   'Server side rendering': 'רינדור בצד השרת',
   'Static site': 'אתר סטטי',
-  Adapter: 'מתאם',
+  Adapter: 'Adapter',
   'Choose how your site is rendered at runtime.':
     'בחרו כיצד האתר שלכם מרונדר בזמן ריצה.',
   Framework: 'Framework',
   'Choose your stack, adapter mode, and where build output is written.':
-    'בחרו את הסטאק, מצב המתאם והמיקום שאליו נכתב פלט הבנייה.',
+    'בחרו את הסטאק, מצב ה-Adapter והמיקום שאליו נכתב פלט הבנייה.',
   'Select framework': 'בחירת framework',
   'Output directory': 'תיקיית פלט',
   'Enter output directory': 'הזינו תיקיית פלט',
@@ -267,14 +267,14 @@ export const heSitesDictionary: Record<string, string> = {
   'Failed to update specification': 'עדכון המפרט נכשל',
 
   // Settings: runtime image card
-  Image: 'תמונת בסיס',
+  Image: 'Image',
   'Base image used when your site runs in production (SSR, API routes, and dynamic handlers). Pick an image that matches your stack. Changes take effect after the next successful deploy.':
-    'תמונת הבסיס המשמשת כאשר האתר שלכם רץ בפרודקשן (SSR, נתיבי API ומטפלים דינמיים). בחרו תמונה שמתאימה לסטאק שלכם. השינויים ייכנסו לתוקף לאחר הפריסה המוצלחת הבאה.',
-  'Select an image': 'בחירת תמונת בסיס',
+    'ה-Image הבסיסי שמשמש כאשר האתר שלכם רץ בפרודקשן (SSR, נתיבי API ומטפלים דינמיים). בחרו Image שמתאים לסטאק שלכם. השינויים ייכנסו לתוקף לאחר הפריסה המוצלחת הבאה.',
+  'Select an image': 'בחרו Image',
   'No images are available for this framework yet.':
-    'אין עדיין תמונות בסיס זמינות עבור ה-framework הזה.',
+    'עדיין אין Images זמינים עבור ה-framework הזה.',
   'Choose a framework in build settings to see compatible images.':
-    'בחרו framework בהגדרות הבנייה כדי לראות תמונות בסיס תואמות.',
+    'בחרו framework בהגדרות הבנייה כדי לראות Images תואמים.',
   'Runtime settings updated successfully': 'הגדרות זמן הריצה עודכנו בהצלחה',
   'Failed to update runtime settings': 'עדכון הגדרות זמן הריצה נכשל',
 
@@ -296,16 +296,16 @@ export const heSitesDictionary: Record<string, string> = {
     'הזמן הקצוב חייב להיות בין 1 ל-30 שניות',
 
   // Settings: logging card
-  Logging: 'רישום יומנים',
+  Logging: 'רישום לוגים',
   'Controls how much detail is captured for each request. Full logging helps you debug production issues with stdout, stderr, and stack traces in the console. Turning logging off reduces overhead and can slightly improve response time when you do not need that detail.':
-    'קובע כמה פירוט נשמר עבור כל בקשה. רישום מלא עוזר לנפות באגים בפרודקשן עם stdout, stderr ועקבות מחסנית בקונסולה. כיבוי הרישום מפחית תקורה ויכול לשפר מעט את זמן התגובה כשאינכם זקוקים לפירוט הזה.',
+    'קובע כמה פירוט נשמר עבור כל בקשה. רישום מלא עוזר לנפות באגים בפרודקשן עם stdout, stderr ו-stack traces בקונסולה. כיבוי הרישום מפחית תקורה ויכול לשפר מעט את זמן התגובה כשאינכם זקוקים לפירוט הזה.',
   'Full request logging': 'רישום מלא של בקשות',
   'Enabled - logs and errors from your site are recorded.':
-    'מופעל - יומנים ושגיאות מהאתר שלכם נשמרים.',
+    'מופעל - לוגים ושגיאות מהאתר שלכם נשמרים.',
   'Disabled - lighter request records; responses may be slightly faster.':
     'כבוי - רשומות בקשה קלות יותר; ייתכן שהתגובות יהיו מעט מהירות יותר.',
-  'Logging updated successfully': 'רישום היומנים עודכן בהצלחה',
-  'Failed to update logging': 'עדכון רישום היומנים נכשל',
+  'Logging updated successfully': 'רישום הלוגים עודכן בהצלחה',
+  'Failed to update logging': 'עדכון רישום הלוגים נכשל',
 
   // Settings: details card
   Details: 'פרטים',
@@ -374,7 +374,7 @@ export const heSitesDictionary: Record<string, string> = {
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',
   'Enter URL': 'הזינו כתובת URL',
-  'Select branch': 'בחרו ענף',
+  'Select branch': 'בחירת Branch',
   'Connect repository first': 'חברו מאגר קודם',
 
   // Template gallery
@@ -389,8 +389,8 @@ export const heSitesDictionary: Record<string, string> = {
   'All use cases': 'כל תרחישי השימוש',
   Starter: 'ערכת התחלה',
   AI: 'AI',
-  Databases: 'מסדי נתונים',
-  Messaging: 'הודעות',
+  Databases: 'Databases',
+  Messaging: 'Messaging',
   'Dev tools': 'כלי פיתוח',
   Utilities: 'כלי עזר',
 
@@ -455,9 +455,9 @@ export const heSitesDictionary: Record<string, string> = {
   'Detecting framework...': 'מזהה framework...',
   Detect: 'זיהוי',
   'Git configuration': 'תצורת Git',
-  Branch: 'ענף',
+  Branch: 'Branch',
   'Production branch for the repo linked to the site. Successful deployments from this branch get activated automatically.':
-    'ענף הפרודקשן של המאגר המקושר לאתר. פריסות מוצלחות מהענף הזה מופעלות אוטומטית.',
+    'ה-Branch של הפרודקשן במאגר המקושר לאתר. פריסות מוצלחות מה-Branch הזה מופעלות אוטומטית.',
   'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).':
     'הנתיב לקוד האתר במאגר המקושר. השתמשו בשורש המאגר (./) או בתת-תיקייה שמכילה את האפליקציה שלכם (למשל ./apps/web).',
   'Disable automated comments on repository commits':
@@ -490,7 +490,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Configure the environment variables for this template':
     'הגדירו את משתני הסביבה עבור התבנית הזו',
   'Optional variables': 'משתנים אופציונליים',
-  Secret: 'סוד',
+  Secret: 'סודי',
 
   // Create wizard: deploying and finish
   'Deployment cancelled': 'הפריסה בוטלה',
@@ -502,7 +502,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating preview…': 'יוצר תצוגה מקדימה…',
   'Screenshot may take a few moments after build completes':
     'צילום המסך עשוי להיות מוכן כמה רגעים לאחר סיום הבנייה',
-  'Visit site': 'ביקור באתר',
+  'Visit site': 'מעבר לאתר',
   'Next steps': 'הצעדים הבאים',
   'Configure your site or share it with others':
     'הגדירו את האתר שלכם או שתפו אותו עם אחרים',

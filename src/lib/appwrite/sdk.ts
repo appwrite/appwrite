@@ -66,6 +66,8 @@ import {
   ensureFingerprintServerTimeSynced,
   resetFingerprintServerTimeCache,
 } from '@/lib/fingerprint'
+import { getActiveLanguage } from '@/lib/i18n/active-language'
+import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -246,6 +248,21 @@ clientConsole.setEndpoint(endpoint).setProject('console')
 
 // Configure Project client (will be set per-project)
 clientProject.setEndpoint(endpoint).setMode('admin')
+
+// Match server-side content (e.g. localized responses) to the active UI language.
+clientConsole.setLocale(getActiveLanguage())
+clientProject.setLocale(getActiveLanguage())
+
+// Keep SDK locale in sync when the language changes (debug menu / storage event).
+if (typeof window !== 'undefined') {
+  subscribeToDebugOverrides(() => {
+    const language = getActiveLanguage()
+    if (clientConsole.config.locale !== language) {
+      clientConsole.setLocale(language)
+      clientProject.setLocale(language)
+    }
+  })
+}
 
 function scheduleConsoleFingerprintServerTimeSync(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
@@ -500,7 +517,10 @@ export const sdk = {
   forConsoleIn(region: string) {
     const regionEndpoint = getApiEndpoint(region)
     const regionClient = new Client()
-    regionClient.setEndpoint(regionEndpoint).setProject('console')
+    regionClient
+      .setEndpoint(regionEndpoint)
+      .setProject('console')
+      .setLocale(getActiveLanguage())
     return wrapServiceObject(
       wrapConsoleAccountGet(createConsoleSdkRaw(regionClient)) as Record<
         string,

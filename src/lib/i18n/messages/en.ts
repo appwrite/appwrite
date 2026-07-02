@@ -425,6 +425,6 @@ export const enCatalog = {
       },
     },
   },
-} as const
+}
 
 export type EnCatalog = typeof enCatalog

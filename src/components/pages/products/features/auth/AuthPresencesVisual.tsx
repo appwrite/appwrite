@@ -55,7 +55,10 @@ function PeerCursor({
 export function AuthPresencesVisual() {
   const t = useT()
   return (
-    <ProductFeatureVisualFrame eyebrow="Team workspace" title="See who is working together">
+    <ProductFeatureVisualFrame
+      eyebrow={t('Team workspace')}
+      title={t('See who is working together')}
+    >
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex -space-x-1.5">

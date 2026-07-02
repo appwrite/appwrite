@@ -152,27 +152,28 @@ function getRelationshipPreviewText(
   relationshipType: ColumnFormData['relationshipType'],
   sourceTableName: string,
   targetTableName: string,
+  t: (text: string) => string,
 ) {
   switch (relationshipType) {
     case 'oneToOne':
       return {
-        forward: `${sourceTableName} can contain one ${targetTableName}`,
-        backward: `${targetTableName} can belong to one ${sourceTableName}`,
+        forward: `${sourceTableName} ${t('can contain one')} ${targetTableName}`,
+        backward: `${targetTableName} ${t('can belong to one')} ${sourceTableName}`,
       }
     case 'oneToMany':
       return {
-        forward: `${sourceTableName} can contain many ${targetTableName}`,
-        backward: `${targetTableName} can belong to one ${sourceTableName}`,
+        forward: `${sourceTableName} ${t('can contain many')} ${targetTableName}`,
+        backward: `${targetTableName} ${t('can belong to one')} ${sourceTableName}`,
       }
     case 'manyToOne':
       return {
-        forward: `${sourceTableName} can contain one ${targetTableName}`,
-        backward: `${targetTableName} can belong to many ${sourceTableName}`,
+        forward: `${sourceTableName} ${t('can contain one')} ${targetTableName}`,
+        backward: `${targetTableName} ${t('can belong to many')} ${sourceTableName}`,
       }
     case 'manyToMany':
       return {
-        forward: `${sourceTableName} can contain many ${targetTableName}`,
-        backward: `${targetTableName} can belong to many ${sourceTableName}`,
+        forward: `${sourceTableName} ${t('can contain many')} ${targetTableName}`,
+        backward: `${targetTableName} ${t('can belong to many')} ${sourceTableName}`,
       }
     default:
       return null
@@ -341,23 +342,24 @@ export function ColumnDrawer({
 
     // Key validation
     if (!formData.key.trim()) {
-      newErrors.key = 'Key is required'
+      newErrors.key = t('Key is required')
     } else if (!/^[A-Za-z0-9][A-Za-z0-9._\-]*$/.test(formData.key)) {
-      newErrors.key = 'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _'
+      newErrors.key = t('Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _')
     } else if (
       !isEditMode &&
       existingColumns.some((c) => c.key === formData.key)
     ) {
-      newErrors.key = 'Column with this key already exists'
+      newErrors.key = t('Column with this key already exists')
     }
 
     // Type-specific validation
     if (formData.type === 'string') {
       if (!formData.size || formData.size < 1) {
-        newErrors.size = 'Size is required and must be at least 1'
+        newErrors.size = t('Size is required and must be at least 1')
       } else if (formData.encrypt && formData.size < 150) {
-        newErrors.size =
-          'Encrypted string columns require a minimum size of 150'
+        newErrors.size = t(
+          'Encrypted string columns require a minimum size of 150',
+        )
       }
     } else if (formData.type === 'varchar') {
       if (
@@ -365,10 +367,11 @@ export function ColumnDrawer({
         formData.size < VARCHAR_SIZE_MIN ||
         formData.size > VARCHAR_SIZE_MAX
       ) {
-        newErrors.size = `Size is required and must be between ${VARCHAR_SIZE_MIN} and ${VARCHAR_SIZE_MAX}`
+        newErrors.size = `${t('Size is required and must be between')} ${VARCHAR_SIZE_MIN} ${t('and')} ${VARCHAR_SIZE_MAX}`
       } else if (formData.encrypt && formData.size < 150) {
-        newErrors.size =
-          'Encrypted varchar columns require a minimum size of 150'
+        newErrors.size = t(
+          'Encrypted varchar columns require a minimum size of 150',
+        )
       } else if (
         !isEditMode &&
         table?.bytesUsed !== undefined &&
@@ -377,33 +380,35 @@ export function ColumnDrawer({
       ) {
         const newColumnBytes = formData.size * 4 + 2
         if (table.bytesUsed + newColumnBytes > table.bytesMax) {
-          newErrors.size =
-            'This column exceeds the remaining row space. Consider using text, mediumtext, or longtext instead.'
+          newErrors.size = t(
+            'This column exceeds the remaining row space. Consider using text, mediumtext, or longtext instead.',
+          )
         }
       }
     } else if (formData.type === 'enum') {
       const validElements = enumElements.filter((e) => e.trim().length > 0)
       if (validElements.length === 0) {
-        newErrors.elements = 'At least one element is required'
+        newErrors.elements = t('At least one element is required')
       } else {
         const invalidElements = validElements.filter((e) => e.length > 255)
         if (invalidElements.length > 0) {
-          newErrors.elements =
-            'Enum elements have a maximum length of 255 characters'
+          newErrors.elements = t(
+            'Enum elements have a maximum length of 255 characters',
+          )
         }
       }
     } else if (formData.type === 'relationship') {
       if (!formData.relatedTableId) {
-        newErrors.relatedTableId = 'Related table is required'
+        newErrors.relatedTableId = t('Related table is required')
       }
       if (!formData.relationshipType) {
-        newErrors.relationshipType = 'Relationship type is required'
+        newErrors.relationshipType = t('Relationship type is required')
       }
       if (!formData.onDelete) {
-        newErrors.onDelete = 'On delete action is required'
+        newErrors.onDelete = t('On delete action is required')
       }
       if (formData.twoWay && !formData.twoWayKey) {
-        newErrors.twoWayKey = 'Two-way key is required'
+        newErrors.twoWayKey = t('Two-way key is required')
       }
     } else if (formData.type === 'bigint') {
       const minParsed = bigintMinText.trim()
@@ -412,8 +417,9 @@ export function ColumnDrawer({
       const maxParsed = bigintMaxText.trim()
         ? parseInt64Value(bigintMaxText)
         : null
-      const int64RangeHint =
-        'Must be a signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807'
+      const int64RangeHint = t(
+        'Must be a signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807',
+      )
 
       if (bigintMinText.trim() && minParsed === null) {
         newErrors.min = int64RangeHint
@@ -432,7 +438,7 @@ export function ColumnDrawer({
         maxParsed !== null &&
         minParsed > maxParsed
       ) {
-        newErrors.max = 'Max must be greater than or equal to min'
+        newErrors.max = t('Max must be greater than or equal to min')
       }
     }
 
@@ -492,7 +498,7 @@ export function ColumnDrawer({
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to save column',
+        error instanceof Error ? error.message : t('Failed to save column'),
       )
     }
   }
@@ -530,14 +536,15 @@ export function ColumnDrawer({
   const showDefaultValueCheckbox = isSpatialType && !formData.required
   const currentTableName =
     availableTables.find((table) => table.$id === currentTableId)?.name ||
-    'Current table'
+    t('Current table')
   const relatedTableName =
     relationshipTables.find((table) => table.$id === formData.relatedTableId)
-      ?.name || 'Related table'
+      ?.name || t('Related table')
   const relationshipPreview = getRelationshipPreviewText(
     formData.relationshipType,
     currentTableName,
     relatedTableName,
+    t,
   )
 
   return (
@@ -555,7 +562,7 @@ export function ColumnDrawer({
             {/* Key */}
             <div className="space-y-2">
               <Label htmlFor="column-key" className="text-[12px] font-medium">
-                Key <span className="text-destructive">*</span>
+                {t('Key')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="column-key"
@@ -1030,7 +1037,8 @@ export function ColumnDrawer({
                     htmlFor="related-table"
                     className="text-[12px] font-medium"
                   >
-                    Related table <span className="text-destructive">*</span>
+                    {t('Related table')}{' '}
+                    <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.relatedTableId || ''}
@@ -1072,7 +1080,8 @@ export function ColumnDrawer({
                         htmlFor="column-key-relationship"
                         className="text-[12px] font-medium"
                       >
-                        Column key <span className="text-destructive">*</span>
+                        {t('Column key')}{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="column-key-relationship"
@@ -1104,7 +1113,7 @@ export function ColumnDrawer({
                           htmlFor="two-way-key"
                           className="text-[12px] font-medium"
                         >
-                          Column key (related table){' '}
+                          {t('Column key (related table)')}{' '}
                           <span className="text-destructive">*</span>
                         </Label>
                         <Input
