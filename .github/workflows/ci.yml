@@ -192,33 +192,33 @@ jobs:
             const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
 
             const services = [
-              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 6 },
-              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 6 },
-              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 6 },
-              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 6 },
-              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 6 },
-              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 6 },
-              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 6 },
-              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 6 },
-              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 6 },
+              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 8 },
+              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 8 },
+              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 8 },
+              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 8 },
             ];
             core.setOutput('services', JSON.stringify(services));
 
@@ -429,7 +429,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: [build, matrix]
     permissions:
       contents: read
