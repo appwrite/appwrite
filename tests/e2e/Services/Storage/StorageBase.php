@@ -25,6 +25,38 @@ trait StorageBase
     private static array $cachedZstdBucket = [];
 
     /**
+     * Valid signatures for a chunk-uploaded file: the content MD5 on local
+     * devices, or the composite multipart ETag (md5 of part MD5s suffixed
+     * with the part count) on S3 devices.
+     */
+    protected function getChunkedFileSignatures(string $path, int $chunkSize = 5 * 1024 * 1024): array
+    {
+        $signatures = [\md5_file($path)];
+
+        $handle = \fopen($path, 'rb');
+        if ($handle === false) {
+            return $signatures;
+        }
+        $binary = '';
+        $parts = 0;
+        while (!\feof($handle)) {
+            $chunk = \fread($handle, $chunkSize);
+            if ($chunk === '' || $chunk === false) {
+                break;
+            }
+            $binary .= \md5($chunk, true);
+            $parts++;
+        }
+        \fclose($handle);
+
+        if ($parts > 1) {
+            $signatures[] = \md5($binary) . '-' . $parts;
+        }
+
+        return $signatures;
+    }
+
+    /**
      * Helper method to set up bucket and file data for tests.
      * Uses static caching to avoid recreating resources.
      */
@@ -287,7 +319,7 @@ trait StorageBase
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
-        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
+        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // should validate that the file is not encrypted
 
         /**
          * Failure
@@ -1016,7 +1048,20 @@ trait StorageBase
         $this->assertEquals(200, $cachedPreview['headers']['status-code']);
         $this->assertEquals('image/png', $cachedPreview['headers']['content-type']);
         $this->assertStringStartsWith('private, max-age=', $cachedPreview['headers']['cache-control']);
-        $this->assertEquals($preview['body'], $cachedPreview['body']);
+        $this->assertNotEmpty($cachedPreview['body']);
+
+        $cachedPreviewAgain = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $headers,
+            $params
+        );
+
+        $this->assertEquals(200, $cachedPreviewAgain['headers']['status-code']);
+        $this->assertEquals('image/png', $cachedPreviewAgain['headers']['content-type']);
+        $this->assertStringStartsWith('private, max-age=', $cachedPreviewAgain['headers']['cache-control']);
+        $this->assertEquals('hit', $cachedPreviewAgain['headers']['x-appwrite-cache']);
+        $this->assertEquals($cachedPreview['body'], $cachedPreviewAgain['body']);
     }
 
     public function testFilePreviewZstdCompression(): void

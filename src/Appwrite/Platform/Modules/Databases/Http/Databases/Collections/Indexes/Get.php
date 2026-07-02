@@ -35,6 +35,7 @@ class Get extends Action
             ->desc('Get index')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
+            ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
@@ -67,7 +68,7 @@ class Get extends Action
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);

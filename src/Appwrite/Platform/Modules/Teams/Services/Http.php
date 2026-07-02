@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Teams\Services;
 
-use Appwrite\Platform\Modules\Teams\Http\Logs\XList as ListLogs;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Create as CreateMembership;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Delete as DeleteMembership;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Get as GetMembership;
@@ -42,8 +41,5 @@ class Http extends Service
         $this->addAction(UpdateMembership::getName(), new UpdateMembership());
         $this->addAction(DeleteMembership::getName(), new DeleteMembership());
         $this->addAction(UpdateMembershipStatus::getName(), new UpdateMembershipStatus());
-
-        // Logs
-        $this->addAction(ListLogs::getName(), new ListLogs());
     }
 }

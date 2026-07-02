@@ -19,6 +19,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\Queue\Logs\Get as GetQueueLogs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Mails\Get as GetQueueMails;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Messaging\Get as GetQueueMessaging;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations\Get as GetQueueMigrations;
+use Appwrite\Platform\Modules\Health\Http\Health\Queue\Notifications\Get as GetQueueNotifications;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsResources\Get as GetQueueStatsResources;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsUsage\Get as GetQueueUsage;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Webhooks\Get as GetQueueWebhooks;
@@ -56,6 +57,7 @@ class Http extends Service
         $this->addAction(GetQueueMails::getName(), new GetQueueMails());
         $this->addAction(GetQueueMessaging::getName(), new GetQueueMessaging());
         $this->addAction(GetQueueMigrations::getName(), new GetQueueMigrations());
+        $this->addAction(GetQueueNotifications::getName(), new GetQueueNotifications());
         $this->addAction(GetQueueFunctions::getName(), new GetQueueFunctions());
         $this->addAction(GetQueueStatsResources::getName(), new GetQueueStatsResources());
         $this->addAction(GetQueueUsage::getName(), new GetQueueUsage());

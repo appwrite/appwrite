@@ -53,6 +53,7 @@ class Get extends Action
             ->desc('Get file preview')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
@@ -71,6 +72,7 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::IMAGE
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')

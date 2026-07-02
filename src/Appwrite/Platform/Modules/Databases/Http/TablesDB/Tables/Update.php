@@ -40,6 +40,7 @@ class Update extends CollectionUpdate
             ->label('event', 'databases.[databaseId].tables.[tableId].update')
             ->label('audits.event', 'table.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: 'tables',

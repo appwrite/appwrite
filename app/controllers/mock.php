@@ -46,7 +46,7 @@ Http::get('/v1/mock/tests/locale')
     ->inject('request')
     ->inject('response')
     ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }

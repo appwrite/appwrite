@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Platform\Workers\Messaging;
@@ -27,7 +29,7 @@ use Utopia\Storage\Device\Local;
  * reflection invokes private methods directly on PHP 8.1+, and `setAccessible(true)` is deprecated on PHP 8.5
  * (the CI unit-test runtime), where the suite fails on triggered deprecations.
  */
-class MessagingFanoutTest extends TestCase
+final class MessagingFanoutTest extends TestCase
 {
     private function provider(): Document
     {
@@ -556,6 +558,7 @@ class ScriptedEmailAdapter extends EmailAdapter
      */
     public function __construct(private readonly array $script = [])
     {
+        parent::__construct();
     }
 
     public function getName(): string
