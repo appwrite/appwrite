@@ -70,6 +70,10 @@ class Response extends SwooleResponse
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
+    // Notifications
+    public const MODEL_NOTIFICATION = 'notification';
+    public const MODEL_NOTIFICATION_LIST = 'notificationList';
+
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
