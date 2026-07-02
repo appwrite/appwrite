@@ -8,12 +8,11 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Get extends Action
@@ -49,7 +48,7 @@ class Get extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->inject('gitHub')
+            ->inject('vcs')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -58,7 +57,7 @@ class Get extends Action
     public function action(
         string $installationId,
         string $providerRepositoryId,
-        GitHub $github,
+        Resolver $vcs,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -68,14 +67,11 @@ class Get extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $adapter = $vcs->getAdapter($installation, $dbForPlatform);
 
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwner($adapter, $installation, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $adapter->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -83,12 +79,12 @@ class Get extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $repository = $github->getRepository($owner, $repositoryName);
+        $repository = $adapter->getRepository($owner, $repositoryName);
 
-        $authorized = $github->hasAccessToAllRepositories();
+        $authorized = $adapter->hasAccessToAllRepositories();
         if (!$authorized) {
             try {
-                $installationRepository = $github->getInstallationRepository($repositoryName);
+                $installationRepository = $adapter->getInstallationRepository($repositoryName);
                 if (!empty($installationRepository)) {
                     $authorized = true;
                 }
@@ -103,7 +99,7 @@ class Get extends Action
         $repository['provider'] = $installation->getAttribute('provider', '');
         $repository['defaultBranch'] =  $repository['default_branch'] ?? '';
         $repository['authorized'] = $authorized;
-        $repository['providerInstallationId'] = $providerInstallationId;
+        $repository['providerInstallationId'] = $installation->getAttribute('providerInstallationId', '');
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     }

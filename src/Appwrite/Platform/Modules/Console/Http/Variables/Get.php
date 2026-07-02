@@ -7,6 +7,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -49,10 +50,11 @@ class Get extends Action
             ->inject('response')
             ->inject('platform')
             ->inject('dbForProject')
+            ->inject('vcs')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, array $platform, Database $dbForProject)
+    public function action(Response $response, array $platform, Database $dbForProject, Resolver $vcs)
     {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
@@ -66,11 +68,7 @@ class Get extends Action
 
         $isDomainEnabled = $isAAAAValid || $isAValid || $isCNAMEValid;
 
-        $isVcsEnabled = !empty(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
+        $vcsProviders = \array_keys($vcs->getProviders());
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
@@ -85,7 +83,8 @@ class Get extends Action
             '_APP_COMPUTE_BUILD_TIMEOUT' => +System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT'),
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
-            '_APP_VCS_ENABLED' => $isVcsEnabled,
+            '_APP_VCS_ENABLED' => !empty($vcsProviders),
+            '_APP_VCS_PROVIDERS' => $vcsProviders,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],

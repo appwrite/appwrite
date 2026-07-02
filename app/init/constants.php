@@ -105,9 +105,15 @@ const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_SDK_PLATFORM_STATIC = 'static';
-const APP_VCS_GITHUB_USERNAME = 'Appwrite';
-const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
-const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
+const APP_VCS_COMMIT_USERNAME = 'Appwrite';
+const APP_VCS_COMMIT_EMAIL = 'team@appwrite.io';
+const APP_VCS_COMMIT_AUTHOR_URL = 'https://github.com/TeamAppwrite';
+/** @deprecated Use APP_VCS_COMMIT_USERNAME. Kept for appwrite/cloud. */
+const APP_VCS_GITHUB_USERNAME = APP_VCS_COMMIT_USERNAME;
+/** @deprecated Use APP_VCS_COMMIT_EMAIL. Kept for appwrite/cloud. */
+const APP_VCS_GITHUB_EMAIL = APP_VCS_COMMIT_EMAIL;
+/** @deprecated Use APP_VCS_COMMIT_AUTHOR_URL. Kept for appwrite/cloud. */
+const APP_VCS_GITHUB_URL = APP_VCS_COMMIT_AUTHOR_URL;
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
