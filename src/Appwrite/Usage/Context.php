@@ -71,6 +71,26 @@ class Context
         return '';
     }
 
+    public function setResourceType(string $type): self
+    {
+        return $this;
+    }
+
+    public function getResourceType(): string
+    {
+        return '';
+    }
+
+    public function setIp(string $ip): self
+    {
+        return $this;
+    }
+
+    public function getIp(): string
+    {
+        return '';
+    }
+
     /**
      * Reset the context
      */
