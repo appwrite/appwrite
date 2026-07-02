@@ -43,7 +43,7 @@ class Update extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
-            ->label('audits.resource', 'database/{request.databaseId}/collections/{request.collectionId}')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
