@@ -349,10 +349,45 @@ export const enCatalog = {
         viewDocs: 'View docs',
         viewPricing: 'View pricing',
       },
+      productNames: {
+        auth: 'Auth',
+        databases: 'Databases',
+        storage: 'Storage',
+        functions: 'Functions',
+        messaging: 'Messaging',
+        sites: 'Sites',
+      },
       explore: {
         title: 'Explore Appwrite', // pragma: allowlist secret
         description:
           'Modular backend services that share the same project, permissions model, and console.',
+      },
+      navigation: {
+        triggerLabel: 'Products',
+        desktopTitle: 'Platform products',
+        desktopSubtitle: 'Build, deploy, and scale on one backend platform',
+        viewOverview: 'View platform overview',
+        categories: {
+          build: 'Build',
+          deploy: 'Deploy',
+          protect: 'Protect',
+        },
+        items: {
+          authTagline: 'Email, OAuth, SMS, MFA, teams, and sessions.',
+          databasesTagline: 'TablesDB, DocumentsDB, VectorsDB, PostgreSQL, MySQL.',
+          storageTagline: 'Upload, transform, and deliver files on CDN.',
+          functionsTagline: 'APIs, cron jobs, and event handlers at scale.',
+          messagingTagline: 'Email, SMS, and push with topics and targets.',
+          sitesTagline: 'Static, SSR, and CSR deploys from Git.',
+          realtimeName: 'Realtime',
+          realtimeTagline: 'Live events, channels, and presence.',
+          domainsName: 'Domains',
+          domainsTagline: 'Buy domains, DNS, TLS, and app connections.',
+          firewallName: 'Firewall',
+          firewallTagline: 'Managed WAF for malicious traffic.',
+          advisorName: 'Advisor',
+          advisorTagline: 'Security and performance insights.',
+        },
       },
       tools: {
         headingTitle: 'Tools built for developers and agents',

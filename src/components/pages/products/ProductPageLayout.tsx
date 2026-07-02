@@ -23,14 +23,16 @@ type ProductPageLayoutProps = {
 export function ProductPageLayout({ content }: ProductPageLayoutProps) {
   const { catalog } = useI18n()
   const pageLayoutCopy = catalog.website.products.pageLayout
+  const productNamesCopy = catalog.website.products.productNames
   const product = PRODUCT_REGISTRY[content.id]
   const ProductIcon = product.icon
   const heroLogoStrip = PRODUCT_HERO_LOGO_STRIPS[content.id]
+  const productName = productNamesCopy[content.id] ?? product.name
 
   return (
     <div className="relative overflow-x-clip bg-background">
       <MarketingHeroSection
-        leading={<ProductHeroIcon icon={ProductIcon} name={product.name} />}
+        leading={<ProductHeroIcon icon={ProductIcon} name={productName} />}
         title={content.hero.title}
         description={content.hero.description}
         wideFooter={content.hero.stats?.length === 5}
