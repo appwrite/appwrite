@@ -35,6 +35,8 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
+COPY patches/apply.php /tmp/apply.php
+RUN php /tmp/apply.php && rm /tmp/apply.php
 
 # Add Source Code
 COPY ./app /usr/src/code/app
