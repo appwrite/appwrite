@@ -184,10 +184,10 @@ class Gitea extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', $this->endpoint . '/api/v1/user', ['Authorization: token ' . \urlencode($accessToken)]), true) ?? [];
+            $this->user = \json_decode($this->request('GET', $this->endpoint . '/api/v1/user', ['Authorization: token ' . $accessToken]), true) ?? [];
 
             // Gitea reports the primary email's verification separately
-            $emails = \json_decode($this->request('GET', $this->endpoint . '/api/v1/user/emails', ['Authorization: token ' . \urlencode($accessToken)]), true);
+            $emails = \json_decode($this->request('GET', $this->endpoint . '/api/v1/user/emails', ['Authorization: token ' . $accessToken]), true);
 
             foreach (\is_array($emails) ? $emails : [] as $email) {
                 if (($email['primary'] ?? false) === true) {
@@ -203,7 +203,7 @@ class Gitea extends OAuth2
 
     public function createRepository(string $accessToken, string $repositoryName, bool $private): array
     {
-        $repository = $this->request('POST', $this->endpoint . '/api/v1/user/repos', ['Authorization: token ' . \urlencode($accessToken), 'Content-Type: application/json'], \json_encode([
+        $repository = $this->request('POST', $this->endpoint . '/api/v1/user/repos', ['Authorization: token ' . $accessToken, 'Content-Type: application/json'], \json_encode([
             'name' => $repositoryName,
             'private' => $private
         ]));
