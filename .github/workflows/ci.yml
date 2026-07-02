@@ -257,6 +257,7 @@ jobs:
   build:
     name: Build
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+s3-cache+ecr-cache
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -289,6 +290,7 @@ jobs:
   unit:
     name: Tests / Unit
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
@@ -352,6 +354,7 @@ jobs:
   e2e_general:
     name: Tests / E2E / General
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
@@ -426,6 +429,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
@@ -546,6 +550,7 @@ jobs:
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
@@ -623,6 +628,7 @@ jobs:
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
@@ -706,6 +712,7 @@ jobs:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 20
     needs: build
     permissions:
       actions: read
