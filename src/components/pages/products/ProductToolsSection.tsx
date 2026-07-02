@@ -154,12 +154,14 @@ export function ProductToolsSection({ productId }: ProductToolsSectionProps) {
             <ToolsTileTitle>{toolsCopy.consoleTitle}</ToolsTileTitle>
             <ToolsTileDescription>{toolsCopy.consoleDescription}</ToolsTileDescription>
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-border bg-muted/50 px-1.5 font-mono text-[11px] text-muted-foreground">
-                ⌘
-              </kbd>
-              <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-border bg-muted/50 px-1.5 font-mono text-[11px] text-muted-foreground">
-                K
-              </kbd>
+              <span dir="ltr" className="flex items-center gap-1.5">
+                <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-border bg-muted/50 px-1.5 font-mono text-[11px] text-muted-foreground">
+                  ⌘
+                </kbd>
+                <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-border bg-muted/50 px-1.5 font-mono text-[11px] text-muted-foreground">
+                  K
+                </kbd>
+              </span>
               <span className="text-[11px] text-muted-foreground">
                 {toolsCopy.commandCenter}
               </span>

@@ -1687,7 +1687,10 @@ export function CommandCenter({
                           </p>
                         </div>
                         {shortcutLabel ? (
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          <span
+                            dir="ltr"
+                            className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                          >
                             {shortcutLabel}
                           </span>
                         ) : null}

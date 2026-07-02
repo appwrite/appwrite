@@ -33,6 +33,12 @@ code {
   unicode-bidi: isolate;
 }
 
+/* Keyboard shortcut labels keep modifier-before-key order in RTL pages. */
+html[dir='rtl'] kbd {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 /* Code examples and monospace blocks stay LTR when the page is RTL. */
 html[dir='rtl'] [data-code-example],
 html[dir='rtl'] pre {

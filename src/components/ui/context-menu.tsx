@@ -233,6 +233,7 @@ function ContextMenuShortcut({
 }: React.ComponentProps<'span'>) {
   return (
     <span
+      dir="ltr"
       data-slot="context-menu-shortcut"
       className={cn(
         'text-muted-foreground ms-auto text-xs tracking-widest',

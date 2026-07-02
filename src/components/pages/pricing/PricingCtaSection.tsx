@@ -94,7 +94,7 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
 export function PricingCtaSection() {
   const t = useT()
   return (
-    <section className="relative overflow-x-hidden border-t border-border bg-background py-16 sm:py-20">
+    <section className="relative overflow-hidden border-t border-border bg-background py-16 sm:py-20">
       <HomeSoftLights variant="testimonials" className="opacity-50" />
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6">
         <PricingSectionHeading

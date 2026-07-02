@@ -16,7 +16,7 @@ import { PricingServicesAvatars } from './_components/PricingServicesAvatars'
 export function PricingHeroSection() {
   const t = useT()
   return (
-    <section className="relative isolate overflow-x-hidden border-b border-border bg-background pb-14 pt-10 sm:pb-16 sm:pt-14 lg:pb-20">
+    <section className="relative isolate overflow-hidden border-b border-border bg-background pb-14 pt-10 sm:pb-16 sm:pt-14 lg:pb-20">
       <HomeSoftLights variant="pricing" />
       <div
         className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"
@@ -61,7 +61,7 @@ const afterItems = [
 export function StackConsolidationSection() {
   const t = useT()
   return (
-    <section className="relative overflow-x-hidden border-b border-border bg-background py-16 sm:py-20">
+    <section className="relative overflow-hidden border-b border-border bg-background py-16 sm:py-20">
       <HomeSoftLights variant="testimonials" />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

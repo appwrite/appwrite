@@ -18,12 +18,22 @@ function isConsoleAreaPath(pathname: string): boolean {
   return firstSegment ? CONSOLE_AREA_PREFIXES.has(firstSegment) : false
 }
 
+function isConsoleAuthRouteMatch(
+  matches: Array<{ routeId?: string }>,
+): boolean {
+  return matches.some(
+    (match) =>
+      match.routeId === '/_auth' || match.routeId?.startsWith('/_auth/'),
+  )
+}
+
 function isExcludedMarketingSiteLayoutPath(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/'
   if (normalized === '/docs' || normalized.startsWith('/docs/')) return true
   if (normalized === '/generator' || normalized.startsWith('/generator/')) {
     return true
   }
+  if (normalized === '/reset') return true
   return false
 }
 
@@ -76,6 +86,7 @@ export function shouldUseMarketingSiteLayout({
   matches: Array<{ staticData?: unknown }>
 }): boolean {
   if (!marketingEnabled) return false
+  if (isConsoleAuthRouteMatch(matches)) return false
   if (isExcludedMarketingSiteLayoutPath(pathname)) return false
 
   if (resolveMarketingRouteShellOptions(matches) !== null) {

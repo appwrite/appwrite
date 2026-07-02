@@ -30,7 +30,7 @@ export function ProductPageLayout({ content }: ProductPageLayoutProps) {
   const productName = productNamesCopy[content.id] ?? product.name
 
   return (
-    <div className="relative overflow-x-clip bg-background">
+    <div className="relative min-w-0 bg-background">
       <MarketingHeroSection
         leading={<ProductHeroIcon icon={ProductIcon} name={productName} />}
         title={content.hero.title}

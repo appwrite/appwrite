@@ -164,9 +164,14 @@ export function NativeAppBar() {
           <span className="min-w-0 flex-1 truncate text-start">
             {nativeAppBarCopy.searchPlaceholder}
           </span>
-          <kbd className="ms-auto shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-            ⌘K
-          </kbd>
+          <span className="ms-auto shrink-0">
+            <kbd
+              dir="ltr"
+              className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+            >
+              ⌘K
+            </kbd>
+          </span>
         </button>
       </div>
 

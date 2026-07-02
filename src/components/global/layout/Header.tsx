@@ -1017,12 +1017,14 @@ export function ConsoleHeader({
               </span>
               {searchModKey ? (
                 <span className="ms-auto flex shrink-0 items-center gap-1">
-                  <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
-                    {searchModKey}
-                  </kbd>
-                  <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
-                    K
-                  </kbd>
+                  <span dir="ltr" className="flex items-center gap-1">
+                    <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+                      {searchModKey}
+                    </kbd>
+                    <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85">
+                      K
+                    </kbd>
+                  </span>
                 </span>
               ) : null}
             </button>
@@ -1093,9 +1095,14 @@ export function ConsoleHeader({
                       {headerCopy.search.compactPlaceholder}
                     </span>
                     {searchModKey ? (
-                      <kbd className="ms-2 hidden shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85 @[850px]:inline">
-                        {searchModKey}K
-                      </kbd>
+                      <span className="ms-2 hidden shrink-0 @[850px]:inline">
+                        <kbd
+                          dir="ltr"
+                          className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
+                        >
+                          {searchModKey}K
+                        </kbd>
+                      </span>
                     ) : null}
                   </button>
 

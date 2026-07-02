@@ -13,7 +13,7 @@ export function DomainsSearchBackground({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-0 overflow-x-hidden overflow-y-visible',
+        'pointer-events-none absolute inset-0 overflow-hidden',
         className,
       )}
       aria-hidden
@@ -23,7 +23,7 @@ export function DomainsSearchBackground({
         aria-hidden
       />
 
-      <div className="absolute inset-0 z-[1] overflow-x-hidden overflow-y-visible">
+      <div className="absolute inset-0 z-[1] overflow-hidden">
         <div
           className={cn(
             'absolute -start-[42%] bottom-[-32%] h-[480px] w-[820px] opacity-[0.52]',

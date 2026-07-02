@@ -100,7 +100,7 @@ export function DocsAiSection({ variant = 'page' }: DocsAiSectionProps) {
   return (
     <section
       className={cn(
-        'relative isolate overflow-x-hidden border-b border-border',
+        'relative isolate overflow-hidden border-b border-border',
         sectionPaddingY,
       )}
     >

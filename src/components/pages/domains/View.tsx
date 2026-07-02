@@ -106,7 +106,7 @@ export function View({ initialSearch = '' }: DomainsViewProps) {
   )
 
   return (
-    <div className="relative isolate min-h-[calc(100dvh-3.5rem)] overflow-x-clip bg-background">
+    <div className="relative isolate min-h-[calc(100dvh-3.5rem)] min-w-0 bg-background">
       <DomainsSearchBackground />
       <div className="relative z-[2]">
         <DomainSearchResults

@@ -351,7 +351,9 @@ export function HomeSoftLights({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-0 z-0 overflow-x-hidden overflow-y-visible',
+        /* overflow-hidden: overflow-x-hidden + overflow-y-visible computes to overflow-y:auto
+           (CSS overflow equivalence), which creates a nested scrollbar on Linux inside main. */
+        'pointer-events-none absolute inset-0 z-0 overflow-hidden',
         className,
       )}
       aria-hidden

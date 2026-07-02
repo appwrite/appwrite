@@ -10,7 +10,7 @@ import { DocsRouteLink } from './DocsRouteLink'
 
 export function DocsHeroSection() {
   return (
-    <section className="relative isolate overflow-x-hidden border-b border-border bg-background">
+    <section className="relative isolate overflow-hidden border-b border-border bg-background">
       <HomeSoftLights variant="docs" />
       <div
         className="absolute inset-0 z-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-[length:18px_18px]"

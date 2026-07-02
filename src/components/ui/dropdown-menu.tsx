@@ -180,6 +180,7 @@ function DropdownMenuShortcut({
 }: React.ComponentProps<'span'>) {
   return (
     <span
+      dir="ltr"
       data-slot="dropdown-menu-shortcut"
       className={cn(
         'text-muted-foreground ms-auto text-xs tracking-widest',

@@ -49,7 +49,7 @@ function ShortcutKeyBadges({
 }) {
   const t = useT()
   return (
-    <div className="flex shrink-0 items-center gap-0.5">
+    <div dir="ltr" className="flex shrink-0 items-center gap-0.5">
       {keys.map((key, i) => (
         <span key={i} className="flex items-center gap-0.5">
           {isSequential && i > 0 && (
