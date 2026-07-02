@@ -188,8 +188,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
-            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
+            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
+            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
 
             const services = [
               { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 15 },
@@ -242,7 +242,9 @@ jobs:
               return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
             };
 
-            if (!pr || await isDatabaseVersionChanged()) {
+            const isManualRun = context.eventName === 'workflow_dispatch';
+
+            if (isManualRun || (pr && await isDatabaseVersionChanged())) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
               core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
               return;
@@ -253,7 +255,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+s3-cache+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+s3-cache+ecr-cache
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -285,7 +287,7 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
     needs: build
     permissions:
       contents: read
@@ -348,7 +350,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
     needs: build
     permissions:
       contents: read
@@ -542,7 +544,7 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
     needs: [build, matrix]
     permissions:
       contents: read
@@ -619,7 +621,7 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
     needs: [build, matrix]
     permissions:
       contents: read
@@ -702,7 +704,7 @@ jobs:
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
     needs: build
     permissions:
       actions: read
