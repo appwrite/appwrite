@@ -201,9 +201,18 @@ export const heCatalog: EnCatalog = {
     ...enCatalog.website,
     home: {
       ...enCatalog.website.home,
+      seoDescription:
+        'Appwrite היא פלטפורמת פיתוח בקוד פתוח עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים. לבנות כמו צוות של מאות אנשים.', // pragma: allowlist secret
       announcementNew: 'חדש',
       announcementText: 'מכריזים על Presences API',
       heroTitle: 'לבנות מהר יותר ולגדול יותר מאי פעם',
+      heroDescription:
+        'Appwrite היא פלטפורמת קוד פתוח לבנייה ולהתרחבות מהירה יותר של אפליקציות, עם אימות, מסדי נתונים, אחסון, פונקציות, הודעות, Realtime ואירוח אתרים. הכל במקום אחד.', // pragma: allowlist secret
+      heroPreviewWorkspace: 'Appwrite', // pragma: allowlist secret
+      heroPreviewOrganization: 'אקמי קורפ',
+      heroPreviewProject: 'פרויקט Appwrite ראשון', // pragma: allowlist secret
+      heroImageAlt:
+        'תצוגת הקונסול של Appwrite עם גרפי שימוש, אפליקציות ומפתחות API', // pragma: allowlist secret
       startProject: 'התחלת פרויקט',
       requestDemo: 'בקשת דמו',
       toolsHeading: 'מותאם לפריימוורקים, לשפות ולסוכני ה-AI שאתם אוהבים',
@@ -213,12 +222,40 @@ export const heCatalog: EnCatalog = {
       productsDescription:
         'לבנות עם מוצרים מודולריים שמרגישים אחידים מהאב-טיפוס הראשון ועד לסקייל בפרודקשן.',
       securityHeading: 'אבטחה מובנית בכל שכבות הארכיטקטורה',
+      securityDescription:
+        'עם גישה שמתחילה מאבטחה, Appwrite עוזרת לשמור על המוצר ועל המשתמשים בטוחים כברירת מחדל, ומקלה על עמידה במדיניות מחמירה.', // pragma: allowlist secret
+      aiDocLinks: {
+        ...enCatalog.website.home.aiDocLinks,
+        mcpServers: 'שרתי MCP',
+        skills: 'יכולות Appwrite', // pragma: allowlist secret
+        aiArena: 'זירת AI',
+      },
       securityItems: {
         ...enCatalog.website.home.securityItems,
         ddosTitle: 'הגנת DDoS',
+        ddosDescription:
+          'זיהוי והפחתה אוטומטיים של מתקפות מניעת שירות מבוזרות.',
         encryptionTitle: 'הצפנה',
+        encryptionDescription:
+          'הצפנת נתונים מובנית עבור עומסי עבודה רגישים במנוחה ובתעבורה.',
         abuseTitle: 'הגנה מפני ניצול לרעה',
+        abuseDescription:
+          'הגנה על ה-API שלכם מפני ניצול לרעה באמצעות מנגנוני פלטפורמה מובנים.',
         migrationsTitle: 'העברת נתונים',
+        migrationsDescription:
+          'העברת נתונים מצדדים שלישיים או בין סביבות Cloud ו-Self-hosted.',
+        gdprTitle: 'GDPR',
+        gdprDescription:
+          'תמיכה בתהליכי פרטיות נתונים ובאמצעי הגנה לדרישות GDPR.',
+        soc2Title: 'SOC 2',
+        soc2Description:
+          'עבודה על גבי תשתית שתוכננה לסטנדרטים גבוהים של אבטחה ופרטיות.',
+        hipaaTitle: 'HIPAA',
+        hipaaDescription:
+          'הגנה על נתוני בריאות רגישים עם בקרות מוצר שמבוססות אבטחה.',
+        ccpaTitle: 'CCPA',
+        ccpaDescription:
+          'בנייה עם בקרות שעוזרות להגן על נתונים רגישים של משתמשים.',
       },
       productBento: {
         ...enCatalog.website.home.productBento,
@@ -230,6 +267,22 @@ export const heCatalog: EnCatalog = {
         messagingTitle: 'הודעות',
         firewallTitle: 'חומת אש',
         realtimeTitle: 'Realtime',
+        authDescription:
+          'אימות מאובטח של משתמשים עם אימייל, SMS, OAuth, סשנים אנונימיים וקישורי קסם.',
+        databasesDescription:
+          'מודלים, שאילתות וסקייל עם מסדי הנתונים של Appwrite או עם PostgreSQL ו-MySQL ייעודיים, כדי להתאים לתרחיש העבודה ולצורכי הצוות.', // pragma: allowlist secret
+        storageDescription:
+          'אחסון קבצים עם דחיסה, הצפנה, המרות תמונה ובקרת גישה.',
+        functionsDescription:
+          'פריסת פונקציות Serverless עם סביבות ריצה מבודדות ומאובטחות והפעלה מבוססת אירועים.',
+        sitesDescription:
+          'פריסת פרונטאנד סטטי, SSR ו-CSR מ-Git עם תצוגות מקדימות מיידיות ו-Appwrite מאחוריהם.', // pragma: allowlist secret
+        messagingDescription:
+          'שליחת אימייל, SMS והתראות Push דרך שירות הודעות אחוד.',
+        firewallDescription:
+          'הגנה על אפליקציות עם כללי תעבורה, בקרות ניצול לרעה ואבטחת קצה לכל פרויקט.',
+        realtimeDescription:
+          'הרשמה ותגובה לאירועים ברחבי הפרויקט בזמן אמת.',
         firewallNewLabel: 'חדש',
       },
     },
