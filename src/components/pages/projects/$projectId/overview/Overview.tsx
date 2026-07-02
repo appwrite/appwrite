@@ -1281,7 +1281,7 @@ export function View({ projectId, initialData }: ViewProps) {
                       RESOURCE_CARD_SHELL_CLASSNAME,
                     )}
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                       {integration.icon}
                     </div>
                     <div className="min-w-0 flex-1">

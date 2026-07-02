@@ -39,7 +39,7 @@ export function IntegrationIcon({
     return (
       <div
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-lg border border-border bg-background p-1.5',
+          'flex shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 p-1.5',
           containerClass,
           className,
         )}
@@ -57,7 +57,7 @@ export function IntegrationIcon({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-lg bg-muted',
+        'flex shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40',
         containerClass,
         className,
       )}

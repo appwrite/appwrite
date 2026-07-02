@@ -133,6 +133,20 @@ const COVER_BEAM_SOFT_LIGHT_LAYOUT = {
   },
 } satisfies Record<'center' | 'accent', CoverSoftLightLayout>
 
+/** Moody ambient teal wash from the lower-left corner. */
+const COVER_GLOW_SOFT_LIGHT_LAYOUT = {
+  bottomLeft: {
+    left: -0.42,
+    anchor: 'bottom',
+    bottomOverflow: 0.34,
+    widthRatio: 1280 / 1200,
+    heightRatio: 720 / 630,
+    tone: 'teal',
+    midStop: 36,
+    fadeStop: 76,
+  },
+} satisfies Record<'bottomLeft', CoverSoftLightLayout>
+
 export const COVER_SOFT_LIGHT_VARIANTS: Record<
   CoverSoftLightVariant,
   Record<string, CoverSoftLightLayout>
@@ -140,6 +154,7 @@ export const COVER_SOFT_LIGHT_VARIANTS: Record<
   hero: COVER_HERO_SOFT_LIGHT_LAYOUT,
   aurora: COVER_AURORA_SOFT_LIGHT_LAYOUT,
   beam: COVER_BEAM_SOFT_LIGHT_LAYOUT,
+  glow: COVER_GLOW_SOFT_LIGHT_LAYOUT,
 }
 
 /** Reference canvas the light layouts were tuned against (Open Graph). */
@@ -246,11 +261,15 @@ export function getCoverSoftLightLayoutsForTheme(
   themeId: CoverThemeId,
   context?: CoverBackgroundContext,
 ): Array<[string, CoverSoftLightLayout]> {
-  if (context?.templateId === 'integration-icon') {
+  const theme = getCoverTheme(themeId)
+
+  if (
+    context?.templateId === 'integration-icon' &&
+    theme.softLightVariant !== 'glow'
+  ) {
     return Object.entries(COVER_INTEGRATION_ICON_SOFT_LIGHT_LAYOUT)
   }
 
-  const theme = getCoverTheme(themeId)
   const layouts = COVER_SOFT_LIGHT_VARIANTS[theme.softLightVariant]
 
   if (theme.softLightVariant === 'hero') {

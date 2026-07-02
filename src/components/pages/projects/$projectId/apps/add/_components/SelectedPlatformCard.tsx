@@ -37,7 +37,7 @@ export function SelectedPlatformCard({
     <div className="rounded-xl border border-border bg-card/50 px-3 py-2.5 sm:px-4 sm:py-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[12px] font-medium text-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-[12px] font-medium text-foreground">
             <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-muted-foreground [&_img]:!h-3.5 [&_img]:!w-3.5 [&_svg]:!h-3.5 [&_svg]:!w-3.5">
               <PlatformKindIcon kind={kind} />
             </span>
@@ -49,7 +49,7 @@ export function SelectedPlatformCard({
                 className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60"
                 aria-hidden
               />
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[12px] font-medium text-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-[12px] font-medium text-foreground">
                 <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-muted-foreground [&_img]:!h-3.5 [&_img]:!w-3.5 [&_svg]:!h-3.5 [&_svg]:!w-3.5">
                   {secondary.icon}
                 </span>

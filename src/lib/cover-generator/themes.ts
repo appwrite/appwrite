@@ -14,7 +14,7 @@ export type CoverThemeFamily = 'light' | 'dark'
 
 export type CoverBackgroundGridStyle = 'dots' | 'grid' | 'diagonal' | 'none'
 
-export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam'
+export type CoverSoftLightVariant = 'hero' | 'aurora' | 'beam' | 'glow'
 
 export const COVER_BACKGROUND_GRID_LABELS: Record<CoverBackgroundGridStyle, string> = {
   dots: 'Dotted grid',
@@ -35,6 +35,7 @@ const COVER_THEME_LABEL_BY_ID: Record<string, string> = {
   'dark-beam': 'Diagonal lines, top pink & orange spotlight',
   'light-plain': 'Plain, bottom pink & purple',
   'dark-plain': 'Plain, bottom pink & purple',
+  'dark-glow': 'Plain, bottom teal ambient glow',
 }
 
 const COVER_THEME_DESCRIPTION_BY_ID: Record<string, string> = {
@@ -48,6 +49,8 @@ const COVER_THEME_DESCRIPTION_BY_ID: Record<string, string> = {
   'dark-beam': 'Diagonal texture with a pink spotlight and orange accent above.',
   'light-plain': 'Solid background with soft corner glow, no texture.',
   'dark-plain': 'Solid background with soft corner glow, no texture.',
+  'dark-glow':
+    'Plain dark background with a large teal light leak from the lower-left corner.',
 }
 
 export function getCoverBackgroundGridLabel(style: CoverBackgroundGridStyle): string {
@@ -83,6 +86,12 @@ const LIGHT_AURORA_SOFT_LIGHTS = getCoverSoftLightOpacityPreset('light', 1.2)
 const DARK_AURORA_SOFT_LIGHTS = getCoverSoftLightOpacityPreset('dark', 1.25)
 const LIGHT_BEAM_SOFT_LIGHTS = getCoverSoftLightOpacityPreset('light', 1.1)
 const DARK_BEAM_SOFT_LIGHTS = getCoverSoftLightOpacityPreset('dark', 1.15)
+const DARK_GLOW_SOFT_LIGHTS: CoverSoftLightOpacity = {
+  pink: { strong: 0.06, mid: 0.02 },
+  purple: { strong: 0.07, mid: 0.025 },
+  teal: { strong: 0.13, mid: 0.045 },
+  orange: { strong: 0.06, mid: 0.02 },
+}
 
 const LIGHT_BASE = {
   family: 'light' as const,
@@ -191,13 +200,24 @@ export const COVER_THEME_DEFINITIONS = {
     softLightVariant: 'hero',
     softLights: DARK_SOFT_LIGHTS,
   }),
+  'dark-glow': defineCoverTheme({
+    id: 'dark-glow',
+    ...DARK_BASE,
+    backgroundGrid: 'none',
+    softLightVariant: 'glow',
+    softLights: DARK_GLOW_SOFT_LIGHTS,
+  }),
 } as const satisfies Record<string, CoverThemeDefinition>
 
 export type CoverThemeId = keyof typeof COVER_THEME_DEFINITIONS
 
 export const COVER_THEME_IDS = Object.keys(COVER_THEME_DEFINITIONS) as CoverThemeId[]
 
-export const COVER_EDITOR_THEME_IDS = ['light-plain', 'dark-plain'] as const satisfies readonly CoverThemeId[]
+export const COVER_EDITOR_THEME_IDS = [
+  'light-plain',
+  'dark-plain',
+  'dark-glow',
+] as const satisfies readonly CoverThemeId[]
 
 export type CoverEditorThemeId = (typeof COVER_EDITOR_THEME_IDS)[number]
 
