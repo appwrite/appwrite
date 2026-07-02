@@ -43,11 +43,12 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     healthcheck:
       test:
-        - CMD
-        - doctor
+        - CMD-SHELL
+        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
+      start_period: 120s
     networks:
       - appwrite
     labels:
