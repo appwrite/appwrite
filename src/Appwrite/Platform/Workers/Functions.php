@@ -327,6 +327,7 @@ class Functions extends Action
         $bus->dispatch(new ExecutionCompleted(
             execution: $execution->getArrayCopy(),
             project: $project->getArrayCopy(),
+            resource: $function->getArrayCopy(),
         ));
     }
 
@@ -630,6 +631,7 @@ class Functions extends Action
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
                 spec: $spec,
+                resource: $function->getArrayCopy(),
             ));
         }
 
