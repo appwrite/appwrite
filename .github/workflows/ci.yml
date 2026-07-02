@@ -188,37 +188,37 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
-            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache`;
+            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
+            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
 
             const services = [
-              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 15 },
-              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 15 },
-              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 15 },
-              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 15 },
-              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 15 },
-              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 15 },
+              { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Avatars',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Console',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Databases',         runner: runner8, functional: false, processes: 3,    timeout: 8 },
+              { name: 'TablesDB',          runner: runner8, functional: false, processes: 3,    timeout: 8 },
+              { name: 'Functions',         runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'FunctionsSchedule', runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'GraphQL',           runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'Health',            runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Advisor',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Locale',            runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Projects',          runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Realtime',          runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'Sites',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Proxy',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Storage',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Tokens',            runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Teams',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Users',             runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'ProjectWebhooks',   runner: runner4, functional: false, processes: null, timeout: 8 },
+              { name: 'Webhooks',          runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'VCS',               runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Messaging',         runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Notifications',     runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Migrations',        runner: runner4, functional: true,  processes: 1,    timeout: 8 },
+              { name: 'Project',           runner: runner4, functional: true,  processes: null, timeout: 8 },
+              { name: 'Presences',         runner: runner4, functional: true,  processes: null, timeout: 8 },
             ];
             core.setOutput('services', JSON.stringify(services));
 
@@ -242,7 +242,10 @@ jobs:
               return getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
             };
 
-            if (!pr || await isDatabaseVersionChanged()) {
+            const fullMatrix = context.eventName === 'workflow_dispatch'
+              || (pr && await isDatabaseVersionChanged());
+
+            if (fullMatrix) {
               core.setOutput('databases', JSON.stringify(['MariaDB', 'PostgreSQL', 'MongoDB']));
               core.setOutput('modes', JSON.stringify(['dedicated', 'shared']));
               return;
@@ -253,7 +256,8 @@ jobs:
 
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+s3-cache+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+s3-cache+ecr-cache
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -285,7 +289,8 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
@@ -337,7 +342,7 @@ jobs:
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
-          timeout_minutes: 15
+          timeout_minutes: 5
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/unit
@@ -348,7 +353,8 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: build
     permissions:
       contents: read
@@ -405,7 +411,7 @@ jobs:
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
-          timeout_minutes: 15
+          timeout_minutes: 5
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/General
@@ -418,11 +424,12 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: ${{ matrix.service.runner }}
+    timeout-minutes: 20
     needs: [build, matrix]
     permissions:
       contents: read
@@ -538,11 +545,12 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
@@ -602,7 +610,7 @@ jobs:
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
-          timeout_minutes: 15
+          timeout_minutes: 5
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e
@@ -615,11 +623,12 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 15
     needs: [build, matrix]
     permissions:
       contents: read
@@ -684,7 +693,7 @@ jobs:
         with:
           max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
           retry_wait_seconds: 60
-          timeout_minutes: 15
+          timeout_minutes: 5
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Sites
@@ -697,12 +706,13 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs --timestamps
 
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=120g/spot=false/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    timeout-minutes: 20
     needs: build
     permissions:
       actions: read
