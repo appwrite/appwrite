@@ -90,7 +90,7 @@ export function DiagramNodeView({
         }}
       >
         <div
-          className="absolute start-4 top-3 text-[12px] font-semibold uppercase tracking-wider"
+          className="absolute left-4 top-3 text-[12px] font-semibold uppercase tracking-wider"
           style={{ color: brand.mutedForeground }}
         >
           {node.label}

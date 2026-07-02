@@ -769,14 +769,14 @@ export function DiagramCanvas({
         >
           <SchemaBlueprintMat />
           <div
-            className="pointer-events-auto absolute start-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{
               width: artboardDisplaySize.width,
               height: artboardDisplaySize.height,
             }}
           >
             <div
-              className="absolute start-0 top-0 origin-top-start overflow-hidden rounded-xl border border-border shadow-sm"
+              className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-xl border border-border shadow-sm"
               style={artboardTransformStyle}
             >
                 <CoverBrandBackgroundPreview

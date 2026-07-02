@@ -57,7 +57,7 @@ export function DiagramTemplatePreviewCard({
       >
         {displayWidth > 0 ? (
           <div
-            className="pointer-events-none absolute start-0 top-0 origin-top-start"
+            className="pointer-events-none absolute left-0 top-0 origin-top-left"
             style={{
               width: document.width,
               height: document.height,

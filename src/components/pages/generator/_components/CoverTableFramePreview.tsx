@@ -115,7 +115,7 @@ export function CoverTableFramePreview({
                   className="flex items-center justify-center px-1 font-semibold uppercase tracking-wider"
                   style={{
                     fontSize: layout.headerFontSize,
-                    borderInlineStart:
+                    borderLeft:
                       columnIndex > 0 ? `1px solid ${brand.border}` : undefined,
                     opacity: columnIndex > 0 ? 0.65 : 1,
                   }}
@@ -150,7 +150,7 @@ export function CoverTableFramePreview({
                       fontSize: layout.cellFontSize,
                       fontWeight: columnIndex === 0 ? 600 : 400,
                       color: columnIndex === 0 ? brand.foreground : brand.mutedForeground,
-                      borderInlineStart:
+                      borderLeft:
                         columnIndex > 0 ? `1px solid ${brand.border}` : undefined,
                       opacity: columnIndex > 0 ? 0.65 : 1,
                     }}

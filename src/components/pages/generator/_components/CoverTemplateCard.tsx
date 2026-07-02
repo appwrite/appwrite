@@ -80,7 +80,7 @@ export function CoverTemplateCard({
             data={previewData}
             previewUrl={previewUrl || undefined}
             displayWidth={previewWidth}
-            className="absolute start-0 top-0"
+            className="absolute left-0 top-0"
           />
         ) : null}
       </div>

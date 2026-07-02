@@ -17,6 +17,8 @@ import {
   type Tab,
 } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
+import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
+import { cn } from '@/lib/utils'
 
 const GENERATOR_TABS: Tab[] = [
   { id: 'covers', label: 'Covers', to: '/generator' },
@@ -45,7 +47,13 @@ function GeneratorLayoutContent() {
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        dir="ltr"
+        className={cn(
+          'flex h-full min-h-0 flex-1 flex-col overflow-hidden',
+          FORCE_LTR_CLASS,
+        )}
+      >
         <ServiceHeader
           title={
             editorTitle ? (

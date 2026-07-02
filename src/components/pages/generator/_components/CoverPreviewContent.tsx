@@ -86,7 +86,7 @@ export function CoverScaledPreview({
       style={{ width: displayWidth, height: displayHeight }}
     >
       <div
-        className="pointer-events-none absolute start-0 top-0 origin-top-start"
+        className="pointer-events-none absolute left-0 top-0 origin-top-left"
         style={{
           width: data.width,
           height: data.height,
