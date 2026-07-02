@@ -141,6 +141,26 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
         default => SESSION_PROVIDER_TOKEN,
     };
+
+    // For OAuth2 tokens, carry the provider credentials from the identity onto the session,
+    // mirroring the cookie-based createOAuth2Session flow.
+    $providerCredentials = [];
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
+        $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('provider', [$oauthProvider]),
+        ]));
+
+        if (!$identity->isEmpty()) {
+            $providerCredentials = [
+                'providerUid' => $identity->getAttribute('providerUid'),
+                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
+                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
+                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
+            ];
+        }
+    }
+
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -154,6 +174,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
+        $providerCredentials,
         $detector->getOS(),
         $detector->getClient(),
         $detector->getDevice()
