@@ -47,28 +47,31 @@ import {
   getMarketingHomeOgImage,
   getMarketingPageMetaTags,
 } from '@/lib/marketing/route-meta'
+import { getEnglishCatalog, useI18n } from '@/lib/i18n'
+
+const HOME_COPY = getEnglishCatalog().website.home
 
 const frameworkTools = [
-  { name: 'React', icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
-  { name: 'Next.js', icon: '/icons/nextjs.svg', href: '/docs/quick-starts/nextjs' },
-  { name: 'Vue', icon: '/icons/vue.svg', href: '/docs/quick-starts/vue' },
-  { name: 'SvelteKit', icon: '/icons/svelte.svg', href: '/docs/quick-starts/sveltekit' },
-  { name: 'Astro', icon: '/icons/astro.svg', href: '/docs/quick-starts/astro' },
-  { name: 'Android', icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
-  { name: 'iOS', icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
-  { name: 'Flutter', icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },
-  { name: 'Claude', icon: '/icons/claude.svg', href: '/docs/tooling/mcp/claude-code' },
-  { name: 'ChatGPT', icon: '/icons/chatgpt.svg', href: '/docs/tooling/ai/agents/codex' },
-  { name: 'Cursor', icon: '/icons/cursor-ai.svg', href: '/docs/tooling/mcp/cursor' },
-  { name: 'Lovable', icon: '/icons/lovable.svg', href: '/docs/tooling/ai/vibe-coding/lovable' },
-  { name: 'OpenCode', icon: '/icons/opencode.svg', href: '/docs/tooling/mcp/opencode' },
-  { name: 'Bun', icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
+  { name: HOME_COPY.frameworkTools.react, icon: '/icons/react.svg', href: '/docs/quick-starts/react' },
+  { name: HOME_COPY.frameworkTools.nextjs, icon: '/icons/nextjs.svg', href: '/docs/quick-starts/nextjs' },
+  { name: HOME_COPY.frameworkTools.vue, icon: '/icons/vue.svg', href: '/docs/quick-starts/vue' },
+  { name: HOME_COPY.frameworkTools.sveltekit, icon: '/icons/svelte.svg', href: '/docs/quick-starts/sveltekit' },
+  { name: HOME_COPY.frameworkTools.astro, icon: '/icons/astro.svg', href: '/docs/quick-starts/astro' },
+  { name: HOME_COPY.frameworkTools.android, icon: '/icons/android.svg', href: '/docs/quick-starts/android' },
+  { name: HOME_COPY.frameworkTools.ios, icon: '/icons/apple.svg', href: '/docs/quick-starts/apple' },
+  { name: HOME_COPY.frameworkTools.flutter, icon: '/icons/flutter.svg', href: '/docs/quick-starts/flutter' },
+  { name: HOME_COPY.frameworkTools.claude, icon: '/icons/claude.svg', href: '/docs/tooling/mcp/claude-code' },
+  { name: HOME_COPY.frameworkTools.chatgpt, icon: '/icons/chatgpt.svg', href: '/docs/tooling/ai/agents/codex' },
+  { name: HOME_COPY.frameworkTools.cursor, icon: '/icons/cursor-ai.svg', href: '/docs/tooling/mcp/cursor' },
+  { name: HOME_COPY.frameworkTools.lovable, icon: '/icons/lovable.svg', href: '/docs/tooling/ai/vibe-coding/lovable' },
+  { name: HOME_COPY.frameworkTools.opencode, icon: '/icons/opencode.svg', href: '/docs/tooling/mcp/opencode' },
+  { name: HOME_COPY.frameworkTools.bun, icon: '/icons/bun.svg', href: '/docs/products/functions/runtimes' },
 ] as const
 
 const aiDocLinks = [
-  { label: 'MCP servers', href: '/docs/tooling/ai/mcp-servers' },
-  { label: 'Appwrite Skills', href: '/docs/tooling/ai/skills' },
-  { label: 'AI Arena', href: 'https://arena.appwrite.io/', external: true },
+  { label: HOME_COPY.aiDocLinks.mcpServers, href: '/docs/tooling/ai/mcp-servers' },
+  { label: HOME_COPY.aiDocLinks.skills, href: '/docs/tooling/ai/skills' }, // pragma: allowlist secret
+  { label: HOME_COPY.aiDocLinks.aiArena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
 ] as const
 
 const productBentoItems: {
@@ -84,17 +87,15 @@ const productBentoItems: {
   mobileVisualTall?: boolean
 }[] = [
   {
-    title: 'Auth',
-    description:
-      'Authenticate users securely with email, SMS, OAuth, anonymous sessions, and magic URLs.',
+    title: HOME_COPY.productBento.authTitle,
+    description: HOME_COPY.productBento.authDescription,
     icon: Users,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:row-span-2',
   },
   {
-    title: 'Databases',
-    description:
-      "Model, query, and scale with Appwrite databases or native PostgreSQL and MySQL, so you can match your use case and team's needs.",
+    title: HOME_COPY.productBento.databasesTitle,
+    description: HOME_COPY.productBento.databasesDescription,
     icon: Database,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-3',
@@ -102,32 +103,29 @@ const productBentoItems: {
     mobileVisualTall: true,
   },
   {
-    title: 'Storage',
-    description:
-      'Store files with compression, encryption, image transformations, and access control.',
+    title: HOME_COPY.productBento.storageTitle,
+    description: HOME_COPY.productBento.storageDescription,
     icon: Folder,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-3 lg:row-span-2',
   },
   {
-    title: 'Functions',
-    description:
-      'Deploy serverless functions with secure isolated runtimes and event-driven execution.',
+    title: HOME_COPY.productBento.functionsTitle,
+    description: HOME_COPY.productBento.functionsDescription,
     icon: Zap,
     className:
       'lg:col-span-4 lg:col-start-1 lg:row-start-5 lg:row-span-2',
   },
   {
-    title: 'Sites',
-    description:
-      'Deploy static, SSR, and CSR frontends from Git with instant previews and Appwrite behind them.',
+    title: HOME_COPY.productBento.sitesTitle,
+    description: HOME_COPY.productBento.sitesDescription,
     icon: Globe,
     className:
       'lg:col-span-8 lg:col-start-5 lg:row-start-4 lg:row-span-3',
     tall: true,
   },
   {
-    title: 'Messaging',
+    title: HOME_COPY.productBento.messagingTitle,
     description:
       'Send email, SMS, and push messages through a unified messaging service.',
     icon: MessageSquare,
@@ -136,19 +134,17 @@ const productBentoItems: {
     compact: true,
   },
   {
-    title: 'Firewall',
-    label: 'New',
-    description:
-      'Protect apps with traffic rules, abuse controls, and edge security for every project.',
+    title: HOME_COPY.productBento.firewallTitle,
+    label: HOME_COPY.productBento.firewallNewLabel,
+    description: HOME_COPY.productBento.firewallDescription,
     icon: Shield,
     className:
       'lg:col-span-4 lg:col-start-5 lg:row-start-7 lg:row-span-2',
     compact: true,
   },
   {
-    title: 'Realtime',
-    description:
-      'Subscribe and react to events across your project as they happen.',
+    title: HOME_COPY.productBento.realtimeTitle,
+    description: HOME_COPY.productBento.realtimeDescription,
     icon: Radio,
     className:
       'lg:col-span-4 lg:col-start-9 lg:row-start-7 lg:row-span-2',
@@ -170,51 +166,43 @@ const securityItems: {
   icon: LucideIcon
 }[] = [
   {
-    title: 'DDoS protection',
-    description:
-      'Automatically detect and mitigate distributed denial-of-service attacks.',
+    title: HOME_COPY.securityItems.ddosTitle,
+    description: HOME_COPY.securityItems.ddosDescription,
     icon: ShieldCheck,
   },
   {
-    title: 'Encryption',
-    description:
-      'Built-in data encryption for sensitive workloads in rest and in transit.',
+    title: HOME_COPY.securityItems.encryptionTitle,
+    description: HOME_COPY.securityItems.encryptionDescription,
     icon: LockKeyhole,
   },
   {
-    title: 'Abuse protection',
-    description:
-      'Protect your APIs from abuse with built-in platform safeguards.',
+    title: HOME_COPY.securityItems.abuseTitle,
+    description: HOME_COPY.securityItems.abuseDescription,
     icon: BadgeCheck,
   },
   {
-    title: 'Data migrations',
-    description:
-      'Move data from third parties or between Cloud and self-hosted environments.',
+    title: HOME_COPY.securityItems.migrationsTitle,
+    description: HOME_COPY.securityItems.migrationsDescription,
     icon: DatabaseBackup,
   },
   {
-    title: 'GDPR',
-    description:
-      'Support data privacy workflows and safeguards for GDPR requirements.',
+    title: HOME_COPY.securityItems.gdprTitle,
+    description: HOME_COPY.securityItems.gdprDescription,
     icon: Globe2,
   },
   {
-    title: 'SOC 2',
-    description:
-      'Operate on infrastructure designed for high security and privacy standards.',
+    title: HOME_COPY.securityItems.soc2Title,
+    description: HOME_COPY.securityItems.soc2Description,
     icon: Pentagon,
   },
   {
-    title: 'HIPAA',
-    description:
-      'Protect sensitive health data with security-first product controls.',
+    title: HOME_COPY.securityItems.hipaaTitle,
+    description: HOME_COPY.securityItems.hipaaDescription,
     icon: HeartPulse,
   },
   {
-    title: 'CCPA',
-    description:
-      'Build with controls that help protect sensitive user data.',
+    title: HOME_COPY.securityItems.ccpaTitle,
+    description: HOME_COPY.securityItems.ccpaDescription,
     icon: Scale,
   },
 ]
@@ -225,8 +213,7 @@ export const Route = createFileRoute('/home')({
   head: () => ({
     meta: getMarketingPageMetaTags({
       pageName: 'Home',
-      description:
-        'Appwrite is an open-source developer platform with Auth, Databases, Storage, Functions, Messaging, and Sites. Build like a team of hundreds.',
+      description: HOME_COPY.seoDescription,
       ogImage: getMarketingHomeOgImage(),
     }),
     links: [
@@ -251,6 +238,9 @@ export const Route = createFileRoute('/home')({
 })
 
 function HomePage() {
+  const { catalog } = useI18n()
+  const homeCopy = catalog.website.home
+
   return (
     <StandaloneCommandCenterScope context="account">
       <ConsoleLayout
@@ -277,31 +267,31 @@ function HomePage() {
             >
               <MarketingSiteLink href="/docs/products/realtime/presence">
                 <Radio className="size-3.5" />
-                <span className="text-[var(--brand-cta)]">New</span>
-                Announcing the Presences API
+                <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
+                {homeCopy.announcementText}
                 <ArrowRight className="size-3.5" />
               </MarketingSiteLink>
             </Button>
 
             <h1 className="font-aeonik-pro text-gradient-brand mt-6 max-w-6xl pb-3 text-balance text-[48px] font-normal leading-[1.04] tracking-[-0.022em] lg:text-[76px]">
-              Build faster and scale bigger than ever
+              {homeCopy.heroTitle}
               <span className="text-[var(--brand-cta)]">_</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-balance text-[15px] leading-6 text-muted-foreground sm:text-[16px] sm:leading-7">
-              Appwrite is an open-source platform for building and scaling applications
-              faster, offering Auth, Databases, Storage, Functions, Messaging, Realtime,
-              and web hosting. All in one place.
+              {homeCopy.heroDescription}
             </p>
 
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
               <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
                 <Link to="/sign-up" search={{ redirect: '/' }}>
-                  Start project
+                  {homeCopy.startProject}
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-                <MarketingSiteLink href="/enterprise">Request a demo</MarketingSiteLink>
+                <MarketingSiteLink href="/enterprise">
+                  {homeCopy.requestDemo}
+                </MarketingSiteLink>
               </Button>
             </div>
           </div>
@@ -316,17 +306,21 @@ function HomePage() {
                     <span className="size-2.5 rounded-full bg-muted-foreground/30" />
                   </div>
                   <div className="ms-2 flex min-w-0 items-center gap-1.5 pe-4 text-[12px] text-muted-foreground">
-                    <span className="font-medium text-foreground">appwrite</span>
+                    <span className="font-medium text-foreground">
+                      {homeCopy.heroPreviewWorkspace}
+                    </span>
                     <ChevronRight className="size-3" />
-                    <span className="truncate">Acme Corp</span>
+                    <span className="truncate">
+                      {homeCopy.heroPreviewOrganization}
+                    </span>
                     <ChevronRight className="size-3" />
-                    <span className="truncate">First Appwrite project</span>
+                    <span className="truncate">{homeCopy.heroPreviewProject}</span>
                   </div>
                 </div>
                 <div className="relative z-10 aspect-[148/65] w-full overflow-hidden">
                   <img
                     src="/images/heroes/console-app-light.avif"
-                    alt="Appwrite console overview with usage charts, apps, and API keys"
+                    alt={homeCopy.heroImageAlt}
                     width={1280}
                     height={960}
                     fetchPriority="high"
@@ -335,7 +329,7 @@ function HomePage() {
                   />
                   <img
                     src="/images/heroes/console-app-dark.avif"
-                    alt="Appwrite console overview with usage charts, apps, and API keys"
+                    alt={homeCopy.heroImageAlt}
                     width={1280}
                     height={960}
                     fetchPriority="high"
@@ -353,7 +347,7 @@ function HomePage() {
         <section className="border-b border-border bg-background py-14 sm:py-16">
           <div className="mx-auto w-full max-w-6xl px-4 text-center sm:px-6">
             <h2 className="font-aeonik-pro text-[16px] font-normal tracking-tight text-foreground sm:text-[18px]">
-              Optimized for the frameworks, languages and agents you love
+              {homeCopy.toolsHeading}
               <span className="text-[var(--brand-cta)]">_</span>
             </h2>
 
@@ -377,7 +371,7 @@ function HomePage() {
 
           <nav
             className="mt-7 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[12px] font-medium text-muted-foreground"
-            aria-label="AI and MCP documentation"
+            aria-label={homeCopy.aiDocsNavLabel}
           >
             {aiDocLinks.map((link, index) => (
               <span key={link.href} className="flex items-center gap-2">
@@ -411,14 +405,13 @@ function HomePage() {
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="font-aeonik-pro text-[40px] font-normal leading-none tracking-tight text-foreground sm:text-[48px]">
-                All the services you need
+                {homeCopy.productsHeadingLineOne}
                 <br />
-                in one platform
+                {homeCopy.productsHeadingLineTwo}
                 <span className="text-[var(--brand-cta)]">_</span>
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-[14px] leading-6 text-muted-foreground">
-                Build with modular products that feel unified from the first prototype
-                to production scale.
+                {homeCopy.productsDescription}
               </p>
             </div>
 
@@ -511,13 +504,11 @@ function HomePage() {
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
             <div className="mx-auto max-w-5xl text-center">
               <h2 className="font-aeonik-pro mx-auto max-w-5xl text-balance text-[36px] font-normal leading-none tracking-tight text-foreground sm:text-[44px]">
-                Embedded security across every layer of the architecture
+                {homeCopy.securityHeading}
                 <span className="text-[var(--brand-cta)]">_</span>
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-balance text-[14px] leading-6 text-muted-foreground sm:text-[15px] sm:leading-7">
-                With a security-first approach, Appwrite helps keep products and
-                users safe by default, making it easier to adhere to strict
-                safety policies.
+                {homeCopy.securityDescription}
               </p>
             </div>
 
