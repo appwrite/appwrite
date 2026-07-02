@@ -134,16 +134,20 @@ class Resolver
         $expiry = $installation->getAttribute('personalAccessTokenExpiry', '');
         $refreshToken = $installation->getAttribute('personalRefreshToken', '');
 
-        if (empty($expiry) || empty($refreshToken) || new \DateTime($expiry) >= new \DateTime('now')) {
+        if (!$this->isExpired($expiry) || empty($refreshToken)) {
             return $installation;
         }
 
         $oauth2 = $provider->createOAuth2();
-        $oauth2->refreshTokens($refreshToken);
+        try {
+            $oauth2->refreshTokens($refreshToken);
+        } catch (\Throwable) {
+            return $this->recoverRefreshedInstallation($installation, $dbForPlatform, $provider);
+        }
 
         $accessToken = $oauth2->getAccessToken('');
         if (empty($accessToken)) {
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
+            return $this->recoverRefreshedInstallation($installation, $dbForPlatform, $provider);
         }
 
         $installation
@@ -158,6 +162,34 @@ class Resolver
         ]));
 
         return $installation;
+    }
+
+    protected function isExpired(string $expiry): bool
+    {
+        if (empty($expiry)) {
+            return false;
+        }
+
+        try {
+            return new \DateTime($expiry) < new \DateTime('now');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function recoverRefreshedInstallation(Document $installation, Database $dbForPlatform, Provider $provider): Document
+    {
+        $fresh = $dbForPlatform->getDocument('installations', $installation->getId());
+
+        if (
+            !$fresh->isEmpty()
+            && !empty($fresh->getAttribute('personalAccessToken', ''))
+            && !$this->isExpired($fresh->getAttribute('personalAccessTokenExpiry', ''))
+        ) {
+            return $fresh;
+        }
+
+        throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. The refresh token may be expired or revoked. Please reconnect the ' . $provider->getName() . ' installation.');
     }
 
     /**

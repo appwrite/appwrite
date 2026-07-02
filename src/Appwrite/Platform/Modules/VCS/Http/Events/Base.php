@@ -127,16 +127,28 @@ abstract class Base extends Action
             return $adapter;
         }
 
-        $installation = $authorization->skip(fn () => $dbForPlatform->findOne('installations', [
-            Query::equal('provider', [$provider->getKey()]),
-            Query::equal('organization', [$parsedPayload['owner'] ?? '']),
-        ]));
-
-        if ($installation->isEmpty()) {
+        $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
+        if (empty($providerRepositoryId)) {
             return null;
         }
 
-        return $vcs->getAdapter($installation, $dbForPlatform);
+        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+            Query::equal('providerRepositoryId', [$providerRepositoryId]),
+            Query::orderDesc('$createdAt'),
+            Query::limit(100),
+        ]));
+
+        foreach ($repositories as $repository) {
+            $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
+
+            if ($installation->isEmpty() || $installation->getAttribute('provider', 'github') !== $provider->getKey()) {
+                continue;
+            }
+
+            return $vcs->getAdapter($installation, $dbForPlatform);
+        }
+
+        return null;
     }
 
     protected function handleInstallationEvent(
