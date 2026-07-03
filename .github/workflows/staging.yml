@@ -85,7 +85,7 @@ jobs:
                   token: ${{ steps.app-token.outputs.token }}
 
             - name: Update image tag
-              run: yq -i '.${{ env.PROJECT }}.image.tag = strenv(TAG)' ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
+              run: yq -i '.global.image.tag = strenv(TAG)' ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
 
             - name: Commit and push
               run: |
