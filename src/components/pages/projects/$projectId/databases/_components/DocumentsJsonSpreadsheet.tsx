@@ -301,7 +301,11 @@ export function DocumentsJsonSpreadsheet({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
-        `Successfully deleted ${selectedRows.size} document${selectedRows.size > 1 ? 's' : ''}`,
+        `${t('Successfully deleted')} ${selectedRows.size} ${
+          selectedRows.size === 1
+            ? dbLabels.recordSingular
+            : dbLabels.recordPlural
+        }`,
       )
       const pid = previewRowId
       if (pid && rowIds.includes(pid)) {
@@ -361,13 +365,13 @@ export function DocumentsJsonSpreadsheet({
               icon={FileText}
               title={
                 documentsPaneHasFilters
-                  ? `No ${dbLabels.recordPlural} match your filters`
-                  : `No ${dbLabels.recordPlural} yet`
+                  ? dbLabels.noRecordsFilteredTitle
+                  : dbLabels.noRecordsYetTitle
               }
               description={
                 documentsPaneHasFilters
                   ? t('Try adjusting or clearing filters.')
-                  : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
+                  : dbLabels.addFirstRecordHint
               }
               isEmpty={!documentsPaneHasFilters}
               hasFilters={documentsPaneHasFilters}
@@ -506,11 +510,10 @@ export function DocumentsJsonSpreadsheet({
               <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 px-6 text-center">
                 <FileText className="h-10 w-10 text-muted-foreground/45" />
                 <p className="text-[14px] font-medium text-foreground">
-                  No {dbLabels.recordSingular} selected
+                  {dbLabels.noRecordSelectedTitle}
                 </p>
                 <p className="max-w-sm text-[13px] text-muted-foreground">
-                  Select a row in the table to view and edit, or use{' '}
-                  {dbLabels.createRecord.toLowerCase()} in the header.
+                  {dbLabels.noRecordSelectedHint}
                 </p>
               </div>
             )}
@@ -522,8 +525,9 @@ export function DocumentsJsonSpreadsheet({
         <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:w-auto sm:max-w-none sm:px-0">
           <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 shadow-lg sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="info" className="h-6 px-2.5">
-              {selectedRows.size} document{selectedRows.size > 1 ? 's' : ''}{' '}
-              selected
+              {selectedRows.size === 1
+                ? dbLabels.oneRecordSelectedLabel
+                : `${selectedRows.size} ${dbLabels.recordsSelectedSuffix}`}
             </Badge>
             <div className="flex items-center gap-2">
               <Button

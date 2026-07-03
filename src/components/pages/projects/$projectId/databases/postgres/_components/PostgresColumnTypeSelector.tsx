@@ -49,6 +49,7 @@ function PostgresColumnTypePropertyField({
   value: PostgresColumnTypeState
   onChange: (value: PostgresColumnTypeState) => void
 }) {
+  const t = useT()
   const propertyValue = getPostgresColumnTypePropertyValue(value, property.key)
   const inputId = `postgres-column-${property.key}`
   const limitsLabel = formatPostgresColumnTypePropertyLimits(property)
@@ -79,7 +80,7 @@ function PostgresColumnTypePropertyField({
       ) : null}
       {property.optional && property.optionalEmptyLabel ? (
         <p className="text-[11px] text-muted-foreground">
-          Leave empty for {property.optionalEmptyLabel}.
+          {t('Leave empty for')} {t(property.optionalEmptyLabel)}.
         </p>
       ) : null}
       <Input
@@ -88,7 +89,10 @@ function PostgresColumnTypePropertyField({
         min={property.min}
         max={property.max}
         value={propertyValue ?? ''}
-        placeholder={getPostgresColumnTypePropertyPlaceholder(property)}
+        placeholder={(() => {
+          const placeholder = getPostgresColumnTypePropertyPlaceholder(property)
+          return placeholder ? t(placeholder) : undefined
+        })()}
         aria-invalid={rangeError ? true : undefined}
         onChange={(event) => {
           const raw = event.target.value.trim()

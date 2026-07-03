@@ -1,5 +1,5 @@
 import { WifiOff } from 'lucide-react'
-import { useNavigatorOnline } from '@/lib/network-connectivity'
+import { useConfirmedOffline } from '@/lib/network-connectivity'
 import { useT } from '@/lib/i18n/translate'
 
 /**
@@ -8,9 +8,9 @@ import { useT } from '@/lib/i18n/translate'
  */
 export function NetworkOfflineCurtain() {
   const t = useT()
-  const online = useNavigatorOnline()
+  const offline = useConfirmedOffline()
 
-  if (online) return null
+  if (!offline) return null
 
   return (
     <div

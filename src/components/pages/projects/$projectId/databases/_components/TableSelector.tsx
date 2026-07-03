@@ -109,13 +109,13 @@ export function TableSelector({
 
   const displayValue =
     value && value !== '-'
-      ? selectedName || tables.find((t) => t.$id === value)?.name || placeholder
-      : placeholder
+      ? selectedName || tables.find((t) => t.$id === value)?.name || t(placeholder)
+      : t(placeholder)
 
   if (empty) {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="text-[13px] text-muted-foreground">{emptyLabel}</span>
+        <span className="text-[13px] text-muted-foreground">{t(emptyLabel)}</span>
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="inline-flex">
@@ -189,7 +189,9 @@ export function TableSelector({
             </div>
             <CommandList className="max-h-[240px]">
               {tables.length === 0 && (
-                <CommandEmpty>{isFetching ? '' : noResultsLabel}</CommandEmpty>
+                <CommandEmpty>
+                  {isFetching ? t('Loading…') : t(noResultsLabel)}
+                </CommandEmpty>
               )}
               <CommandGroup>
                 {tables.map((table) => (

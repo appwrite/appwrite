@@ -322,8 +322,8 @@ export function PostgresTableColumnDrawer({
                   value={defaultValue}
                   onChange={(event) => setDefaultValue(event.target.value)}
                   className="font-mono"
-                  placeholder={getPostgresColumnDefaultPlaceholder(
-                    typeState.typeId,
+                  placeholder={t(
+                    getPostgresColumnDefaultPlaceholder(typeState.typeId),
                   )}
                 />
               </div>

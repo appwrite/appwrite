@@ -255,7 +255,7 @@ export function InlineTableCell({
         max={inputConfig.max}
         step={inputConfig.step}
         maxLength={inputConfig.maxLength}
-        placeholder={inputConfig.placeholder}
+        placeholder={inputConfig.placeholder ? t(inputConfig.placeholder) : undefined}
         aria-invalid={validationError ? true : undefined}
         className={cn(
           INLINE_INPUT_CLASS,
@@ -394,7 +394,7 @@ export function InlineTableCell({
               if (validationError) setValidationError(null)
             }}
             clearable={!isRequired}
-            placeholder={inputConfig.placeholder}
+            placeholder={inputConfig.placeholder ? t(inputConfig.placeholder) : undefined}
             size="sm"
             hideIcon
             className={cn(

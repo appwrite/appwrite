@@ -321,11 +321,11 @@ export function Workspace({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${t('Created 50')} ${dbLabels.containerPlural}`)
+      toast.success(dbLabels.createdManyContainersSuccess)
     },
     onError: (error: Error) => {
       toast.error(
-        error.message || `Failed to create ${dbLabels.containerPlural}`,
+        error.message || dbLabels.failedToCreateContainer,
       )
     },
   })
@@ -881,7 +881,7 @@ export function Workspace({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            {dbLabels.containerSingularTitle} not found
+            {dbLabels.containerNotFoundTitle}
           </p>
           <Button variant="link" onClick={handleBackToDatabase}>
             {t('Back to database')}
@@ -1181,7 +1181,7 @@ export function Workspace({
             <span className="shrink-0 tabular-nums">
               {sidebarTablesTotal === 0
                 ? `0 ${dbLabels.containerPlural}`
-                : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
+                : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} ${t('of')} ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
             </span>
             <div className="flex items-center gap-0.5">
               <Button
@@ -1489,11 +1489,9 @@ export function Workspace({
                     await new Promise((resolve) =>
                       setTimeout(resolve, remaining),
                     )
-                    toast.success(
-                      `${dbLabels.recordPluralTitle} refreshed successfully`,
-                    )
+                    toast.success(dbLabels.recordsRefreshedSuccess)
                   } catch {
-                    toast.error(`${t('Failed to refresh')} ${dbLabels.recordPlural}`)
+                    toast.error(dbLabels.failedToRefreshRecords)
                   } finally {
                     setIsRefreshingRows(false)
                     refreshStartTimeRef.current = null
@@ -1538,12 +1536,12 @@ export function Workspace({
                 >
                   <Lightbulb className="h-3.5 w-3.5 shrink-0 @[640px]:me-1.5" />
                   <span className="hidden @[640px]:inline">
-                    {`${t('Suggest')} ${dbLabels.schemaPluralTitle.toLowerCase()}`}
+                    {dbLabels.suggestSchemaCardTitle}
                   </span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                {`${t('Suggest')} ${dbLabels.schemaPluralTitle.toLowerCase()}`}
+                {dbLabels.suggestSchemaCardTitle}
               </TooltipContent>
             </Tooltip>
           ) : activeTab === 'indexes' && features.aiAssistant ? (
@@ -1723,9 +1721,9 @@ export function Workspace({
                 databaseId={databaseId}
                 value={tableId}
                 selectedName={selectedTable?.name}
-                placeholder={`Select ${dbLabels.containerSingular}`}
-                emptyLabel={`No ${dbLabels.containerPlural}`}
-                noResultsLabel={`No ${dbLabels.containerPlural} found`}
+                placeholder={dbLabels.selectContainerPlaceholder}
+                emptyLabel={dbLabels.emptyContainersShortLabel}
+                noResultsLabel={dbLabels.noContainerSearchResultsLabel}
                 createTooltip={dbLabels.createContainer}
                 itemIcon={ContainerListIcon}
                 createDisabled={noCreateTablePermission}

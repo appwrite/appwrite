@@ -15,7 +15,7 @@ import {
 // static build (text "Loading data for you" then logo).
 
 // Create a new router instance
-export const getRouter = () => {
+export function getRouter() {
   const rqContext = TanstackQuery.getContext()
 
   const router = createRouter({

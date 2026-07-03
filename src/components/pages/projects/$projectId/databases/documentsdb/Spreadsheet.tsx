@@ -1361,9 +1361,7 @@ function RowEditDrawer({
   }
 
   const rowEditorTitle =
-    isCreateMode
-      ? dbLabels.createRecord
-      : `Update ${dbLabels.recordSingularTitle}`
+    isCreateMode ? dbLabels.createRecord : dbLabels.updateRecord
 
   const inlineDocumentDirty =
     presentation === 'inline' && documentJsonText !== documentJsonBaseline
@@ -1630,7 +1628,7 @@ function RowEditDrawer({
                         className="text-[12px] font-medium text-foreground"
                         htmlFor="row-id"
                       >
-                        {dbLabels.recordSingularTitle} ID
+                        {dbLabels.recordIdLabel}
                       </Label>
                       <IdInput
                         id="row-id"
@@ -3571,8 +3569,8 @@ export function RowsSpreadsheet({
       })
       toast.success(
         variables.rowId
-          ? `${dbLabels.recordSingularTitle} updated successfully`
-          : `${dbLabels.recordSingularTitle} created successfully`,
+          ? dbLabels.recordUpdatedSuccess
+          : dbLabels.recordCreatedSuccess,
       )
       if (useInlineDocumentPane && result && typeof result === 'object') {
         const rowObj = result as Record<string, unknown>
@@ -3622,8 +3620,8 @@ export function RowsSpreadsheet({
       toast.error(
         error.message ||
           (variables.rowId
-            ? `Failed to update ${dbLabels.recordSingular}`
-            : `Failed to create ${dbLabels.recordSingular}`),
+            ? dbLabels.failedToUpdateRecord
+            : dbLabels.failedToCreateRecord),
       )
     },
   })
@@ -3653,7 +3651,7 @@ export function RowsSpreadsheet({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
-        `Successfully deleted ${selectedRows.size} ${
+        `${t('Successfully deleted')} ${selectedRows.size} ${
           selectedRows.size === 1
             ? dbLabels.recordSingular
             : dbLabels.recordPlural
@@ -3672,7 +3670,7 @@ export function RowsSpreadsheet({
     },
     onError: (error: Error) => {
       toast.error(
-        error.message || `Failed to delete ${dbLabels.recordPlural}`,
+        error.message || dbLabels.failedToDeleteRecords,
       )
     },
   })
@@ -3697,12 +3695,12 @@ export function RowsSpreadsheet({
       await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
-      toast.success(`${dbLabels.recordSingularTitle} ${t('duplicated')}`)
+      toast.success(dbLabels.recordDuplicatedSuccess)
     },
     onError: (error: Error) => {
       toast.error(
         error.message ??
-          `Failed to duplicate ${dbLabels.recordSingular}`,
+          dbLabels.failedToDuplicateRecord,
       )
     },
   })
@@ -3740,9 +3738,7 @@ export function RowsSpreadsheet({
           c.type !== 'relationship' && (!c.status || c.status === 'available'),
       )
       if (dataProducingColumns.length === 0) {
-        throw new Error(
-          `Add at least one ${dbLabels.schemaSingularTitle.toLowerCase()} to generate sample data.`,
-        )
+        throw new Error(dbLabels.addSchemaForSampleDataHint)
       }
 
       const sampleRows = generateSampleRows(columns, rowCount)
@@ -3841,7 +3837,7 @@ export function RowsSpreadsheet({
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">
-          Loading {dbLabels.recordPlural}…
+          {dbLabels.loadingRecordsLabel}
         </div>
       </div>
     )
@@ -3912,15 +3908,15 @@ export function RowsSpreadsheet({
             <div className="space-y-2 text-center">
               <p className="text-sm font-medium text-foreground">
                 {hasColumns
-                  ? `No ${dbLabels.recordPlural} found`
-                  : `No ${dbLabels.schemaPlural} yet`}
+                  ? dbLabels.emptyGridNoRecordsTitle
+                  : dbLabels.emptyGridNoSchemaTitle}
               </p>
               <p className="text-xs text-muted-foreground max-w-sm">
                 {hasColumns
                   ? hideSampleData
-                    ? `This ${dbLabels.containerSingular} is empty. Get started by creating a ${dbLabels.recordSingular} or adding ${dbLabels.schemaPlural}.`
-                    : `This ${dbLabels.containerSingular} is empty. Get started by creating a ${dbLabels.recordSingular}, adding ${dbLabels.schemaPlural}, or generating sample data.`
-                  : `This ${dbLabels.containerSingular} has no ${dbLabels.schemaPlural} yet. Create your first ${dbLabels.schemaSingularTitle.toLowerCase()} to get started.`}
+                    ? dbLabels.emptyGridHasSchemaHint
+                    : dbLabels.emptyGridHasSchemaWithSampleHint
+                  : dbLabels.emptyGridNoSchemaHint}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
@@ -3935,11 +3931,10 @@ export function RowsSpreadsheet({
                           </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="text-sm font-medium text-foreground">
-                              Create {dbLabels.recordSingular}
+                              {dbLabels.createRecord}
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              Add a new {dbLabels.recordSingular} to this{' '}
-                              {dbLabels.containerSingular}
+                              {dbLabels.createRecordCardHint}
                             </p>
                           </div>
                         </div>
@@ -3960,11 +3955,10 @@ export function RowsSpreadsheet({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-medium text-foreground">
-                          Create {dbLabels.recordSingular}
+                          {dbLabels.createRecord}
                         </h3>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Add a new {dbLabels.recordSingular} to this{' '}
-                          {dbLabels.containerSingular}
+                          {dbLabels.createRecordCardHint}
                         </p>
                       </div>
                     </div>
@@ -3980,11 +3974,10 @@ export function RowsSpreadsheet({
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-foreground">
-                            Create {dbLabels.schemaSingularTitle.toLowerCase()}
+                            {dbLabels.createSchema}
                           </h3>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Add {dbLabels.schemaPlural.toLowerCase()} with the
-                            Documents API or SDK
+                            {dbLabels.createSchemaDisabledHint}
                           </p>
                         </div>
                       </div>
@@ -4105,13 +4098,13 @@ export function RowsSpreadsheet({
             icon={FileText}
             title={
               documentsPaneHasFilters
-                ? `No ${dbLabels.recordPlural} match your filters`
-                : `No ${dbLabels.recordPlural} yet`
+                ? dbLabels.noRecordsFilteredTitle
+                : dbLabels.noRecordsYetTitle
             }
             description={
               documentsPaneHasFilters
                 ? t('Try adjusting or clearing filters.')
-                : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
+                : dbLabels.addFirstRecordHint
             }
             isEmpty={!documentsPaneHasFilters}
             hasFilters={documentsPaneHasFilters}
@@ -4161,13 +4154,13 @@ export function RowsSpreadsheet({
                 icon={FileText}
                 title={
                   documentsPaneHasFilters
-                    ? `No ${dbLabels.recordPlural} match your filters`
-                    : `No ${dbLabels.recordPlural} yet`
+                    ? dbLabels.noRecordsFilteredTitle
+                    : dbLabels.noRecordsYetTitle
                 }
                 description={
                   documentsPaneHasFilters
                     ? t('Try adjusting or clearing filters.')
-                    : `Use ${dbLabels.createRecord.toLowerCase()} in the header to add your first ${dbLabels.recordSingular}.`
+                    : dbLabels.addFirstRecordHint
                 }
                 isEmpty={!documentsPaneHasFilters}
                 hasFilters={documentsPaneHasFilters}
@@ -4787,11 +4780,10 @@ export function RowsSpreadsheet({
               <div className="flex h-full min-h-0 flex-col items-center justify-center gap-2 px-6 text-center">
                 <FileText className="h-10 w-10 text-muted-foreground/45" />
                 <p className="text-[14px] font-medium text-foreground">
-                  No {dbLabels.recordSingular} selected
+                  {dbLabels.noRecordSelectedTitle}
                 </p>
                 <p className="max-w-sm text-[13px] text-muted-foreground">
-                  Select a row in the table to view and edit, or use{' '}
-                  {dbLabels.createRecord.toLowerCase()} in the header.
+                  {dbLabels.noRecordSelectedHint}
                 </p>
               </div>
             )}
@@ -4862,11 +4854,9 @@ export function RowsSpreadsheet({
         <div className="fixed bottom-4 start-1/2 z-50 w-[min(100%,calc(100vw-2rem))] max-w-md -translate-x-1/2 px-2 sm:px-0 sm:w-auto sm:max-w-none">
           <div className="mx-auto flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 sm:min-w-[400px] sm:gap-3 sm:px-6">
             <Badge variant="secondary" className="h-6 px-2.5">
-              {selectedRows.size}{' '}
               {selectedRows.size === 1
-                ? dbLabels.recordSingular
-                : dbLabels.recordPlural}{' '}
-              selected
+                ? dbLabels.oneRecordSelectedLabel
+                : `${selectedRows.size} ${dbLabels.recordsSelectedSuffix}`}
             </Badge>
             <div className="flex items-center gap-2">
               <Button
@@ -4970,13 +4960,14 @@ export function RowsSpreadsheet({
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>Delete {dbLabels.recordPluralTitle}</DialogTitle>
+            <DialogTitle>{dbLabels.deleteRecordsTitle}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete {selectedRows.size}{' '}
+              {t('Are you sure you want to delete')}{' '}
+              {selectedRows.size}{' '}
               {selectedRows.size === 1
                 ? dbLabels.recordSingular
                 : dbLabels.recordPlural}
-              ? This action cannot be undone.
+              ? {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
 

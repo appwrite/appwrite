@@ -19,7 +19,7 @@ import { formatError } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { isNavigatorReportedOffline } from '@/lib/network-connectivity'
+import { useConfirmedOffline } from '@/lib/network-connectivity'
 import {
   isStaleChunkLoadError,
   tryReloadForStaleChunk,
@@ -145,6 +145,7 @@ export function ErrorComponent({
   const navigate = useNavigate()
   const router = useRouter()
   const canGoBack = useCanGoBack()
+  const isConfirmedOffline = useConfirmedOffline()
 
   // Check if this is a project route and if the error is project-related
   const isProjectRoute = location.pathname.startsWith('/projects/')
@@ -176,10 +177,9 @@ export function ErrorComponent({
       lowerMessage.includes('permission denied') ||
       lowerMessage.includes('access denied'))
 
-  // Only use the offline-specific UI when the browser reports no connection.
-  // Broader heuristics (status 0, "failed to fetch", etc.) also match CORS and
-  // other failures, which should show the regular error page with details.
-  const isConnectivityError = isNavigatorReportedOffline()
+  // Only use the offline-specific UI when offline is confirmed (not just
+  // navigator.onLine, which is unreliable). Other failures show the regular page.
+  const isConnectivityError = isConfirmedOffline
   const isStaleChunkError = isStaleChunkLoadError(error)
 
   // Use project-specific messages for project routes
