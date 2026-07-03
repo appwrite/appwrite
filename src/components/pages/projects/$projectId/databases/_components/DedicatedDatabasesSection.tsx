@@ -6,13 +6,13 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   dedicatedDatabaseHomeLink,
+  isNativeDedicatedDatabase,
+  isProductOwnedDedicatedDatabase,
   needsDedicatedProductTypeLookup,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import {
   getNativeDatabaseEmptyLabel,
-  isMysqlEngine,
-  isPostgresEngine,
   matchesNativeEngine,
   NATIVE_DATABASE_ENGINE_LABELS,
   type NativeDatabaseEngine,
@@ -131,14 +131,15 @@ function filterDedicatedDatabases(
   excludeNativeEngines?: boolean,
 ): Models.DedicatedDatabase[] {
   if (nativeEngine) {
-    return databases.filter((db) =>
-      matchesNativeEngine(db.engine, nativeEngine),
+    return databases.filter(
+      (db) =>
+        isNativeDedicatedDatabase(db) &&
+        matchesNativeEngine(db.engine, nativeEngine),
     )
   }
   if (excludeNativeEngines) {
-    return databases.filter(
-      (db) => !isPostgresEngine(db.engine) && !isMysqlEngine(db.engine),
-    )
+    // Product-owned dedicated compute (not listed in native postgres/mysql sections).
+    return databases.filter((db) => isProductOwnedDedicatedDatabase(db))
   }
   return databases
 }

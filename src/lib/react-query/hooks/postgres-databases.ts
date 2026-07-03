@@ -12,11 +12,12 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  DEDICATED_FEATURE_UNAVAILABLE,
   mapDedicatedDatabaseCredentials,
   type DedicatedDatabaseConnectionList,
   type DedicatedDatabaseCredentials,
 } from '@/lib/databases/dedicated-engine'
+import { POSTGRES_ACTIVE_CONNECTIONS_SQL } from '@/lib/postgres-metrics-sql'
+import { parsePostgresActiveConnections } from '@/lib/postgres-metrics'
 import {
   explainPostgresDatabaseQuery,
 } from '@/lib/postgres-query-explanation'
@@ -715,14 +716,34 @@ export function postgresTableAutocompleteColumnsQueryOptions(
   })
 }
 
+/**
+ * List active sessions via postgresql.createExecution + pg_stat_activity.
+ * Maps into the legacy DedicatedDatabaseConnectionList shape for callers that
+ * still use this query key; the Connections tab prefers the richer
+ * PostgresActiveConnectionRow list from postgres-metrics.
+ */
 export async function fetchPostgresDatabaseConnections(
-  _projectId: string,
-  _databaseId: string,
+  projectId: string,
+  databaseId: string,
 ): Promise<DedicatedDatabaseConnectionList> {
-  // The console SDK dropped the connection-listing endpoint (getStatus now only
-  // exposes current/max counts, not a per-connection list). Gated until a
-  // replacement API exists; the query is disabled so this never runs.
-  throw new Error(DEDICATED_FEATURE_UNAVAILABLE)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    POSTGRES_ACTIVE_CONNECTIONS_SQL,
+    30,
+  )
+  const rows = parsePostgresActiveConnections(execution)
+  const connections = rows.map((row) => {
+    const username = row.username?.trim() || ''
+    return {
+      $id: String(row.pid),
+      username,
+      database: row.database?.trim() || '',
+      role: username,
+      $createdAt: row.backendStart?.trim() || '',
+    }
+  })
+  return { connections, total: connections.length }
 }
 
 export async function fetchPostgresDatabaseCredentials(
@@ -749,9 +770,7 @@ export function postgresDatabaseConnectionsQueryOptions(
     ],
     queryFn: () =>
       fetchPostgresDatabaseConnections(projectId!, databaseId!),
-    // Connection listing was removed from the console SDK; keep disabled until
-    // a replacement API is available (consumers fall back to an empty list).
-    enabled: false,
+    enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,

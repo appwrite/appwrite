@@ -183,10 +183,28 @@ function dedicatedApiToRouteKind(api: string): DatabaseRouteKind | null {
   return null
 }
 
+/** Product-owned dedicated compute (`api` = tablesdb / documentsdb / vectorsdb). */
+export function isProductOwnedDedicatedDatabase(
+  db: Pick<DedicatedDatabaseLinkInput, 'api'>,
+): boolean {
+  return dedicatedApiToRouteKind(db.api ?? '') !== null
+}
+
+/** Native dedicated compute (`api` = nativedb or unset). */
+export function isNativeDedicatedDatabase(
+  db: Pick<DedicatedDatabaseLinkInput, 'api'>,
+): boolean {
+  return !isProductOwnedDedicatedDatabase(db)
+}
+
 export function needsDedicatedProductTypeLookup(
   db: DedicatedDatabaseLinkInput,
 ): boolean {
-  if (isPostgresDedicatedEngine(db.engine)) return false
+  // Product `api` is authoritative; only probe when compute omits it.
+  if (isProductOwnedDedicatedDatabase(db)) return false
+  if (isNativeDedicatedDatabase(db) && isPostgresDedicatedEngine(db.engine)) {
+    return false
+  }
   return dedicatedApiToRouteKind(db.api) === null
 }
 
@@ -202,33 +220,29 @@ function productDatabaseDeepLink(
   databaseId: string,
   dbKind: DatabaseRouteKind,
 ): TanStackNavLink {
-  return dbNavLink(dbKind).dataGrid({
+  const link = dbNavLink(dbKind).dataGrid({
     projectId,
     dbKind,
     databaseId,
     resourceId: '-',
   })
+  return {
+    to: link.to,
+    params: link.params as unknown as Record<string, string>,
+  }
 }
 
 /**
  * Resolve the console home link for a dedicated database row.
- * Postgres uses the native postgres route tree; product APIs use tablesdb /
- * documentsdb / vectorsdb. When compute omits `api` (e.g. legacy mongodb edge
- * for DocumentsDB), pass the resolved product route kind if known.
+ * Product APIs (`api` = tablesdb / documentsdb / vectorsdb) use those route
+ * trees. Native postgres uses the postgres route tree. When compute omits
+ * `api`, pass the resolved product route kind if known.
  */
 export function dedicatedDatabaseHomeLink(
   projectId: string,
   db: DedicatedDatabaseLinkInput,
   productRouteKind?: DatabaseRouteKind | null,
 ): TanStackNavLink | null {
-  if (isPostgresDedicatedEngine(db.engine)) {
-    return postgresDatabaseHome({
-      projectId,
-      databaseId: db.$id,
-      tableId: '-',
-    })
-  }
-
   const apiKind = dedicatedApiToRouteKind(db.api)
   if (apiKind) {
     return productDatabaseDeepLink(projectId, db.$id, apiKind)
@@ -236,6 +250,14 @@ export function dedicatedDatabaseHomeLink(
 
   if (productRouteKind) {
     return productDatabaseDeepLink(projectId, db.$id, productRouteKind)
+  }
+
+  if (isPostgresDedicatedEngine(db.engine)) {
+    return postgresDatabaseHome({
+      projectId,
+      databaseId: db.$id,
+      tableId: '-',
+    })
   }
 
   return null

@@ -9,7 +9,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { ChevronDown, Database, Loader2, Plus, Table2 } from 'lucide-react'
-import type { Models } from '@appwrite.io/console'
 import { DatabaseTypeIcon } from './DatabaseTypeIcon'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,6 +45,7 @@ import {
   matchesNativeEngine,
   type NativeDatabaseEngine,
 } from '@/lib/databases/native-database-engines'
+import { isNativeDedicatedDatabase } from '@/lib/database-routes'
 import {
   getSpecOptionById,
   mapDedicatedDatabaseSpecifications,
@@ -129,11 +129,20 @@ function DatabaseSelectorNameWithSpec({
   )
 }
 
-function getDedicatedDatabaseId(db: Models.Database): string | undefined {
-  const dedicatedId = (db as Record<string, unknown>).dedicatedDatabaseId
-  return typeof dedicatedId === 'string' && dedicatedId.trim() !== ''
-    ? dedicatedId.trim()
-    : undefined
+/**
+ * Resolve the dedicated-compute ID for a product database.
+ * Older APIs linked via `dedicatedDatabaseId`; current SDKs use the same ID for
+ * product and compute when the database is dedicated (`api` = tablesdb/…).
+ */
+function getDedicatedDatabaseId(db: {
+  $id: string
+  dedicatedDatabaseId?: unknown
+}): string {
+  const legacyId = (db as { dedicatedDatabaseId?: unknown }).dedicatedDatabaseId
+  if (typeof legacyId === 'string' && legacyId.trim() !== '') {
+    return legacyId.trim()
+  }
+  return db.$id
 }
 
 function matchesSpecSearch(
@@ -247,9 +256,8 @@ export function DatabaseSelector({
         id: db.$id,
         name: db.name,
         apiType: db.type,
-        specSlug: dedicatedId
-          ? (specSlugByDedicatedId.get(dedicatedId) ?? null)
-          : SERVERLESS_DATABASE_SPEC_ID,
+        specSlug:
+          specSlugByDedicatedId.get(dedicatedId) ?? SERVERLESS_DATABASE_SPEC_ID,
       }
     })
   }, [productData?.databases, specSlugByDedicatedId])
@@ -257,7 +265,11 @@ export function DatabaseSelector({
   const nativeItems = useMemo((): DatabaseSelectorItem[] => {
     if (!resolvedNativeEngine) return []
     return (dedicatedData?.databases ?? [])
-      .filter((db) => matchesNativeEngine(db.engine, resolvedNativeEngine))
+      .filter(
+        (db) =>
+          isNativeDedicatedDatabase(db) &&
+          matchesNativeEngine(db.engine, resolvedNativeEngine),
+      )
       .map((db) => ({
         id: db.$id,
         name: db.name,
@@ -286,11 +298,11 @@ export function DatabaseSelector({
   const selectedProductSpecSlug = useMemo(() => {
     if (isNative || !value) return null
     if (selectedItem?.specSlug) return selectedItem.specSlug
-    const dedicatedId = selectedProductDatabase
-      ? getDedicatedDatabaseId(selectedProductDatabase)
-      : undefined
-    if (!dedicatedId) return SERVERLESS_DATABASE_SPEC_ID
-    return specSlugByDedicatedId.get(dedicatedId) ?? null
+    if (!selectedProductDatabase) return SERVERLESS_DATABASE_SPEC_ID
+    const dedicatedId = getDedicatedDatabaseId(selectedProductDatabase)
+    return (
+      specSlugByDedicatedId.get(dedicatedId) ?? SERVERLESS_DATABASE_SPEC_ID
+    )
   }, [
     isNative,
     selectedItem?.specSlug,
@@ -312,7 +324,7 @@ export function DatabaseSelector({
       : null
 
   const selectedApiType =
-    selectedItem?.apiType ?? selectedProductDatabase?.type ?? null
+    selectedItem?.apiType ?? selectedProductDatabase?.databaseType ?? null
   const selectedEngine =
     selectedItem?.engine ??
     (isNative ? (resolvedNativeEngine ?? null) : null)
