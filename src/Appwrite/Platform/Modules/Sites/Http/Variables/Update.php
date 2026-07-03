@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
+use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -9,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -34,8 +36,10 @@ class Update extends Base
             ->desc('Update variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
+            ->label('event', 'variables.[variableId].update')
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
@@ -52,12 +56,13 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
-            ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
+            ->param('key', null, new Nullable(new Text(255, 0)), 'Variable key. Max length: 255 chars.', true)
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
             ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
+            ->inject('queueForEvents')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
@@ -65,10 +70,11 @@ class Update extends Base
     public function action(
         string $siteId,
         string $variableId,
-        string $key,
+        ?string $key,
         ?string $value,
         ?bool $secret,
         Response $response,
+        QueueEvent $queueForEvents,
         Database $dbForProject
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -78,7 +84,7 @@ class Update extends Base
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
+        if ($variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $site->getSequence() || $variable->getAttribute('resourceType') !== 'site') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
@@ -86,19 +92,36 @@ class Update extends Base
             throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
         }
 
-        $variable
-            ->setAttribute('key', $key)
-            ->setAttribute('value', $value ?? $variable->getAttribute('value'))
-            ->setAttribute('secret', $secret ?? $variable->getAttribute('secret'))
-            ->setAttribute('search', implode(' ', [$variableId, $site->getId(), $key, 'site']));
+        if (\is_null($key) && \is_null($value) && \is_null($secret)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID);
+        }
+
+        $updates = new Document();
+
+        if (!\is_null($key)) {
+            $updates->setAttribute('key', $key);
+            $updates->setAttribute('search', implode(' ', [$variableId, $site->getId(), $key, 'site']));
+        }
+
+        if (!\is_null($value)) {
+            $updates->setAttribute('value', $value);
+        }
+
+        if (!\is_null($secret)) {
+            $updates->setAttribute('secret', $secret);
+        }
 
         try {
-            $dbForProject->updateDocument('variables', $variable->getId(), $variable);
+            $variable = $dbForProject->updateDocument('variables', $variable->getId(), $updates);
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->updateDocument('sites', $site->getId(), $site->setAttribute('live', false));
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'live' => false,
+        ]));
+
+        $queueForEvents->setParam('variableId', $variable->getId());
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }

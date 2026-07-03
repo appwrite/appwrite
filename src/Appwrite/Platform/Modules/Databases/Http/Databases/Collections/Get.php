@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Get extends Action
 {
@@ -34,6 +34,7 @@ class Get extends Action
             ->desc('Get collection')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
@@ -53,8 +54,8 @@ class Get extends Action
                     replaceWith: 'tablesDB.getTable',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -65,7 +66,7 @@ class Get extends Action
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -74,6 +75,8 @@ class Get extends Action
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
+
+        $this->addRowBytesInfo($collection, $dbForProject);
 
         $response->dynamic($collection, $this->getResponseModel());
     }

@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -56,20 +57,29 @@ class Update extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('tokenId', '', new UID(), 'Token unique ID.')
+        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Token unique ID.', false, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'File token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
+        ->inject('usage')
         ->callback($this->action(...));
     }
 
-    public function action(string $tokenId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents)
+    public function action(string $tokenId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents, Context $usage)
     {
         $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
         if ($token->isEmpty()) {
             throw new Exception(Exception::TOKEN_NOT_FOUND);
+        }
+
+        if ($token->getAttribute('resourceType') === TOKENS_RESOURCE_TYPE_FILES) {
+            $resourceId = (string) $token->getAttribute('resourceId', '');
+            [$bucketId, $fileId] = explode(':', $resourceId, 2) + ['', ''];
+            if ($bucketId !== '' && $fileId !== '') {
+                $usage->setResourcePath('bucket/' . $bucketId . '/file/' . $fileId);
+            }
         }
 
         $token->setAttribute('expire', $expire);

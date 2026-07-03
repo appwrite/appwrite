@@ -2,27 +2,30 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
-use Appwrite\SDK\Specification\Format\Swagger2;
 use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
 use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\App;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\DI\Container;
+use Utopia\Http\Http;
+use Utopia\Http\Request as UtopiaRequest;
+use Utopia\Http\Response as UtopiaResponse;
 use Utopia\Platform\Action;
-use Utopia\Request as UtopiaRequest;
-use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -34,6 +37,9 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
+            ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to the specs repo?', optional: true)
+            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
+            ->param('branch', null, new Nullable(new Text(256)), 'Target branch for PR (defaults to main)', optional: true)
             ->callback($this->action(...));
     }
 
@@ -55,7 +61,6 @@ class Specs extends Action
     protected function getFormatInstance(string $format, array $arguments)
     {
         return match ($format) {
-            'swagger2' => new Swagger2(...$arguments),
             'open-api3' => new OpenAPI3(...$arguments),
             default => throw new Exception('Format not found: ' . $format)
         };
@@ -66,13 +71,40 @@ class Specs extends Action
      *
      * @return array<string>
      */
-    protected function getPlatforms(): array
+    public static function getPlatforms(): array
     {
         return [
             APP_SDK_PLATFORM_CLIENT,
             APP_SDK_PLATFORM_SERVER,
             APP_SDK_PLATFORM_CONSOLE,
         ];
+    }
+
+    /**
+     * Platforms to include in PR creation.
+     * Override in a subclass to exclude specific platforms.
+     *
+     * @return array<string>
+     */
+    public static function getPlatformsForPR(): array
+    {
+        return static::getPlatforms();
+    }
+
+    /**
+     * Build the CLI command used to regenerate SDK examples.
+     * Override in a subclass to customise flags (platform, sdk, mode, etc.).
+     *
+     * @param string $version Spec version being generated
+     * @return string Shell command string (including 2>&1 redirect)
+     */
+    protected function getSdksCommand(string $version): string
+    {
+        $cli = \realpath(__DIR__ . '/../../../../app') . '/cli.php';
+
+        return 'php ' . \escapeshellarg($cli)
+            . ' sdks --platform=* --sdk=* --version=' . \escapeshellarg($version)
+            . ' --git=no --mode=examples 2>&1';
     }
 
     /**
@@ -105,11 +137,27 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
+                'ProjectPath' => [
+                    'type' => 'apiKey',
+                    'name' => 'project',
+                    'description' => 'Your project ID',
+                    'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
+                ],
                 'JWT' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -123,12 +171,51 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
+                'Mode' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Mode',
+                    'description' => '',
+                    'in' => 'header',
+                ],
                 'DevKey' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Dev-Key',
                     'description' => 'Your secret dev API key',
                     'in' => 'header',
-                ]
+                ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
             ],
             APP_SDK_PLATFORM_SERVER => [
                 'Project' => [
@@ -136,6 +223,16 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Project',
                     'description' => 'Your project ID',
                     'in' => 'header',
+                ],
+                'ProjectPath' => [
+                    'type' => 'apiKey',
+                    'name' => 'project',
+                    'description' => 'Your project ID',
+                    'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
                 ],
                 'Key' => [
                     'type' => 'apiKey',
@@ -149,6 +246,12 @@ class Specs extends Action
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
                 ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -161,11 +264,56 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
+                'Mode' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Mode',
+                    'description' => '',
+                    'in' => 'header',
+                ],
                 'ForwardedUserAgent' => [
                     'type' => 'apiKey',
                     'name' => 'X-Forwarded-User-Agent',
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
+                ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
                 ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
@@ -175,6 +323,16 @@ class Specs extends Action
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
+                'ProjectPath' => [
+                    'type' => 'apiKey',
+                    'name' => 'project',
+                    'description' => 'Your project ID',
+                    'in' => 'query',
+                    'x-appwrite' => [
+                        'location' => 'path',
+                        'param' => 'project_id',
+                    ],
+                ],
                 'Key' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Key',
@@ -186,6 +344,12 @@ class Specs extends Action
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -199,8 +363,197 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with. Used by SDKs that forward an incoming Cookie header in server-side runtimes.',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'DevKey' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Dev-Key',
+                    'description' => 'Your secret dev API key',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone',
+                    'in' => 'header',
+                    'x-appwrite' => [
+                        'optional' => true,
+                    ],
+                ],
             ],
         ];
+    }
+
+    protected function verifyParsedSpec(array $spec): void
+    {
+        $services = [];
+        foreach ($spec['tags'] ?? [] as $tag) {
+            if (!\is_array($tag)) {
+                continue;
+            }
+
+            $service = $tag['name'] ?? null;
+            if (!\is_string($service) || $service === '') {
+                continue;
+            }
+
+            $services[$this->normalizeSdkName($service)] = $service;
+        }
+
+        if (empty($services)) {
+            return;
+        }
+
+        $enums = [];
+        $this->collectSpecEnumNames($spec, $enums);
+
+        if (empty($enums)) {
+            return;
+        }
+
+        $overlaps = [];
+        foreach ($services as $normalized => $service) {
+            if (!isset($enums[$normalized])) {
+                continue;
+            }
+
+            foreach ($enums[$normalized] as $enum) {
+                $overlaps[] = "service '{$service}' with enum '{$enum}'";
+            }
+        }
+
+        if (!empty($overlaps)) {
+            throw new \RuntimeException(
+                'Spec service names must not overlap enum names. Overlaps: '
+                . \implode(', ', \array_unique($overlaps))
+            );
+        }
+    }
+
+    private function collectSpecEnumNames(array $node, array &$enums, ?string $fallbackName = null, bool $skipCurrentEnum = false): void
+    {
+        if (!$skipCurrentEnum && isset($node['enum']) && \is_array($node['enum'])) {
+            $enumName = $this->getExplicitSpecEnumName($node)
+                ?? $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+        }
+
+        $itemsEnumHandled = false;
+        if (
+            isset($node['items'])
+            && \is_array($node['items'])
+            && isset($node['items']['enum'])
+            && \is_array($node['items']['enum'])
+        ) {
+            $enumName = $this->getExplicitSpecEnumName($node['items'])
+                ?? $this->getExplicitSpecEnumName($node)
+                ?? $this->getFallbackSpecEnumName($node, $fallbackName);
+
+            if (!\is_null($enumName)) {
+                $this->addSpecEnumName($enums, $enumName);
+            }
+
+            $itemsEnumHandled = true;
+        }
+
+        $explicitEnumName = $this->getExplicitSpecEnumName($node);
+        if (!\is_null($explicitEnumName) && !isset($node['enum']) && !$itemsEnumHandled) {
+            $this->addSpecEnumName($enums, $explicitEnumName);
+        }
+
+        foreach ($node as $key => $value) {
+            if (!\is_array($value)) {
+                continue;
+            }
+
+            $this->collectSpecEnumNames(
+                $value,
+                $enums,
+                $this->getChildSpecEnumFallbackName($node, $key, $value, $fallbackName),
+                $key === 'items' && $itemsEnumHandled
+            );
+        }
+    }
+
+    private function addSpecEnumName(array &$enums, string $name): void
+    {
+        $enums[$this->normalizeSdkName($name)][] = $this->formatSdkName($name);
+    }
+
+    private function getExplicitSpecEnumName(array $node): ?string
+    {
+        $enumName = $node['x-enum-name'] ?? null;
+
+        return \is_string($enumName) && $enumName !== '' ? $enumName : null;
+    }
+
+    private function getFallbackSpecEnumName(array $node, ?string $fallbackName): ?string
+    {
+        $name = $node['name'] ?? $fallbackName;
+
+        return \is_string($name) && $name !== '' ? $name : null;
+    }
+
+    private function getChildSpecEnumFallbackName(
+        array $parent,
+        int|string $key,
+        array $child,
+        ?string $fallbackName
+    ): ?string {
+        if (isset($child['name']) && \is_string($child['name']) && $child['name'] !== '') {
+            return $child['name'];
+        }
+
+        if ($key === 'schema' || $key === 'items') {
+            return $this->getFallbackSpecEnumName($parent, $fallbackName);
+        }
+
+        if (\is_string($key) && !\in_array($key, ['components', 'content', 'definitions', 'delete', 'get', 'head', 'options', 'parameters', 'patch', 'paths', 'post', 'properties', 'put', 'responses'], true)) {
+            return $key;
+        }
+
+        return $fallbackName;
+    }
+
+    private function formatSdkName(string $name): string
+    {
+        return \str_replace(' ', '', \ucwords(\str_replace(['-', '_', '/'], ' ', $name)));
+    }
+
+    private function normalizeSdkName(string $name): string
+    {
+        return \strtolower((string) \preg_replace('/[^a-z0-9]/i', '', $name));
     }
 
     public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
@@ -224,24 +577,51 @@ class Specs extends Action
         return $sdkPlatforms;
     }
 
-    public function action(string $version, string $mode): void
+    public function action(string $version, string $mode, ?string $git, ?string $message, ?string $branch): void
     {
-        $appRoutes = App::getRoutes();
+        if (\is_null($git)) {
+            $git = Console::confirm('Should we push specs to the appwrite/specs repo? (yes/no)');
+        }
+
+        if ($git === 'yes' && \is_null($message)) {
+            $message = Console::confirm('Please enter your commit message:');
+        }
+
+        if (\is_null($branch)) {
+            $branch = 'main';
+        }
+
+        $appRoutes = Http::getRoutes();
 
         /** @var AppwriteResponse $response */
         $response = $this->getResponse();
 
         $mocks = ($mode === 'mocks');
 
-        // Mock dependencies
-        App::setResource('request', fn () => $this->getRequest());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        // Mock dependencies needed by param validator injections in route definitions
+        $specsContainer = new Container();
+        $specsContainer->set('request', fn () => $this->getRequest());
+        $specsContainer->set('response', fn () => $response);
+        $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
+        $specsContainer->set('project', fn () => new Document([]));
+        $specsContainer->set('passwordsDictionary', fn () => []);
+        $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
+        $specsContainer->set('plan', fn () => []);
 
-        $platforms = $this->getPlatforms();
+        $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
+
+        $generatedFiles = [];
+        $endpoint = System::getEnv('_APP_HOME', 'https://appwrite.io');
+        $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', 'team@appwrite.io');
+        $specsDir = __DIR__ . '/../../../../app/config/specs';
+
+        if (!is_dir($specsDir) && !@mkdir($specsDir, 0755, true) && !is_dir($specsDir)) {
+            throw new Exception('Failed to create specs directory: ' . $specsDir);
+        }
 
         foreach ($platforms as $platform) {
             $routes = [];
@@ -326,7 +706,7 @@ class Specs extends Action
             }
 
             $arguments = [
-                new App('UTC'),
+                $specsContainer,
                 $services,
                 $routes,
                 $models,
@@ -335,11 +715,9 @@ class Specs extends Action
                 $platform
             ];
 
-            foreach (['swagger2', 'open-api3'] as $format) {
+            foreach (['open-api3'] as $format) {
                 $formatInstance = $this->getFormatInstance($format, $arguments);
                 $specs = new Specification($formatInstance);
-                $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
@@ -358,25 +736,156 @@ class Specs extends Action
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
                     ->setParam('docs.url', $endpoint . '/docs');
 
-                if ($mocks) {
-                    $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
+                $path = $mocks
+                    ? $specsDir . '/' . $format . '-mocks-' . $platform . '.json'
+                    : $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                    if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
-                        throw new Exception('Failed to save mocks spec file: ' . $path);
+                try {
+                    $parsedSpecs = $specs->parse();
+                    $this->verifyParsedSpec($parsedSpecs);
+                } catch (\RuntimeException $e) {
+                    throw new \RuntimeException("Spec generation failed for {$platform} ({$format}): " . $e->getMessage(), 0, $e);
+                }
+
+                $encodedSpecs = \json_encode($parsedSpecs, JSON_PRETTY_PRINT);
+
+                unset($parsedSpecs);
+
+                if ($encodedSpecs === false) {
+                    throw new Exception('Failed to encode ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . \json_last_error_msg());
+                }
+
+                if (\file_put_contents($path, $encodedSpecs) === false) {
+                    throw new Exception('Failed to save ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . $path);
+                }
+
+                $generatedFiles[] = realpath($path);
+                Console::success('Saved ' . ($mocks ? 'mocks ' : '') . 'spec file: ' . realpath($path));
+
+                unset($encodedSpecs, $specs, $formatInstance);
+            }
+
+            unset($arguments, $models, $routes, $services);
+        }
+
+        if ($git === 'yes') {
+            $gitUrl = 'git@github.com:appwrite/specs.git';
+            $gitRepoName = 'appwrite/specs';
+            $gitBranch = 'feat-' . $version . '-specs';
+            $repoBranch = $branch;
+            $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/specs/';
+            $examplesDir = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version;
+
+            Console::info("Cloning {$gitRepoName} into {$target}...");
+
+            \exec('rm -rf ' . $target . ' && \
+                mkdir -p ' . $target . ' && \
+                cd ' . $target . ' && \
+                git init && \
+                git config core.ignorecase false && \
+                git config pull.rebase false && \
+                git remote add origin ' . $gitUrl . ' && \
+                git fetch origin && \
+                (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
+                git pull origin ' . $repoBranch . ' && \
+                (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
+                (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
+                git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true
+            ');
+
+            // Copy generated spec files into specs/{version}/ subdirectory
+            $prPlatforms = static::getPlatformsForPR();
+            $prFiles = \array_filter(
+                $generatedFiles,
+                fn (string $file) => \in_array(
+                    \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
+                    $prPlatforms,
+                    true
+                )
+            );
+
+            $specsSubDir = $mocks ? 'mocks' : $version;
+            \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));
+            foreach ($prFiles as $file) {
+                $fileName = \basename($file);
+                \exec('cp ' . \escapeshellarg($file) . ' ' . \escapeshellarg("{$target}/specs/{$specsSubDir}/{$fileName}"));
+                Console::success("Copied spec file to repo: specs/{$specsSubDir}/{$fileName}");
+            }
+
+            // Regenerate SDK examples for this version
+            Console::info("Regenerating SDK examples for version {$version}...");
+            $sdksCommand = $this->getSdksCommand($version);
+            \exec($sdksCommand, $sdksOutput, $sdksReturnCode);
+
+            if ($sdksReturnCode !== 0) {
+                Console::warning("SDK examples generation returned non-zero exit code: {$sdksReturnCode}");
+                Console::warning(\implode("\n", $sdksOutput));
+            } else {
+                Console::success("Regenerated SDK examples for version {$version}");
+            }
+
+            // Copy SDK examples for this version, filtered by PR platforms
+            if (\is_dir($examplesDir)) {
+                \exec('mkdir -p ' . \escapeshellarg("{$target}/examples/{$version}"));
+                $exampleFolders = \glob($examplesDir . '/*', GLOB_ONLYDIR) ?: [];
+                foreach ($exampleFolders as $folder) {
+                    $folderName = \basename($folder);
+                    $platform = \strstr($folderName, '-', true) ?: $folderName;
+                    if (!\in_array($platform, $prPlatforms, true)) {
+                        Console::info("Skipping SDK examples for platform '{$platform}': examples/{$version}/{$folderName}");
+                        continue;
                     }
-
-                    Console::success('Saved mocks spec file: ' . realpath($path));
-
-                    continue;
+                    \exec('cp -r ' . \escapeshellarg($folder) . ' ' . \escapeshellarg("{$target}/examples/{$version}/"));
+                    Console::success("Copied SDK examples to repo: examples/{$version}/{$folderName}");
                 }
+            } else {
+                Console::warning("No SDK examples found at: {$examplesDir}. Skipping examples copy.");
+            }
 
-                $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+            // Git add, commit, and push
+            \exec('cd ' . $target . ' && \
+                git add -A && \
+                git commit -m "' . \addslashes($message) . '" && \
+                git push -u origin ' . $gitBranch . '
+            ');
 
-                if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
-                    throw new Exception('Failed to save spec file: ' . $path);
-                }
+            Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
 
-                Console::success('Saved spec file: ' . realpath($path));
+            // Create or update PR
+            $prTitle = "feat: API specs update for version {$version}";
+            $prBody = "This PR contains API specification updates and SDK examples for version {$version}.";
+
+            $prCommand = 'cd ' . $target . ' && \
+                gh pr create \
+                --repo "' . $gitRepoName . '" \
+                --title "' . $prTitle . '" \
+                --body "' . $prBody . '" \
+                --base "' . $repoBranch . '" \
+                --head "' . $gitBranch . '" \
+                2>&1';
+
+            $prUrl = '';
+            \exec($prCommand, $prOutput);
+            $prOutput = \implode("\n", $prOutput);
+
+            if (\str_contains($prOutput, 'already exists')) {
+                Console::warning("PR already exists for branch {$gitBranch}");
+                // Try to get the existing PR URL
+                \exec('cd ' . $target . ' && gh pr view --repo "' . $gitRepoName . '" --json url -q .url 2>&1', $existingPrOutput);
+                $prUrl = \trim(\implode("\n", $existingPrOutput));
+            } else {
+                $prUrl = \trim($prOutput);
+            }
+
+            // Clean up temp directory
+            \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+            Console::success("Removed temp directory '{$target}'");
+
+            if (!empty($prUrl)) {
+                Console::log('');
+                Console::log('Pull Request Summary');
+                Console::log("Specs PR: {$prUrl}");
+                Console::log('');
             }
         }
     }

@@ -2,14 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -39,6 +41,7 @@ class Create extends Action
             ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -54,14 +57,16 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
-            ->param('buildId', '', new UID(), 'Build unique ID.', true) // added as optional param for backward compatibility
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('buildId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Build unique ID.', true, ['dbForProject']) // added as optional param for backward compatibility
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('deviceForFunctions')
+            ->inject('project')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -72,8 +77,10 @@ class Create extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Build $queueForBuilds,
-        Device $deviceForFunctions
+        BuildPublisher $publisherForBuilds,
+        Device $deviceForFunctions,
+        Document $project,
+        array $platform
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -104,6 +111,7 @@ class Create extends Action
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
+            'startCommand' => $function->getAttribute('startCommand', ''),
             'buildStartedAt' => null,
             'buildEndedAt' => null,
             'buildDuration' => null,
@@ -113,17 +121,13 @@ class Create extends Action
             'buildLogs' => '',
         ]));
 
-        $function = $function
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
-
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($function)
-            ->setDeployment($deployment);
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $function,
+            deployment: $deployment,
+            type: BUILD_TYPE_DEPLOYMENT,
+            platform: $platform,
+        ));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
@@ -9,7 +11,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
-class TeamsCustomServerTest extends Scope
+final class TeamsCustomServerTest extends Scope
 {
     use TeamsBase;
     use TeamsBaseServer;

@@ -4,7 +4,7 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\Auth\Proofs\Password;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -262,7 +262,7 @@ class V17 extends Migration
                  * Set default maxSessions
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT
+                    'maxSessions' => 10
                 ]));
                 break;
             case 'users':

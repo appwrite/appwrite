@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -41,6 +42,7 @@ class Create extends Action
         ->label('audits.resource', 'token/{response.$id}')
         ->label('usage.metric', 'tokens.{scope}.requests.create')
         ->label('usage.params', ['resourceId:{request.resourceId}', 'resourceType:{request.resourceType}'])
+        ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
         ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
         ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
         ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -60,23 +62,24 @@ class Create extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-        ->param('fileId', '', new UID(), 'File unique ID.')
+        ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+        ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File unique ID.', false, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
         ->inject('response')
+        ->inject('user')
         ->inject('dbForProject')
         ->inject('queueForEvents')
         ->inject('authorization')
         ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
     {
         /**
          * @var Document $bucket
          * @var Document $file
          */
-        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
+        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $user, $bucketId, $fileId);
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $bucketPermission =  $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));

@@ -6,34 +6,39 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Swoole\Database\PDOProxy;
-use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Logger\Adapter\AppSignal;
 use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Mongo\Client as MongoClient;
+use Utopia\Pools\Adapter\Stack as StackPool;
+use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
+global $register;
 $register = new Registry();
 
-App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
-if (!App::isProduction()) {
+if (!Http::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher-sms']);
@@ -50,7 +55,7 @@ $register->set('logger', function () {
     }
 
     try {
-        $loggingProvider = new DSN($providerConfig ?? '');
+        $loggingProvider = new DSN($providerConfig);
 
         $providerName = $loggingProvider->getScheme();
         $providerConfig = match ($providerName) {
@@ -65,12 +70,12 @@ $register->set('logger', function () {
 
         $providerConfig = match ($providerName) {
             'sentry' => [ 'key' => $configChunks[0], 'projectId' => $configChunks[1] ?? '', 'host' => '',],
-            'logowl' => ['ticket' => $configChunks[0] ?? '', 'host' => ''],
+            'logowl' => ['ticket' => $configChunks[0], 'host' => ''],
             default => ['key' => $providerConfig],
         };
     }
 
-    if (empty($providerName) || empty($providerConfig)) {
+    if (empty($providerName)) {
         return;
     }
 
@@ -115,7 +120,7 @@ $register->set('realtimeLogger', function () {
         default => ['key' => $loggingProvider->getHost()],
     };
 
-    if (empty($providerName) || empty($providerConfig)) {
+    if (empty($providerName)) {
         return;
     }
 
@@ -147,9 +152,9 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
-        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => System::getEnv('_APP_DB_PORT', '3306'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -162,33 +167,56 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_REDIS_PASS', ''),
     ]);
 
+    $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+    $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+
     $connections = [
         'console' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+        ],
+        'documentsdb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_DOCUMENTSDB', $fallbackForDocumentsDB),
+            'multiple' => true,
+            'schemes' => ['mongodb'],
+        ],
+        'vectorsdb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORSDB', $fallbackForVectorsDB),
+            'multiple' => true,
+            'schemes' => ['postgresql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
         ],
         'publisher' => [
             'type' => 'publisher',
-            'dsns' => $fallbackForRedis,
-            'multiple' => false,
-            'schemes' => ['redis'],
-        ],
-        'consumer' => [
-            'type' => 'consumer',
             'dsns' => $fallbackForRedis,
             'multiple' => false,
             'schemes' => ['redis'],
@@ -205,31 +233,30 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['redis'],
         ],
+        'lock' => [
+            'type' => 'lock',
+            'dsns' => $fallbackForRedis,
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
     ];
 
-    $maxConnections = System::getEnv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / System::getEnv('_APP_POOL_CLIENTS', 14);
+    $maxConnections = (int) System::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / (int) System::getEnv('_APP_POOL_CLIENTS', 14);
 
-    $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
+    $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+    $poolSize = max(1, (int)($instanceConnections / $workerCount));
 
-    if ($multiprocessing) {
-        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-    } else {
-        $workerCount = 1;
-    }
-
-    if ($workerCount > $instanceConnections) {
-        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
-    }
-
-    $poolSize = (int)($instanceConnections / $workerCount);
+    // Queue workers consume jobs concurrently with coroutines; each in-flight
+    // job may hold a connection, so pools must cover the coroutine count.
+    $poolSize = max($poolSize, (int) System::getEnv('_APP_WORKER_MAX_COROUTINES', 1));
 
     foreach ($connections as $key => $connection) {
-        $type = $connection['type'] ?? '';
-        $multiple = $connection['multiple'] ?? false;
-        $schemes = $connection['schemes'] ?? [];
+        $type = $connection['type'];
+        $multiple = $connection['multiple'];
+        $schemes = $connection['schemes'];
         $config = [];
-        $dsns = explode(',', $connection['dsns'] ?? '');
+        $dsns = explode(',', $connection['dsns']);
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
@@ -259,20 +286,40 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
+
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT => false,
-                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
-                        ]);
-                    });
+                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
+                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                        \PDO::ATTR_TIMEOUT => 3, // Seconds
+                        \PDO::ATTR_PERSISTENT => false,
+                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                        \PDO::ATTR_EMULATE_PREPARES => true,
+                        \PDO::ATTR_STRINGIFY_FETCHES => true
+                    ]);
                 },
-                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    try {
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
+                        @$mongo->connect();
+
+                        return $mongo;
+                    } catch (\Throwable $e) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                    }
+                },
+                'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
+                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                        \PDO::ATTR_TIMEOUT => 3, // Seconds
+                        \PDO::ATTR_PERSISTENT => false,
+                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                        \PDO::ATTR_EMULATE_PREPARES => true,
+                        \PDO::ATTR_STRINGIFY_FETCHES => true
+                    ));
+                },
+                default => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
                     if ($dsnPass) {
@@ -282,16 +329,26 @@ $register->set('pools', function () {
 
                     return $redis;
                 },
-                default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
+            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
+
+            // PubSub workers hold one long-lived subscribed connection and also need
+            // spare capacity for publishes from the same process.
+            $connectionPoolSize = match ($type) {
+                'pubsub' => max(2, $poolSize),
+                default => $poolSize,
+            };
+
+            $pool = new Pool($poolAdapter, $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
+                            'mongodb' => new Mongo($resource()),
+                            'postgresql' => new Postgres($resource()),
                             default => null
                         };
 
@@ -303,16 +360,28 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'publisher':
-                    case 'consumer':
+                        // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
-                            'redis' => new Queue\Broker\Redis(new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort())),
+                            'redis' => (function () use ($dsn) {
+                                $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+                                return new Queue\Broker\Redis($connection, $connection);
+                            })(),
                             default => null
                         };
                     case 'cache':
-                        return match ($dsn->getScheme()) {
+                        $adapter = match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
+
+                        if ($adapter !== null) {
+                            $adapter->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES);
+                            $adapter->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY);
+                        }
+
+                        return $adapter;
+                    case 'lock':
+                        return $resource();
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
@@ -324,6 +393,12 @@ $register->set('pools', function () {
         Config::setParam('pools-' . $key, $config);
     }
 
+    $reconnectAttempts = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_ATTEMPTS', 5);
+    $reconnectSleep = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_SLEEP', 2);
+
+    $group->setReconnectAttempts($reconnectAttempts);
+    $group->setReconnectSleep($reconnectSleep);
+
     return $group;
 });
 
@@ -333,46 +408,49 @@ $register->set('db', function () {
     $dbPort = System::getEnv('_APP_DB_PORT', '');
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
-    $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+    $dsn = '';
 
-    return new PDO(
-        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
-        $dbUser,
-        $dbPass,
-        SQL::getPDOAttributes()
-    );
+    switch ($dbAdapter) {
+        case 'mongodb':
+            try {
+                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                @$mongo->connect();
+                return $mongo;
+            } catch (\Throwable $e) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'MongoDB connection failed: ' . $e->getMessage());
+            }
+        case 'mysql':
+        case 'mariadb':
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        case 'postgresql':
+            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        default:
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
+    }
 });
 
 $register->set('smtp', function () {
-    $mail = new PHPMailer(true);
-
-    $mail->isSMTP();
-
-    $username = System::getEnv('_APP_SMTP_USERNAME');
-    $password = System::getEnv('_APP_SMTP_PASSWORD');
-
-    $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = System::getEnv('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = System::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = !empty($username) && !empty($password);
-    $mail->Username = $username;
-    $mail->Password = $password;
-    $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
-    $mail->SMTPAutoTLS = false;
-    $mail->CharSet = 'UTF-8';
-
-    $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-    $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-
-    $mail->setFrom($email, $from);
-    $mail->addReplyTo($email, $from);
-
-    $mail->isHTML(true);
-
-    return $mail;
+    $username = System::getEnv('_APP_SMTP_USERNAME', '');
+    $password = System::getEnv('_APP_SMTP_PASSWORD', '');
+    return new SMTP(
+        host: System::getEnv('_APP_SMTP_HOST', 'smtp'),
+        port: (int) System::getEnv('_APP_SMTP_PORT', 25),
+        username: $username,
+        password: $password,
+        smtpSecure: System::getEnv('_APP_SMTP_SECURE', ''),
+        smtpAutoTLS: false,
+        xMailer: 'Appwrite Mailer',
+        timeout: 10,
+        keepAlive: true,
+        timelimit: 30,
+    );
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2025-12.mmdb');
+    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2026-06.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');
@@ -385,4 +463,12 @@ $register->set('promiseAdapter', function () {
 });
 $register->set('hooks', function () {
     return new Hooks();
+});
+$listeners = require __DIR__ . '/../listeners.php';
+$register->set('bus', function () use ($listeners) {
+    $bus = new \Utopia\Bus\Bus();
+    foreach ($listeners as $listener) {
+        $bus->subscribe($listener);
+    }
+    return $bus;
 });

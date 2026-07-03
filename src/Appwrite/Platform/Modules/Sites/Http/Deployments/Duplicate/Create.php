@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate;
 
-use Appwrite\Event\Build;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -14,10 +15,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 
 class Create extends Action
@@ -40,6 +41,7 @@ class Create extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -55,17 +57,18 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->inject('queueForBuilds')
+            ->inject('publisherForBuilds')
             ->inject('deviceForSites')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -78,9 +81,10 @@ class Create extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Build $queueForBuilds,
+        BuildPublisher $publisherForBuilds,
         Device $deviceForSites,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -119,6 +123,7 @@ class Create extends Action
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'buildCommands' => \implode(' && ', $commands),
+            'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
@@ -131,18 +136,11 @@ class Create extends Action
             'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
-            'type' => $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual'
+            'type' => $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual'
         ]));
 
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
-
         // Preview deployments for sites
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -169,10 +167,13 @@ class Create extends Action
             ]))
         );
 
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($site)
-            ->setDeployment($deployment);
+        $publisherForBuilds->enqueue(new BuildMessage(
+            project: $project,
+            resource: $site,
+            deployment: $deployment,
+            type: BUILD_TYPE_DEPLOYMENT,
+            platform: $platform,
+        ));
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

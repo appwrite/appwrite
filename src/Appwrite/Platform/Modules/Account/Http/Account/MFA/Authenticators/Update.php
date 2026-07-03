@@ -7,6 +7,7 @@ use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -15,7 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -76,7 +77,7 @@ class Update extends Action
                     contentType: ContentType::JSON
                 )
             ])
-            ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
+            ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.', enum: new Enum(name: 'AuthenticatorType'))
             ->param('otp', '', new Text(256), 'Valid verification token.')
             ->inject('response')
             ->inject('user')
@@ -119,7 +120,7 @@ class Update extends Action
 
         $authenticator->setAttribute('verified', true);
 
-        $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+        $dbForProject->updateDocument('authenticators', $authenticator->getId(), new Document(['verified' => true]));
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);
@@ -127,7 +128,7 @@ class Update extends Action
         $factors = \array_values(\array_unique($factors));
 
         $session->setAttribute('factors', $factors);
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors]));
 
         $queueForEvents->setParam('userId', $user->getId());
 

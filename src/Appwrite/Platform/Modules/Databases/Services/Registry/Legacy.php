@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Services\Registry;
 
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\BigInt\Create as CreateBigIntAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\BigInt\Update as UpdateBigIntAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Create as CreateBooleanAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Boolean\Update as UpdateBooleanAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Datetime\Create as CreateDatetimeAttribute;
@@ -20,6 +22,10 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\IP
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\IP\Update as UpdateIPAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line\Create as CreateLineAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line\Update as UpdateLineAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Longtext\Create as CreateLongtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Longtext\Update as UpdateLongtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Mediumtext\Create as CreateMediumtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Mediumtext\Update as UpdateMediumtextAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point\Create as CreatePointAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point\Update as UpdatePointAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Polygon\Create as CreatePolygonAttribute;
@@ -28,8 +34,12 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Re
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship\Update as UpdateRelationshipAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Create as CreateStringAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Update as UpdateStringAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Text\Create as CreateTextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Text\Update as UpdateTextAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\URL\Create as CreateURLAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\URL\Update as UpdateURLAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Create as CreateVarcharAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Update as UpdateVarcharAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\XList as ListAttributes;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CreateCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Delete as DeleteCollection;
@@ -41,7 +51,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Get as GetDocument;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Logs\XList as ListDocumentLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList as ListDocuments;
@@ -50,14 +59,11 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Creat
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Delete as DeleteIndex;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\XList as ListIndexes;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Logs\XList as ListCollectionLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Update as UpdateCollection;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete as DeleteTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Get as GetTransaction;
@@ -65,8 +71,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations\C
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Update as UpdateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Update as UpdateDatabase;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\Get as GetDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\Databases\Usage\XList as ListDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\XList as ListDatabases;
 use Utopia\Platform\Service;
 
@@ -99,9 +103,6 @@ class Legacy extends Base
         $service->addAction(UpdateDatabase::getName(), new UpdateDatabase());
         $service->addAction(DeleteDatabase::getName(), new DeleteDatabase());
         $service->addAction(ListDatabases::getName(), new ListDatabases());
-        $service->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
-        $service->addAction(GetDatabaseUsage::getName(), new GetDatabaseUsage());
-        $service->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
     }
 
     private function registerCollectionActions(Service $service): void
@@ -111,8 +112,6 @@ class Legacy extends Base
         $service->addAction(UpdateCollection::getName(), new UpdateCollection());
         $service->addAction(DeleteCollection::getName(), new DeleteCollection());
         $service->addAction(ListCollections::getName(), new ListCollections());
-        $service->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
-        $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
     }
 
     private function registerDocumentActions(Service $service): void
@@ -126,7 +125,6 @@ class Legacy extends Base
         $service->addAction(DeleteDocument::getName(), new DeleteDocument());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
         $service->addAction(ListDocuments::getName(), new ListDocuments());
-        $service->addAction(ListDocumentLogs::getName(), new ListDocumentLogs());
         $service->addAction(IncrementDocumentAttribute::getName(), new IncrementDocumentAttribute());
         $service->addAction(DecrementDocumentAttribute::getName(), new DecrementDocumentAttribute());
 
@@ -163,6 +161,10 @@ class Legacy extends Base
         $service->addAction(CreateIntegerAttribute::getName(), new CreateIntegerAttribute());
         $service->addAction(UpdateIntegerAttribute::getName(), new UpdateIntegerAttribute());
 
+        // Attribute: BigInt
+        $service->addAction(CreateBigIntAttribute::getName(), new CreateBigIntAttribute());
+        $service->addAction(UpdateBigIntAttribute::getName(), new UpdateBigIntAttribute());
+
         // Attribute: IP
         $service->addAction(CreateIPAttribute::getName(), new CreateIPAttribute());
         $service->addAction(UpdateIPAttribute::getName(), new UpdateIPAttribute());
@@ -190,6 +192,22 @@ class Legacy extends Base
         // Attribute: URL
         $service->addAction(CreateURLAttribute::getName(), new CreateURLAttribute());
         $service->addAction(UpdateURLAttribute::getName(), new UpdateURLAttribute());
+
+        // Attribute: Varchar
+        $service->addAction(CreateVarcharAttribute::getName(), new CreateVarcharAttribute());
+        $service->addAction(UpdateVarcharAttribute::getName(), new UpdateVarcharAttribute());
+
+        // Attribute: Text
+        $service->addAction(CreateTextAttribute::getName(), new CreateTextAttribute());
+        $service->addAction(UpdateTextAttribute::getName(), new UpdateTextAttribute());
+
+        // Attribute: Mediumtext
+        $service->addAction(CreateMediumtextAttribute::getName(), new CreateMediumtextAttribute());
+        $service->addAction(UpdateMediumtextAttribute::getName(), new UpdateMediumtextAttribute());
+
+        // Attribute: Longtext
+        $service->addAction(CreateLongtextAttribute::getName(), new CreateLongtextAttribute());
+        $service->addAction(UpdateLongtextAttribute::getName(), new UpdateLongtextAttribute());
     }
 
     private function registerIndexActions(Service $service): void

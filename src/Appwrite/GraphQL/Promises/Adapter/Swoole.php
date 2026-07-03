@@ -35,8 +35,12 @@ class Swoole extends Adapter
         return new GQLPromise($promise, $this);
     }
 
-    public function all(array $promisesOrValues): GQLPromise
+    public function all(iterable $promisesOrValues): GQLPromise
     {
+        if ($promisesOrValues instanceof \Traversable) {
+            $promisesOrValues = \iterator_to_array($promisesOrValues);
+        }
+
         return new GQLPromise(SwoolePromise::all($promisesOrValues), $this);
     }
 }

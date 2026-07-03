@@ -3,27 +3,31 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class XList extends Action
@@ -47,6 +51,7 @@ class XList extends Action
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/documents')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -65,26 +70,30 @@ class XList extends Action
                     replaceWith: 'tablesDB.listRows',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID to read uncommitted changes within the transaction.', true)
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('ttl', 0, new Range(min: 0, max: 86400), 'TTL (seconds) for caching list responses. Responses are stored in an in-memory key-value cache, keyed per project, collection, schema version (attributes and indexes), caller authorization roles, and the exact query — so users with different permissions never share cached entries. Schema changes invalidate cached entries automatically; document writes do not, so choose a TTL you are comfortable serving as stale data. Set to 0 to disable caching. Must be between 0 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForStatsUsage')
+            ->inject('user')
+            ->inject('getDatabasesDB')
+            ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
+            ->inject('utopia')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
     {
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -99,16 +108,11 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-
+        $dbForDatabases = $getDatabasesDB($database);
+        $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
-        if ($cursor) {
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -116,7 +120,14 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            try {
+                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            } catch (NotFoundException) {
+                // The collection metadata document exists but the backing store (e.g. a
+                // dedicated DocumentsDB shard) has no table for it. Treat this as a
+                // not-found on the collection so the caller sees a 404 instead of a 500.
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -126,24 +137,82 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
+        $dbStart = \microtime(true);
+
         try {
-            $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+            $hasSelects = ! empty(Query::groupByType($queries)['selections']);
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            // When there are no select queries, relationship loading is skipped on the
+            // underlying find() to avoid pulling related documents the caller did not ask for.
+            $find = $hasSelects
+                ? fn () => $dbForDatabases->find($collectionTableId, $queries)
+                : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
-                $total = $includeTotal ? $transactionState->countDocuments($collectionTableId, $transactionId, $queries) : 0;
-            } elseif (! empty($selectQueries)) {
-                // has selects, allow relationship on documents
-                $documents = $dbForProject->find($collectionTableId, $queries);
-                $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
+                $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
+            } elseif ((int)$ttl > 0) {
+                $cacheKey = $this->getListCacheKey($dbForProject, $collectionId);
+                $roles = $dbForProject->getAuthorization()->getRoles();
+                $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
+
+                $documentsCacheHit = false;
+                try {
+                    $cachedDocuments = $dbForProject->getCache()->load($cacheKey, $ttl, $documentsField);
+                } catch (\Throwable) {
+                    $cachedDocuments = null;
+                }
+
+                if ($cachedDocuments !== null &&
+                    $cachedDocuments !== false &&
+                    \is_array($cachedDocuments)) {
+                    $documents = \array_map(function ($doc) {
+                        return new Document($doc);
+                    }, $cachedDocuments);
+                    $documentsCacheHit = true;
+                } else {
+                    $documents = $find();
+
+                    $documentsArray = \array_map(function ($doc) {
+                        return $doc->getArrayCopy();
+                    }, $documents);
+                    try {
+                        $dbForProject->getCache()->save($cacheKey, $documentsArray, $documentsField);
+                    } catch (\Throwable) {
+                    }
+                }
+
+                if ($includeTotal) {
+                    $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
+                    try {
+                        $cachedTotal = $dbForProject->getCache()->load($cacheKey, $ttl, $totalField);
+                    } catch (\Throwable) {
+                        $cachedTotal = null;
+                    }
+                    if ($cachedTotal !== null && $cachedTotal !== false) {
+                        $total = (int) $cachedTotal;
+                    } else {
+                        $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                        try {
+                            $dbForProject->getCache()->save($cacheKey, $total, $totalField);
+                        } catch (\Throwable) {
+                        }
+                    }
+                } else {
+                    $total = 0;
+                }
+
+                $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
             } else {
-                // has no selects, disable relationship loading on documents
-                /* @type Document[] $documents */
-                $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find($collectionTableId, $queries));
-                $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                $documents = $find();
+                $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             }
+        } catch (NotFoundException) {
+            // The collection metadata document exists but the backing store (e.g. a
+            // dedicated DocumentsDB shard) has no table for it. Treat this as a
+            // not-found on the collection so the caller sees a 404 instead of a 500.
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
@@ -151,7 +220,11 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (Timeout) {
+            throw new Exception(Exception::DATABASE_TIMEOUT);
         }
+
+        $dbDurationMs = (\microtime(true) - $dbStart) * 1000;
 
         $operations = 0;
         $collectionsCache = [];
@@ -167,14 +240,29 @@ class XList extends Action
             );
         }
 
-        $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+        $usage
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
 
         $response->dynamic(new Document([
             'total' => $total,
             // rows or documents
             $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
+
+        try {
+            $this->afterQuery($dbDurationMs, $database, $collection, $queries, $utopia);
+        } catch (\Throwable) {
+            // Observers must never break the response.
+        }
+    }
+
+    /**
+     * After query hook.
+     *
+     * @param array<Query> $queries
+     */
+    protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
+    {
     }
 }

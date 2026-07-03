@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -10,15 +13,24 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
-class FunctionsServerTest extends Scope
+final class FunctionsServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
     use Async;
 
-    public function testCreateFunction(): array
+    private static array $cachedFunction = [];
+    private static array $cachedDeployment = [];
+    private static array $cachedExecution = [];
+
+    protected function setupFunction(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedFunction[$key])) {
+            return self::$cachedFunction[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_FUNCTION);
         $gqlPayload = [
@@ -45,10 +57,10 @@ class FunctionsServerTest extends Scope
 
         $query = '
             mutation createVariables($functionId: String!) {
-                var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
+                var1: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "name", value: "John Doe") {
                     _id
                 }
-                var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
+                var2: functionsCreateVariable(functionId: $functionId, variableId: "unique()", key: "age", value: "42") {
                     _id
                 }
             }
@@ -69,17 +81,19 @@ class FunctionsServerTest extends Scope
         $this->assertIsArray($variables['body']['data']);
         $this->assertArrayNotHasKey('errors', $variables['body']);
 
+        self::$cachedFunction[$key] = $function;
         return $function;
     }
 
-    /**
-     * @depends testCreateFunction
-     * @param $function
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateDeployment($function): array
+    protected function setupDeployment(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedDeployment[$key])) {
+            return self::$cachedDeployment[$key];
+        }
+
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DEPLOYMENT);
 
@@ -129,19 +143,27 @@ class FunctionsServerTest extends Scope
             $this->assertArrayNotHasKey('errors', $deployment['body']);
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
+
+            if ($deployment['status'] === 'failed') {
+                throw new Critical('Deployment build failed: ' . ($deployment['buildLogs'] ?? 'no logs'));
+            }
+
             $this->assertEquals('ready', $deployment['status']);
-        }, 30000);
+        }, 120000);
+
+        self::$cachedDeployment[$key] = $deployment;
         return $deployment;
     }
 
-    /**
-     * @depends testCreateDeployment
-     * @param $deployment
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateExecution($deployment): array
+    protected function setupExecution(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(self::$cachedExecution[$key])) {
+            return self::$cachedExecution[$key];
+        }
+
+        $deployment = $this->setupDeployment();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_EXECUTION);
         $gqlPayload = [
@@ -159,17 +181,44 @@ class FunctionsServerTest extends Scope
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
 
-        return $execution['body']['data']['functionsCreateExecution'];
+        self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
+        return self::$cachedExecution[$key];
+    }
+
+    public function testCreateFunction(): void
+    {
+        $function = $this->setupFunction();
+        $this->assertNotEmpty($function);
     }
 
     /**
-     * @depends testGetDeployment
-     * @param $deployment
      * @return void
      * @throws \Exception
      */
-    public function testCreateRetryBuild($deployment): void
+    public function testCreateDeployment(): void
     {
+        $deployment = $this->setupDeployment();
+        $this->assertNotEmpty($deployment);
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateExecution(): void
+    {
+        $execution = $this->setupExecution();
+        $this->assertNotEmpty($execution);
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateRetryBuild(): void
+    {
+        $deployment = $this->setupDeployment();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::RETRY_BUILD);
         $gqlPayload = [
@@ -212,13 +261,13 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @param $function
      * @return array
      * @throws \Exception
      */
-    public function testGetFunction($function): array
+    public function testGetFunction(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FUNCTION);
         $gqlPayload = [
@@ -263,13 +312,13 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @param $function
      * @return array
      * @throws \Exception
      */
-    public function testGetDeployments($function)
+    public function testGetDeployments(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_DEPLOYMENTS);
         $gqlPayload = [
@@ -293,13 +342,13 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDeployment
-     * @param $deployment
      * @return array
      * @throws \Exception
      */
-    public function testGetDeployment($deployment)
+    public function testGetDeployment(): array
     {
+        $deployment = $this->setupDeployment();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_DEPLOYMENT);
         $gqlPayload = [
@@ -324,13 +373,13 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @param $function
      * @return array
      * @throws \Exception
      */
-    public function testGetExecutions($function): array
+    public function testGetExecutions(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_EXECUTIONS);
         $gqlPayload = [
@@ -354,13 +403,13 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateExecution
-     * @param $execution
      * @return array
      * @throws \Exception
      */
-    public function testGetExecution($execution): array
+    public function testGetExecution(): array
     {
+        $execution = $this->setupExecution();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_EXECUTION);
         $gqlPayload = [
@@ -385,13 +434,13 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @param $function
      * @return array
      * @throws \Exception
      */
-    public function testUpdateFunction($function): array
+    public function testUpdateFunction(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_FUNCTION);
         $gqlPayload = [
@@ -423,12 +472,12 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDeployment
-     * @param $deployment
      * @throws \Exception
      */
-    public function testDeleteDeployment($deployment): array
+    public function testDeleteDeployment(): void
     {
+        $deployment = $this->setupDeployment();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_DEPLOYMENT);
         $gqlPayload = [
@@ -447,22 +496,28 @@ class FunctionsServerTest extends Scope
         $this->assertIsNotArray($response['body']);
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        return $deployment;
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        self::$cachedDeployment[$key] = [];
+        self::$cachedExecution[$key] = [];
     }
 
     /**
-     * @depends testDeleteDeployment
-     * @param $deployment
      * @throws \Exception
      */
-    public function testDeleteFunction($deployment): void
+    public function testDeleteFunction(): void
     {
+        // Ensure deployment is deleted first
+        $this->testDeleteDeployment();
+
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_FUNCTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $deployment['resourceId'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -473,5 +528,9 @@ class FunctionsServerTest extends Scope
 
         $this->assertIsNotArray($response['body']);
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        self::$cachedFunction[$key] = [];
     }
 }

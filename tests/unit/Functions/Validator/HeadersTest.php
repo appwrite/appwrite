@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Functions\Validator;
 
 use Appwrite\Functions\Validator\Headers;
 use PHPUnit\Framework\TestCase;
 
-class HeadersTest extends TestCase
+final class HeadersTest extends TestCase
 {
     protected ?Headers $object = null;
 
@@ -19,37 +21,37 @@ class HeadersTest extends TestCase
         $headers = [
             'headerKey' => 'headerValue',
         ];
-        $this->assertEquals($this->object->isValid($headers), true);
+        $this->assertTrue($this->object->isValid($headers));
 
         $headers = [
             'headerKey' => 'headerValue',
             'x-appwrite-key' => 'headerValue',
         ];
-        $this->assertEquals($this->object->isValid($headers), false);
+        $this->assertFalse($this->object->isValid($headers));
 
         $headers = [
             'headerKey' => 'headerValue',
             'headerKey2' => 'headerValue2',
         ];
-        $this->assertEquals($this->object->isValid($headers), true);
+        $this->assertTrue($this->object->isValid($headers));
 
         $headers = [
             'headerKey' => 'headerValue',
             'x-appwrite-project' => 'headerValue',
             'headerKey2' => 'headerValue2',
         ];
-        $this->assertEquals($this->object->isValid($headers), false);
+        $this->assertFalse($this->object->isValid($headers));
 
         $headers = [
             'header/////Key' => 'headerValue',
         ];
-        $this->assertEquals($this->object->isValid($headers), false);
+        $this->assertFalse($this->object->isValid($headers));
 
         $headers = [
             'Content-Type' => 'application/json',
             'X-Custom-Header' => 'value'
         ];
-        $this->assertEquals($this->object->isValid($headers), true);
+        $this->assertTrue($this->object->isValid($headers));
 
         $headers = [
             'X-Custom-Header_With-Hyphens_and_Underscores' => 'value'
@@ -73,11 +75,6 @@ class HeadersTest extends TestCase
 
         $headers = [
             '' => 'value'
-        ];
-        $this->assertFalse($this->object->isValid($headers));
-
-        $headers = [
-            null => 'value',
         ];
         $this->assertFalse($this->object->isValid($headers));
 

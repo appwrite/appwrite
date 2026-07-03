@@ -35,6 +35,7 @@ class Delete extends Base
             ->label('event', 'sites.[siteId].logs.[logId].delete')
             ->label('audits.event', 'logs.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'logs',
@@ -50,8 +51,8 @@ class Delete extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('logId', '', new UID(), 'Log ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('logId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Log ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

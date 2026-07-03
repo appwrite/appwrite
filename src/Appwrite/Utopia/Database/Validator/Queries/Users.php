@@ -14,6 +14,8 @@ class Users extends Base
         'emailVerification',
         'phoneVerification',
         'labels',
+        'impersonator',
+        'accessedAt',
     ];
 
     /**

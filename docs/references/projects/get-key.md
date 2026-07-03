@@ -1,1 +1,0 @@
-Get a key by its unique ID. This endpoint returns details about a specific API key in your project including it's scopes.

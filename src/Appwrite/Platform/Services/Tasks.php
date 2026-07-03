@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
+use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
@@ -14,7 +15,7 @@ use Appwrite\Platform\Tasks\Screenshot;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\StatsResources;
+use Appwrite\Platform\Tasks\TimeTravel;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
@@ -28,6 +29,7 @@ class Tasks extends Service
         $this
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
+            ->addAction(Interval::getName(), new Interval())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(QueueRetry::getName(), new QueueRetry())
@@ -41,7 +43,7 @@ class Tasks extends Service
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
-            ->addAction(StatsResources::getName(), new StatsResources())
+            ->addAction(TimeTravel::getName(), new TimeTravel())
         ;
     }
 }

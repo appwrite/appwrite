@@ -72,7 +72,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.8.0
+    appwrite/appwrite:1.9.0
 ```
 
 ### Windows
@@ -84,7 +84,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.8.0
+    appwrite/appwrite:1.9.0
 ```
 
 #### PowerShell
@@ -94,7 +94,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.8.0
+    appwrite/appwrite:1.9.0
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -161,6 +161,8 @@ docker run -it --rm `
 |                    | [PHP 快速开始](https://appwrite.io/docs/quick-starts/php)                   |
 |                    | [Kotlin 快速开始](https://appwrite.io/docs/quick-starts/kotlin)             |
 |                    | [Swift 快速开始](https://appwrite.io/docs/quick-starts/swift)               |
+|                    | [Go 快速开始](https://appwrite.io/docs/quick-starts/go)                     |
+|                    | [Rust 快速开始](https://appwrite.io/docs/quick-starts/rust)                 |
 
 ### 软件服务
 
@@ -185,20 +187,22 @@ docker run -it --rm `
 
 - :white_check_mark: &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)
 - :white_check_mark: &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) (由 Appwrite 团队维护)
 - :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native) - **公测** (由 Appwrite 团队维护)
 
 #### 服务器
 
-- :white_check_mark: &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **公测** (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Node.js](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
 - :white_check_mark: &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **公测** (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **公测** (由 Appwrite 团队维护)
-- :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **公测** (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Go](https://github.com/appwrite/sdk-for-go) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Swift](https://github.com/appwrite/sdk-for-swift) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (由 Appwrite 团队维护)
+- :white_check_mark: &nbsp; [Rust](https://github.com/appwrite/sdk-for-rust) (由 Appwrite 团队维护)
 
 #### 开发者社区
 

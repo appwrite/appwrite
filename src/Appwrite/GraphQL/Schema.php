@@ -6,9 +6,9 @@ use Appwrite\GraphQL\Types\Mapper;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Route;
+use Utopia\Http\Exception;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 
 class Schema
 {
@@ -17,7 +17,7 @@ class Schema
 
     /**
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity  Function to calculate complexity
      * @param callable $attributes  Function to get attributes
      * @param array $urls           Array of functions to get urls for specific method types
@@ -26,16 +26,12 @@ class Schema
      * @throws Exception
      */
     public static function build(
-        App $utopia,
+        Http $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,
         array $params,
     ): GQLSchema {
-        App::setResource('utopia:graphql', static function () use ($utopia) {
-            return $utopia;
-        });
-
         if (!empty(self::$schema)) {
             return self::$schema;
         }
@@ -80,15 +76,15 @@ class Schema
      * This function iterates all API routes and builds a GraphQL
      * schema defining types and resolvers for all response models.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity
      * @return array
      * @throws Exception
      */
-    protected static function api(App $utopia, callable $complexity): array
+    protected static function api(Http $utopia, callable $complexity): array
     {
         Mapper::init($utopia
-            ->getResource('response')
+            ->context()->get('response')
             ->getModels());
 
         $queries = [];
@@ -98,10 +94,9 @@ class Schema
             foreach ($routes as $route) {
                 /** @var Route $route */
 
-                /** @var \Appwrite\SDK\Method $sdk  */
                 $sdk = $route->getLabel('sdk', false);
 
-                if (empty($sdk)) {
+                if ($sdk === false) {
                     continue;
                 }
 
@@ -143,7 +138,7 @@ class Schema
      * Iterates all of a projects attributes and builds GraphQL
      * queries and mutations for the collections they make up.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity
      * @param callable $attributes
      * @param array $urls
@@ -152,7 +147,7 @@ class Schema
      * @throws \Exception
      */
     protected static function collections(
-        App $utopia,
+        Http $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,
@@ -177,7 +172,7 @@ class Schema
                 $required = $attr['required'];
                 $default = $attr['default'];
                 $escapedKey = str_replace('$', '', $key);
-                $collections[$collectionId][$escapedKey] = [
+                $collections[$databaseId][$collectionId][$escapedKey] = [
                     'type' => Mapper::attribute(
                         $type,
                         $array,
@@ -187,80 +182,82 @@ class Schema
                 ];
             }
 
-            foreach ($collections as $collectionId => $attributes) {
-                $objectType = new ObjectType([
-                    'name' => $collectionId,
-                    'fields' => \array_merge(
-                        ["_id" => ['type' => Type::string()]],
-                        $attributes
-                    ),
-                ]);
-                $attributes = \array_merge(
-                    $attributes,
-                    Mapper::args('mutate')
-                );
-
-                $queryFields[$collectionId . 'Get'] = [
-                    'type' => $objectType,
-                    'args' => Mapper::args('id'),
-                    'resolve' => Resolvers::documentGet(
-                        $utopia,
-                        $databaseId,
-                        $collectionId,
-                        $urls['get'],
-                    )
-                ];
-                $queryFields[$collectionId . 'List'] = [
-                    'type' => Type::listOf($objectType),
-                    'args' => Mapper::args('list'),
-                    'resolve' => Resolvers::documentList(
-                        $utopia,
-                        $databaseId,
-                        $collectionId,
-                        $urls['list'],
-                        $params['list'],
-                    ),
-                    'complexity' => $complexity,
-                ];
-
-                $mutationFields[$collectionId . 'Create'] = [
-                    'type' => $objectType,
-                    'args' => $attributes,
-                    'resolve' => Resolvers::documentCreate(
-                        $utopia,
-                        $databaseId,
-                        $collectionId,
-                        $urls['create'],
-                        $params['create'],
-                    )
-                ];
-                $mutationFields[$collectionId . 'Update'] = [
-                    'type' => $objectType,
-                    'args' => \array_merge(
-                        Mapper::args('id'),
-                        \array_map(
-                            fn ($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+            foreach ($collections as $databaseId => $databaseCollections) {
+                foreach ($databaseCollections as $collectionId => $attributes) {
+                    $objectType = new ObjectType([
+                        'name' => $collectionId,
+                        'fields' => \array_merge(
+                            ["_id" => ['type' => Type::string()]],
                             $attributes
+                        ),
+                    ]);
+                    $attributes = \array_merge(
+                        $attributes,
+                        Mapper::args('mutate')
+                    );
+
+                    $queryFields[$collectionId . 'Get'] = [
+                        'type' => $objectType,
+                        'args' => Mapper::args('id'),
+                        'resolve' => Resolvers::documentGet(
+                            $utopia,
+                            $databaseId,
+                            $collectionId,
+                            $urls['get'],
                         )
-                    ),
-                    'resolve' => Resolvers::documentUpdate(
-                        $utopia,
-                        $databaseId,
-                        $collectionId,
-                        $urls['update'],
-                        $params['update'],
-                    )
-                ];
-                $mutationFields[$collectionId . 'Delete'] = [
-                    'type' => Mapper::model('none'),
-                    'args' => Mapper::args('id'),
-                    'resolve' => Resolvers::documentDelete(
-                        $utopia,
-                        $databaseId,
-                        $collectionId,
-                        $urls['delete'],
-                    )
-                ];
+                    ];
+                    $queryFields[$collectionId . 'List'] = [
+                        'type' => Type::listOf($objectType),
+                        'args' => Mapper::args('list'),
+                        'resolve' => Resolvers::documentList(
+                            $utopia,
+                            $databaseId,
+                            $collectionId,
+                            $urls['list'],
+                            $params['list'],
+                        ),
+                        'complexity' => $complexity,
+                    ];
+
+                    $mutationFields[$collectionId . 'Create'] = [
+                        'type' => $objectType,
+                        'args' => $attributes,
+                        'resolve' => Resolvers::documentCreate(
+                            $utopia,
+                            $databaseId,
+                            $collectionId,
+                            $urls['create'],
+                            $params['create'],
+                        )
+                    ];
+                    $mutationFields[$collectionId . 'Update'] = [
+                        'type' => $objectType,
+                        'args' => \array_merge(
+                            Mapper::args('id'),
+                            \array_map(
+                                fn ($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+                                $attributes
+                            )
+                        ),
+                        'resolve' => Resolvers::documentUpdate(
+                            $utopia,
+                            $databaseId,
+                            $collectionId,
+                            $urls['update'],
+                            $params['update'],
+                        )
+                    ];
+                    $mutationFields[$collectionId . 'Delete'] = [
+                        'type' => Mapper::model('none'),
+                        'args' => Mapper::args('id'),
+                        'resolve' => Resolvers::documentDelete(
+                            $utopia,
+                            $databaseId,
+                            $collectionId,
+                            $urls['delete'],
+                        )
+                    ];
+                }
             }
             $offset += $limit;
         }

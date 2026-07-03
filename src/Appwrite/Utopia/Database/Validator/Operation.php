@@ -59,6 +59,7 @@ class Operation extends Validator
     {
         switch ($this->type) {
             case 'legacy':
+            case 'documentsdb':
                 $this->collectionIdName = 'collectionId';
                 $this->documentIdName = 'documentId';
                 break;

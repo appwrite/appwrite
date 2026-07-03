@@ -30,6 +30,7 @@ class Get extends Base
             ->desc('Get function')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.read')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -46,7 +47,7 @@ class Get extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

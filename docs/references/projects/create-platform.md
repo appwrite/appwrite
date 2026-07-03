@@ -1,1 +1,0 @@
-Create a new platform for your project. Use this endpoint to register a new platform where your users will run your application which will interact with the Appwrite API.

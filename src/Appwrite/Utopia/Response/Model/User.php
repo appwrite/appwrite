@@ -108,6 +108,41 @@ class User extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('emailCanonical', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Canonical form of the user email address.',
+                'required' => false,
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('emailIsFree', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a free email provider.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsDisposable', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a disposable email provider.',
+                'required' => false,
+                'default' => null,
+                'example' => false,
+            ])
+            ->addRule('emailIsCorporate', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is from a corporate domain.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsCanonical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user email is in its canonical form.',
+                'required' => false,
+                'default' => null,
+                'example' => true,
+            ])
             ->addRule('phoneVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Phone verification status.',
@@ -139,13 +174,27 @@ class User extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('impersonator', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user can impersonate other users.',
+                'required' => false,
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('impersonatorUserId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the original actor performing the impersonation. Present only when the current request is impersonating another user. Internal audit logs attribute the action to this user, while the impersonated target is recorded only in internal audit payload data.',
+                'required' => false,
+                'default' => null,
+                'example' => '5e5ea5c16897e',
+            ])
         ;
     }
 
     /**
-     * Get Collection
+     * Filter user document attributes for response output.
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {

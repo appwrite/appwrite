@@ -10,6 +10,18 @@ use Utopia\Database\Query;
 
 class V20 extends Filter
 {
+    /**
+     * Per-instance (request-scoped) memo of the `attributes` array for a given
+     * `(databaseNamespace, collectionId)`. Avoids re-fetching the same collection
+     * document when multiple relationships in the same schema point at it, and
+     * when `parse()` is re-entered before `Request::getParams()` memoization warms.
+     *
+     * A `null` value means we already tried and the collection was missing or errored.
+     *
+     * @var array<string, array<int, array<string, mixed>>|null>
+     */
+    private array $collectionAttributesCache = [];
+
     // Convert 1.7 params to 1.8
     public function parse(array $content, string $model): array
     {
@@ -58,7 +70,7 @@ class V20 extends Filter
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $selections = Query::groupByType($parsed)['selections'] ?? [];
+        $selections = Query::groupByType($parsed)['selections'];
 
         // Check if we need to add wildcard + relationships
         // This happens when:
@@ -106,36 +118,21 @@ class V20 extends Filter
      * Recursively includes nested relationships up to 3 levels deep.
      * Prevents infinite loops by tracking all visited collections in the current path.
      */
-    private function getRelatedCollectionKeys(
-        ?string $databaseId = null,
-        ?string $collectionId = null,
-        ?string $prefix = null,
-        int $depth = 1,
-        array $visited = []
-    ): array {
-        $databaseId ??= $this->getParamValue('databaseId');
-        $collectionId ??= $this->getParamValue('collectionId');
+    private function getRelatedCollectionKeys(): array
+    {
+        $databaseId = $this->getParamValue('databaseId');
+        $collectionId = $this->getParamValue('collectionId');
 
-        if (
-            empty($databaseId) ||
-            empty($collectionId) ||
-            $depth > Database::RELATION_MAX_DEPTH
-        ) {
+        if (empty($databaseId) || empty($collectionId)) {
             return [];
         }
-
-        // Check if we've already visited this collection in the current path to prevent cycles
-        if (in_array($collectionId, $visited)) {
-            return [];
-        }
-
-        $visited[] = $collectionId;
 
         $dbForProject = $this->getDbForProject();
         if ($dbForProject === null) {
             return [];
         }
 
+        // Resolve the database namespace once, outside the recursion.
         try {
             $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'databases',
@@ -148,19 +145,42 @@ class V20 extends Filter
             return [];
         }
 
-        try {
-            $collection = $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
-                'database_' . $database->getSequence(),
-                $collectionId
-            ));
-            if ($collection->isEmpty()) {
-                return [];
-            }
-        } catch (\Throwable) {
+        $databaseNamespace = 'database_' . $database->getSequence();
+
+        return $this->walkRelatedCollectionKeys(
+            $dbForProject,
+            $databaseNamespace,
+            $collectionId,
+            null,
+            1,
+            []
+        );
+    }
+
+    private function walkRelatedCollectionKeys(
+        Database $dbForProject,
+        string $databaseNamespace,
+        string $collectionId,
+        ?string $prefix,
+        int $depth,
+        array $visited
+    ): array {
+        if ($depth > Database::RELATION_MAX_DEPTH) {
             return [];
         }
 
-        $attributes = $collection->getAttribute('attributes', []);
+        // Check if we've already visited this collection in the current path to prevent cycles
+        if (in_array($collectionId, $visited, true)) {
+            return [];
+        }
+
+        $attributes = $this->getCollectionAttributes($dbForProject, $databaseNamespace, $collectionId);
+        if ($attributes === null) {
+            return [];
+        }
+
+        $visited[] = $collectionId;
+
         $relationshipKeys = [];
 
         foreach ($attributes as $attr) {
@@ -176,27 +196,54 @@ class V20 extends Filter
             $relatedCollectionId = $attr['relatedCollection'] ?? null;
 
             // Skip this relationship entirely if it points to an already visited collection
-            if ($relatedCollectionId && in_array($relatedCollectionId, $visited)) {
+            if ($relatedCollectionId && in_array($relatedCollectionId, $visited, true)) {
                 continue;
             }
 
-            // Add the wildcard select for this relationship
             $relationshipKeys[] = $fullKey . '.*';
 
-            // Continue recursively if we have a related collection
             if ($relatedCollectionId) {
-                $nestedKeys = $this->getRelatedCollectionKeys(
-                    $databaseId,
+                $nestedKeys = $this->walkRelatedCollectionKeys(
+                    $dbForProject,
+                    $databaseNamespace,
                     $relatedCollectionId,
                     $fullKey,
                     $depth + 1,
                     $visited
                 );
-
                 $relationshipKeys = \array_merge($relationshipKeys, $nestedKeys);
             }
         }
 
         return \array_values(\array_unique($relationshipKeys));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>|null
+     */
+    private function getCollectionAttributes(
+        Database $dbForProject,
+        string $databaseNamespace,
+        string $collectionId
+    ): ?array {
+        $cacheKey = $databaseNamespace . ':' . $collectionId;
+        if (\array_key_exists($cacheKey, $this->collectionAttributesCache)) {
+            return $this->collectionAttributesCache[$cacheKey];
+        }
+
+        try {
+            $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
+                $databaseNamespace,
+                $collectionId
+            ));
+        } catch (\Throwable) {
+            return $this->collectionAttributesCache[$cacheKey] = null;
+        }
+
+        if ($collection->isEmpty()) {
+            return $this->collectionAttributesCache[$cacheKey] = null;
+        }
+
+        return $this->collectionAttributesCache[$cacheKey] = $collection->getAttribute('attributes', []);
     }
 }

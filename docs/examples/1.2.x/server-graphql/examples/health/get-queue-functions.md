@@ -1,5 +1,0 @@
-query {
-    healthGetQueueFunctions {
-        size
-    }
-}

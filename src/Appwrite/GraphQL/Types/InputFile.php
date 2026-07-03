@@ -8,8 +8,8 @@ use GraphQL\Type\Definition\ScalarType;
 
 class InputFile extends ScalarType
 {
-    public $name = 'InputFile';
-    public $description = 'The `InputFile` special type represents a file to be uploaded in the same HTTP request as specified by
+    public string $name = 'InputFile';
+    public ?string $description = 'The `InputFile` special type represents a file to be uploaded in the same HTTP request as specified by
  [graphql-multipart-request-spec](https://github.com/jaydenseric/graphql-multipart-request-spec).';
 
     public function serialize($value)

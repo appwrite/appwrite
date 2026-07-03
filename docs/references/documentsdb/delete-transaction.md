@@ -1,0 +1,1 @@
+Delete a transaction by its unique ID.

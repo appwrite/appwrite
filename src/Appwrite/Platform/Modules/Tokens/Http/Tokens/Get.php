@@ -7,6 +7,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
@@ -47,18 +48,27 @@ class Get extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('tokenId', '', new UID(), 'Token ID.')
+        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Token ID.', false, ['dbForProject'])
         ->inject('response')
         ->inject('dbForProject')
+        ->inject('usage')
         ->callback($this->action(...));
     }
 
-    public function action(string $tokenId, Response $response, Database $dbForProject)
+    public function action(string $tokenId, Response $response, Database $dbForProject, Context $usage)
     {
         $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
         if ($token->isEmpty()) {
             throw new Exception(Exception::TOKEN_NOT_FOUND);
+        }
+
+        if ($token->getAttribute('resourceType') === TOKENS_RESOURCE_TYPE_FILES) {
+            $resourceId = (string) $token->getAttribute('resourceId', '');
+            [$bucketId, $fileId] = explode(':', $resourceId, 2) + ['', ''];
+            if ($bucketId !== '' && $fileId !== '') {
+                $usage->setResourcePath('bucket/' . $bucketId . '/file/' . $fileId);
+            }
         }
 
         $response->dynamic($token, Response::MODEL_RESOURCE_TOKEN);

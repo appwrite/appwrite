@@ -1,1 +1,0 @@
-appwrite databases list-usage

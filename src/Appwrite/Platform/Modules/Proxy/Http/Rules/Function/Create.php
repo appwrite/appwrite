@@ -2,18 +2,18 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Http\Rules\Action;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
@@ -45,12 +45,14 @@ class Create extends Action
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'proxy',
-                group: null,
+                group: 'rules',
                 name: 'createFunctionRule',
                 description: <<<EOT
                 Create a new proxy rule for executing Appwrite Function on custom domain.
+
+                Rule ID is automatically generated as MD5 hash of a rule domain for performance purposes.
                 EOT,
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -62,25 +64,36 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('functionId', '', new UID(), 'ID of function to be executed.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of function to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('platform')
             ->inject('log')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
-    {
-        $this->validateDomainRestrictions($domain, $platform);
+    public function action(
+        string $domain,
+        string $functionId,
+        string $branch,
+        Response $response,
+        Document $project,
+        Certificate $publisherForCertificates,
+        Event $queueForEvents,
+        Database $dbForPlatform,
+        Database $dbForProject,
+        array $platform,
+        Log $log,
+        Authorization $authorization,
+    ) {
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $this->validateDomainRestrictions($domain, $platform);
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -90,14 +103,11 @@ class Create extends Action
         $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
-        if (
-            ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
-        ) {
+        if ($this->isAppwriteOwned($domain)) {
             $status = RULE_STATUS_VERIFIED;
             $owner = 'Appwrite';
         }
@@ -131,22 +141,27 @@ class Create extends Action
             }
         }
 
-        try {
-            $rule = $dbForPlatform->createDocument('rules', $rule);
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $queueForCertificates
-                ->setDomain(new Document([
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: $project,
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->trigger();
+                ]),
+                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+            ));
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());
+
+        // Rename 'created' status to 'unverified' for consistency.
+        // 'verifying' and 'verified' statuses stay as is.
+        // 'unverified' in the meaning of failed certificate generation stays as is.
+        if ($rule->getAttribute('status') === 'created') {
+            $rule->setAttribute('status', 'unverified');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

@@ -7,6 +7,10 @@ use Appwrite\Utopia\Response\Model;
 
 class AlgoArgon2 extends Model
 {
+    public array $conditions = [
+        'type' => 'argon2',
+    ];
+
     public function __construct()
     {
         // No options if imported. If hashed by Appwrite, following configuration is available:

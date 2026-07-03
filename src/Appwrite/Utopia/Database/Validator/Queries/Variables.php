@@ -7,7 +7,8 @@ class Variables extends Base
     public const ALLOWED_ATTRIBUTES = [
         'key',
         'resourceType',
-        'resourceId'
+        'resourceId',
+        'secret',
     ];
 
     /**

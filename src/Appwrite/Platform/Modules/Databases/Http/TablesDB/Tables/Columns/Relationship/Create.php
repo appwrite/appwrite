@@ -10,7 +10,8 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
@@ -34,11 +35,12 @@ class Create extends RelationshipCreate
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/relationship')
             ->desc('Create relationship column')
             ->groups(['api', 'database'])
-            ->label('scope', ['tables.write', 'collections.write'])
+            ->label('scope', ['tables.write', 'collections.write', 'columns.write', 'attributes.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -52,26 +54,26 @@ class Create extends RelationshipCreate
                     )
                 ]
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID.')
-            ->param('relatedTableId', '', new UID(), 'Related Table ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('relatedTableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Table ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
                 Database::RELATION_ONE_TO_ONE,
                 Database::RELATION_MANY_TO_ONE,
                 Database::RELATION_MANY_TO_MANY,
                 Database::RELATION_ONE_TO_MANY
-            ], true), 'Relation type')
+            ], true), 'Relation type', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, new Nullable(new Key()), 'Column Key.', true)
-            ->param('twoWayKey', null, new Nullable(new Key()), 'Two Way Column Key.', true)
+            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Column Key.', true, ['dbForProject'])
+            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Column Key.', true, ['dbForProject'])
             ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true), 'Constraints option', true)
+            ], true), 'Constraints option', true, enum: new Enum(name: 'RelationMutate'))
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));

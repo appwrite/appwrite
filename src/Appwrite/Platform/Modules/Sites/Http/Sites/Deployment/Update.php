@@ -38,6 +38,7 @@ class Update extends Base
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',
@@ -53,8 +54,8 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
@@ -111,7 +112,10 @@ class Update extends Base
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getSequence());
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $rule->getAttribute('deploymentId'),
+                'deploymentInternalId' => $rule->getAttribute('deploymentInternalId'),
+            ])));
         }, $queries));
 
         $queueForEvents

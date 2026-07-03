@@ -30,6 +30,7 @@ class Get extends Base
             ->desc('Get variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label(
                 'sdk',
@@ -49,8 +50,8 @@ class Get extends Base
                     ],
                 )
             )
-            ->param('siteId', '', new UID(), 'Site unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
@@ -66,15 +67,10 @@ class Get extends Base
 
         $variable = $dbForProject->getDocument('variables', $variableId);
         if (
-            $variable === false ||
             $variable->isEmpty() ||
             $variable->getAttribute('resourceInternalId') !== $site->getSequence() ||
             $variable->getAttribute('resourceType') !== 'site'
         ) {
-            throw new Exception(Exception::VARIABLE_NOT_FOUND);
-        }
-
-        if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 

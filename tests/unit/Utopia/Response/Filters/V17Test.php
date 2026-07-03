@@ -1,17 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Filters\V17;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V17Test extends TestCase
+final class V17Test extends TestCase
 {
-    /**
-     * @var Filter
-     */
-    protected $filter = null;
+    protected Filter $filter;
 
     public function setUp(): void
     {
@@ -22,39 +23,35 @@ class V17Test extends TestCase
     {
     }
 
-    public function projectProvider(): array
+    public static function projectProvider(): \Iterator
     {
-        return [
-            'rename providers' => [
-                [
-                    'oAuthProviders' => [
-                        [
-                            'key' => 'github',
-                            'name' => 'GitHub',
-                            'appId' => 'client_id',
-                            'secret' => 'client_secret',
-                            'enabled' => true,
-                        ],
+        yield 'rename providers' => [
+            [
+                'oAuthProviders' => [
+                    [
+                        'key' => 'github',
+                        'name' => 'GitHub',
+                        'appId' => 'client_id',
+                        'secret' => 'client_secret',
+                        'enabled' => true,
                     ],
                 ],
-                [
-                    'providers' => [
-                        [
-                            'key' => 'github',
-                            'name' => 'GitHub',
-                            'appId' => 'client_id',
-                            'secret' => 'client_secret',
-                            'enabled' => true,
-                        ],
+            ],
+            [
+                'providers' => [
+                    [
+                        'key' => 'github',
+                        'name' => 'GitHub',
+                        'appId' => 'client_id',
+                        'secret' => 'client_secret',
+                        'enabled' => true,
                     ],
                 ],
             ],
         ];
     }
 
-    /**
-     * @dataProvider projectProvider
-     */
+    #[DataProvider('projectProvider')]
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
@@ -64,23 +61,19 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function userProvider(): array
+    public static function userProvider(): \Iterator
     {
-        return [
-            'remove targets' => [
-                [
-                    'targets' => 'test',
-                    'mfa' => 'test',
-                ],
-                [
-                ],
+        yield 'remove targets' => [
+            [
+                'targets' => 'test',
+                'mfa' => 'test',
+            ],
+            [
             ],
         ];
     }
 
-    /**
-     * @dataProvider userProvider
-     */
+    #[DataProvider('userProvider')]
     public function testUser(array $content, array $expected): void
     {
         $model = Response::MODEL_USER;
@@ -90,22 +83,18 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function tokenProvider(): array
+    public static function tokenProvider(): \Iterator
     {
-        return [
-            'remove securityPhrase' => [
-                [
-                    'phrase' => 'Lorum Ipsum',
-                ],
-                [
-                ],
+        yield 'remove securityPhrase' => [
+            [
+                'phrase' => 'Lorum Ipsum',
+            ],
+            [
             ],
         ];
     }
 
-    /**
-     * @dataProvider tokenProvider
-     */
+    #[DataProvider('tokenProvider')]
     public function testToken(array $content, array $expected): void
     {
         $model = Response::MODEL_TOKEN;
@@ -115,22 +104,18 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function membershipProvider(): array
+    public static function membershipProvider(): \Iterator
     {
-        return [
-            'remove mfa' => [
-                [
-                    'mfa' => 'test',
-                ],
-                [
-                ],
+        yield 'remove mfa' => [
+            [
+                'mfa' => 'test',
+            ],
+            [
             ],
         ];
     }
 
-    /**
-     * @dataProvider membershipProvider
-     */
+    #[DataProvider('membershipProvider')]
     public function testMembership(array $content, array $expected): void
     {
         $model = Response::MODEL_MEMBERSHIP;
@@ -140,23 +125,19 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function sessionProvider(): array
+    public static function sessionProvider(): \Iterator
     {
-        return [
-            'remove factors and secrets' => [
-                [
-                    'factors' => 'test',
-                    'secret' => 'test',
-                ],
-                [
-                ],
-            ]
+        yield 'remove factors and secrets' => [
+            [
+                'factors' => 'test',
+                'secret' => 'test',
+            ],
+            [
+            ],
         ];
     }
 
-    /**
-     * @dataProvider sessionProvider
-     */
+    #[DataProvider('sessionProvider')]
     public function testSession(array $content, array $expected): void
     {
         $model = Response::MODEL_SESSION;
@@ -166,7 +147,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function webhookProvider(): array
+    public static function webhookProvider(): array
     {
         return [
             'remove webhook additions' => [
