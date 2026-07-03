@@ -1,5 +1,13 @@
 // Table spreadsheet UI (rows, columns, indexes, security, settings) for this database product.
 import { cn } from '@/lib/utils'
+import {
+  applyColumnResizeRailPosition,
+  horizontalResizeDeltaPx,
+  horizontalSplitHandleStyle,
+  isRtlElement,
+  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
+} from '@/lib/layout/horizontal-resize'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import {
   columnTypeSupportsNumericRange,
@@ -318,9 +326,11 @@ const ROW_GRID_DEFAULT_DATE_KEYS = ['$createdAt', '$updatedAt'] as const
  * `w-2` hit area so the spine stays thin but remains easy to grab.
  */
 const DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
-  'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:start-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'group absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
+  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+  'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
+  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
   'hover:before:opacity-100',
 )
 
@@ -2937,7 +2947,12 @@ export function RowsSpreadsheet({
       const onMove = (ev: PointerEvent) => {
         if (!splitEl) return
         const next = clampSplitFirstPaneWidthPx(
-          startW + (ev.clientX - startX),
+          startW +
+            horizontalResizeDeltaPx(
+              startX,
+              ev.clientX,
+              isRtlElement(splitEl),
+            ),
           splitEl.clientWidth,
           DOCUMENTS_TABLE_PANE_MIN_PX,
           DOCUMENTS_TABLE_PANE_MAX_PX,
@@ -3485,7 +3500,6 @@ export function RowsSpreadsheet({
   const repositionDataColumnRailsOnly = useCallback(() => {
     const layer = rowsTableLayerRef.current
     if (!layer) return
-    const layerRect = layer.getBoundingClientRect()
     const cols = (columnsRef.current as string[]).filter(
       (c) => typeof c === 'string' && c.length > 0 && !c.startsWith('$'),
     )
@@ -3493,7 +3507,7 @@ export function RowsSpreadsheet({
       const th = dataColumnHeaderThRefs.current.get(col)
       const rail = dataColumnRailRefs.current.get(col)
       if (!th || !rail) continue
-      rail.style.left = `${th.getBoundingClientRect().right - layerRect.left}px`
+      applyColumnResizeRailPosition(rail, layer, th)
     }
   }, [])
 
@@ -5518,7 +5532,7 @@ export function RowsSpreadsheet({
             aria-orientation="vertical"
             role="separator"
             tabIndex={0}
-            style={{ left: documentTablePaneWidthPx }}
+            style={horizontalSplitHandleStyle(documentTablePaneWidthPx)}
             onKeyDown={(e) => {
               const splitEl = documentSplitContainerRef.current
               if (!splitEl) return
@@ -5560,7 +5574,7 @@ export function RowsSpreadsheet({
               }
             }}
             className={cn(
-              'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+              'absolute top-0 bottom-0 z-30 w-1.5 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
               isDocumentsSplitResizing &&
                 'bg-primary/30 dark:bg-sidebar-accent/70',
               'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',

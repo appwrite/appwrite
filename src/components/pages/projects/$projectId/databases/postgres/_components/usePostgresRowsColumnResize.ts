@@ -19,6 +19,7 @@ import {
   mergeDatabaseTableRowColumnWidthsTableIntoPrefs,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
+import { applyColumnResizeRailPosition } from '@/lib/layout/horizontal-resize'
 import {
   POSTGRES_ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX,
   POSTGRES_ROWS_DATA_COLUMN_MAX_WIDTH_PX,
@@ -96,19 +97,15 @@ export function usePostgresRowsColumnResize(
   const repositionRails = useCallback(() => {
     const layer = tableLayerRef.current
     if (!layer) return
-    const layerRect = layer.getBoundingClientRect()
     for (const columnKey of columnKeysRef.current) {
       const th = headerThRefs.current.get(columnKey)
       const rail = railRefs.current.get(columnKey)
       if (!th || !rail) continue
       const isLastColumn =
         columnKeysRef.current[columnKeysRef.current.length - 1] === columnKey
-      const rawLeft = th.getBoundingClientRect().right - layerRect.left
-      // Keep the last resize handle inside the table so it does not widen scroll width.
-      const left = isLastColumn
-        ? Math.min(rawLeft, Math.max(0, layerRect.width - 4))
-        : rawLeft
-      rail.style.left = `${left}px`
+      applyColumnResizeRailPosition(rail, layer, th, {
+        maxInsetInlineStartPx: isLastColumn ? layer.getBoundingClientRect().width : undefined,
+      })
     }
   }, [])
 

@@ -2,15 +2,30 @@ import * as React from 'react'
 import { GripVerticalIcon } from 'lucide-react'
 import * as ResizablePrimitive from 'react-resizable-panels'
 
+import { RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X } from '@/lib/layout/horizontal-resize'
+import { usePageDirection } from '@/lib/layout/page-direction'
 import { cn } from '@/lib/utils'
 
 function ResizablePanelGroup({
   className,
+  dir,
+  direction,
+  style,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
+  const pageDirection = usePageDirection()
+  const groupDirection = dir ?? pageDirection
+
   return (
     <ResizablePrimitive.PanelGroup
+      key={groupDirection}
       data-slot="resizable-panel-group"
+      dir={groupDirection}
+      direction={direction}
+      style={{
+        ...style,
+        direction: groupDirection,
+      }}
       className={cn(
         'flex h-full w-full data-[panel-group-direction=vertical]:flex-col',
         className,
@@ -44,7 +59,9 @@ function ResizableHandle({
     <ResizablePrimitive.PanelResizeHandle
       data-slot="resizable-handle"
       className={cn(
-        'bg-border focus-visible:ring-ring relative flex w-px items-center justify-center after:absolute after:inset-y-0 after:start-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:start-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:translate-x-0 data-[panel-group-direction=vertical]:after:-translate-y-1/2 [&[data-panel-group-direction=vertical]>div]:rotate-90',
+        'bg-border focus-visible:ring-ring relative flex w-px items-center justify-center after:absolute after:inset-y-0 after:w-1',
+        RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+        'focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:start-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:translate-x-0 data-[panel-group-direction=vertical]:after:-translate-y-1/2 [&[data-panel-group-direction=vertical]>div]:rotate-90',
         className,
       )}
       {...props}

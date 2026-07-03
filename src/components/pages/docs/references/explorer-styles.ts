@@ -34,8 +34,9 @@ export const REFERENCE_COLUMN_HEADER_CLASS = `${DOCS_SECTION_HEADER_CLASS} px-4`
 
 export const REFERENCE_SCROLL_AREA_CLASS = 'min-h-0 min-w-0 flex-1 overflow-hidden'
 
-export const REFERENCE_RESIZE_HANDLE_CLASS =
-  'relative z-[45] w-[0.5px] bg-border before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100 after:w-2 after:start-1/2 after:-translate-x-1/2'
+import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
+
+export const REFERENCE_RESIZE_HANDLE_CLASS = verticalPanelResizeHandleClass('z-[45]')
 
 export { getHttpMethodBadgeVariant as getHttpMethodVariant } from '@/lib/http-method-badge'
 export { getHttpMethodAccentClasses } from '@/lib/http-method-badge'

@@ -1,5 +1,10 @@
 // Table spreadsheet UI (rows, columns, indexes, security, settings) for this database product.
 import { cn } from '@/lib/utils'
+import {
+  horizontalResizeDeltaPx,
+  horizontalSplitHandleStyle,
+  isRtlElement,
+} from '@/lib/layout/horizontal-resize'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -2868,7 +2873,12 @@ export function RowsSpreadsheet({
       const onMove = (ev: PointerEvent) => {
         if (!splitEl) return
         const next = clampSplitFirstPaneWidthPx(
-          startW + (ev.clientX - startX),
+          startW +
+            horizontalResizeDeltaPx(
+              startX,
+              ev.clientX,
+              isRtlElement(splitEl),
+            ),
           splitEl.clientWidth,
           DOCUMENTS_TABLE_PANE_MIN_PX,
           DOCUMENTS_TABLE_PANE_MAX_PX,
@@ -4801,7 +4811,7 @@ export function RowsSpreadsheet({
             aria-orientation="vertical"
             role="separator"
             tabIndex={0}
-            style={{ left: documentTablePaneWidthPx }}
+            style={horizontalSplitHandleStyle(documentTablePaneWidthPx)}
             onKeyDown={(e) => {
               const splitEl = documentSplitContainerRef.current
               if (!splitEl) return
@@ -4843,7 +4853,7 @@ export function RowsSpreadsheet({
               }
             }}
             className={cn(
-              'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+              'absolute top-0 bottom-0 z-30 w-1.5 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
               isDocumentsSplitResizing &&
                 'bg-primary/30 dark:bg-sidebar-accent/70',
               'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',

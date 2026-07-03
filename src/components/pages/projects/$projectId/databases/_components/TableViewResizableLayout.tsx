@@ -31,15 +31,11 @@ import {
   TABLE_VIEW_SIDEBAR_MAX_WIDTH_PX,
   TABLE_VIEW_SIDEBAR_MIN_WIDTH_PX,
 } from '@/lib/resizable-layout'
+import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 
 /** Above rows grid stickies (`z-20`–`z-40` in View.tsx), below overlays (`z-50+`). */
-const HANDLE_CLASS = cn(
-  'relative z-[45] w-[0.5px] bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
-  'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:w-2 after:start-1/2 after:-translate-x-1/2',
-)
+const HANDLE_CLASS = verticalPanelResizeHandleClass('z-[45]')
 
 type TableViewResizableLayoutProps = {
   sidebar: ReactNode

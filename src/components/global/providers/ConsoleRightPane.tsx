@@ -8,6 +8,11 @@ import { useRightPaneWidth } from '@/lib/react-query/hooks/auth'
 import { clampRightPaneWidthPx } from '@/lib/right-pane/constants'
 import { useIsMarketingPage } from '@/hooks/use-is-marketing-page'
 import { isConsoleRightPanePath } from '@/lib/docs/docs-preview-context'
+import {
+  inlineEndPaneWidthFromPointer,
+  isRtlElement,
+  resizeHandleOnInlineStartEdgeStyle,
+} from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import { AIChatPanelContent } from './AIChat'
 import { DocsPreviewContent } from './DocsPreview'
@@ -70,7 +75,12 @@ export function ConsoleRightPane() {
     if (!isResizing) return
 
     const handleMouseMove = (event: MouseEvent) => {
-      const newWidth = window.innerWidth - event.clientX
+      const isRtl = isRtlElement(document.documentElement)
+      const newWidth = inlineEndPaneWidthFromPointer(
+        event.clientX,
+        window.innerWidth,
+        isRtl,
+      )
       setWidthPx(clampRightPaneWidthPx(newWidth))
     }
 
@@ -105,8 +115,9 @@ export function ConsoleRightPane() {
     >
       <div
         onMouseDown={handleMouseDown}
+        style={resizeHandleOnInlineStartEdgeStyle()}
         className={cn(
-          'absolute start-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+          'absolute top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
           isResizing && 'bg-primary/30 dark:bg-sidebar-accent/70',
         )}
         aria-hidden

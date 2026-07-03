@@ -26,15 +26,11 @@ import {
   computeTwoPanelHorizontalLayout,
   syncPanelGroupFirstPanePx,
 } from '@/lib/resizable-layout'
+import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import { CliTerminalLayoutProvider } from './CliTerminalLayoutContext'
 
-const HANDLE_CLASS = cn(
-  'relative z-[45] w-[0.5px] bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
-  'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:w-2 after:start-1/2 after:-translate-x-1/2',
-)
+const HANDLE_CLASS = verticalPanelResizeHandleClass('z-[45]')
 
 const PERSIST_DEBOUNCE_MS = 250
 

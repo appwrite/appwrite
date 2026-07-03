@@ -20,7 +20,10 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
-import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import {
+  dedicatedDatabaseEngineParam,
+  dedicatedEngineService,
+} from '@/lib/databases/dedicated-engine'
 import {
   databaseRouteKindFromApiType,
   type DatabaseRouteKind,
@@ -919,7 +922,7 @@ async function provisionDedicatedCompute(
     engine != null
       ? {
           ...sharedPayload,
-          engine,
+          engine: dedicatedDatabaseEngineParam(engine),
           ...(engine === 'mongodb' ? { backend: 'edge' as const } : {}),
           api: computeApiForDatabaseType(backend),
         }
@@ -1116,7 +1119,7 @@ export async function createNativeDatabase(
   return await dedicatedEngineService(projectSdk, data.engine).create({
     databaseId,
     name: data.name.trim(),
-    engine: data.engine,
+    engine: dedicatedDatabaseEngineParam(data.engine),
     specification: data.specification.trim(),
     replicas: haReplicaCount,
     backupEnabled: pitrEnabled,

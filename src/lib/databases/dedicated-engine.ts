@@ -32,6 +32,22 @@ export function dedicatedEngineService(
   return projectSdk.postgresql
 }
 
+/**
+ * Map internal/console engine identifiers to SDK create/update `engine` param
+ * values (e.g. postgres → postgresql).
+ */
+export function dedicatedDatabaseEngineParam(
+  engine: string | null | undefined,
+): string | undefined {
+  const e = (engine ?? '').toLowerCase().trim()
+  if (!e) return undefined
+  if (e === 'postgres' || e === 'postgresql') return 'postgresql'
+  if (e === 'mysql') return 'mysql'
+  if (e === 'mariadb') return 'mariadb'
+  if (e === 'mongodb' || e === 'mongo') return 'mongodb'
+  return e
+}
+
 export const DEDICATED_FEATURE_UNAVAILABLE =
   'This feature is not available on the current console version.'
 

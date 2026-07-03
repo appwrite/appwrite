@@ -13,6 +13,10 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
+import {
+  RESIZE_HANDLE_PSEUDO_AFTER_X,
+  RESIZE_HANDLE_PSEUDO_BEFORE_X,
+} from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import type { CliShellSession } from '@/lib/cli-shell/cli-shell-sessions'
 import { useCliShell } from './CliShellProvider'
@@ -20,9 +24,11 @@ import { CliTerminalSession } from './CliTerminalSession'
 
 const SPLIT_HANDLE_CLASS = cn(
   'relative z-10 h-full w-px shrink-0 self-stretch items-stretch bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'before:pointer-events-none before:absolute before:inset-y-0 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
+  RESIZE_HANDLE_PSEUDO_BEFORE_X,
   'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-  'after:absolute after:inset-y-0 after:start-1/2 after:w-3 after:-translate-x-1/2',
+  'after:absolute after:inset-y-0 after:w-3',
+  RESIZE_HANDLE_PSEUDO_AFTER_X,
 )
 
 function getSplitPaneContentClass(index: number, total: number): string {

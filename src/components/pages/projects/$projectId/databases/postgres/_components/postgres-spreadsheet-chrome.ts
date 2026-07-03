@@ -1,4 +1,8 @@
 import { parsePostgresIndexKeyColumns } from '@/lib/postgres-index-metadata'
+import {
+  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
+} from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
@@ -53,9 +57,11 @@ export function getPostgresRowsDataColumnHeaderStyle(
 }
 
 export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
-  'group absolute top-0 bottom-0 z-[41] w-2 -translate-x-1/2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:start-1/2 after:w-[0.5px] after:-translate-x-1/2 after:bg-border',
-  'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:z-10 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity',
+  'group absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
+  'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
+  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+  'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
+  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
   'hover:before:opacity-100',
 )
 

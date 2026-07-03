@@ -68,6 +68,7 @@ export const enCatalog = {
         admin: 'Admin',
         cache: 'Cache',
         blocks: 'Blocks',
+        generator: 'Generator',
       },
       search: {
         compactPlaceholder: 'Search...',

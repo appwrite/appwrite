@@ -65,6 +65,7 @@ import {
 } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
+import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import {
   computeTwoPanelHorizontalLayout,
@@ -1219,11 +1220,8 @@ export function View() {
               </div>
             </ResizablePanel>
             <ResizableHandle
-              className={cn(
-                'relative z-10 w-[0.5px] bg-border',
-                'before:pointer-events-none before:absolute before:inset-y-0 before:start-1/2 before:w-2 before:-translate-x-1/2 before:bg-border before:opacity-0 before:transition-opacity before:z-10',
-                'hover:before:opacity-100 data-[resize-handle-state=drag]:before:opacity-100',
-                'after:w-2 after:start-1/2 after:-translate-x-1/2',
+              className={verticalPanelResizeHandleClass(
+                'z-10 before:z-10',
               )}
             />
             <ResizablePanel

@@ -78,6 +78,7 @@ export const heCatalog: EnCatalog = {
         admin: 'ניהול',
         cache: 'Cache',
         blocks: 'Blocks',
+        generator: 'Generator',
       },
       search: {
         ...enCatalog.app.header.search,

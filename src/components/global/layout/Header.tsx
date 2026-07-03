@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   DatabaseZap,
   ShieldAlert,
+  Sparkles,
   Home,
   LayoutDashboard,
   BookOpen,
@@ -1455,6 +1456,13 @@ export function ConsoleHeader({
                         <Link to="/blocks" className={ACCOUNT_MENU_ITEM_CLASS}>
                           <ShieldAlert className="h-4 w-4" />
                           <span>{headerCopy.accountMenu.blocks}</span>
+                        </Link>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem asChild>
+                        <Link to="/generator" className={ACCOUNT_MENU_ITEM_CLASS}>
+                          <Sparkles className="h-4 w-4" />
+                          <span>{headerCopy.accountMenu.generator}</span>
                         </Link>
                       </DropdownMenuItem>
                     </>

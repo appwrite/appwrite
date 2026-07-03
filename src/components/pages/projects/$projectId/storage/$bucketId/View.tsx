@@ -14,6 +14,12 @@ import { flushSync } from 'react-dom'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
+  applyColumnResizeRailPosition,
+  horizontalResizeDeltaPx,
+  horizontalSplitHandleStyle,
+  isRtlElement,
+} from '@/lib/layout/horizontal-resize'
+import {
   AlertCircle,
   ArrowDown,
   ArrowUp,
@@ -1080,7 +1086,12 @@ export function View() {
       const onMove = (ev: globalThis.PointerEvent) => {
         if (!splitEl) return
         const next = clampSplitFirstPaneWidthPx(
-          startW + (ev.clientX - startX),
+          startW +
+            horizontalResizeDeltaPx(
+              startX,
+              ev.clientX,
+              isRtlElement(splitEl),
+            ),
           splitEl.clientWidth,
           STORAGE_FILES_TABLE_PANE_MIN_PX,
           STORAGE_FILES_TABLE_PANE_MAX_PX,
@@ -1199,12 +1210,11 @@ export function View() {
   const repositionFileColumnRailsOnly = useCallback(() => {
     const layer = filesTableLayerRef.current
     if (!layer) return
-    const layerRect = layer.getBoundingClientRect()
     for (const col of STORAGE_FILES_LIST_RESIZABLE_COLUMN_WIDTH_KEYS) {
       const th = fileColumnHeaderThRefs.current.get(col)
       const rail = fileColumnRailRefs.current.get(col)
       if (!th || !rail) continue
-      rail.style.left = `${th.getBoundingClientRect().right - layerRect.left}px`
+      applyColumnResizeRailPosition(rail, layer, th)
     }
   }, [])
 
@@ -2367,7 +2377,7 @@ export function View() {
                       aria-orientation="vertical"
                       role="separator"
                       tabIndex={0}
-                      style={{ left: fileTablePaneWidthPx }}
+                      style={horizontalSplitHandleStyle(fileTablePaneWidthPx)}
                       onKeyDown={(e) => {
                         const splitEl = filesSplitContainerRef.current
                         if (!splitEl) return
@@ -2403,7 +2413,7 @@ export function View() {
                         }
                       }}
                       className={cn(
-                        'absolute top-0 bottom-0 z-30 w-1.5 -translate-x-1/2 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
+                        'absolute top-0 bottom-0 z-30 w-1.5 cursor-col-resize border-0 bg-transparent p-0 outline-none transition-colors hover:bg-primary/20 dark:hover:bg-sidebar-accent/60',
                         isFilesSplitResizing &&
                           'bg-primary/30 dark:bg-sidebar-accent/70',
                         'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
