@@ -62,26 +62,16 @@ final class Lock
         $this->projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
     }
 
-    public function run(string $collection, string $id, Closure $fn): void
-    {
-        $this->tryWithKey($this->key($collection, $id), $fn, target: $collection);
-    }
-
-    public function runOrFail(string $collection, string $id, Closure $fn): mixed
-    {
-        return $this->execute($this->key($collection, $id), $collection, $fn);
-    }
-
     public function withKey(
         string $key,
         Closure $fn,
+        string $target,
         int $ttl = self::FAIL_TTL_SECONDS,
         float $waitTimeout = self::FAIL_WAIT_SECONDS,
-        ?string $target = null,
     ): mixed {
         return $this->execute(
             $key,
-            $target ?? self::inferTargetFromKey($key),
+            $target,
             $fn,
             ttl: $ttl,
             waitTimeout: $waitTimeout,
@@ -92,12 +82,12 @@ final class Lock
     public function tryWithKey(
         string $key,
         Closure $fn,
+        string $target,
         int $ttl = self::SKIP_TTL_SECONDS,
-        ?string $target = null,
     ): mixed {
         return $this->execute(
             $key,
-            $target ?? self::inferTargetFromKey($key),
+            $target,
             $fn,
             ttl: $ttl,
             waitTimeout: self::SKIP_WAIT_SECONDS,
@@ -189,33 +179,6 @@ final class Lock
                 $this->reportError(self::OUTCOME_RELEASE_ERROR, $key, $target, $e);
             }
         }
-    }
-
-    private static function inferTargetFromKey(string $key): string
-    {
-        $parts = explode(':', $key, 5);
-
-        return $parts[3] ?? 'unknown';
-    }
-
-    public function key(string $collection, string $id, ?string $attribute = null): string
-    {
-        return self::buildKey($this->projectInternalId, $collection, $id, $attribute);
-    }
-
-    public function keyForProject(Document $project, string $collection, string $id, ?string $attribute = null): string
-    {
-        $sequence = $project->getSequence();
-        $projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
-
-        return self::buildKey($projectInternalId, $collection, $id, $attribute);
-    }
-
-    private static function buildKey(string $projectInternalId, string $collection, string $id, ?string $attribute = null): string
-    {
-        $key = "lock:platform:{$projectInternalId}:{$collection}:{$id}";
-
-        return $attribute === null ? $key : "{$key}:{$attribute}";
     }
 
     /**

@@ -63,19 +63,19 @@ final class LockTest extends TestCase
         return fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new MemoryLock($key, $this->heldLocks));
     }
 
-    public function testRunUsesPerDocumentKeyAndInvokesCallback(): void
+    public function testTryWithKeyUsesGivenKeyAndInvokesCallback(): void
     {
         $called = false;
         $lock = $this->makeLock();
-        $lock->run('keys', 'k1', function () use (&$called) {
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', function () use (&$called) {
             $called = true;
-        });
+        }, target: 'keys');
 
         $this->assertTrue($called);
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'keys:k1', $this->heldLocks);
     }
 
-    public function testRunUsesShortTryOnceLockWindow(): void
+    public function testTryWithKeyUsesShortTryOnceLockWindow(): void
     {
         $ttl = null;
         $timeout = null;
@@ -93,13 +93,13 @@ final class LockTest extends TestCase
             $this->project,
         );
 
-        $lock->run('keys', 'k1', fn () => null);
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', fn () => null, target: 'keys');
 
         $this->assertSame(5, $ttl);
         $this->assertEqualsWithDelta(0.0, $timeout, PHP_FLOAT_EPSILON);
     }
 
-    public function testRunSkipsOnContention(): void
+    public function testTryWithKeySkipsOnContention(): void
     {
         $key = self::KEY_PREFIX.'keys:k1';
         $this->heldLocks[$key] = true;
@@ -107,15 +107,15 @@ final class LockTest extends TestCase
         $called = false;
         $lock = $this->makeLock();
 
-        $lock->run('keys', 'k1', function () use (&$called) {
+        $lock->tryWithKey($key, function () use (&$called) {
             $called = true;
-        });
+        }, target: 'keys');
 
         $this->assertFalse($called);
         $this->assertArrayHasKey($key, $this->heldLocks);
     }
 
-    public function testRunOrFailUsesShortHttpLockTtlAndAcquireTimeout(): void
+    public function testWithKeyUsesShortHttpLockTtlAndAcquireTimeout(): void
     {
         $ttl = null;
         $timeout = null;
@@ -133,7 +133,7 @@ final class LockTest extends TestCase
             $this->project,
         );
 
-        $lock->runOrFail('keys', 'k1', fn () => null);
+        $lock->withKey(self::KEY_PREFIX.'keys:k1', fn () => null, target: 'keys');
 
         $this->assertSame(10, $ttl);
         $this->assertEqualsWithDelta(3.0, $timeout, PHP_FLOAT_EPSILON);
@@ -149,9 +149,9 @@ final class LockTest extends TestCase
         );
 
         $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', function () use (&$called) {
             $called = true;
-        });
+        }, target: 'keys');
 
         $this->assertTrue($called);
     }
@@ -169,7 +169,7 @@ final class LockTest extends TestCase
             $this->project,
         );
 
-        $lock->run('keys', 'k1', fn () => null);
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', fn () => null, target: 'keys');
 
         $this->assertCount(1, $adapter->logs);
         $this->assertNotSame($requestLog, $adapter->logs[0]);
@@ -177,7 +177,7 @@ final class LockTest extends TestCase
         $this->assertSame([], $requestLog->getExtra());
     }
 
-    public function testRunOrFailBackendErrorRunsCallbackUnlocked(): void
+    public function testWithKeyBackendErrorRunsCallbackUnlocked(): void
     {
         $lock = new Lock(
             fn (string $key, int $ttl, \Closure $callback): mixed => $callback(new ThrowingAcquireLock(new \RedisException('redis unavailable'))),
@@ -187,9 +187,9 @@ final class LockTest extends TestCase
         );
 
         $called = false;
-        $lock->runOrFail('keys', 'k1', function () use (&$called) {
+        $lock->withKey(self::KEY_PREFIX.'keys:k1', function () use (&$called) {
             $called = true;
-        });
+        }, target: 'keys');
 
         $this->assertTrue($called);
     }
@@ -204,9 +204,9 @@ final class LockTest extends TestCase
         );
 
         $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', function () use (&$called) {
             $called = true;
-        });
+        }, target: 'keys');
 
         $this->assertTrue($called);
     }
@@ -216,7 +216,7 @@ final class LockTest extends TestCase
         $lock = $this->makeLock();
 
         $this->expectException(\RedisException::class);
-        $lock->run('keys', 'k1', fn () => throw new \RedisException('callback failed'));
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', fn () => throw new \RedisException('callback failed'), target: 'keys');
     }
 
     public function testReleaseErrorAfterCallbackIsLoggedButNotThrown(): void
@@ -228,10 +228,10 @@ final class LockTest extends TestCase
             $this->project,
         );
 
-        $this->assertSame('ok', $lock->runOrFail('keys', 'k1', fn () => 'ok'));
+        $this->assertSame('ok', $lock->withKey(self::KEY_PREFIX.'keys:k1', fn () => 'ok', target: 'keys'));
     }
 
-    public function testRunOrFailThrowsOnContention(): void
+    public function testWithKeyThrowsOnContention(): void
     {
         $key = self::KEY_PREFIX.'projects:p1';
         $this->heldLocks[$key] = true;
@@ -240,17 +240,17 @@ final class LockTest extends TestCase
 
         $this->expectException(Exception::class);
         try {
-            $lock->runOrFail('projects', 'p1', fn () => 'never-runs');
+            $lock->withKey($key, fn () => 'never-runs', target: 'projects');
         } catch (Exception $e) {
             $this->assertSame(Exception::GENERAL_RESOURCE_LOCKED, $e->getType());
             throw $e;
         }
     }
 
-    public function testRunOrFailReturnsCallbackValueWhenUncontended(): void
+    public function testWithKeyReturnsCallbackValueWhenUncontended(): void
     {
         $lock = $this->makeLock();
-        $result = $lock->runOrFail('projects', 'p1', fn () => 'ok');
+        $result = $lock->withKey(self::KEY_PREFIX.'projects:p1', fn () => 'ok', target: 'projects');
 
         $this->assertSame('ok', $result);
         $this->assertArrayNotHasKey(self::KEY_PREFIX.'projects:p1', $this->heldLocks);
@@ -263,13 +263,13 @@ final class LockTest extends TestCase
         $lock = $this->makeLock();
         $lock->withKey($custom, function () use (&$called) {
             $called = true;
-        });
+        }, target: 'custom');
 
         $this->assertTrue($called);
         $this->assertArrayNotHasKey($custom, $this->heldLocks);
     }
 
-    public function testTryWithKeySkipsOnContention(): void
+    public function testTryWithKeySkipsGivenKeyOnContention(): void
     {
         $custom = 'lock:test:contended';
         $this->heldLocks[$custom] = true;
@@ -278,19 +278,19 @@ final class LockTest extends TestCase
         $called = false;
         $lock->tryWithKey($custom, function () use (&$called): void {
             $called = true;
-        }, ttl: 5);
+        }, target: 'custom', ttl: 5);
 
         $this->assertFalse($called);
     }
 
-    public function testWithKeyThrowsOnContention(): void
+    public function testWithKeyThrowsGivenKeyOnContention(): void
     {
         $custom = 'lock:test:contended';
         $this->heldLocks[$custom] = true;
 
         $lock = $this->makeLock();
         $this->expectException(Exception::class);
-        $lock->withKey($custom, fn () => null, ttl: 5, waitTimeout: 0.1);
+        $lock->withKey($custom, fn () => null, target: 'custom', ttl: 5, waitTimeout: 0.1);
     }
 
     public function testDisabledModeRunsCallbackUnlocked(): void
@@ -303,68 +303,15 @@ final class LockTest extends TestCase
 
             $called = false;
             $lock = $this->makeLock();
-            $lock->run('keys', 'k1', function () use (&$called) {
+            $lock->tryWithKey($key, function () use (&$called) {
                 $called = true;
-            });
+            }, target: 'keys');
 
             $this->assertTrue($called);
             $this->assertArrayHasKey($key, $this->heldLocks);
         } finally {
             $previous === false ? \putenv('_APP_LOCKING_ENABLED') : \putenv('_APP_LOCKING_ENABLED='.$previous);
         }
-    }
-
-    public function testProjectWithoutSequenceFallsBackToUnknown(): void
-    {
-        $emptyProject = new Document();
-        $lock = new Lock(
-            $this->withLock(),
-            new NoTelemetry(),
-            null,
-            $emptyProject,
-        );
-
-        $key = 'lock:platform:unknown:keys:k1';
-        $this->heldLocks[$key] = true;
-
-        $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
-            $called = true;
-        });
-
-        $this->assertFalse($called, 'Lock without project sequence should hash to the unknown bucket');
-
-        unset($this->heldLocks[$key]);
-    }
-
-    public function testKeyForProjectUsesGivenProjectSequence(): void
-    {
-        $lock = new Lock(
-            $this->withLock(),
-            new NoTelemetry(),
-            null,
-            new Document(),
-        );
-
-        $project = new Document([
-            '$id' => 'routed-project',
-            '$sequence' => '84',
-        ]);
-
-        $this->assertSame(
-            'lock:platform:84:projects:routed-project:accessedAt',
-            $lock->keyForProject($project, 'projects', 'routed-project', 'accessedAt')
-        );
-    }
-
-    public function testKeyUsesAttributeSuffix(): void
-    {
-        $lock = $this->makeLock();
-
-        $this->assertSame(
-            self::KEY_PREFIX.'projects:p1:accessedAt',
-            $lock->key('projects', 'p1', 'accessedAt')
-        );
     }
 
     public function testPoolCheckoutExceptionRunsCallbackUnlocked(): void
@@ -377,9 +324,9 @@ final class LockTest extends TestCase
         );
 
         $called = false;
-        $lock->run('keys', 'k1', function () use (&$called) {
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', function () use (&$called) {
             $called = true;
-        });
+        }, target: 'keys');
 
         $this->assertTrue($called);
     }
@@ -394,7 +341,7 @@ final class LockTest extends TestCase
         );
 
         $this->expectException(\RuntimeException::class);
-        $lock->run('keys', 'k1', fn () => null);
+        $lock->tryWithKey(self::KEY_PREFIX.'keys:k1', fn () => null, target: 'keys');
     }
 
 }
