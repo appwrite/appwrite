@@ -1,6 +1,35 @@
 import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
+let bodyResizeDragLockCount = 0
+let savedBodyUserSelect = ''
+let savedBodyCursor = ''
+
+/** Disable text selection (and optionally set cursor) while dragging a resize handle. */
+export function setBodyResizeDragActive(
+  active: boolean,
+  cursor: string | null = 'col-resize',
+): void {
+  if (typeof document === 'undefined') return
+
+  if (active) {
+    if (bodyResizeDragLockCount === 0) {
+      savedBodyUserSelect = document.body.style.userSelect
+      savedBodyCursor = document.body.style.cursor
+      document.body.style.userSelect = 'none'
+      if (cursor) document.body.style.cursor = cursor
+    }
+    bodyResizeDragLockCount += 1
+    return
+  }
+
+  bodyResizeDragLockCount = Math.max(0, bodyResizeDragLockCount - 1)
+  if (bodyResizeDragLockCount === 0) {
+    document.body.style.userSelect = savedBodyUserSelect
+    document.body.style.cursor = savedBodyCursor
+  }
+}
+
 export const COLUMN_RESIZE_RAIL_WIDTH_PX = 8
 
 export const SPLIT_PANE_RESIZE_HANDLE_WIDTH_PX = 6

@@ -26,7 +26,10 @@ import {
   computeTwoPanelHorizontalLayout,
   syncPanelGroupFirstPanePx,
 } from '@/lib/resizable-layout'
-import { verticalPanelResizeHandleClass } from '@/lib/layout/horizontal-resize'
+import {
+  verticalPanelResizeHandleClass,
+  setBodyResizeDragActive,
+} from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import { CliTerminalLayoutProvider } from './CliTerminalLayoutContext'
 
@@ -176,6 +179,7 @@ export function CliTerminalResizableLayout({
     (e?: PointerEvent<HTMLDivElement>) => {
       if (!isSidebarResizingRef.current) return
       isSidebarResizingRef.current = false
+      setBodyResizeDragActive(false)
       onSidebarResizingChange?.(false)
       if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
         try {
@@ -202,6 +206,7 @@ export function CliTerminalResizableLayout({
   const handleSidebarResizePointerDown = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
       isSidebarResizingRef.current = true
+      setBodyResizeDragActive(true)
       onSidebarResizingChange?.(true)
       e.currentTarget.setPointerCapture(e.pointerId)
     },

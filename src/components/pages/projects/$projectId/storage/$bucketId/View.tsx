@@ -18,6 +18,7 @@ import {
   horizontalResizeDeltaPx,
   horizontalSplitHandleStyle,
   isRtlElement,
+  setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
   AlertCircle,
@@ -1076,6 +1077,7 @@ export function View() {
   const handleFilesSplitPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLButtonElement>) => {
       e.preventDefault()
+      setBodyResizeDragActive(true)
       isFilesSplitResizingRef.current = true
       setIsFilesSplitResizing(true)
       const btn = e.currentTarget
@@ -1103,6 +1105,7 @@ export function View() {
       const onUp = () => {
         const finalWidth = fileTablePaneWidthRef.current
         persistTablePaneWidthPx(finalWidth)
+        setBodyResizeDragActive(false)
         isFilesSplitResizingRef.current = false
         setIsFilesSplitResizing(false)
         try {
@@ -1120,16 +1123,6 @@ export function View() {
     },
     [persistTablePaneWidthPx],
   )
-
-  useEffect(() => {
-    if (!isFilesSplitResizing) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isFilesSplitResizing])
 
   useLayoutEffect(() => {
     if (isFilesStackedLayout) return
@@ -1337,6 +1330,7 @@ export function View() {
         if (!splitFilesTable) return
         e.preventDefault()
         e.stopPropagation()
+        setBodyResizeDragActive(true)
         const btn = e.currentTarget
         btn.setPointerCapture(e.pointerId)
         const startX = e.clientX
@@ -1350,6 +1344,7 @@ export function View() {
           applyDraggedFileColumnWidthPx(columnKey, initialWidth + delta)
         }
         const onUp = () => {
+          setBodyResizeDragActive(false)
           try {
             btn.releasePointerCapture(e.pointerId)
           } catch {
@@ -1375,16 +1370,6 @@ export function View() {
       persistFileListColumnWidths,
     ],
   )
-
-  useEffect(() => {
-    if (!resizingFileColumnKey) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [resizingFileColumnKey])
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">

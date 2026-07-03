@@ -5,6 +5,7 @@ import {
   horizontalResizeDeltaPx,
   horizontalSplitHandleStyle,
   isRtlElement,
+  setBodyResizeDragActive,
   RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
 } from '@/lib/layout/horizontal-resize'
@@ -2937,6 +2938,7 @@ export function RowsSpreadsheet({
   const handleDocumentsSplitPointerDown = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
       e.preventDefault()
+      setBodyResizeDragActive(true)
       isDocumentsSplitResizingRef.current = true
       setIsDocumentsSplitResizing(true)
       const btn = e.currentTarget
@@ -2962,6 +2964,7 @@ export function RowsSpreadsheet({
         documentTablePaneWidthRef.current = next
       }
       const onUp = () => {
+        setBodyResizeDragActive(false)
         isDocumentsSplitResizingRef.current = false
         setIsDocumentsSplitResizing(false)
         try {
@@ -2983,16 +2986,6 @@ export function RowsSpreadsheet({
     },
     [],
   )
-
-  useEffect(() => {
-    if (!isDocumentsSplitResizing) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isDocumentsSplitResizing])
 
   useEffect(() => {
     if (!useInlineDocumentPane || isDocumentsStackedLayout) return
@@ -3607,6 +3600,7 @@ export function RowsSpreadsheet({
       if (!columnKey || columnKey.startsWith('$')) return
       e.preventDefault()
       e.stopPropagation()
+      setBodyResizeDragActive(true)
       const btn = e.currentTarget
       btn.setPointerCapture(e.pointerId)
       const startX = e.clientX
@@ -3620,6 +3614,7 @@ export function RowsSpreadsheet({
         applyDraggedDataColumnWidthPx(columnKey, initialWidth + delta)
       }
       const onUp = () => {
+        setBodyResizeDragActive(false)
         try {
           btn.releasePointerCapture(e.pointerId)
         } catch {
@@ -3647,16 +3642,6 @@ export function RowsSpreadsheet({
       persistRowColumnWidths,
     ],
   )
-
-  useEffect(() => {
-    if (!resizingDataColumnKey) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [resizingDataColumnKey])
 
   const columnResizeLayoutKey = (columns as string[])
     .map((c) => String(c))

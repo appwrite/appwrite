@@ -2,7 +2,7 @@ import * as React from 'react'
 import { GripVerticalIcon } from 'lucide-react'
 import * as ResizablePrimitive from 'react-resizable-panels'
 
-import { RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X } from '@/lib/layout/horizontal-resize'
+import { RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X, setBodyResizeDragActive } from '@/lib/layout/horizontal-resize'
 import { usePageDirection } from '@/lib/layout/page-direction'
 import { cn } from '@/lib/utils'
 
@@ -51,13 +51,23 @@ ResizablePanel.displayName = 'ResizablePanel'
 function ResizableHandle({
   withHandle,
   className,
+  onDragging,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
   withHandle?: boolean
 }) {
+  const handleDragging = React.useCallback(
+    (isDragging: boolean) => {
+      setBodyResizeDragActive(isDragging)
+      onDragging?.(isDragging)
+    },
+    [onDragging],
+  )
+
   return (
     <ResizablePrimitive.PanelResizeHandle
       data-slot="resizable-handle"
+      onDragging={handleDragging}
       className={cn(
         'bg-border focus-visible:ring-ring relative flex w-px items-center justify-center after:absolute after:inset-y-0 after:w-1',
         RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,

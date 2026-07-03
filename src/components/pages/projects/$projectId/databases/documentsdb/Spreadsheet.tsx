@@ -4,6 +4,7 @@ import {
   horizontalResizeDeltaPx,
   horizontalSplitHandleStyle,
   isRtlElement,
+  setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
@@ -2863,6 +2864,7 @@ export function RowsSpreadsheet({
   const handleDocumentsSplitPointerDown = useCallback(
     (e: React.PointerEvent<HTMLButtonElement>) => {
       e.preventDefault()
+      setBodyResizeDragActive(true)
       isDocumentsSplitResizingRef.current = true
       setIsDocumentsSplitResizing(true)
       const btn = e.currentTarget
@@ -2888,6 +2890,7 @@ export function RowsSpreadsheet({
         documentTablePaneWidthRef.current = next
       }
       const onUp = () => {
+        setBodyResizeDragActive(false)
         isDocumentsSplitResizingRef.current = false
         setIsDocumentsSplitResizing(false)
         try {
@@ -2909,16 +2912,6 @@ export function RowsSpreadsheet({
     },
     [],
   )
-
-  useEffect(() => {
-    if (!isDocumentsSplitResizing) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isDocumentsSplitResizing])
 
   useEffect(() => {
     if (!useInlineDocumentPane || isDocumentsStackedLayout) return

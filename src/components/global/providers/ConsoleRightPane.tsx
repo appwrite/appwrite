@@ -12,6 +12,7 @@ import {
   inlineEndPaneWidthFromPointer,
   isRtlElement,
   resizeHandleOnInlineStartEdgeStyle,
+  setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import { AIChatPanelContent } from './AIChat'
@@ -68,6 +69,7 @@ export function ConsoleRightPane() {
 
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
     event.preventDefault()
+    setBodyResizeDragActive(true)
     setIsResizing(true)
   }, [])
 
@@ -85,19 +87,17 @@ export function ConsoleRightPane() {
     }
 
     const handleMouseUp = () => {
+      setBodyResizeDragActive(false)
       setIsResizing(false)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
+      setBodyResizeDragActive(false)
     }
   }, [isResizing, setWidthPx])
 

@@ -10,6 +10,7 @@ import {
   POSTGRES_SQL_RESULTS_MIN_HEIGHT_PX,
 } from '@/lib/resizable-layout'
 import { cn } from '@/lib/utils'
+import { setBodyResizeDragActive } from '@/lib/layout/horizontal-resize'
 import { useT } from '@/lib/i18n/translate'
 
 /** Same vertical handle as API Explorer / `ResizableHandle` (hairline + 8px hit area). */
@@ -99,8 +100,7 @@ export function PostgresSqlEditorContainer({
         editorPaneRef.current?.getBoundingClientRect().height ?? editorHeightPx
       latestHeightRef.current = dragStartHeightRef.current
       e.currentTarget.setPointerCapture(e.pointerId)
-      document.body.style.cursor = 'row-resize'
-      document.body.style.userSelect = 'none'
+      setBodyResizeDragActive(true, 'row-resize')
     },
     [editorHeightPx],
   )
@@ -119,8 +119,7 @@ export function PostgresSqlEditorContainer({
       if (!isDraggingRef.current) return
       isDraggingRef.current = false
       setIsDragging(false)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
+      setBodyResizeDragActive(false)
 
       if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
         try {
@@ -139,8 +138,7 @@ export function PostgresSqlEditorContainer({
 
   useEffect(() => {
     return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
+      setBodyResizeDragActive(false)
     }
   }, [])
 

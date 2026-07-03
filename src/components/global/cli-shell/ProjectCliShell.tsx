@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { setBodyResizeDragActive } from '@/lib/layout/horizontal-resize'
 import { useT } from '@/lib/i18n/translate'
 import { usePlatform } from '@/hooks/use-keyboard-shortcuts'
 import {
@@ -284,6 +285,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
         startY: event.clientY,
         startHeight: height,
       }
+      setBodyResizeDragActive(true, 'row-resize')
       setIsResizing(true)
     },
     [height],
@@ -304,19 +306,17 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
 
     const handleMouseUp = () => {
       resizeSessionRef.current = null
+      setBodyResizeDragActive(false)
       setIsResizing(false)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-    document.body.style.cursor = 'row-resize'
-    document.body.style.userSelect = 'none'
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
+      setBodyResizeDragActive(false)
     }
   }, [fullscreen, isResizing, setHeight])
 

@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -19,7 +18,10 @@ import {
   mergeDatabaseTableRowColumnWidthsTableIntoPrefs,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
-import { applyColumnResizeRailPosition } from '@/lib/layout/horizontal-resize'
+import {
+  applyColumnResizeRailPosition,
+  setBodyResizeDragActive,
+} from '@/lib/layout/horizontal-resize'
 import {
   POSTGRES_ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX,
   POSTGRES_ROWS_DATA_COLUMN_MAX_WIDTH_PX,
@@ -177,6 +179,7 @@ export function usePostgresRowsColumnResize(
       if (!columnKey) return
       event.preventDefault()
       event.stopPropagation()
+      setBodyResizeDragActive(true)
       const button = event.currentTarget
       button.setPointerCapture(event.pointerId)
       const startX = event.clientX
@@ -189,6 +192,7 @@ export function usePostgresRowsColumnResize(
         applyDraggedWidthPx(columnKey, initialWidth + (ev.clientX - startX))
       }
       const onUp = () => {
+        setBodyResizeDragActive(false)
         try {
           button.releasePointerCapture(event.pointerId)
         } catch {
@@ -212,16 +216,6 @@ export function usePostgresRowsColumnResize(
     },
     [applyDraggedWidthPx, getColumnWidthPx, persistColumnWidths],
   )
-
-  useEffect(() => {
-    if (!resizingColumnKey) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [resizingColumnKey])
 
   const columnResizeLayoutKey = columnKeys.join('\u0001')
 

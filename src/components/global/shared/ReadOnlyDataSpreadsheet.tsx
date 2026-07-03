@@ -3,6 +3,7 @@ import {
   applyColumnResizeRailPosition,
   RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
+  setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
   formatSpreadsheetCellValue,
@@ -211,6 +212,7 @@ export function ReadOnlyDataSpreadsheet({
       if (!columnKey) return
       event.preventDefault()
       event.stopPropagation()
+      setBodyResizeDragActive(true)
       const button = event.currentTarget
       button.setPointerCapture(event.pointerId)
       const startX = event.clientX
@@ -221,6 +223,7 @@ export function ReadOnlyDataSpreadsheet({
         applyDraggedWidthPx(columnKey, initialWidth + (ev.clientX - startX))
       }
       const onUp = () => {
+        setBodyResizeDragActive(false)
         try {
           button.releasePointerCapture(event.pointerId)
         } catch {
@@ -245,16 +248,6 @@ export function ReadOnlyDataSpreadsheet({
     },
     [],
   )
-
-  useEffect(() => {
-    if (!resizingColumnKey) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [resizingColumnKey])
 
   const columnResizeLayoutKey = columnKeys.join('\u0001')
 

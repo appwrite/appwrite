@@ -117,16 +117,6 @@ export function CliTerminalSessionsLayout({
     })
   }, [effectiveDisplaySessionIds, open])
 
-  useEffect(() => {
-    if (!isSplitResizing) return
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-    return () => {
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isSplitResizing])
-
   useLayoutEffect(() => {
     const activeDisplayId =
       effectiveDisplaySessionIds.length === 1
