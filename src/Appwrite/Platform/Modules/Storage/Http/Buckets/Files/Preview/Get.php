@@ -242,15 +242,20 @@ class Get extends Action
 
         $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
         $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
+        $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
         $dimensions = \getimagesizefromstring($source);
-        if (
-            $dimensions !== false &&
-            (($maxWidth > 0 && $dimensions[0] > $maxWidth) || ($maxHeight > 0 && $dimensions[1] > $maxHeight))
-        ) {
-            throw new Exception(
-                Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
-                \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d pixels', $dimensions[0], $dimensions[1], $maxWidth, $maxHeight)
-            );
+        if ($dimensions !== false) {
+            [$width, $height] = $dimensions;
+            if (
+                ($maxWidth > 0 && $width > $maxWidth) ||
+                ($maxHeight > 0 && $height > $maxHeight) ||
+                ($maxArea > 0 && $width * $height > $maxArea)
+            ) {
+                throw new Exception(
+                    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+                    \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d or %d total pixels', $width, $height, $maxWidth, $maxHeight, $maxArea)
+                );
+            }
         }
 
         try {
