@@ -332,6 +332,31 @@ function applyCloudOnlyFeatureGates(
   return features
 }
 
+/** '' or unrecognized → null = no override. */
+function parseEnvFeatureOverride(value: string): boolean | null {
+  const normalized = value.toLowerCase().trim()
+  if (normalized === 'false' || normalized === '0' || normalized === 'disabled')
+    return false
+  if (normalized === 'true' || normalized === '1' || normalized === 'enabled')
+    return true
+  return null
+}
+
+/**
+ * Per-feature overrides from runtime env vars (e.g.
+ * VITE_CONSOLE_USER_VERIFICATION), applied on top of the canonical profile.
+ * A stored debug override still wins.
+ */
+function applyEnvFeatureOverrides(
+  features: ConsoleProfileFeatures,
+): ConsoleProfileFeatures {
+  const userVerification = parseEnvFeatureOverride(
+    getRuntimeConfig().userVerification,
+  )
+  if (userVerification === null) return features
+  return { ...features, userVerification }
+}
+
 export function getActiveProfile(): ConsoleProfile {
   const stored = getStoredProfile()
   const profileId = stored?.id ?? getProfileFromEnv()
@@ -339,11 +364,13 @@ export function getActiveProfile(): ConsoleProfile {
   if (!stored) {
     return {
       ...canonical,
-      features: applyCloudOnlyFeatureGates(profileId, canonical.features),
+      features: applyEnvFeatureOverrides(
+        applyCloudOnlyFeatureGates(profileId, canonical.features),
+      ),
     }
   }
   const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
-    ...canonical.features,
+    ...applyEnvFeatureOverrides(canonical.features),
     ...stored.features,
   } as ConsoleProfileFeatures)
   return { ...stored, features: mergedFeatures }
@@ -356,13 +383,12 @@ export function getActiveProfileFeatures(): ConsoleProfileFeatures {
   return getActiveProfile().features
 }
 
-/** Canonical feature defaults for a profile id (includes cloud-only gates). */
+/** Feature defaults for a profile id (cloud-only gates + env overrides) — what a debug reset restores. */
 export function getCanonicalProfileFeatures(
   profileId: ConsoleProfileId,
 ): ConsoleProfileFeatures {
-  return applyCloudOnlyFeatureGates(
-    profileId,
-    CONSOLE_PROFILES[profileId].features,
+  return applyEnvFeatureOverrides(
+    applyCloudOnlyFeatureGates(profileId, CONSOLE_PROFILES[profileId].features),
   )
 }
 
@@ -380,13 +406,13 @@ export const CONSOLE_PROFILE_CHANGE_EVENT = 'consoleProfileChange'
 
 /**
  * Set the profile override (debug mode only).
- * Stores the full profile object (actual value) in localStorage.
- * Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI can re-render.
+ * Stores the profile with empty feature overrides so defaults (canonical + env)
+ * show through. Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI can re-render.
  */
 export function setDebugProfileOverride(profileId: ConsoleProfileId | null) {
   if (typeof window === 'undefined') return
   if (profileId) {
-    const profile = CONSOLE_PROFILES[profileId]
+    const profile = { ...CONSOLE_PROFILES[profileId], features: {} }
     localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(profile))
   } else {
     localStorage.removeItem(DEBUG_PROFILE_KEY)
@@ -430,7 +456,7 @@ export function resetDebugProfileFeatureOverrides() {
   const stored = getStoredProfile()
   if (!stored) return
   if (!VALID_PROFILE_IDS.includes(stored.id)) return
-  const canonical = CONSOLE_PROFILES[stored.id]
+  const canonical = { ...CONSOLE_PROFILES[stored.id], features: {} }
   localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(canonical))
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
