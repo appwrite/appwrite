@@ -212,20 +212,45 @@ class Doctor extends Action
             }
         }
 
+        // The Docker healthcheck runs `doctor` on a short interval, so this check must
+        // stay side-effect free. By default we only verify that the SMTP server is
+        // reachable, without sending any message. Sending a real test email is opt-in
+        // through `_APP_SMTP_TEST_EMAIL`, which must be a recipient the operator owns —
+        // we never fall back to a real third-party address. See issue #12760.
         try {
-            /** @var EmailAdapter $smtp */
-            $smtp = $register->get('smtp');
+            $smtpTestEmail = System::getEnv('_APP_SMTP_TEST_EMAIL', '');
 
-            $emailMessage = new EmailMessage(
-                to: ['demo@example.com'],
-                subject: 'Test SMTP Connection',
-                content: 'Hello World',
-                fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')),
-                fromEmail: System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-            );
+            if (!empty($smtpTestEmail)) {
+                /** @var EmailAdapter $smtp */
+                $smtp = $register->get('smtp');
 
-            $smtp->send($emailMessage);
-            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                $emailMessage = new EmailMessage(
+                    to: [$smtpTestEmail],
+                    subject: 'Test SMTP Connection',
+                    content: 'Hello World',
+                    fromName: \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')),
+                    fromEmail: System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+                );
+
+                $smtp->send($emailMessage);
+                Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+            } else {
+                $smtpHost = System::getEnv('_APP_SMTP_HOST', '');
+                $smtpPort = (int) System::getEnv('_APP_SMTP_PORT', 25);
+
+                if (empty($smtpHost)) {
+                    Console::info('⚪ ' . str_pad("SMTP", 50, '.') . 'not configured');
+                } else {
+                    $connection = @\fsockopen($smtpHost, $smtpPort, $errno, $errstr, 5);
+
+                    if ($connection !== false) {
+                        \fclose($connection);
+                        Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
+                    } else {
+                        Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
+                    }
+                }
+            }
         } catch (\Throwable) {
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
