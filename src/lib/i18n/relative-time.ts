@@ -37,9 +37,14 @@ function formatDurationPhrase(
   isFuture: boolean,
   t: Translator,
 ): string {
-  if (getActiveLanguage() === 'he') {
+  const language = getActiveLanguage()
+  if (language === 'he') {
     const prefix = t(isFuture ? 'In relative time' : 'Ago relative time')
     return `${prefix} ${duration}`
+  }
+  if (language === 'ja') {
+    const suffix = t(isFuture ? 'In relative time' : 'Ago relative time')
+    return `${duration}${suffix}`
   }
 
   return isFuture ? `in ${duration}` : `${duration} ago`
@@ -97,7 +102,8 @@ export function formatShortRelativeTime(
 
   if (diffMinutes < 1) return t('Just now')
 
-  if (getActiveLanguage() === 'he') {
+  const language = getActiveLanguage()
+  if (language === 'he' || language === 'ja') {
     if (diffMinutes < 60) {
       return formatRelativeDuration(diffMinutes, 'minute', { t })
     }
@@ -117,7 +123,7 @@ export function formatShortRelativeTime(
       return formatRelativeDuration(diffWeeks, 'week', { t })
     }
 
-    return dateObj.toLocaleDateString(getIntlLocale('he'), {
+    return dateObj.toLocaleDateString(getIntlLocale(language), {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

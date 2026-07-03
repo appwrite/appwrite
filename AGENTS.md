@@ -1531,6 +1531,35 @@ English is not translated; it IS the source. Rules for writing it:
 
 **When "social" is correct in Hebrew:** social **media** examples, OG **social preview**, marketing **Social** category → רשתות חברתיות is fine. Auth **social login** must not become התחברות חברתית.
 
+### Language: Japanese (`ja`)
+
+- **Files**: structured catalog `src/lib/i18n/messages/ja.ts`; dictionaries `src/lib/i18n/dictionaries/ja/*.ts` (merged in `dictionaries/ja/index.ts`). <!-- pragma: allowlist secret -->
+- **Audit**: `bun run i18n:audit:ja` (`scripts/i18n-audit-ja.ts`)
+- **Direction**: LTR (default). Selecting Japanese in the debug menu keeps LTR unless page direction is overridden manually.
+- **Keep in English (Latin script)**:
+  - **Brand name**: `Appwrite` always stays Latin.
+  - **Branded compound names**: `Appwrite Cloud`, `Appwrite Network`, `Appwrite Sites`, and any other `Appwrite …` product title.
+  - **Sub-brand and feature proper nouns**: TablesDB, DocumentsDB, VectorsDB, Magic URL, Email OTP, Command Center, AI Arena, Agent Skills, Advisor, Explorer, Distribution, Firewall, Presences, and plan names (Free, Pro, Scale, Enterprise).
+  - **Technical terms** commonly kept in English in Japanese developer UIs: API, SDK, CLI, OAuth, MFA, TOTP, JWT, SSR, CSR, CDN, DNS, TLS, WAF, DDoS, REST, GraphQL, Webhook, Endpoint, Serverless, Cron, Git, Branch, Build, Timeout, SQL, JSON, CSV, framework and runtime names.
+- **Standalone product names (translate in menus and titles)**: Auth = '認証', Databases = 'データベース', Storage = 'ストレージ', Functions = 'Functions', Messaging = 'メッセージング', Sites = 'サイト', Realtime = 'Realtime'.
+- **Glossary (do not deviate)**:
+  - **Other terms**: Bucket = 'バケット', Session = 'セッション', Token = 'トークン', Logs = 'ログ', Deployment = 'デプロイ', Migrations = 'マイグレーション', Certificate = '証明書', Expired = '期限切れ', Timeout = 'タイムアウト', Production = '本番', Members = 'メンバー', Billing = '請求', 'Open in new tab' = '新しいタブで開く'.
+- **Relative time**: `Ago relative time` = '前', `In relative time` = '後' (suffix after duration: `2時間前`, `3日後`).
+- **Voice and register**: Polite product Japanese (です/ます) for descriptions; buttons use nominal forms (作成, 更新, 削除, キャンセル) or `〜を作成` patterns. Avoid over-formal filler.
+- No em dashes.
+
+**Japanese anti-calque reference** (enforced by `i18n:audit:ja`):
+
+| English | Never use | Use instead |
+| --- | --- | --- |
+| Social providers | ソーシャルログイン, ソーシャルプロバイダー | OAuth プロバイダー |
+| Logs | 日誌 | ログ |
+| Token | 証票, 代金トークン | トークン |
+| Bucket | 桶, バケツ | バケット |
+| tenant (user-facing) | テナント | 顧客, 組織, Multi-tenancy (label) |
+| Credentials (DB, API) | ログイン情報 | アクセス資格情報 |
+| Scale (plan name) | スケールプラン | Scale (Latin) |
+
 ### Adding a new language
 
 1. **Catalog**: create `src/lib/i18n/messages/<lang>.ts` exporting a catalog typed as `EnCatalog`, spreading `enCatalog` and overriding translated sections. <!-- pragma: allowlist secret -->

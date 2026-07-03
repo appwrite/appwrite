@@ -2,11 +2,13 @@ import { useCallback } from 'react'
 import { useI18n, type SupportedLanguage } from '@/lib/i18n'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { heDictionary } from '@/lib/i18n/dictionaries/he'
+import { jaDictionary } from '@/lib/i18n/dictionaries/ja'
 
 const LANGUAGE_DICTIONARIES: Partial<
   Record<SupportedLanguage, Record<string, string>>
 > = {
   he: heDictionary,
+  ja: jaDictionary,
 }
 
 /**

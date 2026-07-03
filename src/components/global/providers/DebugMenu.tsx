@@ -925,7 +925,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         ? languageCopy.activeAuto
         : overrides.language === 'he'
           ? languageCopy.activeHebrew
-          : languageCopy.activeEnglish
+          : overrides.language === 'ja'
+            ? languageCopy.activeJapanese
+            : languageCopy.activeEnglish
 
     const languageOptions: MenuItem[] = (
       [
@@ -944,6 +946,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           value: 'he' as const,
           description: languageCopy.hebrewDescription,
         },
+        {
+          label: languageCopy.japaneseLabel,
+          value: 'ja' as const,
+          description: languageCopy.japaneseDescription,
+        },
       ] as const
     ).map((option) => ({
       label: option.label,
@@ -954,14 +961,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           language: option.value,
           ...(option.value === 'he'
             ? { pageDirection: 'rtl' as const }
-            : option.value === 'en'
+            : option.value === 'en' || option.value === 'ja'
               ? { pageDirection: 'ltr' as const }
               : {}),
         }))
         setDebugOverride('language', option.value)
         if (option.value === 'he') {
           setDebugOverride('pageDirection', 'rtl')
-        } else if (option.value === 'en') {
+        } else if (option.value === 'en' || option.value === 'ja') {
           setDebugOverride('pageDirection', 'ltr')
         }
       },
