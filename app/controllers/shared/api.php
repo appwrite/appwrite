@@ -170,24 +170,21 @@ Http::init()
                         find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
-                    $sequence = $project->getSequence();
-                    $keyOwnerInternalId = (string) ($sequence ?: $project->getId());
+                    $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
                         find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
-                    $sequence = $user->getSequence();
-                    $keyOwnerInternalId = (string) ($sequence ?: $user->getId());
+                    $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
                         find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
-                    $sequence = $team->getSequence();
-                    $keyOwnerInternalId = (string) ($sequence ?: $team->getId());
+                    $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 
                 if (!$dbKey) {
@@ -387,8 +384,7 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $sequence = $project->getSequence();
-                $projectInternalId = (string) ($sequence ?: $project->getId());
+                $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
                 $lock->tryWithKey(
                     'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
                     fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
@@ -413,8 +409,7 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $sequence = $user->getSequence();
-                    $userInternalId = (string) ($sequence ?: $user->getId());
+                    $userInternalId = (string) ($user->getSequence() ?: $user->getId());
                     $lock->tryWithKey(
                         'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
                         fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
