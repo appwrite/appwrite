@@ -15,7 +15,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
-use Appwrite\Locking\PlatformDBLock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -79,12 +78,6 @@ return function (Container $context): void {
             $project
         );
     }, ['pools', 'telemetry', 'logger', 'project']);
-
-    $context->set('platformDBLock', fn (Lock $lock, Database $dbForPlatform, Authorization $authorization): PlatformDBLock => new PlatformDBLock(
-        $lock,
-        $dbForPlatform,
-        $authorization
-    ), ['lock', 'dbForPlatform', 'authorization']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 

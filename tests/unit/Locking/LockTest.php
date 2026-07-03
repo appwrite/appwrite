@@ -357,6 +357,16 @@ final class LockTest extends TestCase
         );
     }
 
+    public function testKeyUsesAttributeSuffix(): void
+    {
+        $lock = $this->makeLock();
+
+        $this->assertSame(
+            self::KEY_PREFIX.'projects:p1:accessedAt',
+            $lock->key('projects', 'p1', 'accessedAt')
+        );
+    }
+
     public function testPoolCheckoutExceptionRunsCallbackUnlocked(): void
     {
         $lock = new Lock(

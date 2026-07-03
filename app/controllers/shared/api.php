@@ -16,7 +16,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
-use Appwrite\Locking\PlatformDBLock;
+use Appwrite\Locking\Lock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -61,10 +61,10 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->inject('platformDBLock')
+    ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, PlatformDBLock $platformDBLock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -211,7 +211,11 @@ Http::init()
 
                 $updatedKey = $updates->isEmpty()
                     ? null
-                    : $platformDBLock->tryUpdateDocument('keys', $dbKey->getId(), $updates);
+                    : $lock->tryWithKey(
+                        $lock->key('keys', $dbKey->getId()),
+                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates)),
+                        target: 'keys'
+                    );
 
                 if ($updatedKey instanceof Document) {
                     if (! empty($apiKey->getProjectId())) {
@@ -376,7 +380,15 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $platformDBLock->tryUpdateAttribute('projects', $project->getId(), 'accessedAt', DateTime::now());
+                $lock->tryWithKey(
+                    $lock->key('projects', $project->getId(), 'accessedAt'),
+                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                        'projects',
+                        $project->getId(),
+                        new Document(['accessedAt' => DateTime::now()])
+                    )),
+                    target: 'projects'
+                );
             }
         }
 
@@ -392,7 +404,15 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $platformDBLock->tryUpdateAttribute('users', $user->getId(), 'accessedAt', $user->getAttribute('accessedAt'));
+                    $lock->tryWithKey(
+                        $lock->key('users', $user->getId(), 'accessedAt'),
+                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                            'users',
+                            $user->getId(),
+                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        )),
+                        target: 'users'
+                    );
                 }
             }
         }
