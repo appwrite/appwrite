@@ -952,9 +952,7 @@ export function View() {
             <EmptyState
               icon={Globe}
               title={t('No sites yet')}
-              description={t(
-                'Create your first site to start deploying static sites',
-              )}
+              description={t('Create your first site to get started')}
               isEmpty={
                 !(urlSearch && urlSearch.length > 0) && filterMap.size === 0
               }
@@ -1142,9 +1140,7 @@ export function View() {
               <EmptyState
                 icon={Globe}
                 title={t('No sites yet')}
-                description={t(
-                  'Create your first site to start deploying static sites',
-                )}
+                description={t('Create your first site to get started')}
                 isEmpty={!(urlSearch || filterMap.size > 0)}
                 hasFilters={!!(urlSearch || filterMap.size > 0)}
                 variant="card"
