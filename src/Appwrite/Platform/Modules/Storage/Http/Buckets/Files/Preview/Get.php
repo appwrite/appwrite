@@ -240,6 +240,19 @@ class Get extends Action
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
+        $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
+        $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
+        $dimensions = \getimagesizefromstring($source);
+        if (
+            $dimensions !== false &&
+            (($maxWidth > 0 && $dimensions[0] > $maxWidth) || ($maxHeight > 0 && $dimensions[1] > $maxHeight))
+        ) {
+            throw new Exception(
+                Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+                \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d pixels', $dimensions[0], $dimensions[1], $maxWidth, $maxHeight)
+            );
+        }
+
         try {
             $image = new Image($source);
         } catch (\Exception $e) {
