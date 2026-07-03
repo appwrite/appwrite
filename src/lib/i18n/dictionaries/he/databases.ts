@@ -1054,6 +1054,16 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Coming soon in your project region. Available in': 'בקרוב באזור הפרויקט שלכם. זמין ב-',
   'No PostgreSQL databases found': 'לא נמצאו מסדי PostgreSQL',
   'No MySQL databases found': 'לא נמצאו מסדי MySQL',
+  'Loading PostgreSQL databases...': 'טוען מסדי PostgreSQL...',
+  'Loading MySQL databases...': 'טוען מסדי MySQL...',
+  'Failed to load PostgreSQL databases': 'טעינת מסדי PostgreSQL נכשלה',
+  'Failed to load MySQL databases': 'טעינת מסדי MySQL נכשלה',
+  "Couldn't refresh PostgreSQL databases": 'לא ניתן לרענן את מסדי PostgreSQL',
+  "Couldn't refresh MySQL databases": 'לא ניתן לרענן את מסדי MySQL',
+  'Create a PostgreSQL database from the create database wizard.':
+    'צרו מסד PostgreSQL מאשף יצירת מסד הנתונים.',
+  'Create a MySQL database from the create database wizard.':
+    'צרו מסד MySQL מאשף יצירת מסד הנתונים.',
   'Database ID must be 36 characters or less.': 'מזהה מסד הנתונים חייב להיות באורך 36 תווים לכל היותר.',
   'Database ID must contain only letters and numbers (no hyphens, underscores, or periods).': 'מזהה מסד הנתונים חייב להכיל רק אותיות ומספרים (ללא מקפים, קווים תחתונים או נקודות).',
   'Database ID must contain only letters and numbers. Leave the ID blank to auto-generate one, or choose a custom ID without hyphens, underscores, or periods.': 'מזהה מסד הנתונים חייב להכיל רק אותיות ומספרים. השאירו את השדה ריק ליצירה אוטומטית, או בחרו מזהה מותאם ללא מקפים, קווים תחתונים או נקודות.',

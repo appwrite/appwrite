@@ -9,11 +9,23 @@ import {
   needsDedicatedProductTypeLookup,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
+import {
+  getNativeDatabaseEmptyLabel,
+  isMysqlEngine,
+  isPostgresEngine,
+  matchesNativeEngine,
+  NATIVE_DATABASE_ENGINE_LABELS,
+  type NativeDatabaseEngine,
+} from '@/lib/databases/native-database-engines'
 import { useQueries } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useMemo } from 'react'
-import { AlertCircle, Cpu, Loader2 } from 'lucide-react'
+import { AlertCircle, Cpu, Loader2, type LucideIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import {
+  MySQLDolphinIcon,
+  PostgresElephantIcon,
+} from './database-mascot-icons'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -43,6 +55,92 @@ type DedicatedDatabasesSectionProps = {
   projectId: string
   viewMode: 'list' | 'grid'
   regionSupported?: boolean
+  /** When set, only list databases for this native engine. */
+  nativeEngine?: NativeDatabaseEngine
+  /** Hide PostgreSQL and MySQL rows when they have their own sections. */
+  excludeNativeEngines?: boolean
+}
+
+type SectionIcon = LucideIcon | typeof PostgresElephantIcon | typeof MySQLDolphinIcon
+
+type DedicatedSectionCopy = {
+  title: string
+  description: string
+  loadingLabel: string
+  failedLabel: string
+  refreshFailedLabel: string
+  emptyTitle: string
+  emptyDescription: string
+  icon: SectionIcon
+  showEngineColumn: boolean
+}
+
+function getDedicatedSectionCopy(
+  nativeEngine?: NativeDatabaseEngine,
+): DedicatedSectionCopy {
+  if (nativeEngine === 'postgres') {
+    return {
+      title: NATIVE_DATABASE_ENGINE_LABELS.postgres,
+      description:
+        'A dedicated PostgreSQL database for relational workloads, SQL tooling, and portable schemas.',
+      loadingLabel: 'Loading PostgreSQL databases...',
+      failedLabel: 'Failed to load PostgreSQL databases',
+      refreshFailedLabel: "Couldn't refresh PostgreSQL databases",
+      emptyTitle: getNativeDatabaseEmptyLabel('postgres'),
+      emptyDescription:
+        'Create a PostgreSQL database from the create database wizard.',
+      icon: PostgresElephantIcon,
+      showEngineColumn: false,
+    }
+  }
+
+  if (nativeEngine === 'mysql') {
+    return {
+      title: NATIVE_DATABASE_ENGINE_LABELS.mysql,
+      description:
+        'A dedicated MySQL database for common relational workloads and existing MySQL applications.',
+      loadingLabel: 'Loading MySQL databases...',
+      failedLabel: 'Failed to load MySQL databases',
+      refreshFailedLabel: "Couldn't refresh MySQL databases",
+      emptyTitle: getNativeDatabaseEmptyLabel('mysql'),
+      emptyDescription:
+        'Create a MySQL database from the create database wizard.',
+      icon: MySQLDolphinIcon,
+      showEngineColumn: false,
+    }
+  }
+
+  return {
+    title: 'Dedicated databases',
+    description:
+      'Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.',
+    loadingLabel: 'Loading dedicated databases...',
+    failedLabel: 'Failed to load dedicated databases',
+    refreshFailedLabel: "Couldn't refresh dedicated databases",
+    emptyTitle: 'No dedicated databases yet',
+    emptyDescription:
+      'Create a PostgreSQL or MySQL database to get started with dedicated compute.',
+    icon: Cpu,
+    showEngineColumn: true,
+  }
+}
+
+function filterDedicatedDatabases(
+  databases: Models.DedicatedDatabase[],
+  nativeEngine?: NativeDatabaseEngine,
+  excludeNativeEngines?: boolean,
+): Models.DedicatedDatabase[] {
+  if (nativeEngine) {
+    return databases.filter((db) =>
+      matchesNativeEngine(db.engine, nativeEngine),
+    )
+  }
+  if (excludeNativeEngines) {
+    return databases.filter(
+      (db) => !isPostgresEngine(db.engine) && !isMysqlEngine(db.engine),
+    )
+  }
+  return databases
 }
 
 function formatEngineLabel(engine: string): string {
@@ -97,10 +195,14 @@ function DedicatedDatabaseCard({
   db,
   projectId,
   productRouteKindByDedicatedId,
+  icon = Cpu,
+  showEngineMetadata = true,
 }: {
   db: Models.DedicatedDatabase
   projectId: string
   productRouteKindByDedicatedId: Map<string, DatabaseRouteKind>
+  icon?: SectionIcon
+  showEngineMetadata?: boolean
 }) {
   const t = useT()
   const link = dedicatedDatabaseHomeLink(
@@ -113,15 +215,19 @@ function DedicatedDatabaseCard({
       interactive={!!link}
       title={db.name}
       resourceId={db.$id}
-      icon={Cpu}
+      icon={(icon ?? Cpu) as LucideIcon}
       iconColor="bg-muted text-muted-foreground"
       status={dedicatedStatusVariant(db.status)}
       statusLabel={localizeResourceStatusLabel(db.status, t)}
       metadata={[
-        {
-          label: 'Engine',
-          value: formatEngineLabel(db.engine),
-        },
+        ...(showEngineMetadata
+          ? [
+              {
+                label: 'Engine',
+                value: formatEngineLabel(db.engine),
+              },
+            ]
+          : []),
         {
           label: 'Tier',
           value: db.specification || 'Not set',
@@ -147,21 +253,28 @@ export function DedicatedDatabasesSection({
   projectId,
   viewMode,
   regionSupported = true,
+  nativeEngine,
+  excludeNativeEngines,
 }: DedicatedDatabasesSectionProps) {
   const t = useT()
+  const sectionCopy = getDedicatedSectionCopy(nativeEngine)
+  const SectionIcon = sectionCopy.icon
+
   if (!regionSupported) {
     return (
       <section className="mt-10">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <h2 className="text-[15px] font-semibold text-foreground">
-            {t('Dedicated databases')}
+            {t(sectionCopy.title)}
           </h2>
           <DedicatedDatabaseRegionUnavailableBadge />
           <p className="w-full text-[13px] text-muted-foreground">
-            {t('Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.')}
+            {t(sectionCopy.description)}
           </p>
         </div>
-        <DedicatedDatabaseRegionUnavailableCard icon={Cpu} />
+        <DedicatedDatabaseRegionUnavailableCard
+          icon={SectionIcon as LucideIcon}
+        />
       </section>
     )
   }
@@ -170,6 +283,8 @@ export function DedicatedDatabasesSection({
     <DedicatedDatabasesSectionContent
       projectId={projectId}
       viewMode={viewMode}
+      nativeEngine={nativeEngine}
+      excludeNativeEngines={excludeNativeEngines}
     />
   )
 }
@@ -177,8 +292,12 @@ export function DedicatedDatabasesSection({
 function DedicatedDatabasesSectionContent({
   projectId,
   viewMode,
+  nativeEngine,
+  excludeNativeEngines,
 }: Omit<DedicatedDatabasesSectionProps, 'regionSupported'>) {
   const t = useT()
+  const sectionCopy = getDedicatedSectionCopy(nativeEngine)
+  const SectionIcon = sectionCopy.icon
   const {
     databases,
     isLoading,
@@ -187,9 +306,19 @@ function DedicatedDatabasesSectionContent({
     refetch,
   } = useProjectDedicatedDatabases(projectId)
 
+  const visibleDatabases = useMemo(
+    () =>
+      filterDedicatedDatabases(
+        databases,
+        nativeEngine,
+        excludeNativeEngines,
+      ),
+    [databases, excludeNativeEngines, nativeEngine],
+  )
+
   const dedicatedDatabasesNeedingProductType = useMemo(
-    () => databases.filter(needsDedicatedProductTypeLookup),
-    [databases],
+    () => visibleDatabases.filter(needsDedicatedProductTypeLookup),
+    [visibleDatabases],
   )
 
   const productRouteKindLookups = useQueries({
@@ -213,10 +342,10 @@ function DedicatedDatabasesSectionContent({
     <section className="mt-10">
       <div className="mb-4">
         <h2 className="text-[15px] font-semibold text-foreground">
-          {t('Dedicated databases')}
+          {t(sectionCopy.title)}
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          {t('Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.')}
+          {t(sectionCopy.description)}
         </p>
       </div>
 
@@ -224,14 +353,14 @@ function DedicatedDatabasesSectionContent({
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
           <p className="mt-3 text-[13px] text-muted-foreground">
-            {t('Loading dedicated databases...')}
+            {t(sectionCopy.loadingLabel)}
           </p>
         </div>
-      ) : errorMessage && databases.length === 0 ? (
+      ) : errorMessage && visibleDatabases.length === 0 ? (
         <div className="rounded-lg border border-destructive/30 bg-card py-10 px-6 text-center">
           <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
           <h3 className="mt-4 text-[15px] font-semibold text-foreground">
-            {t('Failed to load dedicated databases')}
+            {t(sectionCopy.failedLabel)}
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">{errorMessage}</p>
           <Button
@@ -246,12 +375,12 @@ function DedicatedDatabasesSectionContent({
           </Button>
         </div>
       ) : viewMode === 'list' ? (
-        databases.length > 0 ? (
+        visibleDatabases.length > 0 ? (
           <>
             {errorMessage ? (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{t("Couldn't refresh dedicated databases")}</AlertTitle>
+                <AlertTitle>{t(sectionCopy.refreshFailedLabel)}</AlertTitle>
                 <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-[13px]">{errorMessage}</p>
                   <Button
@@ -274,9 +403,11 @@ function DedicatedDatabasesSectionContent({
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       {t('Database')}
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {t('Engine')}
-                    </TableHead>
+                    {sectionCopy.showEngineColumn ? (
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        {t('Engine')}
+                      </TableHead>
+                    ) : null}
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       {t('Tier')}
                     </TableHead>
@@ -292,7 +423,7 @@ function DedicatedDatabasesSectionContent({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {databases.map((db) => {
+                  {visibleDatabases.map((db) => {
                     const link = dedicatedDatabaseHomeLink(
                       projectId,
                       db,
@@ -327,9 +458,11 @@ function DedicatedDatabasesSectionContent({
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-[13px] text-foreground">
-                        {formatEngineLabel(db.engine)}
-                      </TableCell>
+                      {sectionCopy.showEngineColumn ? (
+                        <TableCell className="px-4 py-3 text-[13px] text-foreground">
+                          {formatEngineLabel(db.engine)}
+                        </TableCell>
+                      ) : null}
                       <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                         {db.specification || t('Not set')}
                       </TableCell>
@@ -356,9 +489,9 @@ function DedicatedDatabasesSectionContent({
           </>
         ) : (
           <EmptyState
-            icon={Cpu}
-            title={t('No dedicated databases yet')}
-            description={t('Create a PostgreSQL or MySQL database to get started with dedicated compute.')}
+            icon={SectionIcon as LucideIcon}
+            title={t(sectionCopy.emptyTitle)}
+            description={t(sectionCopy.emptyDescription)}
             isEmpty
             variant="card"
           />
@@ -368,7 +501,7 @@ function DedicatedDatabasesSectionContent({
           {errorMessage ? (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{t("Couldn't refresh dedicated databases")}</AlertTitle>
+              <AlertTitle>{t(sectionCopy.refreshFailedLabel)}</AlertTitle>
               <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[13px]">{errorMessage}</p>
                 <Button
@@ -385,20 +518,22 @@ function DedicatedDatabasesSectionContent({
             </Alert>
           ) : null}
           <div className={cn(RESOURCE_CARD_GRID_CLASSNAME)}>
-            {databases.map((db) => (
+            {visibleDatabases.map((db) => (
               <DedicatedDatabaseCard
                 key={db.$id}
                 db={db}
                 projectId={projectId}
                 productRouteKindByDedicatedId={productRouteKindByDedicatedId}
+                icon={SectionIcon}
+                showEngineMetadata={sectionCopy.showEngineColumn}
               />
             ))}
-            {databases.length === 0 ? (
+            {visibleDatabases.length === 0 ? (
               <div className="col-span-full">
                 <EmptyState
-                  icon={Cpu}
-                  title={t('No dedicated databases yet')}
-                  description={t('Create a PostgreSQL or MySQL database to get started with dedicated compute.')}
+                  icon={SectionIcon as LucideIcon}
+                  title={t(sectionCopy.emptyTitle)}
+                  description={t(sectionCopy.emptyDescription)}
                   isEmpty
                   variant="card"
                 />

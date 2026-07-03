@@ -1158,11 +1158,32 @@ export function View() {
           />
         ) : null}
 
+        {features.nativeDbsPostgres && projectId ? (
+          <DedicatedDatabasesSection
+            projectId={projectId}
+            viewMode={viewMode}
+            regionSupported={supportsDedicatedDatabaseCompute}
+            nativeEngine="postgres"
+          />
+        ) : null}
+
+        {features.nativeDbsMySQL && projectId ? (
+          <DedicatedDatabasesSection
+            projectId={projectId}
+            viewMode={viewMode}
+            regionSupported={supportsDedicatedDatabaseCompute}
+            nativeEngine="mysql"
+          />
+        ) : null}
+
         {features.dedicatedDbsSupport && projectId ? (
           <DedicatedDatabasesSection
             projectId={projectId}
             viewMode={viewMode}
             regionSupported={supportsDedicatedDatabaseCompute}
+            excludeNativeEngines={
+              features.nativeDbsPostgres || features.nativeDbsMySQL
+            }
           />
         ) : null}
 
