@@ -241,7 +241,9 @@ class Doctor extends Action
                 if (empty($smtpHost)) {
                     Console::info('⚪ ' . str_pad("SMTP", 50, '.') . 'not configured');
                 } else {
-                    $connection = @\fsockopen($smtpHost, $smtpPort, $errno, $errstr, 5);
+                    // Keep the probe well within the container healthcheck timeout (5s),
+                    // which also has to cover the other checks doctor runs.
+                    $connection = @\fsockopen($smtpHost, $smtpPort, $errno, $errstr, 3);
 
                     if ($connection !== false) {
                         \fclose($connection);
