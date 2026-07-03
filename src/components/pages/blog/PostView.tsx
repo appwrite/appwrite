@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import {
   MarketingCtaSection,
+  MarketingCtaSignupButtons,
 } from '@/components/pages/marketing/MarketingSections'
 import { ProductFeaturePublicIcon } from '@/components/pages/products/features/_components/ProductFeaturePublicIcon'
 import {
@@ -123,14 +124,7 @@ export function PostView({ post }: PostViewProps) {
       ) : null}
 
       <MarketingCtaSection title="Ready to build?">
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
-            Get started
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">View pricing</Link>
-        </Button>
+        <MarketingCtaSignupButtons />
       </MarketingCtaSection>
     </div>
   )
@@ -181,14 +175,7 @@ export function CategoryView({ category, posts, authors }: CategoryViewProps) {
       </section>
 
       <MarketingCtaSection title="Ready to build?">
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
-            Get started
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">View pricing</Link>
-        </Button>
+        <MarketingCtaSignupButtons />
       </MarketingCtaSection>
     </div>
   )
@@ -291,14 +278,7 @@ export function AuthorView({ author, posts, authors }: AuthorViewProps) {
       </section>
 
       <MarketingCtaSection title="Ready to build?">
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
-            Get started
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">View pricing</Link>
-        </Button>
+        <MarketingCtaSignupButtons />
       </MarketingCtaSection>
     </div>
   )

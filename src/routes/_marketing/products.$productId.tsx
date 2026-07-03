@@ -10,6 +10,7 @@ import {
 } from '@/lib/react-query/hooks/sites'
 import { MARKETING_SITE_TEMPLATES_PROJECT_ID } from '@/lib/sites/site-template-wizard'
 import { pageTitle } from '@/lib/utils/page-title'
+import { translate } from '@/lib/i18n/translate'
 
 export const Route = createFileRoute('/_marketing/products/$productId')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
@@ -26,15 +27,16 @@ export const Route = createFileRoute('/_marketing/products/$productId')({
 
     const content = getProductContent(params.productId)
     const product = PRODUCT_REGISTRY[params.productId]
+    const metaDescription = translate(content.metaDescription)
     const ogImageSubtitle =
       content.metaDescription.trim() !== product.name.trim()
-        ? content.metaDescription
-        : product.tagline
+        ? metaDescription
+        : translate(product.tagline)
 
     return {
       meta: getMarketingPageMetaTags({
         pageName: product.name,
-        description: content.metaDescription,
+        description: metaDescription,
         ogImageEyebrow: 'Products',
         ogImageSubtitle,
       }),

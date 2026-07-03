@@ -30,7 +30,8 @@
     "generate:routes": "tsr generate",
     "generate:sitemap": "bun run scripts/generate-sitemap.ts",
     "generate:specs": "bun run scripts/generate-specs.ts",
-    "socials": "bun run scripts/socials.ts"
+    "socials": "bun run scripts/socials.ts",
+    "i18n:audit:he": "bun run scripts/i18n-audit-he.ts"
   },
   "dependencies": {
     "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9b5dcc6",

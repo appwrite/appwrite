@@ -480,7 +480,7 @@ Checklist (in this order):
 ### Copy
 
 - **No em dashes** - Do not use em dashes (`—`) in user-facing copy, labels, descriptions, or empty states. Use a period, comma, colon, or parentheses instead.
-- **All copy must be translatable** - Wrap every new user-facing string in `t('...')` and add its Hebrew dictionary entry. See "Internationalization (i18n)" for the full workflow, style guide, and what not to wrap.
+- **All copy must be translatable** - Wrap every new user-facing string in `t('...')` and add a dictionary entry for each supported language. See "Internationalization (i18n)" for the full workflow, style guide, and what not to wrap.
 
 ### Visual Design
 
@@ -1090,7 +1090,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Row actions menu (⋯)   | `RowActionsMenuTrigger` + `DropdownMenuItem` with `MenuItemContent` / `MenuItemIcon`; same icons and ordering as the resource context menu. See "Context menu and row actions menus".                                                                                                                                   |
 | Delete styling         | No red text on menu/row delete actions. Red `variant="destructive"` only in delete cards, dialog confirm buttons, and bulk delete bars. See "Context menu and row actions menus" → "Destructive action styling".                                                                                                        |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)".                                                                               |
-| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add a Hebrew entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/he/*.ts` file. English inline is the source of truth. Translate standalone product names in menus; keep `Appwrite …` compounds in Latin. See "Internationalization (i18n)".                                    |
+| User-facing copy (i18n) | Wrap ALL new user-facing strings in `t('...')` (`useT()` from `@/lib/i18n/translate`) and add an entry keyed by the exact English string to the matching `src/lib/i18n/dictionaries/<lang>/*.ts` file for each supported language. English inline is the source of truth. Apply each language's glossary; keep `Appwrite …` compounds and sub-brands in Latin unless that language's block says otherwise. Run `bun run i18n:audit:<lang>` before merging dictionary changes. See "Internationalization (i18n)".                                    |
 
 ---
 
@@ -1351,25 +1351,25 @@ Console uses **team** (organization) and **user** (account) preferences to store
 
 ## Internationalization (i18n)
 
-All user-facing copy in the app and website is translatable. **English is the only source of truth**; other languages (currently Hebrew) are translated from English. Blog content, changelog content, docs content, and legal document bodies are **not** translated.
+All user-facing copy in the app and website is translatable. **English is the only source of truth**; other languages are translated from English. Blog content, changelog content, docs content, and legal document bodies are **not** translated.
 
 ### Architecture (two layers)
 
-1. **Structured catalog** (`src/lib/i18n/messages/en.ts` + `he.ts`): typed nested catalogs for the global shell (header, footer, sidebar, home page, product navigation). Access via `useI18n().catalog`. Use this only for shell-level copy that benefits from a typed structure. <!-- pragma: allowlist secret -->
+1. **Structured catalog** (`src/lib/i18n/messages/en.ts` + `<lang>.ts` per language): typed nested catalogs for the global shell (header, footer, sidebar, home page, product navigation). Access via `useI18n().catalog`. Use this only for shell-level copy that benefits from a typed structure. <!-- pragma: allowlist secret -->
 2. **`t()` API** (`src/lib/i18n/translate.ts`) - the default for everything else:
    - Components keep their English copy **inline** as the source of truth, wrapped in `t('...')`.
    - `useT()` is a React hook returning `t(text) => string`; call it at the top level of function components only.
    - `translate(text)` is the non-React variant for utilities (e.g. toast/error formatting in `src/lib/utils/error-formatting.ts`).
-   - Translations live in per-domain dictionaries at `src/lib/i18n/dictionaries/he/*.ts`, keyed by the **exact English string**. Unknown strings fall back to English, so partial coverage never breaks the UI.
+   - Translations live in per-domain dictionaries at `src/lib/i18n/dictionaries/<lang>/*.ts`, keyed by the **exact English string**. Unknown strings fall back to English, so partial coverage never breaks the UI.
 
-Language selection: debug menu (press `.`) → Settings → Language (Auto / English / Hebrew). Hebrew automatically enables the RTL page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
+Language selection: debug menu (press `.`) → Settings → Language. RTL languages (e.g. Hebrew) auto-enable the matching page direction. `src/lib/i18n/active-language.ts` resolves the active language outside React.
 
 ### Debug menu (English + LTR only)
 
-The debug menu (`src/components/global/providers/DebugMenu.tsx` and its `DebugMenu*Panel` subcomponents) is **developer tooling**, not product UI. It must **always** stay **English** and **LTR**, even when the rest of the app is Hebrew/RTL.
+The debug menu (`src/components/global/providers/DebugMenu.tsx` and its `DebugMenu*Panel` subcomponents) is **developer tooling**, not product UI. It must **always** stay **English** and **LTR**, even when the rest of the app is localized and RTL.
 
-- **Do not translate** debug menu labels, descriptions, tooltips, or panel copy. Keep English strings inline; never wrap them in `t()` or add them to Hebrew dictionaries.
-- **Do not override** `app.debugMenu` in `he.ts` or other language catalogs. English strings live in `en.ts` only; `DebugMenu` reads them via `getEnglishCatalog()`, not `useI18n().catalog`.
+- **Do not translate** debug menu labels, descriptions, tooltips, or panel copy. Keep English strings inline; never wrap them in `t()` or add them to per-language dictionaries.
+- **Do not override** `app.debugMenu` in non-English catalogs. English strings live in `en.ts` only; `DebugMenu` reads them via `getEnglishCatalog()`, not `useI18n().catalog`.
 - **Force isolation**: the debug menu root and popover use `dir="ltr"` and `lang="en"` so page-level RTL does not mirror the menu.
 - **New languages**: wire language options in `DebugMenu.tsx` with English copy only. Do not add debug menu entries to per-language dictionaries.
 
@@ -1378,7 +1378,7 @@ The debug menu (`src/components/global/providers/DebugMenu.tsx` and its `DebugMe
 ### Adding new copy (required workflow)
 
 1. Write the English copy inline and wrap it: `{t('Create bucket')}`, `placeholder={t('Search files...')}`, `toast.success(t('Bucket created'))`.
-2. Add a Hebrew entry to the **matching domain dictionary** (`databases.ts`, `sites.ts`, `functions.ts`, `auth-storage.ts`, `project-misc.ts`, `organizations.ts`, `account-global.ts`, `shared-ui.ts`, `marketing.ts`). The key must match the wrapped English string **character for character**. No duplicate keys within a file (TS error).
+2. Add an entry to the **matching domain dictionary** for each supported language (`databases.ts`, `sites.ts`, `functions.ts`, `auth-storage.ts`, `project-misc.ts`, `organizations.ts`, `account-global.ts`, `shared-ui.ts`, `marketing.ts`, etc. under `dictionaries/<lang>/`). The key must match the wrapped English string **character for character**. No duplicate keys within a file (TS error).
 3. For module-level constant arrays with labels, do NOT move them into the catalog - wrap at the render site (`{t(item.label)}`) and add each possible value to the dictionary.
 4. Components that render user-facing text props (title, description, label, emptyMessage) should wrap them at the render site (`{t(title)}`); unknown strings pass through, so this gives free coverage for all callers.
 
@@ -1394,7 +1394,7 @@ Never produce broken grammar by naive word-splitting. Either:
 - Reword so the dynamic value sits between complete segments (`{t('Delete')} "{name}"? {t('This action cannot be undone.')}`),
 - Or leave the string in English. Broken sentences are worse than English fallbacks.
 
-When sentences are assembled from fragments, read the composed sentence end to end in the target language's reading direction (RTL for Hebrew).
+When sentences are assembled from fragments, read the composed sentence end to end in the target language's reading direction (e.g. RTL for Hebrew, Arabic).
 
 ### One key, one meaning (context collisions)
 
@@ -1410,12 +1410,12 @@ When two dictionaries define the same key, the merge order in the language's `di
 
 Appwrite product names follow two rules depending on whether the English source includes the `Appwrite` brand prefix:
 
-| English source | Rule | Example (Hebrew) |
+| English source | Rule | Example |
 | --- | --- | --- |
-| `Appwrite …` compound | Keep the **full string** in Latin script | `Appwrite Network` stays `Appwrite Network`; `Appwrite Sites` stays `Appwrite Sites` |
-| Standalone product name (nav, tabs, menus, section titles) | **Translate** using the target language's standalone product glossary | `Sites` → `אתרים`, `Databases` → `מסדי נתונים`, `Storage` → `אחסון` |
-| Sub-brand proper nouns | Always Latin, regardless of context | TablesDB, Command Center, Magic URL |
-| Generic usage in sentences | Natural target-language phrasing | "your databases" → `מסדי הנתונים שלכם` |
+| `Appwrite …` compound | Keep the **full string** in Latin script in every language | `Appwrite Network` stays `Appwrite Network` |
+| Standalone product name (nav, tabs, menus, section titles) | **Translate** using that language's standalone product glossary | `Sites` → Hebrew `אתרים`; French would use that language's glossary form |
+| Sub-brand proper nouns | Always Latin, regardless of language or context | TablesDB, Command Center, Magic URL |
+| Generic usage in sentences | Natural phrasing in the target language | "your databases" → natural possessive/plural in that language |
 
 When the same product word appears both standalone and inside an `Appwrite …` compound, they are **different translation keys** (`Sites` vs `Appwrite Sites`). Never reuse a standalone translation inside a branded compound string.
 
@@ -1426,11 +1426,53 @@ If a standalone product name collides with a generic English word (`Network`, `S
 Follow this process whenever adding or updating translations:
 
 1. **Read the render site first.** A one-word key can be a status badge, a button, a column header, or a chart label - grep the key in `src/components` and read the surrounding JSX before translating. Never translate from the key alone.
-2. **Apply the language's glossary** (see the per-language sections below). Branded compound names, sub-brand proper nouns, and glossary terms are non-negotiable; do not invent alternatives. Standalone product names in menus may be translated using the glossary forms below.
+2. **Apply the language's glossary** (see the per-language **Language: X** sections below). Branded compound names, sub-brand proper nouns, and glossary terms are non-negotiable; do not invent alternatives. Standalone product names in menus use that language's glossary forms.
 3. **Translate meaning, not words.** No literal calques; write what a native product team at a major tech company would ship. If a natural translation needs restructuring the sentence, restructure it.
-4. **Respect grammar agreement** (gender, number, definiteness) with the noun the string describes; for statuses next to mixed-gender nouns prefer neutral forms.
+4. **Respect target-language grammar** (agreement, formality, plural rules, etc.) for the noun or action the string describes; prefer neutral wording when gender is ambiguous.
 5. **Re-read assembled sentences.** When copy is built from fragments plus dynamic values, compose the final sentence mentally (in the language's reading direction) and confirm it flows.
 6. **Verify coverage before finishing**: bundle the merged dictionary (`esbuild src/lib/i18n/dictionaries/<lang>/index.ts --bundle`) and diff its keys against all `t('...')` literals in `src` - missing count must be 0. Then run the dev server, switch language in the debug menu, and spot-check the touched screens.
+7. **Run the language quality audit**: `bun run i18n:audit:<lang>` (e.g. `i18n:audit:he` for Hebrew). Fix every reported issue before merging. Each supported language should have its own audit script; add one when onboarding a new language.
+
+### Avoid awkward translations (anti-calque guide)
+
+Translate **meaning and domain terminology**, not English words one-by-one. If a native speaker of the target language would pause at the phrasing, rewrite it.
+
+**Process (every batch, every language):**
+
+1. **Grep the English key in `src/components`** and read the UI context (badge, title, FAQ answer, settings label) before translating.
+2. **Map the English term to the domain concept** using that language's glossary (see its "Language: X" block). Do not invent literal translations for established dev terms unless the glossary says to localize them.
+3. **Read the full translated sentence** in the target language's natural reading direction. If it stumbles, restructure the sentence; do not patch single words.
+4. **Run `bun run i18n:audit:<lang>`** and fix all hits. Extend that language's audit script when you discover a new recurring mistake.
+
+**Cross-language pitfalls** (watch in every language; each language block documents local forms):
+
+| English concept | Pitfall | What to do instead |
+| --- | --- | --- |
+| social login / Social providers | Literal "social" + "login" calque (sounds like social media) | Use the domain term: OAuth, identity providers, or the glossary form for that language |
+| multi-tenancy / tenant | Literal "tenant" as renter/resident | Model as customers, organizations, or workspaces; keep `Multi-tenancy` as a label if the locale uses the English term |
+| Credentials (DB, API, S3) | Same word as user login/password | Distinguish access credentials from auth sign-in copy (glossary per language) |
+| Credentials (auth password/MFA) | Same word as API keys | Use auth-specific phrasing (e.g. account security, verification) |
+| encryption at rest | Word-for-word "at rest" | Use the established security phrasing in that language |
+| Execution (function run) | Same word as session or generic "run" | Use the Functions glossary term (e.g. execution / invocation), not session wording |
+| Please (UI copy) | Over-formal filler | Drop or use direct imperative; follow that language's voice/register rules |
+| Scale (growth) | Translating the product name "Scale" like growth | Plan name `Scale` stays Latin; growth/scaling uses natural phrasing, not a borrowed English calque |
+
+**Terms that usually stay in Latin script** (unless a language block explicitly localizes them):
+
+- Brand: `Appwrite` and all `Appwrite …` compounds
+- Sub-brands: TablesDB, DocumentsDB, VectorsDB, Magic URL, Command Center, and similar proper nouns
+- Widely kept in English in developer UIs: API, SDK, CLI, OAuth, MFA, TOTP, JWT, SSR, webhook, endpoint, Cron, Git, and framework/runtime names
+
+**Homographs:** English "social" in auth (social login) vs social media (OG preview, example apps) are different concepts. Translate each from context, not from the shared English word.
+
+**Per-language audit scripts:**
+
+- Path: `scripts/i18n-audit-<lang>.ts`
+- npm script: `i18n:audit:<lang>` in `package.json`
+- Rules: forbidden glossary substitutions, known calque regexes, context-sensitive key filters
+- Document the rules in that language's **Language: X** block so translators and agents know why each rule exists
+
+When adding `dictionaries/<lang>/`, write the **Language: X** block first (glossary, voice, calques, audit command), then translate, then run coverage + audit before merging.
 
 ---
 
@@ -1447,6 +1489,7 @@ English is not translated; it IS the source. Rules for writing it:
 ### Language: Hebrew (`he`)
 
 - **Files**: structured catalog `src/lib/i18n/messages/he.ts`; dictionaries `src/lib/i18n/dictionaries/he/*.ts` (merged in `dictionaries/he/index.ts`). <!-- pragma: allowlist secret -->
+- **Audit**: `bun run i18n:audit:he` (`scripts/i18n-audit-he.ts`)
 - **Direction**: RTL. Selecting Hebrew auto-enables the RTL page direction; verify fragment-assembled sentences read correctly right-to-left.
 - **Keep in English (Latin script)**:
   - **Brand name**: `Appwrite` always stays Latin.
@@ -1463,14 +1506,40 @@ English is not translated; it IS the source. Rules for writing it:
 - **Grammatical gender**: match the noun the string describes (table = feminine: 'נמחקה'; database = masculine: 'נמחק').
 - No em dashes, no niqqud.
 
+**Hebrew anti-calque reference** (enforced by `i18n:audit:he`):
+
+| English | Never use | Use instead |
+| --- | --- | --- |
+| Logs | יומנים | לוגים |
+| Token | אסימון | טוקן |
+| Session | הפעלות | סשן / סשנים |
+| Bucket | דלי | באקט |
+| Scale (growth) | סקייל / סקיילינג | צמיחה / קנה מידה |
+| Execution (function run) | הפעלה / הפעלות | הרצה / הרצות |
+| Please (UI copy) | אנא | (drop; start with verb: אשרו, פנו, הזינו) |
+
+| English concept | Awkward calque | Natural Hebrew |
+| --- | --- | --- |
+| social login / Social providers | התחברות חברתית, ספקי התחברות חברתית | OAuth, ספקי OAuth |
+| multi-tenancy / tenant | ריבוי דיירים, דייר, לדייר | Multi-tenancy (label), ריבוי לקוחות, ללקוח / לארגון, בידוד בין לקוחות |
+| Credentials (DB, API, S3) | פרטי התחברות | פרטי גישה |
+| Credentials (auth password/MFA) | פרטי התחברות | פרטי אימות |
+| OAuth provider setup | פרטי התחברות | פרטי OAuth |
+| second sign-in method (MFA) | שיטת התחברות שנייה | אימות דו-שלבי |
+| encryption at rest | הצפנה במנוחה | הצפנה במצב מנוחה |
+| sign in / sign up (auth pages) | (varies) | התחברות / הרשמה are fine; do not use התחברות for API credentials |
+
+**When "social" is correct in Hebrew:** social **media** examples, OG **social preview**, marketing **Social** category → רשתות חברתיות is fine. Auth **social login** must not become התחברות חברתית.
+
 ### Adding a new language
 
 1. **Catalog**: create `src/lib/i18n/messages/<lang>.ts` exporting a catalog typed as `EnCatalog`, spreading `enCatalog` and overriding translated sections. <!-- pragma: allowlist secret -->
-2. **Dictionaries**: create `src/lib/i18n/dictionaries/<lang>/` mirroring the `he/` per-domain files (databases, sites, functions, auth-storage, project-misc, organizations, account-global, shared-ui, marketing) plus an `index.ts` that merges them.
+2. **Dictionaries**: create `src/lib/i18n/dictionaries/<lang>/` mirroring the `he/` per-domain files (databases, sites, functions, auth-storage, project-misc, organizations, account-global, shared-ui, marketing, product-pages, etc.) plus an `index.ts` that merges them.
 3. **Wiring**: add the language to `SupportedLanguage` and the resolver in `src/lib/i18n/active-language.ts` (include browser-locale auto-detection), register the catalog in `src/lib/i18n/index.tsx`, add the dictionary to `LANGUAGE_DICTIONARIES` in `src/lib/i18n/translate.ts`, and add the option to the debug menu language submenu in `DebugMenu.tsx` using **English-only** labels (set `pageDirection: 'rtl'` on selection if the language is RTL). Do not translate the debug menu itself.
 4. **SDK locale**: no change needed - `setLocale` uses the resolved language automatically.
-5. **Glossary first**: before translating in bulk, write this section's per-language block for the new language (which branded compound names and sub-brands stay Latin; recommended translations for standalone menu product names; which technical terms stay Latin; terminology standards; voice/register; grammar rules). Translate against that glossary, then run the quality workflow and coverage check above.
-6. **Document it**: add the new "Language: X" block to this file.
+5. **Language block in this file**: add a **Language: X** section with glossary, voice/register, direction, Latin-script terms, and language-specific anti-calque examples (see Hebrew as the template).
+6. **Audit script**: add `scripts/i18n-audit-<lang>.ts` and `i18n:audit:<lang>` in `package.json` with regex rules for that language's forbidden terms and calques.
+7. **Translate and verify**: translate against the glossary, run the quality workflow, coverage check, and `bun run i18n:audit:<lang>` before merging.
 
 ---
 

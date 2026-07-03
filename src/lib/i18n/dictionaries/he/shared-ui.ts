@@ -855,9 +855,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Auth · Policies · Passwords': 'אימות · מדיניות · סיסמאות',
   'Password history, dictionary, and personal data checks':
     'בדיקות היסטוריית סיסמאות, מילון ונתונים אישיים',
-  'Auth · Social providers': 'אימות · ספקי התחברות חברתית',
+  'Auth · Social providers': 'אימות · ספקי OAuth',
   'Configure OAuth2 providers for social login':
-    'הגדרת ספקי OAuth2 להתחברות חברתית',
+    'הגדרת ספקי OAuth2',
   'Auth · OAuth2 server · Settings': 'אימות · שרת OAuth2 · הגדרות',
   'Configure OAuth2 authorization server for third-party apps':
     'הגדרת שרת הרשאות OAuth2 לאפליקציות צד שלישי',

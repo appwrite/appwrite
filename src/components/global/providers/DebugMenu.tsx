@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/tooltip'
 import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
-import { Switch } from '@/components/ui/switch'
+import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
 import { Input } from '@/components/ui/input'
 import { useTheme } from 'next-themes'
 import {
@@ -291,7 +291,7 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
             <TooltipContent side="left">Reset to default</TooltipContent>
           </Tooltip>
         )}
-        <Switch
+        <DebugMenuSwitch
           checked={item.switchValue}
           onCheckedChange={item.switchOnChange}
           disabled={item.disabled}

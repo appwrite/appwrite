@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Switch } from '@/components/ui/switch'
+import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
 import { cn } from '@/lib/utils'
 import {
   formatInitMockTicketType,
@@ -51,7 +51,7 @@ export function DebugMenuInitTicketPanel() {
               : 'Use account rules on /init'}
           </p>
         </div>
-        <Switch
+        <DebugMenuSwitch
           checked={mockEnabled}
           onCheckedChange={(checked) => {
             setDebugOverride(

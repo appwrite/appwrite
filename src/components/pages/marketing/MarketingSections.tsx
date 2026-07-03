@@ -1,7 +1,9 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ComponentType, SVGProps } from 'react'
 import type { ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { HomeSoftLights } from '@/components/pages/home/HomeSoftLights'
+import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -547,5 +549,21 @@ export function MarketingCtaSection({
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">{children}</div>
       </div>
     </section>
+  )
+}
+
+export function MarketingCtaSignupButtons() {
+  const t = useT()
+  return (
+    <>
+      <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
+        <Link to="/sign-up" search={{ redirect: '/' }}>
+          {t('Get started')}
+        </Link>
+      </Button>
+      <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
+        <Link to="/pricing">{t('View pricing')}</Link>
+      </Button>
+    </>
   )
 }

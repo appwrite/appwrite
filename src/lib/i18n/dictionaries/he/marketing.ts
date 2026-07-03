@@ -443,7 +443,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Enterprise plans can include SOC-2 and HIPAA support, along with SSO, activity logs, and custom backup policies for security and governance workflows.':
     'תוכניות Enterprise יכולות לכלול תמיכה ב-SOC-2 וב-HIPAA, לצד SSO, יומני פעילות ומדיניות גיבוי מותאמת לתהליכי אבטחה וממשל.',
   'Enterprise support': 'תמיכת אנטרפרייז',
-  'Error submitting form. Please contact support.': 'שגיאה בשליחת הטופס. אנא פנו לתמיכה.',
+  'Error submitting form. Please contact support.': 'שגיאה בשליחת הטופס. פנו לתמיכה.',
   'Errors': 'שגיאות',
   'EU data processing': 'עיבוד נתונים באיחוד האירופי',
   'Evaluating vendors': 'בוחנים ספקים',
@@ -625,7 +625,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Issue #': 'Issue מס׳',
   'Issues': 'Issues',
   'It\u2019s especially nice that Appwrite have to deal with the scaling now and not me.':
-    'ממש נחמד ש-Appwrite מתמודדים עם הסקיילינג ולא אני.',
+    'ממש נחמד ש-Appwrite מתמודדים עם הצמיחה בקנה מידה ולא אני.',
   'Join a growing community of developers and students who use Appwrite to build their products. Gain access to a wealth of knowledge, support, and shared experiences needed to grow and advance your tech career.': // pragma: allowlist secret
     'הצטרפו לקהילה צומחת של מפתחים וסטודנטים שמשתמשים ב-Appwrite לבניית המוצרים שלהם. קבלו גישה לשפע של ידע, תמיכה וניסיון משותף שיעזרו לכם לצמוח ולקדם את הקריירה הטכנולוגית שלכם.', // pragma: allowlist secret
   'Join a lean, AI-native team': 'הצטרפו לצוות רזה ו-AI-native',
@@ -983,7 +983,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'SOC 2 Type II report': 'דוח SOC 2 Type II',
   'SOC-2 and HIPAA': 'SOC-2 ו-HIPAA',
   'SOC-2, HIPAA, and BAA': 'SOC-2, HIPAA ו-BAA',
-  'Social providers': 'ספקי התחברות חברתית',
+  'Social providers': 'ספקי OAuth',
   'Socialaize runs hundreds of thousands of function executions per day on Cloud':
     'Socialaize מריצים מאות אלפי הרצות פונקציות ביום על Cloud',
   'Software development transforms our everyday lives, shaped by the creativity and innovation of developers and the AI agents they work with. At Appwrite, we enable them to build products the world loves by removing technical barriers with our backend platform.': // pragma: allowlist secret
@@ -1003,6 +1003,44 @@ export const heMarketingDictionary: Record<string, string> = {
   'Start building like a team of hundreds today': 'התחילו לבנות כמו צוות של מאות עוד היום',
   'Start building like a team of hundreds with Appwrite': 'התחילו לבנות כמו צוות של מאות עם Appwrite', // pragma: allowlist secret
   'Start building with Appwrite today': 'התחילו לבנות עם Appwrite עוד היום', // pragma: allowlist secret
+  'Ready to build?': 'מוכנים לבנות?',
+  'Start building with Auth': 'התחילו לבנות עם אימות',
+  'Start building with Databases': 'התחילו לבנות עם מסדי נתונים',
+  'Start building with Storage': 'התחילו לבנות עם אחסון',
+  'Start building with Functions': 'התחילו לבנות עם פונקציות',
+  'Start building with Messaging': 'התחילו לבנות עם הודעות',
+  'Start building with Sites': 'התחילו לבנות עם אתרים',
+  'Create a project and add authentication in minutes with our quick start guides.':
+    'צרו פרויקט והוסיפו אימות בדקות עם מדריכי ההתחלה המהירה שלנו.',
+  'Create a database, define your schema, and query your first rows in minutes.':
+    'צרו מסד נתונים, הגדירו סכימה ושאילתו את השורות הראשונות שלכם בדקות.',
+  'Create a bucket, upload your first file, and generate a preview URL in minutes.':
+    'צרו באקט, העלו את הקובץ הראשון שלכם וצרו כתובת תצוגה מקדימה בדקות.',
+  'Deploy your first function from a template or your own codebase in minutes.':
+    'פרסו את הפונקציה הראשונה שלכם מתבנית או מקוד הבסיס שלכם בדקות.',
+  'Configure a provider, create a topic, and send your first message from the console or SDK.':
+    'הגדירו ספק, צרו נושא ושלחו את ההודעה הראשונה שלכם מהקונסול או מה-SDK.',
+  'Connect a repository and deploy your first frontend alongside your Appwrite backend.': // pragma: allowlist secret
+    'חברו מאגר והעלו את הפרונטאנד הראשון שלכם לצד ה-backend של Appwrite.', // pragma: allowlist secret
+  'View pricing': 'צפו במחירים',
+  'Authentication that ships with your product': 'אימות שמגיע עם המוצר שלכם',
+  'Databases built for modern applications': 'מסדי נתונים שנבנו לאפליקציות מודרניות',
+  'File storage with delivery built in': 'אחסון קבצים עם אספקה מובנית',
+  'Serverless Functions for every backend job': 'פונקציות Serverless לכל משימת backend',
+  'Messaging across every channel': 'הודעות בכל ערוץ',
+  'Deploy web apps from Git in minutes': 'פרסו אפליקציות אינטרנט מ-Git בדקות',
+  'Give users a secure sign-in experience without building auth infrastructure. Appwrite Auth supports the methods your users expect, team collaboration signals, and the controls your team needs.':
+    'ספקו למשתמשים חוויית כניסה מאובטחת בלי לבנות תשתית אימות. Appwrite Auth תומך בשיטות שהמשתמשים שלכם מצפים להן, באותות שיתוף פעולה בצוותים ובבקרות שהצוות שלכם צריך.', // pragma: allowlist secret
+  'Model, query, and scale structured data with Appwrite TablesDB or connect native PostgreSQL and MySQL when you need full SQL control.': // pragma: allowlist secret
+    'מדלו, שאילתו והרחיבו נתונים מובנים עם Appwrite TablesDB, או חברו PostgreSQL ו-MySQL מקוריים כשאתם צריכים שליטה מלאה ב-SQL.', // pragma: allowlist secret
+  'Upload, organize, and serve images, videos, documents, and other assets through Appwrite CDN. Resize, crop, and convert formats on the fly, compress and encrypt at the bucket level, and share with granular permissions.': // pragma: allowlist secret
+    'העלו, ארגנו והגישו תמונות, סרטונים, מסמכים ונכסים אחרים דרך Appwrite CDN. שנו גודל, חתכו והמירו פורמטים בזמן אמת, דחסו והצפינו ברמת הבאקט, ושתפו עם הרשאות מדויקות.', // pragma: allowlist secret
+  'Run API endpoints, webhooks, cron jobs, and event handlers in secure isolated runtimes that scale with demand.':
+    'הריצו נקודות קצה API, webhooks, משימות cron ומטפלי אירועים בסביבות ריצה מבודדות ומאובטחות שמתרחבות לפי הביקוש.',
+  'Reach users on email, SMS, and push from a unified API. Manage providers, audiences, and delivery without stitching vendors together.':
+    'הגיעו למשתמשים באימייל, SMS ו-push מ-API אחוד. נהלו ספקים, קהלים ומסירה בלי לחבר בין ספקים ידנית.',
+  'Ship static, SSR, and client-rendered frontends with automatic builds, branch previews, and Appwrite services connected behind the scenes.': // pragma: allowlist secret
+    'העלו פרונטאנדים סטטיים, SSR ו-client-rendered עם בניות אוטומטיות, תצוגות מקדימות לענפים ושירותי Appwrite מחוברים מאחורי הקלעים.', // pragma: allowlist secret
   'Start from our docs': 'התחילו מהדוקומנטציה שלנו',
   'Start small, build consistently, and give things enough time to become real.': 'התחילו בקטן, בנו בעקביות ותנו לדברים מספיק זמן להפוך לאמיתיים.',
   'Startups program': 'תוכנית הסטארטאפים',
