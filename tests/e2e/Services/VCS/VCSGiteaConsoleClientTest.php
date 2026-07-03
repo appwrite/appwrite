@@ -21,7 +21,10 @@ final class VCSGiteaConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    protected string $vcsProvider = 'gitea';
+    protected function getVcsProvider(): string
+    {
+        return 'gitea';
+    }
 
     public function testFunctionRedeploysFromGiteaWebhook(): void
     {

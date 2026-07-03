@@ -10,7 +10,12 @@ trait VCSBase
     {
         parent::setUp();
 
-        $this->skipUnlessVcs($this->vcsProvider ?? 'github');
+        $this->skipUnlessVcs($this->getVcsProvider());
+    }
+
+    protected function getVcsProvider(): string
+    {
+        return 'github';
     }
 
     protected function skipUnlessVcs(string $provider): void

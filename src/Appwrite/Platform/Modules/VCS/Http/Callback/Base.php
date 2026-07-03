@@ -72,7 +72,8 @@ abstract class Base extends Action
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            return $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            return;
         }
 
         $region = $project->getAttribute('region', 'default');
@@ -89,7 +90,8 @@ abstract class Base extends Action
         $redirectFailure = $state['failure'] ?? '';
 
         if (empty($code)) {
-            return $this->failure($response, $redirectFailure, 'OAuth2 authorization code is missing.');
+            $this->failure($response, $redirectFailure, 'OAuth2 authorization code is missing.');
+            return;
         }
 
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $provider->getKey() . '/callback';
@@ -100,14 +102,16 @@ abstract class Base extends Action
         $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
 
         if (empty($accessToken)) {
-            return $this->failure($response, $redirectFailure, 'Failed to exchange authorization code for an access token.');
+            $this->failure($response, $redirectFailure, 'Failed to exchange authorization code for an access token.');
+            return;
         }
 
         $providerInstallationId = $oauth2->getUserID($accessToken);
         $owner = \method_exists($oauth2, 'getUserSlug') ? $oauth2->getUserSlug($accessToken) : '';
 
         if (empty($providerInstallationId) || empty($owner)) {
-            return $this->failure($response, $redirectFailure, 'Failed to get user information from ' . $provider->getName() . '.');
+            $this->failure($response, $redirectFailure, 'Failed to get user information from ' . $provider->getName() . '.');
+            return;
         }
 
         $projectInternalId = $project->getSequence();
