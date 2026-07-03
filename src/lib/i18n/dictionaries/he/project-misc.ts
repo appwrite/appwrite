@@ -1024,13 +1024,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Schedule a meeting': 'קביעת פגישה',
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our': 'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
   'priority support portal': 'פורטל התמיכה בעדיפות גבוהה',
-  "Appwrite offers two MCP servers that allow LLMs to interact with Appwrite's API and documentation. Deploy with a single click or view the": 'Appwrite מציעה שני שרתי MCP שמאפשרים למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. פרסו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
+  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
   docs: 'דוקומנטציה',
   'for instructions.': 'להוראות.',
-  'MCP for API': 'MCP עבור API',
-  'Interact with your Appwrite project directly. Create users, manage databases, and perform operations using natural language.': 'תקשרו ישירות עם פרויקט ה-Appwrite שלכם. צרו משתמשים, נהלו מסדי נתונים ובצעו פעולות בשפה טבעית.', // pragma: allowlist secret
-  'MCP for Docs': 'MCP עבור דוקומנטציה',
-  'Access comprehensive Appwrite documentation. Get code examples, troubleshooting help, and implementation guidance.': 'גשו לדוקומנטציה המקיפה של Appwrite. קבלו דוגמאות קוד, עזרה בפתרון בעיות והנחיות יישום.', // pragma: allowlist secret
+  'MCP server': 'שרת MCP',
+  Install: 'התקנה',
   'MCP servers': 'שרתי MCP',
   "You've reached the limit of": 'הגעתם למגבלה של',
   'Approaching the limit for': 'מתקרבים למגבלה של',
