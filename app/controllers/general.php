@@ -147,7 +147,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $sequence = $project->getSequence();
-            $projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+            $projectInternalId = (string) ($sequence ?: $project->getId());
             $lock->tryWithKey(
                 'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
                 fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(

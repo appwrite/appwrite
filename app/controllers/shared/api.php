@@ -163,7 +163,7 @@ Http::init()
             // For standard keys, update last accessed time
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
-                $keyOwnerInternalId = 'unknown';
+                $keyOwnerInternalId = '';
                 if (! empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',
@@ -171,7 +171,7 @@ Http::init()
                         subject: 'keys'
                     );
                     $sequence = $project->getSequence();
-                    $keyOwnerInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+                    $keyOwnerInternalId = (string) ($sequence ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
@@ -179,7 +179,7 @@ Http::init()
                         subject: 'keys'
                     );
                     $sequence = $user->getSequence();
-                    $keyOwnerInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+                    $keyOwnerInternalId = (string) ($sequence ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
@@ -187,7 +187,7 @@ Http::init()
                         subject: 'keys'
                     );
                     $sequence = $team->getSequence();
-                    $keyOwnerInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+                    $keyOwnerInternalId = (string) ($sequence ?: $team->getId());
                 }
 
                 if (!$dbKey) {
@@ -388,7 +388,7 @@ Http::init()
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $sequence = $project->getSequence();
-                $projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+                $projectInternalId = (string) ($sequence ?: $project->getId());
                 $lock->tryWithKey(
                     'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
                     fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
@@ -414,7 +414,7 @@ Http::init()
                     ]));
                 } else {
                     $sequence = $user->getSequence();
-                    $userInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+                    $userInternalId = (string) ($sequence ?: $user->getId());
                     $lock->tryWithKey(
                         'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
                         fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(

@@ -59,7 +59,7 @@ final class Lock
         $this->enabled = System::getEnv('_APP_LOCKING_ENABLED', 'enabled') !== 'disabled';
         $this->attempts = $telemetry->createCounter('lock.attempts', null, 'Distributed lock acquire outcomes');
         $sequence = $project->getSequence();
-        $this->projectInternalId = ($sequence !== null && $sequence !== '') ? (string) $sequence : 'unknown';
+        $this->projectInternalId = (string) ($sequence ?: $project->getId());
     }
 
     public function withKey(
