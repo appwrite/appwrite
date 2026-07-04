@@ -739,6 +739,7 @@ export const jaDatabasesTranslations: Record<string, string> = {
   'Search indexes...': 'インデックスを検索...',
   'Search queries': 'クエリを検索',
   'Search related rows…': '関連行を検索…',
+  'Search rows...': '行を検索...',
   'Search schemas': 'スキーマを検索',
   'Search schemas…': 'スキーマを検索…',
   'Search tables': 'テーブルを検索',

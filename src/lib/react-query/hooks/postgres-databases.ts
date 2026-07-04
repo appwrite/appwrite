@@ -66,6 +66,7 @@ import {
   buildPostgresInsertRowSql,
   buildSyncPostgresSerialSequencesSql,
   isPostgresDuplicatePrimaryKeyError,
+  isPostgresSequenceBackedColumn,
   buildPostgresSelectRowsSql,
   buildPostgresUpdateRowSql,
   POSTGRES_ROW_CTID_COLUMN,
@@ -1010,14 +1011,27 @@ export async function createPostgresTableRow(
   )
   const filteredValues = filterPostgresRowCreateValues(values, columns)
   const sql = buildPostgresInsertRowSql(tableId, filteredValues)
-  const syncSql = buildSyncPostgresSerialSequencesSql(tableId, columns)
 
-  // Serial/identity PKs are omitted from the create form. If an earlier row
-  // used an explicit ID (or data was imported), the sequence can lag behind
-  // MAX(id) and the next DEFAULT nextval() hits users_pkey / similar.
-  if (syncSql) {
+  // When serial/identity columns are omitted (left blank), Postgres uses
+  // DEFAULT nextval(). If an earlier row used an explicit ID (or data was
+  // imported), the sequence can lag behind MAX(id) and hit users_pkey.
+  // Sync sequences before insert, and once more on duplicate-key errors.
+  const omittedSequenceColumns = columns.filter(
+    (column) =>
+      isPostgresSequenceBackedColumn(column) &&
+      !Object.prototype.hasOwnProperty.call(filteredValues, column.column_name),
+  )
+  const syncSql =
+    omittedSequenceColumns.length > 0
+      ? buildSyncPostgresSerialSequencesSql(tableId, omittedSequenceColumns)
+      : null
+
+  const runSync = async () => {
+    if (!syncSql) return
     await executePostgresDatabaseSql(projectId, databaseId, syncSql)
   }
+
+  await runSync()
 
   const runInsert = () => executePostgresDatabaseSql(projectId, databaseId, sql)
 
@@ -1027,7 +1041,7 @@ export async function createPostgresTableRow(
     if (!syncSql || !isPostgresDuplicatePrimaryKeyError(error)) {
       throw error
     }
-    await executePostgresDatabaseSql(projectId, databaseId, syncSql)
+    await runSync()
     return await runInsert()
   }
 }
@@ -1040,6 +1054,19 @@ export async function deletePostgresTableRow(
 ) {
   const sql = buildPostgresDeleteRowSql(tableId, identity)
   return executePostgresDatabaseSql(projectId, databaseId, sql)
+}
+
+export async function deletePostgresTableRows(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  identities: PostgresRowIdentity[],
+) {
+  await Promise.all(
+    identities.map((identity) =>
+      deletePostgresTableRow(projectId, databaseId, tableId, identity),
+    ),
+  )
 }
 
 export async function commitPostgresRowEdits(
@@ -1118,6 +1145,23 @@ export function useDeletePostgresTableRow(
   return useMutation({
     mutationFn: (identity: PostgresRowIdentity) =>
       deletePostgresTableRow(projectId, databaseId, tableId, identity),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+    },
+  })
+}
+
+export function useDeletePostgresTableRows(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (identities: PostgresRowIdentity[]) =>
+      deletePostgresTableRows(projectId, databaseId, tableId, identities),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],

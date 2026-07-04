@@ -62,16 +62,17 @@ export function PostgresTablePropertiesPanel({
   const [tableName, setTableName] = useState(table)
   const [comment, setComment] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const savedComment = tableInfo?.table_comment ?? ''
+  const isCommentUnchanged = comment === savedComment
+  const isNameUnchanged = !tableName.trim() || tableName.trim() === table
 
   useEffect(() => {
     setTableName(table)
   }, [table])
 
   useEffect(() => {
-    if (tableInfo?.table_comment != null) {
-      setComment(tableInfo.table_comment)
-    }
-  }, [tableInfo?.table_comment])
+    setComment(tableInfo?.table_comment ?? '')
+  }, [tableId, tableInfo?.table_comment])
 
   const handleUpdateName = async () => {
     const trimmed = tableName.trim()
@@ -92,6 +93,7 @@ export function PostgresTablePropertiesPanel({
   }
 
   const handleUpdateComment = async () => {
+    if (comment === savedComment) return
     try {
       await executeSql.mutateAsync(buildPostgresTableCommentSql(tableId, comment))
       toast.success(t('Comment updated'))
@@ -197,11 +199,7 @@ export function PostgresTablePropertiesPanel({
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
-                disabled={
-                  executeSql.isPending ||
-                  !tableName.trim() ||
-                  tableName.trim() === table
-                }
+                disabled={executeSql.isPending || isNameUnchanged}
                 onClick={() => void handleUpdateName()}
               >
                 {t('Update')}
@@ -232,7 +230,7 @@ export function PostgresTablePropertiesPanel({
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
-                disabled={executeSql.isPending}
+                disabled={executeSql.isPending || isCommentUnchanged}
                 onClick={() => void handleUpdateComment()}
               >
                 {t('Update')}

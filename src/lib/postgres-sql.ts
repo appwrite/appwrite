@@ -285,7 +285,12 @@ export type PostgresTableColumnRow = {
 export function isPostgresPrimaryKeyColumn(
   column: Pick<PostgresTableColumnRow, 'is_primary_key'>,
 ): boolean {
-  return column.is_primary_key === true || column.is_primary_key === 'true'
+  const value = column.is_primary_key
+  if (value === true) return true
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  return normalized === 'true' || normalized === 't' || normalized === '1'
 }
 
 export function sortPostgresTableColumns<T extends PostgresTableColumnRow>(
