@@ -27,6 +27,10 @@ import {
   POSTGRES_STICKY_THEAD_CLASS,
 } from './postgres-spreadsheet-chrome'
 import {
+  SPREADSHEET_STICKY_START_EDGE_SHADOW,
+  SPREADSHEET_STICKY_START_HEADER_SHADOW,
+} from '@/lib/layout/spreadsheet-sticky'
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -197,7 +201,7 @@ export function PostgresRowsSpreadsheet({
                   <th
                     className={cn(
                       'sticky start-0 z-30 bg-background px-2 py-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
-                      POSTGRES_HEADER_CELL_BORDER_CLASS,
+                      SPREADSHEET_STICKY_START_HEADER_SHADOW,
                     )}
                     style={{
                       width: POSTGRES_ROWS_TABLE_EDGE_COL_PX,
@@ -280,8 +284,8 @@ export function PostgresRowsSpreadsheet({
                     >
                       <td
                         className={cn(
-                          'sticky start-0 z-10 bg-background px-2 py-2.5 text-center',
-                          POSTGRES_BODY_CELL_BORDER_CLASS,
+                          'sticky start-0 z-10 border-b border-border bg-background px-2 py-2.5 text-center',
+                          SPREADSHEET_STICKY_START_EDGE_SHADOW,
                         )}
                       >
                         <span className="text-[11px] tabular-nums text-muted-foreground">

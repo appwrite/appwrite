@@ -8,6 +8,17 @@ import {
   RESIZE_HANDLE_PSEUDO_AFTER_HAIRLINE_LOGICAL_X,
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
 } from '@/lib/layout/horizontal-resize'
+import {
+  SPREADSHEET_STICKY_END_EDGE_SHADOW,
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+  SPREADSHEET_STICKY_START_EDGE_SHADOW,
+  SPREADSHEET_STICKY_START_HEADER_SHADOW,
+} from '@/lib/layout/spreadsheet-sticky'
+
+export {
+  SPREADSHEET_STICKY_END_EDGE_SHADOW as STORAGE_SPREADSHEET_STICKY_END_EDGE_SHADOW,
+  SPREADSHEET_STICKY_START_EDGE_SHADOW as STORAGE_SPREADSHEET_STICKY_START_EDGE_SHADOW,
+}
 import { cn } from '@/lib/utils'
 import {
   STORAGE_FILES_TABLE_PANE_MAX_PX,
@@ -134,11 +145,11 @@ export const STORAGE_SPREADSHEET_TABLE_LAYER_CLASS =
 
 /** Sticky checkbox `th` — single shadow utility (do not stack multiple `shadow-[...]`). */
 export const STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW =
-  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]'
+  SPREADSHEET_STICKY_START_HEADER_SHADOW
 
 /** Sticky actions `th` — single shadow utility (do not stack multiple `shadow-[...]`). */
 export const STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW =
-  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)]'
+  SPREADSHEET_STICKY_END_HEADER_SHADOW
 
 /**
  * Column resize rail (matches Tables DB `Spreadsheet` `DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS`).

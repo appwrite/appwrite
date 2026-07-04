@@ -6,6 +6,12 @@ import {
   isRtlElement,
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
+import {
+  SPREADSHEET_STICKY_END_EDGE_SHADOW,
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+  SPREADSHEET_STICKY_START_EDGE_SHADOW,
+  SPREADSHEET_STICKY_START_HEADER_SHADOW,
+} from '@/lib/layout/spreadsheet-sticky'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -4222,7 +4228,7 @@ export function RowsSpreadsheet({
                   'sticky start-0 z-40 w-10 bg-background px-2 py-2 text-center',
                   useInlineDocumentPane &&
                     'min-w-[40px] max-w-[40px] shrink-0 box-border',
-                  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_-1px_0_0_0_var(--border)]',
+                  SPREADSHEET_STICKY_START_HEADER_SHADOW,
                 )}
                 style={
                   useInlineDocumentPane
@@ -4466,7 +4472,7 @@ export function RowsSpreadsheet({
                 className={cn(
                   'relative sticky end-0 z-30 bg-background p-0',
                   useInlineDocumentPane && 'shrink-0 box-border',
-                  'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border),inset_1px_0_0_0_var(--border)]',
+                  SPREADSHEET_STICKY_END_HEADER_SHADOW,
                 )}
                 style={{
                   width: ROWS_TABLE_EDGE_COL_PX,
@@ -4544,7 +4550,7 @@ export function RowsSpreadsheet({
                       'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
                       useInlineDocumentPane &&
                         'min-w-[40px] max-w-[40px] shrink-0 box-border',
-                      'shadow-[inset_-1px_0_0_0_var(--border)]',
+                      SPREADSHEET_STICKY_START_EDGE_SHADOW,
                       !isInlinePreviewRow
                         ? 'bg-background'
                         : 'bg-muted/25 group-hover:bg-muted/35',
@@ -4685,7 +4691,7 @@ export function RowsSpreadsheet({
                     className={cn(
                       'sticky end-0 border-b border-border p-0',
                       useInlineDocumentPane && 'shrink-0 box-border',
-                      'shadow-[inset_1px_0_0_0_var(--border)]',
+                      SPREADSHEET_STICKY_END_EDGE_SHADOW,
                       !isInlinePreviewRow
                         ? 'bg-background'
                         : 'bg-muted/25 group-hover:bg-muted/35',
