@@ -66,7 +66,7 @@ class Update extends Action
             ->param('secret', '', new Text(256), 'Secret key.')
             ->inject('request')
             ->inject('response')
-            ->inject('user')
+            ->inject('targetUser')
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('project')
@@ -79,7 +79,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -104,16 +104,16 @@ class Update extends Action
         }
 
         if ($userId !== $membership->getAttribute('userId')) {
-            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
+            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $targetUser->getAttribute('email') . ')');
         }
 
-        $hasSession = !$user->isEmpty();
+        $hasSession = !$targetUser->isEmpty();
         if (!$hasSession) {
-            $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
+            $targetUser->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
-        if ($membership->getAttribute('userInternalId') !== $user->getSequence()) {
-            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
+        if ($membership->getAttribute('userInternalId') !== $targetUser->getSequence()) {
+            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $targetUser->getAttribute('email') . ')');
         }
 
         if ($membership->getAttribute('confirm') === true) {
@@ -125,11 +125,12 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        $targetUser->setAttribute('emailVerification', true);
+        $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
 
         // Create session for the user if not logged in
         if (!$hasSession) {
-            $authorization->addRole(Role::user($user->getId())->toString());
+            $authorization->addRole(Role::user($targetUser->getId())->toString());
 
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
@@ -139,14 +140,14 @@ class Update extends Action
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
+                    Permission::read(Role::user($targetUser->getId())),
+                    Permission::update(Role::user($targetUser->getId())),
+                    Permission::delete(Role::user($targetUser->getId())),
                 ],
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getSequence(),
+                'userId' => $targetUser->getId(),
+                'userInternalId' => $targetUser->getSequence(),
                 'provider' => SESSION_PROVIDER_EMAIL,
-                'providerUid' => $user->getAttribute('email'),
+                'providerUid' => $targetUser->getAttribute('email'),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
@@ -160,7 +161,7 @@ class Update extends Action
             $authorization->addRole(Role::user($userId)->toString());
 
             $encoded = $store
-                ->setProperty('id', $user->getId())
+                ->setProperty('id', $targetUser->getId())
                 ->setProperty('secret', $secret)
                 ->encode();
 
@@ -193,12 +194,12 @@ class Update extends Action
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $targetUser->getId());
 
         $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
+            ->setParam('userId', $targetUser->getId())
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -206,8 +207,8 @@ class Update extends Action
         $response->dynamic(
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email')),
+                ->setAttribute('userName', $targetUser->getAttribute('name'))
+                ->setAttribute('userEmail', $targetUser->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     }

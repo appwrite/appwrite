@@ -6,7 +6,6 @@ use Appwrite\Tests\Retry;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
-use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Console;
@@ -721,14 +720,6 @@ trait MigrationsBase
             'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
-        ]);
-
-        $finalStats = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'startDate' => UsageTest::getYesterday(),
-            'endDate' => UsageTest::getTomorrow(),
         ]);
 
         $this->assertEquals('completed', $result['status']);

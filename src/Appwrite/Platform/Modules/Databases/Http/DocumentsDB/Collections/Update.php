@@ -38,6 +38,7 @@ class Update extends CollectionUpdate
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'collections',

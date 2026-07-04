@@ -41,6 +41,7 @@ class Create extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',

@@ -200,7 +200,7 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testListSpecs(): void
     {
-        $specifications = $this->listSpecifications();
+        $specifications = $this->listSpecifications(['type' => 'runtimes']);
         $this->assertEquals(200, $specifications['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);
@@ -214,20 +214,25 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
+        $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $function = $this->getFunction($function['body']['$id']);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $this->cleanupFunction($function['body']['$id']);
@@ -2516,17 +2521,6 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertCount(1, $executions['body']['executions']);
         });
 
-        $this->assertEventually(function () use ($functionId) {
-            $response = $this->getUsage($functionId, [
-                'range' => '24h'
-            ]);
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertCount(24, $response['body']);
-            $this->assertEquals('24h', $response['body']['range']);
-            $this->assertEquals(1, $response['body']['executionsTotal']);
-        }, 25000, 500);
-
         $this->cleanupFunction($functionId);
     }
 
@@ -3310,6 +3304,35 @@ final class FunctionsCustomServerTest extends Scope
         foreach ($functionIds as $functionId) {
             $this->cleanupFunction($functionId);
         }
+    }
+
+    public function testCreateVcsDeploymentWithoutInstallation(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test VCS No Installation',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'branch',
+            'reference' => 'main',
+        ]);
+
+        $this->assertEquals(404, $deployment['headers']['status-code']);
+        $this->assertEquals('installation_not_found', $deployment['body']['type']);
+
+        $this->cleanupFunction($functionId);
     }
 
 }

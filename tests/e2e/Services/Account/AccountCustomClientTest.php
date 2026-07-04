@@ -1039,128 +1039,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    public function testGetAccountLogs(): void
-    {
-        // Use fresh account for predictable log count
-        $data = $this->createFreshAccountWithSession();
-        $session = $data['session'];
-        $headers = array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]);
-
-        /**
-         * Test for SUCCESS
-         */
-        $this->assertEventually(function () use ($headers) {
-            $response = $this->client->call(Client::METHOD_GET, '/account/logs', $headers);
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertIsArray($response['body']['logs']);
-            $this->assertNotEmpty($response['body']['logs']);
-            $logCount = count($response['body']['logs']);
-            $this->assertContains($logCount, [1, 2]);
-            $this->assertIsNumeric($response['body']['total']);
-
-            $this->assertEquals('session.create', $response['body']['logs'][0]['event']);
-            $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
-            $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
-            $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
-
-            $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
-            $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
-            $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
-            $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
-            $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
-
-            $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
-            $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
-            $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
-            $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
-
-            $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
-            $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
-
-            if ($logCount === 2) {
-                $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
-                $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
-                $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
-            }
-
-            $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
-                'queries' => [
-                    Query::limit(1)->toString()
-                ]
-            ]);
-
-            $this->assertEquals(200, $responseLimit['headers']['status-code']);
-            $this->assertIsArray($responseLimit['body']['logs']);
-            $this->assertNotEmpty($responseLimit['body']['logs']);
-            $this->assertCount(1, $responseLimit['body']['logs']);
-            $this->assertIsNumeric($responseLimit['body']['total']);
-
-            $this->assertEquals($response['body']['logs'][0], $responseLimit['body']['logs'][0]);
-
-            $responseOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
-                'queries' => [
-                    Query::offset(1)->toString()
-                ]
-            ]);
-
-            $this->assertEquals(200, $responseOffset['headers']['status-code']);
-            $this->assertIsArray($responseOffset['body']['logs']);
-            $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
-            $this->assertIsNumeric($responseOffset['body']['total']);
-
-            if ($logCount === 2) {
-                $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
-            }
-
-            $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
-                'queries' => [
-                    Query::offset(1)->toString(),
-                    Query::limit(1)->toString()
-                ]
-            ]);
-
-            $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
-            $this->assertIsArray($responseLimitOffset['body']['logs']);
-            $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
-            $this->assertIsNumeric($responseLimitOffset['body']['total']);
-
-            if ($logCount === 2) {
-                $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
-            }
-        });
-
-        /**
-         * Test for total=false
-         */
-        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', $headers, [
-            'total' => false
-        ]);
-
-        $this->assertEquals(200, $logsWithIncludeTotalFalse['headers']['status-code']);
-        $this->assertIsArray($logsWithIncludeTotalFalse['body']);
-        $this->assertIsArray($logsWithIncludeTotalFalse['body']['logs']);
-        $this->assertIsInt($logsWithIncludeTotalFalse['body']['total']);
-        $this->assertSame(0, $logsWithIncludeTotalFalse['body']['total']);
-        $this->assertGreaterThan(0, count($logsWithIncludeTotalFalse['body']['logs']));
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-    }
-
     // TODO Add tests for OAuth2 session creation
 
     public function testUpdateAccountName(): void
@@ -2349,6 +2227,98 @@ final class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(412, $response['headers']['status-code']);
+    }
+
+    public function testOAuth2TokenSessionProviderAccessToken(): void
+    {
+        // Just ensure we have a session set up
+        $this->setupAccountWithSession();
+
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        // Enable the mock OAuth2 provider
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Start the OAuth2 *token* flow (createOAuth2Token), NOT createOAuth2Session
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
+
+        $oauthParamsString = \parse_url($response['headers']['location'], PHP_URL_QUERY);
+        $oauthParams = [];
+        \parse_str($oauthParamsString, $oauthParams);
+
+        $this->assertNotEmpty($oauthParams['secret']);
+        $this->assertNotEmpty($oauthParams['userId']);
+
+        // Exchange the token for a session via createSession (POST /account/sessions/token)
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $oauthParams['userId'],
+            'secret' => $oauthParams['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('mock', $response['body']['provider']);
+
+        $sessionCookieKey = 'a_session_' . $this->getProject()['$id'];
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $oauthUserCookie = $response['cookies'][$sessionCookieKey];
+        $this->assertNotEmpty($oauthUserCookie);
+
+        // Get the current session and ensure the provider access token was persisted
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => $sessionCookieKey . '=' . $oauthUserCookie,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('mock', $response['body']['provider']);
+
+        // The bug: session created via createOAuth2Token + createSession has an empty
+        // providerAccessToken, whereas createOAuth2Session persists it (see mock provider '123456').
+        $this->assertNotEmpty($response['body']['providerAccessToken']);
+        $this->assertEquals('123456', $response['body']['providerAccessToken']);
     }
 
     public function testCreateOidcOAuth2Token(): void

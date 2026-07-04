@@ -70,6 +70,10 @@ class Response extends SwooleResponse
     public const MODEL_ROW = 'row';
     public const MODEL_ROW_LIST = 'rowList';
 
+    // Notifications
+    public const MODEL_NOTIFICATION = 'notification';
+    public const MODEL_NOTIFICATION_LIST = 'notificationList';
+
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
@@ -252,6 +256,8 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_STAGE = 'stage';
+    public const MODEL_STAGE_LIST = 'stageList';
     public const MODEL_PROJECT_AUTH_METHOD = 'projectAuthMethod';
     public const MODEL_PROJECT_SERVICE = 'projectService';
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
@@ -471,6 +477,16 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
+        if (
+            $this->impersonatorUser !== null
+            && $model === self::MODEL_ACCOUNT
+            && $this->user !== null
+            && $document->getId() === $this->user->getId()
+        ) {
+            $document = clone $document;
+            $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
+        }
+
         $output = $this->output(clone $document, $model);
         $output = $this->applyFilters($output, $model, raw: clone $document);
 
@@ -775,6 +791,7 @@ class Response extends SwooleResponse
 
     private ?Authorization $authorization = null;
     private ?DBUser $user = null;
+    private ?Document $impersonatorUser = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
@@ -784,5 +801,15 @@ class Response extends SwooleResponse
     public function setUser(DBUser $user): void
     {
         $this->user = $user;
+    }
+
+    public function setImpersonatorUser(Document $impersonatorUser): void
+    {
+        $this->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
+    }
+
+    public function getImpersonatorUser(): ?Document
+    {
+        return $this->impersonatorUser;
     }
 }

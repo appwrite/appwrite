@@ -64,6 +64,7 @@ class Create extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
+            ->label('usage.resource', 'function/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'functions',
@@ -90,7 +91,7 @@ class Create extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
@@ -98,11 +99,12 @@ class Create extends Base
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan, 'buildSpecifications'), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+                System::getEnv('_APP_COMPUTE_MEMORY', 0),
+                'buildSpecifications'
             ), 'Build specification for the function deployments.', true, ['plan'])
             ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
@@ -274,6 +276,7 @@ class Create extends Base
                 'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
                 'schedule'  => $function->getAttribute('schedule'),
                 'active' => false,
             ]))

@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Functions\Workers\Builds;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 final class BuildsTest extends TestCase
@@ -85,6 +86,80 @@ final class BuildsTest extends TestCase
 
         $this->assertSame('ssr', $detection->getName());
         $this->assertNull($detection->getFallbackFile());
+    }
+
+    public function testDisconnectVcsClearsAllFieldsAndDeletesRepository(): void
+    {
+        $resource = new Document([
+            '$id' => 'func123',
+            '$collection' => 'functions',
+            'repositoryId' => 'repo456',
+            'installationId' => 'install789',
+            'installationInternalId' => 'install789internal',
+            'providerRepositoryId' => 'gh123',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => 'functions/my-func',
+            'providerSilentMode' => true,
+            'repositoryInternalId' => 'repo456internal',
+        ]);
+
+        $dbForProject = $this->createMock(Database::class);
+        $dbForPlatform = $this->createMock(Database::class);
+
+        $dbForPlatform->expects($this->once())
+            ->method('deleteDocument')
+            ->with('repositories', 'repo456');
+
+        $dbForProject->expects($this->once())
+            ->method('updateDocument')
+            ->with('functions', 'func123', $this->callback(function (Document $doc) {
+                $this->assertSame('', $doc->getAttribute('installationId'));
+                $this->assertSame('', $doc->getAttribute('installationInternalId'));
+                $this->assertSame('', $doc->getAttribute('providerRepositoryId'));
+                $this->assertSame('', $doc->getAttribute('providerBranch'));
+                $this->assertSame('', $doc->getAttribute('providerRootDirectory'));
+                $this->assertFalse($doc->getAttribute('providerSilentMode'));
+                $this->assertSame('', $doc->getAttribute('repositoryId'));
+                $this->assertSame('', $doc->getAttribute('repositoryInternalId'));
+                return true;
+            }));
+
+        $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
+    }
+
+    public function testDisconnectVcsSkipsRepositoryDeletionWhenRepositoryIdEmpty(): void
+    {
+        $resource = new Document([
+            '$id' => 'func123',
+            '$collection' => 'functions',
+            'repositoryId' => '',
+        ]);
+
+        $dbForProject = $this->createMock(Database::class);
+        $dbForPlatform = $this->createMock(Database::class);
+
+        $dbForPlatform->expects($this->never())->method('deleteDocument');
+        $dbForProject->expects($this->once())->method('updateDocument');
+
+        $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
+    }
+
+    public function testTruncateBuildLogsKeepsShortLogsUnchanged(): void
+    {
+        $logs = "Build finished.\n";
+
+        $this->assertSame($logs, $this->callBuilds('truncateBuildLogs', $logs));
+    }
+
+    public function testTruncateBuildLogsTrimsOversizedLogsToLimitKeepingTail(): void
+    {
+        $oversized = \str_repeat('a', APP_LOG_LENGTH_LIMIT + 5000) . 'TAIL_MARKER';
+
+        $result = (string) $this->callBuilds('truncateBuildLogs', $oversized);
+
+        $this->assertLessThanOrEqual(APP_LOG_LENGTH_LIMIT, \strlen($result));
+        $this->assertStringContainsString('[WARNING] Logs truncated.', $result);
+        $this->assertStringEndsWith('TAIL_MARKER', $result);
     }
 
     private function callBuilds(string $method, mixed ...$arguments): mixed

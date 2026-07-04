@@ -50,16 +50,17 @@ class Create extends CreateDocumentAction
             ->label('resourceType', RESOURCE_TYPE_EMBEDDINGS_TEXT)
             ->label('audits.event', 'embedding.create')
             ->label('audits.resource', 'vectorsdb/embeddings/text')
+            ->label('usage.resource', 'database/embeddings/text')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
                     namespace: 'vectorsDB',
-                    group: $this->getSdkGroup(),
+                    group: 'embeddings',
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
-                    description: '/docs/references/vectorsdb/create-document.md',
+                    description: '/docs/references/vectorsdb/create-text-embeddings.md',
                     auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(

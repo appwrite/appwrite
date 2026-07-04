@@ -6,7 +6,7 @@ Init your Appwrite client:
 Client client = Client();
 
 client
-    .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
+    .setEndpoint('https://localhost:9521/v1') // Your Appwrite Endpoint
     .setProject('5e8cf4f46b5e8') // Your project ID
     .setSelfSigned() // Remove in production
 ;

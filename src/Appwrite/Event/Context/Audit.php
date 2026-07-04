@@ -9,6 +9,7 @@ class Audit
     public function __construct(
         public ?Document $project = null,
         public ?Document $user = null,
+        public ?Document $impersonatorUser = null,
         public string $mode = '',
         public string $userAgent = '',
         public string $ip = '',
@@ -23,6 +24,7 @@ class Audit
     {
         return $this->project === null
             && $this->user === null
+            && $this->impersonatorUser === null
             && $this->mode === ''
             && $this->userAgent === ''
             && $this->ip === ''

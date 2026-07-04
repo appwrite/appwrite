@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -26,6 +27,7 @@ class Install extends Action
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 1;
+    private const int DOCKER_COMPOSE_UP_TIMEOUT_SECONDS = 600;
     private const int PROC_CLOSE_TIMEOUT_SECONDS = 60;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
@@ -57,7 +59,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb']), 'Database to use (mongodb|mariadb)', true)
             ->callback($this->action(...));
     }
 
@@ -101,6 +103,8 @@ class Install extends Action
         $data = $this->readExistingCompose();
         $envFileExists = file_exists($this->path . '/' . $this->getEnvFileName());
         $existingInstallation = $data !== '' || $envFileExists;
+
+        $existingDatabase = null;
 
         if ($existingInstallation) {
             $time = \time();
@@ -171,7 +175,6 @@ class Install extends Action
             // Detect database type from existing installation.
             // 1.9.0+ installs have _APP_DB_ADAPTER; pre-1.9.0 installs
             // can be detected by the DB service name or _APP_DB_HOST.
-            $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
                 $svcEnv = $service->getEnvironment()->list();
                 if (isset($svcEnv['_APP_DB_ADAPTER'])) {
@@ -200,7 +203,8 @@ class Install extends Action
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
-        if (!in_array($database, $enabledDatabases, true)) {
+        $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
+        if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
             Console::exit(1);
         }
@@ -332,6 +336,9 @@ class Install extends Action
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
+            $enabledDatabases[] = $lockedDatabase;
+        }
 
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
@@ -527,13 +534,22 @@ class Install extends Action
         }
 
         $templateForEnv = new View($this->buildFromProjectPath('/app/views/install/env.phtml'));
-        $templateForCompose = new View($this->buildFromProjectPath('/app/views/install/compose.phtml'));
+        $composePath = $this->buildFromProjectPath('/docker-compose.yml');
+        $composeYaml = \file_get_contents($composePath);
+        if ($composeYaml === false) {
+            throw new \RuntimeException('Failed to read docker-compose.yml from ' . $composePath);
+        }
+        $composeGenerator = new Generator($composeYaml);
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
         $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
         if ($isLocalInstall) {
             $version = 'local';
+        }
+
+        if (!$isLocalInstall && $this->hostPath === '') {
+            $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
@@ -552,16 +568,18 @@ class Install extends Action
         }
         $executorImages = \implode(',', \array_unique($runtimeImages));
 
-        $templateForCompose
-            ->setParam('httpPort', $httpPort)
-            ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', $version)
-            ->setParam('organization', $organization)
-            ->setParam('image', $image)
-            ->setParam('database', $database)
-            ->setParam('hostPath', $this->hostPath)
-            ->setParam('enableAssistant', $enableAssistant)
-            ->setParam('executorImages', $executorImages);
+        $input['_APP_HTTP_PORT'] = $httpPort;
+        $input['_APP_HTTPS_PORT'] = $httpsPort;
+        $input['_APP_IMAGE'] = "{$organization}/{$image}";
+        $input['_APP_VERSION'] = $version;
+        $input['_APP_EXECUTOR_IMAGES'] = $executorImages;
+
+        $composeContent = $composeGenerator->render([
+            'version' => $version,
+            'database' => $database,
+            'hostPath' => $this->hostPath,
+            'enableAssistant' => $enableAssistant,
+        ]);
 
         $templateForEnv->setParam('vars', $input);
 
@@ -599,7 +617,7 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    $this->writeComposeFile($templateForCompose);
+                    $this->writeComposeFile($composeContent);
                 }
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_COMPLETED, $messages);
@@ -618,7 +636,7 @@ class Install extends Action
             }
 
             if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoEntrypointIfNeeded();
+                $this->copyMongoFilesIfNeeded();
             }
 
             if (!$noStart) {
@@ -634,7 +652,7 @@ class Install extends Action
                     }
                 }
 
-                if (!$isLocalInstall || file_exists('/.dockerenv') || file_exists('/run/.containerenv')) {
+                if (!$isLocalInstall && (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))) {
                     $this->connectInstallerToAppwriteNetwork();
                 }
 
@@ -914,10 +932,9 @@ class Install extends Action
         $healthPath = '/v1/health/version';
 
         if ($isLocalInstall) {
-            $candidates = [
-                self::APPWRITE_API_URL . $healthPath,
-                'http://localhost:' . $httpPort . $healthPath,
-            ];
+            $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
+                ? ['http://host.docker.internal:' . $httpPort . $healthPath]
+                : ['http://localhost:' . $httpPort . $healthPath];
         } else {
             $candidates = [
                 self::APPWRITE_API_URL . $healthPath,
@@ -1074,11 +1091,10 @@ class Install extends Action
         ];
     }
 
-    private function writeComposeFile(View $template): void
+    private function writeComposeFile(string $renderedContent): void
     {
         $composeFileName = $this->getComposeFileName();
         $targetPath = $this->path . '/' . $composeFileName;
-        $renderedContent = $template->render(false);
 
         $result = @file_put_contents($targetPath, $renderedContent);
         if ($result === false) {
@@ -1096,13 +1112,23 @@ class Install extends Action
         }
     }
 
-    private function copyMongoEntrypointIfNeeded(): void
+    private function copyMongoFilesIfNeeded(): void
     {
-        $mongoEntrypoint = $this->buildFromProjectPath('/mongo-entrypoint.sh');
+        $files = [
+            'mongo-entrypoint.sh',
+            'mongo-init.js',
+        ];
 
-        if (file_exists($mongoEntrypoint)) {
-            // Always use container path for file operations
-            copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh');
+        foreach ($files as $file) {
+            $source = $this->buildFromProjectPath('/' . $file);
+            if (file_exists($source)) {
+                $target = $this->path . '/' . $file;
+                if (@copy($source, $target) === false) {
+                    $lastError = error_get_last();
+                    $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
+                    throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
+                }
+            }
         }
     }
 
@@ -1148,6 +1174,16 @@ class Install extends Action
 
         $command[] = '--project-directory';
         $command[] = $composePath;
+
+        $validateCommand = $command;
+        $validateCommand[] = 'config';
+        $validateCommand[] = '--quiet';
+        \exec($env . implode(' ', array_map(escapeshellarg(...), $validateCommand)) . ' 2>&1', $validateOutput, $validateExit);
+        if ($validateExit !== 0) {
+            $message = trim(implode("\n", $validateOutput));
+            throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
+        }
+
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';
@@ -1213,11 +1249,17 @@ class Install extends Action
         }
 
         stream_set_blocking($pipes[1], false);
-        $deadline = time() + self::PROC_CLOSE_TIMEOUT_SECONDS;
+        $deadline = time() + self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS;
         $buffer = '';
+        $timedOut = false;
 
-        while (time() < $deadline) {
+        while (true) {
             $status = proc_get_status($process);
+            if (time() >= $deadline && $status['running']) {
+                $timedOut = true;
+                $output[] = 'Docker Compose did not finish starting containers within ' . self::DOCKER_COMPOSE_UP_TIMEOUT_SECONDS . ' seconds.';
+                break;
+            }
 
             $read = [$pipes[1]];
             $write = null;
@@ -1266,7 +1308,17 @@ class Install extends Action
 
         fclose($pipes[1]);
 
-        $exit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        if ($timedOut) {
+            proc_terminate($process, SIGTERM);
+            usleep(500_000);
+
+            if (proc_get_status($process)['running']) {
+                proc_terminate($process, SIGKILL);
+            }
+        }
+
+        $closeExit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+        $exit = $timedOut ? 124 : $closeExit;
 
         return ['output' => $output, 'exit' => $exit];
     }
@@ -1357,12 +1409,80 @@ class Install extends Action
         return $cwd !== false ? $cwd : '.';
     }
 
+    protected function detectInstallerHostPath(string $containerPath): ?string
+    {
+        if (!file_exists('/.dockerenv') && !file_exists('/run/.containerenv')) {
+            return null;
+        }
+
+        $containerId = trim((string) @file_get_contents('/etc/hostname'));
+        if ($containerId === '') {
+            return null;
+        }
+
+        $command = \implode(' ', \array_map(\escapeshellarg(...), [
+            'docker',
+            'inspect',
+            '--format',
+            '{{ json .Mounts }}',
+            $containerId,
+        ]));
+        $output = [];
+        @\exec($command . ' 2>/dev/null', $output, $exitCode);
+        if ($exitCode !== 0 || empty($output)) {
+            return null;
+        }
+
+        $mounts = \json_decode(\implode("\n", $output), true);
+        if (!\is_array($mounts)) {
+            return null;
+        }
+
+        $containerPath = \rtrim($containerPath, '/');
+        foreach ($mounts as $mount) {
+            if (!\is_array($mount)) {
+                continue;
+            }
+            $source = $mount['Source'] ?? null;
+            $destination = $mount['Destination'] ?? null;
+            if (!\is_string($source) || !\is_string($destination) || $source === '' || $destination === '') {
+                continue;
+            }
+
+            $destination = \rtrim($destination, '/');
+            $hostPath = match (true) {
+                $destination === $containerPath => \rtrim($source, '/'),
+                \str_starts_with($containerPath . '/', $destination . '/') => \rtrim($source, '/') . \substr($containerPath, \strlen($destination)),
+                default => null,
+            };
+
+            if ($hostPath !== null) {
+                return $hostPath;
+            }
+        }
+
+        return null;
+    }
+
     protected function buildFromProjectPath(string $suffix): string
     {
         if ($suffix !== '' && $suffix[0] !== '/') {
             $suffix = '/' . $suffix;
         }
-        return dirname(__DIR__, 4) . $suffix;
+
+        $roots = [
+            dirname(__DIR__, 4),
+            '/usr/local/share/appwrite',
+        ];
+
+        foreach ($roots as $root) {
+            $path = $root . $suffix;
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return $roots[0] . $suffix;
     }
 
     protected function applyLocalPaths(bool $isLocalInstall, bool $force = false): void

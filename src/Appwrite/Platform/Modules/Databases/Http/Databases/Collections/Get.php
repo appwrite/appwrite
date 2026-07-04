@@ -34,6 +34,7 @@ class Get extends Action
             ->desc('Get collection')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'databases',
