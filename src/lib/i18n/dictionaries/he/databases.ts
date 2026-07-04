@@ -866,7 +866,31 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Table name': 'שם הטבלה',
   'Table properties': 'מאפייני הטבלה',
   'Table renamed': 'שם הטבלה שונה',
+  'Table created': 'הטבלה נוצרה',
   'Table settings': 'הגדרות טבלה',
+  'Table name is required': 'שם הטבלה הוא שדה חובה',
+  'Table name must use letters, numbers, and underscores only.':
+    'שם הטבלה חייב להכיל רק אותיות, מספרים וקווים תחתונים.',
+  'Schema name is required': 'שם הסכימה הוא שדה חובה',
+  'Schema name must use letters, numbers, and underscores only.':
+    'שם הסכימה חייב להכיל רק אותיות, מספרים וקווים תחתונים.',
+  'Column names must use letters, numbers, and underscores only.':
+    'שמות עמודות חייבים להכיל רק אותיות, מספרים וקווים תחתונים.',
+  'Column names must be unique.': 'שמות עמודות חייבים להיות ייחודיים.',
+  'One or more columns have an invalid type configuration.':
+    'לאחת או יותר מהעמודות יש הגדרת סוג לא תקינה.',
+  'Index names must use letters, numbers, and underscores only.':
+    'שמות אינדקסים חייבים להכיל רק אותיות, מספרים וקווים תחתונים.',
+  'Index names must be unique.': 'שמות אינדקסים חייבים להיות ייחודיים.',
+  'One or more indexes reference unknown columns.':
+    'אינדקס אחד או יותר מפנה לעמודות לא מוכרות.',
+  'Create a table with columns, indexes, and key settings in a single flow.':
+    'צרו טבלה עם עמודות, אינדקסים והגדרות מפתח בתהליך אחד.',
+  'Indexes are optional, but adding the most common ones now can improve query performance immediately.':
+    'אינדקסים הם אופציונליים, אבל הוספה של הנפוצים ביותר כבר עכשיו יכולה לשפר מיד את ביצועי השאילתות.',
+  'Add columns before selecting index keys.': 'הוסיפו עמודות לפני בחירת מפתחות האינדקס.',
+  'Describe what this table stores': 'תארו מה טבלה זו מאחסנת',
+  'Select a schema to create a table.': 'בחרו סכימה כדי ליצור טבלה.',
   'Tables': 'טבלאות',
   'Tables with the most dead rows waiting for vacuum. High dead tuple ratios can slow scans and waste space.': 'הטבלאות עם הכי הרבה שורות מתות הממתינות ל-vacuum. יחס גבוה של רשומות מתות עלול להאט סריקות ולבזבז מקום.',
   'Tables with the most sequential scans since statistics were reset. Compare with index scans to spot missing or unused indexes.': 'הטבלאות עם הכי הרבה סריקות סדרתיות מאז איפוס הסטטיסטיקות. השוו לסריקות אינדקס כדי לאתר אינדקסים חסרים או שאינם בשימוש.',

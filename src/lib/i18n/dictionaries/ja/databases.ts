@@ -823,7 +823,32 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Table name': 'テーブル名',
   'Table properties': 'テーブルプロパティ',
   'Table renamed': 'テーブル名を変更しました',
+  'Table created': 'テーブルを作成しました',
   'Table settings': 'テーブル設定',
+  'Table name is required': 'テーブル名は必須です',
+  'Table name must use letters, numbers, and underscores only.':
+    'テーブル名には英字、数字、アンダースコアのみ使用できます。',
+  'Schema name is required': 'スキーマ名は必須です',
+  'Schema name must use letters, numbers, and underscores only.':
+    'スキーマ名には英字、数字、アンダースコアのみ使用できます。',
+  'Column names must use letters, numbers, and underscores only.':
+    '列名には英字、数字、アンダースコアのみ使用できます。',
+  'Column names must be unique.': '列名は一意である必要があります。',
+  'One or more columns have an invalid type configuration.':
+    '1 つ以上の列に無効な型設定があります。',
+  'Index names must use letters, numbers, and underscores only.':
+    'インデックス名には英字、数字、アンダースコアのみ使用できます。',
+  'Index names must be unique.': 'インデックス名は一意である必要があります。',
+  'One or more indexes reference unknown columns.':
+    '1 つ以上のインデックスが不明な列を参照しています。',
+  'Create a table with columns, indexes, and key settings in a single flow.':
+    '列、インデックス、主要な設定を 1 つのフローでまとめてテーブルを作成します。',
+  'Indexes are optional, but adding the most common ones now can improve query performance immediately.':
+    'インデックスは任意ですが、よく使うものをここで追加するとクエリパフォーマンスをすぐに改善できます。',
+  'Add columns before selecting index keys.':
+    'インデックスキーを選択する前に列を追加してください。',
+  'Describe what this table stores': 'このテーブルに格納する内容を説明',
+  'Select a schema to create a table.': 'テーブルを作成するスキーマを選択してください。',
   'Tables': 'テーブル',
   'Tables with the most dead rows waiting for vacuum. High dead tuple ratios can slow scans and waste space.': 'VACUUM 待ちのデッド行が最も多いテーブル。デッドタプル率が高いとスキャンが遅くなり、スペースを浪費します。',
   'Tables with the most sequential scans since statistics were reset. Compare with index scans to spot missing or unused indexes.': '統計リセット以降のシーケンシャルスキャンが最も多いテーブル。インデックススキャンと比較して、不足または未使用のインデックスを特定します。',

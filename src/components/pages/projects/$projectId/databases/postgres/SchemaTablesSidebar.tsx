@@ -1,6 +1,7 @@
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   parsePostgresTableId,
   postgresNav,
@@ -16,9 +17,9 @@ import {
   POSTGRES_SIDEBAR_TABLES_SORT_OPTIONS,
   sortPostgresSidebarTableRows,
 } from '@/lib/user-prefs-keys'
-import { ArrowUpDown, Eye, Loader2, Search, Table2, X } from 'lucide-react'
+import { ArrowUpDown, Eye, Loader2, Plus, Search, Table2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -48,6 +49,11 @@ import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBa
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
 import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 import { useT } from '@/lib/i18n/translate'
+import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
+import { useProject } from '@/lib/react-query/hooks/projects'
+import { CreateTable } from './_components/CreateTable'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -67,8 +73,15 @@ export function SchemaTablesSidebar({
   databaseTab,
 }: SchemaTablesSidebarProps) {
   const t = useT()
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const { account } = useAuth()
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
+  const canCreateTable = canShowTableSecuritySettings(access, features)
   const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()
+  const [createTableOpen, setCreateTableOpen] = useState(false)
 
   const [schemaPickerOpen, setSchemaPickerOpen] = useState(false)
   const [schemaPickerSearch, setSchemaPickerSearch] = useState('')
@@ -153,6 +166,11 @@ export function SchemaTablesSidebar({
     tablesLoading && visibleTables.length === 0 && !!selectedSchema
   const showSchemasLoading =
     schemasLoading && loadedSchemas.length === 0 && !selectedSchema
+  const createTableDisabledReason = !selectedSchema
+    ? t('Select a schema to create a table.')
+    : !canCreateTable
+      ? t("You don't have permission to modify table structure.")
+      : undefined
 
   const prevSelectedTableIdRef = useRef(selectedTableId)
   useEffect(() => {
@@ -311,6 +329,28 @@ export function SchemaTablesSidebar({
                     </DropdownMenuRadioGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          aria-label={t('Create table')}
+                          onClick={() => setCreateTableOpen(true)}
+                          disabled={Boolean(createTableDisabledReason)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {createTableDisabledReason ?? t('Create table')}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div
                 ref={tablesScrollRef}
@@ -402,6 +442,27 @@ export function SchemaTablesSidebar({
         projectId={projectId}
         databaseId={databaseId}
         activeTab={databaseTab}
+      />
+      <CreateTable
+        open={createTableOpen}
+        onOpenChange={setCreateTableOpen}
+        projectId={projectId}
+        databaseId={databaseId}
+        defaultSchema={selectedSchema}
+        onSuccess={async ({ tableId, schema }) => {
+          setSelectedSchema(schema)
+          await Promise.all([
+            queryClient.refetchQueries({
+              queryKey: ['postgres-schemas', 'project', projectId, databaseId],
+            }),
+            queryClient.refetchQueries({
+              queryKey: ['postgres-tables', 'project', projectId, databaseId],
+            }),
+          ])
+          navigate({
+            ...postgresNav({ projectId, databaseId }).table({ tableId }).rows(),
+          })
+        }}
       />
     </aside>
   )
