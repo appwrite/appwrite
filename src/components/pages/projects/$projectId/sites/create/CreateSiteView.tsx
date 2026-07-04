@@ -31,7 +31,6 @@ import {
   Search,
   Lock,
   Plus,
-  RefreshCw,
 } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
@@ -43,6 +42,7 @@ import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 
 const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
@@ -375,17 +375,11 @@ export function CreateSiteView() {
                   />
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
+                <RefreshButton
                   onClick={() => refetchRepos()}
-                  disabled={reposFetching}
-                  className="h-9 w-9 p-0 shrink-0"
-                >
-                  <RefreshCw
-                    className={cn('h-4 w-4', reposFetching && 'animate-spin')}
-                  />
-                </Button>
+                  isRefreshing={reposFetching}
+                  tooltip={t('Refresh repositories')}
+                />
               </div>
 
               {/* Repository list */}

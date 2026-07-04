@@ -29,11 +29,11 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   Search,
   Plus,
-  RefreshCw,
   Lock,
   ArrowRight,
   LayoutTemplate,
 } from 'lucide-react'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -493,17 +493,11 @@ export function CreateFunctionView() {
                   />
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
+                <RefreshButton
                   onClick={() => refetchRepos()}
-                  disabled={reposFetching}
-                  className="h-9 w-9 p-0 shrink-0"
-                >
-                  <RefreshCw
-                    className={cn('h-4 w-4', reposFetching && 'animate-spin')}
-                  />
-                </Button>
+                  isRefreshing={reposFetching}
+                  tooltip={t('Refresh repositories')}
+                />
               </div>
 
               <div className="rounded-lg border border-border overflow-hidden mb-4">

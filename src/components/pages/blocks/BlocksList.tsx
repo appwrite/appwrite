@@ -3,11 +3,11 @@ import { toast } from 'sonner'
 import {
   Filter,
   Loader2,
-  RefreshCw,
   Search,
   ShieldOff,
   X,
 } from 'lucide-react'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { BlockMode } from '@appwrite.io/console'
 import type { Models, BlockResourceType } from '@appwrite.io/console'
 import { useBlocks, useDeleteBlock } from '@/lib/react-query/hooks/manager'
@@ -210,15 +210,12 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
             </PopoverContent>
           </Popover>
 
-          <button
-            type="button"
+          <RefreshButton
             onClick={() => refetch()}
-            aria-label="Refresh"
-            disabled={!projectId || isFetching}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-          >
-            <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
-          </button>
+            isRefreshing={isFetching}
+            disabled={!projectId}
+            className="h-8 w-8"
+          />
         </div>
       </div>
 

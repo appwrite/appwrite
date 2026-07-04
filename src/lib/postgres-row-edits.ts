@@ -167,10 +167,11 @@ export function postgresColumnCanOmitOnCreate(
 }
 
 /**
- * Columns omitted from the create form because Postgres rejects user-supplied
- * values (GENERATED ALWAYS). Writable columns, including primary keys, are shown.
+ * Columns Postgres rejects user-supplied values for (GENERATED ALWAYS identity
+ * or stored generated columns). Primary keys and serial/identity BY DEFAULT
+ * columns are writable on both create and update.
  */
-export function shouldOmitPostgresColumnOnRowCreate(
+export function isPostgresColumnSystemGenerated(
   column: PostgresTableColumnRow,
 ): boolean {
   const generation = String(column.identity_generation ?? '').toUpperCase()
@@ -178,6 +179,13 @@ export function shouldOmitPostgresColumnOnRowCreate(
 
   const defaultValue = column.column_default?.toLowerCase() ?? ''
   return defaultValue.includes('generated always')
+}
+
+/** Columns omitted from the create form because Postgres rejects user values. */
+export function shouldOmitPostgresColumnOnRowCreate(
+  column: PostgresTableColumnRow,
+): boolean {
+  return isPostgresColumnSystemGenerated(column)
 }
 
 /**
@@ -214,9 +222,8 @@ export function filterPostgresRowCreateValues(
 export function isPostgresColumnInlineEditable(
   column: PostgresTableColumnRow,
 ): boolean {
+  if (isPostgresColumnSystemGenerated(column)) return false
   const meta = getPostgresColumnEditMeta(column)
-  if (meta.isPrimaryKey && meta.hasDefault) return false
-  if (isPostgresGeneratedColumn(column)) return false
   if (NON_INLINE_EDITABLE_TYPES.has(meta.typeId)) return false
   return true
 }

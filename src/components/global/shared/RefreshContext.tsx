@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 
-const MIN_ANIMATION_DURATION = 500
+/** Match Tailwind `animate-spin` (1s) so the icon can finish a full turn. */
+const MIN_ANIMATION_DURATION = 1000
 
 interface RefreshContextValue {
   isRefreshing: boolean

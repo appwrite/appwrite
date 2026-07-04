@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -9,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { useT } from '@/lib/i18n/translate'
 
 export type RefreshInterval =
@@ -92,16 +91,12 @@ export function RefreshControls({
         className,
       )}
     >
-      <Button
+      <RefreshButton
         variant="ghost"
-        size="sm"
         onClick={handleManualRefresh}
-        disabled={isRefreshing}
-        className="h-9 gap-2 rounded-e-none border-e border-input px-3 text-[13px] hover:bg-accent"
-      >
-        <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-        {t('Refresh')}
-      </Button>
+        isRefreshing={isRefreshing}
+        className="rounded-e-none rounded-s-md border-0 border-e border-input hover:bg-accent"
+      />
       <Select
         value={refreshInterval}
         onValueChange={(value) => setRefreshInterval(value as RefreshInterval)}

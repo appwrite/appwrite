@@ -7,7 +7,7 @@ import {
   getPostgresInlineFieldType,
   isPostgresColumnRequired,
   isPostgresColumnRequiredOnCreate,
-  isPostgresGeneratedColumn,
+  isPostgresColumnSystemGenerated,
   parseAndValidatePostgresCellInput,
   postgresColumnAutoGeneratesOnInsert,
   postgresColumnCanOmitOnCreate,
@@ -181,7 +181,7 @@ export function PostgresRowEditDrawer({
 
     for (const column of editableColumns) {
       if (isCreate && shouldOmitPostgresColumnOnRowCreate(column)) continue
-      if (!isCreate && isPostgresGeneratedColumn(column)) continue
+      if (!isCreate && isPostgresColumnSystemGenerated(column)) continue
 
       const rawDraft = draft[column.column_name]
       if (rawDraft === null) {
@@ -230,7 +230,7 @@ export function PostgresRowEditDrawer({
       } else if (identity) {
         const changes: Record<string, RowCellValue> = {}
         for (const column of editableColumns) {
-          if (isPostgresGeneratedColumn(column)) continue
+          if (isPostgresColumnSystemGenerated(column)) continue
           const original = row?.[column.column_name] as RowCellValue
           const next = values[column.column_name]
           if (JSON.stringify(original) !== JSON.stringify(next)) {
@@ -296,8 +296,7 @@ export function PostgresRowEditDrawer({
                   const inputId = `postgres-row-field-${column.column_name}`
                   const readOnly =
                     !canWrite ||
-                    (!isCreate && isPostgresGeneratedColumn(column)) ||
-                    (meta.isPrimaryKey && !isCreate)
+                    (!isCreate && isPostgresColumnSystemGenerated(column))
                   const showNullToggle =
                     !readOnly && column.is_nullable === 'YES'
                   const useTextarea =

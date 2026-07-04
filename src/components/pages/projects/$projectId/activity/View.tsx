@@ -27,7 +27,6 @@ import {
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
 import { startOfDay, endOfDay, subDays, max } from 'date-fns'
-import { RefreshCw } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -219,7 +218,7 @@ function ActivityLogsPaginationSkeleton() {
   )
 }
 
-/** Table skeleton while the activity list query is fetching — matches ServiceHeader refresh spin. */
+/** Table skeleton for the initial activity list load only (not refresh). */
 function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
   const t = useT()
   const rows = Math.min(rowCount, ACTIVITY_TABLE_SKELETON_ROWS_CAP)
@@ -232,17 +231,6 @@ function ActivityLogsLoadingTable({ rowCount }: { rowCount: number }) {
         aria-busy="true"
         aria-label={t('Loading activities')}
       >
-        <div
-          className="pointer-events-none absolute end-4 top-2.5 z-20 sm:end-6"
-          aria-hidden
-        >
-          <RefreshCw
-            className={cn(
-              'h-4 w-4 text-muted-foreground transition-transform duration-500',
-              'animate-spin',
-            )}
-          />
-        </div>
         <Table
           withScrollContainer={false}
           className="table-fixed w-full"
@@ -529,7 +517,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     return getActivitiesFilterColumns(countryElements)
   }, [countriesData])
 
-  const { events, hasMore, refetch } = useProjectActivities({
+  const { events, hasMore, isLoading, refetch } = useProjectActivities({
     projectId,
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
@@ -541,7 +529,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   const activityListFetchingCount = useIsFetching({
     queryKey: ['activities', 'project', projectId],
   })
-  /** Same scope as ServiceHeader `isRefreshing` — drives list skeleton in sync with the refresh control. */
+  /** ServiceHeader refresh control only; keep the list visible while refetching. */
   const activityListRefreshing = activityListFetchingCount > 0
 
   useEffect(() => {
@@ -966,7 +954,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           </div>
         )}
 
-        {activityListRefreshing ? (
+        {isLoading && events.length === 0 ? (
           <ActivityLogsLoadingTable rowCount={pageSize} />
         ) : events.length > 0 ? (
           <>

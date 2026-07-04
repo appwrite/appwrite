@@ -2,10 +2,10 @@ import { useCallback, useMemo, useState } from 'react'
 import {
   AlertCircle,
   Cable,
-  RefreshCw,
   StopCircle,
   Unplug,
 } from 'lucide-react'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
   useCancelPostgresBackend,
   useOrganizationScopes,
@@ -483,22 +483,10 @@ export function PostgresConnectionDetails({
               ) : (
                 bulkTerminateButton
               )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 text-[13px]"
-                disabled={isFetching}
+              <RefreshButton
                 onClick={() => void refetch()}
-              >
-                <RefreshCw
-                  className={cn(
-                    'me-1.5 h-3.5 w-3.5',
-                    isFetching && 'animate-spin',
-                  )}
-                />
-                {t('Refresh')}
-              </Button>
+                isRefreshing={isFetching}
+              />
             </div>
           </div>
         </div>

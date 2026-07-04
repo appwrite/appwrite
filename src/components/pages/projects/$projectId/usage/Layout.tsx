@@ -32,13 +32,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   type UsageCategory,
@@ -620,27 +615,10 @@ function UsageLayoutContent({
                 className="h-9"
               />
 
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                      className="h-9 w-9 p-0"
-                    >
-                      <RefreshCw
-                        className={cn(
-                          'h-4 w-4',
-                          isRefreshing && 'animate-spin',
-                        )}
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('Refresh')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <RefreshButton
+                onClick={handleRefresh}
+                isRefreshing={isRefreshing}
+              />
             </div>
           </div>
         </div>
