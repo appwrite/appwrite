@@ -36,6 +36,7 @@ import { CookieConsentProvider } from '@/components/global/providers/CookieConse
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
+import { RecentResourcesProvider } from '@/components/global/providers/RecentResourcesProvider'
 import {
   FullscreenLoader,
 } from '@/components/ui/loader'
@@ -441,18 +442,36 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <PageDirectionProvider>
               <CookieConsentProvider>
                 <NavigationHistoryProvider>
-                  {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
-                  {!skipStaticLoader ? (
-                    <FullscreenLoader
-                      isVisible={clientMounted ? isLoaderVisible : true}
-                      statusBanner={clientMounted ? statusBanner : undefined}
-                    />
-                  ) : null}
-                  <SentryContextProvider>
-                    <DebugModeProvider>
-                      <ConsoleRightPaneProvider>
-                        {features.aiAssistant ? (
-                          <AIChatProvider>
+                  <RecentResourcesProvider>
+                    {/* Branded loader (logo + 2.0) from first paint; fade out only when data is ready. */}
+                    {!skipStaticLoader ? (
+                      <FullscreenLoader
+                        isVisible={clientMounted ? isLoaderVisible : true}
+                        statusBanner={clientMounted ? statusBanner : undefined}
+                      />
+                    ) : null}
+                    <SentryContextProvider>
+                      <DebugModeProvider>
+                        <ConsoleRightPaneProvider>
+                          {features.aiAssistant ? (
+                            <AIChatProvider>
+                              <DocsPreviewProvider>
+                                <PromoBannerProvider>
+                                  <div className="flex w-full min-w-0 overflow-hidden root-container">
+                                    <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                                      <MarketingSiteLayoutGate>
+                                        {children}
+                                      </MarketingSiteLayoutGate>
+                                    </div>
+                                    <ConsoleRightPane />
+                                  </div>
+                                  <ClientOnly>
+                                    <DebugMenu />
+                                  </ClientOnly>
+                                </PromoBannerProvider>
+                              </DocsPreviewProvider>
+                            </AIChatProvider>
+                          ) : (
                             <DocsPreviewProvider>
                               <PromoBannerProvider>
                                 <div className="flex w-full min-w-0 overflow-hidden root-container">
@@ -468,33 +487,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                                 </ClientOnly>
                               </PromoBannerProvider>
                             </DocsPreviewProvider>
-                          </AIChatProvider>
-                        ) : (
-                          <DocsPreviewProvider>
-                            <PromoBannerProvider>
-                              <div className="flex w-full min-w-0 overflow-hidden root-container">
-                                <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                                  <MarketingSiteLayoutGate>
-                                    {children}
-                                  </MarketingSiteLayoutGate>
-                                </div>
-                                <ConsoleRightPane />
-                              </div>
-                              <ClientOnly>
-                                <DebugMenu />
-                              </ClientOnly>
-                            </PromoBannerProvider>
-                          </DocsPreviewProvider>
-                        )}
-                      </ConsoleRightPaneProvider>
-                    </DebugModeProvider>
-                  </SentryContextProvider>
-                  <ClientOnly>
-                    <Toaster />
-                  </ClientOnly>
-                  <ClientOnly>
-                    {!isProjectRoute(location.pathname) && <GlobalUploadProgress />}
-                  </ClientOnly>
+                          )}
+                        </ConsoleRightPaneProvider>
+                      </DebugModeProvider>
+                    </SentryContextProvider>
+                    <ClientOnly>
+                      <Toaster />
+                    </ClientOnly>
+                    <ClientOnly>
+                      {!isProjectRoute(location.pathname) && (
+                        <GlobalUploadProgress />
+                      )}
+                    </ClientOnly>
+                  </RecentResourcesProvider>
                 </NavigationHistoryProvider>
               </CookieConsentProvider>
             </PageDirectionProvider>

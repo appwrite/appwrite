@@ -24,6 +24,11 @@ export {
   type ProjectResourceKind,
   type ProjectResourceSection,
 } from './resource-search'
+export {
+  RECENT_RESOURCES_MAX_SHOWN,
+  filterRecentResources,
+  type RecentResource,
+} from './recent-resources'
 
 // Eager registration of built-in entries.
 import './entries'

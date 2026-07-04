@@ -477,7 +477,10 @@ SELECT
     WHEN 'd' THEN 'BY DEFAULT'
     ELSE NULL
   END AS identity_generation,
-  NULL::text AS serial_sequence,
+  pg_get_serial_sequence(
+    quote_ident(${schemaLit}) || '.' || quote_ident(${tableLit}),
+    a.attname
+  ) AS serial_sequence,
   CASE
     WHEN t.typname IN ('varchar', 'bpchar', 'bit', 'varbit') AND a.atttypmod > 0
       THEN a.atttypmod - 4

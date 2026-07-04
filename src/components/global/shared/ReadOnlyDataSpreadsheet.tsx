@@ -1,7 +1,8 @@
 import { cn } from '@/lib/utils'
 import {
   applyColumnResizeRailPosition,
-  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+  horizontalResizeDeltaPx,
+  RESIZE_HANDLE_PSEUDO_AFTER_HAIRLINE_LOGICAL_X,
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
@@ -39,7 +40,7 @@ const resizableColumnMaxWidthPx = 640
 const dataColumnResizeRailHandleClass = cn(
   'group absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
   'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
-  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
+  RESIZE_HANDLE_PSEUDO_AFTER_HAIRLINE_LOGICAL_X,
   'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
   RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
   'hover:before:opacity-100',
@@ -220,7 +221,10 @@ export function ReadOnlyDataSpreadsheet({
       setResizingColumnKey(columnKey)
       applyDraggedWidthPx(columnKey, initialWidth)
       const onMove = (ev: PointerEvent) => {
-        applyDraggedWidthPx(columnKey, initialWidth + (ev.clientX - startX))
+        applyDraggedWidthPx(
+          columnKey,
+          initialWidth + horizontalResizeDeltaPx(startX, ev.clientX),
+        )
       }
       const onUp = () => {
         setBodyResizeDragActive(false)

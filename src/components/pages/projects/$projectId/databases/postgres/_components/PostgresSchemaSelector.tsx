@@ -85,98 +85,102 @@ export function PostgresSchemaSelector({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={triggerId} className="text-[13px]">
-          {t('Schema')}
-        </Label>
-        {action}
-      </div>
-      <Popover
-        open={open}
-        onOpenChange={(nextOpen) => {
-          setOpen(nextOpen)
-          onOpenChange?.(nextOpen)
-        }}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            id={triggerId}
-            type="button"
-            variant="outline"
-            className={cn(
-              'h-8 min-w-0 w-full justify-between gap-1.5 text-[13px] font-normal',
-              !value && 'text-muted-foreground',
-            )}
-          >
-            <span className="truncate">{displayValue}</span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-      <PopoverContent
-        className="min-w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0"
-        align="start"
-      >
-        <Command shouldFilter={false}>
-          <div className="relative">
-            <CommandInput
-              placeholder={t('Search schemas')}
-              value={search}
-              onValueChange={setSearch}
-              className={cn('h-9', isFetching && 'pe-8')}
-            />
-            <div
+      <Label htmlFor={triggerId} className="text-[13px]">
+        {t('Schema')}
+      </Label>
+      <div className="flex items-center gap-2">
+        <Popover
+          open={open}
+          onOpenChange={(nextOpen) => {
+            setOpen(nextOpen)
+            onOpenChange?.(nextOpen)
+          }}
+        >
+          <PopoverTrigger asChild>
+            <Button
+              id={triggerId}
+              type="button"
+              variant="outline"
               className={cn(
-                'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
-                isFetching ? 'opacity-100' : 'opacity-0',
+                'h-8 min-w-0 flex-1 justify-between gap-1.5 text-[13px] font-normal',
+                !value && 'text-muted-foreground',
               )}
-              aria-hidden
             >
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          </div>
-          <CommandList ref={listScrollRef} className="max-h-[240px]">
-            {showInitialLoading ? (
-              <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
-                {t('Loading schemas…')}
+              <span className="truncate">{displayValue}</span>
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="min-w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0"
+            align="start"
+          >
+            <Command shouldFilter={false}>
+              <div className="relative">
+                <CommandInput
+                  placeholder={t('Search schemas')}
+                  value={search}
+                  onValueChange={setSearch}
+                  className={cn('h-9', isFetching && 'pe-8')}
+                />
+                <div
+                  className={cn(
+                    'pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 transition-opacity duration-200',
+                    isFetching ? 'opacity-100' : 'opacity-0',
+                  )}
+                  aria-hidden
+                >
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
               </div>
-            ) : schemas.length === 0 ? (
-              <CommandEmpty>{t('No schemas found')}</CommandEmpty>
-            ) : (
-              <CommandGroup>
-                {schemas.map((schema) => (
-                  <button
-                    key={schema}
-                    type="button"
-                    onClick={() => {
-                      onSelect(schema)
-                      setOpen(false)
-                    }}
-                    className={cn(
-                      'flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-start text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                      schema === value && 'bg-accent/50',
-                    )}
-                  >
-                    <span className="truncate">{schema}</span>
-                  </button>
-                ))}
-                <div ref={sentinelRef} className="h-px w-full shrink-0" aria-hidden />
-                {isFetchingNextPage ? (
-                  <div className="flex items-center justify-center py-2">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+              <CommandList ref={listScrollRef} className="max-h-[240px]">
+                {showInitialLoading ? (
+                  <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
+                    {t('Loading schemas…')}
                   </div>
-                ) : null}
-              </CommandGroup>
-            )}
-          </CommandList>
-          {total > schemas.length ? (
-            <div className="border-t border-border px-3 py-2 text-[11px] tabular-nums text-muted-foreground">
-              Showing {schemas.length.toLocaleString()} of{' '}
-              {total.toLocaleString()} schemas
-            </div>
-          ) : null}
-        </Command>
-      </PopoverContent>
-      </Popover>
+                ) : schemas.length === 0 ? (
+                  <CommandEmpty>{t('No schemas found')}</CommandEmpty>
+                ) : (
+                  <CommandGroup>
+                    {schemas.map((schema) => (
+                      <button
+                        key={schema}
+                        type="button"
+                        onClick={() => {
+                          onSelect(schema)
+                          setOpen(false)
+                        }}
+                        className={cn(
+                          'flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-start text-[13px] outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                          schema === value && 'bg-accent/50',
+                        )}
+                      >
+                        <span className="truncate">{schema}</span>
+                      </button>
+                    ))}
+                    <div
+                      ref={sentinelRef}
+                      className="h-px w-full shrink-0"
+                      aria-hidden
+                    />
+                    {isFetchingNextPage ? (
+                      <div className="flex items-center justify-center py-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : null}
+                  </CommandGroup>
+                )}
+              </CommandList>
+              {total > schemas.length ? (
+                <div className="border-t border-border px-3 py-2 text-[11px] tabular-nums text-muted-foreground">
+                  Showing {schemas.length.toLocaleString()} of{' '}
+                  {total.toLocaleString()} schemas
+                </div>
+              ) : null}
+            </Command>
+          </PopoverContent>
+        </Popover>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
     </div>
   )
 }

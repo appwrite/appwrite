@@ -7,6 +7,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -1009,13 +1010,20 @@ export async function createPostgresTableRow(
   )
   const filteredValues = filterPostgresRowCreateValues(values, columns)
   const sql = buildPostgresInsertRowSql(tableId, filteredValues)
+  const syncSql = buildSyncPostgresSerialSequencesSql(tableId, columns)
+
+  // Serial/identity PKs are omitted from the create form. If an earlier row
+  // used an explicit ID (or data was imported), the sequence can lag behind
+  // MAX(id) and the next DEFAULT nextval() hits users_pkey / similar.
+  if (syncSql) {
+    await executePostgresDatabaseSql(projectId, databaseId, syncSql)
+  }
 
   const runInsert = () => executePostgresDatabaseSql(projectId, databaseId, sql)
 
   try {
     return await runInsert()
   } catch (error) {
-    const syncSql = buildSyncPostgresSerialSequencesSql(tableId, columns)
     if (!syncSql || !isPostgresDuplicatePrimaryKeyError(error)) {
       throw error
     }
@@ -1717,6 +1725,41 @@ export function useExplainPostgresSql(
   })
 }
 
+/**
+ * Schema-affecting SQL (DDL) must not leave inactive caches in place.
+ * Row/column queries use `refetchOnMount: false`, so `invalidateQueries` alone
+ * only refreshes active observers and the create-row form keeps stale fields
+ * until a full reload.
+ */
+async function refreshPostgresDatabaseCaches(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+) {
+  const schemaQueryKeys = [
+    ['postgres-schemas', 'project', projectId, databaseId],
+    ['postgres-tables', 'project', projectId, databaseId],
+    ['postgres-autocomplete-columns', 'project', projectId, databaseId],
+    ['postgres-table-rows', 'project', projectId, databaseId],
+    ['postgres-table-columns', 'project', projectId, databaseId],
+    ['postgres-table-row-columns', 'project', projectId, databaseId],
+    ['postgres-table-indexes', 'project', projectId, databaseId],
+    ['postgres-table-info', 'project', projectId, databaseId],
+    ['postgres-visualizer', 'project', projectId, databaseId],
+  ] as const
+
+  for (const queryKey of schemaQueryKeys) {
+    // Drop inactive entries so the next mount cannot serve pre-DDL data.
+    queryClient.removeQueries({ queryKey, type: 'inactive' })
+  }
+
+  await Promise.all(
+    schemaQueryKeys.map((queryKey) =>
+      queryClient.invalidateQueries({ queryKey }),
+    ),
+  )
+}
+
 export function useExecutePostgresSql(
   projectId: string,
   databaseId: string,
@@ -1725,35 +1768,8 @@ export function useExecutePostgresSql(
   return useMutation({
     mutationFn: (sql: string) =>
       executePostgresDatabaseSql(projectId, databaseId, sql),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-schemas', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-tables', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-autocomplete-columns', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-rows', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-columns', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-row-columns', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-indexes', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-info', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-visualizer', 'project', projectId, databaseId],
-      })
-    },
+    onSuccess: () =>
+      refreshPostgresDatabaseCaches(queryClient, projectId, databaseId),
   })
 }
 

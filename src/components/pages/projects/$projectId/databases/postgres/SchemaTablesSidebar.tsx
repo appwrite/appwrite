@@ -261,7 +261,7 @@ export function SchemaTablesSidebar({
                             type="button"
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7 shrink-0"
+                            className="h-8 w-8 shrink-0"
                             aria-label={t('Create schema')}
                             onClick={() => setCreateSchemaOpen(true)}
                             disabled={Boolean(createSchemaDisabledReason)}

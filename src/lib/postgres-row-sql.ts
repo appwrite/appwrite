@@ -181,21 +181,42 @@ export function buildPostgresUpdateRowSql(
   )
 }
 
+/** Columns whose INSERT default comes from a serial/identity sequence. */
+function isPostgresSequenceBackedColumn(
+  column: PostgresTableColumnRow,
+): boolean {
+  if (column.serial_sequence?.trim()) return true
+  if (column.is_identity === 'YES') return true
+  const defaultValue = column.column_default?.toLowerCase() ?? ''
+  return defaultValue.includes('nextval(')
+}
+
+/**
+ * Advance serial/identity sequences past MAX(column) so the next DEFAULT
+ * nextval() does not collide with existing primary keys (e.g. after an
+ * explicit ID insert left the sequence behind).
+ */
 export function buildSyncPostgresSerialSequencesSql(
   tableId: string,
   columns: PostgresTableColumnRow[],
 ): string | null {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = qualifiedTable(schema, table)
+  const qualifiedLiteral = quotePostgresStringLiteral(`${schema}.${table}`)
   const statements: string[] = []
 
   for (const column of columns) {
-    const sequenceName = column.serial_sequence?.trim()
-    if (!sequenceName) continue
+    if (!isPostgresSequenceBackedColumn(column)) continue
     const columnName = quotePostgresIdentifier(column.column_name)
-    const sequenceLiteral = quotePostgresStringLiteral(sequenceName)
+    const columnNameLiteral = quotePostgresStringLiteral(column.column_name)
+    const sequenceName = column.serial_sequence?.trim()
+    const sequenceExpr = sequenceName
+      ? `${quotePostgresStringLiteral(sequenceName)}::regclass`
+      : `pg_get_serial_sequence(${qualifiedLiteral}, ${columnNameLiteral})`
+    // is_called=false when the table is empty so the next nextval() returns 1;
+    // is_called=true when rows exist so the next value is MAX+1.
     statements.push(
-      `SELECT setval(${sequenceLiteral}::regclass, COALESCE((SELECT MAX(${columnName}) FROM ${qualified}), 1), true)`,
+      `SELECT setval(seq, COALESCE(max_id, 1), max_id IS NOT NULL) FROM (SELECT ${sequenceExpr} AS seq, (SELECT MAX(${columnName}) FROM ${qualified}) AS max_id) AS sequence_ref WHERE seq IS NOT NULL`,
     )
   }
 

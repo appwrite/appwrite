@@ -1340,8 +1340,10 @@ export function View() {
         })
         applyDraggedFileColumnWidthPx(columnKey, initialWidth)
         const onMove = (ev: globalThis.PointerEvent) => {
-          const delta = ev.clientX - startX
-          applyDraggedFileColumnWidthPx(columnKey, initialWidth + delta)
+          applyDraggedFileColumnWidthPx(
+            columnKey,
+            initialWidth + horizontalResizeDeltaPx(startX, ev.clientX),
+          )
         }
         const onUp = () => {
           setBodyResizeDragActive(false)

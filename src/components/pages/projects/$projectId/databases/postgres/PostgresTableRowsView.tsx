@@ -311,7 +311,7 @@ export function PostgresTableRowsView({
     searchPlaceholder: showRowsSearch ? 'Search rows...' : undefined,
     searchValue: showRowsSearch ? urlSearch ?? '' : undefined,
     onSearchChange: showRowsSearch ? handleSearchChange : undefined,
-    createLabel: canWrite ? 'Create row' : undefined,
+    createLabel: canWrite ? t('Create row') : undefined,
     onCreate: canWrite ? openCreateRow : undefined,
     createDisabled: !canWrite,
     createDisabledTooltip: canWrite

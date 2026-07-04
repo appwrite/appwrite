@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
@@ -27,9 +27,11 @@ import {
 } from '@/lib/postgres-index-metadata'
 import { postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
+import { usePostgresSidebarSchemas } from '@/lib/react-query/hooks/postgres-databases'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { PostgresColumnTypeSelector } from './PostgresColumnTypeSelector'
 import { PostgresIndexAlgorithmSelector } from './PostgresIndexAlgorithmSelector'
+import { PostgresSchemaSelector } from './PostgresSchemaSelector'
 import { useT } from '@/lib/i18n/translate'
 
 type CreateTableProps = {
@@ -117,6 +119,18 @@ export function CreateTable({
   const [tableComment, setTableComment] = useState('')
   const [columns, setColumns] = useState<DraftColumn[]>([createDraftColumn()])
   const [indexes, setIndexes] = useState<DraftIndex[]>([])
+  const [schemaPickerOpen, setSchemaPickerOpen] = useState(false)
+  const [schemaPickerSearch, setSchemaPickerSearch] = useState('')
+  const [debouncedSchemaPickerSearch, setDebouncedSchemaPickerSearch] =
+    useState('')
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setDebouncedSchemaPickerSearch(schemaPickerSearch.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timeout)
+  }, [schemaPickerSearch])
 
   useEffect(() => {
     if (!open) return
@@ -125,7 +139,28 @@ export function CreateTable({
     setTableComment('')
     setColumns([createDraftColumn()])
     setIndexes([])
+    setSchemaPickerOpen(false)
+    setSchemaPickerSearch('')
+    setDebouncedSchemaPickerSearch('')
   }, [defaultSchema, open])
+
+  const {
+    schemas: loadedSchemas,
+    total: schemasTotal,
+    isLoading: schemasLoading,
+    isFetching: schemasFetching,
+    isFetchingNextPage: isFetchingMoreSchemas,
+    hasNextPage: hasMoreSchemas,
+    fetchNextPage: fetchNextSchemaPage,
+  } = usePostgresSidebarSchemas(
+    projectId,
+    databaseId,
+    open && schemaPickerOpen ? debouncedSchemaPickerSearch : '',
+  )
+
+  const handleSchemaSearchChange = useCallback((search: string) => {
+    setSchemaPickerSearch(search)
+  }, [])
 
   const normalizedColumnNames = useMemo(
     () =>
@@ -250,24 +285,27 @@ export function CreateTable({
 
       const qualifiedTableName = `${quotePostgresIdentifier(normalizedSchema)}.${quotePostgresIdentifier(normalizedTableName)}`
 
-      const statements: string[] = [
-        `CREATE TABLE ${qualifiedTableName} (\n  ${columnDefinitions.join(',\n  ')}\n)`,
-      ]
+      const createTableSql = `CREATE TABLE ${qualifiedTableName} (\n  ${columnDefinitions.join(',\n  ')}\n)`
+      await executeSql.mutateAsync(createTableSql)
+
+      const followUpStatements: string[] = []
 
       if (tableComment.trim()) {
-        statements.push(buildPostgresTableCommentSql(tableId, tableComment.trim()))
+        followUpStatements.push(
+          buildPostgresTableCommentSql(tableId, tableComment.trim()),
+        )
       }
 
       for (const column of normalizedColumns) {
         if (column.comment) {
-          statements.push(
+          followUpStatements.push(
             buildPostgresColumnCommentSql(tableId, column.name, column.comment),
           )
         }
       }
 
       for (const index of normalizedIndexes) {
-        statements.push(
+        followUpStatements.push(
           buildPostgresCreateIndexSql(tableId, index.name, index.columns, {
             unique: index.unique,
             algorithm: index.algorithm,
@@ -276,13 +314,20 @@ export function CreateTable({
           }),
         )
         if (index.comment) {
-          statements.push(
-            buildPostgresIndexCommentSql(normalizedSchema, index.name, index.comment),
+          followUpStatements.push(
+            buildPostgresIndexCommentSql(
+              normalizedSchema,
+              index.name,
+              index.comment,
+            ),
           )
         }
       }
 
-      await executeSql.mutateAsync(statements.join(';\n'))
+      for (const statement of followUpStatements) {
+        await executeSql.mutateAsync(statement)
+      }
+
       toast.success(t('Table created'))
       onOpenChange(false)
       onSuccess({
@@ -320,19 +365,21 @@ export function CreateTable({
                 {t('Table settings')}
               </h4>
               <div className="grid gap-3 sm:grid-cols-2">
+                <PostgresSchemaSelector
+                  value={schemaName}
+                  schemas={loadedSchemas}
+                  total={schemasTotal}
+                  isLoading={schemasLoading}
+                  isFetching={schemasFetching}
+                  isFetchingNextPage={isFetchingMoreSchemas}
+                  hasNextPage={hasMoreSchemas}
+                  onSelect={setSchemaName}
+                  onSearchChange={handleSchemaSearchChange}
+                  onLoadMore={() => void fetchNextSchemaPage()}
+                  onOpenChange={setSchemaPickerOpen}
+                />
                 <div className="space-y-2">
-                  <Label htmlFor="table-schema" className="text-[12px] font-medium">
-                    {t('Schema')} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="table-schema"
-                    value={schemaName}
-                    onChange={(event) => setSchemaName(event.target.value)}
-                    placeholder="public"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="table-name" className="text-[12px] font-medium">
+                  <Label htmlFor="table-name" className="text-[13px]">
                     {t('Name')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -340,6 +387,7 @@ export function CreateTable({
                     value={tableName}
                     onChange={(event) => setTableName(event.target.value)}
                     placeholder="users"
+                    className="h-8 text-[13px]"
                   />
                 </div>
               </div>
