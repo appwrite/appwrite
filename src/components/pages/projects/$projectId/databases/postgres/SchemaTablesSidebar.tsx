@@ -54,6 +54,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { CreateTable } from './_components/CreateTable'
+import { CreateSchema } from './_components/CreateSchema'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -79,8 +80,9 @@ export function SchemaTablesSidebar({
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canCreateTable = canShowTableSecuritySettings(access, features)
+  const canModifyTableStructure = canShowTableSecuritySettings(access, features)
   const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()
+  const [createSchemaOpen, setCreateSchemaOpen] = useState(false)
   const [createTableOpen, setCreateTableOpen] = useState(false)
 
   const [schemaPickerOpen, setSchemaPickerOpen] = useState(false)
@@ -166,9 +168,12 @@ export function SchemaTablesSidebar({
     tablesLoading && visibleTables.length === 0 && !!selectedSchema
   const showSchemasLoading =
     schemasLoading && loadedSchemas.length === 0 && !selectedSchema
+  const createSchemaDisabledReason = !canModifyTableStructure
+    ? t("You don't have permission to create schemas.")
+    : undefined
   const createTableDisabledReason = !selectedSchema
     ? t('Select a schema to create a table.')
-    : !canCreateTable
+    : !canModifyTableStructure
       ? t("You don't have permission to modify table structure.")
       : undefined
 
@@ -247,6 +252,30 @@ export function SchemaTablesSidebar({
                 onSearchChange={handleSchemaSearchChange}
                 onLoadMore={() => void fetchNextSchemaPage()}
                 onOpenChange={setSchemaPickerOpen}
+                action={
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 shrink-0"
+                            aria-label={t('Create schema')}
+                            onClick={() => setCreateSchemaOpen(true)}
+                            disabled={Boolean(createSchemaDisabledReason)}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {createSchemaDisabledReason ?? t('Create schema')}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                }
               />
               <div
                 className="-mx-2 h-px shrink-0 bg-border"
@@ -442,6 +471,23 @@ export function SchemaTablesSidebar({
         projectId={projectId}
         databaseId={databaseId}
         activeTab={databaseTab}
+      />
+      <CreateSchema
+        open={createSchemaOpen}
+        onOpenChange={setCreateSchemaOpen}
+        projectId={projectId}
+        databaseId={databaseId}
+        onSuccess={async (schema) => {
+          setSelectedSchema(schema)
+          await Promise.all([
+            queryClient.refetchQueries({
+              queryKey: ['postgres-schemas', 'project', projectId, databaseId],
+            }),
+            queryClient.refetchQueries({
+              queryKey: ['postgres-tables', 'project', projectId, databaseId],
+            }),
+          ])
+        }}
       />
       <CreateTable
         open={createTableOpen}

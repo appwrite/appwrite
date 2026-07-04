@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +29,7 @@ type PostgresSchemaSelectorProps = {
   onSearchChange: (search: string) => void
   onLoadMore: () => void
   onOpenChange?: (open: boolean) => void
+  action?: ReactNode
 }
 
 export function PostgresSchemaSelector({
@@ -43,6 +44,7 @@ export function PostgresSchemaSelector({
   onSearchChange,
   onLoadMore,
   onOpenChange,
+  action,
 }: PostgresSchemaSelectorProps) {
   const t = useT()
   const triggerId = useId()
@@ -83,9 +85,12 @@ export function PostgresSchemaSelector({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={triggerId} className="text-[13px]">
-        {t('Schema')}
-      </Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor={triggerId} className="text-[13px]">
+          {t('Schema')}
+        </Label>
+        {action}
+      </div>
       <Popover
         open={open}
         onOpenChange={(nextOpen) => {
