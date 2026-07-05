@@ -325,7 +325,7 @@ abstract class Migration
         );
 
         foreach ($attributeIds as $attributeId) {
-            if (\in_array($attributeId, $existingIds)) {
+            if (\in_array($attributeId, $existingIds, true)) {
                 Console::warning("Skipping attribute \"{$attributeId}\" in collection {$collectionId}: Attribute already exists");
                 continue;
             }
