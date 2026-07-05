@@ -341,7 +341,12 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
-            $usage->addMetric($this->getDatabasesOperationWriteMetric(), $totalOperations);
+            foreach ($databaseOperations as $databaseInternalId => $count) {
+                $usage
+                    ->setResource('database')
+                    ->setResourceInternalId((string) $databaseInternalId)
+                    ->addMetric($this->getDatabasesOperationWriteMetric(), $count);
+            }
 
             $dbCache = [];
             foreach ($operations as $operation) {
