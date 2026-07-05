@@ -106,6 +106,10 @@ class Create extends Base
 
         $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
 
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         $deployment = $this->redeployVcsSite(
             request: $request,
             site: $site,

@@ -2229,6 +2229,98 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(412, $response['headers']['status-code']);
     }
 
+    public function testOAuth2TokenSessionProviderAccessToken(): void
+    {
+        // Just ensure we have a session set up
+        $this->setupAccountWithSession();
+
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        // Enable the mock OAuth2 provider
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Start the OAuth2 *token* flow (createOAuth2Token), NOT createOAuth2Session
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2', $response['headers']['location']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
+
+        $oauthParamsString = \parse_url($response['headers']['location'], PHP_URL_QUERY);
+        $oauthParams = [];
+        \parse_str($oauthParamsString, $oauthParams);
+
+        $this->assertNotEmpty($oauthParams['secret']);
+        $this->assertNotEmpty($oauthParams['userId']);
+
+        // Exchange the token for a session via createSession (POST /account/sessions/token)
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $oauthParams['userId'],
+            'secret' => $oauthParams['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('mock', $response['body']['provider']);
+
+        $sessionCookieKey = 'a_session_' . $this->getProject()['$id'];
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $oauthUserCookie = $response['cookies'][$sessionCookieKey];
+        $this->assertNotEmpty($oauthUserCookie);
+
+        // Get the current session and ensure the provider access token was persisted
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => $sessionCookieKey . '=' . $oauthUserCookie,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('mock', $response['body']['provider']);
+
+        // The bug: session created via createOAuth2Token + createSession has an empty
+        // providerAccessToken, whereas createOAuth2Session persists it (see mock provider '123456').
+        $this->assertNotEmpty($response['body']['providerAccessToken']);
+        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+    }
+
     public function testCreateOidcOAuth2Token(): void
     {
         $provider = 'oidc';

@@ -512,6 +512,11 @@ return [
         'description' => 'The given file extension is not supported.',
         'code' => 400,
     ],
+    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED => [
+        'name' => Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+        'description' => 'The image resolution exceeds the maximum allowed for processing.',
+        'code' => 400,
+    ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
         'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',

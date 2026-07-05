@@ -24,7 +24,6 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Throwable;
 use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
@@ -1177,7 +1176,7 @@ Http::shutdown()
             $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                 'onboarding' => $byMethod,
             ])));
-        } catch (Throwable) {
+        } catch (\Throwable) {
             // Missing `onboarding` attribute on upgraded installs must not break the request lifecycle.
         }
     });
