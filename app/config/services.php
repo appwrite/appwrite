@@ -327,7 +327,7 @@ return [
         'key' => 'notifications',
         'name' => 'Notifications',
         'subtitle' => 'The Notifications service allows you to read and manage your Appwrite Console notifications.',
-        'description' => '',
+        'description' => '/docs/services/notifications.md',
         'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
