@@ -1262,41 +1262,40 @@ class Builds extends Action
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
         $cpus = (int) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
         $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
+        $resourceType = $deployment->getAttribute('resourceType');
+        $buildDuration = (int) $deployment->getAttribute('buildDuration', 0) * 1000;
+        $mbSeconds = (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus);
+
+        $usage
+            ->setResource(rtrim($resourceType, 's'))
+            ->setResourceInternalId((string) $resource->getSequence());
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
                 $usage
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int) $deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, $buildDuration)
+                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per resource type
+                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), $buildDuration);
                 break;
             case 'failed':
                 $usage
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int) $deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, $buildDuration)
+                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per resource type
+                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), $buildDuration);
                 break;
         }
 
         $usage
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus))
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS), 1) // per function
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus));
+            ->addMetric(METRIC_BUILDS_COMPUTE, $buildDuration)
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, $mbSeconds)
+            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS), 1) // per resource type
+            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
+            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), $buildDuration)
+            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), $mbSeconds);
 
         // Publish usage metrics
         if (! $usage->isEmpty()) {

@@ -1023,25 +1023,21 @@ class Migrations extends Action
 
             case ResourceTable::getName():
                 $usage
-                    ->addMetric(METRIC_COLLECTIONS, $count)
-                    ->addMetric(
-                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS),
-                        $count
-                    );
+                    ->setResource('database')
+                    ->setResourceInternalId((string) $databaseInternalId)
+                    ->addMetric(METRIC_COLLECTIONS, $count);
                 break;
 
             case ResourceRow::getName():
                 $usage
+                    ->setResource('database')
+                    ->setResourceInternalId((string) $databaseInternalId)
                     ->addMetric(
                         str_replace(
                             ['{databaseInternalId}','{collectionInternalId}'],
                             [$databaseInternalId, $tableInternalId],
                             METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
                         ),
-                        $count
-                    )
-                    ->addMetric(
-                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
                         $count
                     )
                     ->addMetric(METRIC_DOCUMENTS, $count);

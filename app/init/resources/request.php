@@ -761,10 +761,10 @@ return function (Container $context): void {
                     $parts = explode('_', $document->getCollection());
                     $databaseInternalId = $parts[1] ?? 0;
                     $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
-                    $databaseIdCollectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTIONS);
                     $usage
-                        ->addMetric($collectionMetric, $value) // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
+                        ->setResource('database')
+                        ->setResourceInternalId((string) $databaseInternalId)
+                        ->addMetric($collectionMetric, $value); // per project
 
                     if ($event === Database::EVENT_DOCUMENT_DELETE) {
                         $usage->addReduce($document);
@@ -775,11 +775,11 @@ return function (Container $context): void {
                     $databaseInternalId = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
                     $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
-                    $databaseIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_DOCUMENTS);
                     $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
                     $usage
+                        ->setResource('database')
+                        ->setResourceInternalId((string) $databaseInternalId)
                         ->addMetric($documentsMetric, $value)  // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
                     break;
                 case $document->getCollection() === 'buckets': // buckets
@@ -793,10 +793,10 @@ return function (Container $context): void {
                     $parts = explode('_', $document->getCollection());
                     $bucketInternalId = $parts[1];
                     $usage
+                        ->setResource('bucket')
+                        ->setResourceInternalId((string) $bucketInternalId)
                         ->addMetric(METRIC_FILES, $value) // per project
-                        ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
-                        ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
-                        ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
+                        ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value); // per project
                     break;
                 case $document->getCollection() === 'functions':
                     $usage->addMetric(METRIC_FUNCTIONS, $value); // per project
@@ -815,13 +815,14 @@ return function (Container $context): void {
                     }
                     break;
                 case $document->getCollection() === 'deployments':
+                    $resourceType = $document->getAttribute('resourceType');
                     $usage
+                        ->setResource(rtrim($resourceType, 's'))
+                        ->setResourceInternalId((string) $document->getAttribute('resourceInternalId'))
                         ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
                         ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
-                        ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per function
-                        ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value)
-                        ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $value) // per function
-                        ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
+                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per resource type
+                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
                     break;
                 default:
                     break;
@@ -1214,78 +1215,42 @@ return function (Container $context): void {
 
             // Register database event listeners for usage stats collection
             $documentsMetric = METRIC_DOCUMENTS;
-            $databaseIdDocumentsMetric = METRIC_DATABASE_ID_DOCUMENTS;
             $databaseIdCollectionIdDocumentsMetric = METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
             if ($databaseType !== DATABASE_TYPE_LEGACY && $databaseType !== DATABASE_TYPE_TABLESDB) {
                 $documentsMetric = $databaseType . '.' . $documentsMetric;
-                $databaseIdDocumentsMetric = $databaseType . '.' . $databaseIdDocumentsMetric;
                 $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
             }
+
+            $emitDocumentsUsage = function (Document $document, int $value) use ($usage, $documentsMetric, $databaseIdCollectionIdDocumentsMetric): void {
+                if (! str_starts_with($document->getCollection(), 'database_') || ! str_contains($document->getCollection(), '_collection_')) {
+                    return;
+                }
+
+                $parts = explode('_', $document->getCollection());
+                $databaseInternalId   = $parts[1] ?? 0;
+                $collectionInternalId = $parts[3] ?? 0;
+                $usage
+                    ->setResource('database')
+                    ->setResourceInternalId((string) $databaseInternalId)
+                    ->addMetric($documentsMetric, $value)  // per project
+                    ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
+            };
+
             $database
-                ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                    $value = 1;
-
-                    if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                        $parts = explode('_', $document->getCollection());
-                        $databaseInternalId   = $parts[1] ?? 0;
-                        $collectionInternalId = $parts[3] ?? 0;
-                        $usage
-                            ->addMetric($documentsMetric, $value)  // per project
-                            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                    }
+                ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
+                    $emitDocumentsUsage($document, 1);
                 })
-                ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                    $value = -1;
-
-                    if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                        $parts = explode('_', $document->getCollection());
-                        $databaseInternalId   = $parts[1] ?? 0;
-                        $collectionInternalId = $parts[3] ?? 0;
-                        $usage
-                            ->addMetric($documentsMetric, $value)  // per project
-                            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                    }
+                ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
+                    $emitDocumentsUsage($document, -1);
                 })
-                ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                    $value = $document->getAttribute('modified', 0);
-
-                    if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                        $parts = explode('_', $document->getCollection());
-                        $databaseInternalId   = $parts[1] ?? 0;
-                        $collectionInternalId = $parts[3] ?? 0;
-                        $usage
-                            ->addMetric($documentsMetric, $value)  // per project
-                            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                    }
+                ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
+                    $emitDocumentsUsage($document, $document->getAttribute('modified', 0));
                 })
-                ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                    $value = -1 * $document->getAttribute('modified', 0);
-
-                    if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                        $parts = explode('_', $document->getCollection());
-                        $databaseInternalId   = $parts[1] ?? 0;
-                        $collectionInternalId = $parts[3] ?? 0;
-                        $usage
-                            ->addMetric($documentsMetric, $value)  // per project
-                            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                    }
+                ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
+                    $emitDocumentsUsage($document, -1 * $document->getAttribute('modified', 0));
                 })
-                ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                    $value = $document->getAttribute('created', 0);
-
-                    if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                        $parts = explode('_', $document->getCollection());
-                        $databaseInternalId   = $parts[1] ?? 0;
-                        $collectionInternalId = $parts[3] ?? 0;
-                        $usage
-                            ->addMetric($documentsMetric, $value)  // per project
-                            ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                            ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                    }
+                ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
+                    $emitDocumentsUsage($document, $document->getAttribute('created', 0));
                 });
 
             return $database;
