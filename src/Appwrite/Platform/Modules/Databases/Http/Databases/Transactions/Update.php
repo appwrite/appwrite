@@ -343,13 +343,6 @@ class Update extends Action
 
             $usage->addMetric($this->getDatabasesOperationWriteMetric(), $totalOperations);
 
-            foreach ($databaseOperations as $sequence => $count) {
-                $usage->addMetric(
-                    str_replace('{databaseInternalId}', $sequence, $this->getDatabasesIdOperationWriteMetric()),
-                    $count
-                );
-            }
-
             $dbCache = [];
             foreach ($operations as $operation) {
                 $databaseInternalId = $operation['databaseInternalId'];

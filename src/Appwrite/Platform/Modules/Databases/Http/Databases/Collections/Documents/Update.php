@@ -250,8 +250,9 @@ class Update extends Action
         $setCollection($collection, $newDocument);
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), $operations);
+            ->setResource('database')
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), max($operations, 1));
 
         // Handle transaction staging
         if ($transactionId !== null) {
