@@ -49,17 +49,7 @@ class GeoRecord extends Document
     {
         $code = $this->getAttribute('countryCode', '--');
 
-        if ($code === '--') {
-            return '--';
-        }
-
-        $upper = \strtoupper($code);
-
-        if ($this->locale === null) {
-            return $upper;
-        }
-
-        return $this->locale->getText('countries.' . \strtolower($upper), false) ? $upper : '--';
+        return $code === '--' ? '--' : \strtoupper($code);
     }
 
     public function getCountryName(): string
