@@ -47,10 +47,13 @@ import { useT } from '@/lib/i18n/translate'
 import {
   getPostgresColumnTypeColor,
   matchesPostgresLocalSearch,
+  POSTGRES_ACTIONS_COL_STYLE,
   POSTGRES_BODY_CELL_BORDER_CLASS,
   POSTGRES_HEADER_CELL_BORDER_CLASS,
-  POSTGRES_LAST_CELL_BORDER_CLASS,
-  POSTGRES_STICKY_THEAD_CLASS} from './postgres-spreadsheet-chrome'
+  POSTGRES_STICKY_ACTIONS_HEADER_CLASS,
+  POSTGRES_STICKY_THEAD_CLASS,
+  postgresStickyActionsCellClass,
+} from './postgres-spreadsheet-chrome'
 
 type PostgresTableColumnsPanelProps = {
   databaseId: string
@@ -279,10 +282,8 @@ export function PostgresTableColumnsPanel({
                   </span>
                 </th>
                 <th
-                  className={cn(
-                    'w-10 px-2 py-2 bg-background',
-                    'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]',
-                  )}
+                  className={POSTGRES_STICKY_ACTIONS_HEADER_CLASS}
+                  style={POSTGRES_ACTIONS_COL_STYLE}
                 />
               </tr>
             </thead>
@@ -433,11 +434,18 @@ export function PostgresTableColumnsPanel({
                         <span className="text-[12px] text-muted-foreground">-</span>
                       )}
                     </td>
-                    <td className={cn('px-2 py-2', POSTGRES_LAST_CELL_BORDER_CLASS)}>
+                    <td
+                      className={postgresStickyActionsCellClass()}
+                      style={POSTGRES_ACTIONS_COL_STYLE}
+                    >
+                      <div
+                        className="flex h-full items-center justify-center py-1.5"
+                        style={POSTGRES_ACTIONS_COL_STYLE}
+                      >
                       {canWrite && !primary ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger revealOnGroupHover />
+                            <RowActionsMenuTrigger />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleEdit(column)}>
@@ -456,7 +464,7 @@ export function PostgresTableColumnsPanel({
                       ) : canWrite && primary ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger revealOnGroupHover />
+                            <RowActionsMenuTrigger />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onSelect={() => handleEdit(column)}>
@@ -465,6 +473,7 @@ export function PostgresTableColumnsPanel({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : null}
+                      </div>
                     </td>
                   </tr>
                   </PostgresColumnContextMenu>

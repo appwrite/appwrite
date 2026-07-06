@@ -212,6 +212,37 @@ export interface LaunchEventRecapTicketCopy {
   shareButtonLabel?: string
 }
 
+export interface LaunchEventReleaseOption {
+  title: string
+  description: string
+  ctaLabel: string
+  href: string
+  external?: boolean
+  /**
+   * Init day when this option becomes available.
+   * Defaults to the section `unlockDay` when omitted.
+   */
+  unlockDay?: number
+  /** Compact availability line (e.g. "Live each Init day"). */
+  availabilityLabel?: string
+}
+
+/** Stage contrasting Cloud (day-by-day) and self-host (full release) availability. */
+export interface LaunchEventReleaseAvailability {
+  /**
+   * Init day when the full release path (typically self-host) unlocks.
+   * Cloud may unlock earlier via its own `unlockDay`.
+   */
+  unlockDay: number
+  sectionTitle: string
+  sectionDescription?: string
+  /** Title while the full-release path is still locked. */
+  lockedTitle: string
+  lockedDescription: string
+  cloud: LaunchEventReleaseOption
+  selfHosted: LaunchEventReleaseOption
+}
+
 export interface LaunchEventRecap {
   /** Hero headline when the event week has ended. */
   headline: string
@@ -263,5 +294,7 @@ export interface LaunchEvent {
   prizes?: LaunchEventPrizes
   /** Copy and labels shown after the launch week ends. */
   recap?: LaunchEventRecap
+  /** Availability cards shown after the final Init day. */
+  releaseAvailability?: LaunchEventReleaseAvailability
   getInvolved: LaunchEventInvolvement[]
 }

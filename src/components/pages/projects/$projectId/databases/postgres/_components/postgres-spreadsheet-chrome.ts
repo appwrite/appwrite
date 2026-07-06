@@ -1,9 +1,37 @@
 import { parsePostgresIndexKeyColumns } from '@/lib/postgres-index-metadata'
 import { columnResizeRailHandleClass } from '@/lib/layout/horizontal-resize'
+import {
+  SPREADSHEET_STICKY_END_EDGE_SHADOW,
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+} from '@/lib/layout/spreadsheet-sticky'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
 export const POSTGRES_ROWS_TABLE_EDGE_COL_PX = 40
+export const POSTGRES_ACTIONS_COL_PX = 40
+
+export const POSTGRES_ACTIONS_COL_STYLE = {
+  width: POSTGRES_ACTIONS_COL_PX,
+  minWidth: POSTGRES_ACTIONS_COL_PX,
+  maxWidth: POSTGRES_ACTIONS_COL_PX,
+} as const
+
+export const POSTGRES_STICKY_ACTIONS_HEADER_CLASS = cn(
+  'relative sticky end-0 z-30 bg-background p-0',
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+)
+
+export function postgresStickyActionsCellClass(options?: {
+  mutedRow?: boolean
+}): string {
+  return cn(
+    'sticky end-0 z-10 border-b border-border p-0',
+    SPREADSHEET_STICKY_END_EDGE_SHADOW,
+    options?.mutedRow
+      ? 'bg-muted/30'
+      : 'bg-background group-hover:bg-muted/50',
+  )
+}
 export const POSTGRES_ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
 export const POSTGRES_ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
 export const POSTGRES_ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640

@@ -30,6 +30,8 @@ type PostgresSchemaSelectorProps = {
   onLoadMore: () => void
   onOpenChange?: (open: boolean) => void
   action?: ReactNode
+  /** Inline badge-style trigger without the schema label wrapper. */
+  compact?: boolean
 }
 
 export function PostgresSchemaSelector({
@@ -45,6 +47,7 @@ export function PostgresSchemaSelector({
   onLoadMore,
   onOpenChange,
   action,
+  compact = false,
 }: PostgresSchemaSelectorProps) {
   const t = useT()
   const triggerId = useId()
@@ -83,33 +86,32 @@ export function PostgresSchemaSelector({
   const displayValue = value?.trim() || 'Select schema'
   const showInitialLoading = isLoading && schemas.length === 0
 
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={triggerId} className="text-[13px]">
-        {t('Schema')}
-      </Label>
-      <div className="flex items-center gap-2">
-        <Popover
-          open={open}
-          onOpenChange={(nextOpen) => {
-            setOpen(nextOpen)
-            onOpenChange?.(nextOpen)
-          }}
-        >
-          <PopoverTrigger asChild>
-            <Button
-              id={triggerId}
-              type="button"
-              variant="outline"
-              className={cn(
-                'h-8 min-w-0 flex-1 justify-between gap-1.5 text-[13px] font-normal',
-                !value && 'text-muted-foreground',
-              )}
-            >
-              <span className="truncate">{displayValue}</span>
-              <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
+  const selector = (
+    <div className={cn('flex items-center gap-2', compact && 'inline-flex')}>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen)
+          onOpenChange?.(nextOpen)
+        }}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            id={compact ? undefined : triggerId}
+            type="button"
+            variant={compact ? 'secondary' : 'outline'}
+            className={cn(
+              'h-8 min-w-0 justify-between gap-1.5 font-normal',
+              compact
+                ? 'max-w-[160px] px-2 text-[12px] font-mono'
+                : 'flex-1 text-[13px]',
+              !value && 'text-muted-foreground',
+            )}
+          >
+            <span className="truncate">{displayValue}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
           <PopoverContent
             className="min-w-[var(--radix-popover-trigger-width)] max-w-[320px] p-0"
             align="start"
@@ -181,6 +183,18 @@ export function PostgresSchemaSelector({
         </Popover>
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
+  )
+
+  if (compact) {
+    return selector
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={triggerId} className="text-[13px]">
+        {t('Schema')}
+      </Label>
+      {selector}
     </div>
   )
 }

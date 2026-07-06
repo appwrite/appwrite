@@ -6,7 +6,12 @@ export type PostgresNavParams = {
   tableId?: string
 }
 
-export type PostgresTableTab = 'rows' | 'columns' | 'indexes' | 'settings'
+export type PostgresTableTab =
+  | 'rows'
+  | 'columns'
+  | 'indexes'
+  | 'security'
+  | 'settings'
 
 /** Database-level views (sidebar nav below schemas/tables). */
 export type PostgresDatabaseTab =
@@ -99,6 +104,12 @@ export function postgresNav(params: PostgresNavBase) {
         indexes() {
           return {
             to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes' as const,
+            params: tableBase,
+          }
+        },
+        security() {
+          return {
+            to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security' as const,
             params: tableBase,
           }
         },
@@ -210,6 +221,7 @@ export function parsePostgresTableTabFromPathname(
   if (pathname.endsWith('/columns')) return 'columns'
   if (pathname.endsWith('/indexes')) return 'indexes'
   if (pathname.endsWith('/settings')) return 'settings'
+  if (pathname.endsWith('/security')) return 'security'
   if (pathname.endsWith('/rows')) return 'rows'
   return null
 }

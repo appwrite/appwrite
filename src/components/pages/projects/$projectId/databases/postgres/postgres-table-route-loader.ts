@@ -4,6 +4,8 @@ import {
   postgresTableColumnsQueryOptions,
   postgresTableIndexesQueryOptions,
   postgresTableInfoQueryOptions,
+  postgresTablePoliciesQueryOptions,
+  postgresTableRlsQueryOptions,
   postgresTableRowColumnsQueryOptions,
   postgresTableRowsQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -132,5 +134,39 @@ export async function prefetchPostgresTableRouteData(
           ),
         ]
       : []),
+  ])
+}
+
+export async function prefetchPostgresTableSecurityRouteData(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const normalizedTableId = await prefetchPostgresTableLayoutData(
+    queryClient,
+    projectId,
+    databaseId,
+    tableId,
+  )
+
+  await Promise.all([
+    queryClient.ensureQueryData(
+      postgresTableInfoQueryOptions(
+        projectId,
+        databaseId,
+        normalizedTableId,
+      ),
+    ),
+    queryClient.ensureQueryData(
+      postgresTableRlsQueryOptions(projectId, databaseId, normalizedTableId),
+    ),
+    queryClient.ensureQueryData(
+      postgresTablePoliciesQueryOptions(
+        projectId,
+        databaseId,
+        normalizedTableId,
+      ),
+    ),
   ])
 }

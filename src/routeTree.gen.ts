@@ -295,6 +295,7 @@ import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCol
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.tables.$tableId.index'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId.index'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.settings'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.security'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.rows'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.indexes'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.tables.$tableId.columns'
@@ -2038,6 +2039,15 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
         PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport.update(
+    {
+      id: '/security',
+      path: '/security',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute =
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRouteImport.update(
     {
@@ -2609,6 +2619,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
+  '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
@@ -2883,6 +2894,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
+  '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
@@ -3201,6 +3213,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
+  '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdIndexRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
@@ -3516,6 +3529,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
+    | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
@@ -3790,6 +3804,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
+    | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId'
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
@@ -4107,6 +4122,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/columns'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/indexes'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
+    | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
@@ -6135,6 +6151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
     }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
+      path: '/security'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRoute
+    }
     '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows': {
       id: '/_public/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/rows'
       path: '/rows'
@@ -7007,6 +7030,7 @@ interface PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteCh
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdColumnsRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute
 }
 
@@ -7018,6 +7042,8 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteChildr
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdIndexesRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRowsRoute,
+    PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute:
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSecurityRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRoute,
   }

@@ -56,6 +56,13 @@ import {
 import { parsePostgresTableId, postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
 import { parsePostgresEnumValues } from '@/lib/postgres-enum-metadata'
 import {
+  buildPostgresTablePoliciesSql,
+  buildPostgresTableRlsStatusSql,
+  isPostgresTruthyFlag,
+  type PostgresTablePolicyRow,
+  type PostgresTableRlsRow,
+} from '@/lib/postgres-rls'
+import {
   buildPostgresVisualizerColumnsBatchSql,
   buildPostgresVisualizerExternalColumnsSql,
   buildPostgresVisualizerForeignKeysSql,
@@ -417,6 +424,43 @@ export async function fetchPostgresTableInfo(
   )
   const rows = executionResultRows<PostgresTableInfoRow>(execution)
   return rows[0] ?? null
+}
+
+export async function fetchPostgresTableRls(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTableRlsStatusSql(schema, table),
+  )
+  const rows = executionResultRows<PostgresTableRlsRow>(execution)
+  const row = rows[0]
+  return {
+    rowSecurityEnabled: isPostgresTruthyFlag(row?.row_security_enabled),
+    forceRowSecurity: isPostgresTruthyFlag(row?.force_row_security),
+  }
+}
+
+export async function fetchPostgresTablePolicies(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTablePoliciesSql(schema, table),
+  )
+  const policies = executionResultRows<PostgresTablePolicyRow>(execution)
+  return {
+    policies,
+    total: policies.length,
+  }
 }
 
 export type PostgresVisualizerColumn = {
@@ -1142,6 +1186,55 @@ export function postgresTableInfoQueryOptions(
   })
 }
 
+export function postgresTableRlsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-rls',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () => fetchPostgresTableRls(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresTablePoliciesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-policies',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () =>
+      fetchPostgresTablePolicies(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function postgresTableRowsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1714,6 +1807,42 @@ export function usePostgresTableInfo(
   }
 }
 
+export function usePostgresTableRls(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTableRlsQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    rowSecurityEnabled: data?.rowSecurityEnabled ?? false,
+    forceRowSecurity: data?.forceRowSecurity ?? false,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresTablePolicies(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTablePoliciesQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    policies: data?.policies ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 function buildPostgresVisualizerRelationships(
   foreignKeys: PostgresVisualizerForeignKeyRow[],
 ): PostgresVisualizerRelationship[] {
@@ -2016,6 +2145,8 @@ async function refreshPostgresDatabaseCaches(
     ['postgres-table-indexes', 'project', projectId, databaseId],
     ['postgres-schema-enums', 'project', projectId, databaseId],
     ['postgres-table-info', 'project', projectId, databaseId],
+    ['postgres-table-rls', 'project', projectId, databaseId],
+    ['postgres-table-policies', 'project', projectId, databaseId],
     ['postgres-visualizer', 'project', projectId, databaseId],
   ] as const
 

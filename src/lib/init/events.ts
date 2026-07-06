@@ -99,6 +99,32 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
         'Appwrite swag including a hoodie, cap, water bottle, tee, Appwriter keyboards, and a Claude Max 12-month subscription card',
     },
     prizes: INIT_JULY_2026_PRIZES,
+    releaseAvailability: {
+      unlockDay: 5,
+      sectionTitle: 'The full release is live',
+      sectionDescription:
+        'On Cloud, each Init feature went live the day it dropped. Self-host Community Edition for the complete Appwrite 2.0 release on your infrastructure.',
+      lockedTitle: 'Cloud ships daily. Self-host unlocks later.',
+      lockedDescription:
+        'Every Init feature goes live on Appwrite Cloud the same day. Community Edition unlocks with the complete release when Init week wraps up.',
+      cloud: {
+        title: 'Appwrite Cloud',
+        availabilityLabel: 'Live each Init day',
+        unlockDay: 1,
+        description:
+          "Each day's feature goes live on Cloud the day it drops.",
+        ctaLabel: 'Get started',
+        href: '/',
+      },
+      selfHosted: {
+        title: 'Community Edition',
+        availabilityLabel: 'Complete release',
+        description:
+          'Self-host the full Appwrite 2.0 package on your infrastructure.',
+        ctaLabel: 'Installation docs',
+        href: '/docs/advanced/self-hosting',
+      },
+    },
     getInvolved: [
       {
         id: 'ticket',

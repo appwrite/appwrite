@@ -41,10 +41,12 @@ import { useT } from '@/lib/i18n/translate'
 import {
   getPostgresEnumValueBadgeClass,
   matchesPostgresLocalSearch,
+  POSTGRES_ACTIONS_COL_STYLE,
   POSTGRES_BODY_CELL_BORDER_CLASS,
   POSTGRES_HEADER_CELL_BORDER_CLASS,
-  POSTGRES_LAST_CELL_BORDER_CLASS,
+  POSTGRES_STICKY_ACTIONS_HEADER_CLASS,
   POSTGRES_STICKY_THEAD_CLASS,
+  postgresStickyActionsCellClass,
 } from './postgres-spreadsheet-chrome'
 
 type PostgresSchemaEnumsPanelProps = {
@@ -242,10 +244,8 @@ export function PostgresSchemaEnumsPanel({
                   </span>
                 </th>
                 <th
-                  className={cn(
-                    'w-10 px-2 py-2 bg-background',
-                    'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]',
-                  )}
+                  className={POSTGRES_STICKY_ACTIONS_HEADER_CLASS}
+                  style={POSTGRES_ACTIONS_COL_STYLE}
                 />
               </tr>
             </thead>
@@ -315,15 +315,17 @@ export function PostgresSchemaEnumsPanel({
                         </span>
                       </td>
                       <td
-                        className={cn(
-                          'px-2 py-2 text-end',
-                          POSTGRES_LAST_CELL_BORDER_CLASS,
-                        )}
+                        className={postgresStickyActionsCellClass()}
+                        style={POSTGRES_ACTIONS_COL_STYLE}
                       >
+                        <div
+                          className="flex h-full items-center justify-center py-1.5"
+                          style={POSTGRES_ACTIONS_COL_STYLE}
+                        >
                         {canWrite ? (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <RowActionsMenuTrigger revealOnGroupHover />
+                              <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onSelect={() => handleEdit(enumRow)}>
@@ -344,6 +346,7 @@ export function PostgresSchemaEnumsPanel({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         ) : null}
+                        </div>
                       </td>
                     </tr>
                   </PostgresEnumContextMenu>

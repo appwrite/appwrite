@@ -33,6 +33,7 @@ import { InitRecapBanner } from './_components/InitRecapBanner'
 import { InitRecapIntro } from './_components/InitRecapIntro'
 import { DayDetailCard } from './_components/DayDetailCard'
 import { LockedDayDetailCard } from './_components/LockedDayDetailCard'
+import { InitReleaseAvailabilityStage } from './_components/InitReleaseAvailabilityStage'
 import { EventSchedulePanel } from './_components/EventSchedulePanel'
 import { OnlineUsersNav, hasOnlineUsersNav } from './_components/OnlineUsersNav'
 import { InitTicketVideoRecordingProvider } from '@/lib/init/init-ticket-video-recording-context'
@@ -186,6 +187,8 @@ function InitPageContent({
               </div>
             </div>
           </div>
+
+          <InitReleaseAvailabilityStage event={event} />
 
           <InitPrizesSection event={event} />
 

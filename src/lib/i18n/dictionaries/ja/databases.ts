@@ -243,6 +243,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Create row': '行の作成',
   'Create schema': 'スキーマの作成',
   'Create table': 'テーブルの作成',
+  'Create a new table in': '新しいテーブルを作成:',
+  'Define columns and create the table.': '列を定義してテーブルを作成します。',
+  'Column settings': '列の設定',
+  'Advanced column options': '列の詳細オプション',
   'Create tables to visualize your database schema. Tables will appear here as interactive nodes that you can drag, zoom, and explore.': 'データベーススキーマを可視化するテーブルを作成してください。テーブルはここにインタラクティブなノードとして表示され、ドラッグ、ズーム、探索ができます。',
   'Create your first database to get started': '最初のデータベースを作成して始めましょう',
   'Created': '作成日時',
@@ -1393,4 +1397,55 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed to delete database': 'データベースの削除に失敗しました',
   'This database may have been deleted or you no longer have access.':
     'このデータベースは削除されたか、アクセス権がなくなった可能性があります。',
+  'Update policy': 'ポリシーの更新',
+  'Update the roles and expressions for this row level security policy.':
+    'この行レベルセキュリティ ポリシーのロールと式を更新します。',
+  'Create a row level security policy for this table.':
+    'このテーブルの行レベルセキュリティ ポリシーを作成します。',
+  'Enter policy name': 'ポリシー名を入力',
+  'Command': 'コマンド',
+  'Policy type': 'ポリシータイプ',
+  'Permissive': '許可型',
+  'Restrictive': '制限型',
+  'Roles': 'ロール',
+  'public, authenticated': 'public, authenticated',
+  'Comma-separated role names. Use public for all roles.':
+    'ロール名をカンマ区切りで入力します。すべてのロールには public を使用します。',
+  'Using expression': 'USING 式',
+  'SQL expression that determines which rows are visible or can be modified.':
+    'どの行が表示または変更可能かを決定する SQL 式です。',
+  'With check expression': 'WITH CHECK 式',
+  'SQL expression checked on INSERT and UPDATE operations.':
+    'INSERT および UPDATE 操作で検証される SQL 式です。',
+  'Policy updated': 'ポリシーを更新しました',
+  'Policy created': 'ポリシーを作成しました',
+  'Failed to update policy': 'ポリシーの更新に失敗しました',
+  'Failed to create policy': 'ポリシーの作成に失敗しました',
+  'Policy name is required': 'ポリシー名は必須です',
+  'Add a USING or WITH CHECK expression for this policy':
+    'このポリシーに USING または WITH CHECK 式を追加してください',
+  'Loading security settings…': 'セキュリティ設定を読み込み中…',
+  'Row level security is not available': '行レベルセキュリティは利用できません',
+  'Row level security can only be configured on base tables.':
+    '行レベルセキュリティはベーステーブルでのみ設定できます。',
+  'When row level security is enabled, access to rows is controlled by policies on this table.':
+    '行レベルセキュリティが有効な場合、行へのアクセスはこのテーブルのポリシーで制御されます。',
+  'Enable row level security': '行レベルセキュリティを有効化',
+  'Force row level security for table owner':
+    'テーブル所有者にも行レベルセキュリティを適用',
+  'Policies define which roles can read or write rows. Without a matching policy, access is denied when row level security is enabled.':
+    'ポリシーはどのロールが行を読み書きできるかを定義します。一致するポリシーがない場合、行レベルセキュリティが有効だとアクセスは拒否されます。',
+  'Manage row level security policies for this table.':
+    'このテーブルの行レベルセキュリティ ポリシーを管理します。',
+  'No policies': 'ポリシーがありません',
+  'This table has no row level security policies yet.':
+    'このテーブルにはまだ行レベルセキュリティ ポリシーがありません。',
+  'Create a policy to control access to rows in this table.':
+    'このテーブルの行へのアクセスを制御するポリシーを作成してください。',
+  'No policies match your search': '検索に一致するポリシーがありません',
+  'Policy deleted': 'ポリシーを削除しました',
+  'Failed to delete policy': 'ポリシーの削除に失敗しました',
+  'Search policies...': 'ポリシーを検索...',
+  "You don't have permission to modify table security.":
+    'テーブルのセキュリティを変更する権限がありません。',
 }

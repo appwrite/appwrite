@@ -4,6 +4,10 @@ import {
   postgresNav,
   type PostgresTableTab,
 } from '@/lib/postgres-database-routes'
+import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
+import { useProject } from '@/lib/react-query/hooks/projects'
 import { useMemo } from 'react'
 import { useT } from '@/lib/i18n/translate'
 
@@ -44,6 +48,10 @@ export function PostgresTableHeader({
 }: PostgresTableHeaderProps) {
   const t = useT()
   const { schema, table } = parsePostgresTableId(tableId)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
+  const showSecurityTab = canShowTableSecuritySettings(access, features)
   const nav = useMemo(
     () => postgresNav({ projectId, databaseId }).table({ tableId }),
     [projectId, databaseId, tableId],
@@ -54,9 +62,12 @@ export function PostgresTableHeader({
       { id: 'rows', label: t('Rows'), ...nav.rows() },
       { id: 'columns', label: t('Columns'), ...nav.columns() },
       { id: 'indexes', label: t('Indexes'), ...nav.indexes() },
+      ...(showSecurityTab
+        ? [{ id: 'security', label: t('Security'), ...nav.security() }]
+        : []),
       { id: 'settings', label: t('Settings'), ...nav.settings() },
     ],
-    [nav, t],
+    [nav, showSecurityTab, t],
   )
 
   return (

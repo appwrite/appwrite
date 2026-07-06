@@ -1,10 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, GripVertical, Plus, Settings2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -29,6 +41,7 @@ import { postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-databas
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { usePostgresSidebarSchemas } from '@/lib/react-query/hooks/postgres-databases'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { PostgresColumnTypeSelector } from './PostgresColumnTypeSelector'
 import { PostgresIndexAlgorithmSelector } from './PostgresIndexAlgorithmSelector'
 import { PostgresSchemaSelector } from './PostgresSchemaSelector'
@@ -60,7 +73,66 @@ type DraftIndex = {
 
 const POSTGRES_IDENTIFIER_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
 
-function createDraftColumn(): DraftColumn {
+function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
+  const copy = [...list]
+  const [removed] = copy.splice(fromIndex, 1)
+  copy.splice(toIndex, 0, removed)
+  return copy
+}
+
+type ColumnDropPosition = 'before' | 'after'
+
+type ColumnDropIndicator = {
+  index: number
+  position: ColumnDropPosition
+}
+
+function reorderWithDropIndicator<T>(
+  list: T[],
+  dragIndex: number,
+  indicator: ColumnDropIndicator,
+): T[] {
+  let insertIndex =
+    indicator.position === 'before' ? indicator.index : indicator.index + 1
+  if (dragIndex < insertIndex) insertIndex -= 1
+  if (dragIndex === insertIndex) return list
+  return reorderList(list, dragIndex, insertIndex)
+}
+
+function resolveDropIndicatorFromPointer(
+  container: HTMLElement,
+  clientY: number,
+): ColumnDropIndicator | null {
+  const rows = container.querySelectorAll<HTMLElement>('[data-column-row]')
+  if (!rows.length) return null
+
+  const firstRect = rows[0].getBoundingClientRect()
+  if (clientY < firstRect.top) {
+    return { index: 0, position: 'before' }
+  }
+
+  for (let i = 0; i < rows.length; i++) {
+    const rect = rows[i].getBoundingClientRect()
+    if (clientY > rect.bottom) continue
+    const position: ColumnDropPosition =
+      clientY - rect.top < rect.height / 2 ? 'before' : 'after'
+    return { index: i, position }
+  }
+
+  return { index: rows.length - 1, position: 'after' }
+}
+
+function isNoOpColumnDrop(
+  dragIndex: number,
+  indicator: ColumnDropIndicator,
+): boolean {
+  let insertIndex =
+    indicator.position === 'before' ? indicator.index : indicator.index + 1
+  if (dragIndex < insertIndex) insertIndex -= 1
+  return dragIndex === insertIndex
+}
+
+function createDraftColumn(overrides?: Partial<DraftColumn>): DraftColumn {
   return {
     id: crypto.randomUUID(),
     name: '',
@@ -69,7 +141,25 @@ function createDraftColumn(): DraftColumn {
     defaultValue: '',
     comment: '',
     primaryKey: false,
+    ...overrides,
   }
+}
+
+function createDefaultTableColumns(): DraftColumn[] {
+  return [
+    createDraftColumn({
+      name: 'id',
+      typeState: createDefaultPostgresColumnTypeState('bigserial'),
+      nullable: false,
+      primaryKey: true,
+    }),
+    createDraftColumn({
+      name: 'created_at',
+      typeState: createDefaultPostgresColumnTypeState('timestamp with time zone'),
+      nullable: false,
+      defaultValue: 'now()',
+    }),
+  ]
 }
 
 function createDraftIndex(): DraftIndex {
@@ -103,6 +193,75 @@ function toggleIncludeColumn(
   return includeColumns.filter((column) => column !== columnName)
 }
 
+type CreateTableColumnSettingsProps = {
+  column: DraftColumn
+  onChange: (patch: Partial<DraftColumn>) => void
+  onTypeChange: (typeState: PostgresColumnTypeState) => void
+}
+
+function CreateTableColumnSettings({
+  column,
+  onChange,
+  onTypeChange,
+}: CreateTableColumnSettingsProps) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+          aria-label={t('Column settings')}
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 space-y-4 p-4" align="end">
+        <div className="space-y-1">
+          <p className="text-[13px] font-semibold text-foreground">
+            {column.name.trim() || t('Column settings')}
+          </p>
+          <p className="text-[12px] text-muted-foreground">
+            {t('Advanced column options')}
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <Label className="text-[12px] font-medium">{t('Nullable')}</Label>
+          <Switch
+            checked={column.nullable}
+            onCheckedChange={(nullable) => onChange({ nullable })}
+            disabled={column.primaryKey}
+          />
+        </div>
+        <PostgresColumnTypeSelector
+          value={column.typeState}
+          onChange={onTypeChange}
+          showTypePicker={false}
+          showArrayOption
+          showTypeOptions
+        />
+        <div className="space-y-2">
+          <Label htmlFor={`column-comment-${column.id}`} className="text-[12px] font-medium">
+            {t('Comment')}
+          </Label>
+          <Textarea
+            id={`column-comment-${column.id}`}
+            value={column.comment}
+            onChange={(event) => onChange({ comment: event.target.value })}
+            rows={2}
+            className="min-h-[70px] resize-y text-[13px]"
+            placeholder={t('Describe what this column stores')}
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function CreateTable({
   open,
   onOpenChange,
@@ -117,8 +276,15 @@ export function CreateTable({
   const [schemaName, setSchemaName] = useState('public')
   const [tableName, setTableName] = useState('')
   const [tableComment, setTableComment] = useState('')
-  const [columns, setColumns] = useState<DraftColumn[]>([createDraftColumn()])
+  const [columns, setColumns] = useState<DraftColumn[]>(createDefaultTableColumns)
+  const [draggingColumnIndex, setDraggingColumnIndex] = useState<number | null>(
+    null,
+  )
+  const [columnDropIndicator, setColumnDropIndicator] =
+    useState<ColumnDropIndicator | null>(null)
+  const columnListRef = useRef<HTMLDivElement>(null)
   const [indexes, setIndexes] = useState<DraftIndex[]>([])
+  const [indexesOpen, setIndexesOpen] = useState(false)
   const [schemaPickerOpen, setSchemaPickerOpen] = useState(false)
   const [schemaPickerSearch, setSchemaPickerSearch] = useState('')
   const [debouncedSchemaPickerSearch, setDebouncedSchemaPickerSearch] =
@@ -137,8 +303,11 @@ export function CreateTable({
     setSchemaName((defaultSchema ?? 'public').trim() || 'public')
     setTableName('')
     setTableComment('')
-    setColumns([createDraftColumn()])
+    setColumns(createDefaultTableColumns())
+    setDraggingColumnIndex(null)
+    setColumnDropIndicator(null)
     setIndexes([])
+    setIndexesOpen(false)
     setSchemaPickerOpen(false)
     setSchemaPickerSearch('')
     setDebouncedSchemaPickerSearch('')
@@ -168,6 +337,74 @@ export function CreateTable({
         .map((column) => column.name.trim())
         .filter((name) => POSTGRES_IDENTIFIER_REGEX.test(name)),
     [columns],
+  )
+
+  const updateColumn = useCallback((columnId: string, patch: Partial<DraftColumn>) => {
+    setColumns((current) =>
+      current.map((entry) =>
+        entry.id === columnId ? { ...entry, ...patch } : entry,
+      ),
+    )
+  }, [])
+
+  const clearColumnDragState = useCallback(() => {
+    setDraggingColumnIndex(null)
+    setColumnDropIndicator(null)
+  }, [])
+
+  const updateColumnDropIndicatorFromPointer = useCallback((clientY: number) => {
+    const container = columnListRef.current
+    if (!container || draggingColumnIndex == null) return
+    const next = resolveDropIndicatorFromPointer(container, clientY)
+    if (!next || isNoOpColumnDrop(draggingColumnIndex, next)) {
+      setColumnDropIndicator(null)
+      return
+    }
+    setColumnDropIndicator(next)
+  }, [draggingColumnIndex])
+
+  const handleColumnDragStart = useCallback(
+    (event: React.DragEvent, index: number) => {
+      if (columns.length <= 1) {
+        event.preventDefault()
+        return
+      }
+      setDraggingColumnIndex(index)
+      setColumnDropIndicator(null)
+      event.dataTransfer.setData('application/json', JSON.stringify({ index }))
+      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.dropEffect = 'move'
+      const row = (event.currentTarget as HTMLElement).closest('[data-column-row]')
+      if (row instanceof HTMLElement) {
+        event.dataTransfer.setDragImage(row, 24, 20)
+      }
+    },
+    [columns.length],
+  )
+
+  const handleColumnListDragOver = useCallback(
+    (event: React.DragEvent) => {
+      if (draggingColumnIndex == null) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+      updateColumnDropIndicatorFromPointer(event.clientY)
+    },
+    [draggingColumnIndex, updateColumnDropIndicatorFromPointer],
+  )
+
+  const handleColumnListDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault()
+      const dragIndex = draggingColumnIndex
+      const indicator = columnDropIndicator
+      clearColumnDragState()
+      if (dragIndex == null || !indicator) return
+
+      setColumns((current) =>
+        reorderWithDropIndicator(current, dragIndex, indicator),
+      )
+    },
+    [clearColumnDragState, columnDropIndicator, draggingColumnIndex],
   )
 
   const handleSubmit = async () => {
@@ -344,11 +581,9 @@ export function CreateTable({
     <BaseDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={t('Create table')}
-      description={t(
-        'Create a table with columns, indexes, and key settings in a single flow.',
-      )}
-      maxWidth="sm:max-w-2xl"
+      title="Create table"
+      description="Define columns and create the table."
+      maxWidth="sm:max-w-3xl"
     >
       <>
         <div className="border-t border-border" />
@@ -361,10 +596,8 @@ export function CreateTable({
         >
           <div className="flex-1 space-y-5 overflow-y-auto px-6 pb-4 pt-4">
             <section className="space-y-3">
-              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {t('Table settings')}
-              </h4>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+                <span>{t('Create a new table in')}</span>
                 <PostgresSchemaSelector
                   value={schemaName}
                   schemas={loadedSchemas}
@@ -377,7 +610,10 @@ export function CreateTable({
                   onSearchChange={handleSchemaSearchChange}
                   onLoadMore={() => void fetchNextSchemaPage()}
                   onOpenChange={setSchemaPickerOpen}
+                  compact
                 />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="table-name" className="text-[13px]">
                     {t('Name')} <span className="text-destructive">*</span>
@@ -390,219 +626,241 @@ export function CreateTable({
                     className="h-8 text-[13px]"
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="table-comment" className="text-[12px] font-medium">
-                  {t('Comment')}
-                </Label>
-                <Textarea
-                  id="table-comment"
-                  value={tableComment}
-                  onChange={(event) => setTableComment(event.target.value)}
-                  rows={2}
-                  className="min-h-[80px] resize-y"
-                  placeholder={t('Describe what this table stores')}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="table-comment" className="text-[13px]">
+                    {t('Description')}
+                  </Label>
+                  <Input
+                    id="table-comment"
+                    value={tableComment}
+                    onChange={(event) => setTableComment(event.target.value)}
+                    placeholder={t('Optional')}
+                    className="h-8 text-[13px]"
+                  />
+                </div>
               </div>
             </section>
 
-            <section className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t('Columns')}
-                </h4>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  onClick={() =>
-                    setColumns((current) => [...current, createDraftColumn()])
-                  }
-                >
-                  {t('Add column')}
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {columns.map((column, index) => (
-                  <div
-                    key={column.id}
-                    className="rounded-lg border border-border bg-card/50 p-3 space-y-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[12px] font-medium text-foreground">
-                        {t('Column')} {index + 1}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[11px]"
-                        onClick={() =>
-                          setColumns((current) =>
-                            current.filter((entry) => entry.id !== column.id),
-                          )
-                        }
-                        disabled={columns.length <= 1}
-                      >
-                        {t('Remove')}
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor={`column-name-${column.id}`}
-                        className="text-[12px] font-medium"
-                      >
-                        {t('Name')} <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id={`column-name-${column.id}`}
-                        value={column.name}
-                        onChange={(event) =>
-                          setColumns((current) =>
-                            current.map((entry) =>
-                              entry.id === column.id
-                                ? { ...entry, name: event.target.value }
-                                : entry,
-                            ),
-                          )
-                        }
-                        placeholder="id"
-                      />
-                    </div>
-                    <PostgresColumnTypeSelector
-                      value={column.typeState}
-                      onChange={(typeState) =>
-                        setColumns((current) =>
-                          current.map((entry) =>
-                            entry.id === column.id ? { ...entry, typeState } : entry,
-                          ),
-                        )
-                      }
-                    />
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2">
-                        <div>
-                          <Label className="text-[12px] font-medium">
-                            {t('Nullable')}
-                          </Label>
-                        </div>
-                        <Switch
-                          checked={column.nullable}
-                          onCheckedChange={(nullable) =>
-                            setColumns((current) =>
-                              current.map((entry) =>
-                                entry.id === column.id
-                                  ? { ...entry, nullable }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          disabled={column.primaryKey}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2">
-                        <div>
-                          <Label className="text-[12px] font-medium">
-                            {t('Primary key')}
-                          </Label>
-                        </div>
-                        <Switch
-                          checked={column.primaryKey}
-                          onCheckedChange={(primaryKey) =>
-                            setColumns((current) =>
-                              current.map((entry) =>
-                                entry.id === column.id
-                                  ? {
-                                      ...entry,
-                                      primaryKey,
-                                      nullable: primaryKey ? false : entry.nullable,
-                                    }
-                                  : entry,
-                              ),
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor={`column-default-${column.id}`}
-                        className="text-[12px] font-medium"
-                      >
-                        {t('Default value')}
-                      </Label>
-                      <Input
-                        id={`column-default-${column.id}`}
-                        value={column.defaultValue}
-                        onChange={(event) =>
-                          setColumns((current) =>
-                            current.map((entry) =>
-                              entry.id === column.id
-                                ? { ...entry, defaultValue: event.target.value }
-                                : entry,
-                            ),
-                          )
-                        }
-                        className="font-mono"
-                        placeholder={t(
-                          getPostgresColumnDefaultPlaceholder(column.typeState.typeId),
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor={`column-comment-${column.id}`}
-                        className="text-[12px] font-medium"
-                      >
-                        {t('Comment')}
-                      </Label>
-                      <Textarea
-                        id={`column-comment-${column.id}`}
-                        value={column.comment}
-                        onChange={(event) =>
-                          setColumns((current) =>
-                            current.map((entry) =>
-                              entry.id === column.id
-                                ? { ...entry, comment: event.target.value }
-                                : entry,
-                            ),
-                          )
-                        }
-                        rows={2}
-                        className="min-h-[70px] resize-y"
-                        placeholder={t('Describe what this column stores')}
-                      />
-                    </div>
+            <section className="space-y-2">
+              <h4 className="text-[13px] font-semibold text-foreground">
+                {t('Columns')}
+              </h4>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="min-w-[668px]">
+                  <div className="grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_72px] items-center gap-2 border-b border-border bg-muted/30 px-3 py-2">
+                    <span aria-hidden="true" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('Name')}
+                    </span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('Type')}
+                    </span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('Default value')}
+                    </span>
+                    <span className="whitespace-nowrap text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('Primary key')}
+                    </span>
+                    <span aria-hidden="true" />
                   </div>
-                ))}
+                  <div
+                    ref={columnListRef}
+                    onDragOver={handleColumnListDragOver}
+                    onDrop={handleColumnListDrop}
+                    onDragLeave={(event) => {
+                      const related = event.relatedTarget as Node | null
+                      if (related && event.currentTarget.contains(related)) return
+                      setColumnDropIndicator(null)
+                    }}
+                  >
+                    {columns.map((column, columnIndex) => {
+                      const canReorderColumns = columns.length > 1
+                      const isDragging = draggingColumnIndex === columnIndex
+                      const showInsertBefore =
+                        columnDropIndicator?.index === columnIndex &&
+                        columnDropIndicator.position === 'before'
+                      const showInsertAfter =
+                        columnDropIndicator?.index === columnIndex &&
+                        columnDropIndicator.position === 'after'
+                      const isDropTarget =
+                        draggingColumnIndex != null &&
+                        !isDragging &&
+                        (showInsertBefore || showInsertAfter)
+
+                      return (
+                        <Fragment key={column.id}>
+                          {showInsertBefore ? (
+                            <div
+                              className="mx-3 h-1 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                              role="presentation"
+                              aria-hidden
+                            />
+                          ) : null}
+                          <div
+                            data-column-row
+                            className={cn(
+                              'grid grid-cols-[28px_minmax(140px,1.2fr)_minmax(140px,1fr)_minmax(140px,1fr)_80px_72px] items-center gap-2 border-b border-border px-3 py-2 transition-[opacity,background-color,box-shadow]',
+                              isDragging && 'opacity-35',
+                              isDropTarget && 'bg-primary/5 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.25)]',
+                            )}
+                          >
+                            <div
+                              draggable={canReorderColumns}
+                              onDragStart={(event) =>
+                                handleColumnDragStart(event, columnIndex)
+                              }
+                              onDragEnd={clearColumnDragState}
+                              className={cn(
+                                'flex h-8 w-7 items-center justify-center rounded-md text-muted-foreground',
+                                canReorderColumns
+                                  ? 'cursor-grab active:cursor-grabbing hover:bg-muted/60 hover:text-foreground'
+                                  : 'cursor-default opacity-40',
+                              )}
+                              aria-label={
+                                canReorderColumns ? t('Drag to reorder') : undefined
+                              }
+                              aria-hidden={!canReorderColumns}
+                            >
+                              <GripVertical className="h-3.5 w-3.5 shrink-0" />
+                            </div>
+                        <Input
+                          value={column.name}
+                          onChange={(event) =>
+                            updateColumn(column.id, { name: event.target.value })
+                          }
+                          placeholder="column_name"
+                          className="h-8 text-[13px]"
+                          aria-label={t('Name')}
+                        />
+                        <PostgresColumnTypeSelector
+                          value={column.typeState}
+                          onChange={(typeState) =>
+                            updateColumn(column.id, { typeState })
+                          }
+                          compact
+                        />
+                        <Input
+                          value={column.defaultValue}
+                          onChange={(event) =>
+                            updateColumn(column.id, {
+                              defaultValue: event.target.value,
+                            })
+                          }
+                          className="h-8 font-mono text-[12px]"
+                          placeholder={t(
+                            getPostgresColumnDefaultPlaceholder(column.typeState.typeId),
+                          )}
+                          aria-label={t('Default value')}
+                        />
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={column.primaryKey}
+                            onCheckedChange={(primaryKey) =>
+                              updateColumn(column.id, {
+                                primaryKey: primaryKey === true,
+                                nullable: primaryKey === true ? false : column.nullable,
+                              })
+                            }
+                            aria-label={t('Primary key')}
+                          />
+                        </div>
+                        <div className="flex items-center justify-end gap-0.5">
+                          <CreateTableColumnSettings
+                            column={column}
+                            onChange={(patch) => updateColumn(column.id, patch)}
+                            onTypeChange={(typeState) =>
+                              updateColumn(column.id, { typeState })
+                            }
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() =>
+                              setColumns((current) =>
+                                current.filter((entry) => entry.id !== column.id),
+                              )
+                            }
+                            disabled={columns.length <= 1}
+                            aria-label={t('Remove column')}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                          </div>
+                          {showInsertAfter ? (
+                            <div
+                              className="mx-3 h-1 shrink-0 rounded-full bg-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.35)]"
+                              role="presentation"
+                              aria-hidden
+                            />
+                          ) : null}
+                        </Fragment>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 w-full border-dashed text-[13px] text-muted-foreground hover:text-foreground"
+                onClick={() =>
+                  setColumns((current) => [...current, createDraftColumn()])
+                }
+              >
+                <Plus className="me-1.5 h-3.5 w-3.5" />
+                {t('Add column')}
+              </Button>
             </section>
 
-            <section className="space-y-3">
+            <Collapsible open={indexesOpen} onOpenChange={setIndexesOpen}>
               <div className="flex items-center justify-between gap-3">
-                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t('Indexes')}
-                </h4>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  onClick={() =>
-                    setIndexes((current) => [...current, createDraftIndex()])
-                  }
-                  disabled={normalizedColumnNames.length === 0}
-                >
-                  {t('Add index')}
-                </Button>
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-1.5 text-[13px] font-semibold text-foreground hover:text-foreground/80"
+                  >
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 text-muted-foreground transition-transform',
+                        indexesOpen && 'rotate-180',
+                      )}
+                    />
+                    {t('Indexes')}
+                    {indexes.length > 0 ? (
+                      <Badge variant="info" className="text-[10px] shrink-0">
+                        {indexes.length}
+                      </Badge>
+                    ) : (
+                      <span className="text-[12px] font-normal text-muted-foreground">
+                        ({t('Optional')})
+                      </span>
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                {indexesOpen ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-[12px]"
+                    onClick={() =>
+                      setIndexes((current) => [...current, createDraftIndex()])
+                    }
+                    disabled={normalizedColumnNames.length === 0}
+                  >
+                    {t('Add index')}
+                  </Button>
+                ) : null}
               </div>
-              <p className="text-[12px] text-muted-foreground">
-                {t(
-                  'Indexes are optional, but adding the most common ones now can improve query performance immediately.',
-                )}
-              </p>
-              <div className="space-y-3">
+              <CollapsibleContent className="mt-3 space-y-3">
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    'Indexes are optional, but adding the most common ones now can improve query performance immediately.',
+                  )}
+                </p>
                 {indexes.map((index, indexPosition) => {
                   const keyColumns = index.formState.columns
                   const includeCandidates = normalizedColumnNames.filter(
@@ -878,13 +1136,10 @@ export function CreateTable({
                     </div>
                   )
                 })}
-              </div>
-            </section>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
-          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
-            <Button type="submit" disabled={executeSql.isPending}>
-              {t('Create')}
-            </Button>
+          <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="outline"
@@ -892,6 +1147,9 @@ export function CreateTable({
               disabled={executeSql.isPending}
             >
               {t('Cancel')}
+            </Button>
+            <Button type="submit" disabled={executeSql.isPending}>
+              {t('Create')}
             </Button>
           </div>
         </form>

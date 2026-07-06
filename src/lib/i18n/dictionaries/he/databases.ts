@@ -244,6 +244,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create row': 'יצירת שורה',
   'Create schema': 'יצירת סכימה',
   'Create table': 'יצירת טבלה',
+  'Create a new table in': 'יצירת טבלה חדשה ב',
+  'Define columns and create the table.': 'הגדירו עמודות וצרו את הטבלה.',
+  'Column settings': 'הגדרות עמודה',
+  'Advanced column options': 'אפשרויות מתקדמות לעמודה',
   'Create tables to visualize your database schema. Tables will appear here as interactive nodes that you can drag, zoom, and explore.': 'צרו טבלאות כדי להמחיש את סכימת מסד הנתונים. הטבלאות יופיעו כאן כצמתים אינטראקטיביים שאפשר לגרור, להתקרב אליהם ולחקור.',
   'Create your first database to get started': 'צרו את מסד הנתונים הראשון שלכם כדי להתחיל',
   'Created': 'נוצר',
@@ -1455,4 +1459,55 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed to delete database': 'מחיקת מסד הנתונים נכשלה',
   'This database may have been deleted or you no longer have access.':
     'ייתכן שמסד נתונים זה נמחק או שאין לכם עוד גישה אליו.',
+  'Update policy': 'עדכון מדיניות',
+  'Update the roles and expressions for this row level security policy.':
+    'עדכנו את התפקידים והביטויים עבור מדיניות אבטחה ברמת השורה זו.',
+  'Create a row level security policy for this table.':
+    'יצירת מדיניות אבטחה ברמת השורה עבור טבלה זו.',
+  'Enter policy name': 'הזינו שם מדיניות',
+  'Command': 'פקודה',
+  'Policy type': 'סוג מדיניות',
+  'Permissive': 'מתירנית',
+  'Restrictive': 'מגבילה',
+  'Roles': 'תפקידים',
+  'public, authenticated': 'public, authenticated',
+  'Comma-separated role names. Use public for all roles.':
+    'שמות תפקידים מופרדים בפסיקים. השתמשו ב-public לכל התפקידים.',
+  'Using expression': 'ביטוי USING',
+  'SQL expression that determines which rows are visible or can be modified.':
+    'ביטוי SQL שקובע אילו שורות גלויות או ניתנות לשינוי.',
+  'With check expression': 'ביטוי WITH CHECK',
+  'SQL expression checked on INSERT and UPDATE operations.':
+    'ביטוי SQL שנבדק בפעולות INSERT ו-UPDATE.',
+  'Policy updated': 'המדיניות עודכנה',
+  'Policy created': 'המדיניות נוצרה',
+  'Failed to update policy': 'עדכון המדיניות נכשל',
+  'Failed to create policy': 'יצירת המדיניות נכשלה',
+  'Policy name is required': 'שם המדיניות נדרש',
+  'Add a USING or WITH CHECK expression for this policy':
+    'הוסיפו ביטוי USING או WITH CHECK למדיניות זו',
+  'Loading security settings…': 'טוען הגדרות אבטחה…',
+  'Row level security is not available': 'אבטחה ברמת השורה אינה זמינה',
+  'Row level security can only be configured on base tables.':
+    'ניתן להגדיר אבטחה ברמת השורה רק על טבלאות בסיס.',
+  'When row level security is enabled, access to rows is controlled by policies on this table.':
+    'כאשר אבטחה ברמת השורה מופעלת, הגישה לשורות נשלטת על ידי מדיניות בטבלה זו.',
+  'Enable row level security': 'הפעלת אבטחה ברמת השורה',
+  'Force row level security for table owner':
+    'אכיפת אבטחה ברמת השורה גם על בעל הטבלה',
+  'Policies define which roles can read or write rows. Without a matching policy, access is denied when row level security is enabled.':
+    'מדיניות קובעת אילו תפקידים יכולים לקרוא או לכתוב שורות. ללא מדיניות מתאימה, הגישה נחסמת כאשר אבטחה ברמת השורה מופעלת.',
+  'Manage row level security policies for this table.':
+    'ניהול מדיניות אבטחה ברמת השורה עבור טבלה זו.',
+  'No policies': 'אין מדיניות',
+  'This table has no row level security policies yet.':
+    'לטבלה זו אין עדיין מדיניות אבטחה ברמת השורה.',
+  'Create a policy to control access to rows in this table.':
+    'יצירת מדיניות לשליטה בגישה לשורות בטבלה זו.',
+  'No policies match your search': 'אין מדיניות שתואמת לחיפוש',
+  'Policy deleted': 'המדיניות נמחקה',
+  'Failed to delete policy': 'מחיקת המדיניות נכשלה',
+  'Search policies...': 'חיפוש מדיניות…',
+  "You don't have permission to modify table security.":
+    'אין לכם הרשאה לשנות את אבטחת הטבלה.',
 }

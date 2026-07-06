@@ -322,6 +322,19 @@ const lastCellBorderClass = 'border-b border-border'
 
 /** Checkbox + row-actions column width; documents list uses `table-fixed` so edges stay this size. */
 const ROWS_TABLE_EDGE_COL_PX = 40
+const spreadsheetActionsColStyle = {
+  width: ROWS_TABLE_EDGE_COL_PX,
+  minWidth: ROWS_TABLE_EDGE_COL_PX,
+  maxWidth: ROWS_TABLE_EDGE_COL_PX,
+}
+const stickyActionsHeaderClass = cn(
+  'relative sticky end-0 z-30 bg-background p-0',
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+)
+const stickyActionsCellBaseClass = cn(
+  'sticky end-0 z-10 border-b border-border p-0',
+  SPREADSHEET_STICKY_END_EDGE_SHADOW,
+)
 /** Default width for user-defined row columns (system columns use fixed layout). */
 const ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
 const ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
@@ -6447,10 +6460,8 @@ export function ColumnsSpreadsheet({
                     </span>
                   </th>
                   <th
-                    className={cn(
-                      'w-10 px-2 py-2 bg-background',
-                      'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]',
-                    )}
+                    className={stickyActionsHeaderClass}
+                    style={spreadsheetActionsColStyle}
                   />
                 </tr>
               </thead>
@@ -6667,7 +6678,21 @@ export function ColumnsSpreadsheet({
                           </code>
                         )}
                       </td>
-                      <td className={cn('px-2 py-2', lastCellBorderClass)}>
+                      <td
+                        className={cn(
+                          stickyActionsCellBaseClass,
+                          isSystem
+                            ? 'bg-muted/30'
+                            : isSuggestion
+                              ? 'bg-amber-500/5'
+                              : 'bg-background group-hover:bg-muted/50',
+                        )}
+                        style={spreadsheetActionsColStyle}
+                      >
+                        <div
+                          className="flex h-full items-center justify-center py-1.5"
+                          style={spreadsheetActionsColStyle}
+                        >
                         {!isSuggestion && !isSystem && !isStatusPending && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -6687,6 +6712,7 @@ export function ColumnsSpreadsheet({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -7412,7 +7438,7 @@ export function IndexesSpreadsheet({
         <>
           <div
             className={cn(
-              'flex-1 overflow-y-auto overscroll-contain',
+              'flex-1 overflow-auto overscroll-contain',
               suggestedIndexes.length > 0 && 'pb-24',
             )}
           >
@@ -7460,10 +7486,8 @@ export function IndexesSpreadsheet({
                     </span>
                   </th>
                   <th
-                    className={cn(
-                      'w-10 px-2 py-2 bg-background',
-                      'shadow-[inset_0_1px_0_0_var(--border),inset_0_-1px_0_0_var(--border)]',
-                    )}
+                    className={stickyActionsHeaderClass}
+                    style={spreadsheetActionsColStyle}
                   />
                 </tr>
               </thead>
@@ -7593,7 +7617,21 @@ export function IndexesSpreadsheet({
                           {localizeResourceStatusLabel(index.status, t)}
                         </Badge>
                       </td>
-                      <td className={cn('px-2 py-2', lastCellBorderClass)}>
+                      <td
+                        className={cn(
+                          stickyActionsCellBaseClass,
+                          isSystem
+                            ? 'bg-muted/30'
+                            : isSuggestion
+                              ? 'bg-amber-500/5'
+                              : 'bg-background group-hover:bg-muted/50',
+                        )}
+                        style={spreadsheetActionsColStyle}
+                      >
+                        <div
+                          className="flex h-full items-center justify-center py-1.5"
+                          style={spreadsheetActionsColStyle}
+                        >
                         {!isSystem && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -7608,6 +7646,7 @@ export function IndexesSpreadsheet({
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
+                        </div>
                       </td>
                     </tr>
                   )
