@@ -2064,4 +2064,85 @@ trait StorageBase
         ], $this->getHeaders()), ['parent' => '/photos']);
         $this->assertEquals(400, $response['headers']['status-code']);
     }
+
+    public function testListFolders(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Folder Listing',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $upload = function (string $parent) use ($bucketId): string {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+                'parent' => $parent,
+                'permissions' => [Permission::read(Role::any()), Permission::delete(Role::any())],
+            ]);
+            $this->assertEquals(201, $file['headers']['status-code']);
+            return $file['body']['$id'];
+        };
+
+        $upload('');
+        $upload('invoices');
+        $upload('photos/2025');
+        $julyFileId = $upload('photos/2026/july');
+
+        $listFolders = function (array $params) use ($bucketId): array {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/folders', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), $params);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            return $response['body']['folders'];
+        };
+
+        // top level, alphabetical
+        $folders = $listFolders([]);
+        $this->assertCount(2, $folders);
+        $this->assertEquals(['invoices/', 'photos/'], \array_column($folders, 'key'));
+        $this->assertEquals(['invoices', 'photos'], \array_column($folders, 'name'));
+        $this->assertEquals(['', ''], \array_column($folders, 'parent'));
+
+        // nested level -- deep files imply intermediate folders
+        $folders = $listFolders(['parent' => 'photos']);
+        $this->assertEquals(['photos/2025/', 'photos/2026/'], \array_column($folders, 'key'));
+
+        $folders = $listFolders(['parent' => 'photos/2026']);
+        $this->assertEquals(['photos/2026/july/'], \array_column($folders, 'key'));
+
+        // pagination
+        $page = $listFolders(['limit' => 1]);
+        $this->assertEquals(['invoices/'], \array_column($page, 'key'));
+        $page = $listFolders(['limit' => 1, 'cursor' => 'invoices/']);
+        $this->assertEquals(['photos/'], \array_column($page, 'key'));
+        $page = $listFolders(['limit' => 1, 'cursor' => 'photos/']);
+        $this->assertCount(0, $page);
+
+        // nonexistent prefix -- empty list, not 404
+        $this->assertCount(0, $listFolders(['parent' => 'missing']));
+
+        // implicit lifecycle -- deleting the last file removes the folder chain
+        $delete = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $julyFileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $delete['headers']['status-code']);
+        $this->assertEquals(['photos/2025/'], \array_column($listFolders(['parent' => 'photos']), 'key'));
+    }
 }
