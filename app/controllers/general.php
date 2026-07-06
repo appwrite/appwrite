@@ -916,15 +916,45 @@ Http::init()
         }
 
         $requestParams = $utopia->context()->get('requestParams');
-        $filterRequestParams = $utopia->context()->get('filterRequestParams');
-        try {
-            $requestParams = $filterRequestParams($requestParams);
-        } catch (\Throwable $e) {
-            $code = $e->getCode();
-            if (\is_int($code) && $code >= 400 && $code < 500) {
-                $utopia->context()->set('requestParams', fn (): array => $requestParams, []);
+        $filters = Request::filters($request);
+        $methods = $route->getLabel('sdk', null);
+
+        if ($filters !== [] && !empty($methods)) {
+            if (!\is_array($methods)) {
+                $id = $methods->getNamespace() . '.' . $methods->getMethodName();
+            } else {
+                $matched = null;
+                foreach ($methods as $method) {
+                    /** @var Method|null $method */
+                    if ($method === null) {
+                        continue;
+                    }
+
+                    $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
+                    $invalidParams = \array_diff(\array_keys($requestParams), $methodParamNames);
+
+                    if (empty($methodParamNames) || empty($invalidParams)) {
+                        $matched = $method;
+                        break;
+                    }
+                }
+
+                $id = $matched !== null
+                    ? $matched->getNamespace() . '.' . $matched->getMethodName()
+                    : 'unknown.unknown';
             }
-            throw $e;
+
+            try {
+                foreach ($filters as $filter) {
+                    $requestParams = $filter->parse($requestParams, $id);
+                }
+            } catch (\Throwable $e) {
+                $code = $e->getCode();
+                if (\is_int($code) && $code >= 400 && $code < 500) {
+                    $utopia->context()->set('requestParams', fn (): array => $requestParams, []);
+                }
+                throw $e;
+            }
         }
         $utopia->context()->set('requestParams', fn (): array => $requestParams, []);
 

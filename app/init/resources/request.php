@@ -19,7 +19,6 @@ use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
-use Appwrite\SDK\Method;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -142,51 +141,6 @@ return function (Container $context): void {
         }
 
         return $request->getQueryParams();
-    }, ['request']);
-
-    $context->set('filterRequestParams', function (ServerRequestInterface $request): callable {
-        return static function (array $parameters) use ($request): array {
-            $filters = Request::filters($request);
-            $route = Request::route($request);
-            if ($filters === [] || $route === null) {
-                return $parameters;
-            }
-
-            $methods = $route->getLabel('sdk', null);
-            if (empty($methods)) {
-                return $parameters;
-            }
-
-            if (!\is_array($methods)) {
-                $id = $methods->getNamespace() . '.' . $methods->getMethodName();
-            } else {
-                $matched = null;
-                foreach ($methods as $method) {
-                    /** @var Method|null $method */
-                    if ($method === null) {
-                        continue;
-                    }
-
-                    $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
-                    $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
-
-                    if (empty($methodParamNames) || empty($invalidParams)) {
-                        $matched = $method;
-                        break;
-                    }
-                }
-
-                $id = $matched !== null
-                    ? $matched->getNamespace() . '.' . $matched->getMethodName()
-                    : 'unknown.unknown';
-            }
-
-            foreach ($filters as $filter) {
-                $parameters = $filter->parse($parameters, $id);
-            }
-
-            return $parameters;
-        };
     }, ['request']);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, ServerRequestInterface $request, array $requestParams, Database $dbForProject, Database $dbForPlatform) {
