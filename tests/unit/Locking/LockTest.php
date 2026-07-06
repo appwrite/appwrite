@@ -211,7 +211,7 @@ final class LockTest extends TestCase
         $this->assertTrue($called);
     }
 
-    public function testCallbackRedisExceptionIsNotSwallowed(): void
+    public function testRedisExceptionThrownByCallbackIsNotTreatedAsBackendError(): void
     {
         $lock = $this->makeLock();
 

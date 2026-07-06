@@ -108,18 +108,26 @@ final class Lock
 
         $labels = ['target' => $target, 'project' => $this->projectInternalId];
 
+        $callbackException = false;
+
         try {
-            return ($this->useLock)($key, $ttl, function (UtopiaLock $lock) use ($fn, $key, $labels, $skipOnContention, $target, $waitTimeout): mixed {
-                return $this->executeWithLock($lock, $key, $target, $labels, $fn, $waitTimeout, $skipOnContention);
+            return ($this->useLock)($key, $ttl, function (UtopiaLock $lock) use ($fn, $key, $labels, $skipOnContention, $target, $waitTimeout, &$callbackException): mixed {
+                return $this->executeWithLock($lock, $key, $target, $labels, $fn, $waitTimeout, $skipOnContention, $callbackException);
             });
-        } catch (CallbackRedisException $e) {
-            throw $e->getRedisException();
         } catch (\RedisException $e) {
+            if ($callbackException) {
+                throw $e;
+            }
+
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
             return $fn();
         } catch (\Exception $e) {
+            if ($callbackException) {
+                throw $e;
+            }
+
             // Pool exhaustion throws a bare \Exception before lock acquisition.
             // Only that exact class is fail-open; subclasses must propagate.
             if (get_class($e) !== \Exception::class) {
@@ -143,6 +151,7 @@ final class Lock
         Closure $fn,
         float $waitTimeout,
         bool $skipOnContention,
+        bool &$callbackException,
     ): mixed {
         try {
             $acquired = $lock->acquire($waitTimeout);
@@ -150,6 +159,7 @@ final class Lock
             $this->attempts->add(1, ['outcome' => self::OUTCOME_BACKEND_ERROR, ...$labels]);
             $this->reportError(self::OUTCOME_BACKEND_ERROR, $key, $target, $e);
 
+            $callbackException = true;
             return $fn();
         }
 
@@ -164,12 +174,9 @@ final class Lock
         }
 
         $this->attempts->add(1, ['outcome' => self::OUTCOME_ACQUIRED, ...$labels]);
+        $callbackException = true;
         try {
-            try {
-                return $fn();
-            } catch (\RedisException $e) {
-                throw new CallbackRedisException($e);
-            }
+            return $fn();
         } finally {
             try {
                 $lock->release();
@@ -221,19 +228,5 @@ final class Lock
             $this->logger->addLog($log);
         } catch (Throwable) {
         }
-    }
-}
-
-final class CallbackRedisException extends \RuntimeException
-{
-    public function __construct(\RedisException $previous)
-    {
-        parent::__construct($previous->getMessage(), $previous->getCode(), $previous);
-    }
-
-    public function getRedisException(): \RedisException
-    {
-        /** @var \RedisException */
-        return parent::getPrevious();
     }
 }
