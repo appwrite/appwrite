@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -121,7 +122,7 @@ class Upsert extends PlatformAction
         ?string $expiresAt,
         array $metadata,
         Response $response,
-        Request $request,
+        ServerRequestInterface $request,
         Database $dbForProject,
         User $user,
         Authorization $authorization,

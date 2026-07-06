@@ -5,7 +5,8 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
@@ -33,7 +34,7 @@ class Reset extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $installId, bool $hard, Request $request, Response $response, State $state, Config $config): void
+    public function action(string $installId, bool $hard, ServerRequestInterface $request, Response $response, State $state, Config $config): void
     {
         if (!Validate::validateCsrf($request)) {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);

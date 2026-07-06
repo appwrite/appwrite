@@ -24,7 +24,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Image\Image;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -118,7 +119,7 @@ class Get extends Action
         string $background,
         string $output,
         ?string $token,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject,
         Document $resourceToken,

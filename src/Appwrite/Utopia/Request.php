@@ -5,46 +5,180 @@ namespace Appwrite\Utopia;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use Psr\Http\Message\UriInterface;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
 use Utopia\Http\Route;
-use Utopia\System\System;
+use Utopia\Psr7\ServerRequest;
+use Utopia\Psr7\Stream;
+use Utopia\Psr7\UploadedFile;
+use Utopia\Psr7\Uri;
+use WeakMap;
 
-class Request extends UtopiaRequest
+class Request extends ServerRequest
 {
+    public const string METHOD_OPTIONS = 'OPTIONS';
+    public const string METHOD_GET = 'GET';
+    public const string METHOD_HEAD = 'HEAD';
+    public const string METHOD_POST = 'POST';
+    public const string METHOD_PATCH = 'PATCH';
+    public const string METHOD_PUT = 'PUT';
+    public const string METHOD_DELETE = 'DELETE';
+    public const string METHOD_TRACE = 'TRACE';
+    public const string METHOD_CONNECT = 'CONNECT';
+
+    /**
+     * @var WeakMap<ServerRequestInterface, array<string, mixed>>|null
+     */
+    private static ?WeakMap $state = null;
+
     /**
      * @var array<Filter>
      */
     private array $filters = [];
     private ?Route $route = null;
     private ?array $filteredParams = null;
+    private SwooleRequest $swoole;
 
-    public function __construct(SwooleRequest $request)
+    public static function files(ServerRequestInterface $request, string|int $key): array
     {
-        $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
-        $this->setTrustedIpHeaders(explode(',', $trustedHeaders));
+        $files = self::denormalizeFiles($request->getUploadedFiles());
 
-        parent::__construct($request);
+        return $files[strtolower((string) $key)] ?? $files[$key] ?? [];
+    }
+
+    public static function size(ServerRequestInterface $request): int
+    {
+        $headerSize = 0;
+        foreach ($request->getHeaders() as $name => $values) {
+            $headerSize += mb_strlen($name . ': ' . implode(', ', $values), '8bit');
+        }
+
+        return $headerSize + mb_strlen((string) $request->getBody(), '8bit');
+    }
+
+    public static function contentRangeStart(ServerRequestInterface $request): ?int
+    {
+        return self::parseContentRangeHeader($request)['start'] ?? null;
+    }
+
+    public static function contentRangeEnd(ServerRequestInterface $request): ?int
+    {
+        return self::parseContentRangeHeader($request)['end'] ?? null;
+    }
+
+    public static function contentRangeSize(ServerRequestInterface $request): ?int
+    {
+        return self::parseContentRangeHeader($request)['size'] ?? null;
+    }
+
+    public static function rangeStart(ServerRequestInterface $request): ?int
+    {
+        return self::parseRangeHeader($request)['start'] ?? null;
+    }
+
+    public static function rangeEnd(ServerRequestInterface $request): ?int
+    {
+        return self::parseRangeHeader($request)['end'] ?? null;
+    }
+
+    public static function rangeUnit(ServerRequestInterface $request): ?string
+    {
+        return self::parseRangeHeader($request)['unit'] ?? null;
+    }
+
+    public static function rememberRoute(ServerRequestInterface $request, ?Route $route): void
+    {
+        self::setState($request, 'route', $route);
+    }
+
+    public static function route(ServerRequestInterface $request): ?Route
+    {
+        $route = self::getState($request, 'route');
+        return $route instanceof Route ? $route : null;
+    }
+
+    public static function addRequestFilter(ServerRequestInterface $request, Filter $filter): void
+    {
+        $filters = self::filters($request);
+        $filters[] = $filter;
+        self::setState($request, 'filters', $filters);
     }
 
     /**
-     * @inheritdoc
+     * @return array<Filter>
      */
+    public static function filters(ServerRequestInterface $request): array
+    {
+        $filters = self::getState($request, 'filters');
+        return \is_array($filters) ? $filters : [];
+    }
+
+    public static function rememberAuthorization(ServerRequestInterface $request, Authorization $authorization): void
+    {
+        self::setState($request, 'authorization', $authorization);
+    }
+
+    public static function rememberUser(ServerRequestInterface $request, User $user): void
+    {
+        self::setState($request, 'user', $user);
+    }
+
+    public static function cacheKey(ServerRequestInterface $request, array $params): string
+    {
+        $allowedParams = self::route($request)?->getLabel('cache.params', null);
+        if ($allowedParams !== null) {
+            $params = array_intersect_key($params, array_flip($allowedParams));
+        }
+        if (!isset($params['project'])) {
+            $params['project'] = $request->getHeaderLine('x-appwrite-project') ?: '';
+        }
+        ksort($params);
+        return md5($request->getRequestTarget() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
+    }
+
+    public function __construct(SwooleRequest $request)
+    {
+        $this->swoole = $request;
+
+        $rawBody = $request->rawContent() ?: '';
+        $headers = $this->headersFromSwoole($request);
+        $server = $request->server ?? [];
+        $method = (string) ($server['request_method'] ?? 'UNKNOWN');
+
+        parent::__construct(
+            method: $method,
+            uri: $this->uriFromSwoole($request, $headers),
+            serverParams: $server,
+            cookieParams: $request->cookie ?? [],
+            queryParams: $request->get ?? [],
+            uploadedFiles: UploadedFile::normalizeFiles($request->files ?? []),
+            parsedBody: $this->parsedBodyFromSwoole($request, $method, $headers, $rawBody),
+            body: new Stream($rawBody),
+            headers: $headers,
+        );
+    }
+
+    public function getParam(string $key, mixed $default = null): mixed
+    {
+        return $this->getParams()[$key] ?? $default;
+    }
+
     public function getParams(): array
     {
         if ($this->filteredParams !== null) {
             return $this->filteredParams;
         }
 
-        $parameters = parent::getParams();
+        $parameters = $this->rawParams();
 
         if (!$this->hasFilters() || !$this->hasRoute()) {
             return $parameters;
         }
 
         $methods = $this->getRoute()?->getLabel('sdk', null);
-
         if (empty($methods)) {
             return $parameters;
         }
@@ -59,11 +193,9 @@ class Request extends UtopiaRequest
                     continue;
                 }
 
-                // Find the method that matches the parameters passed
                 $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
                 $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
 
-                // No params defined, or all params are valid
                 if (empty($methodParamNames) || empty($invalidParams)) {
                     $matched = $method;
                     break;
@@ -80,15 +212,6 @@ class Request extends UtopiaRequest
                 $parameters = $filter->parse($parameters, $id);
             }
         } catch (\Throwable $e) {
-            /*
-            * 4xx filter throws are user-input errors that the action layer
-            * revalidates and reports. Cache the raw, pre-filter parameters
-            * so a subsequent getParams() — e.g. when the framework builds
-            * arguments for an error hook — returns without re-running
-            * filters. Otherwise the second throw gets wrapped as
-            * "Error handler had an error: ..." (HTTP 500), masking the
-            * intended 400.
-            */
             $code = $e->getCode();
             if (\is_int($code) && $code >= 400 && $code < 500) {
                 $this->filteredParams = $parameters;
@@ -100,101 +223,91 @@ class Request extends UtopiaRequest
         return $parameters;
     }
 
-    /**
-     * Function to add a response filter, the order of filters are first in - first out.
-     *
-     * @param Filter $filter the response filter to set
-     *
-     * @return void
-     */
-    public function addFilter(Filter $filter): void
+    public function getQuery(string $key, mixed $default = null): mixed
     {
-        $this->filters[] = $filter;
+        return $this->queryParams[$key] ?? $default;
+    }
+
+    public function getPayload(string $key, mixed $default = null): mixed
+    {
+        $payload = $this->parsedBody;
+        if (\is_object($payload)) {
+            $payload = get_object_vars($payload);
+        }
+
+        return \is_array($payload) ? ($payload[$key] ?? $default) : $default;
+    }
+
+    public function getRawPayload(): string
+    {
+        return (string) $this->body;
+    }
+
+    public function getHeaderLine(string $name, string $default = ''): string
+    {
+        $value = parent::getHeaderLine($name);
+        return $value === '' ? $default : $value;
+    }
+
+    public function getCookie(string $key, string $default = ''): string
+    {
+        return $this->cookieParams[$key] ?? $default;
+    }
+
+    public function setCookieParams(array $cookies): static
+    {
+        $this->cookieParams = $cookies;
+        return $this;
+    }
+
+    public function setMethod(string $method): static
+    {
+        $this->method = strtoupper($method);
+        $this->serverParams['request_method'] = $this->method;
         $this->filteredParams = null;
+        return $this;
     }
 
-    /**
-     * Return the currently set filter
-     *
-     * @return array<Filter>
-     */
-    public function getFilters(): array
+    public function setURI(string $uri): static
     {
-        return $this->filters;
-    }
-
-    /**
-     * Reset filters
-     *
-     * @return void
-     */
-    public function resetFilters(): void
-    {
-        $this->filters = [];
+        $this->serverParams['request_uri'] = $uri;
+        $this->uri = Uri::parse($uri);
         $this->filteredParams = null;
+        return $this;
     }
 
-    /**
-     * Check if a filter has been set
-     *
-     * @return bool
-     */
-    public function hasFilters(): bool
+    public function getFiles(string|int $key): array
     {
-        return !empty($this->filters);
+        return $this->swoole->files[strtolower((string) $key)] ?? $this->swoole->files[$key] ?? [];
     }
 
-    /**
-     * Function to set a request route
-     *
-     * @param Route|null $route the request route to set
-     *
-     * @return void
-     */
-    public function setRoute(?Route $route): void
+    public function getSize(): int
     {
-        $this->route = $route;
-        $this->filteredParams = null;
+        return self::size($this);
     }
 
-    /**
-     * Return the current route
-     *
-     * @return Route|null
-     */
-    public function getRoute(): ?Route
+    public function getReferer(string $default = ''): string
     {
-        return $this->route;
+        return $this->getHeaderLine('referer', $default);
     }
 
-    /**
-     * Check if a route has been set
-     *
-     * @return bool
-     */
-    public function hasRoute(): bool
+    public function getOrigin(string $default = ''): string
     {
-        return $this->route !== null;
+        return $this->getHeaderLine('origin', $default);
     }
 
-    /**
-     * Get headers
-     *
-     * Method for getting all HTTP headers, including a synthesized `cookie`
-     * header. Swoole parses the incoming Cookie header into its own cookie jar,
-     * so it is absent from the raw header map; rebuild it here so consumers that
-     * forward request headers (e.g. function/site executions) still receive it.
-     *
-     * @return array<string, array<int, string>>
-     */
+    public function getAccept(string $default = ''): string
+    {
+        return $this->getHeaderLine('accept', $default);
+    }
+
     public function getHeaders(): array
     {
         $headers = parent::getHeaders();
 
-        $cookies = $this->getCookieParams();
-        if (!empty($cookies)) {
+        if ($this->cookieParams !== []) {
             $pairs = [];
-            foreach ($cookies as $key => $value) {
+            foreach ($this->cookieParams as $key => $value) {
                 $pairs[] = "{$key}={$value}";
             }
             $headers['cookie'] = [\implode('; ', $pairs)];
@@ -203,35 +316,104 @@ class Request extends UtopiaRequest
         return $headers;
     }
 
-    /**
-     * Get User Agent
-     *
-     * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
-     *
-     * @param  string  $default
-     * @return string
-     */
-    public function getUserAgent(string $default = ''): string
+    public function setQueryString(array $params): static
     {
-        $forwardedUserAgent = $this->getHeaderLine('x-forwarded-user-agent');
-        if (!empty($forwardedUserAgent)) {
-            $roles = $this->authorization->getRoles();
-            $isAppUser = $this->user?->isKey($roles) ?? false;
-
-            if ($isAppUser) {
-                return $forwardedUserAgent;
-            }
-        }
-
-        return UtopiaRequest::getUserAgent($default);
+        $this->queryParams = $params;
+        $this->filteredParams = null;
+        return $this;
     }
 
-    /**
-     * Creates a unique stable cache identifier for this GET request.
-     * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
-     *
-     * @return string
-     */
+    public function setPayload(array $params): static
+    {
+        $this->parsedBody = $params;
+        $this->filteredParams = null;
+        return $this;
+    }
+
+    public function setHeader(string $key, string $value): static
+    {
+        $clone = $this->withHeader($key, $value);
+        $this->headers = $clone->getHeaders();
+        $this->rebuildHeaderNames();
+        return $this;
+    }
+
+    public function addHeader(string $key, string $value): static
+    {
+        $clone = $this->withAddedHeader($key, $value);
+        $this->headers = $clone->getHeaders();
+        $this->rebuildHeaderNames();
+        return $this;
+    }
+
+    public function addFilter(Filter $filter): void
+    {
+        $this->filters[] = $filter;
+        $this->filteredParams = null;
+    }
+
+    public function getFilters(): array
+    {
+        return $this->filters;
+    }
+
+    public function resetFilters(): void
+    {
+        $this->filters = [];
+        $this->filteredParams = null;
+    }
+
+    public function hasFilters(): bool
+    {
+        return $this->filters !== [];
+    }
+
+    public function setRoute(?Route $route): void
+    {
+        $this->route = $route;
+        $this->filteredParams = null;
+    }
+
+    public function getRoute(): ?Route
+    {
+        return $this->route;
+    }
+
+    public function hasRoute(): bool
+    {
+        return $this->route !== null;
+    }
+
+    public function getContentRangeStart(): ?int
+    {
+        return $this->parseContentRange()['start'] ?? null;
+    }
+
+    public function getContentRangeEnd(): ?int
+    {
+        return $this->parseContentRange()['end'] ?? null;
+    }
+
+    public function getContentRangeSize(): ?int
+    {
+        return $this->parseContentRange()['size'] ?? null;
+    }
+
+    public function getRangeStart(): ?int
+    {
+        return $this->parseRange()['start'] ?? null;
+    }
+
+    public function getRangeEnd(): ?int
+    {
+        return $this->parseRange()['end'] ?? null;
+    }
+
+    public function getRangeUnit(): ?string
+    {
+        return $this->parseRange()['unit'] ?? null;
+    }
+
     public function cacheIdentifier(): string
     {
         $params = $this->getParams();
@@ -243,19 +425,154 @@ class Request extends UtopiaRequest
             $params['project'] = $this->getHeaderLine('x-appwrite-project', '');
         }
         ksort($params);
-        return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
+        return md5($this->getRequestTarget() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }
 
-    private ?Authorization $authorization = null;
-    private ?User $user = null;
-
-    public function setAuthorization(Authorization $authorization): void
+    private function rawParams(): array
     {
-        $this->authorization = $authorization;
+        return match ($this->method) {
+            self::METHOD_POST, self::METHOD_PUT, self::METHOD_PATCH, self::METHOD_DELETE => \is_array($this->parsedBody) ? $this->parsedBody : [],
+            default => $this->queryParams,
+        };
     }
 
-    public function setUser(User $user): void
+    private function parseContentRange(): array
     {
-        $this->user = $user;
+        if (!preg_match('/^(\w+) (\d+)-(\d+)\/(\d+)$/', $this->getHeaderLine('content-range'), $matches)) {
+            return [];
+        }
+
+        return ['unit' => $matches[1], 'start' => (int) $matches[2], 'end' => (int) $matches[3], 'size' => (int) $matches[4]];
+    }
+
+    private function parseRange(): array
+    {
+        if (!preg_match('/^(\w+)=(\d+)-(\d*)$/', $this->getHeaderLine('range'), $matches)) {
+            return [];
+        }
+
+        return ['unit' => $matches[1], 'start' => (int) $matches[2], 'end' => $matches[3] === '' ? null : (int) $matches[3]];
+    }
+
+    private function rebuildHeaderNames(): void
+    {
+        $this->headerNames = [];
+        foreach (\array_keys($this->headers) as $name) {
+            $this->headerNames[strtolower((string) $name)] = (string) $name;
+        }
+    }
+
+    private function uriFromSwoole(SwooleRequest $request, array $headers): UriInterface
+    {
+        $server = $request->server ?? [];
+        $requestUri = (string) ($server['request_uri'] ?? '/');
+        $query = (string) ($server['query_string'] ?? '');
+
+        if ($query !== '' && !str_contains($requestUri, '?')) {
+            $requestUri .= '?' . $query;
+        }
+
+        $host = $headers['host'] ?? '';
+        $host = \is_array($host) ? ($host[0] ?? '') : $host;
+
+        return $host === ''
+            ? Uri::parse($requestUri)
+            : Uri::parse($this->schemeFromHeaders($headers) . '://' . $host . $requestUri);
+    }
+
+    private function schemeFromHeaders(array $headers): string
+    {
+        $forwarded = $headers['x-forwarded-proto'] ?? null;
+        $forwarded = \is_array($forwarded) ? ($forwarded[0] ?? null) : $forwarded;
+
+        return \in_array($forwarded, ['http', 'https', 'ws', 'wss'], true) ? (string) $forwarded : 'http';
+    }
+
+    private function headersFromSwoole(SwooleRequest $request): array
+    {
+        $headers = [];
+
+        foreach ($request->header ?? [] as $name => $value) {
+            $headers[strtolower((string) $name)] = \is_array($value)
+                ? array_values(array_map(strval(...), $value))
+                : (string) $value;
+        }
+
+        return $headers;
+    }
+
+    private function parsedBodyFromSwoole(SwooleRequest $request, string $method, array $headers, string $rawBody): ?array
+    {
+        if (!\in_array(strtoupper($method), [self::METHOD_POST, self::METHOD_PUT, self::METHOD_PATCH, self::METHOD_DELETE], true)) {
+            return null;
+        }
+
+        $contentType = $headers['content-type'] ?? '';
+        $contentType = \is_array($contentType) ? ($contentType[0] ?? '') : $contentType;
+        $contentType = trim(explode(';', (string) $contentType)[0]);
+
+        if ($contentType === 'application/json') {
+            $decoded = json_decode($rawBody, true);
+            return \is_array($decoded) ? $decoded : [];
+        }
+
+        return $request->post ?? [];
+    }
+
+    private static function getState(ServerRequestInterface $request, string $key): mixed
+    {
+        self::$state ??= new WeakMap();
+        return self::$state[$request][$key] ?? null;
+    }
+
+    private static function setState(ServerRequestInterface $request, string $key, mixed $value): void
+    {
+        self::$state ??= new WeakMap();
+        $state = self::$state[$request] ?? [];
+        $state[$key] = $value;
+        self::$state[$request] = $state;
+    }
+
+    private static function parseContentRangeHeader(ServerRequestInterface $request): array
+    {
+        if (!preg_match('/^(\w+) (\d+)-(\d+)\/(\d+)$/', $request->getHeaderLine('content-range'), $matches)) {
+            return [];
+        }
+
+        return ['unit' => $matches[1], 'start' => (int) $matches[2], 'end' => (int) $matches[3], 'size' => (int) $matches[4]];
+    }
+
+    private static function parseRangeHeader(ServerRequestInterface $request): array
+    {
+        if (!preg_match('/^(\w+)=(\d+)-(\d*)$/', $request->getHeaderLine('range'), $matches)) {
+            return [];
+        }
+
+        return ['unit' => $matches[1], 'start' => (int) $matches[2], 'end' => $matches[3] === '' ? null : (int) $matches[3]];
+    }
+
+    private static function denormalizeFiles(array $files): array
+    {
+        $normalized = [];
+
+        foreach ($files as $key => $file) {
+            if ($file instanceof UploadedFileInterface) {
+                $stream = $file->getStream();
+                $normalized[$key] = [
+                    'name' => $file->getClientFilename(),
+                    'type' => $file->getClientMediaType(),
+                    'tmp_name' => (string) $stream->getMetadata('uri'),
+                    'error' => $file->getError(),
+                    'size' => $file->getSize(),
+                ];
+                continue;
+            }
+
+            if (\is_array($file)) {
+                $normalized[$key] = self::denormalizeFiles($file);
+            }
+        }
+
+        return $normalized;
     }
 }

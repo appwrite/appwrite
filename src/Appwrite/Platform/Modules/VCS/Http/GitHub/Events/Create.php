@@ -6,7 +6,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
-use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -49,7 +49,7 @@ class Create extends Action
 
     public function action(
         GitHub $github,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -59,11 +59,11 @@ class Create extends Action
     ) {
         $this->preprocessEvent($request);
 
-        $event = $request->getHeaderLine('x-github-event', '');
+        $event = ($request->getHeaderLine('x-github-event') ?: '');
         Span::add('vcs.github.event.name', $event);
 
-        $payload = $request->getRawPayload();
-        $signature = $request->getHeaderLine('x-hub-signature-256', '');
+        $payload = (string) $request->getBody();
+        $signature = ($request->getHeaderLine('x-hub-signature-256') ?: '');
         $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
         $valid = empty($secretKey) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
@@ -87,7 +87,7 @@ class Create extends Action
         $response->json($parsedPayload);
     }
 
-    protected function preprocessEvent(Request $request)
+    protected function preprocessEvent(ServerRequestInterface $request)
     {
         return;
     }

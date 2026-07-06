@@ -35,7 +35,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -106,6 +106,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
+            ->inject('ip')
             ->callback($this->action(...));
     }
 
@@ -118,7 +119,7 @@ class Create extends Base
         mixed $headers,
         ?string $scheduledAt,
         Response $response,
-        Request $request,
+        ServerRequestInterface $request,
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -134,6 +135,7 @@ class Create extends Base
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
+        string $ip,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -238,7 +240,6 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
-        $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
 
         if (!empty($ip)) {

@@ -31,7 +31,8 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
-use Utopia\Http\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -171,7 +172,7 @@ class Create extends Base
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
-        Request $request,
+        ServerRequestInterface $request,
         GitHub $github,
         Authorization $authorization,
         array $platform
@@ -315,7 +316,7 @@ class Create extends Base
         ]));
 
         // Backwards compatibility with 1.6 behaviour
-        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = ($request->getHeaderLine('x-appwrite-response-format') ?: System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat && version_compare($requestFormat, '1.7.0', '<')) {
             // build from template
             $template = new Document([]);

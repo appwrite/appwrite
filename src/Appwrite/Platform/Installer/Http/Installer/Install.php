@@ -9,7 +9,8 @@ use Appwrite\Platform\Installer\Server;
 use Appwrite\Platform\Installer\Validator\AppDomain;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Emails\Validator\Email;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
@@ -73,7 +74,7 @@ class Install extends Action
         string $installId,
         ?string $retryStep,
         bool $migrate,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         SwooleResponse $swooleResponse,
         State $state,

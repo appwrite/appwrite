@@ -2,7 +2,7 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use MaxMind\Db\Reader;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
@@ -39,11 +39,12 @@ Http::init()
     ->inject('geodb')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization) {
+    ->inject('ip')
+    ->action(function (Route $route, ServerRequestInterface $request, Document $project, Reader $geodb, User $user, Authorization $authorization, string $ip) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
-            $record = $geodb->get($request->getIP()) ?? [];
+            $record = $geodb->get($ip) ?? [];
             $country = $record['country']['iso_code'] ?? '';
             if (in_array($country, $countries)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);

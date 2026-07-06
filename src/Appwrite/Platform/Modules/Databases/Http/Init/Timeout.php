@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Init;
 
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Database\Database;
 use Utopia\Http\Http;
 use Utopia\Platform\Action;
@@ -24,7 +25,7 @@ class Timeout extends Action
             ->groups(['api', 'database'])
             ->inject('request')
             ->inject('dbForProject')
-            ->callback(function (Request $request, Database $dbForProject) {
+            ->callback(function (ServerRequestInterface $request, Database $dbForProject) {
                 $timeout = \intval($request->getHeaderLine('x-appwrite-timeout'));
 
                 if (!empty($timeout) && Http::isDevelopment()) {

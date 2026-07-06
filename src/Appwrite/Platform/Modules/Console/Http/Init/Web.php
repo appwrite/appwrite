@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Init;
 
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Action;
 
@@ -20,10 +21,10 @@ class Web extends Action
             ->groups(['web'])
             ->inject('request')
             ->inject('response')
-            ->callback(function (Request $request, Response $response) {
+            ->callback(function (ServerRequestInterface $request, Response $response) {
                 $response
                     ->addHeader('X-Frame-Options', 'SAMEORIGIN') // Avoid console and homepage from showing in iframes
-                    ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . \urlencode($request->getURI()))
+                    ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . \urlencode($request->getRequestTarget()))
                     ->addHeader('X-UA-Compatible', 'IE=Edge') // Deny IE browsers from going into quirks mode
                 ;
             });

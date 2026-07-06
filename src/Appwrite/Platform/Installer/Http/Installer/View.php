@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Server;
-use Utopia\Http\Adapter\Swoole\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Integer;
@@ -33,7 +33,7 @@ class View extends Action
             ->callback($this->action(...));
     }
 
-    public function action(int $step, ?string $partial, Request $request, Response $response, Config $config, array $paths): void
+    public function action(int $step, ?string $partial, ServerRequestInterface $request, Response $response, Config $config, array $paths): void
     {
         $csrfToken = $this->makeCsrf($request, $response);
 
@@ -80,9 +80,9 @@ class View extends Action
         $response->html($html);
     }
 
-    private function makeCsrf(Request $request, Response $response): string
+    private function makeCsrf(ServerRequestInterface $request, Response $response): string
     {
-        $existing = $request->getCookie(Server::CSRF_COOKIE);
+        $existing = $request->getCookieParams()[Server::CSRF_COOKIE] ?? '';
         if ($existing !== '') {
             return $existing;
         }

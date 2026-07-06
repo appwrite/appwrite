@@ -19,7 +19,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -80,7 +81,7 @@ class Get extends Action
         string $bucketId,
         string $fileId,
         ?string $token,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject,
         string $mode,
@@ -131,9 +132,9 @@ class Get extends Action
 
         $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
-            $start = $request->getRangeStart();
-            $end = $request->getRangeEnd();
-            $unit = $request->getRangeUnit();
+            $start = Request::rangeStart($request);
+            $end = Request::rangeEnd($request);
+            $unit = Request::rangeUnit($request);
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));

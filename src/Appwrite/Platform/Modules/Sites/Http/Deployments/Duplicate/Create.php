@@ -15,7 +15,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -75,7 +76,7 @@ class Create extends Action
     public function action(
         string $siteId,
         string $deploymentId,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Document $project,
         Database $dbForProject,

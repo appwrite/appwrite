@@ -21,7 +21,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\DI\Container;
 use Utopia\Http\Http;
-use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
 use Utopia\Platform\Action;
 use Utopia\System\System;
@@ -48,7 +47,7 @@ class Specs extends Action
         return 'specs';
     }
 
-    public function getRequest(): UtopiaRequest
+    public function getRequest(): AppwriteRequest
     {
         return new AppwriteRequest(new SwooleRequest());
     }

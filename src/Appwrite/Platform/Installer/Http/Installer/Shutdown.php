@@ -4,7 +4,8 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Swoole\Http\Server as SwooleServer;
 use Swoole\Timer;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 
@@ -29,7 +30,7 @@ class Shutdown extends Action
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response, ?SwooleServer $swooleServer): void
+    public function action(ServerRequestInterface $request, Response $response, ?SwooleServer $swooleServer): void
     {
         if (!Validate::validateCsrf($request)) {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);

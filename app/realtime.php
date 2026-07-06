@@ -880,7 +880,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $project = null;
     $logUser = null;
     $authorization = null;
-    $rawSize = $request->getSize();
+    $rawSize = Request::size($request);
     $channelCount = 0;
     $subscriptionCount = 0;
     $outboundBytes = 0;
@@ -891,8 +891,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     Span::init('realtime.open');
     Span::add('realtime.connection.id', $connection);
     Span::add('realtime.inbound_bytes', $rawSize);
-    if (!empty($request->getOrigin())) {
-        Span::add('realtime.origin', $request->getOrigin());
+    if (!empty($request->getHeaderLine('origin'))) {
+        Span::add('realtime.origin', $request->getHeaderLine('origin'));
     }
 
     $error = null;
@@ -909,6 +909,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $timelimit = $connectionContainer->get('timelimit');
+        $ip = $connectionContainer->get('ip');
         $user = $connectionContainer->get('user'); /** @var User $user */
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
         $targetUser = $connectionContainer->get('targetUser'); /** @var User $targetUser */
@@ -942,8 +943,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
         $timelimit
-            ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getURI());
+            ->setParam('{ip}', $ip)
+            ->setParam('{url}', $request->getRequestTarget());
 
         $abuse = new Abuse($timelimit);
 
@@ -960,7 +961,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Adding Appwrite API domains to allow XDOMAIN communication.
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
-        $origin = $request->getOrigin();
+        $origin = $request->getHeaderLine('origin');
         $originValidator = $connectionContainer->get('originValidator');
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
@@ -969,7 +970,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $roles = $targetUser->getRoles($authorization);
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
+        $channels = Realtime::convertChannels($request->getQueryParams()['channels'] ?? [], $targetUser->getId());
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -1024,7 +1025,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
-                fn ($channel) => $request->getQuery($channel, null)
+                fn ($channel) => $request->getQueryParams()[$channel] ?? null
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());

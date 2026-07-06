@@ -4,6 +4,7 @@ global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -44,9 +45,10 @@ Http::get('/v1/mock/tests/locale')
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
-    ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
-        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+    ->action(function (Locale $locale, array $localeCodes, ServerRequestInterface $request, array $requestParams, Response $response) {
+        $localeParam = (string) ($requestParams['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }

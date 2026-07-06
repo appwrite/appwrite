@@ -4096,23 +4096,26 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc9",
+            "version": "2.0.0-rc16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "e4fdbc57ac6dc7cad1604eb904d3c95a31226ba9"
+                "reference": "37616fe0df438b25ae0feffd61027774337cb113"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/e4fdbc57ac6dc7cad1604eb904d3c95a31226ba9",
-                "reference": "e4fdbc57ac6dc7cad1604eb904d3c95a31226ba9",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/37616fe0df438b25ae0feffd61027774337cb113",
+                "reference": "37616fe0df438b25ae0feffd61027774337cb113",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.3",
+                "php": ">=8.4",
+                "psr/http-message": "^1.1 || ^2.0",
                 "utopia-php/compression": "^0.1",
                 "utopia-php/di": "^0.3",
+                "utopia-php/psr7": "^0.2.0",
                 "utopia-php/servers": "^0.4",
+                "utopia-php/system": "^0.10",
                 "utopia-php/telemetry": "^0.4",
                 "utopia-php/validators": "^0.2"
             },
@@ -4141,9 +4144,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc9"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc16"
             },
-            "time": "2026-06-10T16:25:51+00:00"
+            "time": "2026-07-06T15:25:18+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4666,6 +4669,52 @@
                 "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
             },
             "time": "2020-10-24T07:04:59+00:00"
+        },
+        {
+            "name": "utopia-php/psr7",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/psr7.git",
+                "reference": "115753c36194d53abe5587d383810724ac3a782d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/psr7/zipball/115753c36194d53abe5587d383810724ac3a782d",
+                "reference": "115753c36194d53abe5587d383810724ac3a782d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.1 || ^2.0"
+            },
+            "suggest": {
+                "ext-simplexml": "Required to decode XML responses with Response::xml()."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Psr7\\": "src/Psr7/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PSR-7 HTTP message implementations and PSR-17 factories for Utopia",
+            "keywords": [
+                "http",
+                "php",
+                "psr-17",
+                "psr-7",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/psr7/issues",
+                "source": "https://github.com/utopia-php/psr7/tree/0.2.0"
+            },
+            "time": "2026-07-06T12:40:23+00:00"
         },
         {
             "name": "utopia-php/query",

@@ -3,7 +3,7 @@
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\Config\Config;
@@ -32,12 +32,11 @@ Http::get('/v1/locale')
     ->inject('response')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
+    ->inject('ip')
+    ->action(function (ServerRequestInterface $request, Response $response, Locale $locale, Reader $geodb, string $ip) {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
-        $ip = $request->getIP();
-
         $output['ip'] = $ip;
 
         $currency = null;
