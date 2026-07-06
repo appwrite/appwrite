@@ -29,12 +29,6 @@ final class RequestTest extends TestCase
         $this->assertFalse($this->request->hasFilters());
         $this->assertEmpty($this->request->getFilters());
 
-        $this->request->addFilter(new First());
-        $this->request->addFilter(new Second());
-
-        $this->assertTrue($this->request->hasFilters());
-        $this->assertCount(2, $this->request->getFilters());
-
         $route = new Route(Request::METHOD_GET, '/test');
         $route->label('sdk', new Method(
             namespace: 'namespace',
@@ -47,6 +41,12 @@ final class RequestTest extends TestCase
         // set test header to prevent header populaten inside the request class
         $this->request->addHeader('EXAMPLE', 'VALUE');
         $this->request->setRoute($route);
+        $this->request->addFilter(new First());
+        $this->request->addFilter(new Second());
+
+        $this->assertTrue($this->request->hasFilters());
+        $this->assertCount(2, $this->request->getFilters());
+
         $this->request->setQueryString([
             'initial' => true,
             'first' => false
@@ -157,12 +157,44 @@ final class RequestTest extends TestCase
 
         $firstRoute = new Route(Request::METHOD_GET, '/first');
         $secondRoute = new Route(Request::METHOD_GET, '/second');
+        $firstRoute->label('sdk', new Method(
+            namespace: 'namespace',
+            group: 'group',
+            name: 'first',
+            description: 'description',
+            auth: [],
+            responses: [],
+        ));
+        $secondRoute->label('sdk', new Method(
+            namespace: 'namespace',
+            group: 'group',
+            name: 'second',
+            description: 'description',
+            auth: [],
+            responses: [],
+        ));
 
         $firstRequest->setRoute($firstRoute);
         $secondRequest->setRoute($secondRoute);
+        $firstRequest->addFilter(new class () extends Filter {
+            public function parse(array $content, string $model): array
+            {
+                $content['model'] = $model;
+                return $content;
+            }
+        });
+        $secondRequest->addFilter(new class () extends Filter {
+            public function parse(array $content, string $model): array
+            {
+                $content['model'] = $model;
+                return $content;
+            }
+        });
+        $firstRequest->setQueryString([]);
+        $secondRequest->setQueryString([]);
 
-        $this->assertSame($firstRoute, $firstRequest->getRoute());
-        $this->assertSame($secondRoute, $secondRequest->getRoute());
+        $this->assertSame('namespace.first', $firstRequest->getParams()['model']);
+        $this->assertSame('namespace.second', $secondRequest->getParams()['model']);
     }
 
     public function testGetHeaderLineReturnsStringValue(): void
@@ -185,30 +217,6 @@ final class RequestTest extends TestCase
         $request = new Request($swoole);
 
         $this->assertSame('https://a.example, https://b.example', $request->getHeaderLine('referer'));
-    }
-
-    public function testGetHeadersSynthesizesCookieHeaderFromCookieJar(): void
-    {
-        // Swoole parses the Cookie header into its cookie jar, so getHeaders()
-        // must rebuild it for consumers that forward request headers onward
-        // (e.g. function/site executions).
-        $swoole = new SwooleRequest();
-        $swoole->header = ['host' => 'example.com'];
-        $swoole->cookie = ['custom-session-id' => 'abcd123', 'custom-user-id' => 'efgh456'];
-        $request = new Request($swoole);
-
-        $headers = $request->getHeaders();
-
-        $this->assertSame(['custom-session-id=abcd123; custom-user-id=efgh456'], $headers['cookie']);
-    }
-
-    public function testGetHeadersOmitsCookieHeaderWhenNoCookies(): void
-    {
-        $swoole = new SwooleRequest();
-        $swoole->header = ['host' => 'example.com'];
-        $request = new Request($swoole);
-
-        $this->assertArrayNotHasKey('cookie', $request->getHeaders());
     }
 
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void

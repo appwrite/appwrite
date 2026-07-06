@@ -64,6 +64,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
@@ -302,11 +303,21 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $body = $swooleRequest->getContent() ?: '';
         $method = $swooleRequest->server['request_method'];
 
-        // getHeaders() follows PSR-7 and returns each header as a list of values;
-        // collapse to single-line strings for the function/site header map below.
+        $requestHeaders = $request->getHeaders();
+        $cookies = $request->getCookieParams();
+        if (!empty($cookies)) {
+            $pairs = [];
+            foreach ($cookies as $key => $value) {
+                $pairs[] = "{$key}={$value}";
+            }
+            $requestHeaders['cookie'] = [\implode('; ', $pairs)];
+        }
+
+        // Headers follow PSR-7 and are lists of values; collapse to single-line
+        // strings for the function/site header map below.
         $requestHeaders = \array_map(
             static fn (array $values) => \implode(', ', $values),
-            $request->getHeaders()
+            $requestHeaders
         );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
@@ -998,12 +1009,13 @@ Http::init()
  */
 Http::init()
     ->groups(['api', 'web', 'graphql'])
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('cors')
     ->inject('devKey')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
+    ->action(function (Route $route, Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1024,7 +1036,6 @@ Http::init()
         if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
-        $route = $request->getRoute();
         if ($route?->getLabel('origin', false) === '*') {
             return;
         }

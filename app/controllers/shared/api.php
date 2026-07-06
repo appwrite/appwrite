@@ -24,6 +24,7 @@ use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Request\CacheIdentifier;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
@@ -493,12 +494,12 @@ Http::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('userAgent')
     ->inject('timelimit')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, string $userAgent, callable $timelimit, Document $devKey, Authorization $authorization) {
         $response->setUser($user);
-        $request->setUser($user);
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
@@ -520,7 +521,7 @@ Http::init()
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
                     ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', $request->getUserAgent(''))
+                    ->setParam('{userAgent}', $userAgent)
                     ->setParam('{ip}', $request->getIP())
                     ->setParam('{url}', $request->getHostname() . $route->getPath())
                     ->setParam('{method}', $request->getMethod())
@@ -582,11 +583,11 @@ Http::init()
     ->inject('cacheControlForStorage')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->inject('userAgent')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser, string $userAgent) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
-        $request->setUser($targetUser);
 
         $path = $route->getPath();
         $databaseType = match (true) {
@@ -608,7 +609,7 @@ Http::init()
             ->setUser($targetUser);
 
         $auditContext->mode = $mode;
-        $auditContext->userAgent = $request->getUserAgent('');
+        $auditContext->userAgent = $userAgent;
         $auditContext->ip = $request->getIP();
         $auditContext->hostname = $request->getHostname();
         $auditContext->event = $route->getLabel('audits.event', '');
@@ -635,7 +636,8 @@ Http::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
-            $key = $request->cacheIdentifier();
+            $cacheParams = $route->getLabel('cache.params', null);
+            $key = CacheIdentifier::fromRequest($request, \is_array($cacheParams) ? $cacheParams : null)->toString();
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
@@ -878,8 +880,9 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
+    ->inject('userAgent')
     ->inject('timelimit')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, string $userAgent, callable $timelimit) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
@@ -898,7 +901,7 @@ Http::shutdown()
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
+                ->setParam('{userAgent}', $userAgent)
                 ->setParam('{ip}', $request->getIP())
                 ->setParam('{url}', $request->getHostname() . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
@@ -1011,7 +1014,8 @@ Http::shutdown()
         $cache = new Cache(
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
         );
-        $key = $request->cacheIdentifier();
+        $cacheParams = $route->getLabel('cache.params', null);
+        $key = CacheIdentifier::fromRequest($request, \is_array($cacheParams) ? $cacheParams : null)->toString();
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));

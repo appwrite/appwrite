@@ -103,6 +103,7 @@ class Create extends Action
             ->inject('project')
             ->inject('platform')
             ->inject('request')
+            ->inject('userAgent')
             ->inject('queueForEvents')
             ->inject('publisherForMessaging')
             ->inject('publisherForMails')
@@ -123,6 +124,7 @@ class Create extends Action
         Document $project,
         array $platform,
         Request $request,
+        string $userAgent,
         Event $queueForEvents,
         MessagingPublisher $publisherForMessaging,
         MailPublisher $publisherForMails,
@@ -235,7 +237,7 @@ class Create extends Action
 
                 $bodyTemplate = $templatesPath . '/' . $smtpBaseTemplate . '.tpl';
 
-                $detector = new Detector($request->getUserAgent('UNKNOWN'));
+                $detector = new Detector($userAgent ?: 'UNKNOWN');
                 $agentOs = $detector->getOS();
                 $agentClient = $detector->getClient();
                 $agentDevice = $detector->getDevice();

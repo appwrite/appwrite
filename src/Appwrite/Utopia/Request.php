@@ -3,10 +3,8 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\SDK\Method;
-use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
 use Utopia\Http\Route;
 use Utopia\System\System;
@@ -43,7 +41,7 @@ class Request extends UtopiaRequest
             return $parameters;
         }
 
-        $methods = $this->getRoute()?->getLabel('sdk', null);
+        $methods = $this->route?->getLabel('sdk', null);
 
         if (empty($methods)) {
             return $parameters;
@@ -158,16 +156,6 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * Return the current route
-     *
-     * @return Route|null
-     */
-    public function getRoute(): ?Route
-    {
-        return $this->route;
-    }
-
-    /**
      * Check if a route has been set
      *
      * @return bool
@@ -177,85 +165,4 @@ class Request extends UtopiaRequest
         return $this->route !== null;
     }
 
-    /**
-     * Get headers
-     *
-     * Method for getting all HTTP headers, including a synthesized `cookie`
-     * header. Swoole parses the incoming Cookie header into its own cookie jar,
-     * so it is absent from the raw header map; rebuild it here so consumers that
-     * forward request headers (e.g. function/site executions) still receive it.
-     *
-     * @return array<string, array<int, string>>
-     */
-    public function getHeaders(): array
-    {
-        $headers = parent::getHeaders();
-
-        $cookies = $this->getCookieParams();
-        if (!empty($cookies)) {
-            $pairs = [];
-            foreach ($cookies as $key => $value) {
-                $pairs[] = "{$key}={$value}";
-            }
-            $headers['cookie'] = [\implode('; ', $pairs)];
-        }
-
-        return $headers;
-    }
-
-    /**
-     * Get User Agent
-     *
-     * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
-     *
-     * @param  string  $default
-     * @return string
-     */
-    public function getUserAgent(string $default = ''): string
-    {
-        $forwardedUserAgent = $this->getHeaderLine('x-forwarded-user-agent');
-        if (!empty($forwardedUserAgent)) {
-            $roles = $this->authorization->getRoles();
-            $isAppUser = $this->user?->isKey($roles) ?? false;
-
-            if ($isAppUser) {
-                return $forwardedUserAgent;
-            }
-        }
-
-        return UtopiaRequest::getUserAgent($default);
-    }
-
-    /**
-     * Creates a unique stable cache identifier for this GET request.
-     * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
-     *
-     * @return string
-     */
-    public function cacheIdentifier(): string
-    {
-        $params = $this->getParams();
-        $allowedParams = $this->getRoute()?->getLabel('cache.params', null);
-        if ($allowedParams !== null) {
-            $params = array_intersect_key($params, array_flip($allowedParams));
-        }
-        if (!isset($params['project'])) {
-            $params['project'] = $this->getHeaderLine('x-appwrite-project', '');
-        }
-        ksort($params);
-        return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
-    }
-
-    private ?Authorization $authorization = null;
-    private ?User $user = null;
-
-    public function setAuthorization(Authorization $authorization): void
-    {
-        $this->authorization = $authorization;
-    }
-
-    public function setUser(User $user): void
-    {
-        $this->user = $user;
-    }
 }
