@@ -93,6 +93,10 @@ class Resolver
      */
     public function getAdapter(Document $installation, Database $dbForPlatform): Git
     {
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         $provider = $this->getProviderForInstallation($installation);
         $adapter = $provider->createAdapter($this->cache);
 
@@ -254,7 +258,13 @@ class Resolver
             $endpoint = $protocol . '://' . System::getEnv('_APP_DOMAIN', 'localhost');
         }
 
-        $url = \rtrim($endpoint, '/') . '/v1/vcs/' . $provider->getKey() . '/events';
+        // Accept the base with or without a trailing /v1 (both are used in practice).
+        $endpoint = \rtrim($endpoint, '/');
+        if (\str_ends_with($endpoint, '/v1')) {
+            $endpoint = \substr($endpoint, 0, -3);
+        }
+
+        $url = $endpoint . '/v1/vcs/' . $provider->getKey() . '/events';
 
         try {
             $adapter->createWebhook($owner, $repositoryName, $url, $provider->getWebhookSecret());

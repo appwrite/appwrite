@@ -102,11 +102,12 @@ class Create extends Base
         $template = new Document();
 
         $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
-        $adapter = $vcs->getAdapter($installation, $dbForPlatform);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
+
+        $adapter = $vcs->getAdapter($installation, $dbForPlatform);
 
         $deployment = $this->redeployVcsFunction(
             request: $request,
