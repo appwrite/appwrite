@@ -1343,6 +1343,7 @@ return function (Container $context): void {
             }
 
             $record = null;
+            $lookupSucceeded = false;
             $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
             $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
 
@@ -1357,6 +1358,7 @@ return function (Container $context): void {
                         $body = $response->json();
                         if (\is_array($body)) {
                             $record = $body;
+                            $lookupSucceeded = true;
                         }
                     }
                 } catch (\Throwable $th) {
@@ -1399,7 +1401,9 @@ return function (Container $context): void {
                 'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
                 'connectionOrganization' => $record['organization'] ?? null,
                 'isp' => $record['isp'] ?? null,
-            ]))->setLocale($locale);
+            ]))
+                ->setLocale($locale)
+                ->setLookupSucceeded($lookupSucceeded);
 
             $cache[$ip] = $geoRecord;
 

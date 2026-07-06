@@ -9,11 +9,30 @@ class GeoRecord extends Document
 {
     private ?Locale $locale = null;
 
+    private bool $lookupSucceeded = false;
+
     public function setLocale(Locale $locale): self
     {
         $this->locale = $locale;
 
         return $this;
+    }
+
+    public function setLookupSucceeded(bool $succeeded): self
+    {
+        $this->lookupSucceeded = $succeeded;
+
+        return $this;
+    }
+
+    /**
+     * True when the geo service returned a well-formed response for this IP,
+     * even if the response reported an unknown country (e.g. IP not in the DB).
+     * False when the service was unreachable, misconfigured, or errored.
+     */
+    public function isLookupSucceeded(): bool
+    {
+        return $this->lookupSucceeded;
     }
 
     public function isEmpty(): bool

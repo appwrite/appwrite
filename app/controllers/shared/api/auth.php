@@ -42,18 +42,13 @@ Http::init()
     ->action(function (Route $route, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist) && $project->getId() === 'console') {
-            $isPublicIp = \filter_var(
-                $request->getIP(),
-                FILTER_VALIDATE_IP,
-                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-            ) !== false;
-
-            // Fail-closed on public routable IPs when geo data is unavailable: an unknown
-            // country cannot be proven to sit outside a "block these countries" policy, so
-            // deny access rather than silently letting the denylist pass.
-            // Private and reserved ranges (localhost, LAN, VPN, CI) carry no geographic
-            // meaning, so we leave the gate open for intra-network traffic.
-            if ($isPublicIp && $geoRecord->isEmpty()) {
+            // Fail-closed when we could not reach the geo service at all: we cannot prove
+            // the caller is outside a "block these countries" policy, so deny access
+            // rather than silently letting the denylist pass. A successful lookup that
+            // returns "--" (IP genuinely unknown to the geo DB, common for private and
+            // documentation ranges) is treated as allowed and falls through to the
+            // membership check below.
+            if (!$geoRecord->isLookupSucceeded()) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
 
