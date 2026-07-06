@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\FunctionDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -12,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -38,7 +39,6 @@ class Delete extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].delete')
             ->label('audits.event', 'function.delete')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -62,9 +62,11 @@ class Delete extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -73,9 +75,11 @@ class Delete extends Base
         Response $response,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
-        Event $queueForEvents,
+        Bus $bus,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $project,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -100,12 +104,12 @@ class Delete extends Base
         }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $function,
         ));
 
-        $queueForEvents->setParam('functionId', $function->getId());
+        $bus->dispatch(new FunctionDeleted($function, $project, $actor));
 
         $response->noContent();
     }

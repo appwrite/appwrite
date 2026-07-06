@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\ExecutionDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -37,7 +38,6 @@ class Delete extends Base
             ->groups(['api', 'functions'])
             ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].executions.[executionId].delete')
             ->label('audits.event', 'executions.delete')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -62,8 +62,10 @@ class Delete extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('authorization')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -73,8 +75,10 @@ class Delete extends Base
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents,
-        Authorization $authorization
+        Bus $bus,
+        Authorization $authorization,
+        Document $project,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -128,10 +132,7 @@ class Delete extends Base
             }
         }
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
-            ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
+        $bus->dispatch(new ExecutionDeleted($execution, $function->getId(), $project, $actor));
 
         $response->noContent();
     }

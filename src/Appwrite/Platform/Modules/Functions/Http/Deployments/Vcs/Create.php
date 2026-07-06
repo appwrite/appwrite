@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\DeploymentCreated;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -40,7 +41,6 @@ class Create extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -71,10 +71,11 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('publisherForBuilds')
             ->inject('gitHub')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -88,10 +89,11 @@ class Create extends Base
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
-        Event $queueForEvents,
+        Bus $bus,
         BuildPublisher $publisherForBuilds,
         GitHub $github,
         array $platform,
+        Document $actor,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -122,12 +124,10 @@ class Create extends Base
             referenceType: $type
         );
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+        $bus->dispatch(new DeploymentCreated($deployment, $function->getId(), $project, $actor));
     }
 }

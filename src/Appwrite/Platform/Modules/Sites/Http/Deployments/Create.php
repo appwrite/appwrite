@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteDeploymentCreated;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -52,7 +53,6 @@ class Create extends Action
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -85,7 +85,7 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('deviceForSites')
             ->inject('deviceForLocal')
             ->inject('publisherForBuilds')
@@ -93,6 +93,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('platform')
             ->inject('locks')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -108,7 +109,7 @@ class Create extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
-        Event $queueForEvents,
+        Bus $bus,
         Device $deviceForSites,
         Device $deviceForLocal,
         BuildPublisher $publisherForBuilds,
@@ -116,6 +117,7 @@ class Create extends Action
         Authorization $authorization,
         array $platform,
         callable $locks,
+        Document $actor,
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -314,7 +316,6 @@ class Create extends Action
         }
 
         if ($completed) {
-            $queueForEvents->reset();
             return;
         }
 
@@ -325,7 +326,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, $authorization, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $publisherForBuilds, $queueForEvents, $response, &$site, $siteId, $type): void {
+            $locks($lockKey, 600, function () use ($activate, $authorization, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $publisherForBuilds, $bus, $actor, $response, &$site, $siteId, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -335,8 +336,6 @@ class Create extends Action
                     $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);
 
                     if ($uploaded === $chunks) {
-                        $queueForEvents->reset();
-
                         $response
                             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -442,15 +441,13 @@ class Create extends Action
 
                 $metadata = null;
 
-                if ($chunksUploaded === $chunks) {
-                    $queueForEvents
-                        ->setParam('siteId', $site->getId())
-                        ->setParam('deploymentId', $deployment->getId());
-                }
-
                 $response
                     ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                     ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+                if ($chunksUploaded === $chunks) {
+                    $bus->dispatch(new SiteDeploymentCreated($deployment, $site->getId(), $project, $actor));
+                }
             }, timeout: 120.0);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');

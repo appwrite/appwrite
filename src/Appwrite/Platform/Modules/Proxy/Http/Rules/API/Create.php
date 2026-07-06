@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -38,7 +39,6 @@ class Create extends Action
             ->groups(['api', 'proxy'])
             ->desc('Create API rule')
             ->label('scope', 'rules.write')
-            ->label('event', 'rules.[ruleId].create')
             ->label('audits.event', 'rule.create')
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
@@ -65,11 +65,12 @@ class Create extends Action
             ->inject('response')
             ->inject('project')
             ->inject('publisherForCertificates')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('log')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -78,11 +79,12 @@ class Create extends Action
         Response $response,
         Document $project,
         Certificate $publisherForCertificates,
-        Event $queueForEvents,
+        Bus $bus,
         Database $dbForPlatform,
         array $platform,
         Log $log,
         Authorization $authorization,
+        Document $actor,
     ) {
         $this->validateDomainRestrictions($domain, $platform);
 
@@ -132,8 +134,6 @@ class Create extends Action
             ));
         }
 
-        $queueForEvents->setParam('ruleId', $rule->getId());
-
         // Rename 'created' status to 'unverified' for consistency.
         // 'verifying' and 'verified' statuses stay as is.
         // 'unverified' in the meaning of failed certificate generation stays as is.
@@ -144,5 +144,7 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
+
+        $bus->dispatch(new RuleCreated($rule, $project, $actor));
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\MembershipUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -36,7 +37,6 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId')
             ->desc('Update team membership')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].memberships.[membershipId].update')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
@@ -62,11 +62,11 @@ class Update extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('authorization')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, array $roles, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $membershipId, array $roles, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Authorization $authorization, Bus $bus)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -127,17 +127,13 @@ class Update extends Action
          */
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
-        $queueForEvents
-            ->setParam('userId', $profile->getId())
-            ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId());
+        $membership
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $profile->getAttribute('name'))
+            ->setAttribute('userEmail', $profile->getAttribute('email'));
 
-        $response->dynamic(
-            $membership
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $profile->getAttribute('name'))
-                ->setAttribute('userEmail', $profile->getAttribute('email')),
-            Response::MODEL_MEMBERSHIP
-        );
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
+
+        $bus->dispatch(new MembershipUpdated($membership, $team->getId(), $profile->getId(), $project, $user));
     }
 }

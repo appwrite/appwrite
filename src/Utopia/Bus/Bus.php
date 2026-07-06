@@ -33,7 +33,25 @@ class Bus
         }
 
         $resolver = $this->resolver;
-        $listeners = $this->listeners[$event::class] ?? [];
+
+        // Match listeners registered against the event's concrete class as well as any
+        // parent class or interface it derives from. This lets cross-cutting listeners
+        // subscribe to a base event (e.g. ResourceEvent) and receive every subtype,
+        // while listeners bound to a concrete class keep exact-match behaviour.
+        $types = [$event::class, ...class_parents($event), ...class_implements($event)];
+
+        $seen = [];
+        $listeners = [];
+        foreach ($types as $type) {
+            foreach ($this->listeners[$type] ?? [] as $listener) {
+                $id = \spl_object_id($listener);
+                if (isset($seen[$id])) {
+                    continue;
+                }
+                $seen[$id] = true;
+                $listeners[] = $listener;
+            }
+        }
 
         foreach ($listeners as $listener) {
             $deps = array_map($resolver, $listener->getInjections());

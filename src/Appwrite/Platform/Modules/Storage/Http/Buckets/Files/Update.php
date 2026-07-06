@@ -2,14 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\FileUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -40,7 +42,6 @@ class Update extends Action
             ->groups(['api', 'storage'])
             ->label('scope', 'files.write')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-            ->label('event', 'buckets.[bucketId].files.[fileId].update')
             ->label('audits.event', 'file.update')
             ->label('audits.resource', 'file/{response.$id}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
@@ -63,9 +64,10 @@ class Update extends Action
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('authorization')
             ->inject('user')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -76,9 +78,10 @@ class Update extends Action
         ?array $permissions,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents,
+        Bus $bus,
         Authorization $authorization,
-        User $user
+        User $user,
+        Document $project
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -150,12 +153,8 @@ class Update extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $queueForEvents
-            ->setParam('bucketId', $bucket->getId())
-            ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
-        ;
-
         $response->dynamic($file, Response::MODEL_FILE);
+
+        $bus->dispatch(new FileUpdated($file, $bucket, $project, $user));
     }
 }

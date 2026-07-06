@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteActiveDeploymentUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -35,7 +36,6 @@ class Update extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -59,9 +59,10 @@ class Update extends Base
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -71,9 +72,10 @@ class Update extends Base
         Document $project,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents,
+        Bus $bus,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $actor
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -118,10 +120,8 @@ class Update extends Base
             ])));
         }, $queries));
 
-        $queueForEvents
-            ->setParam('siteId', $site->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $response->dynamic($site, Response::MODEL_SITE);
+
+        $bus->dispatch(new SiteActiveDeploymentUpdated($site, $deployment->getId(), $project, $actor));
     }
 }

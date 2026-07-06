@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Teams\Name;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\TeamUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -31,7 +32,6 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId')
             ->desc('Update name')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].update')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')
             ->label('audits.resource', 'team/{response.$id}')
@@ -52,11 +52,13 @@ class Update extends Action
             ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('user')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $name, Response $response, Database $dbForProject, Event $queueForEvents)
+    public function action(string $teamId, string $name, Response $response, Database $dbForProject, Document $project, Document $user, Bus $bus)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -70,8 +72,8 @@ class Update extends Action
 
         $team = $dbForProject->updateDocument('teams', $team->getId(), new Document(['name' => $name, 'search' => implode(' ', [$teamId, $name])]));
 
-        $queueForEvents->setParam('teamId', $team->getId());
-
         $response->dynamic($team, Response::MODEL_TEAM);
+
+        $bus->dispatch(new TeamUpdated($team, $project, $user));
     }
 }

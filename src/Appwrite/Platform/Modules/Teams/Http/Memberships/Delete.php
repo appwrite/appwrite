@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\MembershipDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -34,7 +35,6 @@ class Delete extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId')
             ->desc('Delete team membership')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'membership.delete')
             ->label('audits.resource', 'team/{request.teamId}')
@@ -59,11 +59,11 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Authorization $authorization, Bus $bus)
     {
         $membership = $dbForProject->getDocument('memberships', $membershipId);
         if ($membership->isEmpty()) {
@@ -143,11 +143,7 @@ class Delete extends Action
             $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
-        $queueForEvents
-            ->setParam('teamId', $team->getId())
-            ->setParam('userId', $profile->getId())
-            ->setParam('membershipId', $membership->getId())
-            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP));
+        $bus->dispatch(new MembershipDeleted($membership, $team->getId(), $profile->getId(), $project, $user));
 
         $response->noContent();
     }

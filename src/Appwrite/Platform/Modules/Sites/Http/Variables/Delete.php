@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
-use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Bus\Events\VariableDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -34,7 +35,6 @@ class Delete extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -57,12 +57,14 @@ class Delete extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
             ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForProject')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $variableId, Response $response, QueueEvent $queueForEvents, Database $dbForProject)
+    public function action(string $siteId, string $variableId, Response $response, Bus $bus, Database $dbForProject, Document $project, Document $actor)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -81,7 +83,7 @@ class Delete extends Base
             'live' => false,
         ]));
 
-        $queueForEvents->setParam('variableId', $variable->getId());
+        $bus->dispatch(new VariableDeleted($variable, $project, $actor));
 
         $response->noContent();
     }

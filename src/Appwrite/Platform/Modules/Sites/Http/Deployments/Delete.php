@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteDeploymentDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -11,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
@@ -38,7 +39,6 @@ class Delete extends Action
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -63,8 +63,10 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('deviceForSites')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -74,8 +76,10 @@ class Delete extends Action
         Response $response,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
-        Event $queueForEvents,
-        Device $deviceForSites
+        Bus $bus,
+        Device $deviceForSites,
+        Document $project,
+        Document $actor
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -137,15 +141,13 @@ class Delete extends Action
             ])));
         }
 
-        $queueForEvents
-            ->setParam('siteId', $site->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $deployment,
         ));
+
+        $bus->dispatch(new SiteDeploymentDeleted($deployment, $site->getId(), $project, $actor));
 
         $response->noContent();
     }

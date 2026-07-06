@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Preferences;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\TeamPreferencesUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Structure as StructureException;
@@ -32,7 +33,6 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId/prefs')
             ->desc('Update team preferences')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].update.prefs')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.update')
             ->label('audits.resource', 'team/{response.$id}')
@@ -54,11 +54,13 @@ class Update extends Action
             ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('user')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents)
+    public function action(string $teamId, array $prefs, Response $response, Database $dbForProject, Document $project, Document $user, Bus $bus)
     {
         try {
             $prefs = new Document($prefs);
@@ -76,8 +78,8 @@ class Update extends Action
             'prefs' => $prefs->getArrayCopy()
         ]));
 
-        $queueForEvents->setParam('teamId', $team->getId());
-
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
+
+        $bus->dispatch(new TeamPreferencesUpdated($team->getId(), $prefs, $project, $user));
     }
 }

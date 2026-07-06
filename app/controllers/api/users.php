@@ -9,10 +9,31 @@ use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Bus\Events\UserDeleted;
+use Appwrite\Bus\Events\UserEmailUpdated;
+use Appwrite\Bus\Events\UserIdentityDeleted;
+use Appwrite\Bus\Events\UserImpersonatorUpdated;
+use Appwrite\Bus\Events\UserLabelsUpdated;
+use Appwrite\Bus\Events\UserMfaAuthenticatorDeleted;
+use Appwrite\Bus\Events\UserMfaRecoveryCodesCreated;
+use Appwrite\Bus\Events\UserMfaRecoveryCodesUpdated;
+use Appwrite\Bus\Events\UserMfaUpdated;
+use Appwrite\Bus\Events\UserNameUpdated;
+use Appwrite\Bus\Events\UserPasswordUpdated;
+use Appwrite\Bus\Events\UserPhoneUpdated;
+use Appwrite\Bus\Events\UserPreferencesUpdated;
+use Appwrite\Bus\Events\UserSessionCreated;
+use Appwrite\Bus\Events\UserSessionDeleted;
+use Appwrite\Bus\Events\UserSessionsDeleted;
+use Appwrite\Bus\Events\UserStatusUpdated;
+use Appwrite\Bus\Events\UserTargetCreated;
+use Appwrite\Bus\Events\UserTargetDeleted;
+use Appwrite\Bus\Events\UserTargetUpdated;
+use Appwrite\Bus\Events\UserTokenCreated;
+use Appwrite\Bus\Events\UserVerificationUpdated;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -43,6 +64,7 @@ use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -593,7 +615,6 @@ Http::post('/v1/users/:userId/targets')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
-    ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
@@ -614,10 +635,12 @@ Http::post('/v1/users/:userId/targets')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true, ['dbForProject'])
     ->param('name', '', new Text(128), 'Target name. Max length: 128 chars. For example: My Awesome App Galaxy S23.', true)
-    ->inject('queueForEvents')
+    ->inject('bus')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Bus $bus, Response $response, Database $dbForProject, Document $project, Document $actor) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -674,13 +697,11 @@ Http::post('/v1/users/:userId/targets')
         }
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('targetId', $target->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($target, Response::MODEL_TARGET);
+
+        $bus->dispatch(new UserTargetCreated($target, $user->getId(), $project, $actor));
     });
 
 Http::get('/v1/users')
@@ -1116,7 +1137,6 @@ Http::get('/v1/users/identities')
 Http::patch('/v1/users/:userId/status')
     ->desc('Update user status')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.status')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1138,8 +1158,10 @@ Http::patch('/v1/users/:userId/status')
     ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1149,16 +1171,14 @@ Http::patch('/v1/users/:userId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => (bool) $status]));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserStatusUpdated($user, $project, $actor));
     });
 
 Http::put('/v1/users/:userId/labels')
     ->desc('Update user labels')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.labels')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1179,8 +1199,10 @@ Http::put('/v1/users/:userId/labels')
     ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1192,16 +1214,14 @@ Http::put('/v1/users/:userId/labels')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['labels' => $user->getAttribute('labels')]));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserLabelsUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/impersonator')
     ->desc('Update user impersonator capability')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.impersonator')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1222,8 +1242,10 @@ Http::patch('/v1/users/:userId/impersonator')
     ->param('impersonator', false, new Boolean(true), 'Whether the user can impersonate other users. When true, the user can browse project users to choose a target and can pass impersonation headers to act as that user. Internal audit logs still attribute impersonated actions to the original impersonator and store the target user details only in internal audit payload data.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, bool $impersonator, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, bool $impersonator, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1233,16 +1255,14 @@ Http::patch('/v1/users/:userId/impersonator')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['impersonator' => $impersonator]));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserImpersonatorUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/verification/phone')
     ->desc('Update phone verification')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1263,8 +1283,10 @@ Http::patch('/v1/users/:userId/verification/phone')
     ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1274,16 +1296,14 @@ Http::patch('/v1/users/:userId/verification/phone')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['phoneVerification' => $phoneVerification]));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserVerificationUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/name')
     ->desc('Update name')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.name')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1305,8 +1325,10 @@ Http::patch('/v1/users/:userId/name')
     ->param('name', '', new Text(128, 0), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1318,15 +1340,14 @@ Http::patch('/v1/users/:userId/name')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['name' => $user->getAttribute('name')]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserNameUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/password')
     ->desc('Update password')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1349,9 +1370,10 @@ Http::patch('/v1/users/:userId/password')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
+    ->inject('bus')
     ->inject('hooks')
-    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->inject('user')
+    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Bus $bus, Hooks $hooks, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1375,7 +1397,6 @@ Http::patch('/v1/users/:userId/password')
                 'password' => $user->getAttribute('password'),
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
-            $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
         }
 
@@ -1426,15 +1447,14 @@ Http::patch('/v1/users/:userId/password')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserPasswordUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/email')
     ->desc('Update email')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.email')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1458,8 +1478,9 @@ Http::patch('/v1/users/:userId/email')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('plan')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Document $project, array $plan, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('user')
+    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Document $project, array $plan, Bus $bus, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1577,15 +1598,14 @@ Http::patch('/v1/users/:userId/email')
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserEmailUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/phone')
     ->desc('Update phone')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1606,8 +1626,10 @@ Http::patch('/v1/users/:userId/phone')
     ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1670,15 +1692,14 @@ Http::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserPhoneUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/verification')
     ->desc('Update email verification')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{request.userId}')
@@ -1700,8 +1721,10 @@ Http::patch('/v1/users/:userId/verification')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1711,15 +1734,14 @@ Http::patch('/v1/users/:userId/verification')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['emailVerification' => $emailVerification]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserVerificationUpdated($user, $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/prefs')
     ->desc('Update user preferences')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
@@ -1738,8 +1760,10 @@ Http::patch('/v1/users/:userId/prefs')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1749,10 +1773,9 @@ Http::patch('/v1/users/:userId/prefs')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['prefs' => $prefs]));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
-
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+
+        $bus->dispatch(new UserPreferencesUpdated($user->getId(), new Document($prefs), $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/targets/:targetId')
@@ -1760,7 +1783,6 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
-    ->label('event', 'users.[userId].targets.[targetId].update')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
@@ -1780,10 +1802,12 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true, ['dbForProject'])
     ->param('name', '', new Text(128), 'Target name. Max length: 128 chars. For example: My Awesome App Galaxy S23.', true)
-    ->inject('queueForEvents')
+    ->inject('bus')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, string $name, Bus $bus, Response $response, Database $dbForProject, Document $project, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1856,18 +1880,15 @@ Http::patch('/v1/users/:userId/targets/:targetId')
         ]));
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('targetId', $target->getId());
-
         $response
             ->dynamic($target, Response::MODEL_TARGET);
+
+        $bus->dispatch(new UserTargetUpdated($target, $user->getId(), $project, $actor));
     });
 
 Http::patch('/v1/users/:userId/mfa')
     ->desc('Update MFA')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -1910,8 +1931,10 @@ Http::patch('/v1/users/:userId/mfa')
     ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, bool $mfa, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, bool $mfa, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1923,9 +1946,9 @@ Http::patch('/v1/users/:userId/mfa')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['mfa' => $user->getAttribute('mfa')]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $response->dynamic($user, Response::MODEL_USER);
+
+        $bus->dispatch(new UserMfaUpdated($user, $project, $actor));
     });
 
 Http::get('/v1/users/:userId/mfa/factors')
@@ -2051,7 +2074,6 @@ Http::get('/v1/users/:userId/mfa/recovery-codes')
 Http::patch('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Create MFA recovery codes')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].create.mfa.recovery-codes')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -2093,8 +2115,10 @@ Http::patch('/v1/users/:userId/mfa/recovery-codes')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2111,19 +2135,18 @@ Http::patch('/v1/users/:userId/mfa/recovery-codes')
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
         $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+
+        $bus->dispatch(new UserMfaRecoveryCodesCreated($user->getId(), $document, $project, $actor));
     });
 
 Http::put('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Update MFA recovery codes (regenerate)')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.mfa.recovery-codes')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
@@ -2166,8 +2189,10 @@ Http::put('/v1/users/:userId/mfa/recovery-codes')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2183,19 +2208,18 @@ Http::put('/v1/users/:userId/mfa/recovery-codes')
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
         $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
-        $queueForEvents->setParam('userId', $user->getId());
-
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+
+        $bus->dispatch(new UserMfaRecoveryCodesUpdated($user->getId(), $document, $project, $actor));
     });
 
 Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->desc('Delete authenticator')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].delete.mfa')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{request.userId}')
@@ -2240,8 +2264,10 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.', enum: new Enum(name: 'AuthenticatorType'))
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2257,7 +2283,7 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $bus->dispatch(new UserMfaAuthenticatorDeleted($user, $project, $actor));
 
         $response->noContent();
     });
@@ -2265,7 +2291,6 @@ Http::delete('/v1/users/:userId/mfa/authenticators/:type')
 Http::post('/v1/users/:userId/sessions')
     ->desc('Create session')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{request.userId}')
@@ -2290,10 +2315,11 @@ Http::post('/v1/users/:userId/sessions')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('queueForEvents')
+    ->inject('bus')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
+    ->inject('user')
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Bus $bus, Store $store, Token $proofForToken, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2345,19 +2371,15 @@ Http::post('/v1/users/:userId/sessions')
             ->setAttribute('secret', $encoded)
             ->setAttribute('countryName', $countryName);
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
-
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($session, Response::MODEL_SESSION);
+
+        $bus->dispatch(new UserSessionCreated($session, $user->getId(), $project, $actor));
     });
 
 Http::post('/v1/users/:userId/tokens')
     ->desc('Create token')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].tokens.[tokenId].create')
     ->label('scope', 'users.write')
     ->label('audits.event', 'tokens.create')
     ->label('audits.resource', 'user/{request.userId}')
@@ -2380,8 +2402,10 @@ Http::post('/v1/users/:userId/tokens')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2409,19 +2433,15 @@ Http::post('/v1/users/:userId/tokens')
 
         $token->setAttribute('secret', $secret);
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $token->getId())
-            ->setPayload($response->output($token, Response::MODEL_TOKEN));
-
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($token, Response::MODEL_TOKEN);
+
+        $bus->dispatch(new UserTokenCreated($token, $user->getId(), $project, $actor));
     });
 
 Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
@@ -2443,8 +2463,10 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -2461,10 +2483,7 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $sessionId)
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+        $bus->dispatch(new UserSessionDeleted($session, $user->getId(), $project, $actor));
 
         $response->noContent();
     });
@@ -2472,7 +2491,6 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
 Http::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.delete')
     ->label('scope', ['users.write', 'sessions.write'])
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -2493,8 +2511,10 @@ Http::delete('/v1/users/:userId/sessions')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -2512,9 +2532,7 @@ Http::delete('/v1/users/:userId/sessions')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER));
+        $bus->dispatch(new UserSessionsDeleted($user, $project, $actor));
 
         $response->noContent();
     });
@@ -2522,7 +2540,6 @@ Http::delete('/v1/users/:userId/sessions')
 Http::delete('/v1/users/:userId')
     ->desc('Delete user')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].delete')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{request.userId}')
@@ -2543,9 +2560,11 @@ Http::delete('/v1/users/:userId')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
+    ->inject('bus')
     ->inject('publisherForDeletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes) {
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Bus $bus, DeletePublisher $publisherForDeletes, Document $project, Document $actor) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -2561,14 +2580,12 @@ Http::delete('/v1/users/:userId')
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $clone,
         ));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($clone, Response::MODEL_USER));
+        $bus->dispatch(new UserDeleted($clone, $project, $actor));
 
         $response->noContent();
     });
@@ -2578,7 +2595,6 @@ Http::delete('/v1/users/:userId/targets/:targetId')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.delete')
     ->label('audits.resource', 'target/{request.$targetId}')
-    ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('scope', 'users.write')
     ->label('sdk', new Method(
         namespace: 'users',
@@ -2596,11 +2612,13 @@ Http::delete('/v1/users/:userId/targets/:targetId')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
-    ->inject('queueForEvents')
+    ->inject('bus')
     ->inject('publisherForDeletes')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, Event $queueForEvents, DeletePublisher $publisherForDeletes, Response $response, Database $dbForProject) {
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $userId, string $targetId, Bus $bus, DeletePublisher $publisherForDeletes, Response $response, Database $dbForProject, Document $project, Document $actor) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2621,14 +2639,12 @@ Http::delete('/v1/users/:userId/targets/:targetId')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_TARGET,
             document: $target,
         ));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('targetId', $target->getId());
+        $bus->dispatch(new UserTargetDeleted($target, $user->getId(), $project, $actor));
 
         $response->noContent();
     });
@@ -2636,7 +2652,6 @@ Http::delete('/v1/users/:userId/targets/:targetId')
 Http::delete('/v1/users/identities/:identityId')
     ->desc('Delete identity')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].identities.[identityId].delete')
     ->label('scope', 'users.write')
     ->label('audits.event', 'identity.delete')
     ->label('audits.resource', 'identity/{request.$identityId}')
@@ -2657,8 +2672,10 @@ Http::delete('/v1/users/identities/:identityId')
     ->param('identityId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Identity ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('bus')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (string $identityId, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor) {
 
         $identity = $dbForProject->getDocument('identities', $identityId);
 
@@ -2668,10 +2685,7 @@ Http::delete('/v1/users/identities/:identityId')
 
         $dbForProject->deleteDocument('identities', $identityId);
 
-        $queueForEvents
-            ->setParam('userId', $identity->getAttribute('userId'))
-            ->setParam('identityId', $identity->getId())
-            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
+        $bus->dispatch(new UserIdentityDeleted($identity, $identity->getAttribute('userId'), $project, $actor));
 
         $response->noContent();
     });

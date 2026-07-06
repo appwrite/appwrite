@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteUpdated;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -48,7 +49,6 @@ class Update extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].update')
             ->label('audits.event', 'sites.update')
             ->label('audits.resource', 'site/{response.$id}')
             ->label('usage.resource', 'site/{response.$id}')
@@ -105,12 +105,13 @@ class Update extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -142,12 +143,13 @@ class Update extends Base
         Response $response,
         Database $dbForProject,
         Document $project,
-        Event $queueForEvents,
+        Bus $bus,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
         GitHub $github,
         Executor $executor,
-        array $platform
+        array $platform,
+        Document $actor
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -312,8 +314,8 @@ class Update extends Base
             $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform);
         }
 
-        $queueForEvents->setParam('siteId', $site->getId());
-
         $response->dynamic($site, Response::MODEL_SITE);
+
+        $bus->dispatch(new SiteUpdated($site, $project, $actor));
     }
 }

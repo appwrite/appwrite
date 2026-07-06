@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\DeploymentCreated;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -12,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -44,7 +45,6 @@ class Create extends Base
             ->desc('Create template deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
-            ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
@@ -77,12 +77,13 @@ class Create extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('project')
             ->inject('publisherForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -98,12 +99,13 @@ class Create extends Base
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents,
+        Bus $bus,
         Document $project,
         BuildPublisher $publisherForBuilds,
         GitHub $github,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -141,13 +143,11 @@ class Create extends Base
                 reference: $reference
             );
 
-            $queueForEvents
-                ->setParam('functionId', $function->getId())
-                ->setParam('deploymentId', $deployment->getId());
-
             $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                 ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+            $bus->dispatch(new DeploymentCreated($deployment, $function->getId(), $project, $actor));
 
             return;
         }
@@ -186,12 +186,10 @@ class Create extends Base
             platform: $platform,
         ));
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+        $bus->dispatch(new DeploymentCreated($deployment, $function->getId(), $project, $actor));
     }
 }
