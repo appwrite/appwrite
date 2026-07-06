@@ -1364,30 +1364,42 @@ return function (Container $context): void {
                 }
             }
 
-            $countryCode = $record['countryCode'] ?? '--';
-            $continentCode = $record['continentCode'] ?? '--';
-            $unknownCountry = $locale->getText('locale.country.unknown');
+            $countryCode = \strtoupper($record['countryCode'] ?? '--');
+            $continentCode = \strtoupper($record['continentCode'] ?? '--');
 
-            $eu = Config::getParam('locale-eu');
+            $eu = \array_map('strtoupper', Config::getParam('locale-eu'));
             $currencies = Config::getParam('locale-currencies');
             $currency = null;
 
-            foreach ($currencies as $element) {
-                if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'])) {
-                    $currency = $element['code'];
-                    break;
+            if ($countryCode !== '--') {
+                foreach ($currencies as $element) {
+                    if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'], true)) {
+                        $currency = $element['code'];
+                        break;
+                    }
                 }
             }
 
-            $geoRecord = new GeoRecord([
+            $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
+
+            $geoRecord = (new GeoRecord([
                 'ip' => $ip,
-                'countryCode' => $locale->getText('countries.' . strtolower($countryCode), false) ? strtolower($countryCode) : '--',
-                'countryName' => $locale->getText('countries.' . strtolower($countryCode), $unknownCountry),
-                'continent' => $locale->getText('continents.' . strtolower($continentCode), $unknownCountry),
+                'countryCode' => $countryCode,
                 'continentCode' => $continentCode,
-                'eu' => \in_array($countryCode, $eu),
+                'eu' => $countryCode !== '--' && \in_array($countryCode, $eu, true),
                 'currency' => $currency,
-            ]);
+                'latitude' => $record['latitude'] ?? null,
+                'longitude' => $record['longitude'] ?? null,
+                'timeZone' => $record['timeZone'] ?? null,
+                'weatherCode' => $record['weatherCode'] ?? null,
+                'postalCode' => $record['postalCode'] ?? null,
+                'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
+                'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
+                'connectionType' => $record['connection'] ?? null,
+                'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
+                'connectionOrganization' => $record['organization'] ?? null,
+                'isp' => $record['isp'] ?? null,
+            ]))->setLocale($locale);
 
             $cache[$ip] = $geoRecord;
 
