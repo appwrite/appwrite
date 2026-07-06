@@ -42,9 +42,16 @@ Http::init()
     ->action(function (Route $route, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist) && $project->getId() === 'console') {
+            // Fail-closed when geo data is unavailable: an unknown country cannot be
+            // proven to sit outside a "block these countries" policy, so deny access
+            // rather than silently letting the denylist pass.
+            if ($geoRecord->isEmpty()) {
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
+            }
+
             $countries = \array_map('strtolower', \array_map('trim', explode(',', $denylist)));
             $country = strtolower($geoRecord->getCountryCode());
-            if (in_array($country, $countries)) {
+            if (in_array($country, $countries, true)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
         }
