@@ -33,7 +33,7 @@ class Get extends DocumentGet
             ->desc('Get document')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
-            ->label('usage.resource', 'database/{request.databaseId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
