@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Server;
-use Appwrite\Utopia\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
@@ -83,7 +82,7 @@ class View extends Action
 
     private function makeCsrf(ServerRequestInterface $request, Response $response): string
     {
-        $existing = Request::cookie($request, Server::CSRF_COOKIE);
+        $existing = $request->getCookieParams()[Server::CSRF_COOKIE] ?? '';
         if ($existing !== '') {
             return $existing;
         }

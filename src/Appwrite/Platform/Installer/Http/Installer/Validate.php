@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Server;
-use Appwrite\Utopia\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
@@ -38,7 +37,7 @@ class Validate extends Action
 
     public static function validateCsrf(ServerRequestInterface $request): bool
     {
-        $cookie = Request::cookie($request, Server::CSRF_COOKIE);
+        $cookie = $request->getCookieParams()[Server::CSRF_COOKIE] ?? '';
         $header = $request->getHeaderLine('x-appwrite-installer-csrf');
 
         return $cookie !== '' && $header !== '' && hash_equals($cookie, $header);

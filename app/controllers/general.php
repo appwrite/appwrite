@@ -240,7 +240,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
-            $cookie = Request::cookie($request, COOKIE_NAME_PREVIEW, '');
+            $cookie = $request->getCookieParams()[COOKIE_NAME_PREVIEW] ?? '';
             $authorized = false;
             $user = new Document();
 

@@ -130,11 +130,6 @@ class Request extends ServerRequest
         return (string) $request->getBody();
     }
 
-    public static function cookie(ServerRequestInterface $request, string $key, string $default = ''): string
-    {
-        return $request->getCookieParams()[$key] ?? $default;
-    }
-
     public static function ip(ServerRequestInterface $request): string
     {
         $server = $request->getServerParams();

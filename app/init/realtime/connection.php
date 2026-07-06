@@ -225,11 +225,9 @@ return function (Container $container): void {
             $store->setKey('a_session_' . $console->getId());
         }
 
+        $cookies = $request->getCookieParams();
         $store->decode(
-            $request->getCookie(
-                $store->getKey(),
-                Request::cookie($request, $store->getKey() . '_legacy', '')
-            )
+            $cookies[$store->getKey()] ?? ($cookies[$store->getKey() . '_legacy'] ?? '')
         );
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {

@@ -453,12 +453,9 @@ return function (Container $context): void {
             $store->setKey('a_session_' . $console->getId());
         }
 
+        $cookies = $request->getCookieParams();
         $store->decode(
-            Request::cookie(
-                $request,
-                $store->getKey(), // Get sessions
-                Request::cookie($request, $store->getKey() . '_legacy', '')
-            )
+            $cookies[$store->getKey()] ?? ($cookies[$store->getKey() . '_legacy'] ?? '')
         );
 
         // Get session from header for SSR clients
