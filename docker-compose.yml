@@ -73,10 +73,14 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - appwrite-embedding
-      - appwrite-geo
+      redis:
+        condition: service_started
+      ${_APP_DB_HOST:-mongodb}:
+        condition: service_started
+      appwrite-embedding:
+        condition: service_started
+      appwrite-geo:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_EDITION
