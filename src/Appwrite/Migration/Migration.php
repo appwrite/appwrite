@@ -316,7 +316,19 @@ abstract class Migration
         $attributes = $collection['attributes'];
         $attributeKeys = \array_column($collection['attributes'], '$id');
 
+        $database->purgeCachedCollection($collectionId);
+
+        $existingIds = \array_map(
+            fn ($attribute) => $attribute->getId(),
+            $database->getCollection($collectionId)->getAttribute('attributes', [])
+        );
+
         foreach ($attributeIds as $attributeId) {
+            if (\in_array($attributeId, $existingIds, true)) {
+                Console::warning("Skipping attribute \"{$attributeId}\" in collection {$collectionId}: Attribute already exists");
+                continue;
+            }
+
             $attributeKey = \array_search($attributeId, $attributeKeys);
 
             if ($attributeKey === false) {
@@ -333,10 +345,36 @@ abstract class Migration
             $attributesToCreate[] = $attribute;
         }
 
-        $database->createAttributes(
-            collection: $collectionId,
-            attributes: $attributesToCreate,
-        );
+        if (empty($attributesToCreate)) {
+            return;
+        }
+
+        try {
+            $database->createAttributes(
+                collection: $collectionId,
+                attributes: $attributesToCreate,
+            );
+        } catch (Duplicate) {
+            foreach ($attributesToCreate as $attribute) {
+                try {
+                    $database->createAttribute(
+                        collection: $collectionId,
+                        id: $attribute['$id'],
+                        type: $attribute['type'],
+                        size: $attribute['size'],
+                        required: $attribute['required'],
+                        default: $attribute['default'],
+                        signed: $attribute['signed'] ?? true,
+                        array: $attribute['array'] ?? false,
+                        format: $attribute['format'] ?? '',
+                        formatOptions: $attribute['formatOptions'] ?? [],
+                        filters: $attribute['filters'],
+                    );
+                } catch (Duplicate) {
+                    Console::warning("Skipping attribute \"{$attribute['$id']}\" in collection {$collectionId}: Attribute already exists");
+                }
+            }
+        }
     }
 
     /**
