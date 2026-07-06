@@ -77,6 +77,10 @@ class Base extends Action
     {
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
 
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         if ($provider->getAuthType() === VcsProvider::AUTH_APP) {
             $adapter->initializeVariables($providerInstallationId, $provider->getEnv('PRIVATE_KEY'), $provider->getEnv('APP_ID'));
 

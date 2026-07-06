@@ -132,4 +132,55 @@ final class MigrationVersionsTest extends TestCase
         $this->assertArrayHasKey('firstSeen', $attributes);
         $this->assertArrayHasKey('lastSeen', $attributes);
     }
+
+    public function testCreateAttributesFromCollectionSkipsExistingAttributes(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV24Functions')
+            ->setNamespace('migration_functions_' . \uniqid());
+        $database->create();
+        $database->createCollection('functions');
+
+        $migration = new V24();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        $existing = [
+            'deploymentRetention',
+            'startCommand',
+            'buildSpecification',
+            'runtimeSpecification',
+        ];
+        $new = [
+            'providerBranches',
+            'providerPaths',
+        ];
+
+        \ob_start();
+        try {
+            $migration->createAttributesFromCollection($database, 'functions', $existing);
+            $migration->createAttributesFromCollection($database, 'functions', [...$existing, ...$new]);
+            $migration->createAttributesFromCollection($database, 'functions', [...$existing, ...$new]);
+        } finally {
+            \ob_end_clean();
+        }
+
+        $attributes = [];
+        foreach ($database->getCollection('functions')->getAttribute('attributes', []) as $attribute) {
+            $attributes[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+        }
+
+        foreach ([...$existing, ...$new] as $id) {
+            $this->assertContains($id, $attributes);
+        }
+    }
 }
