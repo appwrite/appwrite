@@ -3,18 +3,15 @@ name: Mirror
 on:
   pull_request_target:
     types: [opened]
+  issues:
+    types: [opened]
 
 permissions:
+  issues: write
   pull-requests: write
 
 jobs:
   redirect:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Redirect pull request to the monorepo
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.html_url }}
-        run: |
-          gh pr comment "$PR" --body "Thanks for contributing! This repository is a read-only mirror — development for this library happens in [\`packages/telemetry\`](https://github.com/utopia-php/monorepo/tree/main/packages/telemetry) in the [utopia-php monorepo](https://github.com/utopia-php/monorepo). Please open this pull request there instead."
-          gh pr close "$PR"
+    uses: utopia-php/monorepo/.github/workflows/mirror-redirect.yml@main
+    with:
+      package: telemetry
