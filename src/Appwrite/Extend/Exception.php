@@ -152,6 +152,7 @@ class Exception extends \Exception
     public const string STORAGE_DEVICE_NOT_FOUND = 'storage_device_not_found';
     public const string STORAGE_FILE_EMPTY = 'storage_file_empty';
     public const string STORAGE_FILE_TYPE_UNSUPPORTED = 'storage_file_type_unsupported';
+    public const string STORAGE_IMAGE_RESOLUTION_EXCEEDED = 'storage_image_resolution_exceeded';
     public const string STORAGE_INVALID_FILE_SIZE = 'storage_invalid_file_size';
     public const string STORAGE_INVALID_FILE = 'storage_invalid_file';
     public const string STORAGE_BUCKET_ALREADY_EXISTS = 'storage_bucket_already_exists';
