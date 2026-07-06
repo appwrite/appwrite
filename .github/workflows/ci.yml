@@ -189,8 +189,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
-            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache`;
+            const runner4 = `runs-on=${context.runId}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
+            const runner8 = `runs-on=${context.runId}/runner=8cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache`;
 
             const services = [
               { name: 'Account',           runner: runner4, functional: true,  processes: null, timeout: 8 },
@@ -257,7 +257,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+s3-cache+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+s3-cache+ecr-cache
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -291,7 +291,7 @@ jobs:
 
   unit:
     name: Tests / Unit
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
     timeout-minutes: 15
     needs: build
     permissions:
@@ -356,7 +356,7 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
     timeout-minutes: 15
     needs: build
     permissions:
@@ -554,7 +554,7 @@ jobs:
 
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
     timeout-minutes: 15
     needs: [build, matrix]
     permissions:
@@ -633,7 +633,7 @@ jobs:
 
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
     timeout-minutes: 15
     needs: [build, matrix]
     permissions:
@@ -718,7 +718,7 @@ jobs:
   benchmark:
     name: Benchmark
     if: github.event_name == 'pull_request' || github.event_name == 'push'
-    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/extras=otel+ecr-cache
+    runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/volume=60g/spot=price-capacity-optimized/retry=when-interrupted/extras=otel+ecr-cache
     timeout-minutes: 20
     needs: build
     permissions:
