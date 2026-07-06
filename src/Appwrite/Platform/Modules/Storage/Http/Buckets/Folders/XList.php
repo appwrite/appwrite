@@ -91,8 +91,11 @@ class XList extends Action
         $parent = Folder::normalize($parent);
         $cursor = Folder::normalize($cursor);
 
-        if ($cursor !== '' && (!\str_starts_with($cursor, $parent) || $cursor === $parent)) {
-            throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Folder '{$cursor}' for the 'cursor' value is not inside '{$parent}'.");
+        if ($cursor !== '') {
+            $remainder = \substr($cursor, \strlen($parent), -1);
+            if (!\str_starts_with($cursor, $parent) || $cursor === $parent || \str_contains($remainder, '/')) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Folder '{$cursor}' for the 'cursor' value is not an immediate child of '{$parent}'.");
+            }
         }
 
         $collection = 'bucket_' . $bucket->getSequence();
@@ -145,6 +148,8 @@ class XList extends Action
      * Smallest string that sorts after every `parent` value inside the given
      * folder: the trailing '/' replaced with the next code point ('0'), so a
      * seek jumps past all of the folder's contents in one indexed query.
+     * Assumes the database orders `parent` values bytewise (binary collation),
+     * so nothing sorts between '/' (0x2F) and '0' (0x30).
      */
     private static function seekPast(string $folder): string
     {

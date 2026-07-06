@@ -2151,6 +2151,18 @@ trait StorageBase
         // nonexistent prefix -- empty list, not 404
         $this->assertCount(0, $listFolders(['parent' => 'missing']));
 
+        // crafted cursors -- must be an immediate child of parent
+        foreach ([
+            ['parent' => 'photos', 'cursor' => 'photos/2026/july'], // grandchild
+            ['parent' => 'photos', 'cursor' => 'invoices'], // outside parent
+        ] as $params) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/folders', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), $params);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
+
         // implicit lifecycle -- deleting the last file removes the folder chain
         $delete = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $julyFileId, array_merge([
             'content-type' => 'application/json',
