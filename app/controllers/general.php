@@ -1017,7 +1017,7 @@ Http::init()
     ->inject('cors')
     ->inject('devKey')
     ->inject('originValidator')
-    ->action(function (Route $route, Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
+    ->action(function (?Route $route, Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1038,7 +1038,7 @@ Http::init()
         if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
-        if ($route->getLabel('origin', false) === '*') {
+        if ($route?->getLabel('origin', false) === '*') {
             return;
         }
         if (!$originValidator->isValid($origin)) {
