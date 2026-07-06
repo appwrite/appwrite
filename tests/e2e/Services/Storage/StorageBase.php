@@ -1997,4 +1997,71 @@ trait StorageBase
         /* will always be 0 in tests because the worker runs hourly! */
         $this->assertGreaterThanOrEqual(0, $bucket['body']['totalSize']);
     }
+
+    public function testListFilesByParent(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Parent Filter',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $upload = function (string $parent) use ($bucketId): void {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+                'parent' => $parent,
+                'permissions' => [Permission::read(Role::any())],
+            ]);
+            $this->assertEquals(201, $file['headers']['status-code']);
+        };
+
+        $upload('');
+        $upload('photos');
+        $upload('photos/2026');
+
+        $list = function (array $params) use ($bucketId): array {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), $params);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            return $response['body'];
+        };
+
+        // no filter -- all files
+        $this->assertEquals(3, $list([])['total']);
+
+        // exact match -- immediate children only
+        $this->assertEquals(1, $list(['parent' => 'photos'])['total']);
+        $this->assertEquals('photos/', $list(['parent' => 'photos'])['files'][0]['parent']);
+
+        // root only
+        $this->assertEquals(1, $list(['parent' => ''])['total']);
+        $this->assertEquals('', $list(['parent' => ''])['files'][0]['parent']);
+
+        // recursive via queries
+        $recursive = $list(['queries' => [Query::startsWith('parent', 'photos/')->toString()]]);
+        $this->assertEquals(2, $recursive['total']);
+
+        // invalid parent
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['parent' => '/photos']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
 }
