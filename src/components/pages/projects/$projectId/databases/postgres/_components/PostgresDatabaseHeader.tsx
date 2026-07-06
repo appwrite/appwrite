@@ -53,7 +53,8 @@ export function PostgresDatabaseHeader({
         databaseTab === 'visualizer' ||
         databaseTab === 'enums' ||
         databaseTab === 'monitor' ||
-        databaseTab === 'connections'
+        databaseTab === 'connections' ||
+        databaseTab === 'roles'
       }
       searchPlaceholder={searchPlaceholder}
       searchValue={searchValue}
@@ -66,6 +67,7 @@ export function PostgresDatabaseHeader({
       onRefresh={onRefresh}
       isRefreshing={isRefreshing}
       filterTrigger={filterTrigger}
+      showToolbarBottomBorder={databaseTab === 'roles' || databaseTab === 'enums'}
     />
   )
 }

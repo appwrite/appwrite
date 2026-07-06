@@ -55,6 +55,7 @@ import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { CreateTable } from './_components/CreateTable'
 import { CreateSchema } from './_components/CreateSchema'
+import { PostgresSchemaToolsNav } from './_components/PostgresSchemaToolsNav'
 
 type SchemaTablesSidebarProps = {
   projectId: string
@@ -119,6 +120,12 @@ export function SchemaTablesSidebar({
     setDebouncedSchemaPickerSearch('')
     setSchemaPickerOpen(false)
   }, [databaseId])
+
+  useEffect(() => {
+    if (databaseTab === 'visualizer' || databaseTab === 'enums') {
+      setPanel('schemas')
+    }
+  }, [databaseTab, setPanel])
 
   const {
     schemas: loadedSchemas,
@@ -456,6 +463,17 @@ export function SchemaTablesSidebar({
                   </p>
                 ) : null}
               </div>
+              <div
+                className="-mx-2 h-px shrink-0 bg-border"
+                role="separator"
+                aria-hidden
+              />
+              <PostgresSchemaToolsNav
+                projectId={projectId}
+                databaseId={databaseId}
+                activeTab={databaseTab}
+                className="shrink-0"
+              />
             </div>
           )
         ) : panel === 'queries' ? (

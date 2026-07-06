@@ -22,6 +22,7 @@ export type PostgresDatabaseTab =
   | 'insights'
   | 'backups'
   | 'connections'
+  | 'roles'
   | 'settings'
 
 export const POSTGRES_DATABASE_TAB_LABELS: Record<
@@ -35,6 +36,7 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
   insights: 'Insights',
   backups: 'Backups',
   connections: 'Connections',
+  roles: 'Roles',
   settings: 'Settings',
 }
 
@@ -78,6 +80,17 @@ function postgresNavBase(params: PostgresNavBase) {
   return {
     projectId: params.projectId,
     databaseId: params.databaseId,
+  }
+}
+
+function postgresDatabaseTabRoute<const T extends string>(
+  to: T,
+  params: ReturnType<typeof postgresNavBase>,
+) {
+  return {
+    to,
+    params,
+    search: {} as Record<string, never>,
   }
 }
 
@@ -125,55 +138,61 @@ export function postgresNav(params: PostgresNavBase) {
       return this.table({ tableId: p.tableId ?? '-' }).rows()
     },
     sql() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/sql' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/sql' as const,
+        base,
+      )
     },
     editor() {
       return this.sql()
     },
     visualizer() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/visualizer' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/visualizer' as const,
+        base,
+      )
     },
     enums() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/enums' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/enums' as const,
+        base,
+      )
     },
     monitor() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/monitor' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/monitor' as const,
+        base,
+      )
     },
     insights() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/insights' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/insights' as const,
+        base,
+      )
     },
     backups() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/backups' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/backups' as const,
+        base,
+      )
     },
     connections() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/connections' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/connections' as const,
+        base,
+      )
+    },
+    roles() {
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/roles' as const,
+        base,
+      )
     },
     settings() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/settings' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/settings' as const,
+        base,
+      )
     },
   }
 }
@@ -197,8 +216,43 @@ const POSTGRES_DATABASE_TAB_SEGMENTS: PostgresDatabaseTab[] = [
   'insights',
   'backups',
   'connections',
+  'roles',
   'settings',
 ]
+
+export function isPostgresDatabaseTabSegment(
+  segment: string,
+): segment is PostgresDatabaseTab {
+  return POSTGRES_DATABASE_TAB_SEGMENTS.includes(segment as PostgresDatabaseTab)
+}
+
+export function postgresDatabaseTabLink(
+  projectId: string,
+  databaseId: string,
+  tab: PostgresDatabaseTab,
+) {
+  const nav = postgresNav({ projectId, databaseId })
+  switch (tab) {
+    case 'sql':
+      return nav.sql()
+    case 'visualizer':
+      return nav.visualizer()
+    case 'enums':
+      return nav.enums()
+    case 'monitor':
+      return nav.monitor()
+    case 'insights':
+      return nav.insights()
+    case 'backups':
+      return nav.backups()
+    case 'connections':
+      return nav.connections()
+    case 'roles':
+      return nav.roles()
+    case 'settings':
+      return nav.settings()
+  }
+}
 
 export function parsePostgresDatabaseTabFromPathname(
   pathname: string,

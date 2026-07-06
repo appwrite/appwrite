@@ -3,6 +3,7 @@ import { useParams } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ import {
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
@@ -50,7 +52,7 @@ import {
   type PostgresTablePolicyRow,
 } from '@/lib/postgres-rls'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { Pencil, Shield, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Search, Shield, Trash2 } from 'lucide-react'
 import { PostgresTablePolicyDrawer } from './PostgresTablePolicyDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
@@ -60,9 +62,6 @@ import {
 type PostgresTableSecurityPanelProps = {
   databaseId: string
   tableId: string
-  search?: string
-  createDialogOpen?: boolean
-  onCreateDialogOpenChange?: (open: boolean) => void
 }
 
 function isBaseTable(tableType: string | null | undefined): boolean {
@@ -72,9 +71,6 @@ function isBaseTable(tableType: string | null | undefined): boolean {
 export function PostgresTableSecurityPanel({
   databaseId,
   tableId,
-  search = '',
-  createDialogOpen: createDialogOpenProp,
-  onCreateDialogOpenChange,
 }: PostgresTableSecurityPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
@@ -92,17 +88,19 @@ export function PostgresTableSecurityPanel({
     rowSecurityEnabled,
     forceRowSecurity,
     isLoading: rlsLoading,
+    isFetching: rlsFetching,
     refetch: refetchRls,
   } = usePostgresTableRls(projectId, databaseId, tableId)
   const {
     policies,
     isLoading: policiesLoading,
+    isFetching: policiesFetching,
     refetch: refetchPolicies,
   } = usePostgresTablePolicies(projectId, databaseId, tableId)
   const executeSql = useExecutePostgresSql(projectId, databaseId)
 
-  const [internalDialogOpen, setInternalDialogOpen] = useState(false)
-  const dialogOpen = (createDialogOpenProp ?? false) || internalDialogOpen
+  const [searchValue, setSearchValue] = useState('')
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedPolicy, setSelectedPolicy] =
     useState<PostgresTablePolicyRow | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -117,26 +115,29 @@ export function PostgresTableSecurityPanel({
   const effectiveForceRowSecurity = forceRowSecurityDraft ?? forceRowSecurity
   const isLoading = tableInfoLoading || rlsLoading || policiesLoading
 
-  const setDialogOpen = (open: boolean) => {
-    setInternalDialogOpen(open)
-    onCreateDialogOpenChange?.(open)
+  const setDialogOpenState = (open: boolean) => {
+    setDialogOpen(open)
     if (!open) setSelectedPolicy(null)
   }
 
   const handleOpenCreate = () => {
     setSelectedPolicy(null)
-    setDialogOpen(true)
+    setDialogOpenState(true)
   }
 
   const handleOpenEdit = (policy: PostgresTablePolicyRow) => {
     setSelectedPolicy(policy)
-    setDialogOpen(true)
+    setDialogOpenState(true)
   }
 
   const refreshSecurity = async () => {
     setRowSecurityDraft(null)
     setForceRowSecurityDraft(null)
     await Promise.all([refetchRls(), refetchPolicies()])
+  }
+
+  const handleRefreshPolicies = () => {
+    void refreshSecurity()
   }
 
   const handleUpdateRls = async () => {
@@ -184,7 +185,7 @@ export function PostgresTableSecurityPanel({
   const filteredPolicies = useMemo(() => {
     return policies.filter((policy) =>
       matchesPostgresLocalSearch(
-        search,
+        searchValue,
         policy.policyname,
         policy.cmd,
         policy.permissive,
@@ -193,9 +194,10 @@ export function PostgresTableSecurityPanel({
         policy.with_check ?? '',
       ),
     )
-  }, [policies, search])
+  }, [policies, searchValue])
 
-  const hasSearch = search.trim().length > 0
+  const hasSearch = searchValue.trim().length > 0
+  const isRefreshingPolicies = policiesFetching || rlsFetching
   const rlsChanged =
     effectiveRowSecurity !== rowSecurityEnabled ||
     effectiveForceRowSecurity !== forceRowSecurity
@@ -290,12 +292,45 @@ export function PostgresTableSecurityPanel({
 
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Policies')}
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-2">
-                {t('Manage row level security policies for this table.')}
-              </p>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    {t('Policies')}
+                  </h3>
+                  <p className="text-[13px] text-muted-foreground mt-2">
+                    {t('Manage row level security policies for this table.')}
+                  </p>
+                </div>
+                {policies.length > 0 ? (
+                  <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">
+                    <div className="relative min-w-[200px] flex-1 lg:w-[240px] lg:flex-none">
+                      <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        value={searchValue}
+                        onChange={(event) => setSearchValue(event.target.value)}
+                        placeholder={t('Search policies...')}
+                        className="h-9 ps-9 text-[13px]"
+                        aria-label={t('Search policies...')}
+                      />
+                    </div>
+                    <RefreshButton
+                      onClick={handleRefreshPolicies}
+                      isRefreshing={isRefreshingPolicies}
+                    />
+                    {canWrite ? (
+                      <Button
+                        size="sm"
+                        className="h-9 text-[13px]"
+                        onClick={handleOpenCreate}
+                      >
+                        <Plus className="me-1.5 h-4 w-4" />
+                        {t('Create policy')}
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="border-t border-border" />
             {policies.length === 0 ? (
@@ -414,7 +449,7 @@ export function PostgresTableSecurityPanel({
 
       <PostgresTablePolicyDrawer
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={setDialogOpenState}
         projectId={projectId}
         databaseId={databaseId}
         tableId={tableId}

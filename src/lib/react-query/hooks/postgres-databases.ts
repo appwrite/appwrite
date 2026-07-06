@@ -63,6 +63,10 @@ import {
   type PostgresTableRlsRow,
 } from '@/lib/postgres-rls'
 import {
+  buildPostgresListRolesSql,
+  type PostgresRoleRow,
+} from '@/lib/postgres-roles'
+import {
   buildPostgresVisualizerColumnsBatchSql,
   buildPostgresVisualizerExternalColumnsSql,
   buildPostgresVisualizerForeignKeysSql,
@@ -460,6 +464,22 @@ export async function fetchPostgresTablePolicies(
   return {
     policies,
     total: policies.length,
+  }
+}
+
+export async function fetchPostgresRoles(
+  projectId: string,
+  databaseId: string,
+) {
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresListRolesSql(),
+  )
+  const roles = executionResultRows<PostgresRoleRow>(execution)
+  return {
+    roles,
+    total: roles.length,
   }
 }
 
@@ -1235,6 +1255,23 @@ export function postgresTablePoliciesQueryOptions(
   })
 }
 
+export function postgresRolesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['postgres-roles', 'project', projectId, databaseId],
+    queryFn: () => fetchPostgresRoles(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function postgresTableRowsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1790,6 +1827,23 @@ export function usePostgresSchemaEnums(
   }
 }
 
+export function usePostgresRoles(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresRolesQueryOptions(projectId, databaseId),
+  )
+  return {
+    roles: data?.roles ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 export function usePostgresTableInfo(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -2147,6 +2201,7 @@ async function refreshPostgresDatabaseCaches(
     ['postgres-table-info', 'project', projectId, databaseId],
     ['postgres-table-rls', 'project', projectId, databaseId],
     ['postgres-table-policies', 'project', projectId, databaseId],
+    ['postgres-roles', 'project', projectId, databaseId],
     ['postgres-visualizer', 'project', projectId, databaseId],
   ] as const
 

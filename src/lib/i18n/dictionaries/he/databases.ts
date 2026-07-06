@@ -884,6 +884,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Save this SQL query to reopen it later from the Queries panel.': 'שמרו שאילתת SQL זו כדי לפתוח אותה מאוחר יותר מחלונית השאילתות.',
   'Saved query scope': 'היקף השאילתה השמורה',
   'Schema': 'סכימה',
+  'Schema tools': 'כלי סכימה',
   'Schema created': 'הסכימה נוצרה',
   'Schema copied to clipboard': 'הסכימה הועתקה ללוח',
   'Schema copied to clipboard. Paste it in Cursor.': 'הסכימה הועתקה ללוח. הדביקו אותה ב-Cursor.',
@@ -1387,6 +1388,13 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Change the compute tier for this database. Upgrades apply with zero downtime via rolling cutover.':
     'שנו את רמת המחשוב של מסד נתונים זה. שדרוגים מתבצעים ללא השבתה באמצעות rolling cutover.',
   'High availability': 'זמינות גבוהה',
+  'Cluster topology': 'טופולוגיית אשכול',
+  'Primary instance': 'מופע primary',
+  'Read replica': 'Read replica',
+  'A single primary handles reads and writes. Add replicas to scale read traffic and improve failover.':
+    'מופע primary יחיד מטפל בקריאות וכתיבות. הוסיפו replicas כדי להגדיל את תעבורת הקריאה ולשפר failover.',
+  'The primary accepts writes and replicates changes to read replicas for query scaling and faster recovery.':
+    'ה-primary מקבל כתיבות ומשכפל שינויים ל-read replicas להגדלת נפח שאילתות והתאוששות מהירה יותר.',
   'Configure read replicas and replication sync mode for failover resilience.':
     'הגדירו replicas לקריאה ומצב סנכרון שכפול לעמידות בכשלי failover.',
   'Replication sync mode': 'מצב סנכרון שכפול',
@@ -1455,6 +1463,32 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Enter an hour between 0 and 23 (UTC).': 'הזינו שעה בין 0 ל-23 (UTC).',
   'Maintenance window updated': 'חלון התחזוקה עודכן',
   'Failed to update maintenance window': 'עדכון חלון התחזוקה נכשל',
+  'Pick a weekly window in UTC. We also show what that means in your local timezone.':
+    'בחרו חלון שבועי ב-UTC. אנחנו גם מציגים מה זה אומר באזור הזמן המקומי שלכם.',
+  'All times in the grid use UTC (Coordinated Universal Time).':
+    'כל השעות ברשת הן ב-UTC (Coordinated Universal Time).',
+  'Your timezone': 'אזור הזמן שלכם',
+  'Time of day in UTC': 'משך היום ב-UTC',
+  'In UTC': 'ב-UTC',
+  'In your local time': 'בשעה המקומית שלכם',
+  'Maintenance may start on a different weekday in your timezone than in UTC.':
+    'התחזוקה עשויה להתחיל ביום שונה בשבוע באזור הזמן המקומי שלכם לעומת UTC.',
+  'UTC': 'UTC',
+  'Toggle AM or PM, then pick an exact hour for each day. The selected slot shows a check mark.':
+    'החליפו בין AM ל-PM, ואז בחרו שעה מדויקת לכל יום. המשבצת שנבחרה מציגה סימן V.',
+  'Current schedule': 'לוח זמנים נוכחי',
+  'Scheduled every': 'מתוזמן בכל',
+  'starting at': 'החל מ-',
+  'Time of day': 'משך ביום',
+  'Sun': 'א׳',
+  'Mon': 'ב׳',
+  'Tue': 'ג׳',
+  'Wed': 'ד׳',
+  'Thu': 'ה׳',
+  'Fri': 'ו׳',
+  'Sat': 'ש׳',
+  'AM': 'AM',
+  'PM': 'PM',
   'Database deleted': 'מסד הנתונים נמחק',
   'Failed to delete database': 'מחיקת מסד הנתונים נכשלה',
   'This database may have been deleted or you no longer have access.':
@@ -1510,4 +1544,94 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Search policies...': 'חיפוש מדיניות…',
   "You don't have permission to modify table security.":
     'אין לכם הרשאה לשנות את אבטחת הטבלה.',
+  'Policies are combined using the "OR" Boolean operator.':
+    'מדיניות משולבות באמצעות אופרטור הבוליאני "OR".',
+  'Policies are combined using the "AND" Boolean operator.':
+    'מדיניות משולבות באמצעות אופרטור הבוליאני "AND".',
+  'Defaults to all (public) roles if none selected.':
+    'ברירת המחדל היא כל התפקידים (public) אם לא נבחרו תפקידים.',
+  'Create role': 'יצירת תפקיד',
+  'Create a PostgreSQL role for RLS policies and database access.':
+    'יצירת תפקיד PostgreSQL למדיניות RLS ולגישה למסד הנתונים.',
+  'Role name': 'שם תפקיד',
+  'Role name is required': 'שם התפקיד נדרש',
+  'Role name must use letters, numbers, and underscores only.':
+    'שם התפקיד חייב להכיל אותיות, מספרים וקו תחתון בלבד.',
+  'Can login': 'יכול להתחבר',
+  'Allow this role to sign in to the database.':
+    'לאפשר לתפקיד זה להתחבר למסד הנתונים.',
+  'Password is required when login is enabled.':
+    'סיסמה נדרשת כאשר התחברות מופעלת.',
+  'Can create roles': 'יצירת תפקידים',
+  'Allow this role to create other roles.':
+    'לאפשר לתפקיד זה ליצור תפקידים אחרים.',
+  'Can create databases': 'יצירת מסדי נתונים',
+  'Allow this role to create databases.':
+    'לאפשר לתפקיד זה ליצור מסדי נתונים.',
+  'Role created': 'התפקיד נוצר',
+  'Failed to create role': 'יצירת התפקיד נכשלה',
+  'Loading roles…': 'טוען תפקידים…',
+  'No roles yet': 'אין תפקידים עדיין',
+  'Create roles to reference in RLS policies and control database access.':
+    'יצירת תפקידים לשימוש במדיניות RLS ולשליטה בגישה למסד הנתונים.',
+  'Connection limit': 'מגבלת חיבורים',
+  'Valid until': 'תקף עד',
+  'Superuser': 'משתמש-על',
+  'No roles match your search': 'אין תפקידים שתואמים לחיפוש',
+  'Role deleted': 'התפקיד נמחק',
+  'Failed to delete role': 'מחיקת התפקיד נכשלה',
+  'Delete role': 'מחיקת תפקיד',
+  'Search roles...': 'חיפוש תפקידים…',
+  'Roles are cluster-level identities in PostgreSQL. Use them in row level security policies and to control login and database access.':
+    'תפקידים הם זהויות ברמת הקלאסטר ב-PostgreSQL. השתמשו בהם במדיניות אבטחה ברמת השורה ולשליטה בהתחברות ובגישה למסד הנתונים.',
+  'Yes': 'כן',
+  'No': 'לא',
+  'N/A': 'לא זמין',
+  'Update role': 'עדכון תפקיד',
+  'Update PostgreSQL role attributes, limits, and membership.':
+    'עדכון תכונות, מגבלות וחברות של תפקיד PostgreSQL.',
+  'Role updated': 'התפקיד עודכן',
+  'Failed to update role': 'עדכון התפקיד נכשל',
+  'Identity and authentication settings for this role.':
+    'הגדרות זהות ואימות עבור תפקיד זה.',
+  'Privileges': 'הרשאות',
+  'Cluster-level capabilities granted to this role.':
+    'יכולות ברמת הקלאסטר המוענקות לתפקיד זה.',
+  'Limits': 'מגבלות',
+  'Connection limits for roles that can sign in.':
+    'מגבלות חיבור לתפקידים שיכולים להתחבר.',
+  'Membership': 'חברות',
+  'Grant membership in other roles so this role inherits their privileges.':
+    'הענקת חברות בתפקידים אחרים כדי שתפקיד זה יירש את ההרשאות שלהם.',
+  'New password': 'סיסמה חדשה',
+  'Leave blank to keep the current password.': 'השאירו ריק כדי לשמור על הסיסמה הנוכחית.',
+  'No expiry': 'ללא תפוגה',
+  'Keep this role valid indefinitely.': 'שמירה על תפקיד זה תקף ללא הגבלת זמן.',
+  'Superuser privilege enabled': 'הרשאת משתמש-על מופעלת',
+  'Superuser roles bypass all permission checks. Use only when absolutely necessary.':
+    'תפקידי משתמש-על עוקפים את כל בדיקות ההרשאות. השתמשו רק כשזה הכרחי.',
+  'Grant unrestricted access across the entire cluster.':
+    'הענקת גישה בלתי מוגבלת לכל הקלאסטר.',
+  'Allow this role to create, alter, and drop other roles.':
+    'לאפשר לתפקיד זה ליצור, לעדכן ולמחוק תפקידים אחרים.',
+  'Allow this role to connect in replication mode.':
+    'לאפשר לתפקיד זה להתחבר במצב שכפול.',
+  'Inherit privileges': 'ירושת הרשאות',
+  'Allow this role to use privileges granted to roles it is a member of.':
+    'לאפשר לתפקיד זה להשתמש בהרשאות של תפקידים שהוא חבר בהם.',
+  'Bypass row level security': 'עקיפת אבטחה ברמת השורה',
+  'Allow this role to read and write rows without matching RLS policies.':
+    'לאפשר לתפקיד זה לקרוא ולכתוב שורות ללא מדיניות RLS מתאימה.',
+  'Unlimited connections': 'חיבורים ללא הגבלה',
+  'Allow any number of concurrent connections.':
+    'לאפשר מספר חיבורים מקבילים ללא הגבלה.',
+  'Connection limit must be a non-negative number.':
+    'מגבלת החיבורים חייבת להיות מספר שאינו שלילי.',
+  'Valid until is required when expiry is enabled.':
+    'תאריך תפוגה נדרש כאשר תפוגה מופעלת.',
+  'Member of': 'חבר ב',
+  'Add parent role': 'הוספת תפקיד אב',
+  'No roles available': 'אין תפקידים זמינים',
+  'This role is not a member of any other roles.':
+    'תפקיד זה אינו חבר באף תפקיד אחר.',
 }

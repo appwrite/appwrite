@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/databases/postgres/Settings'
+import { PostgresDatabaseSettingsLayout } from '@/components/pages/projects/$projectId/databases/postgres/settings/PostgresDatabaseSettingsLayout'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
 import {
@@ -52,10 +52,5 @@ export const Route = createFileRoute(
 
     return shellData
   },
-  component: PostgresSettingsPage,
+  component: PostgresDatabaseSettingsLayout,
 })
-
-function PostgresSettingsPage() {
-  const { databaseId } = Route.useParams()
-  return <View databaseId={databaseId} />
-}

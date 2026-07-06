@@ -45,7 +45,13 @@ const POLICY_COMMANDS: PostgresPolicyCommand[] = [
   'DELETE',
 ]
 
-const POLICY_TYPES: PostgresPolicyPermissive[] = ['PERMISSIVE', 'RESTRICTIVE']
+
+function getPolicyTypeLabel(
+  type: PostgresPolicyPermissive,
+  t: (text: string) => string,
+): string {
+  return type === 'PERMISSIVE' ? t('Permissive') : t('Restrictive')
+}
 
 export function PostgresTablePolicyDrawer({
   open,
@@ -154,10 +160,10 @@ export function PostgresTablePolicyDrawer({
                   }
                   disabled={isEdit}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                     {POLICY_COMMANDS.map((command) => (
                       <SelectItem key={command} value={command}>
                         {command}
@@ -179,15 +185,32 @@ export function PostgresTablePolicyDrawer({
                   }
                   disabled={isEdit}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {getPolicyTypeLabel(formState.permissive, t)}
+                    </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
-                    {POLICY_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type === 'PERMISSIVE' ? t('Permissive') : t('Restrictive')}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                    <SelectItem value="PERMISSIVE" className="items-start py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">{t('Permissive')}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {t(
+                            'Policies are combined using the "OR" Boolean operator.',
+                          )}
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="RESTRICTIVE" className="items-start py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">{t('Restrictive')}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {t(
+                            'Policies are combined using the "AND" Boolean operator.',
+                          )}
+                        </span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -206,7 +229,7 @@ export function PostgresTablePolicyDrawer({
                 placeholder={t('public, authenticated')}
               />
               <p className="text-[11px] text-muted-foreground">
-                {t('Comma-separated role names. Use public for all roles.')}
+                {t('Defaults to all (public) roles if none selected.')}
               </p>
             </div>
 

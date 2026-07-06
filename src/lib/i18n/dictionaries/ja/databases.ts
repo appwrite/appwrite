@@ -840,6 +840,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Save this SQL query to reopen it later from the Queries panel.': 'この SQL クエリを保存し、後でクエリパネルから再度開けます。',
   'Saved query scope': '保存されたクエリのスコープ',
   'Schema': 'スキーマ',
+  'Schema tools': 'スキーマツール',
   'Schema created': 'スキーマを作成しました',
   'Schema copied to clipboard': 'スキーマをクリップボードにコピーしました',
   'Schema copied to clipboard. Paste it in Cursor.': 'スキーマをクリップボードにコピーしました。Cursor に貼り付けてください。',
@@ -1328,6 +1329,13 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Change the compute tier for this database. Upgrades apply with zero downtime via rolling cutover.':
     'このデータベースのコンピュートティアを変更します。アップグレードはローリングカットオーバーでダウンタイムなく適用されます。',
   'High availability': '高可用性',
+  'Cluster topology': 'クラスタトポロジ',
+  'Primary instance': 'プライマリインスタンス',
+  'Read replica': '読み取りレプリカ',
+  'A single primary handles reads and writes. Add replicas to scale read traffic and improve failover.':
+    '単一のプライマリが読み書きを処理します。レプリカを追加すると読み取りトラフィックをスケールし、フェイルオーバーを改善できます。',
+  'The primary accepts writes and replicates changes to read replicas for query scaling and faster recovery.':
+    'プライマリが書き込みを受け付け、クエリのスケールと迅速な復旧のために変更を読み取りレプリカへレプリケーションします。',
   'Configure read replicas and replication sync mode for failover resilience.':
     'フェイルオーバー耐性のために読み取りレプリカとレプリケーション同期モードを設定します。',
   'Replication sync mode': 'レプリケーション同期モード',
@@ -1393,6 +1401,32 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Enter an hour between 0 and 23 (UTC).': '0 から 23 の間の時刻 (UTC) を入力してください。',
   'Maintenance window updated': 'メンテナンスウィンドウを更新しました',
   'Failed to update maintenance window': 'メンテナンスウィンドウの更新に失敗しました',
+  'Pick a weekly window in UTC. We also show what that means in your local timezone.':
+    'UTC で週次ウィンドウを選択します。ローカルタイムゾーンでの時刻も表示します。',
+  'All times in the grid use UTC (Coordinated Universal Time).':
+    'グリッドの時刻はすべて UTC (協定世界時) です。',
+  'Your timezone': 'タイムゾーン',
+  'Time of day in UTC': 'UTC の時間帯',
+  'In UTC': 'UTC',
+  'In your local time': 'ローカル時刻',
+  'Maintenance may start on a different weekday in your timezone than in UTC.':
+    'タイムゾーンによっては、UTC とは異なる曜日にメンテナンスが始まる場合があります。',
+  'UTC': 'UTC',
+  'Toggle AM or PM, then pick an exact hour for each day. The selected slot shows a check mark.':
+    'AM/PM を切り替え、各曜日の正確な時刻を選びます。選択したスロットにチェックが表示されます。',
+  'Current schedule': '現在のスケジュール',
+  'Scheduled every': '毎週',
+  'starting at': '開始',
+  'Time of day': '時間帯',
+  'Sun': '日',
+  'Mon': '月',
+  'Tue': '火',
+  'Wed': '水',
+  'Thu': '木',
+  'Fri': '金',
+  'Sat': '土',
+  'AM': 'AM',
+  'PM': 'PM',
   'Database deleted': 'データベースを削除しました',
   'Failed to delete database': 'データベースの削除に失敗しました',
   'This database may have been deleted or you no longer have access.':
@@ -1448,4 +1482,95 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Search policies...': 'ポリシーを検索...',
   "You don't have permission to modify table security.":
     'テーブルのセキュリティを変更する権限がありません。',
+  'Policies are combined using the "OR" Boolean operator.':
+    'ポリシーは "OR" ブール演算子で結合されます。',
+  'Policies are combined using the "AND" Boolean operator.':
+    'ポリシーは "AND" ブール演算子で結合されます。',
+  'Defaults to all (public) roles if none selected.':
+    'ロールを指定しない場合、すべての (public) ロールが対象になります。',
+  'Create role': 'ロールの作成',
+  'Create a PostgreSQL role for RLS policies and database access.':
+    'RLS ポリシーとデータベースアクセス用の PostgreSQL ロールを作成します。',
+  'Role name': 'ロール名',
+  'Role name is required': 'ロール名は必須です',
+  'Role name must use letters, numbers, and underscores only.':
+    'ロール名は英字、数字、アンダースコアのみ使用できます。',
+  'Can login': 'ログイン可',
+  'Allow this role to sign in to the database.':
+    'このロールがデータベースにサインインできるようにします。',
+  'Password is required when login is enabled.':
+    'ログインを有効にする場合はパスワードが必須です。',
+  'Can create roles': 'ロール作成',
+  'Allow this role to create other roles.':
+    'このロールが他のロールを作成できるようにします。',
+  'Can create databases': 'データベース作成',
+  'Allow this role to create databases.':
+    'このロールがデータベースを作成できるようにします。',
+  'Role created': 'ロールを作成しました',
+  'Failed to create role': 'ロールの作成に失敗しました',
+  'Loading roles…': 'ロールを読み込み中…',
+  'No roles yet': 'ロールがありません',
+  'Create roles to reference in RLS policies and control database access.':
+    'RLS ポリシーで参照するロールを作成し、データベースアクセスを制御します。',
+  'Connection limit': '接続数の上限',
+  'Valid until': '有効期限',
+  'Superuser': 'スーパーユーザー',
+  'No roles match your search': '検索に一致するロールがありません',
+  'Role deleted': 'ロールを削除しました',
+  'Failed to delete role': 'ロールの削除に失敗しました',
+  'Delete role': 'ロールの削除',
+  'Search roles...': 'ロールを検索...',
+  'Roles are cluster-level identities in PostgreSQL. Use them in row level security policies and to control login and database access.':
+    'ロールは PostgreSQL のクラスターレベルの ID です。行レベルセキュリティ ポリシーやログイン、データベースアクセスの制御に使用します。',
+  'Yes': 'はい',
+  'No': 'いいえ',
+  'N/A': 'N/A',
+  'Update role': 'ロールの更新',
+  'Update PostgreSQL role attributes, limits, and membership.':
+    'PostgreSQL ロールの属性、制限、メンバーシップを更新します。',
+  'Role updated': 'ロールを更新しました',
+  'Failed to update role': 'ロールの更新に失敗しました',
+  'Identity and authentication settings for this role.':
+    'このロールの ID と認証設定です。',
+  'Privileges': '権限',
+  'Cluster-level capabilities granted to this role.':
+    'このロールに付与されるクラスターレベルの権限です。',
+  'Limits': '制限',
+  'Connection limits for roles that can sign in.':
+    'サインイン可能なロールの接続数制限です。',
+  'Membership': 'メンバーシップ',
+  'Grant membership in other roles so this role inherits their privileges.':
+    '他のロールのメンバーにして権限を継承させます。',
+  'New password': '新しいパスワード',
+  'Leave blank to keep the current password.':
+    '空欄のままにすると現在のパスワードを保持します。',
+  'No expiry': '有効期限なし',
+  'Keep this role valid indefinitely.': 'このロールを無期限で有効にします。',
+  'Superuser privilege enabled': 'スーパーユーザー権限が有効です',
+  'Superuser roles bypass all permission checks. Use only when absolutely necessary.':
+    'スーパーユーザー ロールはすべての権限チェックをバイパスします。必要な場合のみ使用してください。',
+  'Grant unrestricted access across the entire cluster.':
+    'クラスター全体への無制限アクセスを付与します。',
+  'Allow this role to create, alter, and drop other roles.':
+    'このロールが他のロールを作成、変更、削除できるようにします。',
+  'Allow this role to connect in replication mode.':
+    'このロールがレプリケーション モードで接続できるようにします。',
+  'Inherit privileges': '権限の継承',
+  'Allow this role to use privileges granted to roles it is a member of.':
+    'このロールが所属するロールの権限を利用できるようにします。',
+  'Bypass row level security': '行レベルセキュリティのバイパス',
+  'Allow this role to read and write rows without matching RLS policies.':
+    'このロールが RLS ポリシーに一致しなくても行を読み書きできるようにします。',
+  'Unlimited connections': '接続数無制限',
+  'Allow any number of concurrent connections.':
+    '同時接続数を無制限にします。',
+  'Connection limit must be a non-negative number.':
+    '接続数の上限は 0 以上の数値である必要があります。',
+  'Valid until is required when expiry is enabled.':
+    '有効期限を有効にする場合は終了日時が必要です。',
+  'Member of': '所属ロール',
+  'Add parent role': '親ロールを追加',
+  'No roles available': '利用可能なロールがありません',
+  'This role is not a member of any other roles.':
+    'このロールは他のロールのメンバーではありません。',
 }
