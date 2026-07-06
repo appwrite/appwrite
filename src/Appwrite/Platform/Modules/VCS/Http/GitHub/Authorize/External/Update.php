@@ -134,7 +134,7 @@ class Update extends Action
             ...array_filter(array_column($prFiles, 'previous_filename'))
         ];
 
-        $this->createGitDeployments($adapter, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+        $this->createGitDeployments($adapter, $vcs, $providerInstallationId, $installation, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
     }

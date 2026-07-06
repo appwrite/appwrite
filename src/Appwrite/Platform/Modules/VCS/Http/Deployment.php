@@ -8,7 +8,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Provider as VcsProvider;
+use Appwrite\Vcs\Resolver;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -31,7 +31,9 @@ trait Deployment
 {
     protected function createGitDeployments(
         Git $adapter,
+        Resolver $vcs,
         string $providerInstallationId,
+        ?Document $installation,
         array $repositories,
         string $providerBranch,
         string $providerBranchUrl,
@@ -147,7 +149,7 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $this->getGitOwner($adapter, $providerInstallationId, $providerRepositoryId);
+                $owner = $this->getGitOwner($adapter, $vcs, $providerInstallationId, $installation, $providerRepositoryId);
                 try {
                     $repositoryName = $adapter->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
@@ -334,7 +336,7 @@ trait Deployment
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $this->getGitOwner($adapter, $providerInstallationId, $providerRepositoryId);
+                    $owner = $this->getGitOwner($adapter, $vcs, $providerInstallationId, $installation, $providerRepositoryId);
                     $adapter->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                     continue;
                 }
@@ -554,7 +556,7 @@ trait Deployment
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $this->getGitOwner($adapter, $providerInstallationId, $providerRepositoryId);
+                    $owner = $this->getGitOwner($adapter, $vcs, $providerInstallationId, $installation, $providerRepositoryId);
 
                     $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                     $adapter->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
@@ -595,18 +597,19 @@ trait Deployment
     }
 
     /**
-     * Owner lookup that works across auth types: app-based adapters resolve
-     * from the installation id, OAuth2-based adapters from the repository id.
+     * Owner lookup that works across auth types. Delegates to
+     * Resolver::getOwner() (which prefers the installation's stored
+     * organization for OAuth2 providers) whenever the installation document
+     * is available; app-based webhook payloads carry the provider
+     * installation id directly and don't require one.
      */
-    protected function getGitOwner(Git $adapter, string $providerInstallationId, string $providerRepositoryId = ''): string
+    protected function getGitOwner(Git $adapter, Resolver $vcs, string $providerInstallationId, ?Document $installation, string $providerRepositoryId = ''): string
     {
-        $provider = VcsProvider::fromKey($adapter->getName());
-
-        if ($provider->getAuthType() === VcsProvider::AUTH_APP || empty($providerRepositoryId)) {
-            return $adapter->getOwnerName($providerInstallationId);
+        if ($installation !== null) {
+            return $vcs->getOwner($adapter, $installation, $providerRepositoryId);
         }
 
-        return $adapter->getOwnerName('', (int)$providerRepositoryId);
+        return $adapter->getOwnerName($providerInstallationId);
     }
 
     protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void

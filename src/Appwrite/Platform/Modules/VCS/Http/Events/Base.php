@@ -108,6 +108,8 @@ abstract class Base extends Action
      * App-based providers authenticate with app credentials and the event's
      * installation id; OAuth2-based providers with the tokens of the matching
      * installation. Returns null when no matching installation exists.
+     *
+     * @return array{adapter: Git, installation: ?Document}|null
      */
     protected function authenticateAdapter(
         Provider $provider,
@@ -116,7 +118,7 @@ abstract class Base extends Action
         array $parsedPayload,
         Database $dbForPlatform,
         Authorization $authorization,
-    ): ?Git {
+    ): ?array {
         if ($provider->getAuthType() === Provider::AUTH_APP) {
             $adapter->initializeVariables(
                 $parsedPayload['installationId'] ?? '',
@@ -124,7 +126,7 @@ abstract class Base extends Action
                 $provider->getEnv('APP_ID'),
             );
 
-            return $adapter;
+            return ['adapter' => $adapter, 'installation' => null];
         }
 
         $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
@@ -145,7 +147,7 @@ abstract class Base extends Action
                 continue;
             }
 
-            return $vcs->getAdapter($installation, $dbForPlatform);
+            return ['adapter' => $vcs->getAdapter($installation, $dbForPlatform), 'installation' => $installation];
         }
 
         return null;
@@ -269,10 +271,12 @@ abstract class Base extends Action
         Span::add("vcs.{$key}.event.branch", $providerBranch);
         Span::add("vcs.{$key}.event.installation.id", $providerInstallationId);
 
-        $adapter = $this->authenticateAdapter($provider, $adapter, $vcs, $parsedPayload, $dbForPlatform, $authorization);
-        if ($adapter === null) {
+        $authenticated = $this->authenticateAdapter($provider, $adapter, $vcs, $parsedPayload, $dbForPlatform, $authorization);
+        if ($authenticated === null) {
             return;
         }
+        $adapter = $authenticated['adapter'];
+        $installation = $authenticated['installation'];
 
         // Find associated repositories
         $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
@@ -283,7 +287,7 @@ abstract class Base extends Action
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if ($providerCommitAuthorEmail !== APP_VCS_COMMIT_EMAIL && !$providerBranchDeleted) {
             $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
-            $this->createGitDeployments($adapter, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            $this->createGitDeployments($adapter, $vcs, $providerInstallationId, $installation, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         }
     }
 
@@ -326,10 +330,12 @@ abstract class Base extends Action
                 return;
             }
 
-            $adapter = $this->authenticateAdapter($provider, $adapter, $vcs, $parsedPayload, $dbForPlatform, $authorization);
-            if ($adapter === null) {
+            $authenticated = $this->authenticateAdapter($provider, $adapter, $vcs, $parsedPayload, $dbForPlatform, $authorization);
+            if ($authenticated === null) {
                 return;
             }
+            $adapter = $authenticated['adapter'];
+            $installation = $authenticated['installation'];
 
             try {
                 $commitDetails = $adapter->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
@@ -353,7 +359,7 @@ abstract class Base extends Action
                 Query::limit(100),
             ]));
 
-            $this->createGitDeployments($adapter, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            $this->createGitDeployments($adapter, $vcs, $providerInstallationId, $installation, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup
 
