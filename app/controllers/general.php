@@ -22,6 +22,7 @@ use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Request\Filters as RequestFilters;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
@@ -879,7 +880,6 @@ Http::init()
         * Request format
         */
         $route = $utopia->match($request)?->route;
-        $request->setRoute($route);
 
         if ($route === null) {
             $response->setStatusCode(404);
@@ -888,42 +888,44 @@ Http::init()
         }
 
         $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $filters = [];
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
-                $request->addFilter(new RequestV16());
+                $filters[] = new RequestV16();
             }
             if (version_compare($requestFormat, '1.5.0', '<')) {
-                $request->addFilter(new RequestV17());
+                $filters[] = new RequestV17();
             }
             if (version_compare($requestFormat, '1.6.0', '<')) {
-                $request->addFilter(new RequestV18());
+                $filters[] = new RequestV18();
             }
             if (version_compare($requestFormat, '1.7.0', '<')) {
-                $request->addFilter(new RequestV19());
+                $filters[] = new RequestV19();
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
-                $request->addFilter(new RequestV20($dbForProject, $params));
+                $filters[] = new RequestV20($dbForProject, $params);
             }
             if (version_compare($requestFormat, '1.9.0', '<')) {
-                $request->addFilter(new RequestV21());
+                $filters[] = new RequestV21();
             }
             if (version_compare($requestFormat, '1.9.1', '<')) {
-                $request->addFilter(new RequestV22());
+                $filters[] = new RequestV22();
             }
             if (version_compare($requestFormat, '1.9.2', '<')) {
-                $request->addFilter(new RequestV23());
+                $filters[] = new RequestV23();
             }
             if (version_compare($requestFormat, '1.9.3', '<')) {
-                $request->addFilter(new RequestV24());
+                $filters[] = new RequestV24();
             }
             if (version_compare($requestFormat, '1.9.4', '<')) {
-                $request->addFilter(new RequestV25());
+                $filters[] = new RequestV25();
             }
             if (version_compare($requestFormat, '1.9.5', '<')) {
-                $request->addFilter(new RequestV26());
+                $filters[] = new RequestV26();
             }
         }
+        RequestFilters::apply($request, $route, $filters);
 
         $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
@@ -1036,7 +1038,7 @@ Http::init()
         if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
-        if ($route?->getLabel('origin', false) === '*') {
+        if ($route->getLabel('origin', false) === '*') {
             return;
         }
         if (!$originValidator->isValid($origin)) {

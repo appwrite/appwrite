@@ -363,8 +363,6 @@ class Resolvers
             $resolverResponse->setContentType(Response::CONTENT_TYPE_NULL);
             $resolverResponse->setSent(false);
 
-            $request->setRoute($utopia->match($request)?->route);
-
             $utopia->execute($request, $resolverResponse);
 
             self::mergeResponseSideEffects($resolverResponse, $response);
