@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 
-use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Bus\Events\VariableDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -36,7 +37,6 @@ class Delete extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'variable.delete')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -59,10 +59,12 @@ class Delete extends Base
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
             ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -70,10 +72,12 @@ class Delete extends Base
         string $functionId,
         string $variableId,
         Response $response,
-        QueueEvent $queueForEvents,
+        Bus $bus,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $project,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -103,7 +107,7 @@ class Delete extends Base
             'active' => $schedule->getAttribute('active'),
         ])));
 
-        $queueForEvents->setParam('variableId', $variable->getId());
+        $bus->dispatch(new VariableDeleted($variable, $project, $actor));
 
         $response->noContent();
     }

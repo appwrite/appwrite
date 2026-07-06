@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\FileDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -12,7 +12,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
@@ -39,7 +41,6 @@ class Delete extends Action
             ->groups(['api', 'storage'])
             ->label('scope', 'files.write')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-            ->label('event', 'buckets.[bucketId].files.[fileId].delete')
             ->label('audits.event', 'file.delete')
             ->label('audits.resource', 'file/{request.fileId}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
@@ -64,11 +65,12 @@ class Delete extends Action
             ->param('fileId', '', new UID(), 'File ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('deviceForFiles')
             ->inject('publisherForDeletes')
             ->inject('authorization')
             ->inject('user')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -77,11 +79,12 @@ class Delete extends Action
         string $fileId,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents,
+        Bus $bus,
         Device $deviceForFiles,
         DeletePublisher $publisherForDeletes,
         Authorization $authorization,
         User $user,
+        Document $project,
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -129,7 +132,7 @@ class Delete extends Action
 
         if ($deviceDeleted) {
             $publisherForDeletes->enqueue(new DeleteMessage(
-                project: $queueForEvents->getProject(),
+                project: $project,
                 type: DELETE_TYPE_CACHE_BY_RESOURCE,
                 resource: 'file/' . $fileId,
                 resourceType: 'bucket/' . $bucket->getId(),
@@ -156,12 +159,7 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
         }
 
-        $queueForEvents
-            ->setParam('bucketId', $bucket->getId())
-            ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
-            ->setPayload($response->output($file, Response::MODEL_FILE))
-        ;
+        $bus->dispatch(new FileDeleted($file, $bucket, $project, $user));
 
         $response->noContent();
     }

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -44,7 +45,6 @@ class Create extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].create')
             ->label('audits.event', 'site.create')
             ->label('audits.resource', 'site/{response.$id}')
             ->label('usage.resource', 'site/{response.$id}')
@@ -100,8 +100,9 @@ class Create extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForPlatform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -132,8 +133,9 @@ class Create extends Base
         Response $response,
         Database $dbForProject,
         Document $project,
-        Event $queueForEvents,
-        Database $dbForPlatform
+        Bus $bus,
+        Database $dbForPlatform,
+        Document $actor
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -224,10 +226,10 @@ class Create extends Base
             ]));
         }
 
-        $queueForEvents->setParam('siteId', $site->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($site, Response::MODEL_SITE);
+
+        $bus->dispatch(new SiteCreated($site, $project, $actor));
     }
 }

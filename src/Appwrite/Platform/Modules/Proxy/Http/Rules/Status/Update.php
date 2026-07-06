@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Status;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -38,7 +39,6 @@ class Update extends Action
             ->desc('Update rule status')
             ->groups(['api', 'proxy'])
             ->label('scope', 'rules.write')
-            ->label('event', 'rules.[ruleId].update')
             ->label('audits.event', 'rule.update')
             ->label('audits.resource', 'rule/{response.$id}')
             ->label('sdk', new Method(
@@ -59,11 +59,12 @@ class Update extends Action
             ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('publisherForCertificates')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('log')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -71,11 +72,12 @@ class Update extends Action
         string $ruleId,
         Response $response,
         Certificate $publisherForCertificates,
-        Event $queueForEvents,
+        Bus $bus,
         Document $project,
         Database $dbForPlatform,
         Log $log,
         Authorization $authorization,
+        Document $actor,
     ) {
         $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
@@ -83,11 +85,12 @@ class Update extends Action
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $queueForEvents->setParam('ruleId', $rule->getId());
-
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+
+            $bus->dispatch(new RuleUpdated($rule, $project, $actor));
+
             return;
         }
 
@@ -127,5 +130,7 @@ class Update extends Action
         }
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
+
+        $bus->dispatch(new RuleUpdated($rule, $project, $actor));
     }
 }

@@ -2,14 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\BucketUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -43,7 +45,6 @@ class Update extends Action
             ->groups(['api', 'storage'])
             ->label('scope', 'buckets.write')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-            ->label('event', 'buckets.[bucketId].update')
             ->label('audits.event', 'bucket.update')
             ->label('audits.resource', 'bucket/{response.$id}')
             ->label('usage.resource', 'bucket/{response.$id}')
@@ -73,7 +74,9 @@ class Update extends Action
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -91,7 +94,9 @@ class Update extends Action
         bool $transformations,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents
+        Bus $bus,
+        Document $project,
+        Document $actor
     ) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -121,9 +126,8 @@ class Update extends Action
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
-        $queueForEvents
-            ->setParam('bucketId', $bucket->getId());
-
         $response->dynamic($bucket, Response::MODEL_BUCKET);
+
+        $bus->dispatch(new BucketUpdated($bucket, $project, $actor));
     }
 }

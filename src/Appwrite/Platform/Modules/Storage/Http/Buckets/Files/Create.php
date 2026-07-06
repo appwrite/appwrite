@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
+use Appwrite\Bus\Events\FileCreated;
 use Appwrite\ClamAV\Network;
-use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -14,6 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
@@ -60,7 +61,6 @@ class Create extends Action
             ->label('scope', 'files.write')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('audits.event', 'file.create')
-            ->label('event', 'buckets.[bucketId].files.[fileId].create')
             ->label('audits.resource', 'file/{response.$id}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
@@ -90,7 +90,7 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('user')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('deviceForFiles')
             ->inject('deviceForLocal')
             ->inject('authorization')
@@ -108,7 +108,7 @@ class Create extends Action
         Database $dbForProject,
         Document $project,
         User $user,
-        Event $queueForEvents,
+        Bus $bus,
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
@@ -321,11 +321,10 @@ class Create extends Action
         }
 
         if ($completed) {
-            $queueForEvents->reset();
             return;
         }
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $path, $permissions, $queueForEvents, $response): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $path, $permissions, $bus, $project, $user, $response): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -338,8 +337,6 @@ class Create extends Action
                     if (empty($contentRange)) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     }
-
-                    $queueForEvents->reset();
 
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
@@ -494,12 +491,7 @@ class Create extends Action
             }
 
             if ($chunksUploaded === $chunks) {
-                $queueForEvents
-                    ->setParam('bucketId', $bucket->getId())
-                    ->setParam('fileId', $file->getId())
-                    ->setContext('bucket', $bucket);
-            } else {
-                $queueForEvents->reset();
+                $bus->dispatch(new FileCreated($file, $bucket, $project, $user));
             }
 
             $metadata = null; // was causing leaks as it was passed by reference

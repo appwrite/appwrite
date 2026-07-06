@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
-use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Bus\Events\VariableUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -36,7 +37,6 @@ class Update extends Base
             ->desc('Update variable')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
-            ->label('event', 'variables.[variableId].update')
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -62,8 +62,10 @@ class Update extends Base
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
             ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForProject')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -74,8 +76,10 @@ class Update extends Base
         ?string $value,
         ?bool $secret,
         Response $response,
-        QueueEvent $queueForEvents,
-        Database $dbForProject
+        Bus $bus,
+        Database $dbForProject,
+        Document $project,
+        Document $actor
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -121,8 +125,8 @@ class Update extends Base
             'live' => false,
         ]));
 
-        $queueForEvents->setParam('variableId', $variable->getId());
-
         $response->dynamic($variable, Response::MODEL_VARIABLE);
+
+        $bus->dispatch(new VariableUpdated($variable, $project, $actor));
     }
 }

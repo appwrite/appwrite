@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\DeploymentCreated;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -51,7 +52,6 @@ class Create extends Action
             ->desc('Create deployment')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
-            ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
@@ -86,7 +86,7 @@ class Create extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('project')
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
@@ -95,6 +95,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('platform')
             ->inject('locks')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -107,7 +108,7 @@ class Create extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents,
+        Bus $bus,
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
@@ -115,7 +116,8 @@ class Create extends Action
         array $plan,
         Authorization $authorization,
         array $platform,
-        callable $locks
+        callable $locks,
+        Document $actor
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -276,7 +278,6 @@ class Create extends Action
         }
 
         if ($completed) {
-            $queueForEvents->reset();
             return;
         }
 
@@ -287,7 +288,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $mergeUploadMetadata, $platform, $project, $publisherForBuilds, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $mergeUploadMetadata, $platform, $project, $publisherForBuilds, $bus, $actor, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -297,8 +298,6 @@ class Create extends Action
                     $metadata = $mergeUploadMetadata($deployment->getAttribute('sourceMetadata', []), $metadata);
 
                     if ($uploaded === $chunks) {
-                        $queueForEvents->reset();
-
                         $response
                             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -377,15 +376,13 @@ class Create extends Action
 
                 $metadata = null;
 
-                if ($chunksUploaded === $chunks) {
-                    $queueForEvents
-                        ->setParam('functionId', $function->getId())
-                        ->setParam('deploymentId', $deployment->getId());
-                }
-
                 $response
                     ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                     ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+                if ($chunksUploaded === $chunks) {
+                    $bus->dispatch(new DeploymentCreated($deployment, $function->getId(), $project, $actor));
+                }
             }, timeout: 120.0);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');

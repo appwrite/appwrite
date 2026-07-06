@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\BucketDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -11,7 +11,9 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -35,7 +37,6 @@ class Delete extends Action
             ->label('scope', 'buckets.write')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('audits.event', 'bucket.delete')
-            ->label('event', 'buckets.[bucketId].delete')
             ->label('audits.resource', 'bucket/{request.bucketId}')
             ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('sdk', new Method(
@@ -56,7 +57,9 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
-            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -65,7 +68,9 @@ class Delete extends Action
         Response $response,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
-        Event $queueForEvents
+        Bus $bus,
+        Document $project,
+        Document $actor
     ) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -78,15 +83,12 @@ class Delete extends Action
         }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $bucket,
         ));
 
-        $queueForEvents
-            ->setParam('bucketId', $bucket->getId())
-            ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
-        ;
+        $bus->dispatch(new BucketDeleted($bucket, $project, $actor));
 
         $response->noContent();
     }

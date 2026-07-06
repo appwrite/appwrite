@@ -2,14 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Logs;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteLogDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -32,7 +34,6 @@ class Delete extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'log.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].logs.[logId].delete')
             ->label('audits.event', 'logs.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -55,11 +56,13 @@ class Delete extends Base
             ->param('logId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Log ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $logId, Response $response, Database $dbForProject, Event $queueForEvents)
+    public function action(string $siteId, string $logId, Response $response, Database $dbForProject, Bus $bus, Document $project, Document $actor)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -80,10 +83,7 @@ class Delete extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove log from DB');
         }
 
-        $queueForEvents
-            ->setParam('siteId', $site->getId())
-            ->setParam('logId', $log->getId())
-            ->setPayload($response->output($log, Response::MODEL_EXECUTION)); // TODO: Update model
+        $bus->dispatch(new SiteLogDeleted($log, $site->getId(), $project, $actor));
 
         $response->noContent();
     }

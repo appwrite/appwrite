@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -12,7 +12,9 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -35,7 +37,6 @@ class Delete extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'sites.[siteId].delete')
             ->label('audits.event', 'site.delete')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -59,7 +60,9 @@ class Delete extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
-            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -68,7 +71,9 @@ class Delete extends Base
         Response $response,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
-        Event $queueForEvents
+        Bus $bus,
+        Document $project,
+        Document $actor
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -81,12 +86,12 @@ class Delete extends Base
         }
 
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $site,
         ));
 
-        $queueForEvents->setParam('siteId', $site->getId());
+        $bus->dispatch(new SiteDeleted($site, $project, $actor));
 
         $response->noContent();
     }

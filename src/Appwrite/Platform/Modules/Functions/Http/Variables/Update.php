@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 
-use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Bus\Events\VariableUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -39,7 +40,6 @@ class Update extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'variables.[variableId].update')
             ->label('audits.event', 'variable.update')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -64,10 +64,12 @@ class Update extends Base
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
             ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
             ->inject('response')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -78,10 +80,12 @@ class Update extends Base
         ?string $value,
         ?bool $secret,
         Response $response,
-        QueueEvent $queueForEvents,
+        Bus $bus,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $project,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -138,8 +142,8 @@ class Update extends Base
             'active' => $schedule->getAttribute('active'),
         ])));
 
-        $queueForEvents->setParam('variableId', $variable->getId());
-
         $response->dynamic($variable, Response::MODEL_VARIABLE);
+
+        $bus->dispatch(new VariableUpdated($variable, $project, $actor));
     }
 }

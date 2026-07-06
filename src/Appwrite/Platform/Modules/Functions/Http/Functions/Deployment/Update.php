@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions\Deployment;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\FunctionDeploymentUpdated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -37,7 +38,6 @@ class Update extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -61,9 +61,10 @@ class Update extends Base
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -73,9 +74,10 @@ class Update extends Base
         Document $project,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents,
+        Bus $bus,
         Database $dbForPlatform,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -130,10 +132,8 @@ class Update extends Base
             ])));
         }, $queries));
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $response->dynamic($function, Response::MODEL_FUNCTION);
+
+        $bus->dispatch(new FunctionDeploymentUpdated($function, $deployment->getId(), $project, $actor));
     }
 }

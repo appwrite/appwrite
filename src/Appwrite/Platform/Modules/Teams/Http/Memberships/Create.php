@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
 use Appwrite\Auth\Validator\Phone;
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\MembershipCreated;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
@@ -21,6 +21,7 @@ use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -56,7 +57,6 @@ class Create extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships')
             ->desc('Create team membership')
             ->groups(['api', 'teams', 'auth'])
-            ->label('event', 'teams.[teamId].memberships.[membershipId].create')
             ->label('scope', 'teams.write')
             ->label('auth.type', 'invites')
             ->label('audits.event', 'membership.create')
@@ -91,7 +91,7 @@ class Create extends Action
             ->inject('locale')
             ->inject('publisherForMails')
             ->inject('publisherForMessaging')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
@@ -101,7 +101,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Bus $bus, callable $timelimit, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
         $isAppUser = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -464,19 +464,15 @@ class Create extends Action
             }
         }
 
-        $queueForEvents
-            ->setParam('userId', $invitee->getId())
-            ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId());
+        $membership
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $invitee->getAttribute('name'))
+            ->setAttribute('userEmail', $invitee->getAttribute('email'));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(
-                $membership
-                    ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
-                Response::MODEL_MEMBERSHIP
-            );
+            ->dynamic($membership, Response::MODEL_MEMBERSHIP);
+
+        $bus->dispatch(new MembershipCreated($membership, $team->getId(), $invitee->getId(), $project, $user));
     }
 }

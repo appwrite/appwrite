@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\DeploymentUpdated;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -38,7 +39,6 @@ class Create extends Action
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -62,11 +62,12 @@ class Create extends Action
             ->param('buildId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Build unique ID.', true, ['dbForProject']) // added as optional param for backward compatibility
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('publisherForBuilds')
             ->inject('deviceForFunctions')
             ->inject('project')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -76,11 +77,12 @@ class Create extends Action
         string $buildId,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents,
+        Bus $bus,
         BuildPublisher $publisherForBuilds,
         Device $deviceForFunctions,
         Document $project,
-        array $platform
+        array $platform,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -129,12 +131,10 @@ class Create extends Action
             platform: $platform,
         ));
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+        $bus->dispatch(new DeploymentUpdated($deployment, $function->getId(), $project, $actor));
     }
 }

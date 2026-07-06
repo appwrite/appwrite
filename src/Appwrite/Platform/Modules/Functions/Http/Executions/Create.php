@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\ExecutionCreated;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -23,6 +23,7 @@ use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -65,7 +66,6 @@ class Create extends Base
             ->groups(['api', 'functions'])
             ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].executions.[executionId].create')
             ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -95,7 +95,7 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('user')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('usage')
             ->inject('publisherForFunctions')
             ->inject('geodb')
@@ -123,7 +123,7 @@ class Create extends Base
         Database $dbForProject,
         Database $dbForPlatform,
         User $user,
-        Event $queueForEvents,
+        Bus $bus,
         Context $usage,
         FunctionPublisher $publisherForFunctions,
         Reader $geodb,
@@ -288,11 +288,6 @@ class Create extends Base
             'duration' => 0.0,
         ]);
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
-            ->setContext('function', $function);
-
         if ($async) {
             if (is_null($scheduledAt)) {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
@@ -350,6 +345,9 @@ class Create extends Base
 
             $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
             $response->dynamic($execution, Response::MODEL_EXECUTION);
+
+            $bus->dispatch(new ExecutionCreated($execution, $function, $project, $user));
+
             return;
         }
 
@@ -542,6 +540,8 @@ class Create extends Base
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION);
+
+        $bus->dispatch(new ExecutionCreated($execution, $function, $project, $user));
     }
 
 }

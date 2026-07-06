@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
-use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Bus\Events\VariableCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -38,7 +39,6 @@ class Create extends Base
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
             ->label('resourceType', RESOURCE_TYPE_SITES)
-            ->label('event', 'variables.[variableId].create')
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -63,13 +63,14 @@ class Create extends Base
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForProject')
             ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $variableId, string $key, string $value, bool $secret, Response $response, QueueEvent $queueForEvents, Database $dbForProject, Document $project)
+    public function action(string $siteId, string $variableId, string $key, string $value, bool $secret, Response $response, Bus $bus, Database $dbForProject, Document $project, Document $actor)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -102,10 +103,10 @@ class Create extends Base
             'live' => false,
         ]));
 
-        $queueForEvents->setParam('variableId', $variable->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($variable, Response::MODEL_VARIABLE);
+
+        $bus->dispatch(new VariableCreated($variable, $project, $actor));
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
+use Appwrite\Bus\Events\MembershipStatusUpdated;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -14,6 +14,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -42,7 +43,6 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId/status')
             ->desc('Update team membership status')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
             ->label('scope', 'public')
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
@@ -71,7 +71,7 @@ class Update extends Action
             ->inject('authorization')
             ->inject('project')
             ->inject('geodb')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('domainVerification')
@@ -79,7 +79,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Bus $bus, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -198,18 +198,13 @@ class Update extends Action
 
         $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
-        $queueForEvents
-            ->setParam('userId', $targetUser->getId())
-            ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId())
-        ;
+        $membership
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $targetUser->getAttribute('name'))
+            ->setAttribute('userEmail', $targetUser->getAttribute('email'));
 
-        $response->dynamic(
-            $membership
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $targetUser->getAttribute('name'))
-                ->setAttribute('userEmail', $targetUser->getAttribute('email')),
-            Response::MODEL_MEMBERSHIP
-        );
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
+
+        $bus->dispatch(new MembershipStatusUpdated($membership, $team->getId(), $targetUser->getId(), $project, $targetUser));
     }
 }

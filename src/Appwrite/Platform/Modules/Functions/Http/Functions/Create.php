@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Bus\Events\FunctionCreated;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -21,6 +22,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -60,7 +62,6 @@ class Create extends Base
             ->desc('Create function')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
-            ->label('event', 'functions.[functionId].create')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.create')
             ->label('audits.resource', 'function/{response.$id}')
@@ -131,6 +132,8 @@ class Create extends Base
             ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('bus')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -174,7 +177,9 @@ class Create extends Base
         Request $request,
         GitHub $github,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        Bus $bus,
+        Document $actor
     ) {
 
         // Temporary abuse check
@@ -443,10 +448,10 @@ class Create extends Base
             }
         }
 
-        $queueForEvents->setParam('functionId', $function->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($function, Response::MODEL_FUNCTION);
+
+        $bus->dispatch(new FunctionCreated($function, $project, $actor));
     }
 }

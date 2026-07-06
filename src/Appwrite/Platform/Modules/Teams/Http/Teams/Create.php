@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Teams;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\TeamCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -40,7 +41,6 @@ class Create extends Action
             ->setHttpPath('/v1/teams')
             ->desc('Create team')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].create')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.create')
             ->label('audits.resource', 'team/{response.$id}')
@@ -64,11 +64,12 @@ class Create extends Action
             ->inject('user')
             ->inject('dbForProject')
             ->inject('authorization')
-            ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $name, array $roles, Response $response, User $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $name, array $roles, Response $response, User $user, Database $dbForProject, Authorization $authorization, Document $project, Bus $bus)
     {
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $isAppUser = $user->isKey($authorization->getRoles());
@@ -125,14 +126,10 @@ class Create extends Action
             $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
-        $queueForEvents->setParam('teamId', $team->getId());
-
-        if (!empty($user->getId())) {
-            $queueForEvents->setParam('userId', $user->getId());
-        }
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($team, Response::MODEL_TEAM);
+
+        $bus->dispatch(new TeamCreated($team, $project, $user));
     }
 }

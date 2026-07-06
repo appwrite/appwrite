@@ -2,13 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\BucketCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -46,7 +47,6 @@ class Create extends Action
             ->groups(['api', 'storage'])
             ->label('scope', 'buckets.write')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-            ->label('event', 'buckets.[bucketId].create')
             ->label('audits.event', 'bucket.create')
             ->label('audits.resource', 'bucket/{response.$id}')
             ->label('usage.resource', 'bucket/{response.$id}')
@@ -76,7 +76,9 @@ class Create extends Action
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -94,7 +96,9 @@ class Create extends Action
         bool $transformations,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents
+        Bus $bus,
+        Document $project,
+        Document $actor
     ) {
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -158,11 +162,10 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
 
-        $queueForEvents
-            ->setParam('bucketId', $bucket->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($bucket, Response::MODEL_BUCKET);
+
+        $bus->dispatch(new BucketCreated($bucket, $project, $actor));
     }
 }

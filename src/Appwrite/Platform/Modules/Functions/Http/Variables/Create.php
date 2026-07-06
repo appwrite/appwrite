@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 
-use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Bus\Events\VariableCreated;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -40,7 +41,6 @@ class Create extends Base
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'variables.[variableId].create')
             ->label('audits.event', 'variable.create')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -65,11 +65,12 @@ class Create extends Base
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
             ->inject('response')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -80,11 +81,12 @@ class Create extends Base
         string $value,
         bool $secret,
         Response $response,
-        QueueEvent $queueForEvents,
+        Bus $bus,
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -128,10 +130,10 @@ class Create extends Base
             'active' => $schedule->getAttribute('active'),
         ])));
 
-        $queueForEvents->setParam('variableId', $variable->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($variable, Response::MODEL_VARIABLE);
+
+        $bus->dispatch(new VariableCreated($variable, $project, $actor));
     }
 }

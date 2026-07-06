@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\FunctionUpdated;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
@@ -14,6 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -52,7 +53,6 @@ class Update extends Base
             ->desc('Update function')
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
-            ->label('event', 'functions.[functionId].update')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'function.update')
             ->label('audits.resource', 'function/{response.$id}')
@@ -109,13 +109,14 @@ class Update extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -146,13 +147,14 @@ class Update extends Base
         Response $response,
         Database $dbForProject,
         Document $project,
-        Event $queueForEvents,
+        Bus $bus,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
         GitHub $github,
         Executor $executor,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        Document $actor
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -344,8 +346,8 @@ class Update extends Base
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $queueForEvents->setParam('functionId', $function->getId());
-
         $response->dynamic($function, Response::MODEL_FUNCTION);
+
+        $bus->dispatch(new FunctionUpdated($function, $project, $actor));
     }
 }

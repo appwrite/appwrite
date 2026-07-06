@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Teams;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\TeamDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -13,6 +13,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -34,7 +35,6 @@ class Delete extends Action
             ->setHttpPath('/v1/teams/:teamId')
             ->desc('Delete team')
             ->groups(['api', 'teams'])
-            ->label('event', 'teams.[teamId].delete')
             ->label('scope', 'teams.write')
             ->label('audits.event', 'team.delete')
             ->label('audits.resource', 'team/{request.teamId}')
@@ -57,12 +57,13 @@ class Delete extends Action
             ->inject('getProjectDB')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
-            ->inject('queueForEvents')
             ->inject('project')
+            ->inject('user')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, DeletePublisher $publisherForDeletes, Event $queueForEvents, Document $project)
+    public function action(string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, DeletePublisher $publisherForDeletes, Document $project, Document $user, Bus $bus)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -93,10 +94,7 @@ class Delete extends Action
             document: $team,
         ));
 
-        $queueForEvents
-            ->setParam('teamId', $team->getId())
-            ->setPayload($response->output($team, Response::MODEL_TEAM))
-        ;
+        $bus->dispatch(new TeamDeleted($team, $project, $user));
 
         $response->noContent();
     }

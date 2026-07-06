@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\DeploymentDeleted;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -11,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
@@ -38,7 +39,6 @@ class Delete extends Action
             ->groups(['api', 'functions'])
             ->label('scope', 'functions.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
-            ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'function/{request.functionId}')
             ->label('usage.resource', 'function/{request.functionId}')
@@ -63,8 +63,10 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('deviceForFunctions')
+            ->inject('project')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -74,8 +76,10 @@ class Delete extends Action
         Response $response,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
-        Event $queueForEvents,
-        Device $deviceForFunctions
+        Bus $bus,
+        Device $deviceForFunctions,
+        Document $project,
+        Document $actor
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -135,15 +139,13 @@ class Delete extends Action
             ])));
         }
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $publisherForDeletes->enqueue(new DeleteMessage(
-            project: $queueForEvents->getProject(),
+            project: $project,
             type: DELETE_TYPE_DOCUMENT,
             document: $deployment,
         ));
+
+        $bus->dispatch(new DeploymentDeleted($deployment, $function->getId(), $project, $actor));
 
         $response->noContent();
     }

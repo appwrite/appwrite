@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Duplicate;
 
-use Appwrite\Event\Event;
+use Appwrite\Bus\Events\SiteDeploymentUpdated;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -38,7 +39,6 @@ class Create extends Action
             ->desc('Create duplicate deployment')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.write')
-            ->label('event', 'sites.[siteId].deployments.[deploymentId].update')
             ->label('audits.event', 'deployment.update')
             ->label('audits.resource', 'site/{request.siteId}')
             ->label('usage.resource', 'site/{request.siteId}')
@@ -64,11 +64,12 @@ class Create extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
-            ->inject('queueForEvents')
+            ->inject('bus')
             ->inject('publisherForBuilds')
             ->inject('deviceForSites')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -80,11 +81,12 @@ class Create extends Action
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents,
+        Bus $bus,
         BuildPublisher $publisherForBuilds,
         Device $deviceForSites,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        Document $actor
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -175,12 +177,10 @@ class Create extends Action
             platform: $platform,
         ));
 
-        $queueForEvents
-            ->setParam('siteId', $site->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+
+        $bus->dispatch(new SiteDeploymentUpdated($deployment, $site->getId(), $project, $actor));
     }
 }
