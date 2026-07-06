@@ -1606,4 +1606,44 @@ final class StorageCustomClientTest extends Scope
         ]);
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testListFoldersFileSecurityVisibility(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Folder Visibility',
+            'fileSecurity' => true,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $upload = function (string $parent, array $permissions) use ($bucketId): void {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+                'parent' => $parent,
+                'permissions' => $permissions,
+            ]);
+            $this->assertEquals(201, $file['headers']['status-code']);
+        };
+
+        $upload('secret', []);
+        $upload('shared', [Permission::read(Role::any())]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/folders', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(['shared/'], \array_column($response['body']['folders'], 'key'));
+    }
 }
