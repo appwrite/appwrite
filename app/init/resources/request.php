@@ -1323,7 +1323,7 @@ return function (Container $context): void {
         return new Agent($adapter);
     }, ['register']);
 
-    $context->set('geoRecord', function ($request, callable $getGeoForIp) {
+    $context->set('geoRecord', function ($request, Locale $locale, callable $getGeoForIp) {
         $ip = $request->getIp();
 
         if (!filter_var($ip, FILTER_VALIDATE_IP)) {
@@ -1331,17 +1331,11 @@ return function (Container $context): void {
             $ip = '0.0.0.0';
         }
 
-        return $getGeoForIp($ip);
-    }, ['request', 'getGeoForIp']);
+        return $getGeoForIp($locale, $ip);
+    }, ['request', 'locale', 'getGeoForIp']);
 
-    $context->set('getGeoForIp', function (Locale $locale) {
-        $cache = [];
-
-        return function (string $ip) use ($locale, &$cache): GeoRecord {
-            if (isset($cache[$ip])) {
-                return $cache[$ip];
-            }
-
+    $context->set('getGeoForIp', function () {
+        return function (Locale $locale, string $ip): GeoRecord {
             $record = null;
             $lookupSucceeded = false;
             $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
@@ -1384,7 +1378,7 @@ return function (Container $context): void {
 
             $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
 
-            $geoRecord = (new GeoRecord([
+            return (new GeoRecord([
                 'ip' => $ip,
                 'countryCode' => $countryCode,
                 'continentCode' => $continentCode,
@@ -1404,10 +1398,6 @@ return function (Container $context): void {
             ]))
                 ->setLocale($locale)
                 ->setLookupSucceeded($lookupSucceeded);
-
-            $cache[$ip] = $geoRecord;
-
-            return $geoRecord;
         };
-    }, ['locale']);
+    }, []);
 };
