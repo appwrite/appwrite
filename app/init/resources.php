@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Executor\Executor;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -69,6 +70,29 @@ $container->set('executor', fn () => new Executor(), []);
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 $container->set('authorization', fn () => new Authorization(), []);
+
+$container->set('requestIpResolver', fn () => static function (ServerRequestInterface $request): string {
+    $server = $request->getServerParams();
+    $remoteAddr = $server['remote_addr'] ?? '0.0.0.0';
+    $trustedHeaders = \array_filter(\array_map(
+        trim(...),
+        \array_map(strtolower(...), \explode(',', System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for')))
+    ));
+
+    foreach ($trustedHeaders as $header) {
+        $headerValue = $request->getHeaderLine($header);
+        if ($headerValue === '') {
+            continue;
+        }
+
+        $ip = trim(explode(',', $headerValue)[0]);
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+
+    return (string) $remoteAddr;
+}, []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
 

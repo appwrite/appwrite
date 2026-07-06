@@ -9,7 +9,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -62,6 +61,9 @@ class Get extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('publisherForAudits')
+            ->inject('ip')
+            ->inject('userAgent')
+            ->inject('hostname')
             ->callback($this->action(...));
     }
 
@@ -73,6 +75,9 @@ class Get extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         AuditPublisher $publisherForAudits,
+        string $ip,
+        string $userAgent,
+        string $hostname,
     ): void {
         $secret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
 
@@ -88,8 +93,10 @@ class Get extends Action
                         $result['notification'],
                         $result['project'],
                         $result['seenAt'],
-                        $request,
                         $publisherForAudits,
+                        $ip,
+                        $userAgent,
+                        $hostname,
                     );
                 }
             } catch (\Throwable) {
@@ -161,7 +168,7 @@ class Get extends Action
         ];
     }
 
-    private function logView(Document $notification, Document $project, string $seenAt, ServerRequestInterface $request, AuditPublisher $publisherForAudits): void
+    private function logView(Document $notification, Document $project, string $seenAt, AuditPublisher $publisherForAudits, string $ip, string $userAgent, string $hostname): void
     {
         $publisherForAudits->enqueue(new AuditMessage(
             event: 'notification.view',
@@ -184,9 +191,9 @@ class Get extends Action
             ]),
             resource: 'notification/' . $notification->getId(),
             mode: APP_MODE_DEFAULT,
-            ip: Request::ip($request),
-            userAgent: Request::userAgent($request, ''),
-            hostname: Request::hostname($request),
+            ip: $ip,
+            userAgent: $userAgent,
+            hostname: $hostname,
         ));
     }
 

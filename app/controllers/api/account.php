@@ -82,7 +82,7 @@ $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 
-$createSession = function (string $userId, string $secret, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, string $userAgent, string $ip, string $protocol) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -123,8 +123,8 @@ $createSession = function (string $userId, string $secret, ServerRequestInterfac
     $user->setAttributes($userFromRequest->getArrayCopy());
 
     $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-    $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
-    $record = $geodb->get(Request::ip($request));
+    $detector = new Detector($userAgent ?: 'UNKNOWN');
+    $record = $geodb->get($ip);
     $sessionSecret = $proofForToken->generate();
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
@@ -169,8 +169,8 @@ $createSession = function (string $userId, string $secret, ServerRequestInterfac
             'userInternalId' => $user->getSequence(),
             'provider' => $provider,
             'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => $userAgent ?: 'UNKNOWN',
+            'ip' => $ip,
             'factors' => [$factor],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
@@ -232,8 +232,6 @@ $createSession = function (string $userId, string $secret, ServerRequestInterfac
     }
 
     $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-    $protocol = Request::protocol($request);
-
     $response
         ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
         ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -286,7 +284,8 @@ Http::post('/v1/account')
     ->inject('authorization')
     ->inject('hooks')
     ->inject('plan')
-    ->action(function (string $userId, string $email, string $password, string $name, ServerRequestInterface $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
+    ->inject('ip')
+    ->action(function (string $userId, string $email, string $password, string $name, ServerRequestInterface $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan, string $ip) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -297,7 +296,7 @@ Http::post('/v1/account')
                 throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 
-            if (!empty($whitelistIPs) && !\in_array(Request::ip($request), $whitelistIPs)) {
+            if (!empty($whitelistIPs) && !\in_array($ip, $whitelistIPs)) {
                 throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
             }
         }
@@ -616,9 +615,8 @@ Http::delete('/v1/account/sessions')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
-
-        $protocol = Request::protocol($request);
+    ->inject('protocol')
+    ->action(function (ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, string $protocol) {
         $sessions = $user->getAttribute('sessions', []);
         $currentSession = null;
 
@@ -749,9 +747,8 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
-
-        $protocol = Request::protocol($request);
+    ->inject('protocol')
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, string $protocol) {
         $sessionId = ($sessionId === 'current')
             ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
@@ -939,9 +936,11 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('protocol')
+    ->action(function (string $email, string $password, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, string $userAgent, string $ip, string $protocol) {
         $email = \strtolower($email);
-        $protocol = Request::protocol($request);
 
         $profile = $dbForProject->findOne('users', [
             Query::equal('email', [$email]),
@@ -962,8 +961,8 @@ Http::post('/v1/account/sessions/email')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
-        $record = $geodb->get(Request::ip($request));
+        $detector = new Detector(($userAgent ?: 'UNKNOWN'));
+        $record = $geodb->get($ip);
         $secret = $proofForToken->generate();
         $session = new Document(array_merge(
             [
@@ -973,8 +972,8 @@ Http::post('/v1/account/sessions/email')
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-                'ip' => Request::ip($request),
+                'userAgent' => ($userAgent ?: 'UNKNOWN'),
+                'ip' => $ip,
                 'factors' => ['password'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
@@ -1087,8 +1086,10 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (ServerRequestInterface $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
-        $protocol = Request::protocol($request);
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('protocol')
+    ->action(function (ServerRequestInterface $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, string $userAgent, string $ip, string $protocol) {
 
         if ('console' === $project->getId()) {
             throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
@@ -1136,8 +1137,8 @@ Http::post('/v1/account/sessions/anonymous')
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
-        $record = $geodb->get(Request::ip($request));
+        $detector = new Detector(($userAgent ?: 'UNKNOWN'));
+        $record = $geodb->get($ip);
         $secret = $proofForToken->generate();
 
         $session = new Document(array_merge(
@@ -1147,8 +1148,8 @@ Http::post('/v1/account/sessions/anonymous')
                 'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_ANONYMOUS,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-                'ip' => Request::ip($request),
+                'userAgent' => ($userAgent ?: 'UNKNOWN'),
+                'ip' => $ip,
                 'factors' => ['anonymous'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
@@ -1244,6 +1245,9 @@ Http::post('/v1/account/sessions/token')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('protocol')
     ->action($createSession);
 
 Http::get('/v1/account/sessions/oauth2/:provider')
@@ -1277,10 +1281,11 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->inject('response')
     ->inject('project')
     ->inject('platform')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, ServerRequestInterface $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('port')
+    ->inject('hostname')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, ServerRequestInterface $request, Response $response, Document $project, array $platform, string $port, string $hostname) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = Request::port($request);
-        $callbackBase = $protocol . '://' . Request::hostname($request);
+        $callbackBase = $protocol . '://' . $hostname;
         if ($protocol === 'https' && $port !== '443') {
             $callbackBase .= ':' . $port;
         } elseif ($protocol === 'http' && $port !== '80') {
@@ -1355,10 +1360,11 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('requestParams')
     ->inject('response')
-    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response) {
+    ->inject('port')
+    ->inject('hostname')
+    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response, string $port, string $hostname) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = Request::port($request);
-        $callbackBase = $protocol . '://' . Request::hostname($request);
+        $callbackBase = $protocol . '://' . $hostname;
         if ($protocol === 'https' && $port !== '443') {
             $callbackBase .= ':' . $port;
         } elseif ($protocol === 'http' && $port !== '80') {
@@ -1392,10 +1398,11 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('requestParams')
     ->inject('response')
-    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response) {
+    ->inject('port')
+    ->inject('hostname')
+    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response, string $port, string $hostname) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = Request::port($request);
-        $callbackBase = $protocol . '://' . Request::hostname($request);
+        $callbackBase = $protocol . '://' . $hostname;
         if ($protocol === 'https' && $port !== '443') {
             $callbackBase .= ':' . $port;
         } elseif ($protocol === 'http' && $port !== '80') {
@@ -1448,10 +1455,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('port')
+    ->inject('hostname')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, string $userAgent, string $ip, string $port, string $hostname) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = Request::port($request);
-        $callbackBase = $protocol . '://' . Request::hostname($request);
+        $callbackBase = $protocol . '://' . $hostname;
         if ($protocol === 'https' && $port !== '443') {
             $callbackBase .= ':' . $port;
         } elseif ($protocol === 'http' && $port !== '80') {
@@ -1909,8 +1919,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'type' => TOKEN_TYPE_OAUTH2,
                 'secret' => $proofForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
-                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-                'ip' => Request::ip($request),
+                'userAgent' => ($userAgent ?: 'UNKNOWN'),
+                'ip' => $ip,
             ]);
 
             $authorization->addRole(Role::user($user->getId())->toString());
@@ -1938,8 +1948,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             // If the `token` param is not set, we persist the session in a cookie
         } else {
-            $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
-            $record = $geodb->get(Request::ip($request));
+            $detector = new Detector(($userAgent ?: 'UNKNOWN'));
+            $record = $geodb->get($ip);
             $secret = $proofForToken->generate();
 
             $session = new Document(array_merge([
@@ -1952,8 +1962,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-                'ip' => Request::ip($request),
+                'userAgent' => ($userAgent ?: 'UNKNOWN'),
+                'ip' => $ip,
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
@@ -2054,10 +2064,11 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->inject('response')
     ->inject('project')
     ->inject('platform')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, ServerRequestInterface $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('port')
+    ->inject('hostname')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, ServerRequestInterface $request, Response $response, Document $project, array $platform, string $port, string $hostname) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = Request::port($request);
-        $callbackBase = $protocol . '://' . Request::hostname($request);
+        $callbackBase = $protocol . '://' . $hostname;
         if ($protocol === 'https' && $port !== '443') {
             $callbackBase .= ':' . $port;
         } elseif ($protocol === 'http' && $port !== '80') {
@@ -2091,7 +2102,6 @@ Http::get('/v1/account/tokens/oauth2/:provider')
 
         $host = $platform['consoleHostname'] ?? '';
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = Request::port($request);
         $redirectBase = $protocol . '://' . $host;
         if ($protocol === 'https' && $port !== '443') {
             $redirectBase .= ':' . $port;
@@ -2162,7 +2172,10 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, ServerRequestInterface $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('port')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, ServerRequestInterface $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization, string $userAgent, string $ip, string $port) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2283,8 +2296,8 @@ Http::post('/v1/account/tokens/magic-url')
             'type' => TOKEN_TYPE_MAGIC_URL,
             'secret' => $proofForToken->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip,
         ]);
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -2301,7 +2314,6 @@ Http::post('/v1/account/tokens/magic-url')
         if (empty($url)) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $host = $platform['consoleHostname'] ?? '';
-            $port = Request::port($request);
             $callbackBase = $protocol . '://' . $host;
             if ($protocol === 'https' && $port !== '443') {
                 $callbackBase .= ':' . $port;
@@ -2322,7 +2334,7 @@ Http::post('/v1/account/tokens/magic-url')
             $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ??
             $project->getAttribute('templates', [])['email.magicSession-' . $locale->fallback] ?? [];
 
-        $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
+        $detector = new Detector(($userAgent ?: 'UNKNOWN'));
         $agentOs = $detector->getOS();
         $agentClient = $detector->getClient();
         $agentDevice = $detector->getDevice();
@@ -2489,7 +2501,9 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, ServerRequestInterface $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (string $userId, string $email, bool $phrase, ServerRequestInterface $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization, string $userAgent, string $ip) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2626,8 +2640,8 @@ Http::post('/v1/account/tokens/email')
             'type' => TOKEN_TYPE_EMAIL,
             'secret' => $proofForCode->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip,
         ]);
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -2657,7 +2671,7 @@ Http::post('/v1/account/tokens/email')
 
         $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
-        $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
+        $detector = new Detector(($userAgent ?: 'UNKNOWN'));
         $agentOs = $detector->getOS();
         $agentClient = $detector->getClient();
         $agentDevice = $detector->getDevice();
@@ -2843,10 +2857,13 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('protocol')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization, string $userAgent, string $ip, string $protocol) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $userAgent, $ip, $protocol);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -2895,6 +2912,9 @@ Http::put('/v1/account/sessions/phone')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('protocol')
     ->action($createSession);
 
 Http::post('/v1/account/tokens/phone')
@@ -2939,7 +2959,9 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, ServerRequestInterface $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (string $userId, string $phone, ServerRequestInterface $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization, string $userAgent, string $ip) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3033,8 +3055,8 @@ Http::post('/v1/account/tokens/phone')
             'type' => TOKEN_TYPE_PHONE,
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip,
         ]);
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -3487,8 +3509,8 @@ Http::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-                ->inject('proofForPassword')
-->inject('authorization')
+    ->inject('proofForPassword')
+    ->inject('authorization')
     ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3611,7 +3633,8 @@ Http::patch('/v1/account/status')
     ->inject('store')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (ServerRequestInterface $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain) {
+    ->inject('protocol')
+    ->action(function (ServerRequestInterface $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Store $store, bool $domainVerification, ?string $cookieDomain, string $protocol) {
 
         $user->setAttribute('status', false);
 
@@ -3624,8 +3647,6 @@ Http::patch('/v1/account/status')
         if (!$domainVerification) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
-
-        $protocol = Request::protocol($request);
         $response
             ->addCookie($store->getKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
             ->addCookie($store->getKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -3671,7 +3692,9 @@ Http::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (string $email, string $url, ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization, string $userAgent, string $ip) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3703,8 +3726,8 @@ Http::post('/v1/account/recovery')
             'type' => TOKEN_TYPE_RECOVERY,
             'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip,
         ]);
 
         $authorization->addRole(Role::user($profile->getId())->toString());
@@ -4008,7 +4031,9 @@ Http::post('/v1/account/verifications/email')
     ->inject('publisherForMails')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $url, ServerRequestInterface $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (string $url, ServerRequestInterface $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization, string $userAgent, string $ip) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4032,8 +4057,8 @@ Http::post('/v1/account/verifications/email')
             'type' => TOKEN_TYPE_VERIFICATION,
             'secret' => $proofForToken->hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip,
         ]);
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -4324,8 +4349,10 @@ Http::post('/v1/account/verifications/phone')
     ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
-                ->inject('authorization')
-    ->action(function (ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->inject('authorization')
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (ServerRequestInterface $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization, string $userAgent, string $ip) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4360,8 +4387,8 @@ Http::post('/v1/account/verifications/phone')
             'type' => TOKEN_TYPE_PHONE,
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request),
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip,
         ]);
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -4527,7 +4554,8 @@ Http::post('/v1/account/targets/push')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, ServerRequestInterface $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken, Authorization $authorization) {
+    ->inject('userAgent')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, ServerRequestInterface $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken, Authorization $authorization, string $userAgent) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
@@ -4538,7 +4566,7 @@ Http::post('/v1/account/targets/push')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $detector = new Detector(Request::userAgent($request, ));
+        $detector = new Detector($userAgent);
         $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
         $device = $detector->getDevice();
@@ -4608,7 +4636,8 @@ Http::put('/v1/account/targets/:targetId/push')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, ServerRequestInterface $request, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->inject('userAgent')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, ServerRequestInterface $request, Response $response, Database $dbForProject, Authorization $authorization, string $userAgent) {
 
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
@@ -4626,7 +4655,7 @@ Http::put('/v1/account/targets/:targetId/push')
                 ->setAttribute('expired', false);
         }
 
-        $detector = new Detector(Request::userAgent($request, ));
+        $detector = new Detector($userAgent);
         $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
         $device = $detector->getDevice();

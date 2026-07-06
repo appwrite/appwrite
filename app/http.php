@@ -545,11 +545,13 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $route = $app->match($request)?->route;
 
             $log = $app->context()->get("log");
+            $ip = $app->context()->get('ip');
+            $hostname = $app->context()->get('hostname');
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             } else {
-                $log->setUser(new User('guest-' . hash('sha256', Request::ip($request))));
+                $log->setUser(new User('guest-' . hash('sha256', $ip)));
             }
 
             $log->setNamespace("http");
@@ -563,7 +565,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
-            $log->addTag('hostname', Request::hostname($request));
+            $log->addTag('hostname', $hostname);
             try {
                 $requestParams = $app->context()->get('requestParams');
             } catch (\Throwable) {

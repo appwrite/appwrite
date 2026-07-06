@@ -2294,15 +2294,17 @@ Http::post('/v1/users/:userId/sessions')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $userId, ServerRequestInterface $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (string $userId, ServerRequestInterface $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, string $userAgent, string $ip) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $secret = $proofForToken->generate();
-        $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
-        $record = $geodb->get(Request::ip($request));
+        $detector = new Detector(($userAgent ?: 'UNKNOWN'));
+        $record = $geodb->get($ip);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
@@ -2314,9 +2316,9 @@ Http::post('/v1/users/:userId/sessions')
                 'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_SERVER,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
+                'userAgent' => ($userAgent ?: 'UNKNOWN'),
                 'factors' => ['server'],
-                'ip' => Request::ip($request),
+                'ip' => $ip,
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => $expire,
             ],
@@ -2382,7 +2384,9 @@ Http::post('/v1/users/:userId/tokens')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, ServerRequestInterface $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->action(function (string $userId, int $length, int $expire, ServerRequestInterface $request, Response $response, Database $dbForProject, Event $queueForEvents, string $userAgent, string $ip) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2401,8 +2405,8 @@ Http::post('/v1/users/:userId/tokens')
             'type' => TOKEN_TYPE_GENERIC,
             'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
-            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
-            'ip' => Request::ip($request)
+            'userAgent' => ($userAgent ?: 'UNKNOWN'),
+            'ip' => $ip
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);

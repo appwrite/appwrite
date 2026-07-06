@@ -64,7 +64,8 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, ServerRequestInterface $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->inject('hostname')
+    ->action(function (Route $route, ServerRequestInterface $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser, string $hostname) {
 
         /**
          * Handle user authentication and session validation.
@@ -152,7 +153,7 @@ Http::init()
                     '$id' => '',
                     'status' => true,
                     'type' => ACTOR_TYPE_KEY_PROJECT,
-                    'email' => 'app.' . $project->getId() . '@service.' . Request::hostname($request),
+                    'email' => 'app.' . $project->getId() . '@service.' . $hostname,
                     'password' => '',
                     'name' => $apiKey->getName(),
                 ]);
@@ -498,7 +499,10 @@ Http::init()
     ->inject('timelimit')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('hostname')
+    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization, string $userAgent, string $ip, string $hostname) {
         $response->setUser($user);
         Request::rememberUser($request, $user);
 
@@ -522,9 +526,9 @@ Http::init()
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
                     ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', Request::userAgent($request, ''))
-                    ->setParam('{ip}', Request::ip($request))
-                    ->setParam('{url}', Request::hostname($request) . $route->getPath())
+                    ->setParam('{userAgent}', $userAgent)
+                    ->setParam('{ip}', $ip)
+                    ->setParam('{url}', $hostname . $route->getPath())
                     ->setParam('{method}', $request->getMethod())
                     ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
@@ -585,7 +589,10 @@ Http::init()
     ->inject('cacheControlForStorage')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('hostname')
+    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser, string $userAgent, string $ip, string $hostname) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
@@ -611,9 +618,9 @@ Http::init()
             ->setUser($targetUser);
 
         $auditContext->mode = $mode;
-        $auditContext->userAgent = Request::userAgent($request, '');
-        $auditContext->ip = Request::ip($request);
-        $auditContext->hostname = Request::hostname($request);
+        $auditContext->userAgent = $userAgent;
+        $auditContext->ip = $ip;
+        $auditContext->hostname = $hostname;
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
@@ -883,7 +890,10 @@ Http::shutdown()
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, callable $timelimit) {
+    ->inject('userAgent')
+    ->inject('ip')
+    ->inject('hostname')
+    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, callable $timelimit, string $userAgent, string $ip, string $hostname) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
@@ -902,9 +912,9 @@ Http::shutdown()
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', Request::userAgent($request, ''))
-                ->setParam('{ip}', Request::ip($request))
-                ->setParam('{url}', Request::hostname($request) . $route->getPath())
+                ->setParam('{userAgent}', $userAgent)
+                ->setParam('{ip}', $ip)
+                ->setParam('{url}', $hostname . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
@@ -931,7 +941,8 @@ Http::shutdown()
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, ServerRequestInterface $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
+    ->inject('hostname')
+    ->action(function (Route $route, array $params, ServerRequestInterface $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode, string $hostname) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
@@ -968,7 +979,7 @@ Http::shutdown()
                 '$id' => '',
                 'status' => true,
                 'type' => ACTOR_TYPE_GUEST,
-                'email' => 'guest.' . $project->getId() . '@service.' . Request::hostname($request),
+                'email' => 'guest.' . $project->getId() . '@service.' . $hostname,
                 'password' => '',
                 'name' => 'Guest',
             ]);

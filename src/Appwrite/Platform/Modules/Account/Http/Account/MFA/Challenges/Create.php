@@ -18,7 +18,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
@@ -112,6 +111,7 @@ class Create extends Action
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
+            ->inject('userAgent')
             ->callback($this->action(...));
     }
 
@@ -131,7 +131,8 @@ class Create extends Action
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
-        ProofsCode $proofForCode
+        ProofsCode $proofForCode,
+        string $userAgent
     ): void {
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
 
@@ -236,7 +237,7 @@ class Create extends Action
 
                 $bodyTemplate = $templatesPath . '/' . $smtpBaseTemplate . '.tpl';
 
-                $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
+                $detector = new Detector($userAgent ?: 'UNKNOWN');
                 $agentOs = $detector->getOS();
                 $agentClient = $detector->getClient();
                 $agentDevice = $detector->getDevice();

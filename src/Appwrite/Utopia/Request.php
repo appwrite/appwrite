@@ -15,7 +15,6 @@ use Utopia\Psr7\ServerRequest;
 use Utopia\Psr7\Stream;
 use Utopia\Psr7\UploadedFile;
 use Utopia\Psr7\Uri;
-use Utopia\System\System;
 use WeakMap;
 
 class Request extends ServerRequest
@@ -41,75 +40,7 @@ class Request extends ServerRequest
     private array $filters = [];
     private ?Route $route = null;
     private ?array $filteredParams = null;
-    private ?Authorization $authorization = null;
-    private ?User $user = null;
     private SwooleRequest $swoole;
-
-    public static function ip(ServerRequestInterface $request): string
-    {
-        $server = $request->getServerParams();
-        $remoteAddr = $server['remote_addr'] ?? '0.0.0.0';
-        $trustedHeaders = \array_filter(\array_map(
-            trim(...),
-            \array_map(strtolower(...), \explode(',', System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for')))
-        ));
-
-        foreach ($trustedHeaders as $header) {
-            $headerValue = $request->getHeaderLine($header);
-            if ($headerValue === '') {
-                continue;
-            }
-
-            $ip = trim(explode(',', $headerValue)[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                return $ip;
-            }
-        }
-
-        return (string) $remoteAddr;
-    }
-
-    public static function protocol(ServerRequestInterface $request): string
-    {
-        $server = $request->getServerParams();
-        $protocol = $request->getHeaderLine('x-forwarded-proto') ?: (string) ($server['server_protocol'] ?? 'https');
-
-        if ($protocol === 'HTTP/1.1') {
-            return 'http';
-        }
-
-        return match ($protocol) {
-            'http', 'https', 'ws', 'wss' => $protocol,
-            default => 'https',
-        };
-    }
-
-    public static function port(ServerRequestInterface $request): string
-    {
-        $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
-
-        return $request->getHeaderLine('x-forwarded-port') ?: (string) parse_url(self::protocol($request) . '://' . $forwardedHost, PHP_URL_PORT);
-    }
-
-    public static function hostname(ServerRequestInterface $request): string
-    {
-        $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
-        $hostname = parse_url(self::protocol($request) . '://' . $forwardedHost, PHP_URL_HOST);
-        return strtolower(\strval($hostname));
-    }
-
-    public static function userAgent(ServerRequestInterface $request, string $default = ''): string
-    {
-        $forwardedUserAgent = $request->getHeaderLine('x-forwarded-user-agent');
-        $authorization = self::getState($request, 'authorization');
-        $user = self::getState($request, 'user');
-
-        if ($forwardedUserAgent !== '' && $authorization instanceof Authorization && $user instanceof User && $user->isKey($authorization->getRoles())) {
-            return $forwardedUserAgent;
-        }
-
-        return $request->getHeaderLine('user-agent') ?: $default;
-    }
 
     public static function files(ServerRequestInterface $request, string|int $key): array
     {
@@ -329,54 +260,6 @@ class Request extends ServerRequest
         return $this;
     }
 
-    public function getIP(): string
-    {
-        $remoteAddr = $this->serverParams['remote_addr'] ?? '0.0.0.0';
-        $trustedHeaders = \array_filter(\array_map(
-            trim(...),
-            \array_map(strtolower(...), \explode(',', System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for')))
-        ));
-
-        foreach ($trustedHeaders as $header) {
-            $headerValue = $this->getHeaderLine($header);
-            if ($headerValue === '') {
-                continue;
-            }
-
-            $ip = trim(explode(',', $headerValue)[0]);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                return $ip;
-            }
-        }
-
-        return (string) $remoteAddr;
-    }
-
-    public function getProtocol(): string
-    {
-        $protocol = $this->getHeaderLine('x-forwarded-proto', (string) ($this->serverParams['server_protocol'] ?? 'https'));
-
-        if ($protocol === 'HTTP/1.1') {
-            return 'http';
-        }
-
-        return match ($protocol) {
-            'http', 'https', 'ws', 'wss' => $protocol,
-            default => 'https',
-        };
-    }
-
-    public function getPort(): string
-    {
-        return $this->getHeaderLine('x-forwarded-port', (string) parse_url($this->getProtocol() . '://' . $this->getHeaderLine('x-forwarded-host', $this->getHeaderLine('host')), PHP_URL_PORT));
-    }
-
-    public function getHostname(): string
-    {
-        $hostname = parse_url($this->getProtocol() . '://' . $this->getHeaderLine('x-forwarded-host', $this->getHeaderLine('host')), PHP_URL_HOST);
-        return strtolower(\strval($hostname));
-    }
-
     public function setMethod(string $method): static
     {
         $this->method = strtoupper($method);
@@ -411,16 +294,6 @@ class Request extends ServerRequest
     public function getOrigin(string $default = ''): string
     {
         return $this->getHeaderLine('origin', $default);
-    }
-
-    public function getUserAgent(string $default = ''): string
-    {
-        $forwardedUserAgent = $this->getHeaderLine('x-forwarded-user-agent');
-        if ($forwardedUserAgent !== '' && $this->authorization !== null && $this->user?->isKey($this->authorization->getRoles())) {
-            return $forwardedUserAgent;
-        }
-
-        return $this->getHeaderLine('user-agent', $default);
     }
 
     public function getAccept(string $default = ''): string
@@ -553,16 +426,6 @@ class Request extends ServerRequest
         }
         ksort($params);
         return md5($this->getRequestTarget() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
-    }
-
-    public function setAuthorization(Authorization $authorization): void
-    {
-        $this->authorization = $authorization;
-    }
-
-    public function setUser(User $user): void
-    {
-        $this->user = $user;
     }
 
     private function rawParams(): array

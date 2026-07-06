@@ -143,6 +143,44 @@ return function (Container $context): void {
         return $request->getQueryParams();
     }, ['request']);
 
+    $context->set('ip', fn (ServerRequestInterface $request, callable $requestIpResolver): string => $requestIpResolver($request), ['request', 'requestIpResolver']);
+
+    $context->set('protocol', function (ServerRequestInterface $request): string {
+        $server = $request->getServerParams();
+        $protocol = $request->getHeaderLine('x-forwarded-proto') ?: (string) ($server['server_protocol'] ?? 'https');
+
+        if ($protocol === 'HTTP/1.1') {
+            return 'http';
+        }
+
+        return match ($protocol) {
+            'http', 'https', 'ws', 'wss' => $protocol,
+            default => 'https',
+        };
+    }, ['request']);
+
+    $context->set('port', function (ServerRequestInterface $request, string $protocol): string {
+        $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
+
+        return $request->getHeaderLine('x-forwarded-port') ?: (string) parse_url($protocol . '://' . $forwardedHost, PHP_URL_PORT);
+    }, ['request', 'protocol']);
+
+    $context->set('hostname', function (ServerRequestInterface $request, string $protocol): string {
+        $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
+        $hostname = parse_url($protocol . '://' . $forwardedHost, PHP_URL_HOST);
+
+        return strtolower(\strval($hostname));
+    }, ['request', 'protocol']);
+
+    $context->set('userAgent', function (ServerRequestInterface $request, Authorization $authorization, User $user): string {
+        $forwardedUserAgent = $request->getHeaderLine('x-forwarded-user-agent');
+        if ($forwardedUserAgent !== '' && $user->isKey($authorization->getRoles())) {
+            return $forwardedUserAgent;
+        }
+
+        return $request->getHeaderLine('user-agent');
+    }, ['request', 'authorization', 'user']);
+
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, ServerRequestInterface $request, array $requestParams, Database $dbForProject, Database $dbForPlatform) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
             return new Document();
@@ -254,7 +292,7 @@ return function (Container $context): void {
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, ServerRequestInterface $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, ServerRequestInterface $request, string $hostname) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add platform configured hostnames */
@@ -266,7 +304,7 @@ return function (Container $context): void {
 
         /* Add the request hostname if a dev key is found */
         if (! $devKey->isEmpty()) {
-            $allowed[] = Request::hostname($request);
+            $allowed[] = $hostname;
         }
 
         $originHostname = parse_url($request->getHeaderLine('origin'), PHP_URL_HOST);
@@ -293,7 +331,7 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'devKey', 'request']);
+    }, ['platform', 'project', 'rule', 'devKey', 'request', 'hostname']);
 
     /**
      * List of allowed request schemes for the request.
@@ -318,30 +356,29 @@ return function (Container $context): void {
     /**
      * Whether the request origin is verified against the request hostname.
      */
-    $context->set('domainVerification', function (ServerRequestInterface $request) {
+    $context->set('domainVerification', function (ServerRequestInterface $request, string $hostname) {
         $origin = \parse_url($request->getHeaderLine('origin') ?: ($request->getHeaderLine('referer') ?: ''), PHP_URL_HOST);
-        $selfDomain = new Domain(Request::hostname($request));
+        $selfDomain = new Domain($hostname);
         $endDomain = new Domain((string) $origin);
 
         return ($selfDomain->getRegisterable() === $endDomain->getRegisterable())
             && $endDomain->getRegisterable() !== '';
-    }, ['request']);
+    }, ['request', 'hostname']);
 
     /**
      * Cookie domain for the current request.
      */
-    $context->set('cookieDomain', function (ServerRequestInterface $request, Document $project) {
-        $localHosts = ['localhost', 'localhost:' . Request::port($request)];
+    $context->set('cookieDomain', function (ServerRequestInterface $request, Document $project, string $hostname, string $port) {
+        $localHosts = ['localhost', 'localhost:' . $port];
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
         if (!empty($migrationHost)) {
             // Treat the migration host like localhost because internal migration and CI
             // traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
-            $localHosts[] = $migrationHost . ':' . Request::port($request);
+            $localHosts[] = $migrationHost . ':' . $port;
         }
 
-        $hostname = Request::hostname($request);
         $isLocalHost = \in_array($hostname, $localHosts, true);
         $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
 
@@ -359,7 +396,7 @@ return function (Container $context): void {
         }
 
         return '.' . $hostname;
-    }, ['request', 'project']);
+    }, ['request', 'project', 'hostname', 'port']);
 
     /**
      * Rule associated with a request origin.

@@ -909,6 +909,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $timelimit = $connectionContainer->get('timelimit');
+        $ip = $connectionContainer->get('ip');
         $user = $connectionContainer->get('user'); /** @var User $user */
         $impersonatorUser = $connectionContainer->get('impersonatorUser'); /** @var Document $impersonatorUser */
         $targetUser = $connectionContainer->get('targetUser'); /** @var User $targetUser */
@@ -942,7 +943,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
         $timelimit
-            ->setParam('{ip}', Request::ip($request))
+            ->setParam('{ip}', $ip)
             ->setParam('{url}', $request->getRequestTarget());
 
         $abuse = new Abuse($timelimit);

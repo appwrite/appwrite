@@ -23,6 +23,8 @@ use Utopia\Validator\WhiteList;
  * Register the minimal per-connection resources required by realtime.
  */
 return function (Container $container): void {
+    $container->set('ip', fn (Request $request, callable $requestIpResolver): string => $requestIpResolver($request), ['request', 'requestIpResolver']);
+
     $getProjectId = static function (Request $request): string {
         $projectId = ($request->getHeaderLine('x-appwrite-project') ?: '');
 
