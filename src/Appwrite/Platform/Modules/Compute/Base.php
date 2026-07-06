@@ -33,29 +33,38 @@ class Base extends Action
      * @param array $plan The billing plan configuration
      * @return string The appropriate default specification
      */
-    protected function getDefaultSpecification(array $plan): string
+    protected function getDefaultSpecification(array $plan, string $planKey = 'runtimeSpecifications', string $fallback = APP_COMPUTE_SPECIFICATION_DEFAULT, bool $preferFallback = false): string
     {
         $specifications = Config::getParam('specifications', []);
 
         if (empty($specifications)) {
-            return APP_COMPUTE_SPECIFICATION_DEFAULT;
+            return $fallback;
         }
 
         $specificationValidator = new SpecificationValidator(
             $plan,
             $specifications,
             System::getEnv('_APP_COMPUTE_CPUS', 0),
-            System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            System::getEnv('_APP_COMPUTE_MEMORY', 0),
+            $planKey
         );
         $allowedSpecifications = $specificationValidator->getAllowedSpecifications();
 
+        if (empty($allowedSpecifications)) {
+            return $fallback;
+        }
+
+        if ($preferFallback && !array_key_exists($planKey, $plan) && \in_array($fallback, $allowedSpecifications)) {
+            return $fallback;
+        }
+
         // If there is no plan use the highest specification
         if (empty($plan)) {
-            return end($allowedSpecifications) ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
+            return end($allowedSpecifications);
         }
 
         // Otherwise, use the lowest specification available in the plan
-        return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
+        return $allowedSpecifications[0];
     }
 
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
@@ -65,6 +74,9 @@ class Base extends Action
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
@@ -139,18 +151,6 @@ class Base extends Action
             'activate' => $activate,
         ]));
 
-        $function = $function
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), new Document([
-            'latestDeploymentId' => $deployment->getId(),
-            'latestDeploymentInternalId' => $deployment->getSequence(),
-            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-        ]));
-
         $publisherForBuilds->enqueue(new BuildMessage(
             project: $project,
             resource: $function,
@@ -169,6 +169,9 @@ class Base extends Action
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
+        if (empty($providerInstallationId)) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         $owner = $github->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
@@ -251,18 +254,6 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $site->getAttribute('providerRootDirectory', ''),
             'activate' => $activate,
-        ]));
-
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $deployment->getId(),
-            'latestDeploymentInternalId' => $deployment->getSequence(),
-            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
         ]));
 
         $sitesDomain = $platform['sitesDomain'];

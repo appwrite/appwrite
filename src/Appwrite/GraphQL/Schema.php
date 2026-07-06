@@ -84,7 +84,7 @@ class Schema
     protected static function api(Http $utopia, callable $complexity): array
     {
         Mapper::init($utopia
-            ->getResource('response')
+            ->context()->get('response')
             ->getModels());
 
         $queries = [];

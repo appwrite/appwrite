@@ -21,6 +21,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Validator\Contains;
+use Utopia\Validator\Globstar;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -41,6 +43,7 @@ trait Deployment
         string $providerCommitMessage,
         string $providerCommitUrl,
         string $providerPullRequestId,
+        array $providerAffectedFiles,
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -59,9 +62,9 @@ trait Deployment
                 $resourceType = $repository->getAttribute('resourceType');
 
                 $logBase = "vcs.github.event.repo.{$repositoryId}";
-                Span::add("{$logBase}.projectId", $projectId);
-                Span::add("{$logBase}.resourceId", $resourceId);
-                Span::add("{$logBase}.resourceType", $resourceType);
+                Span::add('project.id', $projectId);
+                Span::add("{$logBase}.resource.id", $resourceId);
+                Span::add("{$logBase}.resource.type", $resourceType);
 
                 if ($resourceType !== "function" && $resourceType !== "site") {
                     continue;
@@ -94,6 +97,39 @@ trait Deployment
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
+
+                $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
+                if ($validator->isValid($providerCommitMessage)) {
+                    Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
+                // Skip deployments when the branch or affected files do not match configured build triggers.
+                $branchTrigger = new Globstar($resource->getAttribute('providerBranches', []));
+                if (!$branchTrigger->isValid($providerBranch)) {
+                    Span::add("{$logBase}.build.skipped.reason", 'branch');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
+                $providerPaths = $resource->getAttribute('providerPaths', []);
+                if (!empty($providerPaths) && !empty($providerAffectedFiles)) {
+                    $pathTrigger = new Globstar($providerPaths);
+                    $pathMatched = false;
+                    foreach ($providerAffectedFiles as $file) {
+                        if ($pathTrigger->isValid($file)) {
+                            $pathMatched = true;
+                            break;
+                        }
+                    }
+
+                    if (!$pathMatched) {
+                        Span::add("{$logBase}.build.skipped.reason", 'path');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        continue;
+                    }
+                }
 
                 $deploymentId = ID::unique();
                 $repositoryId = $repository->getId();
@@ -201,6 +237,8 @@ trait Deployment
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
                                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                             } finally {
                                 $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                             }
@@ -272,6 +310,8 @@ trait Deployment
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                             } finally {
                                 $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                             }
@@ -354,18 +394,6 @@ trait Deployment
                     'providerCommentId' => \strval($latestCommentId),
                     'providerBranch' => $providerBranch,
                     'activate' => $activate,
-                ])));
-
-                $resource = $resource
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $authorization->skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
-                    'latestDeploymentId' => $resource->getAttribute('latestDeploymentId'),
-                    'latestDeploymentInternalId' => $resource->getAttribute('latestDeploymentInternalId'),
-                    'latestDeploymentCreatedAt' => $resource->getAttribute('latestDeploymentCreatedAt'),
-                    'latestDeploymentStatus' => $resource->getAttribute('latestDeploymentStatus'),
                 ])));
 
                 if ($resource->getCollection() === 'sites') {
@@ -502,6 +530,8 @@ trait Deployment
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                                 $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                             }
+                        } catch (\Throwable $e) {
+                            Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                         } finally {
                             $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
@@ -542,6 +572,14 @@ trait Deployment
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
+            } catch (Exception $e) {
+                Span::add("{$logBase}.error", $e->getMessage());
+                Span::add("{$logBase}.error.type", $e->getType());
+                if ($e->getCode() < 500) {
+                    Console::warning("Skipping repository '{$repository->getId()}' ({$e->getType()}): {$e->getMessage()}");
+                    continue;
+                }
+                $errors[] = $e->getMessage();
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 $errors[] = $e->getMessage();
@@ -561,4 +599,5 @@ trait Deployment
     {
         return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
     }
+
 }

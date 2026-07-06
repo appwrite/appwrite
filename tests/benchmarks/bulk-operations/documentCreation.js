@@ -1,12 +1,12 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
-import { provisionProject, provisionDatabase, cleanup, unique } from "./utils.js";
+import { provisionProject, provisionDatabase, cleanup, unique, ENDPOINT } from "./utils.js";
 
 const amount = 10_000;
 
 export function setup() {
     const resources = provisionProject({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         email: 'test@test.com',
         password: 'password123',
         name: 'Test User',
@@ -14,7 +14,7 @@ export function setup() {
     });
 
     const { databaseId, collectionId } = provisionDatabase({
-        endpoint: 'http://localhost/v1',
+        endpoint: ENDPOINT,
         apiHeaders: resources.apiHeaders
     });
 
@@ -54,7 +54,7 @@ export default function (data) {
     });
 
     const res = http.post(
-        `http://localhost/v1/databases/${data.databaseId}/collections/${data.collectionId}/documents`,
+        `${ENDPOINT}/databases/${data.databaseId}/collections/${data.collectionId}/documents`,
         payload,
         {
             headers: data.apiHeaders

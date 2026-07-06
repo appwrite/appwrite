@@ -7,12 +7,15 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
@@ -29,6 +32,7 @@ use Appwrite\Utopia\Request\Filters\V22 as RequestV22;
 use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
 use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
 use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
+use Appwrite\Utopia\Request\Filters\V26 as RequestV26;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -40,6 +44,7 @@ use Appwrite\Utopia\Response\Filters\V22 as ResponseV22;
 use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
 use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
+use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -72,7 +77,7 @@ use Utopia\Validator\Text;
 
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeleteEvent $queueForDeletes, int $executionsRetentionCount)
+function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock)
 {
     $host = $request->getHostname();
     if (!empty($previewHostname)) {
@@ -141,9 +146,16 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'accessedAt' => DateTime::now()
-            ])));
+            $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
+            $lock->tryWithKey(
+                'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
+                fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                    'projects',
+                    $project->getId(),
+                    new Document(['accessedAt' => DateTime::now()])
+                )),
+                target: 'projects'
+            );
         }
 
         /**
@@ -181,31 +193,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        if (!empty($rule->getAttribute('deploymentId', ''))) {
-            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
-        } else {
-            // 1.6.x DB schema compatibility
-            // TODO: Make sure deploymentId is never empty, and remove this code
-
-            // Check if site or function; should never be site, but better safe than sorry
-            // Attempts to use attribute from both schemas (1.6 and 1.7)
-            $resourceType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('resourceType', ''));
-
-            // ID of site or function
-            $resourceId = $rule->getAttribute('deploymentResourceId', '');
-
-            // Document of site or function
-            $resource = $resourceType === 'function' ?
-                $authorization->skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
-                $authorization->skip(fn () => $dbForProject->getDocument('sites', $resourceId));
-
-            // ID of active deployments
-            // Attempts to use attribute from both schemas (1.6 and 1.7)
-            $activeDeploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
-
-            // Get deployment document, as intended originally
-            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
-        }
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
 
         if ($deployment->isEmpty()) {
             $resourceType = $rule->getAttribute('deploymentResourceType', '');
@@ -314,7 +302,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $body = $swooleRequest->getContent() ?: '';
         $method = $swooleRequest->server['request_method'];
 
-        $requestHeaders = $request->getHeaders();
+        // getHeaders() follows PSR-7 and returns each header as a list of values;
+        // collapse to single-line strings for the function/site header map below.
+        $requestHeaders = \array_map(
+            static fn (array $values) => \implode(', ', $values),
+            $request->getHeaders()
+        );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
             if ($type === 'function') {
@@ -788,12 +781,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 ? RESOURCE_TYPE_FUNCTIONS
                 : RESOURCE_TYPE_SITES;
 
-            $queueForDeletes
-                ->setProject($project)
-                ->setResourceType($resourceType)
-                ->setResource($resource->getSequence())
-                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_EXECUTIONS_LIMIT,
+                resource: (string) $resource->getSequence(),
+                resourceType: $resourceType,
+            ));
         }
 
         return true;
@@ -824,7 +817,7 @@ Http::init()
     ->inject('request')
     ->action(function (Document $project, Request $request) {
         if ($project->getId() === 'console') {
-            $message = empty($request->getHeader('x-appwrite-project')) ?
+            $message = empty($request->getHeaderLine('x-appwrite-project')) ?
                 'No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.' :
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
@@ -854,9 +847,11 @@ Http::init()
     ->inject('apiKey')
     ->inject('cors')
     ->inject('authorization')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->inject('lock')
+    ->inject('params')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params) {
         /*
         * Appwrite Router
         */
@@ -864,15 +859,15 @@ Http::init()
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!\in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
+                $utopia->match($request)?->route->label('router', true);
             }
         }
 
         /*
         * Request format
         */
-        $route = $utopia->getRoute();
+        $route = $utopia->match($request)?->route;
         $request->setRoute($route);
 
         if ($route === null) {
@@ -881,7 +876,7 @@ Http::init()
             return;
         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
                 $request->addFilter(new RequestV16());
@@ -897,7 +892,7 @@ Http::init()
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
-                $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
+                $request->addFilter(new RequestV20($dbForProject, $params));
             }
             if (version_compare($requestFormat, '1.9.0', '<')) {
                 $request->addFilter(new RequestV21());
@@ -914,9 +909,12 @@ Http::init()
             if (version_compare($requestFormat, '1.9.4', '<')) {
                 $request->addFilter(new RequestV25());
             }
+            if (version_compare($requestFormat, '1.9.5', '<')) {
+                $request->addFilter(new RequestV26());
+            }
         }
 
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -936,8 +934,11 @@ Http::init()
         /*
          * Response format
          */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '1.9.5', '<')) {
+                $response->addFilter(new ResponseV26());
+            }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());
             }
@@ -996,7 +997,7 @@ Http::init()
  * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
  */
 Http::init()
-    ->groups(['api', 'web'])
+    ->groups(['api', 'web', 'graphql'])
     ->inject('request')
     ->inject('response')
     ->inject('cors')
@@ -1020,7 +1021,7 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeader('x-appwrite-key'))) {
+        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
         $route = $request->getRoute();
@@ -1159,17 +1160,18 @@ Http::options()
     ->inject('apiKey')
     ->inject('cors')
     ->inject('authorization')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->inject('lock')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         /*
         * Appwrite Router
         */
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
+                $utopia->match($request)?->route->label('router', true);
             }
         }
 
@@ -1204,7 +1206,7 @@ Http::error()
     ->inject('authorization')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-        $route = $utopia->getRoute();
+        $route = $utopia->match($request)?->route;
         $class = \get_class($error);
         $code = $error->getCode();
         $message = $error->getMessage();
@@ -1212,7 +1214,7 @@ Http::error()
         $line = $error->getLine();
         $trace = $error->getTrace();
 
-        Span::error($error);
+        Span::current()?->setError($error);
 
         switch ($class) {
             case Utopia\Http\Exception::class:
@@ -1274,7 +1276,7 @@ Http::error()
         if (!$publish && $project->getId() !== 'console') {
             $errorUser = new DBUser();
             try {
-                $resolvedUser = $utopia->getResource('user');
+                $resolvedUser = $utopia->context()->get('user');
                 if ($resolvedUser instanceof DBUser) {
                     $errorUser = $resolvedUser;
                 }
@@ -1293,7 +1295,7 @@ Http::error()
         if ($logger && $publish) {
             try {
                 /** @var Utopia\Database\Document $user */
-                $user = $utopia->getResource('user');
+                $user = $utopia->context()->get('user');
             } catch (\Throwable) {
                 // All good, user is optional information for logger
             }
@@ -1329,7 +1331,7 @@ Http::error()
             }
 
             $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
 
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
@@ -1494,7 +1496,7 @@ Http::error()
         // the cors resource (which depends on rule -> DB) would cascade.
         // Uses override:true to avoid duplicate headers if init() already set them.
         try {
-            $cors = $utopia->getResource('cors');
+            $cors = $utopia->context()->get('cors');
             foreach ($cors->headers($request->getOrigin()) as $name => $value) {
                 $response
                     ->removeHeader($name)
@@ -1561,16 +1563,17 @@ Http::get('/robots.txt')
     ->inject('previewHostname')
     ->inject('apiKey')
     ->inject('authorization')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->inject('lock')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         $platformHostnames = $platform['hostnames'] ?? [];
         if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
+                $utopia->match($request)?->route->label('router', true);
             }
         }
     });
@@ -1595,16 +1598,17 @@ Http::get('/humans.txt')
     ->inject('previewHostname')
     ->inject('apiKey')
     ->inject('authorization')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->inject('lock')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         $platformHostnames = $platform['hostnames'] ?? [];
         if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $queueForDeletes, $executionsRetentionCount)) {
-                $utopia->getRoute()?->label('router', true);
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
+                $utopia->match($request)?->route->label('router', true);
             }
         }
     });
@@ -1671,11 +1675,10 @@ Http::get('/v1/ping')
         namespace: 'ping',
         group: null,
         name: 'get',
-        hide: true,
         description: <<<EOT
         Send a ping to project as part of onboarding.
         EOT,
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,

@@ -736,6 +736,7 @@ class V19 extends Migration
                         'resourceInternalId' => $document->getSequence(),
                         'resourceUpdatedAt' => DateTime::now(),
                         'projectId' => $this->project->getId(),
+                        'projectInternalId' => $this->project->getSequence(),
                         'schedule'  => $document->getAttribute('schedule'),
                         'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
                     ]));

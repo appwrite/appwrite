@@ -43,6 +43,7 @@ class Update extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].update')
             ->label('audits.event', 'file.update')
             ->label('audits.resource', 'file/{response.$id}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -81,7 +82,7 @@ class Update extends Action
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
@@ -110,7 +111,7 @@ class Update extends Action
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
-        if (!$user->isApp($roles) && !$user->isPrivileged($roles) && !\is_null($permissions)) {
+        if (!$user->isKey($roles) && !$user->isPrivileged($roles) && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);

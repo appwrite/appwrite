@@ -39,7 +39,7 @@ Http::init()
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -122,11 +122,11 @@ Http::post('/v1/graphql/mutation')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeader('content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -173,11 +173,11 @@ Http::post('/v1/graphql')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeader('content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);

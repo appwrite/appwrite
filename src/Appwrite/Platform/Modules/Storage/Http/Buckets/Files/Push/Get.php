@@ -40,6 +40,7 @@ class Get extends Action
             ->desc('Get file for push notification')
             ->groups(['api', 'storage'])
             ->label('scope', 'public')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -90,7 +91,7 @@ class Get extends Action
         $disposition = $decoded['disposition'] ?? 'inline';
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
@@ -119,7 +120,7 @@ class Get extends Action
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();

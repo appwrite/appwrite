@@ -60,12 +60,13 @@ class Interval extends Action
             $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $publisherForCertificates) {
                 $taskName = $task['name'];
                 Span::init("interval.{$taskName}");
+                $error = null;
                 try {
                     $task['callback']($dbForPlatform, $getProjectDB, $publisherForCertificates);
                 } catch (\Exception $e) {
-                    Span::error($e);
+                    $error = $e;
                 } finally {
-                    Span::current()?->finish();
+                    Span::current()?->finish(error: $error);
                 }
             });
         }
@@ -101,11 +102,11 @@ class Interval extends Action
         ]);
 
         $scanned = \count($rules);
-        Span::add("interval.domainVerification.scanned", $scanned);
+        Span::add("interval.domain_verification.scanned", $scanned);
 
         if ($scanned === 0) {
-            Span::add("interval.domainVerification.processed", 0);
-            Span::add("interval.domainVerification.failed", 0);
+            Span::add("interval.domain_verification.processed", 0);
+            Span::add("interval.domain_verification.failed", 0);
             return; // No rules to verify
         }
 
@@ -131,7 +132,7 @@ class Interval extends Action
             }
         }
 
-        Span::add("interval.domainVerification.processed", $processed);
-        Span::add("interval.domainVerification.failed", $failed);
+        Span::add("interval.domain_verification.processed", $processed);
+        Span::add("interval.domain_verification.failed", $failed);
     }
 }

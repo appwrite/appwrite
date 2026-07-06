@@ -1,5 +1,11 @@
 <?php
 
+use Appwrite\Platform\Modules\Advisor\Enums\InsightCTAMethod;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightCTAService;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightSeverity;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightStatus;
+use Appwrite\Platform\Modules\Advisor\Enums\InsightType;
+use Appwrite\Platform\Modules\Advisor\Enums\ReportType;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Utopia\System\System;
 
@@ -30,6 +36,7 @@ const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
+const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
@@ -44,8 +51,8 @@ const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4325;
-const APP_VERSION_STABLE = '1.9.4';
+const APP_CACHE_BUSTER = 4326;
+const APP_VERSION_STABLE = '1.9.5';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -92,6 +99,7 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
+const APP_SITES_BUILD_SPECIFICATION_DEFAULT = Specification::S_2VCPU_2GB;
 const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
@@ -101,6 +109,9 @@ const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
+
+// Embeddings
+const APP_EMBEDDING_BATCH_LIMIT = 100;
 
 /**
  * JWT for Resource Tokens.
@@ -153,14 +164,21 @@ const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
 
 /**
- * Activity associated with user or the app.
+ * Actor that performed the request (user, admin, guest, or API key).
  */
-const ACTIVITY_TYPE_USER = 'user';
-const ACTIVITY_TYPE_ADMIN = 'admin';
-const ACTIVITY_TYPE_GUEST = 'guest';
-const ACTIVITY_TYPE_KEY_PROJECT = 'keyProject';
-const ACTIVITY_TYPE_KEY_ACCOUNT = 'keyAccount';
-const ACTIVITY_TYPE_KEY_ORGANIZATION = 'keyOrganization';
+const ACTOR_TYPE_USER = 'user';
+const ACTOR_TYPE_ADMIN = 'admin';
+const ACTOR_TYPE_GUEST = 'guest';
+const ACTOR_TYPE_HIDDEN = 'hidden';
+const ACTOR_TYPE_KEY_PROJECT = 'keyProject';
+const ACTOR_TYPE_KEY_ACCOUNT = 'keyAccount';
+const ACTOR_TYPE_KEY_ORGANIZATION = 'keyOrganization';
+
+/**
+ * Project onboarding stage status (stored per SDK method key under project.onboarding JSON).
+ */
+const ONBOARDING_STATUS_COMPLETED = 'completed';
+const ONBOARDING_STATUS_SKIPPED = 'skipped';
 
 /**
  * MFA
@@ -194,7 +212,7 @@ const BUILD_TYPE_RETRY = 'retry';
 const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
-const DELETE_TYPE_TRANSACTION = 'transaction';
+const DELETE_TYPE_TRANSACTIONS = 'transactions';
 const DELETE_TYPE_EXPIRED_TRANSACTIONS = 'expired_transactions';
 const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_SITES = 'sites';
@@ -222,6 +240,7 @@ const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
+const DELETE_TYPE_REPORT = 'report';
 
 // Rule statuses
 const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
@@ -232,6 +251,12 @@ const RULE_STATUS_VERIFIED = 'verified';
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
 const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
+// External message fan-out tuning
+const MESSAGE_RECIPIENTS_PAGE_SIZE = 5000; // Recipients resolved from the database per page while streaming a send; aligned with APP_LIMIT_COUNT to minimise round-trips on large topics
+const MESSAGE_SEND_CONCURRENCY = 10; // Maximum adapter send requests running concurrently within a single send job
+const MESSAGE_DELIVERY_ERRORS_LIMIT = 100; // Maximum number of per-recipient delivery errors retained on a message
+const MESSAGE_SEND_MAX_RETRIES = 5; // Maximum number of attempts to deliver a batch when the provider throttles or fails transiently
+const MESSAGE_SEND_RETRY_DELAY = 1.0; // Base seconds for exponential backoff between batch send retries; overridable in tests for an instant suite
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -246,8 +271,9 @@ const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 const APP_LIMIT_UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
-const APP_FUNCTION_LOG_LENGTH_LIMIT = 1000000;
-const APP_FUNCTION_ERROR_LENGTH_LIMIT = 1000000;
+const APP_LOG_LENGTH_LIMIT = 1000000; // Single source of truth for log/error length limits (matches the related attribute sizes)
+const APP_FUNCTION_LOG_LENGTH_LIMIT = APP_LOG_LENGTH_LIMIT;
+const APP_FUNCTION_ERROR_LENGTH_LIMIT = APP_LOG_LENGTH_LIMIT;
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host', 'x-appwrite-client-ip'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
@@ -255,11 +281,34 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+// Notification types
+const NOTIFICATION_TYPE_EMAIL = MESSAGE_TYPE_EMAIL;
+const NOTIFICATION_TYPE_SMS = MESSAGE_TYPE_SMS;
+const NOTIFICATION_TYPE_PUSH = MESSAGE_TYPE_PUSH;
+const NOTIFICATION_TYPE_CONSOLE = 'console';
+const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
+const NOTIFICATION_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
+const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
+const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_INVITATION = 'invitation';
+const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
+const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
+const MAIL_TEMPLATE_OTP = 'otp';
+const MAIL_TEMPLATE_RECOVERY = 'recovery';
+const MAIL_TEMPLATE_SESSION_ALERT = 'session-alert';
+const MAIL_TEMPLATE_SMTP_TEST = 'smtp-test';
+const MAIL_TEMPLATE_VERIFICATION = 'verification';
+const MAIL_TEMPLATE_WEBHOOK_FAILED = 'webhook-failed';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_EPHEMERAL = 'ephemeral';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+const API_KEY_OAUTH2 = 'oauth2';
+
+// Realtime
+const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
+
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -387,6 +436,7 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 const METRIC_MAU = 'users.mau';
 const METRIC_DAU = 'users.dau';
 const METRIC_WAU = 'users.wau';
+const METRIC_USERS_PRESENCE = 'users.presence';
 const METRIC_WEBHOOKS = 'webhooks';
 const METRIC_PLATFORMS = 'platforms';
 const METRIC_PROVIDERS = 'providers';
@@ -423,7 +473,58 @@ const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
 const RESOURCE_TYPE_VCS = 'vcs';
+const RESOURCE_TYPE_USERS = 'users';
+const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
+const RESOURCE_TYPE_INSIGHTS = 'insights';
+const RESOURCE_TYPE_REPORTS = 'reports';
+
+// Insight types — engine-specific so the CTA action can reference the right public API.
+const ADVISOR_INSIGHT_TYPES = [
+    InsightType::DATABASE_INDEX->value, // legacy databases.createIndex
+    InsightType::TABLES_DB_INDEX->value, // tablesDB.createIndex
+    InsightType::DOCUMENTS_DB_INDEX->value, // documentsDB.createIndex
+    InsightType::VECTORS_DB_INDEX->value, // vectorsDB.createIndex
+    InsightType::DATABASE_PERFORMANCE->value,
+    InsightType::SITE_PERFORMANCE->value,
+    InsightType::SITE_ACCESSIBILITY->value,
+    InsightType::SITE_SEO->value,
+    InsightType::FUNCTION_PERFORMANCE->value,
+];
+
+// Public API services (SDK namespaces) that an insight CTA's `service` can reference.
+// Analyzers must pick the one matching the engine the resource lives in.
+const ADVISOR_CTA_SERVICES = [
+    InsightCTAService::DATABASES->value, // legacy
+    InsightCTAService::TABLES_DB->value,
+    InsightCTAService::DOCUMENTS_DB->value,
+    InsightCTAService::VECTORS_DB->value,
+];
+
+// Public API method names that an insight CTA's `method` can reference for index suggestions.
+const ADVISOR_CTA_METHODS = [
+    InsightCTAMethod::CREATE_INDEX->value,
+];
+
+// Insight severities
+const ADVISOR_SEVERITIES = [
+    InsightSeverity::INFO->value,
+    InsightSeverity::WARNING->value,
+    InsightSeverity::CRITICAL->value,
+];
+
+// Insight statuses
+const ADVISOR_STATUSES = [
+    InsightStatus::ACTIVE->value,
+    InsightStatus::DISMISSED->value,
+];
+
+// Report types
+const ADVISOR_REPORT_TYPES = [
+    ReportType::LIGHTHOUSE->value,
+    ReportType::AUDIT->value,
+    ReportType::DATABASE_ANALYZER->value,
+];
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -457,4 +558,8 @@ const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_LEGACY,
     DATABASE_TYPE_TABLESDB,
     DATABASE_TYPE_VECTORSDB
+];
+
+const VCS_DEPLOYMENT_SKIP_PATTERNS = [
+    '[skip ci]',
 ];

@@ -43,7 +43,8 @@ class Update extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
-            ->label('audits.resource', 'database/{request.databaseId}/collections/{request.collectionId}')
+            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: $this->getSDKGroup(),
@@ -80,7 +81,7 @@ class Update extends Action
     public function action(string $databaseId, string $collectionId, ?string $name, ?array $permissions, bool $documentSecurity, bool $enabled, bool $purge, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

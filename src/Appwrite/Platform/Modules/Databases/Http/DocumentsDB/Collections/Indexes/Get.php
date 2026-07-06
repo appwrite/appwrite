@@ -32,6 +32,7 @@ class Get extends IndexGet
             ->desc('Get index')
             ->groups(['api', 'database'])
             ->label('scope', 'collections.read')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'documentsDB',

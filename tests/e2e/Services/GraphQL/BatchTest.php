@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
-class BatchTest extends Scope
+final class BatchTest extends Scope
 {
     use ProjectCustom;
     use SideClient;

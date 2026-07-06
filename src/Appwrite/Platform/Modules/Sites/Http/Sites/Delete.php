@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -37,6 +38,7 @@ class Delete extends Base
             ->label('event', 'sites.[siteId].delete')
             ->label('audits.event', 'site.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'sites',
@@ -56,7 +58,7 @@ class Delete extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -65,7 +67,7 @@ class Delete extends Base
         string $siteId,
         Response $response,
         Database $dbForProject,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Event $queueForEvents
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -78,9 +80,11 @@ class Delete extends Base
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove site from DB');
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($site);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_DOCUMENT,
+            document: $site,
+        ));
 
         $queueForEvents->setParam('siteId', $site->getId());
 

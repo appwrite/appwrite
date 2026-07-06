@@ -3,9 +3,6 @@
 namespace Appwrite\Platform\Modules\Projects\Http\Projects;
 
 use Appwrite\Extend\Exception;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -39,19 +36,6 @@ class Update extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'projects.update')
             ->label('audits.resource', 'project/{request.projectId}')
-            ->label('sdk', new Method(
-                namespace: 'projects',
-                group: 'projects',
-                name: 'update',
-                description: '/docs/references/projects/update.md',
-                auth: [AuthType::ADMIN],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PROJECT,
-                    )
-                ]
-            ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
             ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
@@ -88,6 +72,7 @@ class Update extends Action
             ->setAttribute('legalAddress', $legalAddress)
             ->setAttribute('legalTaxId', $legalTaxId)
             ->setAttribute('search', implode(' ', [$projectId, $name])));
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

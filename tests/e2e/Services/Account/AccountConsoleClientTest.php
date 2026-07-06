@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
-class AccountConsoleClientTest extends Scope
+final class AccountConsoleClientTest extends Scope
 {
     use AccountBase;
     use ProjectConsole;
@@ -36,7 +38,7 @@ class AccountConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -47,7 +49,7 @@ class AccountConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
@@ -61,7 +63,7 @@ class AccountConsoleClientTest extends Scope
             'teamId' => 'unique()',
             'name' => 'myteam'
         ]);
-        $this->assertEquals($team['headers']['status-code'], 201);
+        $this->assertEquals(201, $team['headers']['status-code']);
 
         // Account deletion should succeed even with active membership
         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
@@ -94,7 +96,7 @@ class AccountConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -105,7 +107,7 @@ class AccountConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
@@ -169,10 +171,10 @@ class AccountConsoleClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
 
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
-        $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
-        $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
-        $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
-        $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertStringContainsString('Security alert: new session', (string) $lastEmail['subject']);
+        $this->assertStringContainsString($response['body']['ip'], (string) $lastEmail['text']); // IP Address
+        $this->assertStringContainsString('Unknown', (string) $lastEmail['text']); // Country
+        $this->assertStringContainsString($response['body']['clientName'], (string) $lastEmail['text']); // Client name
         $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
@@ -185,7 +187,7 @@ class AccountConsoleClientTest extends Scope
             'email' => 'otpuser2@appwrite.io'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -225,56 +227,5 @@ class AccountConsoleClientTest extends Scope
         $lastEmailId = $lastEmail['id'];
         $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
         $this->assertEquals($lastEmailId, $lastEmail['id']);
-    }
-
-    public function testGetAccountLogs(): void
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        /**
-         * Test for SUCCESS - Create account and session for console project
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 201);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 201);
-
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
-        /**
-         * Test for SUCCESS - Get account logs
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']['logs']);
-        $this->assertNotEmpty($response['body']['logs']);
-        $this->assertIsNumeric($response['body']['total']);
     }
 }

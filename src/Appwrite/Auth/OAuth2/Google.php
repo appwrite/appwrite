@@ -55,7 +55,7 @@ class Google extends OAuth2
             'state' => \json_encode($this->state),
             'response_type' => 'code',
             'access_type' => 'offline',
-            'prompt' => 'consent'
+            'prompt' => $this->getPrompt()
         ]);
     }
 
@@ -188,6 +188,23 @@ class Google extends OAuth2
         $secret = $this->getAppSecret();
 
         return $secret['clientSecret'] ?? $this->appSecret;
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+        $prompt = $secret['prompt'] ?? [];
+
+        if (empty($prompt)) {
+            $prompt = ['consent'];
+        }
+
+        return \implode(' ', $prompt);
     }
 
     /**

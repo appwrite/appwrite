@@ -56,6 +56,7 @@ class Create extends Action
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'collection.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: $this->getSDKGroup(),
@@ -94,7 +95,7 @@ class Create extends Action
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -102,6 +103,15 @@ class Create extends Action
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
+
+        // Resolve the data-plane database BEFORE writing the metadata row. For a
+        // dedicated product database this throws while provisioning (no DSN yet);
+        // writing the row first would leave an orphaned collection with no backing
+        // collection, which lists fine but fails every document operation.
+        /**
+         * @var Database $dbForDatabases
+         */
+        $dbForDatabases = $getDatabasesDB($database);
 
         try {
             $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([
@@ -121,11 +131,6 @@ class Create extends Action
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
-
-        /**
-         * @var Database $dbForDatabases
-         */
-        $dbForDatabases = $getDatabasesDB($database);
 
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
@@ -172,7 +177,7 @@ class Create extends Action
         $indexDocuments = [];
         try {
             foreach ($indexes as $indexDef) {
-                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
+                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes, $dbForDatabases);
                 $collectionIndexes[] = $idxDoc['collection'];
                 $indexDocuments[] = $idxDoc['document'];
             }
@@ -346,7 +351,7 @@ class Create extends Action
      *
      * @return array{collection: Document, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -370,6 +375,11 @@ class Create extends Action
                 if ($attrArray === true) {
                     $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;
+
+                    if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+                        // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                        throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                    }
                 }
             } else {
                 if (empty($lengths[$i])) {

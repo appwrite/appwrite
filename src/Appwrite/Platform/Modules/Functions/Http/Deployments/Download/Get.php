@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Download;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Validator\WhiteList;
@@ -35,6 +36,7 @@ class Get extends Action
             ->groups(['api', 'functions'])
             ->desc('Get deployment download')
             ->label('scope', 'functions.read')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
@@ -51,11 +53,12 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::ANY,
-                type: MethodType::LOCATION
+                type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
-            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
@@ -105,7 +108,7 @@ class Get extends Action
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();

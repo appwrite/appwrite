@@ -7,14 +7,18 @@ use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Messaging as MessagingMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Redirect;
@@ -25,6 +29,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Usage\Context;
@@ -36,7 +41,6 @@ use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -55,18 +59,17 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator;
+use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -138,6 +141,26 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
         default => SESSION_PROVIDER_TOKEN,
     };
+
+    // For OAuth2 tokens, carry the provider credentials from the identity onto the session,
+    // mirroring the cookie-based createOAuth2Session flow.
+    $providerCredentials = [];
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
+        $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('provider', [$oauthProvider]),
+        ]));
+
+        if (!$identity->isEmpty()) {
+            $providerCredentials = [
+                'providerUid' => $identity->getAttribute('providerUid'),
+                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
+                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
+                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
+            ];
+        }
+    }
+
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -151,6 +174,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
+        $providerCredentials,
         $detector->getOS(),
         $detector->getClient(),
         $detector->getDevice()
@@ -251,7 +275,7 @@ Http::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -342,6 +366,10 @@ Http::post('/v1/account')
 
         if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
         try {
@@ -436,13 +464,13 @@ Http::get('/v1/account')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->inject('user')
-    ->action(function (Response $response, Document $user) {
-        if ($user->isEmpty()) {
+    ->inject('targetUser')
+    ->action(function (Response $response, User $targetUser) {
+        if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
+        $response->dynamic($targetUser, Response::MODEL_ACCOUNT);
     });
 
 Http::delete('/v1/account')
@@ -465,20 +493,20 @@ Http::delete('/v1/account')
         ],
         contentType: ContentType::NONE
     ))
-    ->inject('user')
+    ->inject('targetUser')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('authorization')
-    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes, Authorization $authorization) {
-        if ($user->isEmpty()) {
+    ->action(function (User $targetUser, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Authorization $authorization) {
+        if ($targetUser->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if ($project->getId() === 'console') {
-            $memberships = $user->getAttribute('memberships', []);
+            $memberships = $targetUser->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
                 if (!$membership->getAttribute('confirm', false)) {
                     continue;
@@ -494,15 +522,17 @@ Http::delete('/v1/account')
             }
         }
 
-        $dbForProject->deleteDocument('users', $user->getId());
+        $dbForProject->deleteDocument('users', $targetUser->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($user);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $targetUser,
+        ));
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER));
+            ->setParam('userId', $targetUser->getId())
+            ->setPayload($response->output($targetUser, Response::MODEL_USER));
 
         $response->noContent();
     });
@@ -580,12 +610,12 @@ Http::delete('/v1/account/sessions')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -615,10 +645,11 @@ Http::delete('/v1/account/sessions')
                 $queueForEvents
                     ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_SESSION_TARGETS)
-                    ->setDocument($session)
-                    ->trigger();
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $queueForEvents->getProject(),
+                    type: DELETE_TYPE_SESSION_TARGETS,
+                    document: $session,
+                ));
             }
         }
 
@@ -712,12 +743,12 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('domainVerification')
     ->inject('cookieDomain')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, DeletePublisher $publisherForDeletes, Store $store, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -759,10 +790,11 @@ Http::delete('/v1/account/sessions/:sessionId')
                 ->setParam('sessionId', $session->getId())
                 ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_SESSION_TARGETS)
-                ->setDocument($session)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $queueForEvents->getProject(),
+                type: DELETE_TYPE_SESSION_TARGETS,
+                document: $session,
+            ));
 
             $response->noContent();
             return;
@@ -1236,7 +1268,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -1688,6 +1720,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
+                if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                    $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
+                }
+
                 try {
                     $userId = ID::unique();
                     $user->setAttributes([
@@ -1827,6 +1863,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 $failureRedirect(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                $failureRedirect(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $user->setAttribute('email', $email);
@@ -2002,7 +2042,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified']))
     ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -2113,12 +2153,12 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('plan')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2185,6 +2225,10 @@ Http::post('/v1/account/tokens/magic-url')
 
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $user->setAttributes([
@@ -2304,6 +2348,7 @@ Http::post('/v1/account/tokens/magic-url')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyToEmail = '';
         $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -2320,13 +2365,6 @@ Http::post('/v1/account/tokens/magic-url')
             if (!empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -2348,11 +2386,17 @@ Http::post('/v1/account/tokens/magic-url')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyToEmail($replyToEmail)
-                ->setSmtpReplyToName($replyToName)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $projectName = $project->getAttribute('name');
@@ -2374,18 +2418,18 @@ Http::post('/v1/account/tokens/magic-url')
             'team' => '',
         ];
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->appendVariables($emailVariables)
-            ->setRecipient($email);
-
-        if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $email,
+            subject: $subject,
+            template: MAIL_TEMPLATE_MAGIC_URL,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2436,12 +2480,12 @@ Http::post('/v1/account/tokens/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('plan')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2506,6 +2550,10 @@ Http::post('/v1/account/tokens/email')
 
             if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
                 throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
             $user->setAttributes([
@@ -2633,6 +2681,7 @@ Http::post('/v1/account/tokens/email')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyToEmail = '';
         $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -2649,13 +2698,6 @@ Http::post('/v1/account/tokens/email')
             if (!empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -2677,11 +2719,17 @@ Http::post('/v1/account/tokens/email')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyToEmail($replyToEmail)
-                ->setSmtpReplyToName($replyToName)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $projectName = $project->getAttribute('name');
@@ -2717,20 +2765,19 @@ Http::post('/v1/account/tokens/email')
             ]);
         }
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate($bodyTemplate)
-            ->appendVariables($emailVariables)
-            ->setRecipient($email);
-
-        // since this is console project, set email sender name!
-        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $email,
+            subject: $subject,
+            template: MAIL_TEMPLATE_OTP,
+            bodyTemplate: $bodyTemplate,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2880,7 +2927,7 @@ Http::post('/v1/account/tokens/phone')
     ->inject('platform')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('locale')
     ->inject('timelimit')
     ->inject('usage')
@@ -2888,7 +2935,7 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3021,11 +3068,13 @@ Http::post('/v1/account/tokens/phone')
                 ],
             ]);
 
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                ->setMessage($messageDoc)
-                ->setRecipients([$phone])
-                ->setProviderType(MESSAGE_TYPE_SMS);
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_INTERNAL,
+                project: $project,
+                message: $messageDoc,
+                recipients: [$phone],
+                providerType: MESSAGE_TYPE_SMS,
+            ));
 
             $helper = PhoneNumberUtil::getInstance();
             try {
@@ -3131,77 +3180,6 @@ Http::get('/v1/account/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-Http::get('/v1/account/logs')
-    ->desc('List logs')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'logs',
-        name: 'listLogs',
-        description: '/docs/references/account/list-logs.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_LOG_LIST,
-            )
-        ],
-        contentType: ContentType::JSON,
-    ))
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('user')
-    ->inject('locale')
-    ->inject('geodb')
-    ->inject('dbForProject')
-    ->inject('audit')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Audit $audit) {
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
-        $logs = $audit->getLogsByUser($user->getSequence(), offset: $offset, limit: $limit);
-
-        $output = [];
-
-        foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-            $detector = new Detector($log['userAgent']);
-
-            $output[$i] = new Document(array_merge(
-                $log->getArrayCopy(),
-                $log['data'],
-                $detector->getOS(),
-                $detector->getClient(),
-                $detector->getDevice()
-            ));
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
-        }
-
-        $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
-            'logs' => $output,
-        ]), Response::MODEL_LOG_LIST);
-    });
-
 Http::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
@@ -3264,8 +3242,8 @@ Http::patch('/v1/account/password')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
-    ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('oldPassword', '', new PasswordFormat(new Text(256, 0)), 'Current user password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('project')
@@ -3427,6 +3405,10 @@ Http::patch('/v1/account/email')
 
         if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
+        }
+
+        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
         $user
@@ -3681,11 +3663,11 @@ Http::post('/v1/account/recovery')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3768,6 +3750,7 @@ Http::post('/v1/account/recovery')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyToEmail = '';
         $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -3784,13 +3767,6 @@ Http::post('/v1/account/recovery')
             if (!empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -3812,11 +3788,17 @@ Http::post('/v1/account/recovery')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyToEmail($replyToEmail)
-                ->setSmtpReplyToName($replyToName)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $emailVariables = [
@@ -3829,19 +3811,19 @@ Http::post('/v1/account/recovery')
             'team' => ''
         ];
 
-        $queueForMails
-            ->setRecipient($profile->getAttribute('email', ''))
-            ->setName($profile->getAttribute('name', ''))
-            ->setBody($body)
-            ->appendVariables($emailVariables)
-            ->setSubject($subject)
-            ->setPreview($preview);
-
-        if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $profile->getAttribute('email', ''),
+            name: $profile->getAttribute('name', ''),
+            subject: $subject,
+            template: MAIL_TEMPLATE_RECOVERY,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $recovery->setAttribute('secret', $secret);
 
@@ -3882,7 +3864,7 @@ Http::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -3926,6 +3908,8 @@ Http::put('/v1/account/recovery')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
+        $sessions = $profile->getAttribute('sessions', []);
+
         $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
             [
                 'password' => $newPassword,
@@ -3937,6 +3921,14 @@ Http::put('/v1/account/recovery')
         ));
 
         $user->setAttributes($profile->getArrayCopy());
+
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        if ($invalidate) {
+            foreach ($sessions as $session) {
+                /** @var Document $session */
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
 
         $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
@@ -4009,10 +4001,10 @@ Http::post('/v1/account/verifications/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -4099,6 +4091,7 @@ Http::post('/v1/account/verifications/email')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyToEmail = '';
         $replyToName = '';
+        $smtpConfig = [];
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -4115,13 +4108,6 @@ Http::post('/v1/account/verifications/email')
             if (!empty($smtp['replyToName'])) {
                 $replyToName = $smtp['replyToName'];
             }
-
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -4143,11 +4129,17 @@ Http::post('/v1/account/verifications/email')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyToEmail($replyToEmail)
-                ->setSmtpReplyToName($replyToName)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+                'replyToEmail' => $replyToEmail,
+                'replyToName' => $replyToName,
+                'senderEmail' => $senderEmail,
+                'senderName' => $senderName,
+            ];
         }
 
         $emailVariables = [
@@ -4174,20 +4166,20 @@ Http::post('/v1/account/verifications/email')
             ]);
         }
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate($bodyTemplate)
-            ->appendVariables($emailVariables)
-            ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name') ?? '');
-
-        if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
-        }
-
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new MailMessage(
+            project: $project,
+            recipient: $user->getAttribute('email'),
+            name: $user->getAttribute('name') ?? '',
+            subject: $subject,
+            template: MAIL_TEMPLATE_VERIFICATION,
+            bodyTemplate: $bodyTemplate,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+            platform: $platform,
+        ));
 
         $verification->setAttribute('secret', $verificationSecret);
 
@@ -4321,7 +4313,7 @@ Http::post('/v1/account/verifications/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForMessaging')
+    ->inject('publisherForMessaging')
     ->inject('project')
     ->inject('locale')
     ->inject('timelimit')
@@ -4329,7 +4321,7 @@ Http::post('/v1/account/verifications/phone')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4398,11 +4390,13 @@ Http::post('/v1/account/verifications/phone')
                 ],
             ]);
 
-            $queueForMessaging
-                ->setType(MESSAGE_SEND_TYPE_INTERNAL)
-                ->setMessage($messageDoc)
-                ->setRecipients([$user->getAttribute('phone')])
-                ->setProviderType(MESSAGE_TYPE_SMS);
+            $publisherForMessaging->enqueue(new MessagingMessage(
+                type: MESSAGE_SEND_TYPE_INTERNAL,
+                project: $project,
+                message: $messageDoc,
+                recipients: [$user->getAttribute('phone')],
+                providerType: MESSAGE_TYPE_SMS,
+            ));
 
             $helper = PhoneNumberUtil::getInstance();
             try {
@@ -4674,13 +4668,13 @@ Http::delete('/v1/account/targets/:targetId/push')
     ))
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
+    ->inject('publisherForDeletes')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->action(function (string $targetId, Event $queueForEvents, DeletePublisher $publisherForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
@@ -4695,9 +4689,11 @@ Http::delete('/v1/account/targets/:targetId/push')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_TARGET)
-            ->setDocument($target);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TARGET,
+            document: $target,
+        ));
 
         $queueForEvents
             ->setParam('userId', $user->getId())

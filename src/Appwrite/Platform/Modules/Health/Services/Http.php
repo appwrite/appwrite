@@ -15,10 +15,10 @@ use Appwrite\Platform\Modules\Health\Http\Health\Queue\Databases\Get as GetQueue
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Deletes\Get as GetQueueDeletes;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed\Get as GetFailedJobs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Functions\Get as GetQueueFunctions;
-use Appwrite\Platform\Modules\Health\Http\Health\Queue\Logs\Get as GetQueueLogs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Mails\Get as GetQueueMails;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Messaging\Get as GetQueueMessaging;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations\Get as GetQueueMigrations;
+use Appwrite\Platform\Modules\Health\Http\Health\Queue\Notifications\Get as GetQueueNotifications;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsResources\Get as GetQueueStatsResources;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsUsage\Get as GetQueueUsage;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Webhooks\Get as GetQueueWebhooks;
@@ -48,7 +48,6 @@ class Http extends Service
 
         $this->addAction(GetQueueAudits::getName(), new GetQueueAudits());
         $this->addAction(GetQueueWebhooks::getName(), new GetQueueWebhooks());
-        $this->addAction(GetQueueLogs::getName(), new GetQueueLogs());
         $this->addAction(GetQueueCertificates::getName(), new GetQueueCertificates());
         $this->addAction(GetQueueBuilds::getName(), new GetQueueBuilds());
         $this->addAction(GetQueueDatabases::getName(), new GetQueueDatabases());
@@ -56,6 +55,7 @@ class Http extends Service
         $this->addAction(GetQueueMails::getName(), new GetQueueMails());
         $this->addAction(GetQueueMessaging::getName(), new GetQueueMessaging());
         $this->addAction(GetQueueMigrations::getName(), new GetQueueMigrations());
+        $this->addAction(GetQueueNotifications::getName(), new GetQueueNotifications());
         $this->addAction(GetQueueFunctions::getName(), new GetQueueFunctions());
         $this->addAction(GetQueueStatsResources::getName(), new GetQueueStatsResources());
         $this->addAction(GetQueueUsage::getName(), new GetQueueUsage());

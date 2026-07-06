@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
@@ -20,10 +22,9 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Validator\Range;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * @var string The current context (either 'column' or 'attribute')
@@ -35,12 +36,14 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string|array;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = COLUMNS;
         }
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     /**
@@ -312,7 +315,7 @@ abstract class Action extends UtopiaAction
         };
     }
 
-    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -332,7 +335,7 @@ abstract class Action extends UtopiaAction
 
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -464,20 +467,6 @@ abstract class Action extends UtopiaAction
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setDocument($attribute)
-                ->setCollection($collection);
-        } else {
-            $queueForDatabase
-                ->setRow($attribute)
-                ->setTable($collection);
-        }
-
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
@@ -486,6 +475,18 @@ abstract class Action extends UtopiaAction
             ->setParam('attributeId', $attribute->getId())
             ->setParam('columnId', $attribute->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_CREATE_ATTRIBUTE,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            document: $this->isCollectionsAPI() ? $attribute : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            row: $this->isCollectionsAPI() ? null : $attribute,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
@@ -496,7 +497,7 @@ abstract class Action extends UtopiaAction
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

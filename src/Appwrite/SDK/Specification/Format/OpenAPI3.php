@@ -4,6 +4,7 @@ namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
@@ -16,6 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Spatial;
+use Utopia\Platform\Enum;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -54,9 +56,17 @@ class OpenAPI3 extends Format
             'servers' => [
                 [
                     'url' => $this->getParam('endpoint', ''),
+                    'description' => 'Appwrite Cloud endpoint.',
                 ],
                 [
-                    'url' => $this->getParam('endpoint.docs', ''),
+                    'url' => \str_replace('<REGION>', '{region}', $this->getParam('endpoint.docs', '')),
+                    'description' => 'Appwrite Cloud regional endpoint. Replace `{region}` with your project region.',
+                    'variables' => [
+                        'region' => [
+                            'default' => 'fra',
+                            'description' => 'Appwrite Cloud region.',
+                        ],
+                    ],
                 ],
             ],
             'paths' => [],
@@ -71,24 +81,20 @@ class OpenAPI3 extends Format
             ],
         ];
 
-        if (isset($output['components']['securitySchemes']['Project'])) {
-            $output['components']['securitySchemes']['Project']['x-appwrite'] = ['demo' => '<YOUR_PROJECT_ID>'];
-        }
-
-        if (isset($output['components']['securitySchemes']['Key'])) {
-            $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '<YOUR_API_KEY>'];
-        }
-
-        if (isset($output['components']['securitySchemes']['JWT'])) {
-            $output['components']['securitySchemes']['JWT']['x-appwrite'] = ['demo' => '<YOUR_JWT>'];
-        }
-
-        if (isset($output['components']['securitySchemes']['Locale'])) {
-            $output['components']['securitySchemes']['Locale']['x-appwrite'] = ['demo' => 'en'];
-        }
-
-        if (isset($output['components']['securitySchemes']['Mode'])) {
-            $output['components']['securitySchemes']['Mode']['x-appwrite'] = ['demo' => ''];
+        foreach ([
+            'Project' => '<YOUR_PROJECT_ID>',
+            'ProjectPath' => '<YOUR_PROJECT_ID>',
+            'Key' => '<YOUR_API_KEY>',
+            'JWT' => '<YOUR_JWT>',
+            'Locale' => 'en',
+            'Mode' => '',
+        ] as $key => $demo) {
+            if (isset($output['components']['securitySchemes'][$key])) {
+                $output['components']['securitySchemes'][$key]['x-appwrite'] = \array_merge(
+                    $output['components']['securitySchemes'][$key]['x-appwrite'] ?? [],
+                    ['demo' => $demo]
+                );
+            }
         }
 
         $usedModels = [];
@@ -123,6 +129,7 @@ class OpenAPI3 extends Format
             $specs = new Specs();
             $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
 
+            $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace();
 
             $descContents = $this->getDescriptionContents($desc);
@@ -137,7 +144,6 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $methodName,
                     'group' => $sdk->getGroup(),
-                    'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
@@ -175,7 +181,7 @@ class OpenAPI3 extends Format
                         continue;
                     }
 
-                    $methodSecurities = ['Project' => []];
+                    $methodSecurities = [($methodObj->getLocationAuth()[0] ?? 'Project') => []];
                     foreach ($methodObj->getAuth() as $security) {
                         if (\array_key_exists($security->value, $this->keys)) {
                             $methodSecurities[$security->value] = [];
@@ -291,18 +297,45 @@ class OpenAPI3 extends Format
                 }
 
                 if (!(\is_array($model)) && $model->isNone()) {
+                    if ($produces === ContentType::TEXT->value && !\in_array($response->getCode(), [204, 301, 302, 308], true)) {
+                        $temp['responses'][(string)$response->getCode()] = [
+                            'description' => 'Text',
+                            'content' => [
+                                $produces => [
+                                    'schema' => [
+                                        'type' => 'string',
+                                    ],
+                                ],
+                            ],
+                        ];
+
+                        continue;
+                    }
+
                     $temp['responses'][(string)$response->getCode()] = [
                         'description' => in_array($produces, [
                             'image/*',
                             'image/jpeg',
                             'image/gif',
                             'image/png',
+                            'image/svg+xml',
                             'image/webp',
                             'image/svg-x',
                             'image/x-icon',
                             'image/bmp',
                         ]) ? 'Image' : 'File',
                     ];
+
+                    if ($produces !== '') {
+                        $temp['responses'][(string)$response->getCode()]['content'] = [
+                            $produces => [
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'binary',
+                                ],
+                            ],
+                        ];
+                    }
                 } else {
                     if (\is_array($model)) {
                         $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
@@ -339,14 +372,31 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if ($response->getCode() === 204) {
+                if (in_array($response->getCode(), [204, 301, 302, 308], true)) {
                     $temp['responses'][(string)$response->getCode()]['description'] = 'No content';
+                }
+
+                if ($response->getCode() === 204) {
                     unset($temp['responses'][(string)$response->getCode()]['content']);
                 }
             }
 
+            // No response declares content (e.g. 204 No content): keep the produced
+            // content type available for SDK generation.
+            $hasResponseContent = false;
+            foreach ($temp['responses'] as $responseData) {
+                if (isset($responseData['content'])) {
+                    $hasResponseContent = true;
+                    break;
+                }
+            }
+
+            if (!$hasResponseContent && $produces !== '') {
+                $temp['x-appwrite']['produces'] = [$produces];
+            }
+
             if (!empty($scope)) {
-                $securities = ['Project' => []];
+                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
@@ -356,6 +406,16 @@ class OpenAPI3 extends Format
                 }
 
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+
+                if ($sdk->getType() === MethodType::LOCATION) {
+                    foreach ($sdk->getLocationAuth() as $key) {
+                        if (\array_key_exists($key, $this->keys)) {
+                            $securities[$key] = [];
+                            $temp['x-appwrite']['auth'][$key] = [];
+                        }
+                    }
+                }
+
                 $temp['security'][] = $securities;
             }
 
@@ -372,7 +432,12 @@ class OpenAPI3 extends Format
 
             $bodyRequired = [];
 
-            foreach ($route->getParams() as $name => $param) { // Set params
+            $parameters = \array_merge(
+                $route->getParams(),
+                $sdk->getAdditionalParameters(),
+            );
+
+            foreach ($parameters as $name => $param) { // Set params
                 if (($param['deprecated'] ?? false) === true) {
                     continue;
                 }
@@ -385,12 +450,11 @@ class OpenAPI3 extends Format
                 $isNullable = $validator instanceof Nullable;
 
                 $parameter = $this->getRequestParameterConfig(
-                    $sdk->getNamespace(),
-                    $methodName,
-                    $name,
                     $param['optional'],
                     $isNullable,
                     $param['default'],
+                    $sdk->getNamespace() . '.' . $sdk->getMethodName(),
+                    $name,
                 );
 
                 $node = [
@@ -455,6 +519,9 @@ class OpenAPI3 extends Format
                             $node['schema']['x-upload-id'] = true;
                         }
                         $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-appwrite'] = [
+                            'idGenerator' => 'ID.unique',
+                        ];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\Datetime::class:
@@ -465,11 +532,36 @@ class OpenAPI3 extends Format
                     case \Utopia\Database\Validator\Spatial::class:
                         /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'oneOf' => [
-                                ['type' => 'array']
-                            ]
-                        ];
+                        $node['schema']['items'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => [
+                                'type' => 'number',
+                                'format' => 'double',
+                            ],
+                            Database::VAR_LINESTRING => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'number',
+                                    'format' => 'double',
+                                ],
+                            ],
+                            Database::VAR_POLYGON => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'array',
+                                    'items' => [
+                                        'type' => 'number',
+                                        'format' => 'double',
+                                    ],
+                                ],
+                            ],
+                            default => [
+                                'type' => 'array',
+                                'items' => [
+                                    'type' => 'number',
+                                    'format' => 'double',
+                                ],
+                            ],
+                        };
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
@@ -491,8 +583,8 @@ class OpenAPI3 extends Format
                         break;
                     case \Utopia\Validator\JSON::class:
                     case \Utopia\Validator\Assoc::class:
-                        $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
+                        $node['schema']['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
                     case \Utopia\Storage\Validator\File::class:
@@ -560,6 +652,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
+                    case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'password';
@@ -602,51 +695,34 @@ class OpenAPI3 extends Format
                                 $node['schema']['x-example'] = $param['example'];
                             }
 
-                            // Iterate from the blackList. If it matches with the current one, then it is a blackList
-                            // Do not add the enum
-                            $allowed = true;
-                            $excludeKeys = null;
-                            foreach ($this->enumBlacklist as $blacklist) {
-                                if (
-                                    $blacklist['namespace'] == $sdk->getNamespace()
-                                    && $blacklist['method'] == $methodName
-                                    && $blacklist['parameter'] == $name
-                                ) {
-                                    // 'exclude' => true means full exclude
-                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
-                                        $allowed = false;
-                                        break;
-                                    }
+                            if ($validator->getType() === 'string') {
+                                $enum = $param['enum'] ?? null;
 
-                                    if (isset($blacklist['excludeKeys'])) {
-                                        $excludeKeys = $blacklist['excludeKeys'];
-                                    }
-                                    break;
-                                }
-                            }
-                            if ($allowed && $validator->getType() === 'string') {
-                                $allValues = \array_values($validator->getList());
-                                $allKeys = $this->getRequestEnumKeys($sdk->getNamespace(), $methodName, $name);
+                                if ($enum instanceof Enum) {
+                                    $enumValues = \array_values($validator->getList());
 
-                                if ($excludeKeys !== null) {
-                                    $keepIndices = [];
-                                    foreach ($allValues as $index => $value) {
-                                        if (!\in_array($value, $excludeKeys, true)) {
-                                            $keepIndices[] = $index;
+                                    if (!empty($enum->exclude)) {
+                                        $keepIndices = [];
+                                        foreach ($enumValues as $index => $value) {
+                                            if (!\in_array($value, $enum->exclude, true)) {
+                                                $keepIndices[] = $index;
+                                            }
                                         }
-                                    }
-                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
-                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
-                                } else {
-                                    $enumKeys = $allKeys;
-                                    $enumValues = $allValues;
-                                }
-                                $node['schema']['items']['enum'] = $enumValues;
-                                $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace(), $methodName, $name);
-                                $node['schema']['items']['x-enum-keys'] = $enumKeys;
 
-                                if (!empty($excludeKeys)) {
-                                    $node['description'] = $this->parseDescription($node['description'], $excludeKeys);
+                                        $enumValues = \array_values(\array_intersect_key($enumValues, \array_flip($keepIndices)));
+                                        $node['description'] = $this->parseDescription($node['description'], $enum->exclude);
+                                    }
+
+                                    $enumKeys = [];
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
+                                    }
+
+                                    $node['schema']['items']['enum'] = $enumValues;
+                                    if (!empty($enum->name)) {
+                                        $node['schema']['items']['x-enum-name'] = $enum->name;
+                                    }
+                                    $node['schema']['items']['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -656,51 +732,34 @@ class OpenAPI3 extends Format
                             $node['schema']['type'] = $validator->getType();
                             $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
 
-                            // Iterate from the blackList. If it matches with the current one, then it is a blackList
-                            // Do not add the enum
-                            $allowed = true;
-                            $excludeKeys = null;
-                            foreach ($this->enumBlacklist as $blacklist) {
-                                if (
-                                    $blacklist['namespace'] == $sdk->getNamespace()
-                                    && $blacklist['method'] == $methodName
-                                    && $blacklist['parameter'] == $name
-                                ) {
-                                    // 'exclude' => true means full exclude
-                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
-                                        $allowed = false;
-                                        break;
-                                    }
+                            if ($validator->getType() === 'string') {
+                                $enum = $param['enum'] ?? null;
 
-                                    if (isset($blacklist['excludeKeys'])) {
-                                        $excludeKeys = $blacklist['excludeKeys'];
-                                    }
-                                    break;
-                                }
-                            }
-                            if ($allowed && $validator->getType() === 'string') {
-                                $allValues = \array_values($validator->getList());
-                                $allKeys = $this->getRequestEnumKeys($sdk->getNamespace(), $methodName, $name);
+                                if ($enum instanceof Enum) {
+                                    $enumValues = \array_values($validator->getList());
 
-                                if ($excludeKeys !== null) {
-                                    $keepIndices = [];
-                                    foreach ($allValues as $index => $value) {
-                                        if (!\in_array($value, $excludeKeys, true)) {
-                                            $keepIndices[] = $index;
+                                    if (!empty($enum->exclude)) {
+                                        $keepIndices = [];
+                                        foreach ($enumValues as $index => $value) {
+                                            if (!\in_array($value, $enum->exclude, true)) {
+                                                $keepIndices[] = $index;
+                                            }
                                         }
-                                    }
-                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
-                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
-                                } else {
-                                    $enumKeys = $allKeys;
-                                    $enumValues = $allValues;
-                                }
-                                $node['schema']['enum'] = $enumValues;
-                                $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace(), $methodName, $name);
-                                $node['schema']['x-enum-keys'] = $enumKeys;
 
-                                if (!empty($excludeKeys)) {
-                                    $node['description'] = $this->parseDescription($node['description'], $excludeKeys);
+                                        $enumValues = \array_values(\array_intersect_key($enumValues, \array_flip($keepIndices)));
+                                        $node['description'] = $this->parseDescription($node['description'], $enum->exclude);
+                                    }
+
+                                    $enumKeys = [];
+                                    foreach ($enumValues as $enumValue) {
+                                        $enumKeys[] = $enum->map[$enumValue] ?? $enumValue;
+                                    }
+
+                                    $node['schema']['enum'] = $enumValues;
+                                    if (!empty($enum->name)) {
+                                        $node['schema']['x-enum-name'] = $enum->name;
+                                    }
+                                    $node['schema']['x-enum-keys'] = $enumKeys;
                                 }
                             }
                             if ($validator->getType() === 'integer') {
@@ -752,7 +811,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
-                if ($parameter['emitDefault']) { // Param has default value
+                if ($parameter['emitDefault'] && $this->shouldEmitDefaultForSchema($param['default'], $node['schema'])) { // Param has default value
                     $node['schema']['default'] = $param['default'];
                 }
 
@@ -770,7 +829,7 @@ class OpenAPI3 extends Format
                 if ($isPathParam) { // Param is in URL path (directly or through alias)
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
-                } elseif ($route->getMethod() == 'GET') { // Param is in query
+                } elseif (\in_array($route->getMethod(), ['GET', 'DELETE'], true)) { // Param is in query
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
@@ -781,8 +840,13 @@ class OpenAPI3 extends Format
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['schema']['x-example'] ?? null
                     ];
+
+                    if (\array_key_exists('default', $node['schema'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
+                    }
+
+                    $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
 
                     if (isset($node['schema']['format'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
@@ -797,6 +861,10 @@ class OpenAPI3 extends Format
 
                     if ($node['schema']['x-upload-id'] ?? false) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                    }
+
+                    if (isset($node['schema']['x-appwrite'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['schema']['x-appwrite'];
                     }
 
                     if (\array_key_exists('items', $node['schema'])) {
@@ -834,7 +902,7 @@ class OpenAPI3 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+            if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }
 
@@ -865,7 +933,7 @@ class OpenAPI3 extends Format
                 }
 
                 $type = '';
-                $format = null;
+                $format = $rule['format'] ?? null;
                 $items = null;
 
                 $examples[$name] = $rule['example'] ?? null;
@@ -887,11 +955,11 @@ class OpenAPI3 extends Format
 
                     case 'json':
                         $type = 'object';
-                        $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
                         break;
 
                     case 'array':
                         $type = 'array';
+                        $items = $this->getArrayItemsSchema($rule['example'] ?? []);
                         break;
 
                     case 'integer':
@@ -952,6 +1020,20 @@ class OpenAPI3 extends Format
                 }
 
                 $readOnly = $rule['readOnly'] ?? false;
+                if ($rule['type'] == 'json') {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name] = [
+                        'type' => $type,
+                        'additionalProperties' => true,
+                        'description' => $rule['description'] ?? '',
+                        'x-example' => $rule['example'] ?? null,
+                    ];
+
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
+                    continue;
+                }
+
                 if ($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
@@ -983,20 +1065,30 @@ class OpenAPI3 extends Format
                     }
                 }
                 if ($items) {
-                    $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                    if ($rule['array'] || $rule['type'] === 'array') {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                    } else {
+                        if (isset($items['$ref']) || isset($items['oneOf'])) {
+                            $items = ['allOf' => [$items]];
+                        }
+                        /** @var array<string, mixed> $property */
+                        $property = $output['components']['schemas'][$model->getType()]['properties'][$name];
+                        $output['components']['schemas'][$model->getType()]['properties'][$name] = [
+                            ...$property,
+                            ...$items,
+                        ];
+                    }
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
-                        if ($enumName) {
-                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
+                        if (!empty($rule['enumSDKName'])) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $rule['enumSDKName'];
                         }
                     } else {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
-                        $enumName = $this->getResponseEnumName($model->getType(), $name);
-                        if ($enumName) {
-                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
+                        if (!empty($rule['enumSDKName'])) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $rule['enumSDKName'];
                         }
                     }
                 }

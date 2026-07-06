@@ -67,6 +67,12 @@ class File extends Model
                 'default' => 0,
                 'example' => 17890,
             ])
+            ->addRule('sizeActual', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'File actual stored size in bytes after compression and/or encryption.',
+                'default' => 0,
+                'example' => 12345,
+            ])
             ->addRule('chunksTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of chunks available',
