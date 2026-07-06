@@ -65,6 +65,7 @@ class Update extends Action
             ->param('userId', '', new UID(), 'User ID.')
             ->param('secret', '', new Text(256), 'Secret key.')
             ->inject('request')
+            ->inject('userAgent')
             ->inject('response')
             ->inject('targetUser')
             ->inject('dbForProject')
@@ -79,7 +80,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, string $userAgent, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
         $protocol = $request->getProtocol();
 
@@ -132,7 +133,7 @@ class Update extends Action
         if (!$hasSession) {
             $authorization->addRole(Role::user($targetUser->getId())->toString());
 
-            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $detector = new Detector($userAgent ?: 'UNKNOWN');
             $record = $geodb->get($request->getIP());
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
@@ -149,7 +150,7 @@ class Update extends Action
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $targetUser->getAttribute('email'),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'userAgent' => $userAgent ?: 'UNKNOWN',
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',

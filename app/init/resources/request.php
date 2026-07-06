@@ -184,6 +184,18 @@ return function (Container $context): void {
         return $user;
     }, ['user', 'impersonatorUser', 'mode', 'project', 'request', 'dbForProject', 'dbForPlatform']);
 
+    $context->set('userAgent', function (Request $request, Authorization $authorization, User $targetUser): string {
+        $forwardedUserAgent = $request->getHeaderLine('x-forwarded-user-agent');
+        if (!empty($forwardedUserAgent)) {
+            $roles = $authorization->getRoles();
+            if ($targetUser->isKey($roles)) {
+                return $forwardedUserAgent;
+            }
+        }
+
+        return $request->getHeaderLine('user-agent', '');
+    }, ['request', 'authorization', 'targetUser']);
+
     $context->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)

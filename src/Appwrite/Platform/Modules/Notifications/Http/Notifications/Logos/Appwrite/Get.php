@@ -57,6 +57,7 @@ class Get extends Action
             ->param('jwt', '', new Text(2048, 0), 'Tracking token.', true)
             ->param('theme', 'system', new WhiteList(['system', 'light', 'dark']), 'Logo color theme.', true)
             ->inject('request')
+            ->inject('userAgent')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
@@ -68,6 +69,7 @@ class Get extends Action
         string $jwt,
         string $theme,
         Request $request,
+        string $userAgent,
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -88,6 +90,7 @@ class Get extends Action
                         $result['project'],
                         $result['seenAt'],
                         $request,
+                        $userAgent,
                         $publisherForAudits,
                     );
                 }
@@ -160,7 +163,7 @@ class Get extends Action
         ];
     }
 
-    private function logView(Document $notification, Document $project, string $seenAt, Request $request, AuditPublisher $publisherForAudits): void
+    private function logView(Document $notification, Document $project, string $seenAt, Request $request, string $userAgent, AuditPublisher $publisherForAudits): void
     {
         $publisherForAudits->enqueue(new AuditMessage(
             event: 'notification.view',
@@ -184,7 +187,7 @@ class Get extends Action
             resource: 'notification/' . $notification->getId(),
             mode: APP_MODE_DEFAULT,
             ip: $request->getIP(),
-            userAgent: $request->getUserAgent(''),
+            userAgent: $userAgent,
             hostname: $request->getHostname(),
         ));
     }

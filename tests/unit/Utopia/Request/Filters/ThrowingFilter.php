@@ -6,7 +6,7 @@ use Appwrite\Utopia\Request\Filter;
 
 /**
  * Test fixture: a filter that always throws, with a configurable code.
- * Used to assert how Request::getParams() reacts to filter exceptions.
+ * Used to assert how request filter callers react to filter exceptions.
  */
 class ThrowingFilter extends Filter
 {

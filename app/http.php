@@ -518,7 +518,6 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     try {
         $authorization = $app->context()->get('authorization');
 
-        $request->setAuthorization($authorization);
         $response->setAuthorization($authorization);
         $authorization->cleanRoles();
         $authorization->addRole(Role::any()->toString());
