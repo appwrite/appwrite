@@ -915,7 +915,7 @@ Http::init()
             }
         }
 
-        $localeParam = (string) Request::param($request, 'locale', ($request->getHeaderLine('x-appwrite-locale') ?: ''));
+        $localeParam = (string) (Request::params($request)['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -1006,7 +1006,7 @@ Http::init()
     ->inject('originValidator')
     ->action(function (ServerRequestInterface $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
         // CORS headers
-        foreach ($cors->headers(Request::origin($request, )) as $name => $value) {
+        foreach ($cors->headers($request->getHeaderLine('origin')) as $name => $value) {
             $response->addHeader($name, $value);
         }
 
@@ -1021,7 +1021,7 @@ Http::init()
         }
 
         // Application level CSRF protection
-        $origin = Request::origin($request, );
+        $origin = $request->getHeaderLine('origin');
         if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
@@ -1176,7 +1176,7 @@ Http::options()
             }
         }
 
-        foreach ($cors->headers(Request::origin($request, )) as $name => $value) {
+        foreach ($cors->headers($request->getHeaderLine('origin')) as $name => $value) {
             $response->addHeader($name, $value);
         }
 
@@ -1332,7 +1332,7 @@ Http::error()
             }
 
             $log->addTag('hostname', Request::hostname($request));
-            $log->addTag('locale', (string)Request::param($request, 'locale', ($request->getHeaderLine('x-appwrite-locale') ?: '')));
+            $log->addTag('locale', (string)(Request::params($request)['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: '')));
 
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
@@ -1341,7 +1341,7 @@ Http::error()
 
             try {
                 /* add queries to log */
-                $queries = Request::param($request, 'queries', []);
+                $queries = (Request::params($request)['queries'] ?? []);
                 if (!empty($queries) && is_array($queries)) {
                     $parsedQueries = Query::parseQueries($queries);
 
@@ -1498,7 +1498,7 @@ Http::error()
         // Uses override:true to avoid duplicate headers if init() already set them.
         try {
             $cors = $utopia->context()->get('cors');
-            foreach ($cors->headers(Request::origin($request, )) as $name => $value) {
+            foreach ($cors->headers($request->getHeaderLine('origin')) as $name => $value) {
                 $response
                     ->removeHeader($name)
                     ->addHeader($name, $value);
@@ -1730,11 +1730,11 @@ Http::get('/_appwrite/authorize')
             $host = $previewHostname;
         }
 
-        $referrer = Request::referer($request, );
-        $protocol = \parse_url(Request::origin($request, $referrer), PHP_URL_SCHEME);
+        $referrer = $request->getHeaderLine('referer');
+        $protocol = \parse_url($request->getHeaderLine('origin') ?: $referrer, PHP_URL_SCHEME);
 
-        $jwt = Request::param($request, 'jwt', '');
-        $path = Request::param($request, 'path', '');
+        $jwt = (Request::params($request)['jwt'] ?? '');
+        $path = (Request::params($request)['path'] ?? '');
 
         $duration = 60 * 60 * 24; // 1 day in seconds
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));

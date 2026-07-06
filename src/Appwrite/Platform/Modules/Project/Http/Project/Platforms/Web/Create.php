@@ -122,11 +122,11 @@ class Create extends Action
             ];
 
             $typeValidator = new WhiteList(\array_keys($deprecatedTypeMapping));
-            if (!$typeValidator->isValid(Request::param($request, 'type', ''))) {
+            if (!$typeValidator->isValid((Request::params($request)['type'] ?? ''))) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "type" is invalid: ' . $typeValidator->getDescription());
             }
 
-            $type = $deprecatedTypeMapping[Request::param($request, 'type', '')] ?? '';
+            $type = $deprecatedTypeMapping[(Request::params($request)['type'] ?? '')] ?? '';
         }
 
         if (!empty($key)) {

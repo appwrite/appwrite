@@ -1022,7 +1022,7 @@ Http::shutdown()
             // Resolve resource labels lazily — only needed when creating the entry.
             $requestParams = [];
             foreach ($route->getParams() as $paramKey => $param) {
-                $requestParams[$paramKey] = $params[$paramKey] ?? Request::param($request, $paramKey, $param['default']);
+                $requestParams[$paramKey] = $params[$paramKey] ?? (Request::params($request)[$paramKey] ?? $param['default']);
             }
 
             $resourcePattern = $route->getLabel('cache.resource', null);

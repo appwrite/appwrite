@@ -1580,7 +1580,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = Request::param($request, 'user');
+        $userParam = (Request::params($request)['user'] ?? null);
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
         } elseif ($userParam !== null) {

@@ -280,7 +280,7 @@ function execute(
  */
 function parseGraphql(ServerRequestInterface $request): array
 {
-    return ['query' => Request::rawPayload($request)];
+    return ['query' => (string) $request->getBody()];
 }
 
 /**

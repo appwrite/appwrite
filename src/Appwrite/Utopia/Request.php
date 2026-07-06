@@ -45,11 +45,6 @@ class Request extends ServerRequest
     private ?User $user = null;
     private SwooleRequest $swoole;
 
-    public static function param(ServerRequestInterface $request, string $key, mixed $default = null): mixed
-    {
-        return self::params($request)[$key] ?? $default;
-    }
-
     public static function params(ServerRequestInterface $request): array
     {
         $filtered = self::getState($request, 'filteredParams');
@@ -110,26 +105,6 @@ class Request extends ServerRequest
         return $parameters;
     }
 
-    public static function query(ServerRequestInterface $request, string $key, mixed $default = null): mixed
-    {
-        return $request->getQueryParams()[$key] ?? $default;
-    }
-
-    public static function payload(ServerRequestInterface $request, string $key, mixed $default = null): mixed
-    {
-        $payload = $request->getParsedBody();
-        if (\is_object($payload)) {
-            $payload = get_object_vars($payload);
-        }
-
-        return \is_array($payload) ? ($payload[$key] ?? $default) : $default;
-    }
-
-    public static function rawPayload(ServerRequestInterface $request): string
-    {
-        return (string) $request->getBody();
-    }
-
     public static function ip(ServerRequestInterface $request): string
     {
         $server = $request->getServerParams();
@@ -181,16 +156,6 @@ class Request extends ServerRequest
         $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
         $hostname = parse_url(self::protocol($request) . '://' . $forwardedHost, PHP_URL_HOST);
         return strtolower(\strval($hostname));
-    }
-
-    public static function referer(ServerRequestInterface $request, string $default = ''): string
-    {
-        return $request->getHeaderLine('referer') ?: $default;
-    }
-
-    public static function origin(ServerRequestInterface $request, string $default = ''): string
-    {
-        return $request->getHeaderLine('origin') ?: $default;
     }
 
     public static function userAgent(ServerRequestInterface $request, string $default = ''): string
