@@ -52,8 +52,8 @@ Http::init()
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
 
-            $countries = \array_map('strtolower', \array_map('trim', explode(',', $denylist)));
-            $country = strtolower($geoRecord->getCountryCode());
+            $countries = \array_map('strtoupper', \array_map('trim', explode(',', $denylist)));
+            $country = \strtoupper($geoRecord->getCountryCode());
             if (in_array($country, $countries, true)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }

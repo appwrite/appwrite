@@ -53,13 +53,13 @@ class GeoRecord extends Document
             return '--';
         }
 
-        $lower = \strtolower($code);
+        $upper = \strtoupper($code);
 
         if ($this->locale === null) {
-            return $lower;
+            return $upper;
         }
 
-        return $this->locale->getText('countries.' . $lower, false) ? $lower : '--';
+        return $this->locale->getText('countries.' . \strtolower($upper), false) ? $upper : '--';
     }
 
     public function getCountryName(): string
