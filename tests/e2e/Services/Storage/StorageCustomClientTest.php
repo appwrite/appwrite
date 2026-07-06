@@ -1645,5 +1645,12 @@ final class StorageCustomClientTest extends Scope
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(['shared/'], \array_column($response['body']['folders'], 'key'));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 }

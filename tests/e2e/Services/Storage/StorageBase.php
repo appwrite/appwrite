@@ -596,6 +596,13 @@ trait StorageBase
         $this->assertEquals(201, $chunked['headers']['status-code']);
         $this->assertEquals('videos/2026/', $chunked['body']['parent']);
         $this->assertEquals('videos/2026/large-file.mp4', $chunked['body']['key']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testCreateBucketFileZstdCompression(): void
@@ -2063,6 +2070,13 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), ['parent' => '/photos']);
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 
     public function testListFolders(): void
@@ -2144,5 +2158,12 @@ trait StorageBase
         ], $this->getHeaders()));
         $this->assertEquals(204, $delete['headers']['status-code']);
         $this->assertEquals(['photos/2025/'], \array_column($listFolders(['parent' => 'photos']), 'key'));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 }

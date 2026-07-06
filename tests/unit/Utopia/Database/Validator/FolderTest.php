@@ -38,6 +38,7 @@ final class FolderTest extends TestCase
         $this->assertFalse($this->object->isValid('photos/./2026'));
         $this->assertFalse($this->object->isValid('photos/../2026'));
         $this->assertFalse($this->object->isValid('..'));
+        $this->assertFalse($this->object->isValid('.'));
         $this->assertFalse($this->object->isValid("photos/\x01"));
         $this->assertFalse($this->object->isValid("photos\n"));
         // 2048 chars without trailing slash normalizes to 2049 -- too long
