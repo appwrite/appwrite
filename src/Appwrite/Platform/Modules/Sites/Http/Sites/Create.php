@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -102,6 +103,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('vcs')
             ->callback($this->action(...));
     }
 
@@ -133,7 +135,8 @@ class Create extends Base
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Resolver $vcs
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -215,6 +218,7 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
+            $vcs->ensureRepositoryWebhook($installation, $dbForPlatform, $providerRepositoryId);
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
 

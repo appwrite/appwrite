@@ -23,7 +23,7 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        // GitHub Authorization & Callback
+        // GitHub Authorization & Callback (app installation flow)
         $this->addAction(GetGitHubAuthorize::getName(), new GetGitHubAuthorize());
         $this->addAction(GetGitHubCallback::getName(), new GetGitHubCallback());
         $this->addAction(UpdateExternalDeployment::getName(), new UpdateExternalDeployment());
@@ -41,7 +41,7 @@ class Http extends Service
         $this->addAction(GetRepositoryContents::getName(), new GetRepositoryContents());
         $this->addAction(CreateRepositoryDetections::getName(), new CreateRepositoryDetections());
 
-        // Events
+        // Events (per-provider webhook receivers)
         $this->addAction(CreateGitHubEvent::getName(), new CreateGitHubEvent());
     }
 }

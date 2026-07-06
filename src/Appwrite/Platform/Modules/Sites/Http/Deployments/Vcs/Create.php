@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Resolver;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -21,7 +22,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -74,7 +74,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcs')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -92,7 +92,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        Resolver $vcs,
         Authorization $authorization,
         array $platform
     ) {
@@ -106,6 +106,12 @@ class Create extends Base
 
         $installation = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId'));
 
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $adapter = $vcs->getAdapter($installation, $dbForPlatform);
+
         $deployment = $this->redeployVcsSite(
             request: $request,
             site: $site,
@@ -115,7 +121,7 @@ class Create extends Base
             dbForPlatform: $dbForPlatform,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            github: $github,
+            github: $adapter,
             activate: $activate,
             authorization: $authorization,
             reference: $reference,
