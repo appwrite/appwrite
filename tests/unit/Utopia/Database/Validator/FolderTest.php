@@ -48,9 +48,9 @@ final class FolderTest extends TestCase
 
     public function testNormalize(): void
     {
-        $this->assertEquals('', Folder::normalize(''));
-        $this->assertEquals('photos/', Folder::normalize('photos'));
-        $this->assertEquals('photos/', Folder::normalize('photos/'));
-        $this->assertEquals('photos/2026/', Folder::normalize('photos/2026'));
+        $this->assertSame('', Folder::normalize(''));
+        $this->assertSame('photos/', Folder::normalize('photos'));
+        $this->assertSame('photos/', Folder::normalize('photos/'));
+        $this->assertSame('photos/2026/', Folder::normalize('photos/2026'));
     }
 }
