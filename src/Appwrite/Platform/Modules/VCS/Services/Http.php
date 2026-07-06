@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\VCS\Services;
 
+use Appwrite\Platform\Modules\VCS\Http\Gitea\Authorize\Get as GetGiteaAuthorize;
+use Appwrite\Platform\Modules\VCS\Http\Gitea\Callback\Get as GetGiteaCallback;
+use Appwrite\Platform\Modules\VCS\Http\Gitea\Events\Create as CreateGiteaEvent;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External\Update as UpdateExternalDeployment;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\Get as GetGitHubAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Callback\Get as GetGitHubCallback;
@@ -28,6 +31,10 @@ class Http extends Service
         $this->addAction(GetGitHubCallback::getName(), new GetGitHubCallback());
         $this->addAction(UpdateExternalDeployment::getName(), new UpdateExternalDeployment());
 
+        // Gitea Authorization & Callback (OAuth2 flow)
+        $this->addAction(GetGiteaAuthorize::getName(), new GetGiteaAuthorize());
+        $this->addAction(GetGiteaCallback::getName(), new GetGiteaCallback());
+
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());
         $this->addAction(ListInstallations::getName(), new ListInstallations());
@@ -43,5 +50,6 @@ class Http extends Service
 
         // Events (per-provider webhook receivers)
         $this->addAction(CreateGitHubEvent::getName(), new CreateGitHubEvent());
+        $this->addAction(CreateGiteaEvent::getName(), new CreateGiteaEvent());
     }
 }

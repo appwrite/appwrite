@@ -30,6 +30,7 @@
  *                      (providers without app-level event subscriptions).
  */
 
+use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 return [
@@ -55,5 +56,28 @@ return [
         ],
         'scopes' => [],
         'repositoryWebhook' => false,
+    ],
+    'gitea' => [
+        'name' => 'Gitea',
+        'enabled' => true,
+        'adapter' => Gitea::class,
+        'oauth2' => 'Appwrite\\Auth\\OAuth2\\Gitea',
+        'auth' => 'oauth2',
+        'envPrefix' => '_APP_VCS_GITEA',
+        'required' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET'],
+        'endpoint' => true,
+        'browserEndpoint' => null,
+        'urls' => [
+            'repository' => '{base}/{owner}/{repository}',
+            'branch' => '{base}/{owner}/{repository}/src/branch/{branch}',
+            'commit' => '{base}/{owner}/{repository}/commit/{commit}',
+            'file' => '{base}/{owner}/{repository}/src/branch/{reference}',
+        ],
+        'headers' => [
+            'event' => 'x-gitea-event',
+            'signature' => 'x-gitea-signature',
+        ],
+        'scopes' => ['read:user', 'read:repository', 'write:repository', 'read:organization'],
+        'repositoryWebhook' => true,
     ],
 ];

@@ -1,0 +1,1 @@
+Authorize with a Gitea instance and create a new installation for your project. This endpoint redirects to the Gitea authorization page. After authorization, the callback creates the installation and redirects back to the console.
