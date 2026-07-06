@@ -39,7 +39,7 @@ class Validate extends Action
     public static function validateCsrf(ServerRequestInterface $request): bool
     {
         $cookie = Request::cookie($request, Server::CSRF_COOKIE);
-        $header = Request::headerLine($request, 'x-appwrite-installer-csrf');
+        $header = $request->getHeaderLine('x-appwrite-installer-csrf');
 
         return $cookie !== '' && $header !== '' && hash_equals($cookie, $header);
     }

@@ -133,9 +133,9 @@ return function (Container $context): void {
 
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = Request::headerLine($request, 'x-appwrite-impersonate-user-id', (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
-        $impersonateEmail = Request::headerLine($request, 'x-appwrite-impersonate-user-email', (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
-        $impersonatePhone = Request::headerLine($request, 'x-appwrite-impersonate-user-phone', (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
+        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
+        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
+        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
 
         if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
             return new Document();
@@ -169,9 +169,9 @@ return function (Container $context): void {
             return $user;
         }
 
-        $impersonateUserId = Request::headerLine($request, 'x-appwrite-impersonate-user-id', (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
-        $impersonateEmail = Request::headerLine($request, 'x-appwrite-impersonate-user-email', (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
-        $impersonatePhone = Request::headerLine($request, 'x-appwrite-impersonate-user-phone', (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
+        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
+        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
+        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
 
         $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
         if (!empty($impersonateUserId)) {
@@ -463,7 +463,7 @@ return function (Container $context): void {
 
         // Get session from header for SSR clients
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            $sessionHeader = Request::headerLine($request, 'x-appwrite-session', '');
+            $sessionHeader = ($request->getHeaderLine('x-appwrite-session') ?: '');
 
             if (! empty($sessionHeader)) {
                 $store->decode($sessionHeader);
@@ -475,7 +475,7 @@ return function (Container $context): void {
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
             $response->addHeader('X-Debug-Fallback', 'true');
-            $fallback = Request::headerLine($request, 'x-fallback-cookies', '');
+            $fallback = ($request->getHeaderLine('x-fallback-cookies') ?: '');
             $fallback = \json_decode($fallback, true);
             $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
         }
@@ -508,7 +508,7 @@ return function (Container $context): void {
             $user = new User([]);
         }
 
-        $authJWT = Request::headerLine($request, 'x-appwrite-jwt', '');
+        $authJWT = ($request->getHeaderLine('x-appwrite-jwt') ?: '');
         if (! empty($authJWT) && ! $project->isEmpty()) { // JWT authentication
             if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -538,8 +538,8 @@ return function (Container $context): void {
         }
 
         // Account based on account API key
-        $accountKey = Request::headerLine($request, 'x-appwrite-key', '');
-        $accountKeyUserId = Request::headerLine($request, 'x-appwrite-user', '');
+        $accountKey = ($request->getHeaderLine('x-appwrite-key') ?: '');
+        $accountKeyUserId = ($request->getHeaderLine('x-appwrite-user') ?: '');
         if (! empty($accountKeyUserId) && ! empty($accountKey)) {
             if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
@@ -570,14 +570,13 @@ return function (Container $context): void {
         return $user;
     }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
-    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia) {
-        /** @var Appwrite\Utopia\Request $request */
+    $context->set('project', function ($dbForPlatform, ServerRequestInterface $request, $console, $authorization, Http $utopia) {
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
-        $projectId = Request::param($request, 'project', Request::headerLine($request, 'x-appwrite-project', ''));
+        $projectId = Request::param($request, 'project', ($request->getHeaderLine('x-appwrite-project') ?: ''));
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
-            $projectId = Request::headerLine($request, 'x-appwrite-project', '');
+            $projectId = ($request->getHeaderLine('x-appwrite-project') ?: '');
         }
 
         // Backwards compatibility for new services, originally project resources
@@ -961,17 +960,15 @@ return function (Container $context): void {
 
     $context->set('audit', fn ($dbForProject) => new Audit(new AdapterDatabase($dbForProject)), ['dbForProject']);
 
-    $context->set('mode', function ($request, Document $project) {
-        /** @var Appwrite\Utopia\Request $request */
-
+    $context->set('mode', function (ServerRequestInterface $request, Document $project) {
         /**
          * Defines the mode for the request:
          * - 'default' => Requests for Client and Server Side
          * - 'admin' => Request from the Console on non-console projects
          */
-        $mode = Request::param($request, 'mode', Request::headerLine($request, 'x-appwrite-mode', APP_MODE_DEFAULT));
+        $mode = Request::param($request, 'mode', ($request->getHeaderLine('x-appwrite-mode') ?: APP_MODE_DEFAULT));
 
-        $projectId = Request::param($request, 'project', Request::headerLine($request, 'x-appwrite-project', ''));
+        $projectId = Request::param($request, 'project', ($request->getHeaderLine('x-appwrite-project') ?: ''));
         if (!empty($projectId) && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
@@ -981,7 +978,7 @@ return function (Container $context): void {
 
     $context->set('requestTimestamp', function ($request) {
         // TODO: Move this to the Request class itself
-        $timestampHeader = Request::headerLine($request, 'x-appwrite-timestamp');
+        $timestampHeader = $request->getHeaderLine('x-appwrite-timestamp');
         $requestTimestamp = null;
         if (! empty($timestampHeader)) {
             try {
@@ -995,7 +992,7 @@ return function (Container $context): void {
     }, ['request']);
 
     $context->set('devKey', function (ServerRequestInterface $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = Request::headerLine($request, 'x-appwrite-dev-key', Request::param($request, 'devKey', ''));
+        $devKey = ($request->getHeaderLine('x-appwrite-dev-key') ?: Request::param($request, 'devKey', ''));
 
         // Check if given key match project's development keys
         $key = $project->find('secret', $devKey, 'devKeys');
@@ -1021,7 +1018,7 @@ return function (Container $context): void {
 
         // add sdk to key
         $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower(Request::headerLine($request, 'x-sdk-name', 'UNKNOWN'));
+        $sdk = \strtolower(($request->getHeaderLine('x-sdk-name') ?: 'UNKNOWN'));
 
         if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
@@ -1050,7 +1047,7 @@ return function (Container $context): void {
         } else {
             $route = $utopia->match($request)?->route;
             $path = ! empty($route) ? $route->getPath() : $request->getRequestTarget();
-            $orgHeader = Request::headerLine($request, 'x-appwrite-organization', '');
+            $orgHeader = ($request->getHeaderLine('x-appwrite-organization') ?: '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
                 $uri = $request->getRequestTarget();
                 $pid = explode('/', $uri)[3];
@@ -1096,7 +1093,7 @@ return function (Container $context): void {
         }
 
         if ($allowed) {
-            $host = Request::query($request, 'appwrite-hostname', Request::headerLine($request, 'x-appwrite-hostname', '')) ?? '';
+            $host = Request::query($request, 'appwrite-hostname', ($request->getHeaderLine('x-appwrite-hostname') ?: '')) ?? '';
             if (! empty($host)) {
                 return $host;
             }
@@ -1106,7 +1103,7 @@ return function (Container $context): void {
     }, ['request', 'apiKey']);
 
     $context->set('apiKey', function (ServerRequestInterface $request, Document $project, Document $team, Document $user): ?Key {
-        $key = Request::headerLine($request, 'x-appwrite-key');
+        $key = $request->getHeaderLine('x-appwrite-key');
 
         if (empty($key)) {
             return null;
@@ -1114,9 +1111,9 @@ return function (Container $context): void {
 
         $key = Key::decode($project, $team, $user, $key);
 
-        $userHeader = Request::headerLine($request, 'x-appwrite-user');
-        $organizationHeader = Request::headerLine($request, 'x-appwrite-organization');
-        $projectHeader = Request::headerLine($request, 'x-appwrite-project');
+        $userHeader = $request->getHeaderLine('x-appwrite-user');
+        $organizationHeader = $request->getHeaderLine('x-appwrite-organization');
+        $projectHeader = $request->getHeaderLine('x-appwrite-project');
 
         if (! empty($key->getProjectId())) {
             if (empty($projectHeader) || $projectHeader !== $key->getProjectId()) {
@@ -1223,7 +1220,7 @@ return function (Container $context): void {
                 ['host' => \gethostname(), 'project' => $project->getId()]
             );
 
-            $timeout = \intval(Request::headerLine($request, 'x-appwrite-timeout'));
+            $timeout = \intval($request->getHeaderLine('x-appwrite-timeout'));
             if (!empty($timeout) && Http::isDevelopment()) {
                 $database->setTimeout($timeout);
             }

@@ -130,12 +130,6 @@ class Request extends ServerRequest
         return (string) $request->getBody();
     }
 
-    public static function headerLine(ServerRequestInterface $request, string $name, string $default = ''): string
-    {
-        $value = $request->getHeaderLine($name);
-        return $value === '' ? $default : $value;
-    }
-
     public static function cookie(ServerRequestInterface $request, string $key, string $default = ''): string
     {
         return $request->getCookieParams()[$key] ?? $default;
@@ -168,7 +162,7 @@ class Request extends ServerRequest
     public static function protocol(ServerRequestInterface $request): string
     {
         $server = $request->getServerParams();
-        $protocol = self::headerLine($request, 'x-forwarded-proto', (string) ($server['server_protocol'] ?? 'https'));
+        $protocol = $request->getHeaderLine('x-forwarded-proto') ?: (string) ($server['server_protocol'] ?? 'https');
 
         if ($protocol === 'HTTP/1.1') {
             return 'http';
@@ -182,23 +176,26 @@ class Request extends ServerRequest
 
     public static function port(ServerRequestInterface $request): string
     {
-        return self::headerLine($request, 'x-forwarded-port', (string) parse_url(self::protocol($request) . '://' . self::headerLine($request, 'x-forwarded-host', $request->getHeaderLine('host')), PHP_URL_PORT));
+        $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
+
+        return $request->getHeaderLine('x-forwarded-port') ?: (string) parse_url(self::protocol($request) . '://' . $forwardedHost, PHP_URL_PORT);
     }
 
     public static function hostname(ServerRequestInterface $request): string
     {
-        $hostname = parse_url(self::protocol($request) . '://' . self::headerLine($request, 'x-forwarded-host', $request->getHeaderLine('host')), PHP_URL_HOST);
+        $forwardedHost = $request->getHeaderLine('x-forwarded-host') ?: $request->getHeaderLine('host');
+        $hostname = parse_url(self::protocol($request) . '://' . $forwardedHost, PHP_URL_HOST);
         return strtolower(\strval($hostname));
     }
 
     public static function referer(ServerRequestInterface $request, string $default = ''): string
     {
-        return self::headerLine($request, 'referer', $default);
+        return $request->getHeaderLine('referer') ?: $default;
     }
 
     public static function origin(ServerRequestInterface $request, string $default = ''): string
     {
-        return self::headerLine($request, 'origin', $default);
+        return $request->getHeaderLine('origin') ?: $default;
     }
 
     public static function userAgent(ServerRequestInterface $request, string $default = ''): string
@@ -211,7 +208,7 @@ class Request extends ServerRequest
             return $forwardedUserAgent;
         }
 
-        return self::headerLine($request, 'user-agent', $default);
+        return $request->getHeaderLine('user-agent') ?: $default;
     }
 
     public static function files(ServerRequestInterface $request, string|int $key): array
@@ -308,7 +305,7 @@ class Request extends ServerRequest
             $params = array_intersect_key($params, array_flip($allowedParams));
         }
         if (!isset($params['project'])) {
-            $params['project'] = self::headerLine($request, 'x-appwrite-project', '');
+            $params['project'] = $request->getHeaderLine('x-appwrite-project') ?: '';
         }
         ksort($params);
         return md5($request->getRequestTarget() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);

@@ -818,7 +818,7 @@ Http::init()
     ->inject('request')
     ->action(function (Document $project, ServerRequestInterface $request) {
         if ($project->getId() === 'console') {
-            $message = empty(Request::headerLine($request, 'x-appwrite-project')) ?
+            $message = empty($request->getHeaderLine('x-appwrite-project')) ?
                 'No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.' :
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
@@ -877,7 +877,7 @@ Http::init()
             return;
         }
 
-        $requestFormat = Request::headerLine($request, 'x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = ($request->getHeaderLine('x-appwrite-response-format') ?: System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
                 Request::addRequestFilter($request, new RequestV16());
@@ -915,7 +915,7 @@ Http::init()
             }
         }
 
-        $localeParam = (string) Request::param($request, 'locale', Request::headerLine($request, 'x-appwrite-locale', ''));
+        $localeParam = (string) Request::param($request, 'locale', ($request->getHeaderLine('x-appwrite-locale') ?: ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -935,7 +935,7 @@ Http::init()
         /*
          * Response format
          */
-        $responseFormat = Request::headerLine($request, 'x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $responseFormat = ($request->getHeaderLine('x-appwrite-response-format') ?: System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.9.5', '<')) {
                 $response->addFilter(new ResponseV26());
@@ -1022,7 +1022,7 @@ Http::init()
 
         // Application level CSRF protection
         $origin = Request::origin($request, );
-        if (empty($origin) || !$devKey->isEmpty() || !empty(Request::headerLine($request, 'x-appwrite-key'))) {
+        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
             return;
         }
         $route = Request::route($request);
@@ -1332,7 +1332,7 @@ Http::error()
             }
 
             $log->addTag('hostname', Request::hostname($request));
-            $log->addTag('locale', (string)Request::param($request, 'locale', Request::headerLine($request, 'x-appwrite-locale', '')));
+            $log->addTag('locale', (string)Request::param($request, 'locale', ($request->getHeaderLine('x-appwrite-locale') ?: '')));
 
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());

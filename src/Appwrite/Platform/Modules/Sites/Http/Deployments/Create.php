@@ -168,7 +168,7 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
         }
 
-        $contentRange = Request::headerLine($request, 'content-range');
+        $contentRange = $request->getHeaderLine('content-range');
         $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
@@ -177,7 +177,7 @@ class Create extends Action
             $start = Request::contentRangeStart($request);
             $end = Request::contentRangeEnd($request);
             $fileSize = Request::contentRangeSize($request);
-            $deploymentId = Request::headerLine($request, 'x-appwrite-id', $deploymentId);
+            $deploymentId = ($request->getHeaderLine('x-appwrite-id') ?: $deploymentId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
@@ -221,7 +221,7 @@ class Create extends Action
             return $merged;
         };
 
-        $type = Request::headerLine($request, 'x-sdk-language') === 'cli' ? 'cli' : 'manual';
+        $type = $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         $commands = [];
         if (!empty($installCommand)) {

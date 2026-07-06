@@ -102,7 +102,7 @@ class Get extends Action
         }
 
         $size = $device->getFileSize($path);
-        $rangeHeader = Request::headerLine($request, 'range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         $response
             ->setContentType('application/gzip')

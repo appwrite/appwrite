@@ -167,21 +167,21 @@ Http::init()
                 if (! empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',
-                        find: Request::headerLine($request, 'x-appwrite-key', ''),
+                        find: ($request->getHeaderLine('x-appwrite-key') ?: ''),
                         subject: 'keys'
                     );
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
-                        find: Request::headerLine($request, 'x-appwrite-key', ''),
+                        find: ($request->getHeaderLine('x-appwrite-key') ?: ''),
                         subject: 'keys'
                     );
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
-                        find: Request::headerLine($request, 'x-appwrite-key', ''),
+                        find: ($request->getHeaderLine('x-appwrite-key') ?: ''),
                         subject: 'keys'
                     );
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
@@ -200,7 +200,7 @@ Http::init()
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
-                $sdk = Request::headerLine($request, 'x-sdk-name', 'UNKNOWN');
+                $sdk = ($request->getHeaderLine('x-sdk-name') ?: 'UNKNOWN');
 
                 if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);

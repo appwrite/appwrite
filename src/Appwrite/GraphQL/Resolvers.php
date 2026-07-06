@@ -340,7 +340,7 @@ class Resolvers
             $request = $request->withAddedHeader('x-appwrite-source', 'graphql');
 
             // Drop json content type so post args are used directly.
-            if (\str_starts_with(Request::headerLine($request, 'content-type'), 'application/json')) {
+            if (\str_starts_with($request->getHeaderLine('content-type'), 'application/json')) {
                 $request = $request->withoutHeader('content-type');
             }
 

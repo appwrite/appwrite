@@ -189,7 +189,7 @@ class Create extends Action
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        $contentRange = Request::headerLine($request, 'content-range');
+        $contentRange = $request->getHeaderLine('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
         $chunk = 1;
         $chunks = 1;
@@ -198,7 +198,7 @@ class Create extends Action
             $start = Request::contentRangeStart($request);
             $end = Request::contentRangeEnd($request);
             $fileSize = Request::contentRangeSize($request);
-            $fileId = Request::headerLine($request, 'x-appwrite-id', $fileId);
+            $fileId = ($request->getHeaderLine('x-appwrite-id') ?: $fileId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);

@@ -123,11 +123,11 @@ Http::post('/v1/graphql/mutation')
     ->action(function (ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = Request::params($request);
 
-        if (Request::headerLine($request, 'x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = Request::headerLine($request, 'content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -174,11 +174,11 @@ Http::post('/v1/graphql')
     ->action(function (ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = Request::params($request);
 
-        if (Request::headerLine($request, 'x-sdk-graphql') == 'true') {
+        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = Request::headerLine($request, 'content-type');
+        $type = $request->getHeaderLine('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
