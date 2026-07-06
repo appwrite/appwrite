@@ -491,6 +491,113 @@ trait StorageBase
         $this->assertNotEmpty($webpView['body']);
     }
 
+    public function testCreateBucketFileWithParent(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Folders',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // without trailing slash -- normalized on storage
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'parent' => 'photos/2026',
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('photos/2026/', $file['body']['parent']);
+        $this->assertEquals('photos/2026/logo.png', $file['body']['key']);
+        $this->assertEquals('logo.png', $file['body']['name']);
+
+        // default -- bucket root
+        $rootFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertEquals(201, $rootFile['headers']['status-code']);
+        $this->assertEquals('', $rootFile['body']['parent']);
+        $this->assertEquals('logo.png', $rootFile['body']['key']);
+
+        // duplicate keys allowed -- same parent + name, different fileId
+        $duplicate = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'parent' => 'photos/2026',
+        ]);
+        $this->assertEquals(201, $duplicate['headers']['status-code']);
+        $this->assertEquals('photos/2026/logo.png', $duplicate['body']['key']);
+        $this->assertNotEquals($file['body']['$id'], $duplicate['body']['$id']);
+
+        // invalid values
+        foreach (['/photos', 'photos//2026', 'photos/../2026', "photos/\x01"] as $invalid) {
+            $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+                'parent' => $invalid,
+            ]);
+            $this->assertEquals(400, $res['headers']['status-code']);
+        }
+
+        // chunked upload -- parent is stored when the document is created
+        // with the first chunk (pattern from testCreateBucketFile)
+        $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
+        $size = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @\fopen($source, 'rb');
+        $mimeType = \mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $chunked = null;
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        while (!\feof($handle)) {
+            $curlFile = new CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $chunked = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => 'unique()',
+                'file' => $curlFile,
+                'parent' => 'videos/2026',
+            ]);
+            $this->assertNotEmpty($chunked['body']['$id']);
+            $id = $chunked['body']['$id'];
+            $counter++;
+        }
+        \fclose($handle);
+        $this->assertEquals(201, $chunked['headers']['status-code']);
+        $this->assertEquals('videos/2026/', $chunked['body']['parent']);
+        $this->assertEquals('videos/2026/large-file.mp4', $chunked['body']['key']);
+    }
+
     public function testCreateBucketFileZstdCompression(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
