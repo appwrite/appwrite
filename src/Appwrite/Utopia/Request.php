@@ -45,66 +45,6 @@ class Request extends ServerRequest
     private ?User $user = null;
     private SwooleRequest $swoole;
 
-    public static function params(ServerRequestInterface $request): array
-    {
-        $filtered = self::getState($request, 'filteredParams');
-        if (\is_array($filtered)) {
-            return $filtered;
-        }
-
-        $parameters = self::rawRequestParams($request);
-        $filters = self::filters($request);
-        $route = self::route($request);
-
-        if ($filters === [] || $route === null) {
-            return $parameters;
-        }
-
-        $methods = $route->getLabel('sdk', null);
-        if (empty($methods)) {
-            return $parameters;
-        }
-
-        if (!\is_array($methods)) {
-            $id = $methods->getNamespace() . '.' . $methods->getMethodName();
-        } else {
-            $matched = null;
-            foreach ($methods as $method) {
-                /** @var Method|null $method */
-                if ($method === null) {
-                    continue;
-                }
-
-                $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
-                $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
-
-                if (empty($methodParamNames) || empty($invalidParams)) {
-                    $matched = $method;
-                    break;
-                }
-            }
-
-            $id = $matched !== null
-                ? $matched->getNamespace() . '.' . $matched->getMethodName()
-                : 'unknown.unknown';
-        }
-
-        try {
-            foreach ($filters as $filter) {
-                $parameters = $filter->parse($parameters, $id);
-            }
-        } catch (\Throwable $e) {
-            $code = $e->getCode();
-            if (\is_int($code) && $code >= 400 && $code < 500) {
-                self::setState($request, 'filteredParams', $parameters);
-            }
-            throw $e;
-        }
-
-        self::setState($request, 'filteredParams', $parameters);
-        return $parameters;
-    }
-
     public static function ip(ServerRequestInterface $request): string
     {
         $server = $request->getServerParams();
@@ -221,7 +161,6 @@ class Request extends ServerRequest
     public static function rememberRoute(ServerRequestInterface $request, ?Route $route): void
     {
         self::setState($request, 'route', $route);
-        self::setState($request, 'filteredParams', null);
     }
 
     public static function route(ServerRequestInterface $request): ?Route
@@ -235,7 +174,6 @@ class Request extends ServerRequest
         $filters = self::filters($request);
         $filters[] = $filter;
         self::setState($request, 'filters', $filters);
-        self::setState($request, 'filteredParams', null);
     }
 
     /**
@@ -257,9 +195,8 @@ class Request extends ServerRequest
         self::setState($request, 'user', $user);
     }
 
-    public static function cacheKey(ServerRequestInterface $request): string
+    public static function cacheKey(ServerRequestInterface $request, array $params): string
     {
-        $params = self::params($request);
         $allowedParams = self::route($request)?->getLabel('cache.params', null);
         if ($allowedParams !== null) {
             $params = array_intersect_key($params, array_flip($allowedParams));
@@ -731,25 +668,6 @@ class Request extends ServerRequest
         $state = self::$state[$request] ?? [];
         $state[$key] = $value;
         self::$state[$request] = $state;
-    }
-
-    private static function rawRequestParams(ServerRequestInterface $request): array
-    {
-        if (\in_array($request->getMethod(), [self::METHOD_POST, self::METHOD_PUT, self::METHOD_PATCH, self::METHOD_DELETE], true)) {
-            $body = $request->getParsedBody();
-
-            if (\is_array($body)) {
-                return $body;
-            }
-
-            if (\is_object($body)) {
-                return get_object_vars($body);
-            }
-
-            return [];
-        }
-
-        return $request->getQueryParams();
     }
 
     private static function parseContentRangeHeader(ServerRequestInterface $request): array

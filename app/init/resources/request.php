@@ -19,6 +19,7 @@ use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
+use Appwrite\SDK\Method;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -126,16 +127,94 @@ return function (Container $context): void {
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
-    $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, ServerRequestInterface $request, Database $dbForProject, Database $dbForPlatform) {
+    $context->set('requestParamsResolver', function (ServerRequestInterface $request): callable {
+        $fallback = new class {
+            public bool $hasParams = false;
+            public array $params = [];
+        };
+
+        return static function () use ($request, $fallback): array {
+            if ($fallback->hasParams) {
+                return $fallback->params;
+            }
+
+            if (\in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE], true)) {
+                $body = $request->getParsedBody();
+                if (\is_array($body)) {
+                    $parameters = $body;
+                } elseif (\is_object($body)) {
+                    $parameters = get_object_vars($body);
+                } else {
+                    $parameters = [];
+                }
+            } else {
+                $parameters = $request->getQueryParams();
+            }
+
+            $filters = Request::filters($request);
+            $route = Request::route($request);
+            if ($filters === [] || $route === null) {
+                return $parameters;
+            }
+
+            $methods = $route->getLabel('sdk', null);
+            if (empty($methods)) {
+                return $parameters;
+            }
+
+            if (!\is_array($methods)) {
+                $id = $methods->getNamespace() . '.' . $methods->getMethodName();
+            } else {
+                $matched = null;
+                foreach ($methods as $method) {
+                    /** @var Method|null $method */
+                    if ($method === null) {
+                        continue;
+                    }
+
+                    $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
+                    $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
+
+                    if (empty($methodParamNames) || empty($invalidParams)) {
+                        $matched = $method;
+                        break;
+                    }
+                }
+
+                $id = $matched !== null
+                    ? $matched->getNamespace() . '.' . $matched->getMethodName()
+                    : 'unknown.unknown';
+            }
+
+            try {
+                foreach ($filters as $filter) {
+                    $parameters = $filter->parse($parameters, $id);
+                }
+            } catch (\Throwable $e) {
+                $code = $e->getCode();
+                if (\is_int($code) && $code >= 400 && $code < 500) {
+                    $fallback->hasParams = true;
+                    $fallback->params = $parameters;
+                }
+                throw $e;
+            }
+
+            return $parameters;
+        };
+    }, ['request']);
+
+    $context->set('requestParams', fn (callable $resolver): array => $resolver(), ['requestParamsResolver']);
+
+    $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, ServerRequestInterface $request, array $requestParams, Database $dbForProject, Database $dbForPlatform) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
             return new Document();
         }
 
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)((Request::params($request)['impersonateuserid'] ?? '') ?: (Request::params($request)['impersonateUserId'] ?? '')));
-        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)((Request::params($request)['impersonateemail'] ?? '') ?: (Request::params($request)['impersonateEmail'] ?? '')));
-        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)((Request::params($request)['impersonatephone'] ?? '') ?: (Request::params($request)['impersonatePhone'] ?? '')));
+        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)(($requestParams['impersonateuserid'] ?? '') ?: ($requestParams['impersonateUserId'] ?? '')));
+        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)(($requestParams['impersonateemail'] ?? '') ?: ($requestParams['impersonateEmail'] ?? '')));
+        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)(($requestParams['impersonatephone'] ?? '') ?: ($requestParams['impersonatePhone'] ?? '')));
 
         if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
             return new Document();
@@ -162,16 +241,16 @@ return function (Container $context): void {
             'email' => $user->getAttribute('email', ''),
             'type' => $user->getAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
         ]);
-    }, ['mode', 'project', 'user', 'request', 'dbForProject', 'dbForPlatform']);
+    }, ['mode', 'project', 'user', 'request', 'requestParams', 'dbForProject', 'dbForPlatform']);
 
-    $context->set('targetUser', function (Document $user, Document $impersonatorUser, string $mode, Document $project, ServerRequestInterface $request, Database $dbForProject, Database $dbForPlatform) {
+    $context->set('targetUser', function (Document $user, Document $impersonatorUser, string $mode, Document $project, ServerRequestInterface $request, array $requestParams, Database $dbForProject, Database $dbForPlatform) {
         if ($impersonatorUser->isEmpty()) {
             return $user;
         }
 
-        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)((Request::params($request)['impersonateuserid'] ?? '') ?: (Request::params($request)['impersonateUserId'] ?? '')));
-        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)((Request::params($request)['impersonateemail'] ?? '') ?: (Request::params($request)['impersonateEmail'] ?? '')));
-        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)((Request::params($request)['impersonatephone'] ?? '') ?: (Request::params($request)['impersonatePhone'] ?? '')));
+        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)(($requestParams['impersonateuserid'] ?? '') ?: ($requestParams['impersonateUserId'] ?? '')));
+        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)(($requestParams['impersonateemail'] ?? '') ?: ($requestParams['impersonateEmail'] ?? '')));
+        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)(($requestParams['impersonatephone'] ?? '') ?: ($requestParams['impersonatePhone'] ?? '')));
 
         $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
         if (!empty($impersonateUserId)) {
@@ -183,7 +262,7 @@ return function (Container $context): void {
         }
 
         return $user;
-    }, ['user', 'impersonatorUser', 'mode', 'project', 'request', 'dbForProject', 'dbForPlatform']);
+    }, ['user', 'impersonatorUser', 'mode', 'project', 'request', 'requestParams', 'dbForProject', 'dbForPlatform']);
 
     $context->set('publisherForFunctions', fn (Publisher $publisher) => new FunctionPublisher(
         $publisher,
@@ -567,10 +646,10 @@ return function (Container $context): void {
         return $user;
     }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
-    $context->set('project', function ($dbForPlatform, ServerRequestInterface $request, $console, $authorization, Http $utopia) {
+    $context->set('project', function ($dbForPlatform, ServerRequestInterface $request, array $requestParams, $console, $authorization, Http $utopia) {
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
-        $projectId = (Request::params($request)['project'] ?? ($request->getHeaderLine('x-appwrite-project') ?: ''));
+        $projectId = ($requestParams['project'] ?? ($request->getHeaderLine('x-appwrite-project') ?: ''));
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
             $projectId = ($request->getHeaderLine('x-appwrite-project') ?: '');
@@ -597,7 +676,7 @@ return function (Container $context): void {
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia']);
+    }, ['dbForPlatform', 'request', 'requestParams', 'console', 'authorization', 'utopia']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken) {
         if ($user->isEmpty()) {
@@ -957,21 +1036,21 @@ return function (Container $context): void {
 
     $context->set('audit', fn ($dbForProject) => new Audit(new AdapterDatabase($dbForProject)), ['dbForProject']);
 
-    $context->set('mode', function (ServerRequestInterface $request, Document $project) {
+    $context->set('mode', function (ServerRequestInterface $request, array $requestParams, Document $project) {
         /**
          * Defines the mode for the request:
          * - 'default' => Requests for Client and Server Side
          * - 'admin' => Request from the Console on non-console projects
          */
-        $mode = (Request::params($request)['mode'] ?? ($request->getHeaderLine('x-appwrite-mode') ?: APP_MODE_DEFAULT));
+        $mode = ($requestParams['mode'] ?? ($request->getHeaderLine('x-appwrite-mode') ?: APP_MODE_DEFAULT));
 
-        $projectId = (Request::params($request)['project'] ?? ($request->getHeaderLine('x-appwrite-project') ?: ''));
+        $projectId = ($requestParams['project'] ?? ($request->getHeaderLine('x-appwrite-project') ?: ''));
         if (!empty($projectId) && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
 
         return $mode;
-    }, ['request', 'project']);
+    }, ['request', 'requestParams', 'project']);
 
     $context->set('requestTimestamp', function ($request) {
         // TODO: Move this to the Request class itself
@@ -988,8 +1067,8 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('devKey', function (ServerRequestInterface $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = ($request->getHeaderLine('x-appwrite-dev-key') ?: (Request::params($request)['devKey'] ?? ''));
+    $context->set('devKey', function (ServerRequestInterface $request, array $requestParams, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
+        $devKey = ($request->getHeaderLine('x-appwrite-dev-key') ?: ($requestParams['devKey'] ?? ''));
 
         // Check if given key match project's development keys
         $key = $project->find('secret', $devKey, 'devKeys');
@@ -1035,9 +1114,9 @@ return function (Container $context): void {
         }
 
         return $key;
-    }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
+    }, ['request', 'requestParams', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, ServerRequestInterface $request, Authorization $authorization) {
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, ServerRequestInterface $request, array $requestParams, Authorization $authorization) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
@@ -1051,7 +1130,7 @@ return function (Container $context): void {
                 $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
-                $teamId = (Request::params($request)['teamId'] ?? '');
+                $teamId = ($requestParams['teamId'] ?? '');
 
                 if (empty($teamId)) {
                     return new Document([]);
@@ -1078,7 +1157,7 @@ return function (Container $context): void {
         });
 
         return $team;
-    }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
+    }, ['project', 'dbForPlatform', 'utopia', 'request', 'requestParams', 'authorization']);
 
     $context->set('previewHostname', function (ServerRequestInterface $request, ?Key $apiKey) {
         $allowed = false;
@@ -1133,8 +1212,8 @@ return function (Container $context): void {
         return $key;
     }, ['request', 'project', 'team', 'user']);
 
-    $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
-        $tokenJWT = (Request::params($request)['token'] ?? null);
+    $context->set('resourceToken', function ($project, $dbForProject, $request, array $requestParams, Authorization $authorization) {
+        $tokenJWT = ($requestParams['token'] ?? null);
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
@@ -1202,7 +1281,7 @@ return function (Container $context): void {
         }
 
         return new Document([]);
-    }, ['project', 'dbForProject', 'request', 'authorization']);
+    }, ['project', 'dbForProject', 'request', 'requestParams', 'authorization']);
 
     $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, ServerRequestInterface $request, UsageContext $usage) {
 

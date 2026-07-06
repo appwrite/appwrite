@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Redirects;
 
-use Appwrite\Utopia\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Action;
@@ -30,18 +29,18 @@ abstract class Base extends Action
             ->groups(['web'])
             ->label('permission', 'public')
             ->label('scope', 'home')
+            ->inject('requestParams')
             ->inject('request')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(ServerRequestInterface $request, Response $response): void
+    public function action(array $requestParams, ServerRequestInterface $request, Response $response): void
     {
         $url = parse_url($request->getRequestTarget());
         $target = "/console" . ($url['path'] ?? '');
-        $params = Request::params($request);
-        if (!empty($params)) {
-            $target .= "?" . \http_build_query($params);
+        if (!empty($requestParams)) {
+            $target .= "?" . \http_build_query($requestParams);
         }
         if ($url['fragment'] ?? false) {
             $target .= "#{$url['fragment']}";

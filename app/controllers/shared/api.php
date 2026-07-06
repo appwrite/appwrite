@@ -491,13 +491,14 @@ Http::init()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Route $route, ServerRequestInterface $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
         $response->setUser($user);
         Request::rememberUser($request, $user);
 
@@ -527,7 +528,7 @@ Http::init()
                     ->setParam('{method}', $request->getMethod())
                     ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-                foreach (Request::params($request) as $key => $value) {
+                foreach ($requestParams as $key => $value) {
                     if (! empty($value)) {
                         $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                     }
@@ -565,6 +566,7 @@ Http::init()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -583,7 +585,7 @@ Http::init()
     ->inject('cacheControlForStorage')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, ServerRequestInterface $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
@@ -636,7 +638,7 @@ Http::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
-            $key = Request::cacheKey($request);
+            $key = Request::cacheKey($request, $requestParams);
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
@@ -876,11 +878,12 @@ Http::shutdown()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->action(function (Route $route, ServerRequestInterface $request, Response $response, Document $project, User $user, callable $timelimit) {
+    ->action(function (Route $route, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, callable $timelimit) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
@@ -905,7 +908,7 @@ Http::shutdown()
                 ->setParam('{method}', $request->getMethod())
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-            foreach (Request::params($request) as $key => $value) { // Set request params as potential abuse keys
+            foreach ($requestParams as $key => $value) { // Set request params as potential abuse keys
                 if (! empty($value)) {
                     $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                 }
@@ -993,12 +996,13 @@ Http::shutdown()
     ->inject('route')
     ->inject('params')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, ServerRequestInterface $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
+    ->action(function (Route $route, array $params, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1012,7 +1016,7 @@ Http::shutdown()
         $cache = new Cache(
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
         );
-        $key = Request::cacheKey($request);
+        $key = Request::cacheKey($request, $requestParams);
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -1020,9 +1024,9 @@ Http::shutdown()
         // First request for this resource: record it and persist the payload.
         if ($cacheLog->isEmpty()) {
             // Resolve resource labels lazily — only needed when creating the entry.
-            $requestParams = [];
+            $resourceParams = [];
             foreach ($route->getParams() as $paramKey => $param) {
-                $requestParams[$paramKey] = $params[$paramKey] ?? (Request::params($request)[$paramKey] ?? $param['default']);
+                $resourceParams[$paramKey] = $params[$paramKey] ?? ($requestParams[$paramKey] ?? $param['default']);
             }
 
             $resourcePattern = $route->getLabel('cache.resource', null);
@@ -1031,7 +1035,7 @@ Http::shutdown()
             $renderer = new Renderer(new Document([
                 'user' => (array) $user,
                 'project' => $project,
-                'request' => $requestParams,
+                'request' => $resourceParams,
                 'response' => $data,
             ]));
 

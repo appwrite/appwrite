@@ -915,7 +915,10 @@ Http::init()
             }
         }
 
-        $localeParam = (string) (Request::params($request)['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: ''));
+        $utopia->context()->set('requestParams', fn (callable $resolver): array => $resolver(), ['requestParamsResolver']);
+        $requestParams = $utopia->context()->get('requestParams');
+
+        $localeParam = (string) ($requestParams['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -1198,6 +1201,7 @@ Http::error()
     ->inject('error')
     ->inject('utopia')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('project')
     ->inject('logger')
@@ -1205,7 +1209,7 @@ Http::error()
     ->inject('bus')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, ServerRequestInterface $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+    ->action(function (Throwable $error, Http $utopia, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1332,7 +1336,7 @@ Http::error()
             }
 
             $log->addTag('hostname', Request::hostname($request));
-            $log->addTag('locale', (string)(Request::params($request)['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: '')));
+            $log->addTag('locale', (string)($requestParams['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: '')));
 
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
@@ -1341,7 +1345,7 @@ Http::error()
 
             try {
                 /* add queries to log */
-                $queries = (Request::params($request)['queries'] ?? []);
+                $queries = ($requestParams['queries'] ?? []);
                 if (!empty($queries) && is_array($queries)) {
                     $parsedQueries = Query::parseQueries($queries);
 
@@ -1721,9 +1725,10 @@ Http::get('/v1/ping')
 // Preview authorization
 Http::get('/_appwrite/authorize')
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('previewHostname')
-    ->action(function (ServerRequestInterface $request, Response $response, string $previewHostname) {
+    ->action(function (ServerRequestInterface $request, array $requestParams, Response $response, string $previewHostname) {
 
         $host = Request::hostname($request);
         if (!empty($previewHostname)) {
@@ -1733,8 +1738,8 @@ Http::get('/_appwrite/authorize')
         $referrer = $request->getHeaderLine('referer');
         $protocol = \parse_url($request->getHeaderLine('origin') ?: $referrer, PHP_URL_SCHEME);
 
-        $jwt = (Request::params($request)['jwt'] ?? '');
-        $path = (Request::params($request)['path'] ?? '');
+        $jwt = ($requestParams['jwt'] ?? '');
+        $path = ($requestParams['path'] ?? '');
 
         $duration = 60 * 60 * 24; // 1 day in seconds
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));

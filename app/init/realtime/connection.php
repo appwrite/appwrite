@@ -30,13 +30,13 @@ return function (Container $container): void {
             return $projectId;
         }
 
-        $projectId = (Request::params($request)['project'] ?? '');
+        $projectId = ($request->getQueryParams()['project'] ?? '');
 
         return \is_string($projectId) ? $projectId : '';
     };
 
     $getMode = static function (Request $request, Document $project) use ($getProjectId): string {
-        $mode = (Request::params($request)['mode'] ?? ($request->getHeaderLine('x-appwrite-mode') ?: APP_MODE_DEFAULT));
+        $mode = ($request->getQueryParams()['mode'] ?? ($request->getHeaderLine('x-appwrite-mode') ?: APP_MODE_DEFAULT));
         $projectId = $getProjectId($request);
 
         if (!empty($projectId) && $project->getId() !== $projectId) {
@@ -113,7 +113,7 @@ return function (Container $container): void {
     };
 
     $findDevKey = static function (Request $request, Document $project, array $servers, Authorization $authorization) use ($getDbForPlatform): Document {
-        $devKey = ($request->getHeaderLine('x-appwrite-dev-key') ?: (Request::params($request)['devKey'] ?? ''));
+        $devKey = ($request->getHeaderLine('x-appwrite-dev-key') ?: ($request->getQueryParams()['devKey'] ?? ''));
         $key = $project->find('secret', $devKey, 'devKeys');
 
         if (!$key) {
@@ -269,7 +269,7 @@ return function (Container $container): void {
             $user = new User([]);
         }
 
-        $authJWT = ($request->getHeaderLine('x-appwrite-jwt') ?: (string)((Request::params($request)['jwt'] ?? '')));
+        $authJWT = ($request->getHeaderLine('x-appwrite-jwt') ?: (string)(($request->getQueryParams()['jwt'] ?? '')));
         if (!empty($authJWT) && !$project->isEmpty()) {
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -338,9 +338,9 @@ return function (Container $container): void {
 
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)((Request::params($request)['impersonateuserid'] ?? '') ?: (Request::params($request)['impersonateUserId'] ?? '')));
-        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)((Request::params($request)['impersonateemail'] ?? '') ?: (Request::params($request)['impersonateEmail'] ?? '')));
-        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)((Request::params($request)['impersonatephone'] ?? '') ?: (Request::params($request)['impersonatePhone'] ?? '')));
+        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)(($request->getQueryParams()['impersonateuserid'] ?? '') ?: ($request->getQueryParams()['impersonateUserId'] ?? '')));
+        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)(($request->getQueryParams()['impersonateemail'] ?? '') ?: ($request->getQueryParams()['impersonateEmail'] ?? '')));
+        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)(($request->getQueryParams()['impersonatephone'] ?? '') ?: ($request->getQueryParams()['impersonatePhone'] ?? '')));
 
         if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
             return new Document();
@@ -378,9 +378,9 @@ return function (Container $container): void {
             return $user;
         }
 
-        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)((Request::params($request)['impersonateuserid'] ?? '') ?: (Request::params($request)['impersonateUserId'] ?? '')));
-        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)((Request::params($request)['impersonateemail'] ?? '') ?: (Request::params($request)['impersonateEmail'] ?? '')));
-        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)((Request::params($request)['impersonatephone'] ?? '') ?: (Request::params($request)['impersonatePhone'] ?? '')));
+        $impersonateUserId = ($request->getHeaderLine('x-appwrite-impersonate-user-id') ?: (string)(($request->getQueryParams()['impersonateuserid'] ?? '') ?: ($request->getQueryParams()['impersonateUserId'] ?? '')));
+        $impersonateEmail = ($request->getHeaderLine('x-appwrite-impersonate-user-email') ?: (string)(($request->getQueryParams()['impersonateemail'] ?? '') ?: ($request->getQueryParams()['impersonateEmail'] ?? '')));
+        $impersonatePhone = ($request->getHeaderLine('x-appwrite-impersonate-user-phone') ?: (string)(($request->getQueryParams()['impersonatephone'] ?? '') ?: ($request->getQueryParams()['impersonatePhone'] ?? '')));
 
         $mode = $getMode($request, $project);
         $dbForPlatform = $getDbForPlatform($authorization);

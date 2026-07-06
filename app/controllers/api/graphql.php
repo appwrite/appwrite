@@ -117,11 +117,12 @@ Http::post('/v1/graphql/mutation')
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
-        $query = Request::params($request);
+    ->action(function (ServerRequestInterface $request, array $requestParams, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
+        $query = $requestParams;
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];
@@ -168,11 +169,12 @@ Http::post('/v1/graphql')
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
-        $query = Request::params($request);
+    ->action(function (ServerRequestInterface $request, array $requestParams, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
+        $query = $requestParams;
 
         if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
             $query = $query['query'];

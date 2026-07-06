@@ -1353,8 +1353,9 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
     ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
-    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, Response $response) {
+    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = Request::port($request);
         $callbackBase = $protocol . '://' . Request::hostname($request);
@@ -1364,7 +1365,7 @@ Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
             $callbackBase .= ':' . $port;
         }
 
-        $params = Request::params($request);
+        $params = $requestParams;
         $params['project'] = $projectId;
         unset($params['projectId']);
 
@@ -1389,8 +1390,9 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
     ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
-    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, Response $response) {
+    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = Request::port($request);
         $callbackBase = $protocol . '://' . Request::hostname($request);
@@ -1400,7 +1402,7 @@ Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
             $callbackBase .= ':' . $port;
         }
 
-        $params = Request::params($request);
+        $params = $requestParams;
         $params['project'] = $projectId;
         unset($params['projectId']);
 
@@ -1429,6 +1431,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
     ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
+    ->inject('requestParams')
     ->inject('response')
     ->inject('project')
     ->inject('redirectValidator')
@@ -1445,7 +1448,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, ServerRequestInterface $request, array $requestParams, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = Request::port($request);
         $callbackBase = $protocol . '://' . Request::hostname($request);
@@ -1580,7 +1583,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $name = '';
         $nameOAuth = $oauth2->getUserName($accessToken);
-        $userParam = (Request::params($request)['user'] ?? null);
+        $userParam = ($requestParams['user'] ?? null);
         if (!empty($nameOAuth)) {
             $name = $nameOAuth;
         } elseif ($userParam !== null) {

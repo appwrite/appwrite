@@ -9,7 +9,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -68,6 +67,7 @@ class Create extends Action
             ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', optional: true, example: 'app.example.com') // Optional for backwards compatibility
             ->param('key', '', new Text(256), 'Deprecated: Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
             ->param('type', '', new Text(256), 'Deprecated: Platform type. Max length: 256 chars.', optional: true, deprecated: true) // Exists for backwards compatibility
+            ->inject('requestParams')
             ->inject('request')
             ->inject('response')
             ->inject('queueForEvents')
@@ -83,6 +83,7 @@ class Create extends Action
         string $hostname,
         ?string $key, // For backwards compatibility
         ?string $type, // For backwards compatibility
+        array $requestParams,
         ServerRequestInterface $request,
         Response $response,
         QueueEvent $queueForEvents,
@@ -122,11 +123,11 @@ class Create extends Action
             ];
 
             $typeValidator = new WhiteList(\array_keys($deprecatedTypeMapping));
-            if (!$typeValidator->isValid((Request::params($request)['type'] ?? ''))) {
+            if (!$typeValidator->isValid(($requestParams['type'] ?? ''))) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "type" is invalid: ' . $typeValidator->getDescription());
             }
 
-            $type = $deprecatedTypeMapping[(Request::params($request)['type'] ?? '')] ?? '';
+            $type = $deprecatedTypeMapping[($requestParams['type'] ?? '')] ?? '';
         }
 
         if (!empty($key)) {

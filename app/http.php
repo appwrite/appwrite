@@ -564,7 +564,12 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
             $log->addTag('hostname', Request::hostname($request));
-            $log->addTag('locale', (string)(Request::params($request)['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: '')));
+            try {
+                $requestParams = $app->context()->get('requestParams');
+            } catch (\Throwable) {
+                $requestParams = [];
+            }
+            $log->addTag('locale', (string)($requestParams['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: '')));
 
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
