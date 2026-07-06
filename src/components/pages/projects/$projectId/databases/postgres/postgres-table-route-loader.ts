@@ -90,7 +90,10 @@ export async function prefetchPostgresTableRouteData(
   projectId: string,
   databaseId: string,
   tableId: string,
-  options?: { includeFullIndexes?: boolean; includeTableInfo?: boolean },
+  options?: {
+    includeFullIndexes?: boolean
+    includeTableInfo?: boolean
+  },
 ) {
   const normalizedTableId = await prefetchPostgresTableLayoutData(
     queryClient,

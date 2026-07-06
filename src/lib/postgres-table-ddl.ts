@@ -9,7 +9,12 @@ export function buildPostgresAddColumnSql(
   tableId: string,
   columnName: string,
   dataType: string,
-  options?: { nullable?: boolean; defaultValue?: string },
+  options?: {
+    nullable?: boolean
+    defaultValue?: string
+    primaryKey?: boolean
+    unique?: boolean
+  },
 ): string {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
@@ -17,13 +22,64 @@ export function buildPostgresAddColumnSql(
     `ALTER TABLE ${qualified}`,
     `ADD COLUMN ${quotePostgresIdentifier(columnName)} ${dataType}`,
   ]
-  if (options?.nullable === false) {
+  if (options?.primaryKey) {
+    parts.push('PRIMARY KEY')
+  } else if (options?.unique) {
+    parts.push('UNIQUE')
+  }
+  if (options?.nullable === false && !options?.primaryKey) {
     parts.push('NOT NULL')
   }
   if (options?.defaultValue?.trim()) {
     parts.push(`DEFAULT ${options.defaultValue.trim()}`)
   }
   return prefixPostgresSqlComment(parts.join(' '), 'Add table column')
+}
+
+export function buildPostgresAlterColumnDefaultSql(
+  tableId: string,
+  columnName: string,
+  defaultValue: string | null,
+): string {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
+  const column = quotePostgresIdentifier(columnName)
+  if (!defaultValue?.trim()) {
+    return prefixPostgresSqlComment(
+      `ALTER TABLE ${qualified} ALTER COLUMN ${column} DROP DEFAULT`,
+      'Drop column default',
+    )
+  }
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ALTER COLUMN ${column} SET DEFAULT ${defaultValue.trim()}`,
+    'Set column default',
+  )
+}
+
+export function buildPostgresAddPrimaryKeySql(
+  tableId: string,
+  columnName: string,
+  constraintName: string,
+): string {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quotePostgresIdentifier(constraintName)} PRIMARY KEY (${quotePostgresIdentifier(columnName)})`,
+    'Add primary key',
+  )
+}
+
+export function buildPostgresAddUniqueConstraintSql(
+  tableId: string,
+  columnName: string,
+  constraintName: string,
+): string {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const qualified = `${quotePostgresIdentifier(schema)}.${quotePostgresIdentifier(table)}`
+  return prefixPostgresSqlComment(
+    `ALTER TABLE ${qualified} ADD CONSTRAINT ${quotePostgresIdentifier(constraintName)} UNIQUE (${quotePostgresIdentifier(columnName)})`,
+    'Add unique constraint',
+  )
 }
 
 export function buildPostgresDropColumnSql(

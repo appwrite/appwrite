@@ -24,7 +24,10 @@ import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-va
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
-import { registerProjectRegionFromProject } from '@/lib/project-region'
+import {
+  ensureProjectRegion,
+  registerProjectRegionFromProject,
+} from '@/lib/project-region'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ProjectCliShellLayout } from '@/components/global/cli-shell/ProjectCliShellLayout'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
@@ -101,6 +104,13 @@ export type ProjectLayoutLoaderData =
   | undefined
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
+  // Region must be registered before child route loaders run (loaders execute in parallel).
+  beforeLoad: async ({ params, context }) => {
+    if (typeof window === 'undefined') return
+    const { projectId } = params
+    if (!projectId) return
+    await ensureProjectRegion(context.queryClient, projectId)
+  },
   loader: async ({ params, context }): Promise<ProjectLayoutLoaderData> => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

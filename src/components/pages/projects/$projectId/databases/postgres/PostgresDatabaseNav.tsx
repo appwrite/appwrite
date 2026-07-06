@@ -5,6 +5,7 @@ import {
   BarChart3,
   Cable,
   KeyRound,
+  ListOrdered,
   Network,
   Play,
   Settings,
@@ -74,6 +75,10 @@ export function PostgresDatabaseNav({
       >
         <Network className="h-3.5 w-3.5 shrink-0" />
         <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Visualizer')}</span>
+      </Link>
+      <Link {...nav.enums()} className={navLinkClass(activeTab === 'enums')}>
+        <ListOrdered className="h-3.5 w-3.5 shrink-0" />
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Enums')}</span>
       </Link>
       {features.usageStats ? (
         <Link

@@ -35,6 +35,7 @@ import {
   buildPostgresTableAutocompleteColumnsSql,
   buildPostgresTableColumnsForRowsSql,
   buildPostgresTableColumnsSql,
+  buildPostgresSchemaEnumsSql,
   buildPostgresTableIndexesSql,
   buildPostgresTableInfoSql,
   POSTGRES_SIDEBAR_LIST_PAGE_SIZE,
@@ -43,14 +44,17 @@ import {
   type PostgresListTablesOptions,
   type PostgresSchemaRow,
   type PostgresTableColumnRow,
+  type PostgresSchemaEnumRow,
   type PostgresTableIndexRow,
   type PostgresTableInfoRow,
   type PostgresTableRow,
   sortPostgresTableColumns,
+  sortPostgresSchemaEnums,
   sortPostgresTableIndexes,
   postgresRelationSupportsRowCtid,
 } from '@/lib/postgres-sql'
 import { parsePostgresTableId, postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
+import { parsePostgresEnumValues } from '@/lib/postgres-enum-metadata'
 import {
   buildPostgresVisualizerColumnsBatchSql,
   buildPostgresVisualizerExternalColumnsSql,
@@ -372,6 +376,31 @@ export async function fetchPostgresTableIndexes(
   return {
     indexes,
     total: indexes.length,
+  }
+}
+
+export async function fetchPostgresSchemaEnums(
+  projectId: string,
+  databaseId: string,
+  schema: string,
+) {
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresSchemaEnumsSql(schema),
+  )
+  const rows = executionResultRows<PostgresSchemaEnumRow>(execution)
+  const enums = sortPostgresSchemaEnums(
+    rows
+      .filter((row) => row.enum_name)
+      .map((row) => ({
+        ...row,
+        values: parsePostgresEnumValues(row.enum_values),
+      })),
+  )
+  return {
+    enums,
+    total: enums.length,
   }
 }
 
@@ -835,6 +864,160 @@ export function postgresDatabasePoolerQueryOptions(
   })
 }
 
+export type UpdatePostgresDatabaseInput = {
+  databaseId: string
+  name?: string
+  status?: string
+  specification?: string
+  replicas?: number
+  syncMode?: string
+  networkIdleTimeoutSeconds?: number
+  networkIPAllowlist?: string[]
+  idleTimeoutMinutes?: number
+  pitr?: boolean
+  pitrRetentionDays?: number
+  storageAutoscaling?: boolean
+  storageAutoscalingThresholdPercent?: number
+  storageAutoscalingMaxGb?: number
+}
+
+export type UpdatePostgresDatabasePoolerInput = {
+  databaseId: string
+  mode?: string
+  maxConnections?: number
+  defaultPoolSize?: number
+  readWriteSplitting?: boolean
+}
+
+export async function updatePostgresDatabase(
+  projectId: string,
+  input: UpdatePostgresDatabaseInput,
+) {
+  const { databaseId, ...params } = input
+  return sdk.forProject(projectId).postgresql.update({
+    databaseId,
+    ...params,
+  })
+}
+
+export async function updatePostgresDatabaseMaintenance(
+  projectId: string,
+  databaseId: string,
+  day: string,
+  hourUtc: number,
+) {
+  return sdk.forProject(projectId).postgresql.updateMaintenance({
+    databaseId,
+    day,
+    hourUtc,
+  })
+}
+
+export async function updatePostgresDatabasePooler(
+  projectId: string,
+  input: UpdatePostgresDatabasePoolerInput,
+) {
+  const { databaseId, ...params } = input
+  return sdk.forProject(projectId).postgresql.updatePooler({
+    databaseId,
+    ...params,
+  })
+}
+
+export async function deletePostgresDatabase(
+  projectId: string,
+  databaseId: string,
+) {
+  return sdk.forProject(projectId).postgresql.delete({ databaseId })
+}
+
+export function useUpdatePostgresDatabase(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: Omit<UpdatePostgresDatabaseInput, 'databaseId'>) =>
+      updatePostgresDatabase(projectId!, {
+        databaseId: databaseId!,
+        ...input,
+      }),
+    onSuccess: async (database) => {
+      if (!projectId || !databaseId) return
+      queryClient.setQueryData(
+        postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
+      )
+      await queryClient.invalidateQueries({
+        queryKey: ['dedicated-databases', 'project', projectId],
+      })
+    },
+  })
+}
+
+export function useUpdatePostgresDatabaseMaintenance(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      day,
+      hourUtc,
+    }: {
+      day: string
+      hourUtc: number
+    }) =>
+      updatePostgresDatabaseMaintenance(projectId!, databaseId!, day, hourUtc),
+    onSuccess: async (database) => {
+      if (!projectId || !databaseId) return
+      queryClient.setQueryData(
+        postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
+      )
+    },
+  })
+}
+
+export function useUpdatePostgresDatabasePooler(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (
+      input: Omit<UpdatePostgresDatabasePoolerInput, 'databaseId'>,
+    ) =>
+      updatePostgresDatabasePooler(projectId!, {
+        databaseId: databaseId!,
+        ...input,
+      }),
+    onSuccess: async (pooler) => {
+      if (!projectId || !databaseId) return
+      queryClient.setQueryData(
+        postgresDatabasePoolerQueryOptions(projectId, databaseId).queryKey,
+        pooler,
+      )
+    },
+  })
+}
+
+export function useDeletePostgresDatabase(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (databaseId: string) =>
+      deletePostgresDatabase(projectId!, databaseId),
+    onSuccess: async () => {
+      if (!projectId) return
+      await queryClient.refetchQueries({
+        queryKey: ['dedicated-databases', 'project', projectId],
+      })
+    },
+  })
+}
+
 export function postgresTableColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -907,6 +1090,31 @@ export function postgresTableIndexesQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresSchemaEnumsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-schema-enums',
+      'project',
+      projectId,
+      databaseId,
+      schema,
+    ],
+    queryFn: () =>
+      fetchPostgresSchemaEnums(projectId!, databaseId!, schema!),
+    enabled: !!projectId && !!databaseId && !!schema,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && schema ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -1471,6 +1679,24 @@ export function usePostgresTableIndexes(
   }
 }
 
+export function usePostgresSchemaEnums(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresSchemaEnumsQueryOptions(projectId, databaseId, schema),
+  )
+  return {
+    enums: data?.enums ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 export function usePostgresTableInfo(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1788,6 +2014,7 @@ async function refreshPostgresDatabaseCaches(
     ['postgres-table-columns', 'project', projectId, databaseId],
     ['postgres-table-row-columns', 'project', projectId, databaseId],
     ['postgres-table-indexes', 'project', projectId, databaseId],
+    ['postgres-schema-enums', 'project', projectId, databaseId],
     ['postgres-table-info', 'project', projectId, databaseId],
     ['postgres-visualizer', 'project', projectId, databaseId],
   ] as const

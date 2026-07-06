@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Command,
   CommandEmpty,
@@ -25,6 +26,7 @@ import {
   getPostgresColumnTypePropertyRangeError,
   getPostgresColumnTypePropertyValue,
   getPostgresColumnTypeSearchValue,
+  isPostgresSerialColumnType,
   POSTGRES_COLUMN_TYPE_DEFINITIONS,
   POSTGRES_COLUMN_TYPE_GROUPS,
   type PostgresColumnTypeId,
@@ -132,15 +134,21 @@ export function PostgresColumnTypeSelector({
     [allowSerialTypes],
   )
 
+  const supportsArray = !isPostgresSerialColumnType(value.typeId)
+
   const handleTypeChange = (nextTypeId: PostgresColumnTypeId) => {
-    onChange(createDefaultPostgresColumnTypeState(nextTypeId))
+    const next = createDefaultPostgresColumnTypeState(nextTypeId)
+    if (value.isArray && !isPostgresSerialColumnType(nextTypeId)) {
+      next.isArray = true
+    }
+    onChange(next)
   }
 
   return (
     <div className="space-y-3">
       <div className="space-y-2">
         <Label htmlFor="postgres-column-type" className="text-[12px] font-medium">
-          Type <span className="text-destructive">*</span>
+          {t('Type')} <span className="text-destructive">*</span>
         </Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -157,7 +165,7 @@ export function PostgresColumnTypeSelector({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="max-h-[min(360px,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
+            className="max-h-[min(360px,var(--radix-popover-content-available-height))] w-[max(var(--radix-popover-trigger-width),20rem)] overflow-hidden p-0"
             align="start"
             onWheelCapture={(event) => {
               event.stopPropagation()
@@ -202,7 +210,12 @@ export function PostgresColumnTypeSelector({
                                 : 'opacity-0',
                             )}
                           />
-                          {entry.label}
+                          <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3">
+                            <span className="shrink-0">{entry.label}</span>
+                            <span className="truncate text-[11px] text-muted-foreground">
+                              {t(entry.description)}
+                            </span>
+                          </div>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -213,6 +226,33 @@ export function PostgresColumnTypeSelector({
           </PopoverContent>
         </Popover>
       </div>
+
+      {supportsArray ? (
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="postgres-column-array"
+            checked={value.isArray === true}
+            onCheckedChange={(checked) =>
+              onChange({
+                ...value,
+                isArray: checked === true,
+              })
+            }
+            className="mt-0.5"
+          />
+          <div className="space-y-1">
+            <Label
+              htmlFor="postgres-column-array"
+              className="text-[12px] font-medium leading-none"
+            >
+              {t('Define as array')}
+            </Label>
+            <p className="text-[11px] text-muted-foreground">
+              {t('Store multiple values of this type in a single column.')}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {definition.properties.length > 0 ? (
         <div className="space-y-3 rounded-lg border border-border bg-muted/20 px-3 py-3">

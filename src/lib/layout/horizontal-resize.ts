@@ -32,6 +32,10 @@ export function setBodyResizeDragActive(
 
 export const COLUMN_RESIZE_RAIL_WIDTH_PX = 8
 
+/** Full-table overlay so column resize rails sit above sticky cells for hit-testing. */
+export const COLUMN_RESIZE_RAILS_LAYER_CLASS =
+  'pointer-events-none absolute inset-0 z-50'
+
 export const SPLIT_PANE_RESIZE_HANDLE_WIDTH_PX = 6
 
 /** Centers a w-2 (8px) pseudo-element on its parent using logical start. */
@@ -118,7 +122,21 @@ export function applyColumnResizeRailPosition(
   rail.style.left = `${left}px`
 }
 
-/** Shared chrome for vertical `ResizableHandle` between horizontal panels. */
+/** Shared chrome for spreadsheet column resize rail buttons. */
+export function columnResizeRailHandleClass(
+  ...extra: (string | undefined)[]
+): string {
+  return cn(
+    'group pointer-events-auto absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
+    'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
+    RESIZE_HANDLE_PSEUDO_AFTER_HAIRLINE_LOGICAL_X,
+    'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
+    RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
+    'hover:before:opacity-100',
+    ...extra,
+  )
+}
+
 export function verticalPanelResizeHandleClass(
   ...extra: (string | undefined)[]
 ): string {

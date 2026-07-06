@@ -262,6 +262,7 @@ import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSqlRouteImpo
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.monitor'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.insights'
+import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.enums'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connections'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.connect'
 import { Route as PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.postgres.$databaseId.backups'
@@ -1799,6 +1800,13 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute =
     getParentRoute: () =>
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
   } as any)
+const PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute =
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport.update({
+    id: '/enums',
+    path: '/enums',
+    getParentRoute: () =>
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute,
+  } as any)
 const PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute =
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRouteImport.update(
     {
@@ -2531,6 +2539,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/postgres/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   '/projects/$projectId/databases/postgres/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   '/projects/$projectId/databases/postgres/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
+  '/projects/$projectId/databases/postgres/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute
   '/projects/$projectId/databases/postgres/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   '/projects/$projectId/databases/postgres/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
@@ -2807,6 +2816,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/postgres/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   '/projects/$projectId/databases/postgres/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   '/projects/$projectId/databases/postgres/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
+  '/projects/$projectId/databases/postgres/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute
   '/projects/$projectId/databases/postgres/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   '/projects/$projectId/databases/postgres/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   '/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
@@ -3121,6 +3131,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/postgres/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/connect': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/connections': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
+  '/_public/projects/$projectId/databases/postgres/$databaseId/enums': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/monitor': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   '/_public/projects/$projectId/databases/postgres/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
@@ -3435,6 +3446,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/backups'
     | '/projects/$projectId/databases/postgres/$databaseId/connect'
     | '/projects/$projectId/databases/postgres/$databaseId/connections'
+    | '/projects/$projectId/databases/postgres/$databaseId/enums'
     | '/projects/$projectId/databases/postgres/$databaseId/insights'
     | '/projects/$projectId/databases/postgres/$databaseId/monitor'
     | '/projects/$projectId/databases/postgres/$databaseId/settings'
@@ -3711,6 +3723,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/postgres/$databaseId/backups'
     | '/projects/$projectId/databases/postgres/$databaseId/connect'
     | '/projects/$projectId/databases/postgres/$databaseId/connections'
+    | '/projects/$projectId/databases/postgres/$databaseId/enums'
     | '/projects/$projectId/databases/postgres/$databaseId/insights'
     | '/projects/$projectId/databases/postgres/$databaseId/monitor'
     | '/projects/$projectId/databases/postgres/$databaseId/settings'
@@ -4024,6 +4037,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/postgres/$databaseId/backups'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/connect'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/connections'
+    | '/_public/projects/$projectId/databases/postgres/$databaseId/enums'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/insights'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/monitor'
     | '/_public/projects/$projectId/databases/postgres/$databaseId/settings'
@@ -5890,6 +5904,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
     }
+    '/_public/projects/$projectId/databases/postgres/$databaseId/enums': {
+      id: '/_public/projects/$projectId/databases/postgres/$databaseId/enums'
+      path: '/enums'
+      fullPath: '/projects/$projectId/databases/postgres/$databaseId/enums'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdRoute
+    }
     '/_public/projects/$projectId/databases/postgres/$databaseId/connections': {
       id: '/_public/projects/$projectId/databases/postgres/$databaseId/connections'
       path: '/connections'
@@ -7010,6 +7031,7 @@ interface PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteChildren {
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdBackupsRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute
+  PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute
   PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdSettingsRoute
@@ -7027,6 +7049,8 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdRouteChildren: PublicPro
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdConnectionsRoute,
+    PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute:
+      PublicProjectsProjectIdDatabasesPostgresDatabaseIdEnumsRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute:
       PublicProjectsProjectIdDatabasesPostgresDatabaseIdInsightsRoute,
     PublicProjectsProjectIdDatabasesPostgresDatabaseIdMonitorRoute:

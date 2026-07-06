@@ -219,7 +219,7 @@ export function getPostgresColumnForeignKeyReferenceForEdit(
 export function buildPostgresColumnConstraintName(
   tableName: string,
   columnName: string,
-  suffix: 'check' | 'fkey',
+  suffix: 'check' | 'fkey' | 'pkey' | 'key',
 ): string {
   const normalized = `${tableName}_${columnName}_${suffix}`.replace(/[^a-zA-Z0-9_]/g, '_')
   return normalized.slice(0, 63)

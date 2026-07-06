@@ -67,6 +67,8 @@ export type PostgresColumnTypeProperty = {
 export type PostgresColumnTypeDefinition = {
   id: PostgresColumnTypeId
   label: string
+  /** Short helper shown next to the type in the picker. */
+  description: string
   group: PostgresColumnTypeGroup
   properties: PostgresColumnTypeProperty[]
   createOnly?: boolean
@@ -76,6 +78,8 @@ export type PostgresColumnTypeDefinition = {
 
 export type PostgresColumnTypeState = {
   typeId: PostgresColumnTypeId
+  /** When true, the SQL type is an array (e.g. `text[]`). */
+  isArray?: boolean
   length?: number
   numericPrecision?: number
   numericScale?: number
@@ -136,6 +140,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'text',
       label: 'Text',
+      description: 'Unlimited length text',
       group: 'Text',
       properties: [],
       searchTerms: ['text', 'string'],
@@ -143,6 +148,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'varchar',
       label: 'Varchar',
+      description: 'Variable-length text',
       group: 'Text',
       properties: [
         LENGTH_PROPERTY({
@@ -158,6 +164,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'char',
       label: 'Char',
+      description: 'Fixed-length text',
       group: 'Text',
       properties: [
         LENGTH_PROPERTY({
@@ -173,6 +180,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'smallint',
       label: 'Smallint',
+      description: '2-byte integer',
       group: 'Integer',
       properties: [],
       searchTerms: ['int2', 'smallint'],
@@ -180,6 +188,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'integer',
       label: 'Integer',
+      description: '4-byte integer',
       group: 'Integer',
       properties: [],
       searchTerms: ['int4', 'integer', 'int'],
@@ -187,6 +196,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'bigint',
       label: 'Bigint',
+      description: '8-byte integer',
       group: 'Integer',
       properties: [],
       searchTerms: ['int8', 'bigint'],
@@ -194,6 +204,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'smallserial',
       label: 'Smallserial',
+      description: 'Auto-incrementing smallint',
       group: 'Integer',
       properties: [],
       createOnly: true,
@@ -202,6 +213,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'serial',
       label: 'Serial',
+      description: 'Auto-incrementing integer',
       group: 'Integer',
       properties: [],
       createOnly: true,
@@ -210,6 +222,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'bigserial',
       label: 'Bigserial',
+      description: 'Auto-incrementing bigint',
       group: 'Integer',
       properties: [],
       createOnly: true,
@@ -218,6 +231,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'real',
       label: 'Real',
+      description: 'Single-precision float',
       group: 'Decimal',
       properties: [],
       searchTerms: ['float4', 'real'],
@@ -225,6 +239,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'double precision',
       label: 'Double precision',
+      description: 'Double-precision float',
       group: 'Decimal',
       properties: [],
       searchTerms: ['float8', 'double precision', 'float'],
@@ -232,6 +247,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'numeric',
       label: 'Numeric',
+      description: 'Exact decimal number',
       group: 'Decimal',
       properties: [NUMERIC_PRECISION_PROPERTY(), NUMERIC_SCALE_PROPERTY()],
       searchTerms: ['numeric', 'decimal'],
@@ -239,14 +255,22 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'boolean',
       label: 'Boolean',
+      description: 'True or false',
       group: 'Boolean',
       properties: [],
       searchTerms: ['bool', 'boolean'],
     },
-    { id: 'date', label: 'Date', group: 'Date & time', properties: [] },
+    {
+      id: 'date',
+      label: 'Date',
+      description: 'Calendar date',
+      group: 'Date & time',
+      properties: [],
+    },
     {
       id: 'time',
       label: 'Time',
+      description: 'Time of day',
       group: 'Date & time',
       properties: [DATETIME_PRECISION_PROPERTY],
       searchTerms: ['time without time zone'],
@@ -254,6 +278,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'time with time zone',
       label: 'Time with time zone',
+      description: 'Time with time zone',
       group: 'Date & time',
       properties: [DATETIME_PRECISION_PROPERTY],
       searchTerms: ['timetz', 'time with time zone'],
@@ -261,6 +286,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'timestamp',
       label: 'Timestamp',
+      description: 'Date and time',
       group: 'Date & time',
       properties: [DATETIME_PRECISION_PROPERTY],
       searchTerms: ['timestamp without time zone'],
@@ -268,24 +294,51 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'timestamp with time zone',
       label: 'Timestamp with time zone',
+      description: 'Date and time with time zone',
       group: 'Date & time',
       properties: [DATETIME_PRECISION_PROPERTY],
       searchTerms: ['timestamptz', 'timestamp with time zone'],
     },
-    { id: 'interval', label: 'Interval', group: 'Date & time', properties: [] },
+    {
+      id: 'interval',
+      label: 'Interval',
+      description: 'Time span',
+      group: 'Date & time',
+      properties: [],
+    },
     {
       id: 'uuid',
       label: 'UUID',
+      description: 'Unique identifier',
       group: 'Structured',
       properties: [],
       searchTerms: ['uuid'],
     },
-    { id: 'json', label: 'JSON', group: 'Structured', properties: [] },
-    { id: 'jsonb', label: 'JSONB', group: 'Structured', properties: [] },
-    { id: 'bytea', label: 'Bytea', group: 'Structured', properties: [] },
+    {
+      id: 'json',
+      label: 'JSON',
+      description: 'JSON stored as text',
+      group: 'Structured',
+      properties: [],
+    },
+    {
+      id: 'jsonb',
+      label: 'JSONB',
+      description: 'Binary JSON',
+      group: 'Structured',
+      properties: [],
+    },
+    {
+      id: 'bytea',
+      label: 'Bytea',
+      description: 'Binary data',
+      group: 'Structured',
+      properties: [],
+    },
     {
       id: 'bit',
       label: 'Bit',
+      description: 'Fixed-length bit string',
       group: 'Structured',
       properties: [
         LENGTH_PROPERTY({
@@ -304,6 +357,7 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
     {
       id: 'bit varying',
       label: 'Bit varying',
+      description: 'Variable-length bit string',
       group: 'Structured',
       properties: [
         LENGTH_PROPERTY({
@@ -318,9 +372,27 @@ export const POSTGRES_COLUMN_TYPE_DEFINITIONS: PostgresColumnTypeDefinition[] =
       ],
       searchTerms: ['varbit', 'bit varying'],
     },
-    { id: 'inet', label: 'Inet', group: 'Network', properties: [] },
-    { id: 'cidr', label: 'CIDR', group: 'Network', properties: [] },
-    { id: 'macaddr', label: 'MAC address', group: 'Network', properties: [] },
+    {
+      id: 'inet',
+      label: 'Inet',
+      description: 'IPv4 or IPv6 address',
+      group: 'Network',
+      properties: [],
+    },
+    {
+      id: 'cidr',
+      label: 'CIDR',
+      description: 'IPv4 or IPv6 network',
+      group: 'Network',
+      properties: [],
+    },
+    {
+      id: 'macaddr',
+      label: 'MAC address',
+      description: 'MAC address',
+      group: 'Network',
+      properties: [],
+    },
   ]
 
 const POSTGRES_COLUMN_TYPE_BY_ID = new Map(
@@ -441,7 +513,7 @@ function appendPrecisionSuffix(
   return `${baseType}(${datetimePrecision})`
 }
 
-export function buildPostgresColumnTypeSql(state: PostgresColumnTypeState): string {
+function buildPostgresColumnBaseTypeSql(state: PostgresColumnTypeState): string {
   switch (state.typeId) {
     case 'varchar':
       return `varchar(${state.length ?? 255})`
@@ -478,19 +550,30 @@ export function buildPostgresColumnTypeSql(state: PostgresColumnTypeState): stri
   }
 }
 
+export function buildPostgresColumnTypeSql(state: PostgresColumnTypeState): string {
+  const base = buildPostgresColumnBaseTypeSql(state)
+  return state.isArray ? `${base}[]` : base
+}
+
+export function isPostgresSerialColumnType(typeId: PostgresColumnTypeId): boolean {
+  return (
+    typeId === 'serial' || typeId === 'bigserial' || typeId === 'smallserial'
+  )
+}
+
 export function formatPostgresColumnTypeLabel(
   state: PostgresColumnTypeState,
 ): string {
   const definition = getPostgresColumnTypeDefinition(state.typeId)
-  const sql = buildPostgresColumnTypeSql(state)
-  if (sql === state.typeId) return definition.label
-
-  const paramsMatch = sql.match(/\((.+)\)$/)
-  if (paramsMatch) {
-    return `${definition.label} (${paramsMatch[1]})`
+  const baseSql = buildPostgresColumnBaseTypeSql(state)
+  let label = definition.label
+  if (baseSql !== state.typeId) {
+    const paramsMatch = baseSql.match(/\((.+)\)$/)
+    if (paramsMatch) {
+      label = `${definition.label} (${paramsMatch[1]})`
+    }
   }
-
-  return definition.label
+  return state.isArray ? `${label}[]` : label
 }
 
 function normalizeDataTypeLabel(value: string): string {
@@ -503,26 +586,42 @@ function parsePrecisionFromDataType(dataType: string): number | undefined {
   return parseOptionalInt(match[1])
 }
 
-export function parsePostgresColumnTypeFromRow(
-  row: Pick<
-    PostgresTableColumnRow,
-    | 'data_type'
-    | 'udt_name'
-    | 'character_maximum_length'
-    | 'numeric_precision'
-    | 'numeric_scale'
-    | 'datetime_precision'
-  >,
-): PostgresColumnTypeState {
-  const udt = row.udt_name.toLowerCase()
-  const dataType = normalizeDataTypeLabel(row.data_type)
-  const length = parseOptionalInt(row.character_maximum_length)
-  const numericPrecision = parseOptionalInt(row.numeric_precision)
-  const numericScale = parseOptionalInt(row.numeric_scale)
-  const datetimePrecision =
-    parseOptionalInt(row.datetime_precision) ??
-    parsePrecisionFromDataType(dataType)
+const POSTGRES_ARRAY_UDT_TO_BASE: Record<string, string> = {
+  int2: 'int2',
+  int4: 'int4',
+  int8: 'int8',
+  float4: 'float4',
+  float8: 'float8',
+  bool: 'bool',
+  bpchar: 'bpchar',
+  varchar: 'varchar',
+  text: 'text',
+  numeric: 'numeric',
+  uuid: 'uuid',
+  json: 'json',
+  jsonb: 'jsonb',
+  bytea: 'bytea',
+  date: 'date',
+  time: 'time',
+  timetz: 'timetz',
+  timestamp: 'timestamp',
+  timestamptz: 'timestamptz',
+  interval: 'interval',
+  bit: 'bit',
+  varbit: 'varbit',
+  inet: 'inet',
+  cidr: 'cidr',
+  macaddr: 'macaddr',
+}
 
+function parsePostgresColumnBaseTypeState(
+  udt: string,
+  dataType: string,
+  length: number | undefined,
+  numericPrecision: number | undefined,
+  numericScale: number | undefined,
+  datetimePrecision: number | undefined,
+): PostgresColumnTypeState {
   if (udt === 'varchar' || dataType.startsWith('character varying')) {
     return {
       typeId: 'varchar',
@@ -594,6 +693,49 @@ export function parsePostgresColumnTypeFromRow(
   return createDefaultPostgresColumnTypeState('text')
 }
 
+export function parsePostgresColumnTypeFromRow(
+  row: Pick<
+    PostgresTableColumnRow,
+    | 'data_type'
+    | 'udt_name'
+    | 'character_maximum_length'
+    | 'numeric_precision'
+    | 'numeric_scale'
+    | 'datetime_precision'
+  >,
+): PostgresColumnTypeState {
+  const rawUdt = row.udt_name.toLowerCase()
+  const rawDataType = normalizeDataTypeLabel(row.data_type)
+  const isArray =
+    rawDataType === 'array' ||
+    rawDataType.endsWith('[]') ||
+    rawUdt.startsWith('_')
+
+  const udt = isArray && rawUdt.startsWith('_')
+    ? (POSTGRES_ARRAY_UDT_TO_BASE[rawUdt.slice(1)] ?? rawUdt.slice(1))
+    : rawUdt
+  const dataType = isArray
+    ? normalizeDataTypeLabel(rawDataType.replace(/\[\]$/, ''))
+    : rawDataType
+  const length = parseOptionalInt(row.character_maximum_length)
+  const numericPrecision = parseOptionalInt(row.numeric_precision)
+  const numericScale = parseOptionalInt(row.numeric_scale)
+  const datetimePrecision =
+    parseOptionalInt(row.datetime_precision) ??
+    parsePrecisionFromDataType(dataType)
+
+  const state = parsePostgresColumnBaseTypeState(
+    udt,
+    dataType === 'array' ? udt : dataType,
+    length,
+    numericPrecision,
+    numericScale,
+    datetimePrecision,
+  )
+  if (isArray) state.isArray = true
+  return state
+}
+
 export function postgresColumnTypeStatesEqual(
   a: PostgresColumnTypeState,
   b: PostgresColumnTypeState,
@@ -632,17 +774,17 @@ export function getPostgresColumnDefaultPlaceholder(
 ): string {
   switch (typeId) {
     case 'boolean':
-      return 'e.g. true or false'
+      return 'NULL'
     case 'uuid':
-      return 'e.g. gen_random_uuid()'
+      return 'gen_random_uuid()'
     case 'timestamp with time zone':
     case 'timestamp':
-      return 'e.g. now()'
+      return 'now()'
     case 'json':
     case 'jsonb':
-      return "e.g. '{}'::jsonb"
+      return "'{}'::jsonb"
     default:
-      return "e.g. 'draft' or 0"
+      return 'NULL'
   }
 }
 
@@ -651,6 +793,7 @@ export function getPostgresColumnTypeSearchValue(
 ): string {
   return [
     definition.label,
+    definition.description,
     definition.id,
     definition.group,
     ...(definition.searchTerms ?? []),

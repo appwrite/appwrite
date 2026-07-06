@@ -4,18 +4,30 @@ import {
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
 import { PostgresConnectionsHeaderLimit } from './PostgresConnectionsHeaderLimit'
+import type { PostgresDatabaseHeaderSlotProps } from './PostgresDatabaseHeaderSlotContext'
 import { useT } from '@/lib/i18n/translate'
 
 type PostgresDatabaseHeaderProps = {
   projectId: string
   databaseId: string
   databaseTab: PostgresDatabaseTab
-}
+} & PostgresDatabaseHeaderSlotProps
 
 export function PostgresDatabaseHeader({
   projectId,
   databaseId,
   databaseTab,
+  searchPlaceholder,
+  searchValue,
+  onSearchChange,
+  createLabel,
+  onCreate,
+  createDisabled,
+  createDisabledTooltip,
+  showRefresh,
+  onRefresh,
+  isRefreshing,
+  filterTrigger,
 }: PostgresDatabaseHeaderProps) {
   const t = useT()
   const titleLabel = POSTGRES_DATABASE_TAB_LABELS[databaseTab]
@@ -39,9 +51,21 @@ export function PostgresDatabaseHeader({
       fullWidth={
         databaseTab === 'sql' ||
         databaseTab === 'visualizer' ||
+        databaseTab === 'enums' ||
         databaseTab === 'monitor' ||
         databaseTab === 'connections'
       }
+      searchPlaceholder={searchPlaceholder}
+      searchValue={searchValue}
+      onSearchChange={onSearchChange}
+      createLabel={createLabel}
+      onCreate={onCreate}
+      createDisabled={createDisabled}
+      createDisabledTooltip={createDisabledTooltip}
+      showRefresh={showRefresh}
+      onRefresh={onRefresh}
+      isRefreshing={isRefreshing}
+      filterTrigger={filterTrigger}
     />
   )
 }

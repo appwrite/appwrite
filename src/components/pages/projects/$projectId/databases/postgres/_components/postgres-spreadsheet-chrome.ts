@@ -1,8 +1,5 @@
 import { parsePostgresIndexKeyColumns } from '@/lib/postgres-index-metadata'
-import {
-  RESIZE_HANDLE_PSEUDO_AFTER_HAIRLINE_LOGICAL_X,
-  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
-} from '@/lib/layout/horizontal-resize'
+import { columnResizeRailHandleClass } from '@/lib/layout/horizontal-resize'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
@@ -56,14 +53,8 @@ export function getPostgresRowsDataColumnHeaderStyle(
   }
 }
 
-export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
-  'group absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
-  RESIZE_HANDLE_PSEUDO_AFTER_HAIRLINE_LOGICAL_X,
-  'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
-  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
-  'hover:before:opacity-100',
-)
+export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS =
+  columnResizeRailHandleClass()
 
 export const POSTGRES_STICKY_THEAD_CLASS = 'sticky top-0 z-20 bg-background'
 export const POSTGRES_HEADER_CELL_BORDER_CLASS =
@@ -116,6 +107,11 @@ export function getPostgresIndexTypeColor(type: string): string {
     key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   }
   return colors[type] || 'bg-muted text-muted-foreground border-border'
+}
+
+/** Tinted outline badge class for enum literal values (matches column type badges). */
+export function getPostgresEnumValueBadgeClass(): string {
+  return 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20'
 }
 
 export function matchesPostgresLocalSearch(

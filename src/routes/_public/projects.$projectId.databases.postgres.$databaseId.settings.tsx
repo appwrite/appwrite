@@ -1,7 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { View } from '@/components/pages/projects/$projectId/databases/postgres/Settings'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import { POSTGRES_DATABASE_TAB_LABELS } from '@/lib/postgres-database-routes'
+import {
+  databaseSpecificationsQueryOptions,
+  postgresDatabasePoolerQueryOptions,
+} from '@/lib/react-query/hooks'
+import { canAccessPostgresDatabaseSettings } from '@/lib/console-rbac-loader'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -16,15 +21,41 @@ export const Route = createFileRoute(
   }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return { database: null }
-    return prefetchPostgresShellData(
-      context.queryClient,
-      params.projectId,
-      params.databaseId,
+
+    const { projectId, databaseId } = params
+    const { queryClient } = context
+
+    const canAccess = await canAccessPostgresDatabaseSettings(
+      queryClient,
+      projectId,
     )
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/databases/postgres/$databaseId',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
+
+    const shellData = await prefetchPostgresShellData(
+      queryClient,
+      projectId,
+      databaseId,
+    )
+
+    await Promise.all([
+      queryClient.ensureQueryData(databaseSpecificationsQueryOptions(projectId)),
+      queryClient.ensureQueryData(
+        postgresDatabasePoolerQueryOptions(projectId, databaseId),
+      ),
+    ])
+
+    return shellData
   },
   component: PostgresSettingsPage,
 })
 
 function PostgresSettingsPage() {
-  return <TabPlaceholder tab="settings" />
+  const { databaseId } = Route.useParams()
+  return <View databaseId={databaseId} />
 }

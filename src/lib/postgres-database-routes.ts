@@ -12,6 +12,7 @@ export type PostgresTableTab = 'rows' | 'columns' | 'indexes' | 'settings'
 export type PostgresDatabaseTab =
   | 'sql'
   | 'visualizer'
+  | 'enums'
   | 'monitor'
   | 'insights'
   | 'backups'
@@ -24,6 +25,7 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
 > = {
   sql: 'SQL editor',
   visualizer: 'Visualizer',
+  enums: 'Enums',
   monitor: 'Monitor',
   insights: 'Insights',
   backups: 'Backups',
@@ -126,6 +128,12 @@ export function postgresNav(params: PostgresNavBase) {
         params: base,
       }
     },
+    enums() {
+      return {
+        to: '/projects/$projectId/databases/postgres/$databaseId/enums' as const,
+        params: base,
+      }
+    },
     monitor() {
       return {
         to: '/projects/$projectId/databases/postgres/$databaseId/monitor' as const,
@@ -173,6 +181,7 @@ export function postgresTableRows(params: PostgresNavParams & { tableId: string 
 const POSTGRES_DATABASE_TAB_SEGMENTS: PostgresDatabaseTab[] = [
   'sql',
   'visualizer',
+  'enums',
   'monitor',
   'insights',
   'backups',

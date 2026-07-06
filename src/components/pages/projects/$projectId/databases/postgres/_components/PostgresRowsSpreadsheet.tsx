@@ -29,6 +29,9 @@ import {
   POSTGRES_STICKY_THEAD_CLASS,
 } from './postgres-spreadsheet-chrome'
 import {
+  COLUMN_RESIZE_RAILS_LAYER_CLASS,
+} from '@/lib/layout/horizontal-resize'
+import {
   SPREADSHEET_STICKY_START_EDGE_SHADOW,
   SPREADSHEET_STICKY_START_HEADER_SHADOW,
 } from '@/lib/layout/spreadsheet-sticky'
@@ -197,10 +200,10 @@ export function PostgresRowsSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative inline-block min-w-full align-top overflow-x-clip"
+            className="relative isolate inline-block min-w-full align-top overflow-x-clip"
           >
             <table
-              className="w-full table-fixed border-collapse"
+              className="relative z-0 w-full table-fixed border-collapse"
               style={{ minWidth: tableMinWidthPx }}
             >
               <colgroup>
@@ -401,29 +404,31 @@ export function PostgresRowsSpreadsheet({
                 })}
               </tbody>
             </table>
-            {visibleColumns.map((column) => {
-              const key = column.column_name
-              return (
-                <button
-                  key={`col-resize-rail-${key}`}
-                  ref={(node) => {
-                    if (node) railRefs.current.set(key, node)
-                    else railRefs.current.delete(key)
-                  }}
-                  type="button"
-                  aria-label={`Resize ${key} column width`}
-                  aria-orientation="vertical"
-                  role="separator"
-                  tabIndex={0}
-                  onPointerDown={handleResizePointerDown(key)}
-                  className={cn(
-                    POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
-                    resizingColumnKey === key && 'before:opacity-100',
-                    'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                  )}
-                />
-              )
-            })}
+            <div className={COLUMN_RESIZE_RAILS_LAYER_CLASS} aria-hidden>
+              {visibleColumns.map((column) => {
+                const key = column.column_name
+                return (
+                  <button
+                    key={`col-resize-rail-${key}`}
+                    ref={(node) => {
+                      if (node) railRefs.current.set(key, node)
+                      else railRefs.current.delete(key)
+                    }}
+                    type="button"
+                    aria-label={`Resize ${key} column width`}
+                    aria-orientation="vertical"
+                    role="separator"
+                    tabIndex={0}
+                    onPointerDown={handleResizePointerDown(key)}
+                    className={cn(
+                      POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
+                      resizingColumnKey === key && 'before:opacity-100',
+                      'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                    )}
+                  />
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
