@@ -915,8 +915,18 @@ Http::init()
             }
         }
 
-        $utopia->context()->set('requestParams', fn (callable $resolver): array => $resolver(), ['requestParamsResolver']);
         $requestParams = $utopia->context()->get('requestParams');
+        $filterRequestParams = $utopia->context()->get('filterRequestParams');
+        try {
+            $requestParams = $filterRequestParams($requestParams);
+        } catch (\Throwable $e) {
+            $code = $e->getCode();
+            if (\is_int($code) && $code >= 400 && $code < 500) {
+                $utopia->context()->set('requestParams', fn (): array => $requestParams, []);
+            }
+            throw $e;
+        }
+        $utopia->context()->set('requestParams', fn (): array => $requestParams, []);
 
         $localeParam = (string) ($requestParams['locale'] ?? ($request->getHeaderLine('x-appwrite-locale') ?: ''));
         if (\in_array($localeParam, $localeCodes)) {

@@ -127,30 +127,25 @@ return function (Container $context): void {
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
-    $context->set('requestParamsResolver', function (ServerRequestInterface $request): callable {
-        $fallback = new class {
-            public bool $hasParams = false;
-            public array $params = [];
-        };
-
-        return static function () use ($request, $fallback): array {
-            if ($fallback->hasParams) {
-                return $fallback->params;
+    $context->set('requestParams', function (ServerRequestInterface $request): array {
+        if (\in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE], true)) {
+            $body = $request->getParsedBody();
+            if (\is_array($body)) {
+                return $body;
             }
 
-            if (\in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE], true)) {
-                $body = $request->getParsedBody();
-                if (\is_array($body)) {
-                    $parameters = $body;
-                } elseif (\is_object($body)) {
-                    $parameters = get_object_vars($body);
-                } else {
-                    $parameters = [];
-                }
-            } else {
-                $parameters = $request->getQueryParams();
+            if (\is_object($body)) {
+                return get_object_vars($body);
             }
 
+            return [];
+        }
+
+        return $request->getQueryParams();
+    }, ['request']);
+
+    $context->set('filterRequestParams', function (ServerRequestInterface $request): callable {
+        return static function (array $parameters) use ($request): array {
             $filters = Request::filters($request);
             $route = Request::route($request);
             if ($filters === [] || $route === null) {
@@ -186,24 +181,13 @@ return function (Container $context): void {
                     : 'unknown.unknown';
             }
 
-            try {
-                foreach ($filters as $filter) {
-                    $parameters = $filter->parse($parameters, $id);
-                }
-            } catch (\Throwable $e) {
-                $code = $e->getCode();
-                if (\is_int($code) && $code >= 400 && $code < 500) {
-                    $fallback->hasParams = true;
-                    $fallback->params = $parameters;
-                }
-                throw $e;
+            foreach ($filters as $filter) {
+                $parameters = $filter->parse($parameters, $id);
             }
 
             return $parameters;
         };
     }, ['request']);
-
-    $context->set('requestParams', fn (callable $resolver): array => $resolver(), ['requestParamsResolver']);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, ServerRequestInterface $request, array $requestParams, Database $dbForProject, Database $dbForPlatform) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
