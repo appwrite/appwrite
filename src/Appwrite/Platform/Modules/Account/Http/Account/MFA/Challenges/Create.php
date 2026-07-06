@@ -19,6 +19,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
@@ -122,7 +123,7 @@ class Create extends Action
         Locale $locale,
         Document $project,
         array $platform,
-        Request $request,
+        ServerRequestInterface $request,
         Event $queueForEvents,
         MessagingPublisher $publisherForMessaging,
         MailPublisher $publisherForMails,
@@ -235,7 +236,7 @@ class Create extends Action
 
                 $bodyTemplate = $templatesPath . '/' . $smtpBaseTemplate . '.tpl';
 
-                $detector = new Detector($request->getUserAgent('UNKNOWN'));
+                $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
                 $agentOs = $detector->getOS();
                 $agentClient = $detector->getClient();
                 $agentDevice = $detector->getDevice();

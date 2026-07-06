@@ -5,10 +5,12 @@ namespace Appwrite\GraphQL;
 use Appwrite\GraphQL\Exception as GQLException;
 use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
+use Utopia\Psr7\Uri;
 use Utopia\System\System;
 
 class Resolvers
@@ -89,7 +91,7 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($route, $args): void {
+                prepareRequest: static function (ServerRequestInterface $request) use ($route, $args): ServerRequestInterface {
                     $path = $route->getPath();
                     foreach ($args as $key => $value) {
                         if (\str_contains($path, '/:' . $key)) {
@@ -97,17 +99,13 @@ class Resolvers
                         }
                     }
 
-                    $request->setMethod($route->getMethod());
-                    $request->setURI($path);
+                    $request = $request
+                        ->withMethod($route->getMethod())
+                        ->withUri(Uri::parse($path));
 
-                    switch ($route->getMethod()) {
-                        case 'GET':
-                            $request->setQueryString($args);
-                            break;
-                        default:
-                            $request->setPayload($args);
-                            break;
-                    }
+                    return $route->getMethod() === 'GET'
+                        ? $request->withQueryParams($args)
+                        : $request->withParsedBody($args);
                 }
             );
         });
@@ -161,10 +159,9 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($databaseId, $collectionId, $url, $args): void {
-                    $request->setMethod('GET');
-                    $request->setURI($url($databaseId, $collectionId, $args));
-                }
+                prepareRequest: static fn (ServerRequestInterface $request): ServerRequestInterface => $request
+                    ->withMethod('GET')
+                    ->withUri(Uri::parse($url($databaseId, $collectionId, $args)))
             );
         });
     }
@@ -202,11 +199,10 @@ class Resolvers
                 $resolve,
                 $reject,
                 beforeResolve: $beforeResolve,
-                prepareRequest: static function (Request $request) use ($databaseId, $collectionId, $url, $params, $args): void {
-                    $request->setMethod('GET');
-                    $request->setURI($url($databaseId, $collectionId, $args));
-                    $request->setQueryString($params($databaseId, $collectionId, $args));
-                }
+                prepareRequest: static fn (ServerRequestInterface $request): ServerRequestInterface => $request
+                    ->withMethod('GET')
+                    ->withUri(Uri::parse($url($databaseId, $collectionId, $args)))
+                    ->withQueryParams($params($databaseId, $collectionId, $args))
             );
         });
     }
@@ -239,11 +235,10 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($databaseId, $collectionId, $url, $params, $args): void {
-                    $request->setMethod('POST');
-                    $request->setURI($url($databaseId, $collectionId, $args));
-                    $request->setPayload($params($databaseId, $collectionId, $args));
-                }
+                prepareRequest: static fn (ServerRequestInterface $request): ServerRequestInterface => $request
+                    ->withMethod('POST')
+                    ->withUri(Uri::parse($url($databaseId, $collectionId, $args)))
+                    ->withParsedBody($params($databaseId, $collectionId, $args))
             );
         });
     }
@@ -276,11 +271,10 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($databaseId, $collectionId, $url, $params, $args): void {
-                    $request->setMethod('PATCH');
-                    $request->setURI($url($databaseId, $collectionId, $args));
-                    $request->setPayload($params($databaseId, $collectionId, $args));
-                }
+                prepareRequest: static fn (ServerRequestInterface $request): ServerRequestInterface => $request
+                    ->withMethod('PATCH')
+                    ->withUri(Uri::parse($url($databaseId, $collectionId, $args)))
+                    ->withParsedBody($params($databaseId, $collectionId, $args))
             );
         });
     }
@@ -311,17 +305,16 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($databaseId, $collectionId, $url, $args): void {
-                    $request->setMethod('DELETE');
-                    $request->setURI($url($databaseId, $collectionId, $args));
-                }
+                prepareRequest: static fn (ServerRequestInterface $request): ServerRequestInterface => $request
+                    ->withMethod('DELETE')
+                    ->withUri(Uri::parse($url($databaseId, $collectionId, $args)))
             );
         });
     }
 
     /**
      * @param Http $utopia
-     * @param Request $request
+     * @param ServerRequestInterface $request
      * @param Response $response
      * @param callable $resolve
      * @param callable $reject
@@ -332,7 +325,7 @@ class Resolvers
      */
     private static function resolve(
         Http $utopia,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         callable $resolve,
         callable $reject,
@@ -344,16 +337,15 @@ class Resolvers
         $lock->acquire();
 
         try {
-            $request = clone $request;
-            $request->addHeader('x-appwrite-source', 'graphql');
+            $request = $request->withAddedHeader('x-appwrite-source', 'graphql');
 
             // Drop json content type so post args are used directly.
-            if (\str_starts_with($request->getHeaderLine('content-type'), 'application/json')) {
-                $request->removeHeader('content-type');
+            if (\str_starts_with(Request::headerLine($request, 'content-type'), 'application/json')) {
+                $request = $request->withoutHeader('content-type');
             }
 
             if ($prepareRequest) {
-                $prepareRequest($request);
+                $request = $prepareRequest($request);
             }
 
             /** @var Response $resolverResponse */
@@ -363,7 +355,7 @@ class Resolvers
             $resolverResponse->setContentType(Response::CONTENT_TYPE_NULL);
             $resolverResponse->setSent(false);
 
-            $request->setRoute($utopia->match($request)?->route);
+            Request::rememberRoute($request, $utopia->match($request)?->route);
 
             $utopia->execute($request, $resolverResponse);
 

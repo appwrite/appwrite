@@ -24,6 +24,7 @@ use Appwrite\SDK\Method;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
@@ -63,7 +64,7 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, ServerRequestInterface $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -151,7 +152,7 @@ Http::init()
                     '$id' => '',
                     'status' => true,
                     'type' => ACTOR_TYPE_KEY_PROJECT,
-                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                    'email' => 'app.' . $project->getId() . '@service.' . Request::hostname($request),
                     'password' => '',
                     'name' => $apiKey->getName(),
                 ]);
@@ -166,21 +167,21 @@ Http::init()
                 if (! empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
+                        find: Request::headerLine($request, 'x-appwrite-key', ''),
                         subject: 'keys'
                     );
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
+                        find: Request::headerLine($request, 'x-appwrite-key', ''),
                         subject: 'keys'
                     );
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
+                        find: Request::headerLine($request, 'x-appwrite-key', ''),
                         subject: 'keys'
                     );
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
@@ -199,7 +200,7 @@ Http::init()
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeaderLine('x-sdk-name', 'UNKNOWN');
+                $sdk = Request::headerLine($request, 'x-sdk-name', 'UNKNOWN');
 
                 if ($sdk !== 'UNKNOWN' && $sdkValidator->isValid($sdk)) {
                     $sdks = $dbKey->getAttribute('sdks', []);
@@ -293,7 +294,7 @@ Http::init()
 
             $projectId = $project->getId();
             if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
-                $uri = $request->getURI();
+                $uri = $request->getRequestTarget();
                 $projectId = explode('/', $uri)[3];
             }
 
@@ -496,9 +497,9 @@ Http::init()
     ->inject('timelimit')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
+    ->action(function (Route $route, ServerRequestInterface $request, Response $response, Document $project, User $user, callable $timelimit, Document $devKey, Authorization $authorization) {
         $response->setUser($user);
-        $request->setUser($user);
+        Request::rememberUser($request, $user);
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
@@ -514,19 +515,19 @@ Http::init()
             $isRateLimited = false;
 
             try {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
+                $start = Request::contentRangeStart($request);
+                $end = Request::contentRangeEnd($request);
                 $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
                     ->setParam('{userId}', $user->getId())
-                    ->setParam('{userAgent}', $request->getUserAgent(''))
-                    ->setParam('{ip}', $request->getIP())
-                    ->setParam('{url}', $request->getHostname() . $route->getPath())
+                    ->setParam('{userAgent}', Request::userAgent($request, ''))
+                    ->setParam('{ip}', Request::ip($request))
+                    ->setParam('{url}', Request::hostname($request) . $route->getPath())
                     ->setParam('{method}', $request->getMethod())
                     ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-                foreach ($request->getParams() as $key => $value) {
+                foreach (Request::params($request) as $key => $value) {
                     if (! empty($value)) {
                         $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                     }
@@ -582,11 +583,11 @@ Http::init()
     ->inject('cacheControlForStorage')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, ServerRequestInterface $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
-        $request->setUser($targetUser);
+        Request::rememberUser($request, $targetUser);
 
         $path = $route->getPath();
         $databaseType = match (true) {
@@ -608,9 +609,9 @@ Http::init()
             ->setUser($targetUser);
 
         $auditContext->mode = $mode;
-        $auditContext->userAgent = $request->getUserAgent('');
-        $auditContext->ip = $request->getIP();
-        $auditContext->hostname = $request->getHostname();
+        $auditContext->userAgent = Request::userAgent($request, '');
+        $auditContext->ip = Request::ip($request);
+        $auditContext->hostname = Request::hostname($request);
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
@@ -635,7 +636,7 @@ Http::init()
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
-            $key = $request->cacheIdentifier();
+            $key = Request::cacheKey($request);
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
@@ -749,8 +750,8 @@ Http::init()
     ->groups(['session'])
     ->inject('user')
     ->inject('request')
-    ->action(function (User $user, Request $request) {
-        if (\str_contains($request->getURI(), 'oauth2')) {
+    ->action(function (User $user, ServerRequestInterface $request) {
+        if (\str_contains($request->getRequestTarget(), 'oauth2')) {
             return;
         }
 
@@ -771,7 +772,7 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (ServerRequestInterface $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? 0;
 
         if ($sessionLimit === 0) {
@@ -879,7 +880,7 @@ Http::shutdown()
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
+    ->action(function (Route $route, ServerRequestInterface $request, Response $response, Document $project, User $user, callable $timelimit) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
@@ -892,19 +893,19 @@ Http::shutdown()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
+            $start = Request::contentRangeStart($request);
+            $end = Request::contentRangeEnd($request);
             $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath())
+                ->setParam('{userAgent}', Request::userAgent($request, ''))
+                ->setParam('{ip}', Request::ip($request))
+                ->setParam('{url}', Request::hostname($request) . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
                 ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
 
-            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+            foreach (Request::params($request) as $key => $value) { // Set request params as potential abuse keys
                 if (! empty($value)) {
                     $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
                 }
@@ -927,7 +928,7 @@ Http::shutdown()
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
+    ->action(function (Route $route, array $params, ServerRequestInterface $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
@@ -964,7 +965,7 @@ Http::shutdown()
                 '$id' => '',
                 'status' => true,
                 'type' => ACTOR_TYPE_GUEST,
-                'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
+                'email' => 'guest.' . $project->getId() . '@service.' . Request::hostname($request),
                 'password' => '',
                 'name' => 'Guest',
             ]);
@@ -997,7 +998,7 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
+    ->action(function (Route $route, array $params, ServerRequestInterface $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1011,7 +1012,7 @@ Http::shutdown()
         $cache = new Cache(
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
         );
-        $key = $request->cacheIdentifier();
+        $key = Request::cacheKey($request);
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -1021,7 +1022,7 @@ Http::shutdown()
             // Resolve resource labels lazily — only needed when creating the entry.
             $requestParams = [];
             foreach ($route->getParams() as $paramKey => $param) {
-                $requestParams[$paramKey] = $params[$paramKey] ?? $request->getParam($paramKey, $param['default']);
+                $requestParams[$paramKey] = $params[$paramKey] ?? Request::param($request, $paramKey, $param['default']);
             }
 
             $resourcePattern = $route->getLabel('cache.resource', null);
@@ -1077,7 +1078,7 @@ Http::shutdown()
     ->inject('authorization')
     ->inject('bus')
     ->inject('apiKey')
-    ->action(function (Request $request, Response $response, Document $project, User $user, Context $usage, UsagePublisher $publisherForUsage, Authorization $authorization, Bus $bus, ?Key $apiKey) {
+    ->action(function (ServerRequestInterface $request, Response $response, Document $project, User $user, Context $usage, UsagePublisher $publisherForUsage, Authorization $authorization, Bus $bus, ?Key $apiKey) {
         if ($project->getId() === 'console') {
             return;
         }

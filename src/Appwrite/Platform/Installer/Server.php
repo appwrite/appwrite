@@ -7,7 +7,8 @@ use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
 use Swoole\Runtime;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Http\Adapter\Swoole\Server as SwooleAdapter;
 use Utopia\Http\Files;
@@ -183,9 +184,9 @@ class Server
             }
         });
 
-        $adapter->onRequest(function (Request $request, Response $response) use ($adapter, $files) {
+        $adapter->onRequest(function (ServerRequestInterface $request, Response $response) use ($adapter, $files) {
             // Serve static files from memory
-            $uri = $request->getURI();
+            $uri = $request->getRequestTarget();
             if ($files->isFileLoaded($uri)) {
                 $response
                     ->setContentType($files->getFileMimeType($uri))

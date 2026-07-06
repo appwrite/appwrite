@@ -12,7 +12,8 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -72,7 +73,7 @@ class Get extends Action
         string $deploymentId,
         string $type,
         Response $response,
-        Request $request,
+        ServerRequestInterface $request,
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForBuilds
@@ -108,12 +109,12 @@ class Get extends Action
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeaderLine('range');
+        $rangeHeader = Request::headerLine($request, 'range');
 
         if (!empty($rangeHeader)) {
-            $start = $request->getRangeStart();
-            $end = $request->getRangeEnd();
-            $unit = $request->getRangeUnit();
+            $start = Request::rangeStart($request);
+            $end = Request::rangeEnd($request);
+            $unit = Request::rangeUnit($request);
 
             if ($end === null) {
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));

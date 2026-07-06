@@ -35,7 +35,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -118,7 +119,7 @@ class Create extends Base
         mixed $headers,
         ?string $scheduledAt,
         Response $response,
-        Request $request,
+        ServerRequestInterface $request,
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -238,7 +239,7 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
-        $ip = $request->getIP();
+        $ip = Request::ip($request);
         $headers['x-appwrite-client-ip'] = $ip;
 
         if (!empty($ip)) {
@@ -519,7 +520,7 @@ class Create extends Base
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeaderLine('accept'));
+        $acceptTypes = \explode(', ', Request::headerLine($request, 'accept'));
         foreach ($acceptTypes as $acceptType) {
             if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);

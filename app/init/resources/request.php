@@ -22,6 +22,7 @@ use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
@@ -125,16 +126,16 @@ return function (Container $context): void {
     $context->set('usage', fn () => new UsageContext(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
 
-    $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
+    $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, ServerRequestInterface $request, Database $dbForProject, Database $dbForPlatform) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
             return new Document();
         }
 
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+        $impersonateUserId = Request::headerLine($request, 'x-appwrite-impersonate-user-id', (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
+        $impersonateEmail = Request::headerLine($request, 'x-appwrite-impersonate-user-email', (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
+        $impersonatePhone = Request::headerLine($request, 'x-appwrite-impersonate-user-phone', (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
 
         if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
             return new Document();
@@ -163,14 +164,14 @@ return function (Container $context): void {
         ]);
     }, ['mode', 'project', 'user', 'request', 'dbForProject', 'dbForPlatform']);
 
-    $context->set('targetUser', function (Document $user, Document $impersonatorUser, string $mode, Document $project, Request $request, Database $dbForProject, Database $dbForPlatform) {
+    $context->set('targetUser', function (Document $user, Document $impersonatorUser, string $mode, Document $project, ServerRequestInterface $request, Database $dbForProject, Database $dbForPlatform) {
         if ($impersonatorUser->isEmpty()) {
             return $user;
         }
 
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+        $impersonateUserId = Request::headerLine($request, 'x-appwrite-impersonate-user-id', (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
+        $impersonateEmail = Request::headerLine($request, 'x-appwrite-impersonate-user-email', (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
+        $impersonatePhone = Request::headerLine($request, 'x-appwrite-impersonate-user-phone', (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
 
         $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
         if (!empty($impersonateUserId)) {
@@ -236,7 +237,7 @@ return function (Container $context): void {
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, ServerRequestInterface $request) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add platform configured hostnames */
@@ -248,11 +249,11 @@ return function (Container $context): void {
 
         /* Add the request hostname if a dev key is found */
         if (! $devKey->isEmpty()) {
-            $allowed[] = $request->getHostname();
+            $allowed[] = Request::hostname($request);
         }
 
-        $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
-        $refererHostname = parse_url($request->getReferer(), PHP_URL_HOST);
+        $originHostname = parse_url(Request::origin($request, ), PHP_URL_HOST);
+        $refererHostname = parse_url(Request::referer($request, ), PHP_URL_HOST);
 
         $hostname = $originHostname;
         if (empty($hostname)) {
@@ -300,9 +301,9 @@ return function (Container $context): void {
     /**
      * Whether the request origin is verified against the request hostname.
      */
-    $context->set('domainVerification', function (Request $request) {
-        $origin = \parse_url($request->getOrigin($request->getReferer('')), PHP_URL_HOST);
-        $selfDomain = new Domain($request->getHostname());
+    $context->set('domainVerification', function (ServerRequestInterface $request) {
+        $origin = \parse_url(Request::origin($request, Request::referer($request, '')), PHP_URL_HOST);
+        $selfDomain = new Domain(Request::hostname($request));
         $endDomain = new Domain((string) $origin);
 
         return ($selfDomain->getRegisterable() === $endDomain->getRegisterable())
@@ -312,18 +313,18 @@ return function (Container $context): void {
     /**
      * Cookie domain for the current request.
      */
-    $context->set('cookieDomain', function (Request $request, Document $project) {
-        $localHosts = ['localhost', 'localhost:' . $request->getPort()];
+    $context->set('cookieDomain', function (ServerRequestInterface $request, Document $project) {
+        $localHosts = ['localhost', 'localhost:' . Request::port($request)];
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
         if (!empty($migrationHost)) {
             // Treat the migration host like localhost because internal migration and CI
             // traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
-            $localHosts[] = $migrationHost . ':' . $request->getPort();
+            $localHosts[] = $migrationHost . ':' . Request::port($request);
         }
 
-        $hostname = $request->getHostname();
+        $hostname = Request::hostname($request);
         $isLocalHost = \in_array($hostname, $localHosts, true);
         $isIpAddress = \filter_var($hostname, FILTER_VALIDATE_IP) !== false;
 
@@ -346,11 +347,11 @@ return function (Container $context): void {
     /**
      * Rule associated with a request origin.
      */
-    $context->set('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
-        $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
+    $context->set('rule', function (ServerRequestInterface $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
+        $domain = \parse_url(Request::origin($request, ), PHP_URL_HOST);
 
         if (empty($domain)) {
-            $domain = \parse_url($request->getReferer(), PHP_URL_HOST);
+            $domain = \parse_url(Request::referer($request, ), PHP_URL_HOST);
         }
 
         if (empty($domain)) {
@@ -424,7 +425,7 @@ return function (Container $context): void {
         ['devKey', 'allowedHostnames', 'allowedSchemes']
     );
 
-    $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
+    $context->set('user', function (string $mode, Document $project, Document $console, ServerRequestInterface $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
         /**
          * Handles user authentication and session validation.
          *
@@ -453,15 +454,16 @@ return function (Container $context): void {
         }
 
         $store->decode(
-            $request->getCookie(
+            Request::cookie(
+                $request,
                 $store->getKey(), // Get sessions
-                $request->getCookie($store->getKey() . '_legacy', '')
+                Request::cookie($request, $store->getKey() . '_legacy', '')
             )
         );
 
         // Get session from header for SSR clients
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            $sessionHeader = $request->getHeaderLine('x-appwrite-session', '');
+            $sessionHeader = Request::headerLine($request, 'x-appwrite-session', '');
 
             if (! empty($sessionHeader)) {
                 $store->decode($sessionHeader);
@@ -473,7 +475,7 @@ return function (Container $context): void {
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
             $response->addHeader('X-Debug-Fallback', 'true');
-            $fallback = $request->getHeaderLine('x-fallback-cookies', '');
+            $fallback = Request::headerLine($request, 'x-fallback-cookies', '');
             $fallback = \json_decode($fallback, true);
             $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
         }
@@ -506,7 +508,7 @@ return function (Container $context): void {
             $user = new User([]);
         }
 
-        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        $authJWT = Request::headerLine($request, 'x-appwrite-jwt', '');
         if (! empty($authJWT) && ! $project->isEmpty()) { // JWT authentication
             if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -536,8 +538,8 @@ return function (Container $context): void {
         }
 
         // Account based on account API key
-        $accountKey = $request->getHeaderLine('x-appwrite-key', '');
-        $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
+        $accountKey = Request::headerLine($request, 'x-appwrite-key', '');
+        $accountKeyUserId = Request::headerLine($request, 'x-appwrite-user', '');
         if (! empty($accountKeyUserId) && ! empty($accountKey)) {
             if (! $user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
@@ -572,10 +574,10 @@ return function (Container $context): void {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Utopia\Database\Database $dbForPlatform */
         /** @var Utopia\Database\Document $console */
-        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
+        $projectId = Request::param($request, 'project', Request::headerLine($request, 'x-appwrite-project', ''));
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
-            $projectId = $request->getHeaderLine('x-appwrite-project', '');
+            $projectId = Request::headerLine($request, 'x-appwrite-project', '');
         }
 
         // Backwards compatibility for new services, originally project resources
@@ -584,11 +586,11 @@ return function (Container $context): void {
         $deprecatedProjectPathPrefix = '/v1/projects/';
         $route = $utopia->match($request)?->route;
         if (!empty($route)) {
-            $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
+            $isDeprecatedAlias = \str_starts_with($request->getRequestTarget(), $deprecatedProjectPathPrefix) &&
                 !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
 
             if ($isDeprecatedAlias) {
-                $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
+                $projectId = \explode('/', $request->getRequestTarget(), 5)[3] ?? '';
             }
         }
 
@@ -622,7 +624,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken']);
 
-    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
+    $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, ServerRequestInterface $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -725,7 +727,7 @@ return function (Container $context): void {
         };
 
         // Determine database type from request path, similar to api.php
-        $path = $request->getURI();
+        $path = $request->getRequestTarget();
         $databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
             str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
@@ -967,9 +969,9 @@ return function (Container $context): void {
          * - 'default' => Requests for Client and Server Side
          * - 'admin' => Request from the Console on non-console projects
          */
-        $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+        $mode = Request::param($request, 'mode', Request::headerLine($request, 'x-appwrite-mode', APP_MODE_DEFAULT));
 
-        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
+        $projectId = Request::param($request, 'project', Request::headerLine($request, 'x-appwrite-project', ''));
         if (!empty($projectId) && $project->getId() !== $projectId) {
             $mode = APP_MODE_ADMIN;
         }
@@ -979,7 +981,7 @@ return function (Container $context): void {
 
     $context->set('requestTimestamp', function ($request) {
         // TODO: Move this to the Request class itself
-        $timestampHeader = $request->getHeaderLine('x-appwrite-timestamp');
+        $timestampHeader = Request::headerLine($request, 'x-appwrite-timestamp');
         $requestTimestamp = null;
         if (! empty($timestampHeader)) {
             try {
@@ -992,8 +994,8 @@ return function (Container $context): void {
         return $requestTimestamp;
     }, ['request']);
 
-    $context->set('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
+    $context->set('devKey', function (ServerRequestInterface $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
+        $devKey = Request::headerLine($request, 'x-appwrite-dev-key', Request::param($request, 'devKey', ''));
 
         // Check if given key match project's development keys
         $key = $project->find('secret', $devKey, 'devKeys');
@@ -1019,7 +1021,7 @@ return function (Container $context): void {
 
         // add sdk to key
         $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
+        $sdk = \strtolower(Request::headerLine($request, 'x-sdk-name', 'UNKNOWN'));
 
         if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
@@ -1041,21 +1043,21 @@ return function (Container $context): void {
         return $key;
     }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
-    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
+    $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, ServerRequestInterface $request, Authorization $authorization) {
         $teamInternalId = '';
         if ($project->getId() !== 'console') {
             $teamInternalId = $project->getAttribute('teamInternalId', '');
         } else {
             $route = $utopia->match($request)?->route;
-            $path = ! empty($route) ? $route->getPath() : $request->getURI();
-            $orgHeader = $request->getHeaderLine('x-appwrite-organization', '');
+            $path = ! empty($route) ? $route->getPath() : $request->getRequestTarget();
+            $orgHeader = Request::headerLine($request, 'x-appwrite-organization', '');
             if (str_starts_with($path, '/v1/projects/:projectId')) {
-                $uri = $request->getURI();
+                $uri = $request->getRequestTarget();
                 $pid = explode('/', $uri)[3];
                 $p = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
                 $teamInternalId = $p->getAttribute('teamInternalId', '');
             } elseif ($path === '/v1/projects') {
-                $teamId = $request->getParam('teamId', '');
+                $teamId = Request::param($request, 'teamId', '');
 
                 if (empty($teamId)) {
                     return new Document([]);
@@ -1084,7 +1086,7 @@ return function (Container $context): void {
         return $team;
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
 
-    $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
+    $context->set('previewHostname', function (ServerRequestInterface $request, ?Key $apiKey) {
         $allowed = false;
 
         if (Http::isDevelopment()) {
@@ -1094,7 +1096,7 @@ return function (Container $context): void {
         }
 
         if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
+            $host = Request::query($request, 'appwrite-hostname', Request::headerLine($request, 'x-appwrite-hostname', '')) ?? '';
             if (! empty($host)) {
                 return $host;
             }
@@ -1103,8 +1105,8 @@ return function (Container $context): void {
         return '';
     }, ['request', 'apiKey']);
 
-    $context->set('apiKey', function (Request $request, Document $project, Document $team, Document $user): ?Key {
-        $key = $request->getHeaderLine('x-appwrite-key');
+    $context->set('apiKey', function (ServerRequestInterface $request, Document $project, Document $team, Document $user): ?Key {
+        $key = Request::headerLine($request, 'x-appwrite-key');
 
         if (empty($key)) {
             return null;
@@ -1112,9 +1114,9 @@ return function (Container $context): void {
 
         $key = Key::decode($project, $team, $user, $key);
 
-        $userHeader = $request->getHeaderLine('x-appwrite-user');
-        $organizationHeader = $request->getHeaderLine('x-appwrite-organization');
-        $projectHeader = $request->getHeaderLine('x-appwrite-project');
+        $userHeader = Request::headerLine($request, 'x-appwrite-user');
+        $organizationHeader = Request::headerLine($request, 'x-appwrite-organization');
+        $projectHeader = Request::headerLine($request, 'x-appwrite-project');
 
         if (! empty($key->getProjectId())) {
             if (empty($projectHeader) || $projectHeader !== $key->getProjectId()) {
@@ -1138,7 +1140,7 @@ return function (Container $context): void {
     }, ['request', 'project', 'team', 'user']);
 
     $context->set('resourceToken', function ($project, $dbForProject, $request, Authorization $authorization) {
-        $tokenJWT = $request->getParam('token');
+        $tokenJWT = Request::param($request, 'token');
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
@@ -1208,7 +1210,7 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, UsageContext $usage) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, ServerRequestInterface $request, UsageContext $usage) {
 
         return function (Document $database) use ($databaseFactory, $project, $request, $usage): Database {
             $databaseType = $database->getAttribute('type', '');
@@ -1221,7 +1223,7 @@ return function (Container $context): void {
                 ['host' => \gethostname(), 'project' => $project->getId()]
             );
 
-            $timeout = \intval($request->getHeaderLine('x-appwrite-timeout'));
+            $timeout = \intval(Request::headerLine($request, 'x-appwrite-timeout'));
             if (!empty($timeout) && Http::isDevelopment()) {
                 $database->setTimeout($timeout);
             }

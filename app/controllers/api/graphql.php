@@ -10,6 +10,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
@@ -32,9 +33,9 @@ Http::init()
     ->inject('request')
     ->inject('response')
     ->inject('authorization')
-    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
+    ->action(function (Document $project, User $user, ServerRequestInterface $request, Response $response, Authorization $authorization) {
         $response->setUser($user);
-        $request->setUser($user);
+        Request::rememberUser($request, $user);
 
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
@@ -72,7 +73,7 @@ Http::get('/v1/graphql')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (string $query, string $operationName, string $variables, Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
+    ->action(function (string $query, string $operationName, string $variables, ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = [
             'query' => $query,
         ];
@@ -119,14 +120,14 @@ Http::post('/v1/graphql/mutation')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
-        $query = $request->getParams();
+    ->action(function (ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
+        $query = Request::params($request);
 
-        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
+        if (Request::headerLine($request, 'x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeaderLine('content-type');
+        $type = Request::headerLine($request, 'content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -170,14 +171,14 @@ Http::post('/v1/graphql')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
-        $query = $request->getParams();
+    ->action(function (ServerRequestInterface $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
+        $query = Request::params($request);
 
-        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
+        if (Request::headerLine($request, 'x-sdk-graphql') == 'true') {
             $query = $query['query'];
         }
 
-        $type = $request->getHeaderLine('content-type');
+        $type = Request::headerLine($request, 'content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -274,22 +275,22 @@ function execute(
 /**
  * Parse an "application/graphql" type request
  *
- * @param Request $request
+ * @param ServerRequestInterface $request
  * @return array
  */
-function parseGraphql(Request $request): array
+function parseGraphql(ServerRequestInterface $request): array
 {
-    return ['query' => $request->getRawPayload()];
+    return ['query' => Request::rawPayload($request)];
 }
 
 /**
  * Parse an "multipart/form-data" type request
  *
  * @param array $query
- * @param Request $request
+ * @param ServerRequestInterface $request
  * @return array
  */
-function parseMultipart(array $query, Request $request): array
+function parseMultipart(array $query, ServerRequestInterface $request): array
 {
     $operations = \json_decode($query['operations'], true);
     $map = \json_decode($query['map'], true);
@@ -303,7 +304,7 @@ function parseMultipart(array $query, Request $request): array
                 }
                 $items = &$items[$key];
             }
-            $items = $request->getFiles($fileKey);
+            $items = Request::files($request, $fileKey);
         }
     }
 

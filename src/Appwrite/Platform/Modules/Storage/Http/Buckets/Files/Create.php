@@ -28,7 +28,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -103,7 +104,7 @@ class Create extends Action
         string $fileId,
         mixed $file,
         ?array $permissions,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -172,11 +173,11 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Maximum bucket file size is larger than _APP_STORAGE_LIMIT');
         }
 
-        $file = $request->getFiles('file');
+        $file = Request::files($request, 'file');
 
         // GraphQL multipart spec adds files with index keys
         if (empty($file)) {
-            $file = $request->getFiles(0);
+            $file = Request::files($request, 0);
         }
 
         if (empty($file)) {
@@ -188,16 +189,16 @@ class Create extends Action
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        $contentRange = $request->getHeaderLine('content-range');
+        $contentRange = Request::headerLine($request, 'content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
         $chunk = 1;
         $chunks = 1;
 
         if (!empty($contentRange)) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $fileSize = $request->getContentRangeSize();
-            $fileId = $request->getHeaderLine('x-appwrite-id', $fileId);
+            $start = Request::contentRangeStart($request);
+            $end = Request::contentRangeEnd($request);
+            $fileSize = Request::contentRangeSize($request);
+            $fileId = Request::headerLine($request, 'x-appwrite-id', $fileId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);

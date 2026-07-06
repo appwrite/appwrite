@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Redirects;
 
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -34,11 +35,11 @@ abstract class Base extends Action
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response): void
+    public function action(ServerRequestInterface $request, Response $response): void
     {
-        $url = parse_url($request->getURI());
+        $url = parse_url($request->getRequestTarget());
         $target = "/console" . ($url['path'] ?? '');
-        $params = $request->getParams();
+        $params = Request::params($request);
         if (!empty($params)) {
             $target .= "?" . \http_build_query($params);
         }

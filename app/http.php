@@ -487,19 +487,20 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoole, $setRequestContext) {
     Span::init('http.request');
 
-    $request = new Request($utopiaRequest->getSwooleRequest());
+    $request = $utopiaRequest;
     $response = new Response($utopiaResponse->getSwooleResponse());
 
     Span::add('http.method', $request->getMethod());
 
-    if ($files->isFileLoaded($request->getURI())) {
+    $path = $request->getUri()->getPath() ?: '/';
+    if ($files->isFileLoaded($path)) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $response
-            ->setContentType($files->getFileMimeType($request->getURI()))
+            ->setContentType($files->getFileMimeType($path))
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send($files->getFileContents($request->getURI()));
+            ->send($files->getFileContents($path));
 
         return;
     }
@@ -518,7 +519,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     try {
         $authorization = $app->context()->get('authorization');
 
-        $request->setAuthorization($authorization);
+        Request::rememberAuthorization($request, $authorization);
         $response->setAuthorization($authorization);
         $authorization->cleanRoles();
         $authorization->addRole(Role::any()->toString());
@@ -548,7 +549,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             } else {
-                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
+                $log->setUser(new User('guest-' . hash('sha256', Request::ip($request))));
             }
 
             $log->setNamespace("http");
@@ -558,12 +559,12 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->setMessage($th->getMessage());
 
             $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
-            $log->addTag('url', $route?->getPath() ?? $request->getURI());
+            $log->addTag('url', $route?->getPath() ?? $request->getRequestTarget());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+            $log->addTag('hostname', Request::hostname($request));
+            $log->addTag('locale', (string)Request::param($request, 'locale', Request::headerLine($request, 'x-appwrite-locale', '')));
 
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
@@ -580,7 +581,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
                 /** @var Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
             } elseif ($route === null) {
-                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+                $path = ltrim(parse_url($request->getRequestTarget(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
                 $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 

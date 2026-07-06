@@ -24,19 +24,19 @@ use Utopia\Validator\WhiteList;
  */
 return function (Container $container): void {
     $getProjectId = static function (Request $request): string {
-        $projectId = $request->getHeaderLine('x-appwrite-project', '');
+        $projectId = Request::headerLine($request, 'x-appwrite-project', '');
 
         if (!empty($projectId)) {
             return $projectId;
         }
 
-        $projectId = $request->getParam('project', '');
+        $projectId = Request::param($request, 'project', '');
 
         return \is_string($projectId) ? $projectId : '';
     };
 
     $getMode = static function (Request $request, Document $project) use ($getProjectId): string {
-        $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+        $mode = Request::param($request, 'mode', Request::headerLine($request, 'x-appwrite-mode', APP_MODE_DEFAULT));
         $projectId = $getProjectId($request);
 
         if (!empty($projectId) && $project->getId() !== $projectId) {
@@ -65,10 +65,10 @@ return function (Container $container): void {
     };
 
     $findRule = static function (Request $request, Document $project, Authorization $authorization) use ($getDbForPlatform): Document {
-        $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
+        $domain = \parse_url(Request::origin($request, ), PHP_URL_HOST);
 
         if (empty($domain)) {
-            $domain = \parse_url($request->getReferer(), PHP_URL_HOST);
+            $domain = \parse_url(Request::referer($request, ), PHP_URL_HOST);
         }
 
         if (empty($domain)) {
@@ -113,7 +113,7 @@ return function (Container $container): void {
     };
 
     $findDevKey = static function (Request $request, Document $project, array $servers, Authorization $authorization) use ($getDbForPlatform): Document {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
+        $devKey = Request::headerLine($request, 'x-appwrite-dev-key', Request::param($request, 'devKey', ''));
         $key = $project->find('secret', $devKey, 'devKeys');
 
         if (!$key) {
@@ -137,7 +137,7 @@ return function (Container $container): void {
         }
 
         $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
+        $sdk = \strtolower(Request::headerLine($request, 'x-sdk-name', 'UNKNOWN'));
 
         if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
             $sdks = $key->getAttribute('sdks', []);
@@ -191,8 +191,8 @@ return function (Container $container): void {
             $allowedHostnames[] = $rule->getAttribute('domain', '');
         }
 
-        $originHostname = \parse_url($request->getOrigin(), PHP_URL_HOST);
-        $refererHostname = \parse_url($request->getReferer(), PHP_URL_HOST);
+        $originHostname = \parse_url(Request::origin($request, ), PHP_URL_HOST);
+        $refererHostname = \parse_url(Request::referer($request, ), PHP_URL_HOST);
         $hostname = $originHostname ?: $refererHostname;
 
         if ($request->getMethod() === 'OPTIONS' && !empty($hostname)) {
@@ -228,12 +228,12 @@ return function (Container $container): void {
         $store->decode(
             $request->getCookie(
                 $store->getKey(),
-                $request->getCookie($store->getKey() . '_legacy', '')
+                Request::cookie($request, $store->getKey() . '_legacy', '')
             )
         );
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            $sessionHeader = $request->getHeaderLine('x-appwrite-session', '');
+            $sessionHeader = Request::headerLine($request, 'x-appwrite-session', '');
 
             if (!empty($sessionHeader)) {
                 $store->decode($sessionHeader);
@@ -241,7 +241,7 @@ return function (Container $container): void {
         }
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            $fallback = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
+            $fallback = \json_decode(Request::headerLine($request, 'x-fallback-cookies', ''), true);
             $store->decode((\is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : '');
         }
 
@@ -271,7 +271,7 @@ return function (Container $container): void {
             $user = new User([]);
         }
 
-        $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
+        $authJWT = Request::headerLine($request, 'x-appwrite-jwt', (string)(Request::param($request, 'jwt', '')));
         if (!empty($authJWT) && !$project->isEmpty()) {
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
@@ -300,8 +300,8 @@ return function (Container $container): void {
             }
         }
 
-        $accountKey = $request->getHeaderLine('x-appwrite-key', '');
-        $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
+        $accountKey = Request::headerLine($request, 'x-appwrite-key', '');
+        $accountKeyUserId = Request::headerLine($request, 'x-appwrite-user', '');
 
         if (!empty($accountKeyUserId) && !empty($accountKey)) {
             if (!$user->isEmpty()) {
@@ -340,9 +340,9 @@ return function (Container $container): void {
 
         // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+        $impersonateUserId = Request::headerLine($request, 'x-appwrite-impersonate-user-id', (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
+        $impersonateEmail = Request::headerLine($request, 'x-appwrite-impersonate-user-email', (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
+        $impersonatePhone = Request::headerLine($request, 'x-appwrite-impersonate-user-phone', (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
 
         if (empty($impersonateUserId) && empty($impersonateEmail) && empty($impersonatePhone)) {
             return new Document();
@@ -380,9 +380,9 @@ return function (Container $container): void {
             return $user;
         }
 
-        $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
-        $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
-        $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
+        $impersonateUserId = Request::headerLine($request, 'x-appwrite-impersonate-user-id', (string)(Request::param($request, 'impersonateuserid', '') ?: Request::param($request, 'impersonateUserId', '')));
+        $impersonateEmail = Request::headerLine($request, 'x-appwrite-impersonate-user-email', (string)(Request::param($request, 'impersonateemail', '') ?: Request::param($request, 'impersonateEmail', '')));
+        $impersonatePhone = Request::headerLine($request, 'x-appwrite-impersonate-user-phone', (string)(Request::param($request, 'impersonatephone', '') ?: Request::param($request, 'impersonatePhone', '')));
 
         $mode = $getMode($request, $project);
         $dbForPlatform = $getDbForPlatform($authorization);

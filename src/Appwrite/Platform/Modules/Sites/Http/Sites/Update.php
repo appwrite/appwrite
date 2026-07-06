@@ -18,7 +18,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -138,7 +139,7 @@ class Update extends Base
         ?string $buildSpecification,
         string $runtimeSpecification,
         int $deploymentRetention,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject,
         Document $project,

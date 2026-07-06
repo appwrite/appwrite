@@ -20,7 +20,8 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -104,7 +105,7 @@ class Create extends Action
         ?string $commands,
         mixed $code,
         mixed $activate,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
@@ -137,11 +138,11 @@ class Create extends Action
             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
         }
 
-        $file = $request->getFiles('code');
+        $file = Request::files($request, 'code');
 
         // GraphQL multipart spec adds files with index keys
         if (empty($file)) {
-            $file = $request->getFiles(0);
+            $file = Request::files($request, 0);
         }
 
         if (empty($file)) {
@@ -167,16 +168,16 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
         }
 
-        $contentRange = $request->getHeaderLine('content-range');
+        $contentRange = Request::headerLine($request, 'content-range');
         $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
 
         if (!empty($contentRange)) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
-            $fileSize = $request->getContentRangeSize();
-            $deploymentId = $request->getHeaderLine('x-appwrite-id', $deploymentId);
+            $start = Request::contentRangeStart($request);
+            $end = Request::contentRangeEnd($request);
+            $fileSize = Request::contentRangeSize($request);
+            $deploymentId = Request::headerLine($request, 'x-appwrite-id', $deploymentId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
@@ -220,7 +221,7 @@ class Create extends Action
             return $merged;
         };
 
-        $type = $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual';
+        $type = Request::headerLine($request, 'x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         try {
             $locks($lockKey, 600, function () use ($activate, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, &$metadata, $path, $type, &$completed, $response): void {

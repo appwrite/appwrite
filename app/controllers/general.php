@@ -22,6 +22,7 @@ use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
@@ -77,9 +78,9 @@ use Utopia\Validator\Text;
 
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock)
+function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, ServerRequestInterface $request, Response $response, Log $log, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock)
 {
-    $host = $request->getHostname();
+    $host = Request::hostname($request);
     if (!empty($previewHostname)) {
         $host = $previewHostname;
     }
@@ -181,11 +182,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
     if ($type === 'deployment') {
         if (System::getEnv('_APP_OPTIONS_ROUTER_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https') {
+            if (Request::protocol($request) !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.', view: $errorView);
                 }
-                $response->redirect('https://' . $request->getHostname() . $request->getURI());
+                $response->redirect('https://' . Request::hostname($request) . $request->getRequestTarget());
                 return false;
             }
         }
@@ -224,7 +225,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $path .= '?' . $query;
         }
 
-        $protocol = $request->getProtocol();
+        $protocol = Request::protocol($request);
 
         /**
             Ensure preview authorization
@@ -239,7 +240,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
-            $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
+            $cookie = Request::cookie($request, COOKIE_NAME_PREVIEW, '');
             $authorized = false;
             $user = new Document();
 
@@ -386,7 +387,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
-        $ip = $request->getIP();
+        $ip = Request::ip($request);
         $headers['x-appwrite-client-ip'] = $ip;
 
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
@@ -815,9 +816,9 @@ Http::init()
     ->groups(['database', 'functions', 'sites', 'messaging'])
     ->inject('project')
     ->inject('request')
-    ->action(function (Document $project, Request $request) {
+    ->action(function (Document $project, ServerRequestInterface $request) {
         if ($project->getId() === 'console') {
-            $message = empty($request->getHeaderLine('x-appwrite-project')) ?
+            $message = empty(Request::headerLine($request, 'x-appwrite-project')) ?
                 'No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK.' :
                 'This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct.';
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, $message);
@@ -851,11 +852,11 @@ Http::init()
     ->inject('executionsRetentionCount')
     ->inject('lock')
     ->inject('params')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, ServerRequestInterface $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params) {
         /*
         * Appwrite Router
         */
-        $hostname = $request->getHostname();
+        $hostname = Request::hostname($request);
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
         if (!\in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
@@ -868,7 +869,7 @@ Http::init()
         * Request format
         */
         $route = $utopia->match($request)?->route;
-        $request->setRoute($route);
+        Request::rememberRoute($request, $route);
 
         if ($route === null) {
             $response->setStatusCode(404);
@@ -876,57 +877,57 @@ Http::init()
             return;
         }
 
-        $requestFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = Request::headerLine($request, 'x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
-                $request->addFilter(new RequestV16());
+                Request::addRequestFilter($request, new RequestV16());
             }
             if (version_compare($requestFormat, '1.5.0', '<')) {
-                $request->addFilter(new RequestV17());
+                Request::addRequestFilter($request, new RequestV17());
             }
             if (version_compare($requestFormat, '1.6.0', '<')) {
-                $request->addFilter(new RequestV18());
+                Request::addRequestFilter($request, new RequestV18());
             }
             if (version_compare($requestFormat, '1.7.0', '<')) {
-                $request->addFilter(new RequestV19());
+                Request::addRequestFilter($request, new RequestV19());
             }
             if (version_compare($requestFormat, '1.8.0', '<')) {
                 $dbForProject = $getProjectDB($project);
-                $request->addFilter(new RequestV20($dbForProject, $params));
+                Request::addRequestFilter($request, new RequestV20($dbForProject, $params));
             }
             if (version_compare($requestFormat, '1.9.0', '<')) {
-                $request->addFilter(new RequestV21());
+                Request::addRequestFilter($request, new RequestV21());
             }
             if (version_compare($requestFormat, '1.9.1', '<')) {
-                $request->addFilter(new RequestV22());
+                Request::addRequestFilter($request, new RequestV22());
             }
             if (version_compare($requestFormat, '1.9.2', '<')) {
-                $request->addFilter(new RequestV23());
+                Request::addRequestFilter($request, new RequestV23());
             }
             if (version_compare($requestFormat, '1.9.3', '<')) {
-                $request->addFilter(new RequestV24());
+                Request::addRequestFilter($request, new RequestV24());
             }
             if (version_compare($requestFormat, '1.9.4', '<')) {
-                $request->addFilter(new RequestV25());
+                Request::addRequestFilter($request, new RequestV25());
             }
             if (version_compare($requestFormat, '1.9.5', '<')) {
-                $request->addFilter(new RequestV26());
+                Request::addRequestFilter($request, new RequestV26());
             }
         }
 
-        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        $localeParam = (string) Request::param($request, 'locale', Request::headerLine($request, 'x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
 
-        $localHosts = ['localhost','localhost:'.$request->getPort()];
+        $localHosts = ['localhost','localhost:'.Request::port($request)];
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
         if (!empty($migrationHost)) {
             // Treat the migration host like localhost because internal migration and
             // CI traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
-            $localHosts[] = $migrationHost.':'.$request->getPort();
+            $localHosts[] = $migrationHost.':'.Request::port($request);
         }
 
         $warnings = [];
@@ -934,7 +935,7 @@ Http::init()
         /*
          * Response format
          */
-        $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $responseFormat = Request::headerLine($request, 'x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.9.5', '<')) {
                 $response->addFilter(new ResponseV26());
@@ -980,12 +981,12 @@ Http::init()
         }
 
         if (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && !in_array(($swooleRequest->header['host'] ?? ''), $localHosts)) { // localhost allowed for proxy
+            if (Request::protocol($request) !== 'https' && !in_array(($swooleRequest->header['host'] ?? ''), $localHosts)) { // localhost allowed for proxy
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
 
-                $response->redirect('https://' . $request->getHostname() . $request->getURI());
+                $response->redirect('https://' . Request::hostname($request) . $request->getRequestTarget());
                 return;
             }
         }
@@ -1003,9 +1004,9 @@ Http::init()
     ->inject('cors')
     ->inject('devKey')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
+    ->action(function (ServerRequestInterface $request, Response $response, Cors $cors, Document $devKey, Validator $originValidator) {
         // CORS headers
-        foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+        foreach ($cors->headers(Request::origin($request, )) as $name => $value) {
             $response->addHeader($name, $value);
         }
 
@@ -1014,17 +1015,17 @@ Http::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff');
 
-        if ($request->getProtocol() === 'https') {
+        if (Request::protocol($request) === 'https') {
             $maxAge = 60 * 60 * 24 * 126; // 126 days
             $response->addHeader('Strict-Transport-Security', "max-age=$maxAge");
         }
 
         // Application level CSRF protection
-        $origin = $request->getOrigin();
-        if (empty($origin) || !$devKey->isEmpty() || !empty($request->getHeaderLine('x-appwrite-key'))) {
+        $origin = Request::origin($request, );
+        if (empty($origin) || !$devKey->isEmpty() || !empty(Request::headerLine($request, 'x-appwrite-key'))) {
             return;
         }
-        $route = $request->getRoute();
+        $route = Request::route($request);
         if ($route?->getLabel('origin', false) === '*') {
             return;
         }
@@ -1045,8 +1046,8 @@ Http::init()
    ->inject('platform')
     ->inject('authorization')
     ->inject('certifiedDomains')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
-       $hostname = $request->getHostname();
+   ->action(function (ServerRequestInterface $request, Document $console, Database $dbForPlatform, Certificate $publisherForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
+       $hostname = Request::hostname($request);
        $platformHostnames = $platform['hostnames'] ?? [];
 
        // 1. Cache hit
@@ -1061,7 +1062,7 @@ Http::init()
            return;
        }
 
-       if (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
+       if (str_starts_with($request->getRequestTarget(), '/.well-known/acme-challenge')) {
            return;
        }
 
@@ -1163,19 +1164,19 @@ Http::options()
     ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
     ->inject('lock')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, ServerRequestInterface $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         /*
         * Appwrite Router
         */
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
-        if (!in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
+        if (!in_array(Request::hostname($request), $platformHostnames) || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $bus, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
             }
         }
 
-        foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+        foreach ($cors->headers(Request::origin($request, )) as $name => $value) {
             $response->addHeader($name, $value);
         }
 
@@ -1204,7 +1205,7 @@ Http::error()
     ->inject('bus')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+    ->action(function (Throwable $error, Http $utopia, ServerRequestInterface $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
         $class = \get_class($error);
@@ -1303,7 +1304,7 @@ Http::error()
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             } else {
-                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
+                $log->setUser(new User('guest-' . hash('sha256', Request::ip($request))));
             }
 
             try {
@@ -1321,7 +1322,7 @@ Http::error()
 
             $log->addTag('database', $dsn->getHost());
             $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
-            $log->addTag('url', $request->getURI());
+            $log->addTag('url', $request->getRequestTarget());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
 
@@ -1330,8 +1331,8 @@ Http::error()
                 $log->addTag('projectId', $project->getId());
             }
 
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+            $log->addTag('hostname', Request::hostname($request));
+            $log->addTag('locale', (string)Request::param($request, 'locale', Request::headerLine($request, 'x-appwrite-locale', '')));
 
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
@@ -1340,7 +1341,7 @@ Http::error()
 
             try {
                 /* add queries to log */
-                $queries = $request->getParam('queries', []);
+                $queries = Request::param($request, 'queries', []);
                 if (!empty($queries) && is_array($queries)) {
                     $parsedQueries = Query::parseQueries($queries);
 
@@ -1427,7 +1428,7 @@ Http::error()
                 /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
             } elseif ($route === null) {
-                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+                $path = ltrim(parse_url($request->getRequestTarget(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
                 $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 
@@ -1497,7 +1498,7 @@ Http::error()
         // Uses override:true to avoid duplicate headers if init() already set them.
         try {
             $cors = $utopia->context()->get('cors');
-            foreach ($cors->headers($request->getOrigin()) as $name => $value) {
+            foreach ($cors->headers(Request::origin($request, )) as $name => $value) {
                 $response
                     ->removeHeader($name)
                     ->addHeader($name, $value);
@@ -1566,9 +1567,9 @@ Http::get('/robots.txt')
     ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
     ->inject('lock')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, ServerRequestInterface $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         $platformHostnames = $platform['hostnames'] ?? [];
-        if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
+        if (in_array(Request::hostname($request), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -1601,9 +1602,9 @@ Http::get('/humans.txt')
     ->inject('publisherForDeletes')
     ->inject('executionsRetentionCount')
     ->inject('lock')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, ServerRequestInterface $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, Bus $bus, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock) {
         $platformHostnames = $platform['hostnames'] ?? [];
-        if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
+        if (in_array(Request::hostname($request), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
@@ -1619,8 +1620,8 @@ Http::get('/.well-known/acme-challenge/*')
     ->label('docs', false)
     ->inject('request')
     ->inject('response')
-    ->action(function (Request $request, Response $response) {
-        $uriChunks = \explode('/', $request->getURI());
+    ->action(function (ServerRequestInterface $request, Response $response) {
+        $uriChunks = \explode('/', $request->getRequestTarget());
         $token = $uriChunks[\count($uriChunks) - 1];
 
         $validator = new Text(100, allowList: [
@@ -1722,18 +1723,18 @@ Http::get('/_appwrite/authorize')
     ->inject('request')
     ->inject('response')
     ->inject('previewHostname')
-    ->action(function (Request $request, Response $response, string $previewHostname) {
+    ->action(function (ServerRequestInterface $request, Response $response, string $previewHostname) {
 
-        $host = $request->getHostname();
+        $host = Request::hostname($request);
         if (!empty($previewHostname)) {
             $host = $previewHostname;
         }
 
-        $referrer = $request->getReferer();
-        $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
+        $referrer = Request::referer($request, );
+        $protocol = \parse_url(Request::origin($request, $referrer), PHP_URL_SCHEME);
 
-        $jwt = $request->getParam('jwt', '');
-        $path = $request->getParam('path', '');
+        $jwt = Request::param($request, 'jwt', '');
+        $path = Request::param($request, 'path', '');
 
         $duration = 60 * 60 * 24; // 1 day in seconds
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));

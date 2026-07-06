@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -121,7 +122,7 @@ class Upsert extends PlatformAction
         ?string $expiresAt,
         array $metadata,
         Response $response,
-        Request $request,
+        ServerRequestInterface $request,
         Database $dbForProject,
         User $user,
         Authorization $authorization,
@@ -156,7 +157,7 @@ class Upsert extends PlatformAction
         if (empty($userInternalId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to resolve valid user internal ID.');
         }
-        $isGraphQL = $request->getHeaderLine('x-appwrite-source') === 'graphql';
+        $isGraphQL = Request::headerLine($request, 'x-appwrite-source') === 'graphql';
 
         $presenceData = [
             'userInternalId' => $userInternalId,

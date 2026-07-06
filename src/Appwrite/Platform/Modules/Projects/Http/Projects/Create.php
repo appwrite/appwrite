@@ -7,6 +7,7 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -65,7 +66,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $name, string $teamId, string $region, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
+    public function action(string $projectId, string $name, string $teamId, string $region, ServerRequestInterface $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks)
     {
         $team = $dbForPlatform->getDocument('teams', $teamId);
 

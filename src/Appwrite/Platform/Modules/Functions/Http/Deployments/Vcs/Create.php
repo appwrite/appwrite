@@ -14,7 +14,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
+use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -83,7 +84,7 @@ class Create extends Base
         string $type,
         string $reference,
         bool $activate,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,

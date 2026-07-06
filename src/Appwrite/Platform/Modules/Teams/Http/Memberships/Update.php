@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -66,7 +67,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, array $roles, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
+    public function action(string $teamId, string $membershipId, array $roles, ServerRequestInterface $request, Response $response, User $user, Document $project, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {

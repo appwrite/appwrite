@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\ListSelection;
 use Utopia\Database\Database;
@@ -72,7 +73,7 @@ class XList extends Base
         array $queries,
         string $search,
         bool $includeTotal,
-        Request $request,
+        ServerRequestInterface $request,
         Response $response,
         Database $dbForProject
     ) {

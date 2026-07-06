@@ -880,7 +880,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $project = null;
     $logUser = null;
     $authorization = null;
-    $rawSize = $request->getSize();
+    $rawSize = Request::size($request);
     $channelCount = 0;
     $subscriptionCount = 0;
     $outboundBytes = 0;
@@ -891,8 +891,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     Span::init('realtime.open');
     Span::add('realtime.connection.id', $connection);
     Span::add('realtime.inbound_bytes', $rawSize);
-    if (!empty($request->getOrigin())) {
-        Span::add('realtime.origin', $request->getOrigin());
+    if (!empty(Request::origin($request, ))) {
+        Span::add('realtime.origin', Request::origin($request, ));
     }
 
     $error = null;
@@ -942,8 +942,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
         $timelimit
-            ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getURI());
+            ->setParam('{ip}', Request::ip($request))
+            ->setParam('{url}', $request->getRequestTarget());
 
         $abuse = new Abuse($timelimit);
 
@@ -960,7 +960,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Adding Appwrite API domains to allow XDOMAIN communication.
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
-        $origin = $request->getOrigin();
+        $origin = Request::origin($request, );
         $originValidator = $connectionContainer->get('originValidator');
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
@@ -969,7 +969,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $roles = $targetUser->getRoles($authorization);
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
+        $channels = Realtime::convertChannels(Request::query($request, 'channels', []), $targetUser->getId());
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -1024,7 +1024,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         try {
             $subscriptions = Realtime::constructSubscriptions(
                 $names,
-                fn ($channel) => $request->getQuery($channel, null)
+                fn ($channel) => Request::query($request, $channel, null)
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());

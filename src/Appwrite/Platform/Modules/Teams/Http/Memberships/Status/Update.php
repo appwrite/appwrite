@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
@@ -79,9 +80,9 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
+    public function action(string $teamId, string $membershipId, string $userId, string $secret, ServerRequestInterface $request, Response $response, Document $targetUser, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken, bool $domainVerification, ?string $cookieDomain)
     {
-        $protocol = $request->getProtocol();
+        $protocol = Request::protocol($request);
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -132,8 +133,8 @@ class Update extends Action
         if (!$hasSession) {
             $authorization->addRole(Role::user($targetUser->getId())->toString());
 
-            $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
+            $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
+            $record = $geodb->get(Request::ip($request));
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
@@ -149,8 +150,8 @@ class Update extends Action
                 'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $targetUser->getAttribute('email'),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
+                'ip' => Request::ip($request),
                 'factors' => ['email'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)

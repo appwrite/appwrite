@@ -29,6 +29,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Hash;
@@ -2293,15 +2294,15 @@ Http::post('/v1/users/:userId/sessions')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
+    ->action(function (string $userId, ServerRequestInterface $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $secret = $proofForToken->generate();
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
+        $detector = new Detector(Request::userAgent($request, 'UNKNOWN'));
+        $record = $geodb->get(Request::ip($request));
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
@@ -2313,9 +2314,9 @@ Http::post('/v1/users/:userId/sessions')
                 'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_SERVER,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'userAgent' => Request::userAgent($request, 'UNKNOWN'),
                 'factors' => ['server'],
-                'ip' => $request->getIP(),
+                'ip' => Request::ip($request),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => $expire,
             ],
@@ -2381,7 +2382,7 @@ Http::post('/v1/users/:userId/tokens')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, int $length, int $expire, ServerRequestInterface $request, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2400,8 +2401,8 @@ Http::post('/v1/users/:userId/tokens')
             'type' => TOKEN_TYPE_GENERIC,
             'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP()
+            'userAgent' => Request::userAgent($request, 'UNKNOWN'),
+            'ip' => Request::ip($request)
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
