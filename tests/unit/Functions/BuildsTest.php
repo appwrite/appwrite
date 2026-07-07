@@ -74,6 +74,17 @@ final class BuildsTest extends TestCase
         $this->assertSame("\n./index.html\n./server/entry.mjs\n", $result['detectionLogs']);
     }
 
+    public function testSplitSiteDetectionLogsKeepsLogsWhenDetectionBlockWasTruncated(): void
+    {
+        $result = $this->callBuilds(
+            'splitSiteDetectionLogs',
+            "before\n{APPWRITE_DETECTION_SEPARATOR_START}\n./index.html\n"
+        );
+
+        $this->assertSame("before\n\n./index.html\n", $result['logs']);
+        $this->assertSame('', $result['detectionLogs']);
+    }
+
     public function testDetectSiteRenderingFindsStaticFallbackFile(): void
     {
         $detection = $this->callBuilds('detectSiteRendering', 'other', "./main.html\n");
