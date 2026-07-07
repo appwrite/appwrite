@@ -69,10 +69,22 @@ export function initTicketColumnSplit(): { main: number; stub: number } {
 
 /** Stub label padding inside the stub grid column (% of stub cell). */
 export const INIT_TICKET_STUB_LABEL_INSET = {
-  left: 70,
-  right: 6,
-  bottom: 6,
+  /**
+   * Anchor for rotated stub copy. Pre-rotation column height becomes horizontal
+   * extent after -90° rotation, so leave (100 - left - right)% of stub width.
+   */
+  left: 52,
+  right: 3,
+  bottom: 8,
 } as const
+
+/** Stub title — smaller type when the line is long (pre-rotation width). */
+export function initTicketStubTitleClass(title: string): string {
+  const len = title.trim().length
+  if (len > 36) return 'text-[clamp(5px,0.9vw,8px)]'
+  if (len > 28) return 'text-[clamp(6px,1vw,9px)]'
+  return 'text-[clamp(7px,1.2vw,10px)]'
+}
 
 /** Grid columns for main body vs stub inside the content inset. */
 export function initTicketContentGridStyle(): { gridTemplateColumns: string } {

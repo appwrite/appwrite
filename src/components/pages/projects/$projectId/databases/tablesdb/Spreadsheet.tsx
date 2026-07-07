@@ -20,10 +20,14 @@ import {
   columnTypeSupportsNumericRange,
   formatColumnNumericDisplay,
   formatColumnRangeDisplay,
+  getTableColumnKey,
   getTableColumnStatusBadgeVariant,
   isTableColumnStatusPending,
+  isTablesDbSystemColumnKey,
   isTextType,
+  mergeTablesDbSystemColumnsIntoList,
   normalizeTableColumnStatus,
+  type MappedTableColumnListItem,
 } from '@/lib/utils/database-columns'
 import { NumericValueTooltip } from '@/components/global/shared/NumericValueTooltip'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -5766,7 +5770,6 @@ export function ColumnsSpreadsheet({
   filterMap: filterMapProp,
 }: SpreadsheetProps) {
   const t = useT()
-  const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
   const params = useParams({
     strict: false,
   })
@@ -6239,37 +6242,49 @@ export function ColumnsSpreadsheet({
     })
   }
 
-  // Map API columns to the format expected by the component (use filtered list for display)
-  const columns = apiColumns.map((col: unknown) => ({
-    key: col.key || col.name || col.$id,
-    type: col.type || 'string',
-    format: col.format || null,
-    // String fields
-    size: col.size || null,
-    encrypt: col.encrypt || false,
-    // Number fields
-    min: col.min,
-    max: col.max,
-    // Enum fields
-    elements: col.elements || null,
-    // Relationship fields
-    relatedTableId: col.relatedTableId ?? col.relatedTable,
-    relationshipType: col.relationshipType ?? col.relationType,
-    twoWay: col.twoWay,
-    twoWayKey: col.twoWayKey,
-    onDelete: col.onDelete,
-    // Common fields
-    required: col.required || false,
-    array: col.array || false,
-    default: col.default || null,
-    xdefault: col.xdefault || col.default || null,
-    status: normalizeTableColumnStatus(
-      (col as { status?: string }).status,
-    ),
-    error: (col as { error?: string }).error || '',
-    // Keep reference to original for debugging
-    $id: col.$id,
-  }))
+  // Map API columns and prepend built-in system columns ($id, $createdAt, $updatedAt).
+  const columns = mergeTablesDbSystemColumnsIntoList(
+    apiColumns
+      .filter((col) => !isTablesDbSystemColumnKey(getTableColumnKey(col)))
+      .map(
+        (col: unknown): MappedTableColumnListItem => ({
+          key: getTableColumnKey(col),
+          type: (col as { type?: string }).type || 'string',
+          format: (col as { format?: string | null }).format || null,
+          // String fields
+          size: (col as { size?: number | null }).size || null,
+          encrypt: (col as { encrypt?: boolean }).encrypt || false,
+          // Number fields
+          min: (col as { min?: unknown }).min,
+          max: (col as { max?: unknown }).max,
+          // Enum fields
+          elements: (col as { elements?: string[] | null }).elements || null,
+          // Relationship fields
+          relatedTableId:
+            (col as { relatedTableId?: unknown }).relatedTableId ??
+            (col as { relatedTable?: unknown }).relatedTable,
+          relationshipType:
+            (col as { relationshipType?: unknown }).relationshipType ??
+            (col as { relationType?: unknown }).relationType,
+          twoWay: (col as { twoWay?: unknown }).twoWay,
+          twoWayKey: (col as { twoWayKey?: unknown }).twoWayKey,
+          onDelete: (col as { onDelete?: unknown }).onDelete,
+          // Common fields
+          required: (col as { required?: boolean }).required || false,
+          array: (col as { array?: boolean }).array || false,
+          default: (col as { default?: unknown }).default || null,
+          xdefault:
+            (col as { xdefault?: unknown }).xdefault ??
+            (col as { default?: unknown }).default ??
+            null,
+          status: normalizeTableColumnStatus(
+            (col as { status?: string }).status,
+          ),
+          error: (col as { error?: string }).error || '',
+          $id: String((col as { $id?: string }).$id ?? getTableColumnKey(col)),
+        }),
+      ),
+  )
 
   const displayColumns = columns
 
@@ -6296,60 +6311,9 @@ export function ColumnsSpreadsheet({
     )
   }
 
-  const columnsFullyEmpty =
-    !columnsFetching &&
-    apiColumns.length === 0 &&
-    columnsFilterMap.size === 0 &&
-    suggestedColumns.length === 0
-
-  const columnsFilteredEmpty =
-    !columnsFetching &&
-    apiColumns.length === 0 &&
-    columnsFilterMap.size > 0
-
-  if (columnsFullyEmpty) {
-    return (
-      <div className="flex h-full flex-col">
-        <div className="flex flex-1 items-center justify-center px-6 py-12">
-          <EmptyState
-            icon={Columns3}
-            title={dbLabels.emptyGridNoSchemaTitle}
-            description={dbLabels.addFirstColumnHint}
-            isEmpty
-            variant="centered"
-            iconSize="md"
-          />
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="flex h-full flex-col relative">
-      {columnsFilteredEmpty ? (
-        <div className="flex flex-1 items-center justify-center px-6 py-12">
-          <EmptyState
-            icon={Columns3}
-            title={t('No columns match your filters')}
-            description={t(
-              'Try adjusting or clearing filters to see more results',
-            )}
-            hasFilters
-            variant="centered"
-            iconSize="md"
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearAllColumnsFilters}
-              >
-                {t('Clear filters')}
-              </Button>
-            }
-          />
-        </div>
-      ) : (
-        <>
+      <>
           <div
             className={cn(
               'flex-1 overflow-auto overscroll-contain',
@@ -6468,7 +6432,9 @@ export function ColumnsSpreadsheet({
               <tbody>
                 {allColumns.map((col: unknown) => {
                   const Icon = getColumnIcon(col.type)
-                  const isSystem = col.key ? col.key.startsWith('$') : false
+                  const isSystem = col.key
+                    ? isTablesDbSystemColumnKey(col.key)
+                    : false
                   const isSuggestion = col.isSuggestion
                   const columnStatus = normalizeTableColumnStatus(col.status)
                   const isStatusPending = isTableColumnStatusPending(columnStatus)
@@ -6523,11 +6489,6 @@ export function ColumnsSpreadsheet({
                                 <p>{t('Copy column name')}</p>
                               </TooltipContent>
                             </Tooltip>
-                            {isSuggestion && (
-                              <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                                {t('Suggested')}
-                              </span>
-                            )}
                           </div>
                           {isSuggestion && (
                             <div className="flex items-center gap-1">
@@ -6746,7 +6707,6 @@ export function ColumnsSpreadsheet({
             </div>
           </div>
         </>
-      )}
 
       {/* Bulk Action Bar for Suggestions */}
       {suggestedColumns.length > 0 && (
@@ -7516,14 +7476,6 @@ export function IndexesSpreadsheet({
                             >
                               {index.key || 'unnamed'}
                             </code>
-                            {isSuggestion && (
-                              <Badge
-                                variant="secondary"
-                                className="h-5 px-1.5 text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                              >
-                                {t('Suggested')}
-                              </Badge>
-                            )}
                           </div>
                           {isSuggestion && (
                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">

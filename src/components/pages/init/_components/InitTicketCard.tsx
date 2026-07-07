@@ -24,6 +24,7 @@ import {
   initTicketDisplayAspectRatio,
   initTicketHolderNameFontSizeClass,
   initTicketInsetStyle,
+  initTicketStubTitleClass,
 } from '@/lib/init/ticket-layout'
 import type { ResolvedInitTicketAppearance } from '@/lib/init/ticket-types'
 import {
@@ -190,16 +191,16 @@ function TicketStubContent({
   const { left, right, bottom } = INIT_TICKET_STUB_LABEL_INSET
 
   return (
-    <div className="relative h-full min-w-0 overflow-visible" aria-hidden>
+    <div className="relative h-full min-w-0" aria-hidden>
       <div
-        className="absolute flex items-end justify-start overflow-visible"
+        className="absolute flex items-end justify-start"
         style={{
           left: `${left}%`,
           right: `${right}%`,
           bottom: `${bottom}%`,
         }}
       >
-        <div className="flex origin-bottom-start -rotate-90 flex-col items-start gap-2 whitespace-nowrap text-start">
+        <div className="flex origin-bottom-start -rotate-90 flex-col items-start gap-1 whitespace-nowrap text-start">
           <InitWordmark
             accentColor={accentColor}
             className={cn(
@@ -215,7 +216,7 @@ function TicketStubContent({
           </p>
           <p
             className={cn(
-              'max-w-[160px] truncate text-[clamp(11px,2vw,16px)] font-normal',
+              'text-[clamp(11px,2vw,16px)] font-normal',
               labelClass,
             )}
           >
@@ -223,7 +224,8 @@ function TicketStubContent({
           </p>
           <p
             className={cn(
-              'max-w-[140px] truncate text-[clamp(7px,1.2vw,10px)] font-medium',
+              'font-medium leading-none',
+              initTicketStubTitleClass(holderTitle),
               mutedClass,
             )}
           >
@@ -391,15 +393,17 @@ function TicketFrontFace(props: TicketFaceSharedProps) {
           </div>
         </div>
 
-        <TicketStubContent
-          ticketNumber={ticketNumber}
-          holderName={holderName}
-          holderTitle={holderTitle}
-          passLabel={passLabel}
-          dateRangeLabel={dateRangeLabel}
-          accentColor={accentColor}
-          usesDarkImage={usesDarkImage}
-        />
+        <div className="min-w-0">
+          <TicketStubContent
+            ticketNumber={ticketNumber}
+            holderName={holderName}
+            holderTitle={holderTitle}
+            passLabel={passLabel}
+            dateRangeLabel={dateRangeLabel}
+            accentColor={accentColor}
+            usesDarkImage={usesDarkImage}
+          />
+        </div>
       </div>
     </TicketFaceShell>
   )

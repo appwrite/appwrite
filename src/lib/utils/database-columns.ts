@@ -98,6 +98,82 @@ export function getTableColumnKey(col: unknown): string {
   return String(c.key ?? c.name ?? c.$id ?? c.attribute ?? c.attributeId ?? '')
 }
 
+/** Built-in Tables DB row fields (not returned by listColumns). */
+export type TablesDbSystemColumnDefinition = {
+  key: '$id' | '$createdAt' | '$updatedAt'
+  type: string
+  required: boolean
+}
+
+export const TABLESDB_SYSTEM_COLUMNS: readonly TablesDbSystemColumnDefinition[] =
+  [
+    { key: '$id', type: 'string', required: true },
+    { key: '$createdAt', type: 'datetime', required: true },
+    { key: '$updatedAt', type: 'datetime', required: true },
+  ]
+
+export function isTablesDbSystemColumnKey(key: string): boolean {
+  return (
+    key === '$id' || key === '$createdAt' || key === '$updatedAt'
+  )
+}
+
+export type MappedTableColumnListItem = {
+  key: string
+  type: string
+  format: string | null
+  size: number | null
+  encrypt: boolean
+  min?: unknown
+  max?: unknown
+  elements: string[] | null
+  relatedTableId?: unknown
+  relationshipType?: unknown
+  twoWay?: unknown
+  twoWayKey?: unknown
+  onDelete?: unknown
+  required: boolean
+  array: boolean
+  default: unknown
+  xdefault: unknown
+  status: TableColumnStatus
+  error: string
+  $id: string
+}
+
+export function buildTablesDbSystemColumnListItem(
+  def: TablesDbSystemColumnDefinition,
+): MappedTableColumnListItem {
+  return {
+    key: def.key,
+    type: def.type,
+    format: null,
+    size: null,
+    encrypt: false,
+    elements: null,
+    required: def.required,
+    array: false,
+    default: null,
+    xdefault: null,
+    status: 'available',
+    error: '',
+    $id: def.key,
+  }
+}
+
+/** Prepends all built-in system columns before user-defined columns. */
+export function mergeTablesDbSystemColumnsIntoList(
+  userColumns: MappedTableColumnListItem[],
+): MappedTableColumnListItem[] {
+  const systemColumns = TABLESDB_SYSTEM_COLUMNS.map((def) =>
+    buildTablesDbSystemColumnListItem(def),
+  )
+  const filteredUser = userColumns.filter(
+    (column) => !isTablesDbSystemColumnKey(column.key),
+  )
+  return [...systemColumns, ...filteredUser]
+}
+
 const NUMERIC_RANGE_COLUMN_TYPES = new Set([
   'integer',
   'int',

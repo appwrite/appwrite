@@ -20,6 +20,7 @@ import {
   INIT_TICKET_CONTENT_INSET,
   INIT_TICKET_IMAGE_HEIGHT,
   INIT_TICKET_IMAGE_WIDTH,
+  INIT_TICKET_STUB_LABEL_INSET,
   initTicketColumnSplit,
 } from '@/lib/init/ticket-layout'
 import {
@@ -206,7 +207,10 @@ export async function renderInitTicketImagePng(
       100)
   const { main, stub } = initTicketColumnSplit()
   const mainW = (contentW * main) / (main + stub)
+  const stubW = contentW - mainW
   const stubX = contentX + mainW
+  const stubLabelX =
+    stubX + stubW * (INIT_TICKET_STUB_LABEL_INSET.left / 100)
   const textColor = data.ticketAppearance.usesDarkChrome ? '#ffffff' : '#111827'
   const mutedColor = data.ticketAppearance.usesDarkChrome
     ? 'rgba(255,255,255,0.62)'
@@ -260,7 +264,7 @@ export async function renderInitTicketImagePng(
       <text x="${contentX}" y="${contentY + contentH + 44}" class="upper" fill="${mutedColor}" font-size="13">${passLabel}</text>
       <text x="${contentX}" y="${contentY + contentH + 72}" class="mono" fill="${accentColor}" font-size="14" font-weight="600">${ticketNumber}</text>
 
-      <g transform="translate(${stubX + mainW * 0.34} ${contentY + contentH - 8}) rotate(-90)">
+      <g transform="translate(${stubLabelX} ${contentY + contentH - 8}) rotate(-90)">
         ${wordmarkSvg({
           x: 0,
           y: -2,
