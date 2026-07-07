@@ -357,6 +357,24 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_GEO_ENDPOINT',
+                'description' => 'Internal endpoint of the geo service used to resolve IP geolocation for locale and session enrichment. Leave empty to disable geolocation lookups. Defaults to the bundled `appwrite-geo` container.',
+                'introduction' => 'TBD',
+                'default' => 'http://appwrite-geo/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GEO_SECRET',
+                'description' => 'Bearer token used to authenticate requests from the Appwrite server to the geo service. Must match the `GEO_SECRET` configured on the `appwrite-geo` container. Change it from the default value before running in production.',
+                'introduction' => 'TBD',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => 'token'
             ]
         ],
     ],

@@ -17,6 +17,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -30,7 +31,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Bcrypt;
@@ -2289,11 +2289,11 @@ Http::post('/v1/users/:userId/sessions')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2301,8 +2301,6 @@ Http::post('/v1/users/:userId/sessions')
 
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
@@ -2316,7 +2314,7 @@ Http::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => $expire,
             ],
             $detector->getOS(),
