@@ -117,8 +117,8 @@ const connectionsTableClassName = 'w-full min-w-[80rem] table-fixed'
 function ConnectionsTableColGroup() {
   return (
     <colgroup>
-      <col className="w-[5%]" />
-      <col className="w-[8%]" />
+      <col className="w-[7rem]" />
+      <col className="w-[7%]" />
       <col className="w-[8%]" />
       <col className="w-[9%]" />
       <col className="w-[9%]" />
@@ -588,12 +588,12 @@ export function PostgresConnectionDetails({
                               }
                             }}
                           >
-                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
-                            <span className="font-mono text-[13px] text-foreground">
+                          <TableCell className="overflow-hidden whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
+                            <span className="block truncate font-mono text-[13px] text-foreground">
                               {connection.pid}
                             </span>
                           </TableCell>
-                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                          <TableCell className="overflow-hidden whitespace-nowrap px-4 py-3">
                             <Badge
                               variant={backendTypeBadgeVariant(
                                 connection.backendType,
