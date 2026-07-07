@@ -1844,7 +1844,7 @@ Http::patch('/v1/users/:userId/targets/:targetId')
                 ->setAttribute('providerInternalId', $provider->getSequence());
         }
 
-        if ($name !== null) {
+        if ($name !== null && $name !== '') {
             $target->setAttribute('name', $name);
         }
 
