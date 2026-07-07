@@ -667,7 +667,7 @@ Http::post('/v1/users/:userId/targets')
                 'userId' => $userId,
                 'userInternalId' => $user->getSequence(),
                 'identifier' => $identifier,
-                'name' => $name ?: null,
+                'name' => ($name !== '') ? $name : null,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -1785,7 +1785,6 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, string $targetId, string $identifier, string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
-        $name = $name ?? '';
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1845,7 +1844,7 @@ Http::patch('/v1/users/:userId/targets/:targetId')
                 ->setAttribute('providerInternalId', $provider->getSequence());
         }
 
-        if ($name) {
+        if ($name !== null) {
             $target->setAttribute('name', $name);
         }
 
