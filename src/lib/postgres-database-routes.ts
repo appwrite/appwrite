@@ -194,6 +194,12 @@ export function postgresNav(params: PostgresNavBase) {
         base,
       )
     },
+    computeSettings() {
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/settings/compute' as const,
+        base,
+      )
+    },
   }
 }
 

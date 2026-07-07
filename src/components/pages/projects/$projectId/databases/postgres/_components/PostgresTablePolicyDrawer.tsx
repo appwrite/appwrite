@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { X } from 'lucide-react'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,17 +16,23 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  addPostgresPolicyFormRole,
   buildPostgresAlterPolicySql,
   buildPostgresCreatePolicySql,
   createDefaultPostgresPolicyFormState,
+  formatPostgresPolicyFormRoles,
   mapPostgresPolicyRowToFormState,
+  normalizePostgresTablePolicyRow,
+  parsePostgresPolicyFormRoles,
+  removePostgresPolicyFormRole,
   validatePostgresPolicyFormState,
   type PostgresPolicyCommand,
   type PostgresPolicyFormState,
   type PostgresPolicyPermissive,
   type PostgresTablePolicyRow,
 } from '@/lib/postgres-rls'
-import { useExecutePostgresSql } from '@/lib/react-query/hooks'
+import { isPostgresBuiltinRole } from '@/lib/postgres-roles'
+import { useExecutePostgresSql, usePostgresRoles } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 
@@ -45,6 +54,114 @@ const POLICY_COMMANDS: PostgresPolicyCommand[] = [
   'DELETE',
 ]
 
+const POLICY_SPECIAL_ROLES = [
+  {
+    value: 'public',
+    descriptionKey: 'Applies to all roles.',
+  },
+  {
+    value: 'CURRENT_USER',
+    descriptionKey: 'The user executing the query.',
+  },
+  {
+    value: 'CURRENT_ROLE',
+    descriptionKey: 'The role active in the session.',
+  },
+] as const
+
+type PostgresPolicyRolesFieldProps = {
+  projectId: string
+  databaseId: string
+  value: string
+  onChange: (value: string) => void
+}
+
+function PostgresPolicyRolesField({
+  projectId,
+  databaseId,
+  value,
+  onChange,
+}: PostgresPolicyRolesFieldProps) {
+  const t = useT()
+  const { roles, isLoading } = usePostgresRoles(projectId, databaseId)
+  const selectedRoles = useMemo(() => parsePostgresPolicyFormRoles(value), [value])
+
+  const roleOptions = useMemo(() => {
+    const selectedKeys = new Set(
+      selectedRoles.map((role) => role.trim().toLowerCase()),
+    )
+    const specialOptions = POLICY_SPECIAL_ROLES.filter(
+      (role) => !selectedKeys.has(role.value.toLowerCase()),
+    ).map((role) => ({
+      value: role.value,
+      label: role.value,
+      description: t(role.descriptionKey),
+    }))
+
+    const databaseOptions = roles
+      .map((role) => role.role_name)
+      .filter((roleName) => !selectedKeys.has(roleName.toLowerCase()))
+      .sort((a, b) => a.localeCompare(b))
+      .map((roleName) => {
+        const row = roles.find((entry) => entry.role_name === roleName)
+        return {
+          value: roleName,
+          label: roleName,
+          description: row && isPostgresBuiltinRole(row) ? t('System') : undefined,
+        }
+      })
+
+    return [...specialOptions, ...databaseOptions]
+  }, [roles, selectedRoles, t])
+
+  const addRole = (roleName: string) => {
+    onChange(formatPostgresPolicyFormRoles(addPostgresPolicyFormRole(selectedRoles, roleName)))
+  }
+
+  const removeRole = (roleName: string) => {
+    onChange(
+      formatPostgresPolicyFormRoles(
+        removePostgresPolicyFormRole(selectedRoles, roleName),
+      ),
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-[12px] font-medium">{t('Roles')}</Label>
+      <SearchableSelect
+        value=""
+        onValueChange={addRole}
+        items={roleOptions}
+        placeholder={t('Add role')}
+        searchPlaceholder={t('Search roles...')}
+        emptyMessage={isLoading ? t('Loading roles…') : t('No roles available')}
+        disabled={isLoading && roles.length === 0}
+      />
+      {selectedRoles.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {selectedRoles.map((role) => (
+            <Badge key={role} variant="secondary" className="gap-1 pr-1 text-[12px]">
+              {role}
+              <button
+                type="button"
+                className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
+                onClick={() => removeRole(role)}
+                aria-label={t('Remove')}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      ) : (
+        <p className="text-[12px] text-muted-foreground">
+          {t('Defaults to all (public) roles if none selected.')}
+        </p>
+      )}
+    </div>
+  )
+}
 
 function getPolicyTypeLabel(
   type: PostgresPolicyPermissive,
@@ -66,18 +183,25 @@ export function PostgresTablePolicyDrawer({
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const isEdit = Boolean(policy)
 
-  const [formState, setFormState] = useState<PostgresPolicyFormState>(
-    createDefaultPostgresPolicyFormState(),
+  const policySnapshot = useMemo(
+    () => (policy ? normalizePostgresTablePolicyRow(policy) : null),
+    [policy],
+  )
+
+  const [formState, setFormState] = useState<PostgresPolicyFormState>(() =>
+    policy
+      ? mapPostgresPolicyRowToFormState(policy)
+      : createDefaultPostgresPolicyFormState(),
   )
 
   useEffect(() => {
     if (!open) return
     setFormState(
-      policy
-        ? mapPostgresPolicyRowToFormState(policy)
+      policySnapshot
+        ? mapPostgresPolicyRowToFormState(policySnapshot)
         : createDefaultPostgresPolicyFormState(),
     )
-  }, [open, policy])
+  }, [open, policySnapshot])
 
   const title = useMemo(
     () => (isEdit ? t('Update policy') : t('Create policy')),
@@ -216,22 +340,17 @@ export function PostgresTablePolicyDrawer({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="policy-roles" className="text-[12px] font-medium">
-                {t('Roles')}
-              </Label>
-              <Input
-                id="policy-roles"
-                value={formState.roles}
-                onChange={(event) =>
-                  setFormState((prev) => ({ ...prev, roles: event.target.value }))
-                }
-                placeholder={t('public, authenticated')}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                {t('Defaults to all (public) roles if none selected.')}
-              </p>
-            </div>
+            <PostgresPolicyRolesField
+              projectId={projectId}
+              databaseId={databaseId}
+              value={formState.roles}
+              onChange={(roles) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  roles,
+                }))
+              }
+            />
 
             <div className="space-y-2">
               <Label htmlFor="policy-using" className="text-[12px] font-medium">

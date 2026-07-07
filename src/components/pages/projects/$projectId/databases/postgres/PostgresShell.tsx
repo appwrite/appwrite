@@ -137,7 +137,6 @@ function PostgresShellLayout({
           projectId={projectId}
           databaseId={databaseId}
           databaseName={database.name}
-          databaseSpecification={database.specification}
           nativeEngine="postgres"
         />
       ) : null}
@@ -169,7 +168,6 @@ function PostgresShellLayout({
               projectId={projectId}
               databaseId={databaseId}
               databaseName={database.name}
-              databaseSpecification={database.specification}
               selectedTableId={selectedTableId}
               databaseTab={databaseTab}
             />

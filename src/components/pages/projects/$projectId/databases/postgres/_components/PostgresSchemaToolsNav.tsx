@@ -2,6 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { ListOrdered, Network, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+  secondarySidebarNavLinkClassName,
+} from '@/lib/layout/secondary-sidebar-nav'
+import {
   postgresNav,
   type PostgresDatabaseTab,
 } from '@/lib/postgres-database-routes'
@@ -17,11 +22,9 @@ type PostgresSchemaToolsNavProps = {
 
 function schemaToolLinkClass(active: boolean) {
   return cn(
-    'flex w-full items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] font-medium transition-colors',
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-    active
-      ? 'border-border bg-accent text-foreground'
-      : 'bg-background text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+    secondarySidebarNavLinkClassName(active, 'transition-colors duration-150'),
+    SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+    'gap-1.5 text-[12px]',
   )
 }
 
@@ -70,7 +73,7 @@ export function PostgresSchemaToolsNav({
         <li key={key} className="w-full min-w-0">
           <Link {...link} className={schemaToolLinkClass(active)}>
             <Icon className={iconClassName} />
-            <span className="min-w-0 truncate">{label}</span>
+            <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{label}</span>
           </Link>
         </li>
       ))}

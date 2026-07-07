@@ -161,6 +161,178 @@ export function resolveDatabaseSpecSummary(
   return `${cpu} · ${memory}`
 }
 
+function getSpecOptionForSlug(
+  specs: SpecOption[],
+  specSlug: string | null | undefined,
+): SpecOption | undefined {
+  const slug = specSlug?.trim()
+  if (!slug) return undefined
+  return specs.find((item) => item.id === slug) ?? getSpecOptionById(slug)
+}
+
+function readSpecMetric(value: string | undefined): string | null {
+  const trimmed = value?.trim()
+  if (!trimmed || trimmed === '—' || trimmed === 'Serverless') return null
+  return trimmed
+}
+
+/** Compact CPU label for tight sidebar rows (drops parenthetical qualifiers). */
+export function compactDatabaseSpecCpuLabel(cpu: string): string {
+  return cpu.replace(/\s*\([^)]*\)/g, '').trim()
+}
+
+export type DatabaseSpecDisplayParts = {
+  variant: 'serverless' | 'metrics' | 'label'
+  cpu: string | null
+  memory: string | null
+  connections: string | null
+  label: string | null
+}
+
+/** Structured spec values for compact sidebar display (icons + short values). */
+export function resolveDatabaseSpecDisplayParts(
+  specs: SpecOption[],
+  specSlug: string | null | undefined,
+  options?: {
+    cpuMillicores?: number
+    memoryMb?: number
+    fallbackLabel?: string | null
+    forceServerless?: boolean
+  },
+): DatabaseSpecDisplayParts {
+  const slug = specSlug?.trim()
+  const spec = getSpecOptionForSlug(specs, slug)
+  const summary = resolveDatabaseSpecSummary(specs, slug)
+
+  const serverless =
+    options?.forceServerless === true ||
+    spec?.id === SERVERLESS_DATABASE_SPEC_ID ||
+    summary === 'Serverless'
+
+  if (serverless) {
+    return {
+      variant: 'serverless',
+      cpu: null,
+      memory: null,
+      connections: null,
+      label: 'Serverless',
+    }
+  }
+
+  const cpu =
+    options?.cpuMillicores != null && options.cpuMillicores > 0
+      ? formatDedicatedSpecCpu(options.cpuMillicores)
+      : (() => {
+          const value = readSpecMetric(spec?.cpu)
+          return value ? compactDatabaseSpecCpuLabel(value) : null
+        })()
+
+  const memory =
+    options?.memoryMb != null && options.memoryMb > 0
+      ? formatDedicatedSpecMemory(options.memoryMb)
+      : readSpecMetric(spec?.memory)
+
+  const connections = readSpecMetric(spec?.connections)
+  const hasMetrics = !!(cpu || memory || connections)
+
+  if (hasMetrics) {
+    return {
+      variant: 'metrics',
+      cpu,
+      memory,
+      connections,
+      label: null,
+    }
+  }
+
+  const label =
+    options?.fallbackLabel?.trim() ||
+    spec?.label?.trim() ||
+    slug ||
+    null
+
+  return {
+    variant: 'label',
+    cpu: null,
+    memory: null,
+    connections: null,
+    label,
+  }
+}
+
+/** Full readable summary for tooltips from structured display parts. */
+export function formatDatabaseSpecDisplayTooltip(
+  parts: DatabaseSpecDisplayParts,
+  connectionsUnitLabel = 'connections',
+): string | null {
+  if (parts.variant === 'serverless') return parts.label
+  if (parts.variant === 'label') return parts.label
+
+  const segments: string[] = []
+  if (parts.cpu) segments.push(parts.cpu)
+  if (parts.memory) segments.push(parts.memory)
+  if (parts.connections) {
+    segments.push(
+      formatDatabaseSpecConnectionsLabel(parts.connections, connectionsUnitLabel),
+    )
+  }
+  return segments.length > 0 ? segments.join(' · ') : parts.label
+}
+
+/** Sidebar spec line: CPU · memory · max connections when available. */
+export function resolveDatabaseSpecSidebarSummary(
+  specs: SpecOption[],
+  specSlug: string | null | undefined,
+  connectionsUnitLabel = 'connections',
+): string | null {
+  const base = resolveDatabaseSpecSummary(specs, specSlug)
+  if (!base) return null
+  return appendSpecConnectionsToSummary(
+    base,
+    specs,
+    specSlug,
+    connectionsUnitLabel,
+  )
+}
+
+/** Human-readable max-connections segment for spec summaries (e.g. "60 connections"). */
+export function formatDatabaseSpecConnectionsLabel(
+  count: string,
+  connectionsUnitLabel: string,
+): string {
+  return `${count} ${connectionsUnitLabel}`
+}
+
+/** Append max connections to a spec summary when the tier is known. */
+export function appendSpecConnectionsToSummary(
+  summary: string,
+  specs: SpecOption[],
+  specSlug: string | null | undefined,
+  connectionsUnitLabel = 'connections',
+): string {
+  if (summary === 'Serverless') return summary
+
+  const spec = getSpecOptionForSlug(specs, specSlug)
+  const connections = spec?.connections?.trim()
+  if (
+    !connections ||
+    connections === '—' ||
+    connections === 'Serverless'
+  ) {
+    return summary
+  }
+
+  const segment = formatDatabaseSpecConnectionsLabel(
+    connections,
+    connectionsUnitLabel,
+  )
+  if (summary.includes(segment) || summary.includes(connections)) {
+    return summary
+  }
+
+  return `${summary} · ${segment}`
+}
+
 export function formatDedicatedSpecCpu(millicores: number): string {
   if (millicores <= 0) return '—'
   const cores = millicores / 1000

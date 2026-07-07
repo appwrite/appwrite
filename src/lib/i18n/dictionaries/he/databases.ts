@@ -141,6 +141,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Connection states': 'מצבי חיבור',
   'Connection string unavailable.': 'מחרוזת החיבור אינה זמינה.',
   'Connections': 'חיבורים',
+  'connections': 'חיבורים',
   'Connections by app': 'חיבורים לפי אפליקציה',
   'connections currently idle in transaction.': 'חיבורים במצב לא פעיל בתוך טרנזקציה.',
   'Contact sales': 'יצירת קשר עם מכירות',
@@ -1504,6 +1505,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Permissive': 'מתירנית',
   'Restrictive': 'מגבילה',
   'Roles': 'תפקידים',
+  'Add role': 'הוספת תפקיד',
+  'Applies to all roles.': 'חל על כל התפקידים.',
+  'The user executing the query.': 'המשתמש שמריץ את השאילתה.',
+  'The role active in the session.': 'התפקיד הפעיל בסשן.',
   'public, authenticated': 'public, authenticated',
   'Comma-separated role names. Use public for all roles.':
     'שמות תפקידים מופרדים בפסיקים. השתמשו ב-public לכל התפקידים.',

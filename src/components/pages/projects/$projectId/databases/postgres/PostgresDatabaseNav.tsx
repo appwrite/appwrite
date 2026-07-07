@@ -22,6 +22,7 @@ import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
 import { usePostgresConnectDialog } from './_components/PostgresConnectDialogContext'
+import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
 import { useT } from '@/lib/i18n/translate'
 
 type PostgresDatabaseNavProps = {
@@ -51,7 +52,8 @@ export function PostgresDatabaseNav({
   const showSettings = canCreateDatabase(access, features)
 
   return (
-    <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
+    <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
+      <div className="space-y-0.5">
       {connectDialog ? (
         <button
           type="button"
@@ -109,6 +111,13 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Settings')}</span>
         </Link>
       ) : null}
+      </div>
+      <DatabaseSidebarComputeSpec
+        projectId={projectId}
+        databaseId={databaseId}
+        mode="postgres"
+        variant="footer"
+      />
     </div>
   )
 }

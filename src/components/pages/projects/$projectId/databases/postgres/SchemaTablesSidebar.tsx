@@ -61,7 +61,6 @@ type SchemaTablesSidebarProps = {
   projectId: string
   databaseId: string
   databaseName: string
-  databaseSpecification?: string | null
   selectedTableId?: string
   databaseTab?: PostgresDatabaseTab
 }
@@ -70,7 +69,6 @@ export function SchemaTablesSidebar({
   projectId,
   databaseId,
   databaseName,
-  databaseSpecification,
   selectedTableId,
   databaseTab,
 }: SchemaTablesSidebarProps) {
@@ -224,7 +222,6 @@ export function SchemaTablesSidebar({
         projectId={projectId}
         databaseId={databaseId}
         databaseName={databaseName}
-        databaseSpecification={databaseSpecification}
         nativeEngine="postgres"
       />
       <PostgresSegmentedToggle

@@ -9,7 +9,6 @@ type NativeSidebarDatabaseBarProps = {
   projectId: string
   databaseId: string
   databaseName: string
-  databaseSpecification?: string | null
   nativeEngine: NativeDatabaseEngine
 }
 
@@ -17,7 +16,6 @@ export function NativeSidebarDatabaseBar({
   projectId,
   databaseId,
   databaseName,
-  databaseSpecification,
   nativeEngine,
 }: NativeSidebarDatabaseBarProps) {
   const t = useT()
@@ -45,7 +43,6 @@ export function NativeSidebarDatabaseBar({
           nativeEngine={nativeEngine}
           value={databaseId}
           selectedName={databaseName}
-          selectedSpecification={databaseSpecification}
           onSelect={(newDatabaseId) => {
             if (newDatabaseId === databaseId) return
             switchResource(databaseId, newDatabaseId)

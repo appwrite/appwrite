@@ -127,7 +127,7 @@ export function PostgresTableSecurityPanel({
 
   const handleOpenEdit = (policy: PostgresTablePolicyRow) => {
     setSelectedPolicy(policy)
-    setDialogOpenState(true)
+    setDialogOpen(true)
   }
 
   const refreshSecurity = async () => {
@@ -448,6 +448,7 @@ export function PostgresTableSecurityPanel({
       </div>
 
       <PostgresTablePolicyDrawer
+        key={selectedPolicy?.policyname ?? 'create'}
         open={dialogOpen}
         onOpenChange={setDialogOpenState}
         projectId={projectId}

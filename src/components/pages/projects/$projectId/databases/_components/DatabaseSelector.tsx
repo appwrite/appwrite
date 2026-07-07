@@ -3,8 +3,7 @@
  *
  * Unified searchable dropdown for product databases (TablesDB, DocumentsDB,
  * VectorsDB) and native engines (PostgreSQL, MySQL). Uses debounced search
- * for product databases and client-side search for native engines. Spec tier
- * is shown inline (name · spec).
+ * for product databases and client-side search for native engines.
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
@@ -83,14 +82,11 @@ type DatabaseSelectorBaseProps = {
 type ProductDatabaseSelectorProps = DatabaseSelectorBaseProps & {
   mode?: 'product'
   nativeEngine?: never
-  selectedSpecification?: never
 }
 
 type NativeDatabaseSelectorProps = DatabaseSelectorBaseProps & {
   mode: 'native'
   nativeEngine: NativeDatabaseEngine
-  /** Used when the selected native database is not yet in the cached list. */
-  selectedSpecification?: string | null
 }
 
 export type DatabaseSelectorProps =
@@ -105,35 +101,6 @@ type DatabaseSelectorItem = {
   specSlug?: string | null
 }
 
-function DatabaseSelectorNameWithSpec({
-  name,
-  specSummary,
-  nameClassName,
-}: {
-  name: string
-  specSummary?: string | null
-  nameClassName?: string
-}) {
-  return (
-    <span className="flex min-w-0 items-baseline gap-1">
-      <span className={cn('truncate', nameClassName)}>{name}</span>
-      {specSummary ? (
-        <>
-          <span className="shrink-0 text-muted-foreground/60">·</span>
-          <span className="truncate text-[12px] text-muted-foreground">
-            {specSummary}
-          </span>
-        </>
-      ) : null}
-    </span>
-  )
-}
-
-/**
- * Resolve the dedicated-compute ID for a product database.
- * Older APIs linked via `dedicatedDatabaseId`; current SDKs use the same ID for
- * product and compute when the database is dedicated (`api` = tablesdb/…).
- */
 function getDedicatedDatabaseId(db: {
   $id: string
   dedicatedDatabaseId?: unknown
@@ -173,7 +140,6 @@ export function DatabaseSelector({
   mode = 'product',
   nativeEngine,
   selectedName,
-  selectedSpecification,
   onSelect,
   placeholder = 'Select database',
   limit = DEFAULT_LIMIT,
@@ -295,33 +261,7 @@ export function DatabaseSelector({
 
   const selectedItem = value ? items.find((item) => item.id === value) : undefined
 
-  const selectedProductSpecSlug = useMemo(() => {
-    if (isNative || !value) return null
-    if (selectedItem?.specSlug) return selectedItem.specSlug
-    if (!selectedProductDatabase) return SERVERLESS_DATABASE_SPEC_ID
-    const dedicatedId = getDedicatedDatabaseId(selectedProductDatabase)
-    return (
-      specSlugByDedicatedId.get(dedicatedId) ?? SERVERLESS_DATABASE_SPEC_ID
-    )
-  }, [
-    isNative,
-    selectedItem?.specSlug,
-    selectedProductDatabase,
-    specSlugByDedicatedId,
-    value,
-  ])
-
   const displayName = selectedName || selectedItem?.name || t(placeholder)
-
-  const selectedSpecSummary = isNative
-    ? getSpecSummary(selectedItem?.specSlug ?? selectedSpecification)
-    : selectedProductSpecSlug != null
-      ? getSpecSummary(
-          selectedProductSpecSlug === SERVERLESS_DATABASE_SPEC_ID
-            ? SERVERLESS_DATABASE_SPEC_ID
-            : selectedProductSpecSlug,
-        )
-      : null
 
   const selectedApiType =
     selectedItem?.apiType ?? selectedProductDatabase?.databaseType ?? null
@@ -360,13 +300,14 @@ export function DatabaseSelector({
               apiType={selectedApiType}
               engine={selectedEngine}
             />
-            <DatabaseSelectorNameWithSpec
-              name={displayName}
-              specSummary={selectedSpecSummary}
-              nameClassName={
-                value ? 'text-[13px] font-medium text-foreground' : undefined
-              }
-            />
+            <span
+              className={cn(
+                'min-w-0 truncate',
+                value && 'text-[13px] font-medium text-foreground',
+              )}
+            >
+              {displayName}
+            </span>
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
@@ -400,38 +341,28 @@ export function DatabaseSelector({
               </CommandEmpty>
             )}
             <CommandGroup>
-              {filteredItems.map((item) => {
-                const specSummary = getSpecSummary(
-                  item.specSlug === SERVERLESS_DATABASE_SPEC_ID
-                    ? SERVERLESS_DATABASE_SPEC_ID
-                    : item.specSlug,
-                )
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      onSelect(item.id)
-                      setOpen(false)
-                    }}
-                    className={cn(
-                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                      item.id === value && 'bg-accent/50',
-                    )}
-                  >
-                    <DatabaseTypeIcon
-                      apiType={item.apiType}
-                      engine={item.engine}
-                    />
-                    <DatabaseSelectorNameWithSpec
-                      name={item.name}
-                      specSummary={specSummary}
-                      nameClassName="text-[13px] font-medium text-foreground"
-                    />
-                  </button>
-                )
-              })}
+              {filteredItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(item.id)
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                    item.id === value && 'bg-accent/50',
+                  )}
+                >
+                  <DatabaseTypeIcon
+                    apiType={item.apiType}
+                    engine={item.engine}
+                  />
+                  <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                    {item.name}
+                  </span>
+                </button>
+              ))}
             </CommandGroup>
           </CommandList>
         </Command>

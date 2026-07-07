@@ -180,7 +180,7 @@ export function PostgresSpecificationCard({
       size="sm"
       className="h-7 w-full rounded-none text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
     >
-      <Link {...nav.settings()}>{t('Upgrade compute')}</Link>
+      <Link {...nav.computeSettings()}>{t('Upgrade compute')}</Link>
     </Button>
   ) : showPlanUpgrade ? (
     <Button

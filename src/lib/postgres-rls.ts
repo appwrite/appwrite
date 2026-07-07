@@ -42,11 +42,47 @@ export function isPostgresTruthyFlag(
   return value === true || value === 'true' || value === 't'
 }
 
+function readPostgresPolicyField(
+  row: Record<string, unknown>,
+  ...keys: string[]
+): unknown {
+  for (const key of keys) {
+    if (key in row) return row[key]
+  }
+  const lowerEntries = Object.entries(row).map(
+    ([entryKey, value]) => [entryKey.toLowerCase(), value] as const,
+  )
+  for (const key of keys) {
+    const match = lowerEntries.find(([entryKey]) => entryKey === key.toLowerCase())
+    if (match) return match[1]
+  }
+  return undefined
+}
+
+function readPostgresPolicyText(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value.trim()
+  return String(value).trim()
+}
+
+export function normalizePostgresPolicyRoleName(role: string): string {
+  const trimmed = role.trim()
+  const lower = trimmed.toLowerCase()
+  if (lower === 'public') return 'public'
+  if (lower === 'current_user') return 'CURRENT_USER'
+  if (lower === 'current_role') return 'CURRENT_ROLE'
+  return trimmed
+}
+
 export function parsePostgresPolicyRoles(
   roles: string[] | string | null | undefined,
 ): string[] {
+  if (roles === null || roles === undefined) return []
+
   if (Array.isArray(roles)) {
-    return roles.map((role) => String(role).trim()).filter(Boolean)
+    return roles
+      .map((role) => normalizePostgresPolicyRoleName(String(role)))
+      .filter(Boolean)
   }
   if (typeof roles !== 'string' || !roles.trim()) return []
 
@@ -56,11 +92,59 @@ export function parsePostgresPolicyRoles(
     if (!inner) return []
     return inner
       .split(',')
-      .map((role) => role.trim().replace(/^"(.*)"$/, '$1'))
+      .map((role) =>
+        normalizePostgresPolicyRoleName(role.trim().replace(/^"(.*)"$/, '$1')),
+      )
       .filter(Boolean)
   }
 
-  return [trimmed]
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((role) => normalizePostgresPolicyRoleName(String(role)))
+          .filter(Boolean)
+      }
+    } catch {
+      // Fall through to comma-separated / single-value parsing.
+    }
+  }
+
+  if (trimmed.includes(',')) {
+    return trimmed
+      .split(',')
+      .map((role) => normalizePostgresPolicyRoleName(role))
+      .filter(Boolean)
+  }
+
+  return [normalizePostgresPolicyRoleName(trimmed)]
+}
+
+export function normalizePostgresTablePolicyRow(
+  row: PostgresTablePolicyRow | Record<string, unknown>,
+): PostgresTablePolicyRow {
+  const source = row as Record<string, unknown>
+  const rolesValue = readPostgresPolicyField(source, 'roles')
+  const parsedRoles = parsePostgresPolicyRoles(
+    rolesValue as string[] | string | null | undefined,
+  )
+
+  return {
+    policyname: readPostgresPolicyText(
+      readPostgresPolicyField(source, 'policyname', 'policy_name'),
+    ),
+    permissive: readPostgresPolicyText(
+      readPostgresPolicyField(source, 'permissive'),
+    ),
+    roles: parsedRoles.length > 0 ? parsedRoles : null,
+    cmd: readPostgresPolicyText(readPostgresPolicyField(source, 'cmd', 'command')),
+    qual: readPostgresPolicyText(readPostgresPolicyField(source, 'qual', 'using')) || null,
+    with_check:
+      readPostgresPolicyText(
+        readPostgresPolicyField(source, 'with_check', 'withcheck', 'with check'),
+      ) || null,
+  }
 }
 
 export function formatPostgresPolicyRoles(
@@ -76,35 +160,104 @@ export function createDefaultPostgresPolicyFormState(): PostgresPolicyFormState 
     name: '',
     command: 'ALL',
     permissive: 'PERMISSIVE',
-    roles: 'public',
+    roles: '',
     usingExpression: '',
     withCheckExpression: '',
   }
 }
 
-export function mapPostgresPolicyRowToFormState(
-  policy: PostgresTablePolicyRow,
-): PostgresPolicyFormState {
-  const roles = parsePostgresPolicyRoles(policy.roles)
-  return {
-    name: policy.policyname,
-    command: normalizePostgresPolicyCommand(policy.cmd),
-    permissive:
-      policy.permissive?.toUpperCase() === 'RESTRICTIVE'
-        ? 'RESTRICTIVE'
-        : 'PERMISSIVE',
-    roles: roles.length > 0 ? roles.join(', ') : 'public',
-    usingExpression: policy.qual?.trim() ?? '',
-    withCheckExpression: policy.with_check?.trim() ?? '',
+export function parsePostgresPolicyFormRoles(rolesInput: string): string[] {
+  return parsePostgresPolicyRoles(rolesInput)
+}
+
+export function formatPostgresPolicyFormRoles(roles: string[]): string {
+  return roles.join(', ')
+}
+
+function isPostgresPolicyPublicRole(role: string): boolean {
+  return role.trim().toLowerCase() === 'public'
+}
+
+/** Named roles and PUBLIC are mutually exclusive in PostgreSQL policies. */
+export function addPostgresPolicyFormRole(
+  selectedRoles: readonly string[],
+  roleName: string,
+): string[] {
+  const trimmed = roleName.trim()
+  if (!trimmed) return [...selectedRoles]
+
+  const normalized = normalizePostgresPolicyRoleName(trimmed)
+
+  if (isPostgresPolicyPublicRole(normalized)) {
+    return ['public']
   }
+
+  const withoutPublic = selectedRoles.filter(
+    (role) => !isPostgresPolicyPublicRole(role),
+  )
+  if (
+    withoutPublic.some(
+      (role) => role.trim().toLowerCase() === normalized.toLowerCase(),
+    )
+  ) {
+    return withoutPublic
+  }
+
+  return [...withoutPublic, normalized]
+}
+
+export function removePostgresPolicyFormRole(
+  selectedRoles: readonly string[],
+  roleName: string,
+): string[] {
+  const key = roleName.trim().toLowerCase()
+  return selectedRoles.filter((role) => role.trim().toLowerCase() !== key)
+}
+
+function resolvePostgresPolicyRolesForSql(rolesInput: string): string[] {
+  const roles = parsePostgresPolicyRoles(rolesInput)
+  if (roles.length === 0) return []
+
+  const hasNamedRole = roles.some(
+    (role) =>
+      !isPostgresPolicyPublicRole(role) &&
+      role !== 'CURRENT_USER' &&
+      role !== 'CURRENT_ROLE',
+  )
+
+  if (!hasNamedRole) return roles
+
+  return roles.filter((role) => !isPostgresPolicyPublicRole(role))
+}
+
+export function mapPostgresPolicyRowToFormState(
+  policy: PostgresTablePolicyRow | Record<string, unknown>,
+): PostgresPolicyFormState {
+  const normalized = normalizePostgresTablePolicyRow(policy)
+  const roles = parsePostgresPolicyRoles(normalized.roles)
+  return {
+    name: normalized.policyname,
+    command: normalizePostgresPolicyCommand(normalized.cmd),
+    permissive: normalizePostgresPolicyPermissive(normalized.permissive),
+    roles: roles.length > 0 ? roles.join(', ') : '',
+    usingExpression: normalized.qual ?? '',
+    withCheckExpression: normalized.with_check ?? '',
+  }
+}
+
+export function normalizePostgresPolicyPermissive(
+  permissive: string | null | undefined,
+): PostgresPolicyPermissive {
+  const normalized = String(permissive ?? 'PERMISSIVE').trim().toUpperCase()
+  return normalized === 'RESTRICTIVE' ? 'RESTRICTIVE' : 'PERMISSIVE'
 }
 
 export function normalizePostgresPolicyCommand(
   command: string | null | undefined,
 ): PostgresPolicyCommand {
-  const normalized = command?.trim().toUpperCase()
+  const normalized = String(command ?? 'ALL').trim().toUpperCase()
+  if (normalized === '*' || normalized === 'ALL') return 'ALL'
   if (
-    normalized === 'ALL' ||
     normalized === 'SELECT' ||
     normalized === 'INSERT' ||
     normalized === 'UPDATE' ||
@@ -121,10 +274,7 @@ function qualifiedPostgresTable(tableId: string): string {
 }
 
 function formatPostgresPolicyRolesClause(rolesInput: string): string {
-  const roles = rolesInput
-    .split(',')
-    .map((role) => role.trim())
-    .filter(Boolean)
+  const roles = resolvePostgresPolicyRolesForSql(rolesInput)
 
   if (roles.length === 0) return 'PUBLIC'
 

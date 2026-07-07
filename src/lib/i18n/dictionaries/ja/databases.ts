@@ -141,6 +141,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Connection states': '接続状態',
   'Connection string unavailable.': '接続文字列は利用できません。',
   'Connections': '接続',
+  'connections': '接続',
   'Connections by app': 'アプリ別の接続',
   'connections currently idle in transaction.': '件の接続がトランザクション内でアイドル状態です。',
   'Contact sales': '営業にお問い合わせ',
@@ -1442,6 +1443,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Permissive': '許可型',
   'Restrictive': '制限型',
   'Roles': 'ロール',
+  'Add role': 'ロールを追加',
+  'Applies to all roles.': 'すべてのロールに適用されます。',
+  'The user executing the query.': 'クエリを実行するユーザー。',
+  'The role active in the session.': 'セッションで有効なロール。',
   'public, authenticated': 'public, authenticated',
   'Comma-separated role names. Use public for all roles.':
     'ロール名をカンマ区切りで入力します。すべてのロールには public を使用します。',
