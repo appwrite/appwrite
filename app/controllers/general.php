@@ -1707,6 +1707,8 @@ Http::get('/v1/ping')
             $queueForEvents
                 ->setParam('projectId', $project->getId())
                 ->setPayload($response->output($project, Response::MODEL_PROJECT));
+        } else {
+            $queueForEvents->setEvent('');
         }
 
         $response->text('Pong!');
