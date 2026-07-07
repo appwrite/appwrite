@@ -1351,7 +1351,6 @@ return function (Container $context): void {
     $context->set('getGeoForIp', function () {
         return function (Locale $locale, string $ip): GeoRecord {
             $record = null;
-            $lookupSucceeded = false;
             $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
             $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
 
@@ -1366,7 +1365,6 @@ return function (Container $context): void {
                         $body = $response->json();
                         if (\is_array($body)) {
                             $record = $body;
-                            $lookupSucceeded = true;
                         }
                     }
                 } catch (\Throwable $th) {
@@ -1410,8 +1408,7 @@ return function (Container $context): void {
                 'connectionOrganization' => $record['organization'] ?? null,
                 'isp' => $record['isp'] ?? null,
             ]))
-                ->setLocale($locale)
-                ->setLookupSucceeded($lookupSucceeded);
+                ->setLocale($locale);
         };
     }, []);
 };

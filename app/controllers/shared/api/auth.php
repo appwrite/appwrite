@@ -42,16 +42,8 @@ Http::init()
     ->action(function (Route $route, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist) && $project->getId() === 'console') {
-            // Fail-closed when we could not reach the geo service at all: we cannot prove
-            // the caller is outside a "block these countries" policy, so deny access
-            // rather than silently letting the denylist pass. A successful lookup that
-            // returns "--" (IP genuinely unknown to the geo DB, common for private and
-            // documentation ranges) is treated as allowed and falls through to the
-            // membership check below.
-            if (!$geoRecord->isLookupSucceeded()) {
-                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
-            }
-
+            // A missing or unknown geo lookup ("--") is treated as allowed and falls
+            // through to the membership check below, matching the pre-geo-service behavior.
             $countries = \array_map('strtoupper', \array_map('trim', explode(',', $denylist)));
             $country = \strtoupper($geoRecord->getCountryCode());
             if (in_array($country, $countries, true)) {

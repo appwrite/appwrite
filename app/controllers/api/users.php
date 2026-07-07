@@ -2314,7 +2314,7 @@ Http::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => $geoRecord->getCountryCode(),
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => $expire,
             ],
             $detector->getOS(),

@@ -151,7 +151,7 @@ class Update extends Action
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => $geoRecord->getCountryCode(),
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
