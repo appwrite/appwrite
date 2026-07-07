@@ -30,12 +30,12 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     id: 'init-july-2026',
     slug: 'init-july-2026',
     name: 'init',
-    dateRangeLabel: 'JULY 6 - 10',
-    headline: 'Init is happening July 6 - 10',
+    dateRangeLabel: 'JULY 20 - 24',
+    headline: 'Init is happening July 20 - 24',
     description:
-      'Init is happening July 6 - 10. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
-    startDate: '2026-07-06',
-    endDate: '2026-07-10',
+      'Init is happening July 20 - 24. A week of exciting product launches, live sessions, and community events. Five days of launches, demos, and surprises.',
+    startDate: '2026-07-20',
+    endDate: '2026-07-24',
     status: 'active',
     featured: true,
     presenceEnabled: true,
@@ -151,9 +151,9 @@ export const LAUNCH_EVENTS: LaunchEvent[] = [
     recap: {
       headline: 'Init recap',
       description:
-        'Five days of launches are in the books. Rewatch sessions, explore every announcement, and catch up on what you missed from Init July 6 - 10.',
+        'Five days of launches are in the books. Rewatch sessions, explore every announcement, and catch up on what you missed from Init July 20 - 24.',
       bannerMessage:
-        'Init July 6 - 10 has ended. Browse the full recap below.',
+        'Init July 20 - 24 has ended. Browse the full recap below.',
       introTitle: 'Everything we shipped',
       introDescription:
         'From Appwrite 2.0 to Appwrite Firewall. Explore the full launch timeline, blog posts, and session replays.',

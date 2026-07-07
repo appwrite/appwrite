@@ -426,7 +426,7 @@ export const companyTimelineMilestones: readonly CompanyTimelineMilestone[] = [
   },
   {
     id: '2026-appwrite-2',
-    date: 'July 6, 2026',
+    date: 'July 20, 2026',
     title: 'Appwrite 2.0',
     description:
       'Appwrite 2.0 introduced a refreshed platform experience and stronger foundations, powered by Hyperloop B, a new engine for the platform, and Console IV, a next-generation console rebuilt with TanStack.',
