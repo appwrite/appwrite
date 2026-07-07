@@ -1697,22 +1697,17 @@ Http::get('/v1/ping')
         }
 
         $pingCount = $project->getAttribute('pingCount', 0) + 1;
-        $pingedAt = DateTime::now();
 
-        $project
-            ->setAttribute('pingCount', $pingCount)
-            ->setAttribute('pingedAt', $pingedAt);
+        if ($pingCount <= 1) {
+            $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'pingCount' => $pingCount,
+                'pingedAt' => DateTime::now(),
+            ])));
 
-        $authorization->skip(function () use ($dbForPlatform, $project) {
-            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'pingCount' => $project->getAttribute('pingCount'),
-                'pingedAt' => $project->getAttribute('pingedAt')
-            ]));
-        });
-
-        $queueForEvents
-            ->setParam('projectId', $project->getId())
-            ->setPayload($response->output($project, Response::MODEL_PROJECT));
+            $queueForEvents
+                ->setParam('projectId', $project->getId())
+                ->setPayload($response->output($project, Response::MODEL_PROJECT));
+        }
 
         $response->text('Pong!');
     });
