@@ -7,6 +7,8 @@ use Exception;
 use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 
 class V25 extends Migration
 {
@@ -17,6 +19,9 @@ class V25 extends Migration
     {
         Console::info('Migrating collections');
         $this->migrateCollections();
+
+        Console::info('Migrating buckets');
+        $this->migrateBuckets();
     }
 
     /**
@@ -65,5 +70,38 @@ class V25 extends Migration
                     break;
             }
         }
+    }
+
+    /**
+     * Add the virtual folder `folder` attribute and index to every
+     * per-bucket files collection.
+     *
+     * @return void
+     * @throws Throwable
+     */
+    private function migrateBuckets(): void
+    {
+        $this->dbForProject->foreach('buckets', function (Document $bucket) {
+            $bucketTable = "bucket_{$bucket->getSequence()}";
+            Console::log("Migrating Bucket {$bucket->getId()} ({$bucket->getAttribute('name')})");
+
+            try {
+                $this->createAttributeFromCollection($this->dbForProject, $bucketTable, 'folder', 'files');
+            } catch (Duplicate) {
+                Console::warning("'folder' from {$bucketTable}: Column already exists");
+            } catch (Throwable $th) {
+                Console::warning("'folder' from {$bucketTable}: {$th->getMessage()}");
+            }
+
+            try {
+                $this->createIndexFromCollection($this->dbForProject, $bucketTable, '_key_folder', 'files');
+            } catch (Duplicate) {
+                Console::warning("'_key_folder' from {$bucketTable}: Index already exists");
+            } catch (Throwable $th) {
+                Console::warning("'_key_folder' from {$bucketTable}: {$th->getMessage()}");
+            }
+
+            $this->dbForProject->purgeCachedCollection($bucketTable);
+        });
     }
 }
