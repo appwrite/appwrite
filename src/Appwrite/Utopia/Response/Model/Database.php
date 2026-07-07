@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Database extends Model
 {
@@ -46,7 +47,30 @@ class Database extends Model
                 'default' => 'legacy',
                 'example' => 'legacy',
                 'enum' => ['legacy', 'tablesdb', 'documentsdb', 'vectorsdb'],
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Database status. Possible values: `provisioning`, `ready` or `failed`',
+                'default' => 'ready',
+                'example' => 'ready',
+                'enum' => ['provisioning', 'ready', 'failed'],
+                'enumSDKName' => 'DatabaseStatus',
             ]);
+    }
+
+    /**
+     * A null status is treated as ready.
+     *
+     * @param Document $document
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        if (empty($document->getAttribute('status'))) {
+            $document->setAttribute('status', 'ready');
+        }
+
+        return $document;
     }
 
     /**
