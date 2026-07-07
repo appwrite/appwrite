@@ -40,7 +40,7 @@ return [
         'auth' => 'oauth2',
         'envPrefix' => '_APP_VCS_GITEA',
         'required' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET'],
-        'endpoint' => true,
+        'endpoint' => true, // read _APP_VCS_GITEA_ENDPOINT (self-hosted, no fixed default)
         'browserEndpoint' => null,
         'urls' => [
             'repository' => '{base}/{owner}/{repository}',
