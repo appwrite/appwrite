@@ -2504,7 +2504,9 @@ function RowEditDrawer({
                     </h4>
                     <div className="rounded-lg border border-border bg-muted/30 p-4">
                       <p className="text-[13px] text-muted-foreground">
-                        {t('Configure row-level access permissions to control who can read, write, and delete this row.')}
+                        {t(
+                          'Configure document-level access permissions to control who can read, write, and delete this document.',
+                        )}
                       </p>
                     </div>
                   </div>
@@ -5123,7 +5125,7 @@ export function TableSecurity({ table }: SpreadsheetProps) {
               {t('Permissions')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Choose who can access your tables and rows.{' '}
+              {t('Choose who can access your collections and documents.')}{' '}
               <DocsRouteLink className="link-neutral" href="/docs/products/databases/permissions">
                 {t('Learn more')}
               </DocsRouteLink>
@@ -5156,11 +5158,11 @@ export function TableSecurity({ table }: SpreadsheetProps) {
           </div>
         </div>
 
-        {/* Row Level Security (RLS) */}
+        {/* Document level security */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Row level security (RLS)')}
+              {t('Document level security')}
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -5176,24 +5178,30 @@ export function TableSecurity({ table }: SpreadsheetProps) {
                   htmlFor="security"
                   className="text-[13px] text-foreground"
                 >
-                  {t('Row level security (RLS)')}
+                  {t('Document level security')}
                 </Label>
               </div>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-[13px] text-muted-foreground">
-                {t('When row security is enabled, users need')}{' '}
-                <strong>{t('both table permissions and row permissions')}</strong>{' '}
-                {t('to access rows. Row permissions are an additional layer, not an alternative to table permissions.')}
+                {t('When document security is enabled, users need')}{' '}
+                <strong>
+                  {t('both collection permissions and document permissions')}
+                </strong>{' '}
+                {t(
+                  'to access documents. Document permissions are an additional layer, not an alternative to collection permissions.',
+                )}
               </p>
               <p className="text-[13px] text-muted-foreground">
                 <strong>{t('Create operations')}</strong>{' '}
-                {t('always require table-level permissions, regardless of row security settings.')}
+                {t(
+                  'always require collection-level permissions, regardless of document security settings.',
+                )}
               </p>
               <p className="text-[13px] text-muted-foreground">
-                {t('If row security is disabled, users can access rows')}{' '}
-                <strong>{t('only if they have table permissions')}</strong>.{' '}
-                {t('Row permissions will be ignored.')}
+                {t('If document security is disabled, users can access documents')}{' '}
+                <strong>{t('only if they have collection permissions')}</strong>.{' '}
+                {t('Document permissions will be ignored.')}
               </p>
             </div>
           </div>

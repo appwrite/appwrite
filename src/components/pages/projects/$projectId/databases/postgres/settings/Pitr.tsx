@@ -20,7 +20,7 @@ export function View() {
       id: 'pitr',
       search: {
         title: 'Point-in-time recovery (PITR)',
-        keywords: ['pitr', 'backup', 'retention', 'restore', 'recovery'],
+        keywords: ['pitr', 'retention', 'restore', 'recovery', 'point in time'],
       },
       node: <PostgresDatabasePitrCard {...cardProps} />,
     },

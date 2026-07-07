@@ -3,7 +3,24 @@
  * collect non-time Appwrite query strings for the activities API.
  */
 
-import type { FilterMap } from './types'
+import { buildFilterQueryString } from './operators'
+import type { CompactFilterKey, FilterMap } from './types'
+
+function normalizeActivityCountryFilterKey(
+  key: CompactFilterKey,
+): CompactFilterKey {
+  if (key.c !== 'country' || key.v == null || key.v === '') return key
+  if (Array.isArray(key.v)) {
+    return { ...key, v: key.v.map((item) => String(item).toLowerCase()) }
+  }
+  return { ...key, v: String(key.v).toLowerCase() }
+}
+
+function activityFilterQueryString(key: CompactFilterKey): string {
+  const normalized =
+    key.c === 'country' ? normalizeActivityCountryFilterKey(key) : key
+  return buildFilterQueryString(normalized.o, normalized.c, normalized.v)
+}
 
 export function maxIso(a: string, b: string): string {
   return a >= b ? a : b
@@ -56,7 +73,7 @@ export function getActivityFilterQueryParts(
 
   const extraQueries = [...filterMap.entries()]
     .filter(([key]) => key.c !== 'time')
-    .map(([, qs]) => qs)
+    .map(([key]) => activityFilterQueryString(key))
 
   return { mergedSince, until, extraQueries }
 }

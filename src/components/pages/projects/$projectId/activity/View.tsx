@@ -73,9 +73,12 @@ import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activi
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
 import { ActivityLogRowContextMenu } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogRowContextMenu'
 import {
+  getActivityCountryCode,
+  getActivityCountryDisplayName,
   hasHumanEmail,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
+import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 
 const activityRouteApi = getRouteApi('/_public/projects/$projectId/activity')
@@ -422,7 +425,10 @@ function resourceLabelFromEvent(activity: Models.ActivityEvent): string {
   return activity.event
 }
 
-function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
+function toDisplayActivity(
+  event: Models.ActivityEvent,
+  countryLookups: ReturnType<typeof buildCountryLookups> | null,
+): DisplayActivity {
   return {
     $id: event.$id,
     actorId: event.actorId,
@@ -440,8 +446,8 @@ function toDisplayActivity(event: Models.ActivityEvent): DisplayActivity {
     resourceName: resourceLabelFromEvent(event),
     description: event.event,
     ipAddress: event.ip?.trim() || null,
-    countryCode: event.countryCode?.trim() || null,
-    countryName: event.countryName?.trim() || null,
+    countryCode: getActivityCountryCode(event),
+    countryName: getActivityCountryDisplayName(event, countryLookups),
     timestamp: event.time,
     rawEvent: event.event,
   }
@@ -469,6 +475,10 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   const { project } = useProject(projectId)
   const { showActivityChart } = useDebugOverrides()
   const { data: countriesData } = useCountries()
+  const countryLookups = useMemo(
+    () => buildCountryLookups(countriesData?.countries),
+    [countriesData?.countries],
+  )
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] =
@@ -510,7 +520,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
   const activityFilterColumns = useMemo(() => {
     const countryElements = (countriesData?.countries ?? [])
       .map((country) => ({
-        value: country.code,
+        value: country.code.toLowerCase(),
         label: country.name,
       }))
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -570,9 +580,28 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
       queryStr: string,
       replaceKey?: CompactFilterKey,
     ) => {
+      const normalizedKey =
+        compactKey.c === 'country' &&
+        compactKey.v != null &&
+        compactKey.v !== ''
+          ? {
+              ...compactKey,
+              v: Array.isArray(compactKey.v)
+                ? compactKey.v.map((item) => String(item).toLowerCase())
+                : String(compactKey.v).toLowerCase(),
+            }
+          : compactKey
+      const normalizedQueryStr =
+        normalizedKey.c === 'country'
+          ? buildFilterQueryString(
+              normalizedKey.o,
+              normalizedKey.c,
+              normalizedKey.v,
+            )
+          : queryStr
       const next = new Map(filterMap)
       if (replaceKey) next.delete(replaceKey)
-      next.set(compactKey, queryStr)
+      next.set(normalizedKey, normalizedQueryStr)
       navigate({
         search: (prev) => ({
           ...prev,
@@ -967,7 +996,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 <ActivityLogsTableHead />
                 <TableBody>
                   {events.map((rawEvent) => {
-                    const activity = toDisplayActivity(rawEvent)
+                    const activity = toDisplayActivity(rawEvent, countryLookups)
                     const resourcePrimary =
                       activity.resourceId?.trim() ||
                       activity.resourceName ||

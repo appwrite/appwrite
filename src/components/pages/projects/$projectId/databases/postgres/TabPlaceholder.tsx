@@ -10,7 +10,7 @@ const TAB_DESCRIPTIONS: Partial<Record<PostgresDatabaseTab, string>> = {
   monitor: 'View database metrics and usage over time.',
   insights:
     'Review performance insights and slow query logs for this database.',
-  backups: 'Create backups, configure policies, and manage point-in-time recovery.',
+  backups: 'Create backups, configure policies, and restore from snapshots.',
   connections:
     'View active client sessions connected to this database instance.',
   settings:

@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { View } from '@/components/pages/projects/$projectId/databases/postgres/settings/Backups'
+import { View } from '@/components/pages/projects/$projectId/databases/postgres/settings/Pitr'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/databases/postgres/$databaseId/settings/backups',
+  '/_public/projects/$projectId/databases/postgres/$databaseId/settings/pitr',
 )({
   beforeLoad: ({ params }) => {
     if (!getActiveProfileFeatures().databaseBackups) {

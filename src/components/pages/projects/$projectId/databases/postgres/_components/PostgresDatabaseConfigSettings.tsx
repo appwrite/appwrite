@@ -441,6 +441,11 @@ export function PostgresDatabasePitrCard({
             <Label htmlFor="pitr-retention" className="text-[13px]">
               {t('PITR retention (days)')}
             </Label>
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'Sets how far back you can restore. Recovery points older than this period are deleted, so choose a window that covers how long data issues may go unnoticed.',
+              )}
+            </p>
             <Input
               id="pitr-retention"
               type="number"

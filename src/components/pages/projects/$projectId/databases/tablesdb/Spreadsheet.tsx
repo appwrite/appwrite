@@ -7031,21 +7031,18 @@ export function IndexesSpreadsheet({
   }
 
   // Fetch columns for index creation (first page, default limit)
-  const { columns: availableColumns } = useProjectTableColumns(
-    projectId,
-    databaseId,
-    tableId,
-  )
+  const { columns: availableColumns, isLoading: columnsLoading } =
+    useProjectTableColumns(projectId, databaseId, tableId)
 
   // Notify parent when table has no non-relationship columns (disable create/suggest index buttons)
   useEffect(() => {
-    if (!onIndexesAbilityChange) return
+    if (!onIndexesAbilityChange || columnsLoading) return
     const nonRelationshipColumns =
       availableColumns?.filter(
         (c: { type?: string }) => c.type !== 'relationship',
       ) ?? []
     onIndexesAbilityChange(nonRelationshipColumns.length > 0)
-  }, [availableColumns, onIndexesAbilityChange])
+  }, [availableColumns, columnsLoading, onIndexesAbilityChange])
 
   // Create index mutation
   const createIndexMutation = useMutation({

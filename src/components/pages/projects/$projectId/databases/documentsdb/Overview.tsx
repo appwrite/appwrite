@@ -1403,7 +1403,9 @@ export function Overview({
                 <div className="border-t border-border" />
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    {t('Permissions are configured at the table or row level. You can select the permission model for each table in its settings. When Row Level Security (RLS) is enabled, you can also modify permissions per row when updating individual rows.')}
+                    {t(
+                      'Permissions are configured at the collection or document level. You can select the permission model for each collection in its settings. When document level security is enabled, you can also modify permissions per document when updating individual documents.',
+                    )}
                   </p>
                 </div>
               </div>

@@ -15,7 +15,7 @@ export type PostgresDatabaseSettingsPathSuffix =
   | 'compute'
   | 'availability'
   | 'network'
-  | 'backups'
+  | 'pitr'
   | 'storage'
   | 'connections'
   | 'maintenance'
@@ -107,15 +107,14 @@ export const POSTGRES_DATABASE_SETTINGS_NAV: PostgresDatabaseSettingsNavItem[] =
       ],
     },
     {
-      id: 'backups',
-      label: 'Backups',
-      pathSuffix: 'backups',
+      id: 'pitr',
+      label: 'PITR',
+      pathSuffix: 'pitr',
       icon: History,
       keywords: [
-        'backup',
-        'backups',
         'pitr',
         'point in time',
+        'point-in-time',
         'recovery',
         'retention',
         'restore',

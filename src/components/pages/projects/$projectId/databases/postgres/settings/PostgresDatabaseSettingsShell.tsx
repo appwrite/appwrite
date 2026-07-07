@@ -15,7 +15,7 @@ type PostgresSettingsPath =
   | '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/availability'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/network'
-  | '/projects/$projectId/databases/postgres/$databaseId/settings/backups'
+  | '/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/storage'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/connections'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
@@ -31,8 +31,7 @@ const POSTGRES_SETTINGS_TO: Record<
     '/projects/$projectId/databases/postgres/$databaseId/settings/availability',
   network:
     '/projects/$projectId/databases/postgres/$databaseId/settings/network',
-  backups:
-    '/projects/$projectId/databases/postgres/$databaseId/settings/backups',
+  pitr: '/projects/$projectId/databases/postgres/$databaseId/settings/pitr',
   storage:
     '/projects/$projectId/databases/postgres/$databaseId/settings/storage',
   connections:
@@ -52,7 +51,7 @@ function useActiveSettingsSection(pathname: string): string {
         'compute',
         'availability',
         'network',
-        'backups',
+        'pitr',
         'storage',
         'connections',
         'maintenance',
@@ -82,7 +81,7 @@ export function PostgresDatabaseSettingsShell() {
     () =>
       POSTGRES_DATABASE_SETTINGS_NAV.filter(
         (item) =>
-          item.id !== 'backups' || features.databaseBackups,
+          item.id !== 'pitr' || features.databaseBackups,
       ),
     [features.databaseBackups],
   )

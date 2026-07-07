@@ -32,9 +32,9 @@ export const POSTGRES_DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['ip', 'allowlist', 'cidr', 'idle', 'timeout'],
   },
   {
-    sectionId: 'backups',
+    sectionId: 'pitr',
     title: 'Point-in-time recovery (PITR)',
-    keywords: ['pitr', 'backup', 'retention', 'restore', 'recovery'],
+    keywords: ['pitr', 'retention', 'restore', 'recovery', 'point in time'],
   },
   {
     sectionId: 'storage',

@@ -1274,13 +1274,26 @@ export function Workspace({
         createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
         createDisabled={
           !isDatabaseLevelView &&
-          ((activeTab === 'rows' || activeTab === 'documents'
+          (activeTab === 'rows' || activeTab === 'documents'
             ? noCreateRowPermission
-            : false) ||
-            (activeTab === 'indexes' && !canCreateIndex))
+            : activeTab === 'indexes'
+              ? noCreateTablePermission || !canCreateIndex
+              : false)
         }
         createDisabledTooltip={
-          !isDatabaseLevelView ? createPermissionTooltip : undefined
+          !isDatabaseLevelView
+            ? activeTab === 'indexes' && noCreateTablePermission
+              ? createPermissionTooltip
+              : activeTab === 'indexes' && !canCreateIndex
+                ? t(
+                    'Add at least one non-relationship attribute to create indexes.',
+                  )
+                : activeTab === 'rows' || activeTab === 'documents'
+                  ? noCreateRowPermission
+                    ? createPermissionTooltip
+                    : undefined
+                  : undefined
+            : undefined
         }
         onCreate={
           isDatabaseLevelView

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Browser, Flag, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -10,10 +10,14 @@ import { cn } from '@/lib/utils'
 import { formatIpForDisplay } from '@/lib/format-ip'
 import {
   formatActivityEventJson,
+  getActivityCountryCode,
+  getActivityCountryDisplayName,
   hasHumanEmail,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
 import { sdk } from '@/lib/appwrite/sdk'
+import { buildCountryLookups } from '@/lib/locale/country-lookups'
+import { useCountries } from '@/lib/react-query/hooks'
 import { UserTypeAvatar } from '@/components/pages/projects/$projectId/activity/UserTypeAvatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -232,6 +236,11 @@ export function ActivityLogDrawer({
   display,
 }: ActivityLogDrawerProps) {
   const t = useT()
+  const { data: countriesData } = useCountries()
+  const countryLookups = useMemo(
+    () => buildCountryLookups(countriesData?.countries),
+    [countriesData?.countries],
+  )
   const handleCopyActivityPermalink = useCallback(() => {
     const id = event?.$id
     if (!id) return
@@ -280,9 +289,10 @@ export function ActivityLogDrawer({
     .filter(Boolean)
     .join(' · ')
 
-  const countryNameLine = event.countryName?.trim() ?? ''
+  const countryNameLine =
+    getActivityCountryDisplayName(event, countryLookups) ?? ''
 
-  const countryCode = event.countryCode?.trim().toLowerCase() ?? ''
+  const countryCode = getActivityCountryCode(event) ?? ''
   const flagUrl =
     countryCode.length === 2
       ? sdk.forConsole.avatars.getFlag({
@@ -293,8 +303,8 @@ export function ActivityLogDrawer({
         })
       : null
 
-  const flagAlt = event.countryName?.trim()
-    ? `${event.countryName} flag`
+  const flagAlt = countryNameLine
+    ? `${countryNameLine} flag`
     : countryCode
       ? `${countryCode.toUpperCase()} flag`
       : t('Location unknown')
