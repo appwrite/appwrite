@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
+use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -12,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -22,6 +24,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -80,6 +83,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
+            ->inject('jobs')
             ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
@@ -101,6 +105,7 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
+        Jobs $jobs,
         GitHub $github,
         Authorization $authorization,
         array $platform
@@ -124,6 +129,23 @@ class Create extends Base
         ]);
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
+            // VCS-connected function: the template is merged into the user's repo
+            // and pushed as a commit, then that commit is built. This stays on the
+            // executor for now because it is a git *write*, which the jobs-service
+            // artifact system (download/unarchive) does not cover.
+            //
+            // Plan to move it to the jobs backend (3a — Git Data API push, no git
+            // binary), when utopia-php/vcs grows the bulk-push methods:
+            //   1. download the template tarball (codeload) + read the tree of the
+            //      target repo/branch (github->getRepositoryTree).
+            //   2. for each template file: create a blob (POST .../git/blobs).
+            //   3. create a tree from the blobs on top of the branch's base tree
+            //      (POST .../git/trees), then a commit (POST .../git/commits), then
+            //      fast-forward the branch ref (PATCH .../git/refs/heads/{branch}).
+            //   4. take the resulting commit hash and submit the build via
+            //      Job::build (same authenticated-tarball path as createVcsDeployment).
+            // This replaces clone + rsync + `git commit && git push` with ~4 API
+            // calls and no working tree. Until then, executor handles this branch.
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
             $deployment = $this->redeployVcsFunction(
@@ -152,6 +174,11 @@ class Create extends Base
             return;
         }
 
+        // Backend for the template build: 'orchestrator' (jobs-service, which
+        // pulls the public GitHub tarball via artifacts) or 'executor' (default;
+        // the Builds worker clones the repo). The jobs path pre-declares buildPath.
+        $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
+
         $deploymentId = ID::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -173,18 +200,24 @@ class Create extends Base
             'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
             'type' => 'vcs',
             'activate' => $activate,
+            'status' => 'waiting',
+            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
         ]));
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
 
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $function,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            template: $template,
-            platform: $platform,
-        ));
+        if ($useJobs) {
+            $jobs->create(...Job::build($project, $function, $deployment, $platform, $template));
+        } else {
+            $publisherForBuilds->enqueue(new BuildMessage(
+                project: $project,
+                resource: $function,
+                deployment: $deployment,
+                type: BUILD_TYPE_DEPLOYMENT,
+                template: $template,
+                platform: $platform,
+            ));
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

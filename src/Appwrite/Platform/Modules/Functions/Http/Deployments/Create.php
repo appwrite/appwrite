@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
+use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -12,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -91,6 +93,7 @@ class Create extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('publisherForBuilds')
+            ->inject('jobs')
             ->inject('plan')
             ->inject('authorization')
             ->inject('platform')
@@ -112,6 +115,7 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         BuildPublisher $publisherForBuilds,
+        Jobs $jobs,
         array $plan,
         Authorization $authorization,
         array $platform,
@@ -287,7 +291,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $mergeUploadMetadata, $platform, $project, $publisherForBuilds, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $mergeUploadMetadata, $platform, $project, $publisherForBuilds, $jobs, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -328,6 +332,21 @@ class Create extends Action
 
                     $fileSize = $deviceForFunctions->getFileSize($path);
 
+                    // Build backend for manual-upload function deployments:
+                    // 'orchestrator' (open-runtimes jobs-service, submitted below
+                    // in the request flow) or 'executor' (default; enqueued to the
+                    // Builds worker). Selected by _APP_BUILDS_BACKEND.
+                    $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
+
+                    // Fields marking the deployment as queued. The build worker
+                    // promotes 'waiting' → 'building' on the first callback. The
+                    // jobs path also pre-declares buildPath so build.sh writes the
+                    // output straight onto the mounted builds volume.
+                    $buildFields = ['status' => 'waiting'];
+                    if ($useJobs) {
+                        $buildFields['buildPath'] = Job::buildPath($project->getId(), $deploymentId);
+                    }
+
                     if ($deployment->isEmpty()) {
                         $deployment = $dbForProject->createDocument('deployments', new Document([
                             '$id' => $deploymentId,
@@ -349,7 +368,8 @@ class Create extends Action
                             'sourceChunksUploaded' => $chunksUploaded,
                             'activate' => $activate,
                             'sourceMetadata' => $metadata,
-                            'type' => $type
+                            'type' => $type,
+                            ...$buildFields,
                         ]));
 
                     } else {
@@ -357,17 +377,22 @@ class Create extends Action
                             'sourceSize' => $fileSize,
                             'sourceChunksUploaded' => $chunksUploaded,
                             'sourceMetadata' => $metadata,
+                            ...$buildFields,
                         ]));
                     }
 
-                    // Start the build
-                    $publisherForBuilds->enqueue(new BuildMessage(
-                        project: $project,
-                        resource: $function,
-                        deployment: $deployment,
-                        type: BUILD_TYPE_DEPLOYMENT,
-                        platform: $platform,
-                    ));
+                    if ($useJobs) {
+                        $jobs->create(...Job::build($project, $function, $deployment, $platform));
+                    } else {
+                        // Default: build on the executor via the Builds worker.
+                        $publisherForBuilds->enqueue(new BuildMessage(
+                            project: $project,
+                            resource: $function,
+                            deployment: $deployment,
+                            type: BUILD_TYPE_DEPLOYMENT,
+                            platform: $platform,
+                        ));
+                    }
                 } else {
                     $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                         'sourceChunksUploaded' => $chunksUploaded,
@@ -392,4 +417,5 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment upload is busy. Try again.');
         }
     }
+
 }

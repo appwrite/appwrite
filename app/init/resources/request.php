@@ -580,6 +580,12 @@ return function (Container $context): void {
         if (! \is_string($projectId)) {
             $projectId = $request->getHeaderLine('x-appwrite-project', '');
         }
+        // For non-GET requests getParam() reads the body, so a project passed
+        // as a query parameter (e.g. presigned artifact URLs) is only visible
+        // via getQuery().
+        if (empty($projectId)) {
+            $projectId = (string) $request->getQuery('project', '');
+        }
 
         // Backwards compatibility for new services, originally project resources
         // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>

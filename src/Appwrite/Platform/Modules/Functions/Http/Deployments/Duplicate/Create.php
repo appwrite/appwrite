@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
+use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -10,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -17,6 +19,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 class Create extends Action
 {
@@ -64,6 +67,7 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
+            ->inject('jobs')
             ->inject('deviceForFunctions')
             ->inject('project')
             ->inject('platform')
@@ -78,6 +82,7 @@ class Create extends Action
         Database $dbForProject,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
+        Jobs $jobs,
         Device $deviceForFunctions,
         Document $project,
         array $platform
@@ -100,6 +105,11 @@ class Create extends Action
 
         $deploymentId = ID::unique();
 
+        // Build backend for the rebuild: 'orchestrator' (jobs-service, submitted
+        // here) or 'executor' (default; Builds worker). The jobs path pre-declares
+        // buildPath so build.sh writes output straight onto the mounted volume.
+        $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
+
         $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
@@ -117,17 +127,21 @@ class Create extends Action
             'buildDuration' => null,
             'buildSize' => null,
             'status' => 'waiting',
-            'buildPath' => '',
+            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
             'buildLogs' => '',
         ]));
 
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $function,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            platform: $platform,
-        ));
+        if ($useJobs) {
+            $jobs->create(...Job::build($project, $function, $deployment, $platform));
+        } else {
+            $publisherForBuilds->enqueue(new BuildMessage(
+                project: $project,
+                resource: $function,
+                deployment: $deployment,
+                type: BUILD_TYPE_DEPLOYMENT,
+                platform: $platform,
+            ));
+        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

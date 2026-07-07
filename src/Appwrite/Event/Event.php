@@ -43,6 +43,9 @@ class Event
     public const BUILDS_QUEUE_NAME = 'v1-builds';
     public const BUILDS_CLASS_NAME = 'BuildsV1';
 
+    public const JOBS_QUEUE_NAME = 'v1-jobs';
+    public const JOBS_CLASS_NAME = 'JobsV1';
+
     public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
     public const SCREENSHOTS_CLASS_NAME = 'ScreenshotsV1';
 
