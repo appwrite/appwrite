@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import {
   MarketingCtaSection,
+  MarketingCtaSignupButtons,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/date-utils'
@@ -49,14 +50,7 @@ export function DetailView({ entry }: DetailViewProps) {
       </section>
 
       <MarketingCtaSection title="Ready to build?">
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
-            Get started
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">View pricing</Link>
-        </Button>
+        <MarketingCtaSignupButtons />
       </MarketingCtaSection>
     </div>
   )

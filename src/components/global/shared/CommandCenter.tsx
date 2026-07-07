@@ -20,7 +20,6 @@ import { CommandCenterListFooter } from '@/components/global/shared/CommandCente
 import {
   Bell,
   Building2,
-  Clock,
   Database,
   Folder,
   FolderOpen,
@@ -71,6 +70,7 @@ import {
   DEFAULT_GROUP_LABELS,
   getCommandsForContext,
   PROJECT_RESOURCE_KIND_LABELS,
+  RECENT_RESOURCES_MAX_SHOWN,
   searchCommands,
   searchCommandsWithScores,
   getMessageSearchLabel,
@@ -88,7 +88,7 @@ import { DocsSearchView } from '@/components/pages/docs/DocsSearchView'
 import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCenterFeedbackView'
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
-import { useNavigationHistorySafe } from '@/components/global/providers/NavigationHistoryProvider'
+import { useRecentResourcesSafe } from '@/components/global/providers/RecentResourcesProvider'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
@@ -306,7 +306,7 @@ export function CommandCenter({
   const { isMac } = usePlatform()
   const navigate = useNavigate()
   const location = useLocation()
-  const navigationHistory = useNavigationHistorySafe()
+  const recentResources = useRecentResourcesSafe()
   const { features } = useConsoleProfile()
   const { setTheme } = useTheme()
   const isOrgContext = context === 'org'
@@ -564,38 +564,28 @@ export function CommandCenter({
   }, [context])
 
   const recentCommands: RuntimeCommand[] = useMemo(() => {
-    const backStack = navigationHistory?.getBackStack() ?? []
-    if (backStack.length === 0) return []
+    if (!isProjectContext || !projectId) return []
 
-    return [...backStack]
-      .reverse()
-      .slice(0, 3)
-      .map((entry, index) => ({
-        id: `recent.${index}.${entry.path}`,
-        label: entry.title || entry.path,
-        description: entry.path,
-        icon: Clock,
-        kind: 'action' as CommandKind,
-        group: 'Recent',
-        select: () => {
-          onOpenChange(false)
-          const target = navigationHistory?.popUntil(entry.path)
-          if (target) {
-            navigationHistory?.skipNextPush()
-            navigateToHref(navigate, target)
-            return
-          }
-          navigateToHref(navigate, entry.path)
-        },
-      }))
-  }, [
-    navigationHistory,
-    location.pathname,
-    location.searchStr,
-    open,
-    navigate,
-    onOpenChange,
-  ])
+    const items =
+      recentResources?.getRecentResources({
+        projectId,
+        limit: RECENT_RESOURCES_MAX_SHOWN,
+      }) ?? []
+
+    return items.map((entry) => ({
+      id: `recent.${entry.key}`,
+      label: entry.name,
+      breadcrumbs: entry.breadcrumbs,
+      icon: RESOURCE_KIND_ICONS[entry.kind],
+      kind: 'action' as CommandKind,
+      group: 'Recent',
+      // Prefer the stored resource path so postgres / product-kind URLs stay correct.
+      select: () => {
+        onOpenChange(false)
+        navigateToHref(navigate, entry.href)
+      },
+    }))
+  }, [isProjectContext, projectId, recentResources, navigate, onOpenChange])
 
   // ── Dynamic resource fetching (search by user-typed term) ────────────────
   const hasSearch = search.trim().length > 0
@@ -1786,13 +1776,26 @@ export function CommandCenter({
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <p className="truncate text-[13px] font-medium">
-                              {t(cmd.label)}
+                              {cmd.resourceKind || cmd.breadcrumbs
+                                ? cmd.label
+                                : t(cmd.label)}
                             </p>
-                            {cmd.description && (
+                            {cmd.breadcrumbs && cmd.breadcrumbs.length > 0 ? (
                               <p className="truncate text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
-                                {t(cmd.description)}
+                                {cmd.breadcrumbs.map((segment, index) => (
+                                  <span key={`${segment}-${index}`}>
+                                    {index > 0 ? ' › ' : null}
+                                    {t(segment)}
+                                  </span>
+                                ))}
                               </p>
-                            )}
+                            ) : cmd.description ? (
+                              <p className="truncate text-[11px] text-muted-foreground group-data-[selected=true]:text-foreground/80">
+                                {cmd.resourceKind
+                                  ? cmd.description
+                                  : t(cmd.description)}
+                              </p>
+                            ) : null}
                           </div>
                           {cmd.shortcut && !isMobile && (
                             <ShortcutKeyBadges
@@ -1842,6 +1845,8 @@ interface RuntimeCommand {
   id: string
   label: string
   description?: string
+  /** Breadcrumb trail segments (recent resources). Each segment is translated. */
+  breadcrumbs?: string[]
   icon?: LucideIcon
   shortcut?: string
   kind: CommandKind

@@ -152,6 +152,18 @@ function ProductDatabasesSectionContent({
   )
 
   const errorMessage = error ? getErrorMessage(error) : null
+  const loadingMessage =
+    backend === ApiDatabaseType.Documentsdb
+      ? t('Loading DocumentsDB…')
+      : backend === ApiDatabaseType.Vectorsdb
+        ? t('Loading VectorsDB…')
+        : `${t('Loading')} ${title}…`
+  const failedToLoadMessage =
+    backend === ApiDatabaseType.Documentsdb
+      ? t('Failed to load DocumentsDB')
+      : backend === ApiDatabaseType.Vectorsdb
+        ? t('Failed to load VectorsDB')
+        : `${t('Failed to load')} ${title}`
 
   return (
     <section className="mt-10">
@@ -167,14 +179,14 @@ function ProductDatabasesSectionContent({
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
           <p className="mt-3 text-[13px] text-muted-foreground">
-            Loading {title.toLowerCase()}...
+            {loadingMessage}
           </p>
         </div>
       ) : errorMessage && databases.length === 0 ? (
         <div className="rounded-lg border border-destructive/30 bg-card py-10 px-6 text-center">
           <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
           <h3 className="mt-4 text-[15px] font-semibold text-foreground">
-            Failed to load {title.toLowerCase()}
+            {failedToLoadMessage}
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">{errorMessage}</p>
           <Button

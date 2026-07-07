@@ -2,8 +2,10 @@ import { format } from 'date-fns'
 import type { Locale } from 'date-fns'
 import { enGB } from 'date-fns/locale/en-GB'
 import { he as heDateFns } from 'date-fns/locale/he'
+import { ja as jaDateFns } from 'date-fns/locale/ja'
 import { enGB as enDayPickerLocale } from 'react-day-picker/locale/en-GB'
 import { he as heDayPickerLocale } from 'react-day-picker/locale/he'
+import { ja as jaDayPickerLocale } from 'react-day-picker/locale/ja'
 import {
   getActiveLanguage,
   type SupportedLanguage,
@@ -14,16 +16,19 @@ type DayPickerLocale = typeof enDayPickerLocale
 const DATE_FNS_LOCALES: Record<SupportedLanguage, Locale> = {
   en: enGB,
   he: heDateFns,
+  ja: jaDateFns,
 }
 
 const INTL_LOCALES: Record<SupportedLanguage, string> = {
   en: 'en-GB',
   he: 'he-IL',
+  ja: 'ja-JP',
 }
 
 const DAY_PICKER_LOCALES: Record<SupportedLanguage, DayPickerLocale> = {
   en: enDayPickerLocale,
   he: heDayPickerLocale,
+  ja: jaDayPickerLocale,
 }
 
 export function getDateFnsLocale(

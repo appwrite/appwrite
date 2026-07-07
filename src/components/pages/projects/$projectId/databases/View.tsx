@@ -1314,8 +1314,7 @@ export function DatabaseDetailLayout({
     },
     onError: (error: Error) => {
       toast.error(
-        getErrorMessage(error) ||
-          t(`Failed to create ${dbLabels.containerSingular}`),
+        getErrorMessage(error) || dbLabels.failedToCreateContainer,
       )
     },
   })
@@ -1603,8 +1602,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     },
     onError: (error: Error) => {
       toast.error(
-        getErrorMessage(error) ||
-          t(`Failed to create ${dbLabels.containerSingular}`),
+        getErrorMessage(error) || dbLabels.failedToCreateContainer,
       )
     },
   })

@@ -226,9 +226,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Code: 'קוד',
   Collapse: 'כיווץ',
   'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.': // pragma: allowlist secret
-    'אספו אסימוני Appwrite והתחמקו מברקים. משחק מיני של סיבולת לסשנים של דיבוג.', // pragma: allowlist secret
+    'אספו טוקני Appwrite והתחמקו מברקים. משחק מיני של סיבולת לסשנים של דיבוג.', // pragma: allowlist secret
   'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.':
-    'אספו אסימונים והתחמקו מברקים. השתמשו ברווח, ב-↑ או בלחיצה כדי לקפוץ.',
+    'אספו טוקנים והתחמקו מברקים. השתמשו ברווח, ב-↑ או בלחיצה כדי לקפוץ.',
   'Coming soon': 'בקרוב',
   Comment: 'הערה',
   'Comment (optional)': 'הערה (אופציונלי)',
@@ -241,7 +241,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Compute: 'מחשוב',
   Confidential: 'חסוי',
   'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.':
-    'לקוחות חסויים מאמתים החלפת אסימונים באמצעות סוד. בצעו רוטציה לסודות באופן קבוע ואחסנו את הערכים במנהל סודות.',
+    'לקוחות חסויים מאמתים החלפת טוקנים באמצעות סוד. בצעו רוטציה לסודות באופן קבוע ואחסנו את הערכים במנהל סודות.',
   'Confirmation email with ticket ID. Typically within 24h during support hours.':
     'אימייל אישור עם מזהה פנייה. בדרך כלל בתוך 24 שעות בשעות התמיכה.',
   'Confirming payment': 'מאשר תשלום',
@@ -277,7 +277,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Create a new project in your organization.': 'צרו פרויקט חדש בארגון שלכם.',
   'Create a project first': 'צרו פרויקט תחילה',
   'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
-    'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת אסימונים בצד השרת.',
+    'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת טוקנים בצד השרת.',
   'Create an OAuth2 app listing for the marketplace. It is saved as a draft until you publish it.':
     'צרו דף אפליקציית OAuth2 למרקטפלייס. הדף נשמר כטיוטה עד שתפרסמו אותו.',
   'Create an app to share it with other organizations on the marketplace.':
@@ -744,7 +744,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Pending owner approval': 'ממתין לאישור בעלים',
   'Pending registry': 'ממתין למרשם',
   'Permanently delete this app and revoke all associated tokens. This action cannot be undone.':
-    'מחקו לצמיתות את האפליקציה הזו ובטלו את כל האסימונים המשויכים. פעולה זו אינה ניתנת לביטול.',
+    'מחקו לצמיתות את האפליקציה הזו ובטלו את כל הטוקנים המשויכים. פעולה זו אינה ניתנת לביטול.',
   'Permanently delete this domain and all associated DNS records.':
     'מחקו לצמיתות את הדומיין הזה ואת כל רשומות ה-DNS המשויכות.',
   'Permanently delete this organization and all associated data. This action cannot be undone.':
@@ -959,7 +959,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Status: 'סטטוס',
   Storage: 'אחסון',
   'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.':
-    'אחסנו את הסוד הזה בסביבת הפריסה שלכם לפני שתמשיכו. סשנים פעילים שמשתמשים בסוד שנמחק ייכשלו מיד ברענון אסימונים.',
+    'אחסנו את הסוד הזה בסביבת הפריסה שלכם לפני שתמשיכו. סשנים פעילים שמשתמשים בסוד שנמחק ייכשלו מיד ברענון טוקנים.',
   'Street address': 'כתובת רחוב',
   'Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.':
     'עיבוד תשלומים של Stripe אינו מוגדר. ודאו ש-VITE_STRIPE_PUBLISHABLE_KEY מוגדר בסביבה שלכם.',
@@ -1020,7 +1020,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'To remove this card, replace it with another payment method on your account first. Once a new primary card is set, you can remove this one.':
     'כדי להסיר את הכרטיס הזה, החליפו אותו תחילה באמצעי תשלום אחר בחשבון שלכם. לאחר הגדרת כרטיס ראשי חדש, תוכלו להסיר את הכרטיס הזה.',
   'Token refresh and authorization flows using this secret will stop working immediately. This cannot be undone.':
-    'רענון אסימונים ותהליכי הרשאה שמשתמשים בסוד הזה יפסיקו לעבוד מיד. פעולה זו אינה ניתנת לביטול.',
+    'רענון טוקנים ותהליכי הרשאה שמשתמשים בסוד הזה יפסיקו לעבוד מיד. פעולה זו אינה ניתנת לביטול.',
   Total: 'סה"כ',
   'Total due': 'סה"כ לתשלום',
   'Total due now': 'סה"כ לתשלום כעת',
@@ -1185,7 +1185,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'ואת כל הפרויקטים, מסדי הנתונים והקבצים שלו? פעולה זו אינה ניתנת לביטול.',
   'and all its resources will be deleted.': 'וכל המשאבים שלו יימחקו.',
   'and revoke all associated tokens? This action cannot be undone.':
-    'ולבטל את כל האסימונים המשויכים? פעולה זו אינה ניתנת לביטול.',
+    'ולבטל את כל הטוקנים המשויכים? פעולה זו אינה ניתנת לביטול.',
   app: 'אפליקציה',
   apps: 'אפליקציות',
   by: 'מאת',

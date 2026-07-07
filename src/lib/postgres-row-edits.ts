@@ -9,7 +9,10 @@ import {
   parsePostgresColumnTypeFromRow,
   type PostgresColumnTypeId,
 } from '@/lib/postgres-column-types'
-import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
+import {
+  isPostgresPrimaryKeyColumn,
+  type PostgresTableColumnRow,
+} from '@/lib/postgres-sql'
 import type { PostgresRowIdentity } from '@/lib/postgres-row-sql'
 
 export type PostgresColumnEditMeta = {
@@ -52,8 +55,7 @@ export function getPostgresColumnEditMeta(
     dataType: column.data_type,
     udtName: column.udt_name,
     nullable: column.is_nullable === 'YES',
-    isPrimaryKey:
-      column.is_primary_key === true || column.is_primary_key === 'true',
+    isPrimaryKey: isPostgresPrimaryKeyColumn(column),
     hasDefault: column.column_default != null && column.column_default !== '',
     length: typeState.length,
     numericPrecision: typeState.numericPrecision,
@@ -112,14 +114,92 @@ export function isPostgresGeneratedColumn(column: PostgresTableColumnRow): boole
   )
 }
 
-/** Columns omitted from INSERT on row create (DB assigns value via default/identity). */
+function columnHasExplicitDefault(column: PostgresTableColumnRow): boolean {
+  return column.column_default != null && column.column_default !== ''
+}
+
+/**
+ * True only when Postgres will assign a unique value on INSERT if the column
+ * is omitted: serial/identity sequences, nextval(), or UUID generators.
+ * Plain defaults (constants, now(), etc.) are not auto-generation.
+ */
+export function postgresColumnAutoGeneratesOnInsert(
+  column: PostgresTableColumnRow,
+): boolean {
+  if (column.serial_sequence?.trim()) return true
+
+  const identity = String(column.is_identity ?? '').toUpperCase()
+  if (identity === 'YES' || identity === 'TRUE' || identity === 'T') {
+    return true
+  }
+
+  const generation = String(column.identity_generation ?? '').toUpperCase()
+  if (generation === 'ALWAYS' || generation === 'BY DEFAULT') {
+    return true
+  }
+
+  const defaultValue = column.column_default?.toLowerCase() ?? ''
+  if (!defaultValue) return false
+
+  return (
+    defaultValue.includes('nextval(') ||
+    defaultValue.includes('gen_random_uuid(') ||
+    defaultValue.includes('uuid_generate_')
+  )
+}
+
+/**
+ * True when an empty create field should be omitted from INSERT so Postgres
+ * applies its default. Primary keys only qualify when they truly auto-generate;
+ * otherwise the user must supply a unique value.
+ */
+export function postgresColumnCanOmitOnCreate(
+  column: PostgresTableColumnRow,
+): boolean {
+  if (postgresColumnAutoGeneratesOnInsert(column)) return true
+  if (
+    columnHasExplicitDefault(column) &&
+    !isPostgresPrimaryKeyColumn(column)
+  ) {
+    return true
+  }
+  return false
+}
+
+/**
+ * Columns Postgres rejects user-supplied values for (GENERATED ALWAYS identity
+ * or stored generated columns). Primary keys and serial/identity BY DEFAULT
+ * columns are writable on both create and update.
+ */
+export function isPostgresColumnSystemGenerated(
+  column: PostgresTableColumnRow,
+): boolean {
+  const generation = String(column.identity_generation ?? '').toUpperCase()
+  if (generation === 'ALWAYS') return true
+
+  const defaultValue = column.column_default?.toLowerCase() ?? ''
+  return defaultValue.includes('generated always')
+}
+
+/** Columns omitted from the create form because Postgres rejects user values. */
 export function shouldOmitPostgresColumnOnRowCreate(
   column: PostgresTableColumnRow,
 ): boolean {
-  if (isPostgresGeneratedColumn(column)) return true
+  return isPostgresColumnSystemGenerated(column)
+}
 
-  const meta = getPostgresColumnEditMeta(column)
-  return meta.isPrimaryKey && meta.hasDefault
+/**
+ * Primary keys without auto-generation are always required on create.
+ * Other NOT NULL columns are optional when they have a database default.
+ */
+export function isPostgresColumnRequiredOnCreate(
+  column: PostgresTableColumnRow,
+): boolean {
+  if (postgresColumnAutoGeneratesOnInsert(column)) return false
+  if (column.is_nullable === 'YES') return false
+  if (isPostgresPrimaryKeyColumn(column)) return true
+  if (columnHasExplicitDefault(column)) return false
+  return true
 }
 
 export function filterPostgresRowCreateValues(
@@ -142,9 +222,8 @@ export function filterPostgresRowCreateValues(
 export function isPostgresColumnInlineEditable(
   column: PostgresTableColumnRow,
 ): boolean {
+  if (isPostgresColumnSystemGenerated(column)) return false
   const meta = getPostgresColumnEditMeta(column)
-  if (meta.isPrimaryKey && meta.hasDefault) return false
-  if (isPostgresGeneratedColumn(column)) return false
   if (NON_INLINE_EDITABLE_TYPES.has(meta.typeId)) return false
   return true
 }

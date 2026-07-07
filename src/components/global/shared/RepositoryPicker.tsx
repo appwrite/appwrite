@@ -23,12 +23,13 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { Search, Lock, Plus, RefreshCw } from 'lucide-react'
+import { Search, Lock, Plus } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 
 const REPO_PAGE_SIZE = 5
 
@@ -229,22 +230,14 @@ export function RepositoryPicker({
                 className="h-9 ps-9 text-[13px]"
               />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 shrink-0"
+            <RefreshButton
               onClick={() => {
                 refetchRepos()
                 onRefetch?.()
               }}
-              disabled={isFetching}
-              aria-label={t('Refresh repositories')}
-            >
-              <RefreshCw
-                className={cn('h-4 w-4', isFetching && 'animate-spin')}
-              />
-            </Button>
+              isRefreshing={isFetching}
+              tooltip={t('Refresh repositories')}
+            />
           </div>
         )}
 

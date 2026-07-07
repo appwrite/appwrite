@@ -3,16 +3,18 @@ import {
   type DebugLanguageOverride,
 } from '@/lib/debug-overrides'
 
-export type SupportedLanguage = 'en' | 'he'
+export type SupportedLanguage = 'en' | 'he' | 'ja'
 
 /**
- * Resolve a language preference ('auto' | 'en' | 'he') to a concrete language.
+ * Resolve a language preference ('auto' | 'en' | 'he' | 'ja') to a concrete language.
  * Pure function usable outside React (e.g. SDK initialization).
  */
 export function resolveLanguagePreference(
   preference: DebugLanguageOverride,
 ): SupportedLanguage {
-  if (preference === 'en' || preference === 'he') return preference
+  if (preference === 'en' || preference === 'he' || preference === 'ja') {
+    return preference
+  }
 
   if (typeof navigator === 'undefined') return 'en'
 
@@ -24,8 +26,15 @@ export function resolveLanguagePreference(
     (locale) =>
       typeof locale === 'string' && locale.toLowerCase().startsWith('he'),
   )
+  if (prefersHebrew) return 'he'
 
-  return prefersHebrew ? 'he' : 'en'
+  const prefersJapanese = browserLocales.some(
+    (locale) =>
+      typeof locale === 'string' && locale.toLowerCase().startsWith('ja'),
+  )
+  if (prefersJapanese) return 'ja'
+
+  return 'en'
 }
 
 /**

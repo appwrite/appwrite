@@ -4,7 +4,6 @@ import {
   Search,
   Plus,
   Filter,
-  RefreshCw,
   Upload,
   Download,
   ChevronUp,
@@ -17,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { Link } from '@tanstack/react-router'
 import {
   SERVICE_HEADER_CONTAINER,
@@ -563,32 +563,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   {beforeRefreshButtons}
                 </div>
               ) : null}
+              {showRefresh ? (
+                <RefreshButton onClick={onRefresh} isRefreshing={isRefreshing} />
+              ) : null}
               <TooltipProvider delayDuration={0}>
-                {/* Refresh Button */}
-                {showRefresh && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onRefresh}
-                        disabled={isRefreshing}
-                        className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
-                      >
-                        <RefreshCw
-                          className={cn(
-                            'h-4 w-4 transition-transform duration-500',
-                            isRefreshing && 'animate-spin',
-                          )}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>{t('Refresh')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-
                 {/* Import Button */}
                 {showImport && (
                   <Tooltip>

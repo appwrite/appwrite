@@ -2,10 +2,10 @@ import { useCallback, useMemo, useState } from 'react'
 import {
   AlertCircle,
   Cable,
-  RefreshCw,
   StopCircle,
   Unplug,
 } from 'lucide-react'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
   useCancelPostgresBackend,
   useOrganizationScopes,
@@ -117,8 +117,8 @@ const connectionsTableClassName = 'w-full min-w-[80rem] table-fixed'
 function ConnectionsTableColGroup() {
   return (
     <colgroup>
-      <col className="w-[5%]" />
-      <col className="w-[8%]" />
+      <col className="w-[7rem]" />
+      <col className="w-[7%]" />
       <col className="w-[8%]" />
       <col className="w-[9%]" />
       <col className="w-[9%]" />
@@ -483,22 +483,10 @@ export function PostgresConnectionDetails({
               ) : (
                 bulkTerminateButton
               )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 text-[13px]"
-                disabled={isFetching}
+              <RefreshButton
                 onClick={() => void refetch()}
-              >
-                <RefreshCw
-                  className={cn(
-                    'me-1.5 h-3.5 w-3.5',
-                    isFetching && 'animate-spin',
-                  )}
-                />
-                {t('Refresh')}
-              </Button>
+                isRefreshing={isFetching}
+              />
             </div>
           </div>
         </div>
@@ -600,12 +588,12 @@ export function PostgresConnectionDetails({
                               }
                             }}
                           >
-                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
-                            <span className="font-mono text-[13px] text-foreground">
+                          <TableCell className="overflow-hidden whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
+                            <span className="block truncate font-mono text-[13px] text-foreground">
                               {connection.pid}
                             </span>
                           </TableCell>
-                          <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
+                          <TableCell className="overflow-hidden whitespace-nowrap px-4 py-3">
                             <Badge
                               variant={backendTypeBadgeVariant(
                                 connection.backendType,

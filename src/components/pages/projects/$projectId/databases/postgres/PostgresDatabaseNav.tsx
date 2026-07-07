@@ -5,9 +5,8 @@ import {
   BarChart3,
   Cable,
   KeyRound,
-  Network,
-  Play,
   Settings,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -22,8 +21,8 @@ import {
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
-import { POSTGRES_RUN_QUERY_PLAY_ICON_CLASS } from './_components/postgres-chrome'
 import { usePostgresConnectDialog } from './_components/PostgresConnectDialogContext'
+import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
 import { useT } from '@/lib/i18n/translate'
 
 type PostgresDatabaseNavProps = {
@@ -53,11 +52,8 @@ export function PostgresDatabaseNav({
   const showSettings = canCreateDatabase(access, features)
 
   return (
-    <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
-      <Link {...nav.sql()} className={navLinkClass(activeTab === 'sql')}>
-        <Play className={POSTGRES_RUN_QUERY_PLAY_ICON_CLASS} />
-        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('SQL editor')}</span>
-      </Link>
+    <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
+      <div className="space-y-0.5">
       {connectDialog ? (
         <button
           type="button"
@@ -68,13 +64,6 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Credentials')}</span>
         </button>
       ) : null}
-      <Link
-        {...nav.visualizer()}
-        className={navLinkClass(activeTab === 'visualizer')}
-      >
-        <Network className="h-3.5 w-3.5 shrink-0" />
-        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Visualizer')}</span>
-      </Link>
       {features.usageStats ? (
         <Link
           {...nav.monitor()}
@@ -109,6 +98,10 @@ export function PostgresDatabaseNav({
         <Cable className="h-3.5 w-3.5 shrink-0" />
         <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Connections')}</span>
       </Link>
+      <Link {...nav.roles()} className={navLinkClass(activeTab === 'roles')}>
+        <Users className="h-3.5 w-3.5 shrink-0" />
+        <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Roles')}</span>
+      </Link>
       {showSettings ? (
         <Link
           {...nav.settings()}
@@ -118,6 +111,13 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Settings')}</span>
         </Link>
       ) : null}
+      </div>
+      <DatabaseSidebarComputeSpec
+        projectId={projectId}
+        databaseId={databaseId}
+        mode="postgres"
+        variant="footer"
+      />
     </div>
   )
 }

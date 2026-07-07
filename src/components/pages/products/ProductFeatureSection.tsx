@@ -2,6 +2,7 @@ import { ArrowUpRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { SectionBrandLight, SectionDottedBackground, SectionSoftLight } from '@/components/pages/home/HomeSoftLights'
+import { useT } from '@/lib/i18n/translate'
 import type { ProductFeatureContent } from '@/lib/products/features/types'
 import { cn } from '@/lib/utils'
 
@@ -21,6 +22,7 @@ export function ProductFeatureSection({
   index,
   companion,
 }: ProductFeatureSectionProps) {
+  const t = useT()
   const stacked = feature.layout === 'stacked'
   const centered = stacked && feature.centered
   const hideVisual = feature.hideVisual
@@ -32,7 +34,7 @@ export function ProductFeatureSection({
 
   const docsLink = (
     <DocsRouteLink href={feature.docsHref} className={productFeatureDocsLinkClassName}>
-      {feature.docsLabel}
+      {t(feature.docsLabel)}
       <ArrowUpRight className="size-3.5" aria-hidden />
     </DocsRouteLink>
   )
@@ -55,10 +57,10 @@ export function ProductFeatureSection({
           <>
             <div className={cn('mx-auto text-center', centered ? 'max-w-3xl' : 'max-w-3xl')}>
               <h2 className="font-aeonik-pro text-balance text-[28px] font-normal leading-tight tracking-tight text-foreground sm:text-[32px]">
-                {feature.title}
+                {t(feature.title)}
               </h2>
               <p className="mt-4 text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-                {feature.description}
+                {t(feature.description)}
               </p>
               {!hideVisual && !companion ? <div className="mt-6">{docsLink}</div> : null}
             </div>
@@ -100,10 +102,10 @@ export function ProductFeatureSection({
             {!stacked ? (
               <div className={cn(reversed ? 'lg:ps-4' : 'lg:pe-4')}>
                 <h2 className="font-aeonik-pro text-balance text-[28px] font-normal leading-tight tracking-tight text-foreground sm:text-[32px]">
-                  {feature.title}
+                  {t(feature.title)}
                 </h2>
                 <p className="mt-4 max-w-xl text-[14px] leading-7 text-muted-foreground sm:text-[15px]">
-                  {feature.description}
+                  {t(feature.description)}
                 </p>
                 {companion}
                 <div className="mt-6">{docsLink}</div>

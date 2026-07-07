@@ -5,10 +5,10 @@ import {
   ShieldAlert,
   Search,
   Download,
-  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -40,6 +40,7 @@ export function LogsTab({ searchValue }: LogsTabProps) {
   const t = useT()
   const [logs, setLogs] = useState<FirewallLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [filterAction, setFilterAction] = useState<string>('all')
   const [filterRule, setFilterRule] = useState<string>('all')
 
@@ -167,21 +168,16 @@ export function LogsTab({ searchValue }: LogsTabProps) {
         </Select>
 
         <div className="ms-auto flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5"
+          <RefreshButton
+            isRefreshing={isRefreshing}
             onClick={() => {
-              setIsLoading(true)
+              setIsRefreshing(true)
               setTimeout(() => {
                 setLogs(mockFirewallLogs)
-                setIsLoading(false)
+                setIsRefreshing(false)
               }, 500)
             }}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            {t('Refresh')}
-          </Button>
+          />
           <Button
             variant="outline"
             size="sm"

@@ -7,6 +7,7 @@ import { heOrganizationsDictionary } from './organizations'
 import { heAccountGlobalDictionary } from './account-global'
 import { heSharedUiDictionary } from './shared-ui'
 import { heMarketingDictionary } from './marketing'
+import { heProductPagesDictionary } from './product-pages'
 import { hePricingDictionary } from './pricing'
 
 /**
@@ -15,6 +16,7 @@ import { hePricingDictionary } from './pricing'
  */
 export const heDictionary: Record<string, string> = {
   ...heMarketingDictionary,
+  ...heProductPagesDictionary,
   ...hePricingDictionary,
   ...heSharedUiDictionary,
   ...heAccountGlobalDictionary,

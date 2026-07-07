@@ -18,6 +18,8 @@ export interface RuntimeConfig {
   sentryDsn: string
   instrumentationScriptSrc: string
   plausibleScriptSrc: string
+  /** Override for the profile's userVerification feature ('' = profile default). */
+  userVerification: string
 }
 
 /**
@@ -81,6 +83,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     sentryDsn: read('VITE_SENTRY_DSN'),
     instrumentationScriptSrc: read('VITE_INSTRUMENTATION_SCRIPT_SRC'),
     plausibleScriptSrc: read('VITE_PLAUSIBLE_SCRIPT_SRC'),
+    userVerification: read('VITE_CONSOLE_USER_VERIFICATION'),
   }
 }
 

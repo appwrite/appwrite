@@ -34,6 +34,7 @@ type PostgresRowsEditSessionContextValue = {
   isRowEdited: (tableId: string, rowKey: string) => boolean
   setCellEdit: (edit: Omit<PendingPostgresRowCellEdit, 'databaseId'>) => void
   discardAll: () => void
+  discardRows: (rowKeys: string[]) => void
   commit: () => void
   isCommitting: boolean
   beginInlineEdit: (params: {
@@ -204,6 +205,29 @@ export function PostgresRowsEditSessionProvider({
     activeInlineEditRef.current = null
   }, [])
 
+  const discardRows = useCallback((rowKeys: string[]) => {
+    if (rowKeys.length === 0) return
+    const rowKeySet = new Set(rowKeys)
+    setPendingEdits((prev) => {
+      let changed = false
+      const next = new Map(prev)
+      for (const [key, edit] of prev) {
+        if (rowKeySet.has(edit.rowKey)) {
+          next.delete(key)
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+    const active = activeInlineEditRef.current
+    if (
+      active &&
+      rowKeys.some((rowKey) => active.key.includes(`:${rowKey}:`))
+    ) {
+      activeInlineEditRef.current = null
+    }
+  }, [])
+
   const commit = useCallback(() => {
     if (!canWrite || pendingEdits.size === 0) return
     const edits = Array.from(pendingEdits.values())
@@ -236,6 +260,7 @@ export function PostgresRowsEditSessionProvider({
       isRowEdited,
       setCellEdit,
       discardAll,
+      discardRows,
       commit,
       isCommitting: commitMutation.isPending,
       beginInlineEdit,
@@ -252,6 +277,7 @@ export function PostgresRowsEditSessionProvider({
       commitMutation.isPending,
       consumeSuppressNextDrawerOpen,
       discardAll,
+      discardRows,
       endInlineEdit,
       getCellDisplayValue,
       isCellEdited,

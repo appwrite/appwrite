@@ -125,7 +125,7 @@ export function UsageChart({ className }: UsageChartProps) {
                 stroke="var(--chart-brand)"
                 strokeWidth={1.5}
                 fill="url(#requestsGradient)"
-                name="Requests"
+                name={t('Requests')}
               />
               <Area
                 type="monotone"
@@ -133,7 +133,7 @@ export function UsageChart({ className }: UsageChartProps) {
                 stroke="hsl(var(--muted-foreground))"
                 strokeWidth={1.5}
                 fill="url(#bandwidthGradient)"
-                name="Bandwidth (MB)"
+                name={t('Bandwidth (MB)')}
               />
             </AreaChart>
           </ResponsiveContainer>

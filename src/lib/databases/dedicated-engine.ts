@@ -1,22 +1,29 @@
 /**
- * Dedicated-database engine routing + compatibility shims.
+ * Dedicated-database engine routing.
  *
- * The console SDK replaced its single `compute` service with per-engine
- * services (`postgresql`, `mysql`, `mongo`). They share the same method surface
- * for the operations we use (list/get/create/getPooler/getStatus/
- * listSpecifications/createExecution), so callers route by the database's
- * `engine` string.
+ * The console SDK uses per-engine services (`postgresql`, `mysql`, `mongo`).
+ * They share the same method surface for the operations we use
+ * (list/get/create/getPooler/getStatus/listSpecifications/createExecution),
+ * so callers route by the database's `engine` string. Engine is selected by
+ * which service is called; create/update no longer accept an `engine` param.
+ *
+ * Product-owned dedicated DBs pass `api: 'tablesdb' | 'documentsdb' |
+ * 'vectorsdb'` on create and are reached through those product APIs under the
+ * same database ID. Native DBs use `api: 'nativedb'`.
  *
  * Connection credentials are returned inline on `Models.DedicatedDatabase`
  * (`hostname`, `connectionPort`, `connectionUser`, `connectionPassword`,
  * `connectionString`) instead of a separate `getCredentials` endpoint.
  *
- * The same SDK change dropped two endpoints with no replacement:
- * - query EXPLAIN (`createDatabaseQueryExplanation`)
- * - connection listing (`listDatabaseConnections`)
- * The models below stand in for the removed `Models.*` types so the postgres UI
- * keeps compiling; the features themselves are gated (see
- * DEDICATED_FEATURE_UNAVAILABLE). Re-enable by wiring them to a supported API.
+ * PITR is controlled via the `pitr` create/update param (response field
+ * `pitr`; `backupEnabled` is a separate response-only flag).
+ *
+ * Connection listing uses `postgresql.createExecution` + `pg_stat_activity`
+ * (see `fetchPostgresDatabaseConnections` / `fetchPostgresActiveConnections`).
+ * Query EXPLAIN still has no dedicated endpoint; it is gated via
+ * DEDICATED_FEATURE_UNAVAILABLE until wired to `createExecution` with EXPLAIN.
+ *
+ * Note: `mongo` has no `createExecution` or `getPooler`.
  */
 import type { Models } from '@appwrite.io/console'
 import type { ProjectSdk } from '@/lib/appwrite/sdk'
@@ -30,22 +37,6 @@ export function dedicatedEngineService(
   if (e === 'mongodb' || e === 'mongo') return projectSdk.mongo
   if (e === 'mysql' || e === 'mariadb') return projectSdk.mysql
   return projectSdk.postgresql
-}
-
-/**
- * Map internal/console engine identifiers to SDK create/update `engine` param
- * values (e.g. postgres → postgresql).
- */
-export function dedicatedDatabaseEngineParam(
-  engine: string | null | undefined,
-): string | undefined {
-  const e = (engine ?? '').toLowerCase().trim()
-  if (!e) return undefined
-  if (e === 'postgres' || e === 'postgresql') return 'postgresql'
-  if (e === 'mysql') return 'mysql'
-  if (e === 'mariadb') return 'mariadb'
-  if (e === 'mongodb' || e === 'mongo') return 'mongodb'
-  return e
 }
 
 export const DEDICATED_FEATURE_UNAVAILABLE =

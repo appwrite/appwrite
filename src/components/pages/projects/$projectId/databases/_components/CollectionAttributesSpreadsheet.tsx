@@ -15,8 +15,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { Models } from '@appwrite.io/console'
-import { useT } from '@/lib/i18n/translate'
-import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
+import { Columns3 } from 'lucide-react'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import {
+  isDatabaseRouteKind,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
 
 type CollectionAttributesSpreadsheetProps = {
   table: Models.Collection | { $id: string; name?: string }
@@ -38,6 +42,12 @@ export function CollectionAttributesSpreadsheet({
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
   const collectionId = table.$id
+  const dbKind: DatabaseRouteKind = isDatabaseRouteKind(
+    String(params.dbKind ?? ''),
+  )
+    ? (params.dbKind as DatabaseRouteKind)
+    : 'documentsdb'
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind)
 
   const { columns, total, isLoading } = useProjectCollectionAttributes(
     projectId,
@@ -63,11 +73,19 @@ export function CollectionAttributesSpreadsheet({
 
   if (attributes.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <EmptyState
-          title={t('No attributes yet')}
-          description={t('Define attributes when creating a collection, or store flexible fields on documents without a fixed schema.')}
-        />
+      <div className="flex h-full flex-col">
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <EmptyState
+            icon={Columns3}
+            title={dbLabels.emptyGridNoSchemaTitle}
+            description={t(
+              'Define attributes when creating a collection, or store flexible fields on documents without a fixed schema.',
+            )}
+            isEmpty
+            variant="centered"
+            iconSize="md"
+          />
+        </div>
       </div>
     )
   }

@@ -118,6 +118,8 @@ import {
   STORAGE_SPREADSHEET_HEADER_CELL_BORDER,
   STORAGE_SPREADSHEET_HEADER_STICKY_ACTIONS_SHADOW,
   STORAGE_SPREADSHEET_HEADER_STICKY_CHECKBOX_SHADOW,
+  STORAGE_SPREADSHEET_STICKY_END_EDGE_SHADOW,
+  STORAGE_SPREADSHEET_STICKY_START_EDGE_SHADOW,
   STORAGE_SPREADSHEET_STICKY_THEAD_CLASS,
   STORAGE_FILES_TABLE_HEADER_TH_CLASS,
   STORAGE_FILES_LIST_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
@@ -1340,8 +1342,10 @@ export function View() {
         })
         applyDraggedFileColumnWidthPx(columnKey, initialWidth)
         const onMove = (ev: globalThis.PointerEvent) => {
-          const delta = ev.clientX - startX
-          applyDraggedFileColumnWidthPx(columnKey, initialWidth + delta)
+          applyDraggedFileColumnWidthPx(
+            columnKey,
+            initialWidth + horizontalResizeDeltaPx(startX, ev.clientX),
+          )
         }
         const onUp = () => {
           setBodyResizeDragActive(false)
@@ -2044,7 +2048,7 @@ export function View() {
                                     'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
                                     splitFilesTable &&
                                       'min-w-[40px] max-w-[40px] shrink-0 box-border',
-                                    'shadow-[inset_-1px_0_0_0_var(--border)]',
+                                    STORAGE_SPREADSHEET_STICKY_START_EDGE_SHADOW,
                                     STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,
                                   )}
                                   style={
@@ -2245,7 +2249,7 @@ export function View() {
                                   className={cn(
                                     'sticky end-0 border-b border-border p-0',
                                     splitFilesTable && 'shrink-0 box-border',
-                                    'shadow-[inset_1px_0_0_0_var(--border)]',
+                                    STORAGE_SPREADSHEET_STICKY_END_EDGE_SHADOW,
                                     STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,
                                   )}
                                   style={{

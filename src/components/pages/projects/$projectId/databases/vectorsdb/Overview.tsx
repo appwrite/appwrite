@@ -688,8 +688,7 @@ export function Overview({
     },
     onError: (error: Error) => {
       toast.error(
-        getErrorMessage(error) ||
-          `Failed to create ${dbLabels.containerSingular}`,
+        getErrorMessage(error) || dbLabels.failedToCreateContainer,
       )
     },
   })
@@ -724,7 +723,7 @@ export function Overview({
     onError: (error: Error) => {
       toast.error(
         error.message ||
-          `${t('Failed to delete')} ${dbLabels.containerPlural}`,
+          dbLabels.failedToDeleteContainers,
       )
     },
   })
@@ -1021,7 +1020,7 @@ export function Overview({
             {showTablesLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">
-                  Loading {dbLabels.containerPlural}…
+                  {dbLabels.loadingContainersLabel}
                 </div>
               </div>
             ) : paginatedTables.length > 0 ? (
@@ -1668,8 +1667,7 @@ export function Overview({
                 <div className="border-t border-destructive/20" />
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
-                    Permanently delete this database and all its{' '}
-                    {dbLabels.containerPlural}. This action cannot be undone.
+                    {dbLabels.deleteDatabaseContainersDescription}
                   </p>
 
                   {/* Database Info Summary */}
@@ -1711,14 +1709,13 @@ export function Overview({
                       <DialogHeader className="px-6 pt-6 text-start">
                         <DialogTitle>{t('Delete Database')}</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to delete{' '}
+                          {t('Are you sure you want to delete')}{' '}
                           {database && (
                             <span className="font-medium text-foreground">
                               {database.name}
                             </span>
                           )}{' '}
-                          and all its {dbLabels.containerPlural} and data? This
-                          action cannot be undone.
+                          {dbLabels.deleteDatabaseConfirmSuffix}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="border-t border-border" />

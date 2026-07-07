@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/tooltip'
 import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
-import { Switch } from '@/components/ui/switch'
+import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
 import { Input } from '@/components/ui/input'
 import { useTheme } from 'next-themes'
 import {
@@ -291,7 +291,7 @@ function DebugMenuSwitchRow({ item }: { item: MenuItem }) {
             <TooltipContent side="left">Reset to default</TooltipContent>
           </Tooltip>
         )}
-        <Switch
+        <DebugMenuSwitch
           checked={item.switchValue}
           onCheckedChange={item.switchOnChange}
           disabled={item.disabled}
@@ -925,7 +925,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         ? languageCopy.activeAuto
         : overrides.language === 'he'
           ? languageCopy.activeHebrew
-          : languageCopy.activeEnglish
+          : overrides.language === 'ja'
+            ? languageCopy.activeJapanese
+            : languageCopy.activeEnglish
 
     const languageOptions: MenuItem[] = (
       [
@@ -944,6 +946,11 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           value: 'he' as const,
           description: languageCopy.hebrewDescription,
         },
+        {
+          label: languageCopy.japaneseLabel,
+          value: 'ja' as const,
+          description: languageCopy.japaneseDescription,
+        },
       ] as const
     ).map((option) => ({
       label: option.label,
@@ -954,14 +961,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           language: option.value,
           ...(option.value === 'he'
             ? { pageDirection: 'rtl' as const }
-            : option.value === 'en'
+            : option.value === 'en' || option.value === 'ja'
               ? { pageDirection: 'ltr' as const }
               : {}),
         }))
         setDebugOverride('language', option.value)
         if (option.value === 'he') {
           setDebugOverride('pageDirection', 'rtl')
-        } else if (option.value === 'en') {
+        } else if (option.value === 'en' || option.value === 'ja') {
           setDebugOverride('pageDirection', 'ltr')
         }
       },

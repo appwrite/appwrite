@@ -280,7 +280,7 @@ export function RealtimeMessagesChart({
                 stroke="#10b981"
                 strokeWidth={2}
                 fill="url(#messagesGradient)"
-                name="Messages/min"
+                name={t('Messages/min')}
                 {...CHART_ANIMATION_DISABLED}
               />
             </AreaChart>

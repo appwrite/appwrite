@@ -22,14 +22,12 @@ import {
   Layers,
   MemoryStick,
   Network,
-  RefreshCw,
   ScanLine,
   Table2,
   Timer,
   Users,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Select,
@@ -40,13 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -598,28 +591,11 @@ export function View({ projectId, databaseId }: MonitorProps) {
               }
               className="h-9 min-w-[200px]"
             />
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-9 shrink-0 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
-                    type="button"
-                    onClick={() => void refresh()}
-                    disabled={isFetching}
-                  >
-                    <RefreshCw
-                      className={cn(
-                        'h-4 w-4 transition-transform duration-500',
-                        isFetching && 'animate-spin',
-                      )}
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('Refresh metrics')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <RefreshButton
+              onClick={() => void refresh()}
+              isRefreshing={isFetching}
+              tooltip={t('Refresh metrics')}
+            />
           </div>
         </div>
       </div>

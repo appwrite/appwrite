@@ -3,13 +3,11 @@
  *
  * Unified searchable dropdown for product databases (TablesDB, DocumentsDB,
  * VectorsDB) and native engines (PostgreSQL, MySQL). Uses debounced search
- * for product databases and client-side search for native engines. Spec tier
- * is shown inline (name · spec).
+ * for product databases and client-side search for native engines.
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { ChevronDown, Database, Loader2, Plus, Table2 } from 'lucide-react'
-import type { Models } from '@appwrite.io/console'
 import { DatabaseTypeIcon } from './DatabaseTypeIcon'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,6 +44,7 @@ import {
   matchesNativeEngine,
   type NativeDatabaseEngine,
 } from '@/lib/databases/native-database-engines'
+import { isNativeDedicatedDatabase } from '@/lib/database-routes'
 import {
   getSpecOptionById,
   mapDedicatedDatabaseSpecifications,
@@ -83,14 +82,11 @@ type DatabaseSelectorBaseProps = {
 type ProductDatabaseSelectorProps = DatabaseSelectorBaseProps & {
   mode?: 'product'
   nativeEngine?: never
-  selectedSpecification?: never
 }
 
 type NativeDatabaseSelectorProps = DatabaseSelectorBaseProps & {
   mode: 'native'
   nativeEngine: NativeDatabaseEngine
-  /** Used when the selected native database is not yet in the cached list. */
-  selectedSpecification?: string | null
 }
 
 export type DatabaseSelectorProps =
@@ -105,35 +101,15 @@ type DatabaseSelectorItem = {
   specSlug?: string | null
 }
 
-function DatabaseSelectorNameWithSpec({
-  name,
-  specSummary,
-  nameClassName,
-}: {
-  name: string
-  specSummary?: string | null
-  nameClassName?: string
-}) {
-  return (
-    <span className="flex min-w-0 items-baseline gap-1">
-      <span className={cn('truncate', nameClassName)}>{name}</span>
-      {specSummary ? (
-        <>
-          <span className="shrink-0 text-muted-foreground/60">·</span>
-          <span className="truncate text-[12px] text-muted-foreground">
-            {specSummary}
-          </span>
-        </>
-      ) : null}
-    </span>
-  )
-}
-
-function getDedicatedDatabaseId(db: Models.Database): string | undefined {
-  const dedicatedId = (db as Record<string, unknown>).dedicatedDatabaseId
-  return typeof dedicatedId === 'string' && dedicatedId.trim() !== ''
-    ? dedicatedId.trim()
-    : undefined
+function getDedicatedDatabaseId(db: {
+  $id: string
+  dedicatedDatabaseId?: unknown
+}): string {
+  const legacyId = (db as { dedicatedDatabaseId?: unknown }).dedicatedDatabaseId
+  if (typeof legacyId === 'string' && legacyId.trim() !== '') {
+    return legacyId.trim()
+  }
+  return db.$id
 }
 
 function matchesSpecSearch(
@@ -164,7 +140,6 @@ export function DatabaseSelector({
   mode = 'product',
   nativeEngine,
   selectedName,
-  selectedSpecification,
   onSelect,
   placeholder = 'Select database',
   limit = DEFAULT_LIMIT,
@@ -247,9 +222,8 @@ export function DatabaseSelector({
         id: db.$id,
         name: db.name,
         apiType: db.type,
-        specSlug: dedicatedId
-          ? (specSlugByDedicatedId.get(dedicatedId) ?? null)
-          : SERVERLESS_DATABASE_SPEC_ID,
+        specSlug:
+          specSlugByDedicatedId.get(dedicatedId) ?? SERVERLESS_DATABASE_SPEC_ID,
       }
     })
   }, [productData?.databases, specSlugByDedicatedId])
@@ -257,7 +231,11 @@ export function DatabaseSelector({
   const nativeItems = useMemo((): DatabaseSelectorItem[] => {
     if (!resolvedNativeEngine) return []
     return (dedicatedData?.databases ?? [])
-      .filter((db) => matchesNativeEngine(db.engine, resolvedNativeEngine))
+      .filter(
+        (db) =>
+          isNativeDedicatedDatabase(db) &&
+          matchesNativeEngine(db.engine, resolvedNativeEngine),
+      )
       .map((db) => ({
         id: db.$id,
         name: db.name,
@@ -283,36 +261,10 @@ export function DatabaseSelector({
 
   const selectedItem = value ? items.find((item) => item.id === value) : undefined
 
-  const selectedProductSpecSlug = useMemo(() => {
-    if (isNative || !value) return null
-    if (selectedItem?.specSlug) return selectedItem.specSlug
-    const dedicatedId = selectedProductDatabase
-      ? getDedicatedDatabaseId(selectedProductDatabase)
-      : undefined
-    if (!dedicatedId) return SERVERLESS_DATABASE_SPEC_ID
-    return specSlugByDedicatedId.get(dedicatedId) ?? null
-  }, [
-    isNative,
-    selectedItem?.specSlug,
-    selectedProductDatabase,
-    specSlugByDedicatedId,
-    value,
-  ])
-
   const displayName = selectedName || selectedItem?.name || t(placeholder)
 
-  const selectedSpecSummary = isNative
-    ? getSpecSummary(selectedItem?.specSlug ?? selectedSpecification)
-    : selectedProductSpecSlug != null
-      ? getSpecSummary(
-          selectedProductSpecSlug === SERVERLESS_DATABASE_SPEC_ID
-            ? SERVERLESS_DATABASE_SPEC_ID
-            : selectedProductSpecSlug,
-        )
-      : null
-
   const selectedApiType =
-    selectedItem?.apiType ?? selectedProductDatabase?.type ?? null
+    selectedItem?.apiType ?? selectedProductDatabase?.databaseType ?? null
   const selectedEngine =
     selectedItem?.engine ??
     (isNative ? (resolvedNativeEngine ?? null) : null)
@@ -348,13 +300,14 @@ export function DatabaseSelector({
               apiType={selectedApiType}
               engine={selectedEngine}
             />
-            <DatabaseSelectorNameWithSpec
-              name={displayName}
-              specSummary={selectedSpecSummary}
-              nameClassName={
-                value ? 'text-[13px] font-medium text-foreground' : undefined
-              }
-            />
+            <span
+              className={cn(
+                'min-w-0 truncate',
+                value && 'text-[13px] font-medium text-foreground',
+              )}
+            >
+              {displayName}
+            </span>
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
@@ -388,38 +341,28 @@ export function DatabaseSelector({
               </CommandEmpty>
             )}
             <CommandGroup>
-              {filteredItems.map((item) => {
-                const specSummary = getSpecSummary(
-                  item.specSlug === SERVERLESS_DATABASE_SPEC_ID
-                    ? SERVERLESS_DATABASE_SPEC_ID
-                    : item.specSlug,
-                )
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      onSelect(item.id)
-                      setOpen(false)
-                    }}
-                    className={cn(
-                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                      item.id === value && 'bg-accent/50',
-                    )}
-                  >
-                    <DatabaseTypeIcon
-                      apiType={item.apiType}
-                      engine={item.engine}
-                    />
-                    <DatabaseSelectorNameWithSpec
-                      name={item.name}
-                      specSummary={specSummary}
-                      nameClassName="text-[13px] font-medium text-foreground"
-                    />
-                  </button>
-                )
-              })}
+              {filteredItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(item.id)
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                    item.id === value && 'bg-accent/50',
+                  )}
+                >
+                  <DatabaseTypeIcon
+                    apiType={item.apiType}
+                    engine={item.engine}
+                  />
+                  <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                    {item.name}
+                  </span>
+                </button>
+              ))}
             </CommandGroup>
           </CommandList>
         </Command>

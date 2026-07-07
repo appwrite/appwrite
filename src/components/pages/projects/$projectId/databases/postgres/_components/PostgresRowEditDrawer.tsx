@@ -6,8 +6,11 @@ import {
   getPostgresColumnEditMeta,
   getPostgresInlineFieldType,
   isPostgresColumnRequired,
-  isPostgresGeneratedColumn,
+  isPostgresColumnRequiredOnCreate,
+  isPostgresColumnSystemGenerated,
   parseAndValidatePostgresCellInput,
+  postgresColumnAutoGeneratesOnInsert,
+  postgresColumnCanOmitOnCreate,
   shouldOmitPostgresColumnOnRowCreate,
   valueToPostgresEditString,
 } from '@/lib/postgres-row-edits'
@@ -178,15 +181,31 @@ export function PostgresRowEditDrawer({
 
     for (const column of editableColumns) {
       if (isCreate && shouldOmitPostgresColumnOnRowCreate(column)) continue
-      if (!isCreate && isPostgresGeneratedColumn(column)) continue
+      if (!isCreate && isPostgresColumnSystemGenerated(column)) continue
 
       const rawDraft = draft[column.column_name]
       if (rawDraft === null) {
-        if (isPostgresColumnRequired(column)) {
+        const required = isCreate
+          ? isPostgresColumnRequiredOnCreate(column)
+          : isPostgresColumnRequired(column)
+        if (required) {
           nextErrors[column.column_name] = 'This field is required.'
           continue
         }
         values[column.column_name] = null
+        continue
+      }
+
+      // Empty create fields: omit only when Postgres will assign a value
+      // (auto-generate or non-PK default). Primary keys without auto-generation
+      // are required so we never insert a colliding default.
+      if (isCreate && !(rawDraft ?? '').trim()) {
+        if (postgresColumnCanOmitOnCreate(column)) continue
+        if (column.is_nullable === 'YES') {
+          values[column.column_name] = null
+          continue
+        }
+        nextErrors[column.column_name] = 'This field is required.'
         continue
       }
 
@@ -211,7 +230,7 @@ export function PostgresRowEditDrawer({
       } else if (identity) {
         const changes: Record<string, RowCellValue> = {}
         for (const column of editableColumns) {
-          if (isPostgresGeneratedColumn(column)) continue
+          if (isPostgresColumnSystemGenerated(column)) continue
           const original = row?.[column.column_name] as RowCellValue
           const next = values[column.column_name]
           if (JSON.stringify(original) !== JSON.stringify(next)) {
@@ -258,7 +277,18 @@ export function PostgresRowEditDrawer({
                 {editableColumns.map((column) => {
                   const meta = getPostgresColumnEditMeta(column)
                   const fieldType = getPostgresInlineFieldType(meta)
-                  const required = isPostgresColumnRequired(column)
+                  const required = isCreate
+                    ? isPostgresColumnRequiredOnCreate(column)
+                    : isPostgresColumnRequired(column)
+                  const autoGenerates =
+                    isCreate && postgresColumnAutoGeneratesOnInsert(column)
+                  const canOmitOnCreate =
+                    isCreate && postgresColumnCanOmitOnCreate(column)
+                  const emptyPlaceholder = autoGenerates
+                    ? t('Leave blank to auto-generate')
+                    : column.is_nullable === 'YES'
+                      ? 'NULL'
+                      : undefined
                   const draftValue = draft[column.column_name]
                   const isNull = draftValue === null
                   const stringValue = isNull ? '' : (draftValue ?? '')
@@ -266,9 +296,9 @@ export function PostgresRowEditDrawer({
                   const inputId = `postgres-row-field-${column.column_name}`
                   const readOnly =
                     !canWrite ||
-                    (!isCreate && isPostgresGeneratedColumn(column)) ||
-                    (meta.isPrimaryKey && !isCreate)
-                  const showNullToggle = !required && !readOnly
+                    (!isCreate && isPostgresColumnSystemGenerated(column))
+                  const showNullToggle =
+                    !readOnly && column.is_nullable === 'YES'
                   const useTextarea =
                     isJsonType(meta.typeId) || isLongTextType(meta.typeId)
 
@@ -317,11 +347,18 @@ export function PostgresRowEditDrawer({
                           id={inputId}
                           value={isNull ? null : stringValue || null}
                           onChange={(next) =>
-                            handleFieldChange(column.column_name, next ?? null)
+                            handleFieldChange(
+                              column.column_name,
+                              // '' omits the column on create (use DB default);
+                              // null is an explicit SQL NULL for nullable columns.
+                              next ?? (canOmitOnCreate ? '' : null),
+                            )
                           }
                           clearable={!required}
                           placeholder={
-                            required ? 'Select date & time' : 'NULL'
+                            required
+                              ? 'Select date & time'
+                              : emptyPlaceholder
                           }
                           className="w-full"
                           autoFocus={focusedField === column.column_name}
@@ -337,10 +374,14 @@ export function PostgresRowEditDrawer({
                               const next = event.target.value
                               handleFieldChange(
                                 column.column_name,
-                                next === '' ? null : next,
+                                // Keep '' for create defaults (omit from INSERT);
+                                // only use null for explicit nullable clears.
+                                next === '' && !canOmitOnCreate ? null : next,
                               )
                             }}
-                            placeholder={required ? undefined : 'NULL'}
+                            placeholder={
+                              required ? undefined : emptyPlaceholder
+                            }
                             className="h-9 text-[13px]"
                             aria-invalid={error ? true : undefined}
                             autoFocus={focusedField === column.column_name}
@@ -364,7 +405,9 @@ export function PostgresRowEditDrawer({
                               )
                             }
                             rows={isJsonType(meta.typeId) ? 6 : 4}
-                            placeholder={required ? undefined : 'NULL'}
+                            placeholder={
+                              required ? undefined : emptyPlaceholder
+                            }
                             className={cn(
                               'min-h-[36px] max-h-[600px] resize-none text-[13px] font-mono',
                               isNull && 'cursor-not-allowed opacity-50',
@@ -397,7 +440,9 @@ export function PostgresRowEditDrawer({
                                 event.target.value,
                               )
                             }
-                            placeholder={required ? undefined : 'NULL'}
+                            placeholder={
+                              required ? undefined : emptyPlaceholder
+                            }
                             className={cn(
                               'h-9 text-[13px]',
                               isNull && 'cursor-not-allowed opacity-50',

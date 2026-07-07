@@ -181,31 +181,102 @@ export function buildPostgresUpdateRowSql(
   )
 }
 
+/** Columns whose INSERT default comes from a serial/identity sequence. */
+export function isPostgresSequenceBackedColumn(
+  column: PostgresTableColumnRow,
+): boolean {
+  if (column.serial_sequence?.trim()) return true
+  const identity = String(column.is_identity ?? '').toUpperCase()
+  if (identity === 'YES' || identity === 'TRUE' || identity === 'T') {
+    return true
+  }
+  const generation = String(column.identity_generation ?? '').toUpperCase()
+  if (generation === 'ALWAYS' || generation === 'BY DEFAULT') {
+    return true
+  }
+  const defaultValue = column.column_default?.toLowerCase() ?? ''
+  return defaultValue.includes('nextval(')
+}
+
+/** Resolve the sequence name for a serial/identity column. */
+export function getPostgresColumnSequenceName(
+  column: PostgresTableColumnRow,
+): string | null {
+  const fromMeta = column.serial_sequence?.trim()
+  if (fromMeta) return fromMeta
+
+  const defaultValue = column.column_default ?? ''
+  // nextval('schema.seq'::regclass) / nextval('seq'::text)
+  const match = defaultValue.match(/nextval\s*\(\s*'((?:[^']|'')+)'/i)
+  if (match) return match[1].replace(/''/g, "'")
+  return null
+}
+
+/**
+ * Advance serial/identity sequences past MAX(column) so the next DEFAULT
+ * nextval() does not collide with existing primary keys (e.g. after an
+ * explicit ID insert left the sequence behind).
+ *
+ * Uses a DO block (not SELECT) so the SQL API does not wrap it as a read
+ * query, which can skip or roll back setval().
+ */
 export function buildSyncPostgresSerialSequencesSql(
   tableId: string,
   columns: PostgresTableColumnRow[],
 ): string | null {
   const { schema, table } = parsePostgresTableId(tableId)
   const qualified = qualifiedTable(schema, table)
-  const statements: string[] = []
+  const qualifiedLiteral = quotePostgresStringLiteral(`${schema}.${table}`)
+  const blocks: string[] = []
 
   for (const column of columns) {
-    const sequenceName = column.serial_sequence?.trim()
-    if (!sequenceName) continue
+    if (!isPostgresSequenceBackedColumn(column)) continue
     const columnName = quotePostgresIdentifier(column.column_name)
-    const sequenceLiteral = quotePostgresStringLiteral(sequenceName)
-    statements.push(
-      `SELECT setval(${sequenceLiteral}::regclass, COALESCE((SELECT MAX(${columnName}) FROM ${qualified}), 1), true)`,
-    )
+    const columnNameLiteral = quotePostgresStringLiteral(column.column_name)
+    const sequenceName = getPostgresColumnSequenceName(column)
+    // Prefer an explicit sequence name (metadata or nextval default). Fall back
+    // to pg_get_serial_sequence when the sequence is owned by the column.
+    const sequenceExpr = sequenceName
+      ? `${quotePostgresStringLiteral(sequenceName)}::regclass`
+      : `pg_get_serial_sequence(${qualifiedLiteral}, ${columnNameLiteral})::regclass`
+
+    // is_called=false when the table is empty so the next nextval() returns 1;
+    // is_called=true when rows exist so the next value is MAX+1.
+    blocks.push(`
+seq := ${sequenceExpr};
+IF seq IS NOT NULL THEN
+  SELECT MAX(${columnName}) INTO max_id FROM ${qualified};
+  IF max_id IS NULL THEN
+    PERFORM setval(seq, 1, false);
+  ELSE
+    PERFORM setval(seq, max_id, true);
+  END IF;
+END IF;`.trim())
   }
 
-  if (statements.length === 0) return null
-  return prefixPostgresSqlComment(statements.join(';\n'), 'Sync serial sequences')
+  if (blocks.length === 0) return null
+
+  return prefixPostgresSqlComment(
+    `DO $sync$
+DECLARE
+  seq regclass;
+  max_id bigint;
+BEGIN
+  ${blocks.join('\n  ')}
+END
+$sync$`,
+    'Sync serial sequences',
+  )
 }
 
 export function isPostgresDuplicatePrimaryKeyError(error: unknown): boolean {
   const normalized = (getErrorMessage(error) ?? String(error)).toLowerCase()
-  return normalized.includes('duplicate key') && normalized.includes('pkey')
+  if (!normalized.includes('duplicate key')) return false
+  return (
+    normalized.includes('pkey') ||
+    normalized.includes('unique constraint') ||
+    normalized.includes('primary key')
+  )
 }
 
 export function buildPostgresInsertRowSql(

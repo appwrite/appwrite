@@ -3,12 +3,16 @@ import { usePostgresDatabase } from '@/lib/react-query/hooks'
 import { useLocation, useParams } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import type { ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { TableViewResizableLayout } from '@/components/pages/projects/$projectId/databases/_components/TableViewResizableLayout'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
 import { parsePostgresShellRouteState, type PostgresDatabaseTab } from '@/lib/postgres-database-routes'
 import { PostgresConnectDialogProvider } from './_components/PostgresConnectDialogContext'
 import { PostgresDatabaseHeader } from './_components/PostgresDatabaseHeader'
+import {
+  PostgresDatabaseHeaderSlotProvider,
+  type PostgresDatabaseHeaderSlotProps,
+} from './_components/PostgresDatabaseHeaderSlotContext'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
 import { useT } from '@/lib/i18n/translate'
@@ -100,6 +104,31 @@ function PostgresShellLayout({
   children,
 }: PostgresShellLayoutProps) {
   const selectedTableId = databaseTab ? undefined : tableId
+  const [databaseHeaderSlot, setDatabaseHeaderSlotState] =
+    useState<PostgresDatabaseHeaderSlotProps>({})
+  const setDatabaseHeaderSlot = useCallback(
+    (next: PostgresDatabaseHeaderSlotProps) => {
+      setDatabaseHeaderSlotState((prev) => {
+        if (
+          prev.searchPlaceholder === next.searchPlaceholder &&
+          prev.searchValue === next.searchValue &&
+          prev.onSearchChange === next.onSearchChange &&
+          prev.createLabel === next.createLabel &&
+          prev.onCreate === next.onCreate &&
+          prev.createDisabled === next.createDisabled &&
+          prev.createDisabledTooltip === next.createDisabledTooltip &&
+          prev.showRefresh === next.showRefresh &&
+          prev.onRefresh === next.onRefresh &&
+          prev.isRefreshing === next.isRefreshing &&
+          prev.filterTrigger === next.filterTrigger
+        ) {
+          return prev
+        }
+        return next
+      })
+    },
+    [],
+  )
 
   const mainPanel = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -108,7 +137,6 @@ function PostgresShellLayout({
           projectId={projectId}
           databaseId={databaseId}
           databaseName={database.name}
-          databaseSpecification={database.specification}
           nativeEngine="postgres"
         />
       ) : null}
@@ -118,11 +146,14 @@ function PostgresShellLayout({
             projectId={projectId}
             databaseId={databaseId}
             databaseTab={databaseTab}
+            {...databaseHeaderSlot}
           />
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {children}
+        <PostgresDatabaseHeaderSlotProvider setSlot={setDatabaseHeaderSlot}>
+          {children}
+        </PostgresDatabaseHeaderSlotProvider>
       </div>
     </div>
   )
@@ -137,7 +168,6 @@ function PostgresShellLayout({
               projectId={projectId}
               databaseId={databaseId}
               databaseName={database.name}
-              databaseSpecification={database.specification}
               selectedTableId={selectedTableId}
               databaseTab={databaseTab}
             />

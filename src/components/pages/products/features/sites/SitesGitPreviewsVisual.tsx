@@ -37,7 +37,7 @@ export function SitesGitPreviewsVisual() {
           <div className="mt-2 overflow-hidden rounded-lg border border-border bg-background/90 transition-colors group-hover/visual:border-foreground/10">
             <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
               <img src="/icons/appwrite.svg" alt="" className="size-4 shrink-0" aria-hidden />
-              <p className="text-[12px] font-semibold text-foreground">Appwrite Sites</p>
+              <p className="text-[12px] font-semibold text-foreground">{t('Appwrite Sites')}</p>
             </div>
 
             <div className="space-y-3 px-3 py-3">
@@ -69,7 +69,7 @@ export function SitesGitPreviewsVisual() {
                           {t('Preview')}
                         </TableHead>
                         <TableHead className="w-10 px-2 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          QR
+                          {t('QR')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>

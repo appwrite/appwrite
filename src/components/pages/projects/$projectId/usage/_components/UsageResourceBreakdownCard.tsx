@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
 import type { CountryLookups } from '@/lib/locale/country-lookups'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
 import type { UsageResourceBreakdownDimension } from '@/lib/usage/usage-resources-breakdown'
@@ -65,6 +66,7 @@ function UsageResourceBreakdownDimensionToggle({
   onValueChange: (value: UsageResourceBreakdownDimension) => void
   className?: string
 }) {
+  const t = useT()
   return (
     <ToggleGroup
       type="single"
@@ -77,7 +79,7 @@ function UsageResourceBreakdownDimensionToggle({
         }
       }}
       className={cn('flex h-7 w-full min-w-0 gap-0 rounded-md', className)}
-      aria-label="Resource breakdown dimension"
+      aria-label={t('Resource breakdown dimension')}
     >
       {USAGE_RESOURCE_BREAKDOWN_VIEWS.map((view, index) => {
         const isFirst = index === 0
@@ -95,7 +97,7 @@ function UsageResourceBreakdownDimensionToggle({
               !isFirst && '!border-s-0',
             )}
           >
-            {view.label}
+            {t(view.label)}
           </ToggleGroupItem>
         )
       })}
@@ -122,6 +124,7 @@ export function UsageResourceBreakdownCard({
   embedded = false,
   className,
 }: UsageResourceBreakdownCardProps) {
+  const t = useT()
   const [activeDimension, setActiveDimension] =
     useState<UsageResourceBreakdownDimension>('resourceId')
 
@@ -160,7 +163,7 @@ export function UsageResourceBreakdownCard({
                 embedded ? 'text-[13px]' : 'text-[14px]',
               )}
             >
-              {title}
+              {t(title)}
             </h3>
             {titleAddon}
           </div>
@@ -170,7 +173,7 @@ export function UsageResourceBreakdownCard({
               className="shrink-0 cursor-pointer text-[12px] text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => onShowMore(activeDimension)}
             >
-              Show more
+              {t('Show more')}
             </button>
           ) : null}
         </div>

@@ -9,6 +9,7 @@ import { useDebugOverrides, type DebugLanguageOverride } from '@/lib/debug-overr
 import { enCatalog, type EnCatalog } from '@/lib/i18n/messages/en' // pragma: allowlist secret
 
 import { heCatalog } from '@/lib/i18n/messages/he' // pragma: allowlist secret
+import { jaCatalog } from '@/lib/i18n/messages/ja' // pragma: allowlist secret
 import {
   resolveLanguagePreference,
   type SupportedLanguage,
@@ -19,6 +20,7 @@ export type { SupportedLanguage }
 const LANGUAGE_CATALOGS: Record<SupportedLanguage, EnCatalog> = {
   en: enCatalog,
   he: heCatalog,
+  ja: jaCatalog,
 }
 
 type I18nContextValue = {

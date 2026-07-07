@@ -13,17 +13,24 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID, DatabaseType } from '@appwrite.io/console'
+import {
+  Query,
+  ID,
+  DatabaseType,
+  DocumentsDBIndexType,
+  TablesDBIndexType,
+  VectorsDBIndexType,
+  OrderBy,
+  RelationshipType,
+  RelationMutate,
+} from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
-import {
-  dedicatedDatabaseEngineParam,
-  dedicatedEngineService,
-} from '@/lib/databases/dedicated-engine'
+import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import {
   databaseRouteKindFromApiType,
   type DatabaseRouteKind,
@@ -105,30 +112,16 @@ function seedDatabaseModelCache(
 }
 
 function buildProjectDatabaseDetail(db: Models.Database) {
-  const dbRecord = db as unknown as Record<string, unknown>
-  const backupPolicies =
-    dbRecord.backupPolicies ||
-    dbRecord.backups ||
-    dbRecord.policies ||
-    dbRecord.backup ||
-    []
-  const backupPoliciesArray = Array.isArray(backupPolicies)
-    ? backupPolicies
-    : backupPolicies
-      ? [backupPolicies]
-      : []
-  const backupPolicyCount = backupPoliciesArray.length
-  const hasBackupPolicy =
-    backupPolicyCount > 0 ||
-    dbRecord.backupEnabled === true ||
-    dbRecord.backupPolicyEnabled === true
-  const backupPolicy = backupPoliciesArray[0] || null
+  const backupPolicies = db.policies ?? []
+  const backupPolicyCount = backupPolicies.length
+  const hasBackupPolicy = backupPolicyCount > 0
+  const backupPolicy = backupPolicies[0] || null
 
   return {
     $id: db.$id,
     name: db.name || 'Unnamed Database',
-    tables: (dbRecord.collections as unknown[] | undefined)?.length || 0,
-    rows: (dbRecord.documents as number | undefined) || 0,
+    tables: 0,
+    rows: 0,
     enabled: db.enabled !== false,
     createdAt: db.$createdAt || new Date().toISOString(),
     updatedAt: db.$updatedAt || db.$createdAt || new Date().toISOString(),
@@ -812,17 +805,6 @@ async function waitForProductDatabaseAfterExistsConflict(
   return null
 }
 
-function isDedicatedDatabaseNotFoundError(error: unknown): boolean {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'string'
-        ? error
-        : ''
-  return message.toLowerCase().includes('dedicated database') &&
-    message.toLowerCase().includes('could not be found')
-}
-
 function isDatabaseAlreadyExistsError(error: unknown): boolean {
   const message =
     error instanceof Error
@@ -839,15 +821,13 @@ async function createProductDatabase(
   params: {
     databaseId: string
     name: string
-    dedicatedDatabaseId?: string
+    specification?: string
   },
 ) {
   const payload = {
     databaseId: params.databaseId,
     name: params.name,
-    ...(params.dedicatedDatabaseId
-      ? { dedicatedDatabaseId: params.dedicatedDatabaseId }
-      : {}),
+    ...(params.specification ? { specification: params.specification } : {}),
   }
 
   if (backend === DatabaseType.Documentsdb) {
@@ -859,41 +839,11 @@ async function createProductDatabase(
   return await projectSdk.tablesDB.create(payload)
 }
 
-async function createProductDatabaseWithRetry(
-  projectSdk: ReturnType<typeof sdk.forProject>,
-  backend: DatabaseType,
-  params: {
-    databaseId: string
-    name: string
-    dedicatedDatabaseId: string
-  },
-  maxAttempts = 20,
-): Promise<Models.Database> {
-  let lastError: unknown
-  let intervalMs = 1200
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      return await createProductDatabase(projectSdk, backend, params)
-    } catch (error) {
-      lastError = error
-      if (isDatabaseAlreadyExistsError(error)) {
-        const existing = await waitForProductDatabaseAfterExistsConflict(
-          projectSdk,
-          backend,
-          params.databaseId,
-        )
-        if (existing) return existing
-      }
-      if (!isDedicatedDatabaseNotFoundError(error) || attempt === maxAttempts - 1) {
-        throw error
-      }
-      await sleep(intervalMs)
-      intervalMs = Math.min(Math.round(intervalMs * 1.25), 4000)
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error('Failed to create database')
-}
-
+/**
+ * Provision dedicated compute owned by a product API (tablesdb / documentsdb /
+ * vectorsdb). Engine is selected via the per-engine SDK service; `api` marks
+ * which product API exposes the database under the same ID.
+ */
 async function provisionDedicatedCompute(
   projectSdk: ReturnType<typeof sdk.forProject>,
   params: {
@@ -908,32 +858,18 @@ async function provisionDedicatedCompute(
   const { databaseId, name, specification, backend, haReplicaCount, pitrEnabled } =
     params
 
-  const sharedPayload = {
-    databaseId,
-    name,
-    specification,
-    replicas: haReplicaCount,
-    backupEnabled: pitrEnabled,
-    backupPitr: pitrEnabled,
-  }
-
   const engine = dedicatedComputeEngineForProductBackend(backend)
-  const createParams =
-    engine != null
-      ? {
-          ...sharedPayload,
-          engine: dedicatedDatabaseEngineParam(engine),
-          ...(engine === 'mongodb' ? { backend: 'edge' as const } : {}),
-          api: computeApiForDatabaseType(backend),
-        }
-      : {
-          ...sharedPayload,
-          api: computeApiForDatabaseType(backend),
-        }
-
   const engineService = dedicatedEngineService(projectSdk, engine ?? undefined)
+
   try {
-    return await engineService.create(createParams)
+    return await engineService.create({
+      databaseId,
+      name,
+      specification,
+      replicas: haReplicaCount,
+      pitr: pitrEnabled,
+      api: computeApiForDatabaseType(backend),
+    })
   } catch (error) {
     if (!isDatabaseAlreadyExistsError(error)) {
       throw error
@@ -944,9 +880,10 @@ async function provisionDedicatedCompute(
 
 /**
  * Create a new database in a project.
- * DocumentsDB and VectorsDB provision dedicated compute first, then register the
- * product database with its own ID and `dedicatedDatabaseId` pointing at compute.
- * TablesDB uses the serverless pool unless a dedicated specification is provided.
+ * DocumentsDB and VectorsDB always provision dedicated compute (engine service
+ * with `api` set to the product). TablesDB uses the serverless pool unless a
+ * dedicated specification is provided. Dedicated product databases share one ID
+ * between compute and the product API.
  *
  * @param projectId - The project ID
  * @param data - { databaseId?: string; name: string }
@@ -995,23 +932,25 @@ export async function createProjectDatabase(
     )
     const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
     const pitrEnabled = options?.pitrEnabled === true
-    const computeDatabaseId = ID.unique()
 
-    const dedicated = await provisionDedicatedCompute(projectSdk, {
-      databaseId: computeDatabaseId,
+    await provisionDedicatedCompute(projectSdk, {
+      databaseId: productDatabaseId,
       name,
       specification,
       backend,
       haReplicaCount,
       pitrEnabled,
     })
-    const dedicatedComputeId = dedicated.$id || computeDatabaseId
 
-    const created = await createProductDatabaseWithRetry(projectSdk, backend, {
-      databaseId: productDatabaseId,
-      name,
-      dedicatedDatabaseId: dedicatedComputeId,
-    })
+    const created = await waitForProductDatabaseAfterExistsConflict(
+      projectSdk,
+      backend,
+      productDatabaseId,
+      20,
+    )
+    if (!created) {
+      throw new Error('Failed to create database')
+    }
     seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
     return normalizeProductDatabase(created, backend)
   }
@@ -1119,11 +1058,10 @@ export async function createNativeDatabase(
   return await dedicatedEngineService(projectSdk, data.engine).create({
     databaseId,
     name: data.name.trim(),
-    engine: dedicatedDatabaseEngineParam(data.engine),
     specification: data.specification.trim(),
     replicas: haReplicaCount,
-    backupEnabled: pitrEnabled,
-    backupPitr: pitrEnabled,
+    pitr: pitrEnabled,
+    api: 'nativedb',
   })
 }
 
@@ -1678,12 +1616,15 @@ export async function fetchProjectTableRows(
   tableId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  search?: string,
+  _search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
   filterQueries?: string[],
   listSelectAttrKeys?: string[] | null,
 ) {
+  // listRows/listDocuments have no top-level search param; use filterQueries instead.
+  void _search
+
   if (!projectId || !databaseId || !tableId) {
     return { rows: [], total: 0 }
   }
@@ -1729,21 +1670,12 @@ export async function fetchProjectTableRows(
 
   let response: { rows?: unknown[]; documents?: unknown[]; total?: number }
   try {
-    if (typeof projectSdk.tablesDB.listRows === 'function') {
-      const listRowsParams: Record<string, unknown> = {
-        databaseId,
-        tableId,
-        queries,
-      }
-      if (search?.trim()) {
-        listRowsParams.search = search.trim()
-      }
-      response = (await projectSdk.tablesDB.listRows(
-        listRowsParams as never,
-      )) as typeof response
-    } else {
-      response = { rows: [], total: 0 }
-    }
+    response = await projectSdk.tablesDB.listRows({
+      databaseId,
+      tableId,
+      queries,
+      total: true,
+    })
   } catch {
     response = { rows: [], total: 0 }
   }
@@ -1786,13 +1718,11 @@ export async function fetchProjectTableRow(
       })
       return flattenDocumentForTableRow(doc as Record<string, unknown>)
     }
-    if (typeof projectSdk.tablesDB.getRow === 'function') {
-      return await projectSdk.tablesDB.getRow({
-        databaseId,
-        tableId,
-        rowId,
-      })
-    }
+    return await projectSdk.tablesDB.getRow({
+      databaseId,
+      tableId,
+      rowId,
+    })
   } catch {
     /* not found or no permission */
   }
@@ -1998,15 +1928,11 @@ export async function fetchProjectTable(
         databaseId,
         collectionId: tableId,
       })) as unknown as Record<string, unknown>
-    } else if (typeof projectSdk.tablesDB.getTable === 'function') {
+    } else {
       response = (await projectSdk.tablesDB.getTable({
         databaseId,
         tableId,
       })) as unknown as Record<string, unknown>
-    }
-
-    if (!response) {
-      return null
     }
 
     const rowSecurity =
@@ -2075,15 +2001,11 @@ export async function deleteProjectTableRow(
     return
   }
 
-  if (typeof projectSdk.tablesDB.deleteRow === 'function') {
-    await projectSdk.tablesDB.deleteRow({
-      databaseId,
-      tableId,
-      rowId,
-    })
-  } else {
-    throw new Error('Delete row method not available')
-  }
+  await projectSdk.tablesDB.deleteRow({
+    databaseId,
+    tableId,
+    rowId,
+  })
 }
 
 /**
@@ -2177,24 +2099,13 @@ export async function createProjectTableRow(
       tableId,
       payload,
     )
-    const createParams: {
-      databaseId: string
-      collectionId: string
-      documentId: string
-      data: Record<string, unknown>
-      permissions?: string[]
-    } = {
+    const created = await projectSdk.documentsDB.createDocument({
       databaseId,
       collectionId: tableId,
       documentId: id,
-      data: payload,
-    }
-    if (permissions && permissions.length > 0) {
-      createParams.permissions = permissions
-    }
-    const created = await projectSdk.documentsDB.createDocument(
-      createParams as never,
-    )
+      data: payload as Record<string, any>,
+      ...(permissions && permissions.length > 0 ? { permissions } : {}),
+    })
     return flattenDocumentForTableRow(created as Record<string, unknown>)
   }
 
@@ -2205,43 +2116,23 @@ export async function createProjectTableRow(
       tableId,
       payload,
     )
-    const createParams: {
-      databaseId: string
-      collectionId: string
-      documentId: string
-      data: Record<string, unknown>
-      permissions?: string[]
-    } = {
+    const created = await projectSdk.vectorsDB.createDocument({
       databaseId,
       collectionId: tableId,
       documentId: id,
-      data: payload,
-    }
-    if (permissions && permissions.length > 0) {
-      createParams.permissions = permissions
-    }
-    const created = await projectSdk.vectorsDB.createDocument(
-      createParams as never,
-    )
+      data: payload as Record<string, any>,
+      ...(permissions && permissions.length > 0 ? { permissions } : {}),
+    })
     return flattenDocumentForTableRow(created as Record<string, unknown>)
   }
 
-  if (typeof projectSdk.tablesDB.createRow === 'function') {
-    const createParams: Record<string, unknown> = {
-      databaseId,
-      tableId,
-      rowId: id,
-      data: { ...payload },
-    }
-
-    if (permissions && permissions.length > 0) {
-      createParams.permissions = permissions
-    }
-
-    return await projectSdk.tablesDB.createRow(createParams as never)
-  }
-
-  throw new Error('Create row method not available')
+  return await projectSdk.tablesDB.createRow({
+    databaseId,
+    tableId,
+    rowId: id,
+    data: payload as Record<string, any>,
+    ...(permissions && permissions.length > 0 ? { permissions } : {}),
+  })
 }
 
 /**
@@ -2272,65 +2163,34 @@ export async function updateProjectTableRow(
   if (payload.$id) delete payload.$id
 
   if (kind === DatabaseType.Documentsdb) {
-    const updateParams: {
-      databaseId: string
-      collectionId: string
-      documentId: string
-      data: Record<string, unknown>
-      permissions?: string[]
-    } = {
+    const updated = await projectSdk.documentsDB.updateDocument({
       databaseId,
       collectionId: tableId,
       documentId: rowId,
-      data: payload,
-    }
-    if (permissions !== undefined) {
-      updateParams.permissions = permissions
-    }
-    const updated = await projectSdk.documentsDB.updateDocument(
-      updateParams as never,
-    )
+      data: payload as Record<string, any>,
+      ...(permissions !== undefined ? { permissions } : {}),
+    })
     return flattenDocumentForTableRow(updated as Record<string, unknown>)
   }
 
   if (kind === DatabaseType.Vectorsdb) {
-    const updateParams: {
-      databaseId: string
-      collectionId: string
-      documentId: string
-      data: Record<string, unknown>
-      permissions?: string[]
-    } = {
+    const updated = await projectSdk.vectorsDB.updateDocument({
       databaseId,
       collectionId: tableId,
       documentId: rowId,
-      data: payload,
-    }
-    if (permissions !== undefined) {
-      updateParams.permissions = permissions
-    }
-    const updated = await projectSdk.vectorsDB.updateDocument(
-      updateParams as never,
-    )
+      data: payload as Record<string, any>,
+      ...(permissions !== undefined ? { permissions } : {}),
+    })
     return flattenDocumentForTableRow(updated as Record<string, unknown>)
   }
 
-  if (typeof projectSdk.tablesDB.updateRow === 'function') {
-    const updateParams: Record<string, unknown> = {
-      databaseId,
-      tableId,
-      rowId,
-      data: payload,
-    }
-
-    if (permissions !== undefined) {
-      updateParams.permissions = permissions
-    }
-
-    return await projectSdk.tablesDB.updateRow(updateParams as never)
-  }
-
-  throw new Error('Update row method not available')
+  return await projectSdk.tablesDB.updateRow({
+    databaseId,
+    tableId,
+    rowId,
+    data: payload as Record<string, any>,
+    ...(permissions !== undefined ? { permissions } : {}),
+  })
 }
 
 /**
@@ -2363,15 +2223,7 @@ export async function createProjectTableRows(
   let created = 0
 
   // If no relationship columns, try bulk insert
-  const tablesBulk = projectSdk.tablesDB as unknown as {
-    createRows?: (p: {
-      databaseId: string
-      tableId: string
-      rows: { rowId: string; data: Record<string, unknown> }[]
-    }) => Promise<unknown>
-  }
-
-  if (!hasRelationshipColumns && typeof tablesBulk.createRows === 'function') {
+  if (!hasRelationshipColumns) {
     try {
       const { ID } = await import('@appwrite.io/console')
       const rowsToInsert = rows.map((row) => {
@@ -2383,12 +2235,12 @@ export async function createProjectTableRows(
           delete rowData.$id
         }
         return {
-          rowId,
-          data: rowData,
+          $id: rowId,
+          ...rowData,
         }
       })
 
-      await tablesBulk.createRows({
+      await projectSdk.tablesDB.createRows({
         databaseId,
         tableId,
         rows: rowsToInsert,
@@ -2448,20 +2300,30 @@ export async function createProjectTableColumn(
 
   const projectSdk = sdk.forProject(projectId)
   const data = columnData as Record<string, unknown>
-  const {
-    key,
-    type,
-    required = false,
-    array = false,
-    xdefault,
-    size,
-    min,
-    max,
-    elements,
-  } = data
-  // TablesDB create methods only add encrypt to payload when typeof encrypt !== 'undefined'. Always pass explicit boolean for text types.
+  const type = data.type
+  const required = data.required === true
+  const array = data.array === true
   const encrypt = data.encrypt === true
-  const colKey = typeof key === 'string' ? key : String(key ?? '')
+  const size = typeof data.size === 'number' ? data.size : 255
+  const min = typeof data.min === 'number' ? data.min : undefined
+  const max = typeof data.max === 'number' ? data.max : undefined
+  const stringDefault =
+    data.xdefault === undefined || data.xdefault === null
+      ? undefined
+      : String(data.xdefault)
+  const numberDefault =
+    typeof data.xdefault === 'number' || typeof data.xdefault === 'bigint'
+      ? data.xdefault
+      : undefined
+  const floatDefault =
+    typeof data.xdefault === 'number' ? data.xdefault : undefined
+  const boolDefault =
+    typeof data.xdefault === 'boolean' ? data.xdefault : undefined
+  const elements = Array.isArray(data.elements)
+    ? data.elements.map(String)
+    : []
+  const colKey =
+    typeof data.key === 'string' ? data.key : String(data.key ?? '')
   if (!colKey) {
     throw new Error('Column key is required')
   }
@@ -2473,53 +2335,53 @@ export async function createProjectTableColumn(
         databaseId,
         tableId,
         key: colKey,
-        size: size ?? 255,
+        size,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
         encrypt,
-      } as never)
+      })
     case 'text':
       return await projectSdk.tablesDB.createTextColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
         encrypt,
-      } as never)
+      })
     case 'mediumtext':
       return await projectSdk.tablesDB.createMediumtextColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
         encrypt,
-      } as never)
+      })
     case 'longtext':
       return await projectSdk.tablesDB.createLongtextColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
         encrypt,
-      } as never)
+      })
     case 'string':
       return await projectSdk.tablesDB.createStringColumn({
         databaseId,
         tableId,
         key: colKey,
-        size: size || 255,
+        size,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
         encrypt,
-      } as never)
+      })
     case 'integer':
       return await projectSdk.tablesDB.createIntegerColumn({
         databaseId,
@@ -2528,9 +2390,9 @@ export async function createProjectTableColumn(
         required,
         min,
         max,
-        xdefault,
+        xdefault: numberDefault,
         array,
-      } as never)
+      })
     case 'bigint':
       return await projectSdk.tablesDB.createBigIntColumn({
         databaseId,
@@ -2539,9 +2401,9 @@ export async function createProjectTableColumn(
         required,
         min,
         max,
-        xdefault,
+        xdefault: numberDefault,
         array,
-      } as never)
+      })
     case 'double':
     case 'float':
       return await projectSdk.tablesDB.createFloatColumn({
@@ -2551,98 +2413,99 @@ export async function createProjectTableColumn(
         required,
         min,
         max,
-        xdefault,
+        xdefault: floatDefault,
         array,
-      } as never)
+      })
     case 'boolean':
       return await projectSdk.tablesDB.createBooleanColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: boolDefault,
         array,
-      } as never)
+      })
     case 'datetime':
       return await projectSdk.tablesDB.createDatetimeColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
-      } as never)
+      })
     case 'email':
       return await projectSdk.tablesDB.createEmailColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
-      } as never)
+      })
     case 'ip':
       return await projectSdk.tablesDB.createIpColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
-      } as never)
+      })
     case 'url':
       return await projectSdk.tablesDB.createUrlColumn({
         databaseId,
         tableId,
         key: colKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
-      } as never)
+      })
     case 'enum':
       return await projectSdk.tablesDB.createEnumColumn({
         databaseId,
         tableId,
         key: colKey,
-        elements: (Array.isArray(elements) ? elements : []) as string[],
+        elements,
         required,
-        xdefault,
+        xdefault: stringDefault,
         array,
-      } as never)
+      })
     case 'relationship':
       return await projectSdk.tablesDB.createRelationshipColumn({
         databaseId,
         tableId,
-        relatedTableId: data.relatedTableId as string,
-        type: data.relationshipType as never,
-        twoWay: data.twoWay as boolean,
+        relatedTableId: String(data.relatedTableId ?? ''),
+        type: data.relationshipType as RelationshipType,
+        twoWay: data.twoWay === true,
         key: colKey,
-        twoWayKey: data.twoWayKey as string,
-        onDelete: data.onDelete as never,
-      } as never)
+        twoWayKey:
+          typeof data.twoWayKey === 'string' ? data.twoWayKey : undefined,
+        onDelete: data.onDelete as RelationMutate | undefined,
+      })
     case 'point':
       return await projectSdk.tablesDB.createPointColumn({
         databaseId,
         tableId,
         key: colKey,
-        required: required as boolean,
-        xdefault: xdefault as number[] | undefined,
+        required,
+        xdefault: data.xdefault as number[] | undefined,
       })
     case 'linestring':
       return await projectSdk.tablesDB.createLineColumn({
         databaseId,
         tableId,
         key: colKey,
-        required: required as boolean,
-        xdefault: xdefault as number[][] | undefined,
+        required,
+        xdefault: data.xdefault as number[][] | undefined,
       })
     case 'polygon':
       return await projectSdk.tablesDB.createPolygonColumn({
         databaseId,
         tableId,
         key: colKey,
-        required: required as boolean,
-        xdefault: xdefault as number[][] | undefined,
+        required,
+        xdefault: data.xdefault as number[][] | undefined,
       })
     default:
       throw new Error(`Unsupported column type: ${type}`)
@@ -2671,18 +2534,27 @@ export async function updateProjectTableColumn(
 
   const projectSdk = sdk.forProject(projectId)
   const data = columnData as Record<string, unknown>
-  const {
-    type,
-    required = false,
-    xdefault,
-    size,
-    min,
-    max,
-    elements,
-    newKey,
-  } = data
-  // Explicit boolean so API receives true/false, not undefined
-  const encrypt = typeof data.encrypt === 'boolean' ? data.encrypt : false
+  const type = data.type
+  const required = data.required === true
+  const size = typeof data.size === 'number' ? data.size : undefined
+  const min = typeof data.min === 'number' ? data.min : undefined
+  const max = typeof data.max === 'number' ? data.max : undefined
+  const stringDefault =
+    data.xdefault === undefined || data.xdefault === null
+      ? undefined
+      : String(data.xdefault)
+  const numberDefault =
+    typeof data.xdefault === 'number' || typeof data.xdefault === 'bigint'
+      ? data.xdefault
+      : undefined
+  const floatDefault =
+    typeof data.xdefault === 'number' ? data.xdefault : undefined
+  const boolDefault =
+    typeof data.xdefault === 'boolean' ? data.xdefault : undefined
+  const elements = Array.isArray(data.elements)
+    ? data.elements.map(String)
+    : []
+  const newKey = typeof data.newKey === 'string' ? data.newKey : undefined
 
   // Call the appropriate update method based on column type
   switch (type) {
@@ -2692,52 +2564,47 @@ export async function updateProjectTableColumn(
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         size,
         newKey,
-        encrypt,
-      } as never)
+      })
     case 'text':
       return await projectSdk.tablesDB.updateTextColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-        encrypt,
-      } as never)
+      })
     case 'mediumtext':
       return await projectSdk.tablesDB.updateMediumtextColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-        encrypt,
-      } as never)
+      })
     case 'longtext':
       return await projectSdk.tablesDB.updateLongtextColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-        encrypt,
-      } as never)
+      })
     case 'string':
       return await projectSdk.tablesDB.updateStringColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         size,
         newKey,
-        encrypt,
-      } as never)
+      })
     case 'integer':
       return await projectSdk.tablesDB.updateIntegerColumn({
         databaseId,
@@ -2746,9 +2613,9 @@ export async function updateProjectTableColumn(
         required,
         min,
         max,
-        xdefault,
+        xdefault: numberDefault,
         newKey,
-      } as never)
+      })
     case 'bigint':
       return await projectSdk.tablesDB.updateBigIntColumn({
         databaseId,
@@ -2757,9 +2624,9 @@ export async function updateProjectTableColumn(
         required,
         min,
         max,
-        xdefault,
+        xdefault: numberDefault,
         newKey,
-      } as never)
+      })
     case 'double':
     case 'float':
       return await projectSdk.tablesDB.updateFloatColumn({
@@ -2769,99 +2636,99 @@ export async function updateProjectTableColumn(
         required,
         min,
         max,
-        xdefault,
+        xdefault: floatDefault,
         newKey,
-      } as never)
+      })
     case 'boolean':
       return await projectSdk.tablesDB.updateBooleanColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: boolDefault,
         newKey,
-      } as never)
+      })
     case 'datetime':
       return await projectSdk.tablesDB.updateDatetimeColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-      } as never)
+      })
     case 'email':
       return await projectSdk.tablesDB.updateEmailColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-      } as never)
+      })
     case 'ip':
       return await projectSdk.tablesDB.updateIpColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-      } as never)
+      })
     case 'url':
       return await projectSdk.tablesDB.updateUrlColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-      } as never)
+      })
     case 'enum':
       return await projectSdk.tablesDB.updateEnumColumn({
         databaseId,
         tableId,
         key: columnKey,
-        elements: (Array.isArray(elements) ? elements : []) as string[],
+        elements,
         required,
-        xdefault,
+        xdefault: stringDefault,
         newKey,
-      } as never)
+      })
     case 'relationship':
       return await projectSdk.tablesDB.updateRelationshipColumn({
         databaseId,
         tableId,
         key: columnKey,
-        onDelete: (columnData as Record<string, unknown>).onDelete,
+        onDelete: data.onDelete as RelationMutate | undefined,
         newKey,
-      } as never)
+      })
     case 'point':
       return await projectSdk.tablesDB.updatePointColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: data.xdefault as number[] | undefined,
         newKey,
-      } as never)
+      })
     case 'linestring':
       return await projectSdk.tablesDB.updateLineColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: data.xdefault as number[][] | undefined,
         newKey,
-      } as never)
+      })
     case 'polygon':
       return await projectSdk.tablesDB.updatePolygonColumn({
         databaseId,
         tableId,
         key: columnKey,
         required,
-        xdefault,
+        xdefault: data.xdefault as number[][] | undefined,
         newKey,
-      } as never)
+      })
     default:
       throw new Error(`Unsupported column type for update: ${type}`)
   }
@@ -2886,35 +2753,11 @@ export async function deleteProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const tdb = projectSdk.tablesDB as unknown as {
-    deleteAttribute?: (p: {
-      databaseId: string
-      tableId: string
-      key: string
-    }) => Promise<unknown>
-    deleteColumn?: (p: {
-      databaseId: string
-      tableId: string
-      key: string
-    }) => Promise<unknown>
-  }
-
-  if (typeof tdb.deleteAttribute === 'function') {
-    return await tdb.deleteAttribute({
-      databaseId,
-      tableId,
-      key: columnKey,
-    })
-  }
-  if (typeof tdb.deleteColumn === 'function') {
-    return await tdb.deleteColumn({
-      databaseId,
-      tableId,
-      key: columnKey,
-    })
-  } else {
-    throw new Error('Delete column method not available')
-  }
+  return await projectSdk.tablesDB.deleteColumn({
+    databaseId,
+    tableId,
+    key: columnKey,
+  })
 }
 
 /**
@@ -2945,14 +2788,18 @@ export async function createProjectTableIndex(
   const orders = raw.orders as string[] | undefined
   const lengths = raw.lengths as number[] | undefined
 
+  const orderBy = orders?.map((order) =>
+    order === 'asc' ? OrderBy.Asc : OrderBy.Desc,
+  )
+
   if (kind === DatabaseType.Documentsdb) {
     return await projectSdk.documentsDB.createIndex({
       databaseId,
       collectionId: tableId,
       key,
-      type: type as never,
+      type: type as DocumentsDBIndexType,
       attributes: columns,
-      orders: orders as never,
+      orders: orderBy,
       lengths,
     })
   }
@@ -2962,25 +2809,22 @@ export async function createProjectTableIndex(
       databaseId,
       collectionId: tableId,
       key,
-      type: type as never,
+      type: type as VectorsDBIndexType,
       attributes: columns,
-      orders: orders as never,
+      orders: orderBy,
       lengths,
     })
   }
 
-  const tdbIdx = projectSdk.tablesDB as unknown as {
-    createIndex?: (p: Record<string, unknown>) => Promise<unknown>
-  }
-  if (typeof tdbIdx.createIndex === 'function') {
-    return await tdbIdx.createIndex({
-      databaseId,
-      tableId,
-      ...(indexData as object),
-    })
-  }
-
-  throw new Error('Create index method not available')
+  return await projectSdk.tablesDB.createIndex({
+    databaseId,
+    tableId,
+    key,
+    type: type as TablesDBIndexType,
+    columns,
+    orders: orderBy,
+    lengths,
+  })
 }
 
 /**
@@ -3020,22 +2864,11 @@ export async function deleteProjectTableIndex(
     })
   }
 
-  const tdbDelIdx = projectSdk.tablesDB as unknown as {
-    deleteIndex?: (p: {
-      databaseId: string
-      tableId: string
-      key: string
-    }) => Promise<unknown>
-  }
-  if (typeof tdbDelIdx.deleteIndex === 'function') {
-    return await tdbDelIdx.deleteIndex({
-      databaseId,
-      tableId,
-      key: indexKey,
-    })
-  }
-
-  throw new Error('Delete index method not available')
+  return await projectSdk.tablesDB.deleteIndex({
+    databaseId,
+    tableId,
+    key: indexKey,
+  })
 }
 
 /**
@@ -3081,18 +2914,14 @@ export async function updateProjectTable(
     return await projectSdk.vectorsDB.updateCollection(collectionPayload)
   }
 
-  const tdbUp = projectSdk.tablesDB as unknown as {
-    updateTable?: (p: Record<string, unknown>) => Promise<unknown>
-  }
-  if (typeof tdbUp.updateTable === 'function') {
-    return await tdbUp.updateTable({
-      databaseId,
-      tableId,
-      ...data,
-    })
-  }
-
-  throw new Error('Update table method not available')
+  return await projectSdk.tablesDB.updateTable({
+    databaseId,
+    tableId,
+    name: data.name,
+    permissions: data.permissions,
+    rowSecurity: data.rowSecurity,
+    enabled: data.enabled,
+  })
 }
 
 /**
@@ -3128,17 +2957,10 @@ export async function deleteProjectTable(
     })
   }
 
-  const tdbDel = projectSdk.tablesDB as unknown as {
-    deleteTable?: (p: { databaseId: string; tableId: string }) => Promise<unknown>
-  }
-  if (typeof tdbDel.deleteTable === 'function') {
-    return await tdbDel.deleteTable({
-      databaseId,
-      tableId,
-    })
-  }
-
-  throw new Error('Delete table method not available')
+  return await projectSdk.tablesDB.deleteTable({
+    databaseId,
+    tableId,
+  })
 }
 
 // ============================================================================
@@ -3229,39 +3051,24 @@ function mapProjectDatabaseListItems(
     | undefined,
   limit: number,
 ) {
-  const databases = (databasesData?.databases ?? []).map((db: unknown) => {
-    const d = db as Record<string, unknown>
-    const tables = (d.collections as unknown[] | undefined)?.length || 0
-    const rows = (d.documents as number | undefined) || 0
-    const backupPolicies =
-      d.backupPolicies || d.backups || d.policies || d.backup || []
-    const backupPoliciesArray = Array.isArray(backupPolicies)
-      ? backupPolicies
-      : backupPolicies
-        ? [backupPolicies]
-        : []
-    const backupPolicyCount = backupPoliciesArray.length
-    const hasBackupPolicy =
-      backupPolicyCount > 0 ||
-      d.backupEnabled === true ||
-      d.backupPolicyEnabled === true
-    const backupPolicy = backupPoliciesArray[0] || null
+  const databases = (databasesData?.databases ?? []).map((db) => {
+    const backupPolicies = db.policies ?? []
+    const backupPolicyCount = backupPolicies.length
+    const hasBackupPolicy = backupPolicyCount > 0
+    const backupPolicy = backupPolicies[0] || null
 
     return {
-      $id: d.$id as string,
-      name: (d.name as string) || 'Unnamed Database',
-      tables,
-      rows,
-      enabled: d.enabled !== false,
-      createdAt: (d.$createdAt as string) || new Date().toISOString(),
-      updatedAt:
-        (d.$updatedAt as string) ||
-        (d.$createdAt as string) ||
-        new Date().toISOString(),
+      $id: db.$id,
+      name: db.name || 'Unnamed Database',
+      tables: 0,
+      rows: 0,
+      enabled: db.enabled !== false,
+      createdAt: db.$createdAt || new Date().toISOString(),
+      updatedAt: db.$updatedAt || db.$createdAt || new Date().toISOString(),
       hasBackupPolicy,
       backupPolicy,
       backupPolicyCount,
-      databaseType: (d as unknown as Models.Database).type,
+      databaseType: db.type,
     } as Database & {
       enabled: boolean
       createdAt: string

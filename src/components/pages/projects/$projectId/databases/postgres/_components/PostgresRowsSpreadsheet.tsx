@@ -7,7 +7,9 @@ import {
   getPostgresRowKey,
   POSTGRES_ROW_CTID_COLUMN,
 } from '@/lib/postgres-row-sql'
+import type { PostgresRowIdentity } from '@/lib/postgres-row-sql'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Tooltip,
   TooltipContent,
@@ -27,6 +29,13 @@ import {
   POSTGRES_STICKY_THEAD_CLASS,
 } from './postgres-spreadsheet-chrome'
 import {
+  COLUMN_RESIZE_RAILS_LAYER_CLASS,
+} from '@/lib/layout/horizontal-resize'
+import {
+  SPREADSHEET_STICKY_START_EDGE_SHADOW,
+  SPREADSHEET_STICKY_START_HEADER_SHADOW,
+} from '@/lib/layout/spreadsheet-sticky'
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -45,6 +54,12 @@ type PostgresRowsSpreadsheetProps = {
   isLoading?: boolean
   emptyContent?: React.ReactNode
   onOpenRow?: (row: Record<string, unknown>, focusedField?: string) => void
+  selectedRowKeys?: Set<string>
+  onToggleRow?: (rowKey: string, identity: PostgresRowIdentity) => void
+  onToggleAllRows?: (
+    rows: Array<{ rowKey: string; identity: PostgresRowIdentity }>,
+    selectAll: boolean,
+  ) => void
   currentPage: number
   totalItems: number
   pageSize: number
@@ -63,6 +78,9 @@ export function PostgresRowsSpreadsheet({
   isLoading = false,
   emptyContent,
   onOpenRow,
+  selectedRowKeys,
+  onToggleRow,
+  onToggleAllRows,
   currentPage,
   totalItems,
   pageSize,
@@ -74,6 +92,8 @@ export function PostgresRowsSpreadsheet({
   const editSession = usePostgresRowsEditSession()
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const drawerOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const selectionEnabled =
+    canWrite && selectedRowKeys != null && onToggleRow != null
 
   const visibleColumns = useMemo(
     () =>
@@ -82,6 +102,29 @@ export function PostgresRowsSpreadsheet({
       ),
     [columns],
   )
+
+  const rowEntries = useMemo(
+    () =>
+      rows.map((row) => ({
+        row,
+        rowKey: getPostgresRowKey(row, columns),
+        identity: buildPostgresRowIdentityFromRow(row, columns),
+      })),
+    [columns, rows],
+  )
+
+  const selectedOnPageCount = useMemo(() => {
+    if (!selectedRowKeys) return 0
+    return rowEntries.filter((entry) => selectedRowKeys.has(entry.rowKey))
+      .length
+  }, [rowEntries, selectedRowKeys])
+
+  const allPageSelected =
+    selectionEnabled &&
+    rowEntries.length > 0 &&
+    selectedOnPageCount === rowEntries.length
+  const somePageSelected =
+    selectionEnabled && selectedOnPageCount > 0 && !allPageSelected
 
   const columnKeys = useMemo(
     () => visibleColumns.map((column) => column.column_name),
@@ -157,10 +200,10 @@ export function PostgresRowsSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative inline-block min-w-full align-top overflow-x-clip"
+            className="relative isolate inline-block min-w-full align-top overflow-x-clip"
           >
             <table
-              className="w-full table-fixed border-collapse"
+              className="relative z-0 w-full table-fixed border-collapse"
               style={{ minWidth: tableMinWidthPx }}
             >
               <colgroup>
@@ -197,7 +240,7 @@ export function PostgresRowsSpreadsheet({
                   <th
                     className={cn(
                       'sticky start-0 z-30 bg-background px-2 py-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground',
-                      POSTGRES_HEADER_CELL_BORDER_CLASS,
+                      SPREADSHEET_STICKY_START_HEADER_SHADOW,
                     )}
                     style={{
                       width: POSTGRES_ROWS_TABLE_EDGE_COL_PX,
@@ -205,7 +248,32 @@ export function PostgresRowsSpreadsheet({
                       maxWidth: POSTGRES_ROWS_TABLE_EDGE_COL_PX,
                     }}
                   >
-                    #
+                    {selectionEnabled ? (
+                      <div className="flex justify-center">
+                        <Checkbox
+                          checked={
+                            allPageSelected
+                              ? true
+                              : somePageSelected
+                                ? 'indeterminate'
+                                : false
+                          }
+                          onCheckedChange={(checked) => {
+                            onToggleAllRows?.(
+                              rowEntries.map(({ rowKey, identity }) => ({
+                                rowKey,
+                                identity,
+                              })),
+                              checked === true,
+                            )
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          aria-label={t('Select all rows')}
+                        />
+                      </div>
+                    ) : (
+                      '#'
+                    )}
                   </th>
                   {visibleColumns.map((column, columnIndex) => {
                     const key = column.column_name
@@ -260,9 +328,8 @@ export function PostgresRowsSpreadsheet({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, rowIndex) => {
-                  const rowKey = getPostgresRowKey(row, columns)
-                  const identity = buildPostgresRowIdentityFromRow(row, columns)
+                {rowEntries.map(({ row, rowKey, identity }, rowIndex) => {
+                  const isSelected = selectedRowKeys?.has(rowKey) ?? false
                   const hasPendingEdits =
                     editSession?.isRowEdited(tableId, rowKey) ?? false
                   return (
@@ -270,23 +337,43 @@ export function PostgresRowsSpreadsheet({
                       key={rowKey}
                       className={cn(
                         'group cursor-pointer transition-colors',
+                        isSelected && !hasPendingEdits && 'bg-muted',
                         hasPendingEdits &&
                           'bg-amber-500/10 ring-1 ring-inset ring-amber-500/20 hover:bg-amber-500/15',
-                        !hasPendingEdits && 'hover:bg-muted/50',
+                        !hasPendingEdits && !isSelected && 'hover:bg-muted/50',
                         !hasPendingEdits &&
+                          !isSelected &&
                           rowIndex % 2 === 1 &&
                           'bg-muted/15',
                       )}
                     >
                       <td
                         className={cn(
-                          'sticky start-0 z-10 bg-background px-2 py-2.5 text-center',
-                          POSTGRES_BODY_CELL_BORDER_CLASS,
+                          'sticky start-0 z-10 border-b border-border px-2 py-2.5 text-center',
+                          isSelected || hasPendingEdits
+                            ? 'bg-muted'
+                            : 'bg-background',
+                          hasPendingEdits && 'bg-amber-500/10',
+                          SPREADSHEET_STICKY_START_EDGE_SHADOW,
                         )}
+                        onClick={(event) => event.stopPropagation()}
                       >
-                        <span className="text-[11px] tabular-nums text-muted-foreground">
-                          {rowNumberOffset + rowIndex + 1}
-                        </span>
+                        {selectionEnabled ? (
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() =>
+                                onToggleRow?.(rowKey, identity)
+                              }
+                              onClick={(event) => event.stopPropagation()}
+                              aria-label={t('Select row')}
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-[11px] tabular-nums text-muted-foreground">
+                            {rowNumberOffset + rowIndex + 1}
+                          </span>
+                        )}
                       </td>
                       {visibleColumns.map((column, columnIndex) => {
                         const rawValue = row[column.column_name]
@@ -317,29 +404,31 @@ export function PostgresRowsSpreadsheet({
                 })}
               </tbody>
             </table>
-            {visibleColumns.map((column) => {
-              const key = column.column_name
-              return (
-                <button
-                  key={`col-resize-rail-${key}`}
-                  ref={(node) => {
-                    if (node) railRefs.current.set(key, node)
-                    else railRefs.current.delete(key)
-                  }}
-                  type="button"
-                  aria-label={`Resize ${key} column width`}
-                  aria-orientation="vertical"
-                  role="separator"
-                  tabIndex={0}
-                  onPointerDown={handleResizePointerDown(key)}
-                  className={cn(
-                    POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
-                    resizingColumnKey === key && 'before:opacity-100',
-                    'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                  )}
-                />
-              )
-            })}
+            <div className={COLUMN_RESIZE_RAILS_LAYER_CLASS} aria-hidden>
+              {visibleColumns.map((column) => {
+                const key = column.column_name
+                return (
+                  <button
+                    key={`col-resize-rail-${key}`}
+                    ref={(node) => {
+                      if (node) railRefs.current.set(key, node)
+                      else railRefs.current.delete(key)
+                    }}
+                    type="button"
+                    aria-label={`Resize ${key} column width`}
+                    aria-orientation="vertical"
+                    role="separator"
+                    tabIndex={0}
+                    onPointerDown={handleResizePointerDown(key)}
+                    className={cn(
+                      POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS,
+                      resizingColumnKey === key && 'before:opacity-100',
+                      'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                    )}
+                  />
+                )
+              })}
+            </div>
           </div>
         )}
       </div>

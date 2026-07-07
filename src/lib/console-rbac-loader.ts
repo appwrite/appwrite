@@ -19,6 +19,7 @@ import {
   canAccessOrgSettingsOverview,
   canAccessOrgDomains,
   canShowGetStartedSection,
+  canCreateDatabase,
 } from '@/lib/console-access-checks'
 import {
   deriveAccessFromRolesScopes,
@@ -80,6 +81,17 @@ export async function canAccessDatabaseSecuritySettings(
   if (!access) return true
   const features = getActiveProfileFeatures()
   return canShowDatabaseSecuritySettings(access, features)
+}
+
+/** Native Postgres database Settings tab. */
+export async function canAccessPostgresDatabaseSettings(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<boolean> {
+  const access = await getProjectAccess(queryClient, projectId)
+  if (!access) return true
+  const features = getActiveProfileFeatures()
+  return canCreateDatabase(access, features)
 }
 
 /** Table-level Security/Settings. */

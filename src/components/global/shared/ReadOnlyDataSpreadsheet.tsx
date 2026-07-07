@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils'
 import {
   applyColumnResizeRailPosition,
-  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
-  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
+  COLUMN_RESIZE_RAILS_LAYER_CLASS,
+  columnResizeRailHandleClass,
+  horizontalResizeDeltaPx,
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
@@ -36,14 +37,7 @@ const rowNumberColumnWidthPx = 48
 const resizableColumnDefaultWidthPx = 150
 const resizableColumnMinWidthPx = 72
 const resizableColumnMaxWidthPx = 640
-const dataColumnResizeRailHandleClass = cn(
-  'group absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
-  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
-  'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
-  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
-  'hover:before:opacity-100',
-)
+const dataColumnResizeRailHandleClass = columnResizeRailHandleClass()
 
 export type ReadOnlyDataSpreadsheetColumn =
   | string
@@ -220,7 +214,10 @@ export function ReadOnlyDataSpreadsheet({
       setResizingColumnKey(columnKey)
       applyDraggedWidthPx(columnKey, initialWidth)
       const onMove = (ev: PointerEvent) => {
-        applyDraggedWidthPx(columnKey, initialWidth + (ev.clientX - startX))
+        applyDraggedWidthPx(
+          columnKey,
+          initialWidth + horizontalResizeDeltaPx(startX, ev.clientX),
+        )
       }
       const onUp = () => {
         setBodyResizeDragActive(false)
@@ -319,11 +316,11 @@ export function ReadOnlyDataSpreadsheet({
         ) : (
           <div
             ref={tableLayerRef}
-            className="relative inline-block min-w-full align-top"
+            className="relative isolate inline-block min-w-full align-top"
           >
             <table
               className={cn(
-                'w-full border-collapse text-start',
+                'relative z-0 w-full border-collapse text-start',
                 enableColumnResize ? 'table-fixed' : 'min-w-max',
               )}
               style={enableColumnResize ? { minWidth: tableMinWidthPx } : undefined}
@@ -504,8 +501,9 @@ export function ReadOnlyDataSpreadsheet({
                 })}
               </tbody>
             </table>
-            {enableColumnResize
-              ? normalizedColumns.map((column) => (
+            {enableColumnResize ? (
+              <div className={COLUMN_RESIZE_RAILS_LAYER_CLASS} aria-hidden>
+                {normalizedColumns.map((column) => (
                   <button
                     key={`col-resize-rail-${column.key}`}
                     ref={(node) => {
@@ -524,8 +522,9 @@ export function ReadOnlyDataSpreadsheet({
                       'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                     )}
                   />
-                ))
-              : null}
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       </div>

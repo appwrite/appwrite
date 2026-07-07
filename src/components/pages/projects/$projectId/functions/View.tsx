@@ -573,13 +573,15 @@ export function View() {
         queryKey: Dependencies.FUNCTIONS,
       })
       toast.success(
-        `Successfully deleted ${selectedFunctions.size} function${selectedFunctions.size > 1 ? 's' : ''}`,
+        selectedFunctions.size === 1
+          ? t('Function deleted successfully')
+          : `${t('Successfully deleted')} ${selectedFunctions.size} ${t('functions')}`,
       )
       setSelectedFunctions(new Set())
       setDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to delete functions')
+      toast.error(getErrorMessage(error) || t('Failed to delete functions'))
     },
   })
 
@@ -944,7 +946,7 @@ export function View() {
                           : undefined,
                     })
                   }}
-                  itemLabel="functions"
+                  itemLabel={t('functions')}
                 />
               </>
             )}
@@ -954,8 +956,9 @@ export function View() {
           <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedFunctions.size} function
-                {selectedFunctions.size > 1 ? 's' : ''} selected
+                {selectedFunctions.size}{' '}
+                {selectedFunctions.size > 1 ? t('functions') : t('function')}{' '}
+                {t('selected')}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -964,7 +967,7 @@ export function View() {
                   onClick={() => setSelectedFunctions(new Set())}
                   className="h-8 text-xs"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -973,7 +976,7 @@ export function View() {
                   disabled={bulkDeleteMutation.isPending}
                   className="h-8 gap-2"
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -983,11 +986,11 @@ export function View() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>Delete functions</DialogTitle>
+              <DialogTitle>{t('Delete functions')}</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedFunctions.size}{' '}
-                function{selectedFunctions.size > 1 ? 's' : ''}? This action
-                cannot be undone.
+                {t('Are you sure you want to delete')} {selectedFunctions.size}{' '}
+                {selectedFunctions.size > 1 ? t('functions') : t('function')}?{' '}
+                {t('This action cannot be undone.')}
               </DialogDescription>
             </DialogHeader>
 
@@ -997,14 +1000,14 @@ export function View() {
                 onClick={() => setDeleteDialogOpen(false)}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={confirmBulkDelete}
                 disabled={bulkDeleteMutation.isPending}
               >
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </DialogContent>

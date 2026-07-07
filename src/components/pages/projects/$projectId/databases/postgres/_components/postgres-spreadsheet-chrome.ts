@@ -1,12 +1,37 @@
 import { parsePostgresIndexKeyColumns } from '@/lib/postgres-index-metadata'
+import { columnResizeRailHandleClass } from '@/lib/layout/horizontal-resize'
 import {
-  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
-  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
-} from '@/lib/layout/horizontal-resize'
+  SPREADSHEET_STICKY_END_EDGE_SHADOW,
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+} from '@/lib/layout/spreadsheet-sticky'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
 export const POSTGRES_ROWS_TABLE_EDGE_COL_PX = 40
+export const POSTGRES_ACTIONS_COL_PX = 40
+
+export const POSTGRES_ACTIONS_COL_STYLE = {
+  width: POSTGRES_ACTIONS_COL_PX,
+  minWidth: POSTGRES_ACTIONS_COL_PX,
+  maxWidth: POSTGRES_ACTIONS_COL_PX,
+} as const
+
+export const POSTGRES_STICKY_ACTIONS_HEADER_CLASS = cn(
+  'relative sticky end-0 z-30 bg-background p-0',
+  SPREADSHEET_STICKY_END_HEADER_SHADOW,
+)
+
+export function postgresStickyActionsCellClass(options?: {
+  mutedRow?: boolean
+}): string {
+  return cn(
+    'sticky end-0 z-10 border-b border-border p-0',
+    SPREADSHEET_STICKY_END_EDGE_SHADOW,
+    options?.mutedRow
+      ? 'bg-muted/30'
+      : 'bg-background group-hover:bg-muted/50',
+  )
+}
 export const POSTGRES_ROWS_DATA_COLUMN_DEFAULT_WIDTH_PX = 150
 export const POSTGRES_ROWS_DATA_COLUMN_MIN_WIDTH_PX = 72
 export const POSTGRES_ROWS_DATA_COLUMN_MAX_WIDTH_PX = 640
@@ -56,14 +81,8 @@ export function getPostgresRowsDataColumnHeaderStyle(
   }
 }
 
-export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS = cn(
-  'group absolute top-0 bottom-0 z-[41] w-2 cursor-col-resize touch-none border-0 bg-transparent p-0 outline-none',
-  'after:pointer-events-none after:absolute after:inset-y-0 after:w-[0.5px] after:bg-border',
-  RESIZE_HANDLE_PSEUDO_AFTER_LOGICAL_X,
-  'before:pointer-events-none before:absolute before:inset-y-0 before:z-10 before:w-2 before:bg-border before:opacity-0 before:transition-opacity',
-  RESIZE_HANDLE_PSEUDO_BEFORE_LOGICAL_X,
-  'hover:before:opacity-100',
-)
+export const POSTGRES_DATA_COLUMN_RESIZE_RAIL_HANDLE_CLASS =
+  columnResizeRailHandleClass()
 
 export const POSTGRES_STICKY_THEAD_CLASS = 'sticky top-0 z-20 bg-background'
 export const POSTGRES_HEADER_CELL_BORDER_CLASS =
@@ -116,6 +135,11 @@ export function getPostgresIndexTypeColor(type: string): string {
     key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   }
   return colors[type] || 'bg-muted text-muted-foreground border-border'
+}
+
+/** Tinted outline badge class for enum literal values (matches column type badges). */
+export function getPostgresEnumValueBadgeClass(): string {
+  return 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20'
 }
 
 export function matchesPostgresLocalSearch(

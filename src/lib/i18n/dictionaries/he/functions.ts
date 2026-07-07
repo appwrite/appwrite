@@ -157,6 +157,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Delete deployment': 'מחיקת פריסה',
   'Delete Deployments': 'מחיקת פריסות',
   'Delete function': 'מחיקת פונקציה',
+  'Delete functions': 'מחיקת פונקציות',
   'deploy from URL': 'לפרוס מכתובת URL',
   'Deploy now and connect your version control later via CLI or Git integration in your function settings.':
     'פרסו עכשיו וחברו את ניהול הגרסאות שלכם מאוחר יותר דרך CLI או אינטגרציית Git בהגדרות הפונקציה.',
@@ -252,6 +253,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Failed to delete deployment': 'מחיקת הפריסה נכשלה',
   'Failed to delete deployments': 'מחיקת הפריסות נכשלה',
   'Failed to delete function': 'מחיקת הפונקציה נכשלה',
+  'Failed to delete functions': 'מחיקת הפונקציות נכשלה',
   'Failed to disconnect repository': 'ניתוק ה-repo נכשל',
   'Failed to download build output': 'הורדת פלט הבנייה נכשלה',
   'Failed to download source code': 'הורדת קוד המקור נכשלה',

@@ -25,6 +25,9 @@ import {
   buildPostgresAddCheckConstraintSql,
   buildPostgresAddColumnSql,
   buildPostgresAddForeignKeySql,
+  buildPostgresAddPrimaryKeySql,
+  buildPostgresAddUniqueConstraintSql,
+  buildPostgresAlterColumnDefaultSql,
   buildPostgresAlterColumnNullableSql,
   buildPostgresAlterColumnTypeSql,
   buildPostgresColumnCommentSql,
@@ -40,8 +43,12 @@ import {
   validatePostgresColumnTypeState,
   type PostgresColumnTypeState,
 } from '@/lib/postgres-column-types'
+import {
+  isPostgresPrimaryKeyColumn,
+  isPostgresUniqueColumn,
+  type PostgresTableColumnRow,
+} from '@/lib/postgres-sql'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { PostgresTableColumnRow } from '@/lib/postgres-sql'
 import { PostgresColumnTypeSelector } from './PostgresColumnTypeSelector'
 import { PostgresForeignKeySelector } from './PostgresForeignKeySelector'
 import { useT } from '@/lib/i18n/translate'
@@ -58,6 +65,39 @@ type PostgresTableColumnDrawerProps = {
 
 function normalizeOptionalText(value: string): string {
   return value.trim()
+}
+
+function ConstraintToggle({
+  id,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+  disabled,
+}: {
+  id: string
+  label: string
+  description: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+      <div className="min-w-0">
+        <Label htmlFor={id} className="text-[12px] font-medium">
+          {label}
+        </Label>
+        <p className="text-[11px] text-muted-foreground mt-1">{description}</p>
+      </div>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+      />
+    </div>
+  )
 }
 
 export function PostgresTableColumnDrawer({
@@ -79,6 +119,8 @@ export function PostgresTableColumnDrawer({
     createDefaultPostgresColumnTypeState(),
   )
   const [nullable, setNullable] = useState(true)
+  const [primaryKey, setPrimaryKey] = useState(false)
+  const [unique, setUnique] = useState(false)
   const [defaultValue, setDefaultValue] = useState('')
   const [comment, setComment] = useState('')
   const [checkExpression, setCheckExpression] = useState('')
@@ -89,9 +131,12 @@ export function PostgresTableColumnDrawer({
   useEffect(() => {
     if (!open) return
     if (column) {
+      const isPrimary = isPostgresPrimaryKeyColumn(column)
       setName(column.column_name)
       setTypeState(parsePostgresColumnTypeFromRow(column))
       setNullable(column.is_nullable === 'YES')
+      setPrimaryKey(isPrimary)
+      setUnique(isPrimary || isPostgresUniqueColumn(column))
       setDefaultValue(column.column_default ?? '')
       setComment(column.column_comment ?? '')
       setCheckExpression(getPostgresColumnCheckExpressionForEdit(column.check_constraints))
@@ -102,12 +147,22 @@ export function PostgresTableColumnDrawer({
       setName('')
       setTypeState(createDefaultPostgresColumnTypeState())
       setNullable(true)
+      setPrimaryKey(false)
+      setUnique(false)
       setDefaultValue('')
       setComment('')
       setCheckExpression('')
       setForeignKeyState(createEmptyPostgresForeignKeyState(tableSchema))
     }
   }, [open, column, tableSchema])
+
+  const handlePrimaryKeyChange = (checked: boolean) => {
+    setPrimaryKey(checked)
+    if (checked) {
+      setNullable(false)
+      setUnique(true)
+    }
+  }
 
   const handleSubmit = async () => {
     const trimmedName = name.trim()
@@ -124,6 +179,7 @@ export function PostgresTableColumnDrawer({
 
     const nextComment = normalizeOptionalText(comment)
     const nextCheckExpression = normalizeOptionalText(checkExpression)
+    const nextDefault = defaultValue.trim()
 
     const foreignKeyError = validatePostgresForeignKeyState(foreignKeyState)
     if (foreignKeyError) {
@@ -142,8 +198,10 @@ export function PostgresTableColumnDrawer({
       if (!isEditing) {
         statements.push(
           buildPostgresAddColumnSql(tableId, trimmedName, dataType, {
-            nullable,
-            defaultValue: defaultValue.trim() || undefined,
+            nullable: primaryKey ? false : nullable,
+            defaultValue: nextDefault || undefined,
+            primaryKey,
+            unique: unique && !primaryKey,
           }),
         )
       } else {
@@ -163,9 +221,68 @@ export function PostgresTableColumnDrawer({
           )
         }
         const wasNullable = column.is_nullable === 'YES'
-        if (nullable !== wasNullable) {
+        const nextNullable = primaryKey ? false : nullable
+        if (nextNullable !== wasNullable) {
           statements.push(
-            buildPostgresAlterColumnNullableSql(tableId, trimmedName, nullable),
+            buildPostgresAlterColumnNullableSql(
+              tableId,
+              trimmedName,
+              nextNullable,
+            ),
+          )
+        }
+
+        const previousDefault = (column.column_default ?? '').trim()
+        if (nextDefault !== previousDefault) {
+          statements.push(
+            buildPostgresAlterColumnDefaultSql(
+              tableId,
+              trimmedName,
+              nextDefault || null,
+            ),
+          )
+        }
+
+        const wasPrimary = isPostgresPrimaryKeyColumn(column)
+        const hadStandaloneUnique = isPostgresUniqueColumn(column)
+        if (primaryKey !== wasPrimary) {
+          if (wasPrimary && column.primary_key_constraint) {
+            statements.push(
+              buildPostgresDropConstraintSql(
+                tableId,
+                column.primary_key_constraint,
+              ),
+            )
+          }
+          if (primaryKey) {
+            statements.push(
+              buildPostgresAddPrimaryKeySql(
+                tableId,
+                trimmedName,
+                buildPostgresColumnConstraintName(tableName, trimmedName, 'pkey'),
+              ),
+            )
+          }
+        }
+
+        if (primaryKey) {
+          // Primary key already enforces uniqueness.
+          if (hadStandaloneUnique && column.unique_constraint) {
+            statements.push(
+              buildPostgresDropConstraintSql(tableId, column.unique_constraint),
+            )
+          }
+        } else if (hadStandaloneUnique && !unique && column.unique_constraint) {
+          statements.push(
+            buildPostgresDropConstraintSql(tableId, column.unique_constraint),
+          )
+        } else if (!hadStandaloneUnique && unique) {
+          statements.push(
+            buildPostgresAddUniqueConstraintSql(
+              tableId,
+              trimmedName,
+              buildPostgresColumnConstraintName(tableName, trimmedName, 'key'),
+            ),
           )
         }
       }
@@ -254,6 +371,8 @@ export function PostgresTableColumnDrawer({
     isEditing && parsePostgresColumnCheckConstraints(column?.check_constraints).length > 1
   const hasMultipleForeignKeys =
     isEditing && parsePostgresColumnForeignKeys(column?.foreign_keys).length > 1
+  const isExistingPrimaryKey =
+    isEditing && column != null && isPostgresPrimaryKeyColumn(column)
 
   return (
     <BaseDrawer
@@ -276,43 +395,52 @@ export function PostgresTableColumnDrawer({
           }}
           className="flex flex-col flex-1 min-h-0"
         >
-          <div className="flex-1 overflow-y-auto px-6 pb-4 pt-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="column-name" className="text-[12px] font-medium">
-                Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="column-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={
-                  isEditing &&
-                  (column.is_primary_key === true ||
-                    column.is_primary_key === 'true')
-                }
-              />
-            </div>
-            <PostgresColumnTypeSelector
-              value={typeState}
-              onChange={setTypeState}
-              allowSerialTypes={!isEditing}
-            />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <Label htmlFor="column-nullable" className="text-[12px] font-medium">
-                  {t('Nullable')}
+          <div className="flex-1 overflow-y-auto px-6 pb-4 pt-4 space-y-5">
+            <section className="space-y-3">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('General')}
+              </h4>
+              <div className="space-y-2">
+                <Label htmlFor="column-name" className="text-[12px] font-medium">
+                  {t('Name')} <span className="text-destructive">*</span>
                 </Label>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  {t('Allow NULL values in this column.')}
+                <Input
+                  id="column-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="column_name"
+                  disabled={isExistingPrimaryKey}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  {t(
+                    'Use lowercase letters and underscores, for example column_name.',
+                  )}
                 </p>
               </div>
-              <Switch
-                id="column-nullable"
-                checked={nullable}
-                onCheckedChange={setNullable}
+              <div className="space-y-2">
+                <Label htmlFor="column-comment" className="text-[12px] font-medium">
+                  {t('Description')}
+                </Label>
+                <Textarea
+                  id="column-comment"
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  rows={2}
+                  className="min-h-[72px] resize-y"
+                  placeholder={t('Optional')}
+                />
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('Data type')}
+              </h4>
+              <PostgresColumnTypeSelector
+                value={typeState}
+                onChange={setTypeState}
+                allowSerialTypes={!isEditing}
               />
-            </div>
-            {!isEditing ? (
               <div className="space-y-2">
                 <Label htmlFor="column-default" className="text-[12px] font-medium">
                   {t('Default value')}
@@ -322,56 +450,96 @@ export function PostgresTableColumnDrawer({
                   value={defaultValue}
                   onChange={(event) => setDefaultValue(event.target.value)}
                   className="font-mono"
-                  placeholder={getPostgresColumnDefaultPlaceholder(
-                    typeState.typeId,
+                  placeholder={t(
+                    getPostgresColumnDefaultPlaceholder(typeState.typeId),
                   )}
                 />
-              </div>
-            ) : null}
-            <div className="space-y-2">
-              <Label htmlFor="column-comment" className="text-[12px] font-medium">
-                {t('Comment')}
-              </Label>
-              <Textarea
-                id="column-comment"
-                value={comment}
-                onChange={(event) => setComment(event.target.value)}
-                rows={2}
-                className="min-h-[80px] resize-y"
-                placeholder={t('Describe what this column stores')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="column-check" className="text-[12px] font-medium">
-                Check
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                SQL expression inside CHECK (...), for example{' '}
-                <code className="font-mono text-[11px]">amount &gt; 0</code>.
-              </p>
-              {hasMultipleChecks ? (
                 <p className="text-[11px] text-muted-foreground">
-                  {t('This column has multiple check constraints. Saving replaces them with a single check.')}
+                  {t(
+                    'A literal or SQL expression, for example now() or gen_random_uuid().',
+                  )}
                 </p>
-              ) : null}
-              <Textarea
-                id="column-check"
-                value={checkExpression}
-                onChange={(event) => setCheckExpression(event.target.value)}
-                rows={2}
-                className="min-h-[80px] resize-y font-mono"
-                placeholder="amount > 0"
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('Foreign key')}
+              </h4>
+              <PostgresForeignKeySelector
+                value={foreignKeyState}
+                onChange={setForeignKeyState}
+                projectId={projectId}
+                databaseId={databaseId}
+                defaultSchema={tableSchema}
+                active={open}
+                hasMultipleForeignKeys={hasMultipleForeignKeys}
               />
-            </div>
-            <PostgresForeignKeySelector
-              value={foreignKeyState}
-              onChange={setForeignKeyState}
-              projectId={projectId}
-              databaseId={databaseId}
-              defaultSchema={tableSchema}
-              active={open}
-              hasMultipleForeignKeys={hasMultipleForeignKeys}
-            />
+            </section>
+
+            <section className="space-y-3">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('Constraints')}
+              </h4>
+              <div className="space-y-2">
+                <ConstraintToggle
+                  id="column-primary-key"
+                  label={t('Primary key')}
+                  description={t(
+                    'Use this column as a unique identifier for rows in the table.',
+                  )}
+                  checked={primaryKey}
+                  onCheckedChange={handlePrimaryKeyChange}
+                />
+                <ConstraintToggle
+                  id="column-nullable"
+                  label={t('Allow nullable')}
+                  description={t(
+                    'Allow the column to be NULL when no value is provided.',
+                  )}
+                  checked={primaryKey ? false : nullable}
+                  onCheckedChange={setNullable}
+                  disabled={primaryKey}
+                />
+                <ConstraintToggle
+                  id="column-unique"
+                  label={t('Unique')}
+                  description={t(
+                    'Require values in this column to be unique across rows.',
+                  )}
+                  checked={primaryKey ? true : unique}
+                  onCheckedChange={setUnique}
+                  disabled={primaryKey}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="column-check" className="text-[12px] font-medium">
+                  {t('Check constraint')}
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  {t('Optional SQL expression, for example')}{' '}
+                  <code className="font-mono text-[11px]">
+                    length(column_name) &lt; 500
+                  </code>
+                  .
+                </p>
+                {hasMultipleChecks ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    {t(
+                      'This column has multiple check constraints. Saving replaces them with a single check.',
+                    )}
+                  </p>
+                ) : null}
+                <Textarea
+                  id="column-check"
+                  value={checkExpression}
+                  onChange={(event) => setCheckExpression(event.target.value)}
+                  rows={2}
+                  className="min-h-[72px] resize-y font-mono"
+                  placeholder="length(column_name) < 500"
+                />
+              </div>
+            </section>
           </div>
           <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
             <Button type="submit" disabled={executeSql.isPending || !name.trim()}>

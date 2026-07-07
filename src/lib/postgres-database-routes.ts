@@ -6,16 +6,23 @@ export type PostgresNavParams = {
   tableId?: string
 }
 
-export type PostgresTableTab = 'rows' | 'columns' | 'indexes' | 'settings'
+export type PostgresTableTab =
+  | 'rows'
+  | 'columns'
+  | 'indexes'
+  | 'security'
+  | 'settings'
 
 /** Database-level views (sidebar nav below schemas/tables). */
 export type PostgresDatabaseTab =
   | 'sql'
   | 'visualizer'
+  | 'enums'
   | 'monitor'
   | 'insights'
   | 'backups'
   | 'connections'
+  | 'roles'
   | 'settings'
 
 export const POSTGRES_DATABASE_TAB_LABELS: Record<
@@ -24,10 +31,12 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
 > = {
   sql: 'SQL editor',
   visualizer: 'Visualizer',
+  enums: 'Enums',
   monitor: 'Monitor',
   insights: 'Insights',
   backups: 'Backups',
   connections: 'Connections',
+  roles: 'Roles',
   settings: 'Settings',
 }
 
@@ -74,6 +83,17 @@ function postgresNavBase(params: PostgresNavBase) {
   }
 }
 
+function postgresDatabaseTabRoute<const T extends string>(
+  to: T,
+  params: ReturnType<typeof postgresNavBase>,
+) {
+  return {
+    to,
+    params,
+    search: {} as Record<string, never>,
+  }
+}
+
 /** Typed route helpers for dedicated PostgreSQL databases. */
 export function postgresNav(params: PostgresNavBase) {
   const base = postgresNavBase(params)
@@ -100,6 +120,12 @@ export function postgresNav(params: PostgresNavBase) {
             params: tableBase,
           }
         },
+        security() {
+          return {
+            to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/security' as const,
+            params: tableBase,
+          }
+        },
         settings() {
           return {
             to: '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId/settings' as const,
@@ -112,49 +138,67 @@ export function postgresNav(params: PostgresNavBase) {
       return this.table({ tableId: p.tableId ?? '-' }).rows()
     },
     sql() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/sql' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/sql' as const,
+        base,
+      )
     },
     editor() {
       return this.sql()
     },
     visualizer() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/visualizer' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/visualizer' as const,
+        base,
+      )
+    },
+    enums() {
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/enums' as const,
+        base,
+      )
     },
     monitor() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/monitor' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/monitor' as const,
+        base,
+      )
     },
     insights() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/insights' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/insights' as const,
+        base,
+      )
     },
     backups() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/backups' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/backups' as const,
+        base,
+      )
     },
     connections() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/connections' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/connections' as const,
+        base,
+      )
+    },
+    roles() {
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/roles' as const,
+        base,
+      )
     },
     settings() {
-      return {
-        to: '/projects/$projectId/databases/postgres/$databaseId/settings' as const,
-        params: base,
-      }
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/settings' as const,
+        base,
+      )
+    },
+    computeSettings() {
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/settings/compute' as const,
+        base,
+      )
     },
   }
 }
@@ -173,12 +217,48 @@ export function postgresTableRows(params: PostgresNavParams & { tableId: string 
 const POSTGRES_DATABASE_TAB_SEGMENTS: PostgresDatabaseTab[] = [
   'sql',
   'visualizer',
+  'enums',
   'monitor',
   'insights',
   'backups',
   'connections',
+  'roles',
   'settings',
 ]
+
+export function isPostgresDatabaseTabSegment(
+  segment: string,
+): segment is PostgresDatabaseTab {
+  return POSTGRES_DATABASE_TAB_SEGMENTS.includes(segment as PostgresDatabaseTab)
+}
+
+export function postgresDatabaseTabLink(
+  projectId: string,
+  databaseId: string,
+  tab: PostgresDatabaseTab,
+) {
+  const nav = postgresNav({ projectId, databaseId })
+  switch (tab) {
+    case 'sql':
+      return nav.sql()
+    case 'visualizer':
+      return nav.visualizer()
+    case 'enums':
+      return nav.enums()
+    case 'monitor':
+      return nav.monitor()
+    case 'insights':
+      return nav.insights()
+    case 'backups':
+      return nav.backups()
+    case 'connections':
+      return nav.connections()
+    case 'roles':
+      return nav.roles()
+    case 'settings':
+      return nav.settings()
+  }
+}
 
 export function parsePostgresDatabaseTabFromPathname(
   pathname: string,
@@ -201,6 +281,7 @@ export function parsePostgresTableTabFromPathname(
   if (pathname.endsWith('/columns')) return 'columns'
   if (pathname.endsWith('/indexes')) return 'indexes'
   if (pathname.endsWith('/settings')) return 'settings'
+  if (pathname.endsWith('/security')) return 'security'
   if (pathname.endsWith('/rows')) return 'rows'
   return null
 }

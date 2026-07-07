@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Switch } from '@/components/ui/switch'
+import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
 import { Slider } from '@/components/ui/slider'
 import {
   formatInitMockCurrentDay,
@@ -58,7 +58,7 @@ export function DebugMenuInitDayPanel() {
               : 'Use the real calendar date on /init'}
           </p>
         </div>
-        <Switch
+        <DebugMenuSwitch
           checked={mockEnabled}
           onCheckedChange={(checked) => {
             setDebugOverride('mockInitCurrentDay', checked ? selectedDay : null)

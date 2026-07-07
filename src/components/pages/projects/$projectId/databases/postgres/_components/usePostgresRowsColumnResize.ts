@@ -20,6 +20,7 @@ import {
 } from '@/lib/user-prefs-keys'
 import {
   applyColumnResizeRailPosition,
+  horizontalResizeDeltaPx,
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
@@ -189,7 +190,10 @@ export function usePostgresRowsColumnResize(
       })
       applyDraggedWidthPx(columnKey, initialWidth)
       const onMove = (ev: PointerEvent) => {
-        applyDraggedWidthPx(columnKey, initialWidth + (ev.clientX - startX))
+        applyDraggedWidthPx(
+          columnKey,
+          initialWidth + horizontalResizeDeltaPx(startX, ev.clientX),
+        )
       }
       const onUp = () => {
         setBodyResizeDragActive(false)

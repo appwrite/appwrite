@@ -7,16 +7,18 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  DEDICATED_FEATURE_UNAVAILABLE,
   mapDedicatedDatabaseCredentials,
   type DedicatedDatabaseConnectionList,
   type DedicatedDatabaseCredentials,
 } from '@/lib/databases/dedicated-engine'
+import { POSTGRES_ACTIVE_CONNECTIONS_SQL } from '@/lib/postgres-metrics-sql'
+import { parsePostgresActiveConnections } from '@/lib/postgres-metrics'
 import {
   explainPostgresDatabaseQuery,
 } from '@/lib/postgres-query-explanation'
@@ -33,6 +35,7 @@ import {
   buildPostgresTableAutocompleteColumnsSql,
   buildPostgresTableColumnsForRowsSql,
   buildPostgresTableColumnsSql,
+  buildPostgresSchemaEnumsSql,
   buildPostgresTableIndexesSql,
   buildPostgresTableInfoSql,
   POSTGRES_SIDEBAR_LIST_PAGE_SIZE,
@@ -41,14 +44,28 @@ import {
   type PostgresListTablesOptions,
   type PostgresSchemaRow,
   type PostgresTableColumnRow,
+  type PostgresSchemaEnumRow,
   type PostgresTableIndexRow,
   type PostgresTableInfoRow,
   type PostgresTableRow,
   sortPostgresTableColumns,
+  sortPostgresSchemaEnums,
   sortPostgresTableIndexes,
   postgresRelationSupportsRowCtid,
 } from '@/lib/postgres-sql'
 import { parsePostgresTableId, postgresTableId, quotePostgresIdentifier } from '@/lib/postgres-database-routes'
+import { parsePostgresEnumValues } from '@/lib/postgres-enum-metadata'
+import {
+  buildPostgresTablePoliciesSql,
+  buildPostgresTableRlsStatusSql,
+  isPostgresTruthyFlag,
+  type PostgresTablePolicyRow,
+  type PostgresTableRlsRow,
+} from '@/lib/postgres-rls'
+import {
+  buildPostgresListRolesSql,
+  type PostgresRoleRow,
+} from '@/lib/postgres-roles'
 import {
   buildPostgresVisualizerColumnsBatchSql,
   buildPostgresVisualizerExternalColumnsSql,
@@ -64,6 +81,7 @@ import {
   buildPostgresInsertRowSql,
   buildSyncPostgresSerialSequencesSql,
   isPostgresDuplicatePrimaryKeyError,
+  isPostgresSequenceBackedColumn,
   buildPostgresSelectRowsSql,
   buildPostgresUpdateRowSql,
   POSTGRES_ROW_CTID_COLUMN,
@@ -372,6 +390,31 @@ export async function fetchPostgresTableIndexes(
   }
 }
 
+export async function fetchPostgresSchemaEnums(
+  projectId: string,
+  databaseId: string,
+  schema: string,
+) {
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresSchemaEnumsSql(schema),
+  )
+  const rows = executionResultRows<PostgresSchemaEnumRow>(execution)
+  const enums = sortPostgresSchemaEnums(
+    rows
+      .filter((row) => row.enum_name)
+      .map((row) => ({
+        ...row,
+        values: parsePostgresEnumValues(row.enum_values),
+      })),
+  )
+  return {
+    enums,
+    total: enums.length,
+  }
+}
+
 export async function fetchPostgresTableInfo(
   projectId: string,
   databaseId: string,
@@ -385,6 +428,59 @@ export async function fetchPostgresTableInfo(
   )
   const rows = executionResultRows<PostgresTableInfoRow>(execution)
   return rows[0] ?? null
+}
+
+export async function fetchPostgresTableRls(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTableRlsStatusSql(schema, table),
+  )
+  const rows = executionResultRows<PostgresTableRlsRow>(execution)
+  const row = rows[0]
+  return {
+    rowSecurityEnabled: isPostgresTruthyFlag(row?.row_security_enabled),
+    forceRowSecurity: isPostgresTruthyFlag(row?.force_row_security),
+  }
+}
+
+export async function fetchPostgresTablePolicies(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const { schema, table } = parsePostgresTableId(tableId)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresTablePoliciesSql(schema, table),
+  )
+  const policies = executionResultRows<PostgresTablePolicyRow>(execution)
+  return {
+    policies,
+    total: policies.length,
+  }
+}
+
+export async function fetchPostgresRoles(
+  projectId: string,
+  databaseId: string,
+) {
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    buildPostgresListRolesSql(),
+  )
+  const roles = executionResultRows<PostgresRoleRow>(execution)
+  return {
+    roles,
+    total: roles.length,
+  }
 }
 
 export type PostgresVisualizerColumn = {
@@ -715,14 +811,34 @@ export function postgresTableAutocompleteColumnsQueryOptions(
   })
 }
 
+/**
+ * List active sessions via postgresql.createExecution + pg_stat_activity.
+ * Maps into the legacy DedicatedDatabaseConnectionList shape for callers that
+ * still use this query key; the Connections tab prefers the richer
+ * PostgresActiveConnectionRow list from postgres-metrics.
+ */
 export async function fetchPostgresDatabaseConnections(
-  _projectId: string,
-  _databaseId: string,
+  projectId: string,
+  databaseId: string,
 ): Promise<DedicatedDatabaseConnectionList> {
-  // The console SDK dropped the connection-listing endpoint (getStatus now only
-  // exposes current/max counts, not a per-connection list). Gated until a
-  // replacement API exists; the query is disabled so this never runs.
-  throw new Error(DEDICATED_FEATURE_UNAVAILABLE)
+  const execution = await executePostgresDatabaseSql(
+    projectId,
+    databaseId,
+    POSTGRES_ACTIVE_CONNECTIONS_SQL,
+    30,
+  )
+  const rows = parsePostgresActiveConnections(execution)
+  const connections = rows.map((row) => {
+    const username = row.username?.trim() || ''
+    return {
+      $id: String(row.pid),
+      username,
+      database: row.database?.trim() || '',
+      role: username,
+      $createdAt: row.backendStart?.trim() || '',
+    }
+  })
+  return { connections, total: connections.length }
 }
 
 export async function fetchPostgresDatabaseCredentials(
@@ -749,9 +865,7 @@ export function postgresDatabaseConnectionsQueryOptions(
     ],
     queryFn: () =>
       fetchPostgresDatabaseConnections(projectId!, databaseId!),
-    // Connection listing was removed from the console SDK; keep disabled until
-    // a replacement API is available (consumers fall back to an empty list).
-    enabled: false,
+    enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -811,6 +925,160 @@ export function postgresDatabasePoolerQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export type UpdatePostgresDatabaseInput = {
+  databaseId: string
+  name?: string
+  status?: string
+  specification?: string
+  replicas?: number
+  syncMode?: string
+  networkIdleTimeoutSeconds?: number
+  networkIPAllowlist?: string[]
+  idleTimeoutMinutes?: number
+  pitr?: boolean
+  pitrRetentionDays?: number
+  storageAutoscaling?: boolean
+  storageAutoscalingThresholdPercent?: number
+  storageAutoscalingMaxGb?: number
+}
+
+export type UpdatePostgresDatabasePoolerInput = {
+  databaseId: string
+  mode?: string
+  maxConnections?: number
+  defaultPoolSize?: number
+  readWriteSplitting?: boolean
+}
+
+export async function updatePostgresDatabase(
+  projectId: string,
+  input: UpdatePostgresDatabaseInput,
+) {
+  const { databaseId, ...params } = input
+  return sdk.forProject(projectId).postgresql.update({
+    databaseId,
+    ...params,
+  })
+}
+
+export async function updatePostgresDatabaseMaintenance(
+  projectId: string,
+  databaseId: string,
+  day: string,
+  hourUtc: number,
+) {
+  return sdk.forProject(projectId).postgresql.updateMaintenance({
+    databaseId,
+    day,
+    hourUtc,
+  })
+}
+
+export async function updatePostgresDatabasePooler(
+  projectId: string,
+  input: UpdatePostgresDatabasePoolerInput,
+) {
+  const { databaseId, ...params } = input
+  return sdk.forProject(projectId).postgresql.updatePooler({
+    databaseId,
+    ...params,
+  })
+}
+
+export async function deletePostgresDatabase(
+  projectId: string,
+  databaseId: string,
+) {
+  return sdk.forProject(projectId).postgresql.delete({ databaseId })
+}
+
+export function useUpdatePostgresDatabase(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: Omit<UpdatePostgresDatabaseInput, 'databaseId'>) =>
+      updatePostgresDatabase(projectId!, {
+        databaseId: databaseId!,
+        ...input,
+      }),
+    onSuccess: async (database) => {
+      if (!projectId || !databaseId) return
+      queryClient.setQueryData(
+        postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
+      )
+      await queryClient.invalidateQueries({
+        queryKey: ['dedicated-databases', 'project', projectId],
+      })
+    },
+  })
+}
+
+export function useUpdatePostgresDatabaseMaintenance(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      day,
+      hourUtc,
+    }: {
+      day: string
+      hourUtc: number
+    }) =>
+      updatePostgresDatabaseMaintenance(projectId!, databaseId!, day, hourUtc),
+    onSuccess: async (database) => {
+      if (!projectId || !databaseId) return
+      queryClient.setQueryData(
+        postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
+      )
+    },
+  })
+}
+
+export function useUpdatePostgresDatabasePooler(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (
+      input: Omit<UpdatePostgresDatabasePoolerInput, 'databaseId'>,
+    ) =>
+      updatePostgresDatabasePooler(projectId!, {
+        databaseId: databaseId!,
+        ...input,
+      }),
+    onSuccess: async (pooler) => {
+      if (!projectId || !databaseId) return
+      queryClient.setQueryData(
+        postgresDatabasePoolerQueryOptions(projectId, databaseId).queryKey,
+        pooler,
+      )
+    },
+  })
+}
+
+export function useDeletePostgresDatabase(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (databaseId: string) =>
+      deletePostgresDatabase(projectId!, databaseId),
+    onSuccess: async () => {
+      if (!projectId) return
+      await queryClient.refetchQueries({
+        queryKey: ['dedicated-databases', 'project', projectId],
+      })
+    },
   })
 }
 
@@ -889,6 +1157,31 @@ export function postgresTableIndexesQueryOptions(
   })
 }
 
+export function postgresSchemaEnumsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-schema-enums',
+      'project',
+      projectId,
+      databaseId,
+      schema,
+    ],
+    queryFn: () =>
+      fetchPostgresSchemaEnums(projectId!, databaseId!, schema!),
+    enabled: !!projectId && !!databaseId && !!schema,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && schema ? 5 * 60 * 1000 : 0,
+  })
+}
+
 export function postgresTableInfoQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -910,6 +1203,72 @@ export function postgresTableInfoQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresTableRlsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-rls',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () => fetchPostgresTableRls(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresTablePoliciesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'postgres-table-policies',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+    ],
+    queryFn: () =>
+      fetchPostgresTablePolicies(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId && tableId !== '-',
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function postgresRolesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['postgres-roles', 'project', projectId, databaseId],
+    queryFn: () => fetchPostgresRoles(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -991,16 +1350,36 @@ export async function createPostgresTableRow(
   const filteredValues = filterPostgresRowCreateValues(values, columns)
   const sql = buildPostgresInsertRowSql(tableId, filteredValues)
 
+  // When serial/identity columns are omitted (left blank), Postgres uses
+  // DEFAULT nextval(). If an earlier row used an explicit ID (or data was
+  // imported), the sequence can lag behind MAX(id) and hit users_pkey.
+  // Sync sequences before insert, and once more on duplicate-key errors.
+  const omittedSequenceColumns = columns.filter(
+    (column) =>
+      isPostgresSequenceBackedColumn(column) &&
+      !Object.prototype.hasOwnProperty.call(filteredValues, column.column_name),
+  )
+  const syncSql =
+    omittedSequenceColumns.length > 0
+      ? buildSyncPostgresSerialSequencesSql(tableId, omittedSequenceColumns)
+      : null
+
+  const runSync = async () => {
+    if (!syncSql) return
+    await executePostgresDatabaseSql(projectId, databaseId, syncSql)
+  }
+
+  await runSync()
+
   const runInsert = () => executePostgresDatabaseSql(projectId, databaseId, sql)
 
   try {
     return await runInsert()
   } catch (error) {
-    const syncSql = buildSyncPostgresSerialSequencesSql(tableId, columns)
     if (!syncSql || !isPostgresDuplicatePrimaryKeyError(error)) {
       throw error
     }
-    await executePostgresDatabaseSql(projectId, databaseId, syncSql)
+    await runSync()
     return await runInsert()
   }
 }
@@ -1013,6 +1392,19 @@ export async function deletePostgresTableRow(
 ) {
   const sql = buildPostgresDeleteRowSql(tableId, identity)
   return executePostgresDatabaseSql(projectId, databaseId, sql)
+}
+
+export async function deletePostgresTableRows(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  identities: PostgresRowIdentity[],
+) {
+  await Promise.all(
+    identities.map((identity) =>
+      deletePostgresTableRow(projectId, databaseId, tableId, identity),
+    ),
+  )
 }
 
 export async function commitPostgresRowEdits(
@@ -1091,6 +1483,23 @@ export function useDeletePostgresTableRow(
   return useMutation({
     mutationFn: (identity: PostgresRowIdentity) =>
       deletePostgresTableRow(projectId, databaseId, tableId, identity),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
+      })
+    },
+  })
+}
+
+export function useDeletePostgresTableRows(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (identities: PostgresRowIdentity[]) =>
+      deletePostgresTableRows(projectId, databaseId, tableId, identities),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
@@ -1400,6 +1809,41 @@ export function usePostgresTableIndexes(
   }
 }
 
+export function usePostgresSchemaEnums(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  schema: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresSchemaEnumsQueryOptions(projectId, databaseId, schema),
+  )
+  return {
+    enums: data?.enums ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresRoles(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresRolesQueryOptions(projectId, databaseId),
+  )
+  return {
+    roles: data?.roles ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
 export function usePostgresTableInfo(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
@@ -1410,6 +1854,42 @@ export function usePostgresTableInfo(
   )
   return {
     tableInfo: data ?? null,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresTableRls(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTableRlsQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    rowSecurityEnabled: data?.rowSecurityEnabled ?? false,
+    forceRowSecurity: data?.forceRowSecurity ?? false,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function usePostgresTablePolicies(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    postgresTablePoliciesQueryOptions(projectId, databaseId, tableId),
+  )
+  return {
+    policies: data?.policies ?? [],
+    total: data?.total ?? 0,
     isLoading,
     isFetching,
     error,
@@ -1698,6 +2178,45 @@ export function useExplainPostgresSql(
   })
 }
 
+/**
+ * Schema-affecting SQL (DDL) must not leave inactive caches in place.
+ * Row/column queries use `refetchOnMount: false`, so `invalidateQueries` alone
+ * only refreshes active observers and the create-row form keeps stale fields
+ * until a full reload.
+ */
+async function refreshPostgresDatabaseCaches(
+  queryClient: QueryClient,
+  projectId: string,
+  databaseId: string,
+) {
+  const schemaQueryKeys = [
+    ['postgres-schemas', 'project', projectId, databaseId],
+    ['postgres-tables', 'project', projectId, databaseId],
+    ['postgres-autocomplete-columns', 'project', projectId, databaseId],
+    ['postgres-table-rows', 'project', projectId, databaseId],
+    ['postgres-table-columns', 'project', projectId, databaseId],
+    ['postgres-table-row-columns', 'project', projectId, databaseId],
+    ['postgres-table-indexes', 'project', projectId, databaseId],
+    ['postgres-schema-enums', 'project', projectId, databaseId],
+    ['postgres-table-info', 'project', projectId, databaseId],
+    ['postgres-table-rls', 'project', projectId, databaseId],
+    ['postgres-table-policies', 'project', projectId, databaseId],
+    ['postgres-roles', 'project', projectId, databaseId],
+    ['postgres-visualizer', 'project', projectId, databaseId],
+  ] as const
+
+  for (const queryKey of schemaQueryKeys) {
+    // Drop inactive entries so the next mount cannot serve pre-DDL data.
+    queryClient.removeQueries({ queryKey, type: 'inactive' })
+  }
+
+  await Promise.all(
+    schemaQueryKeys.map((queryKey) =>
+      queryClient.invalidateQueries({ queryKey }),
+    ),
+  )
+}
+
 export function useExecutePostgresSql(
   projectId: string,
   databaseId: string,
@@ -1706,35 +2225,8 @@ export function useExecutePostgresSql(
   return useMutation({
     mutationFn: (sql: string) =>
       executePostgresDatabaseSql(projectId, databaseId, sql),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-schemas', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-tables', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-autocomplete-columns', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-rows', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-columns', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-row-columns', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-indexes', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-table-info', 'project', projectId, databaseId],
-      })
-      void queryClient.invalidateQueries({
-        queryKey: ['postgres-visualizer', 'project', projectId, databaseId],
-      })
-    },
+    onSuccess: () =>
+      refreshPostgresDatabaseCaches(queryClient, projectId, databaseId),
   })
 }
 

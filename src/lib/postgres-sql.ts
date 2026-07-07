@@ -277,15 +277,33 @@ export type PostgresTableColumnRow = {
   datetime_precision: number | string | null
   ordinal_position: number | string
   is_primary_key: boolean | string
+  /** Single-column UNIQUE constraint (not part of a composite unique key). */
+  is_unique: boolean | string
+  primary_key_constraint: string | null
+  unique_constraint: string | null
   column_comment: string | null
   check_constraints: string | null
   foreign_keys: string | null
 }
 
+function isPostgresTruthyFlag(value: unknown): boolean {
+  if (value === true) return true
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  return normalized === 'true' || normalized === 't' || normalized === '1'
+}
+
 export function isPostgresPrimaryKeyColumn(
   column: Pick<PostgresTableColumnRow, 'is_primary_key'>,
 ): boolean {
-  return column.is_primary_key === true || column.is_primary_key === 'true'
+  return isPostgresTruthyFlag(column.is_primary_key)
+}
+
+export function isPostgresUniqueColumn(
+  column: Pick<PostgresTableColumnRow, 'is_unique'>,
+): boolean {
+  return isPostgresTruthyFlag(column.is_unique)
 }
 
 export function sortPostgresTableColumns<T extends PostgresTableColumnRow>(
@@ -339,6 +357,58 @@ export type PostgresTableInfoRow = {
   estimated_rows: number | string | null
 }
 
+export type PostgresSchemaEnumRow = {
+  enum_name: string
+  enum_schema: string
+  enum_values: unknown
+  enum_comment: string | null
+  used_in_schema: boolean | string
+  values: string[]
+}
+
+export function sortPostgresSchemaEnums<T extends Pick<PostgresSchemaEnumRow, 'enum_name'>>(
+  enums: T[],
+): T[] {
+  return [...enums].sort((a, b) => a.enum_name.localeCompare(b.enum_name))
+}
+
+export function isPostgresEnumUsedInSchema(
+  row: Pick<PostgresSchemaEnumRow, 'used_in_schema'>,
+): boolean {
+  const value = row.used_in_schema
+  return value === true || value === 'true' || value === 't'
+}
+
+export function buildPostgresSchemaEnumsSql(schema: string): string {
+  const schemaLit = quotePostgresStringLiteral(schema)
+  return prefixPostgresSqlComment(
+    `
+SELECT
+  t.typname AS enum_name,
+  n.nspname AS enum_schema,
+  COALESCE(
+    json_agg(e.enumlabel ORDER BY e.enumsortorder),
+    '[]'::json
+  ) AS enum_values,
+  obj_description(t.oid, 'pg_type') AS enum_comment,
+  EXISTS (
+    SELECT 1
+    FROM information_schema.columns c
+    WHERE c.table_schema = ${schemaLit}
+      AND c.udt_name = t.typname
+  ) AS used_in_schema
+FROM pg_type t
+JOIN pg_namespace n ON n.oid = t.typnamespace
+LEFT JOIN pg_enum e ON e.enumtypid = t.oid
+WHERE n.nspname = ${schemaLit}
+  AND t.typtype = 'e'
+GROUP BY t.typname, n.nspname, t.oid
+ORDER BY t.typname
+`.trim(),
+    'Load schema enums',
+  )
+}
+
 export function buildPostgresTableColumnsSql(schema: string, table: string): string {
   const schemaLit = quotePostgresStringLiteral(schema)
   const tableLit = quotePostgresStringLiteral(table)
@@ -366,6 +436,9 @@ SELECT
   c.datetime_precision,
   c.ordinal_position,
   CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END AS is_primary_key,
+  CASE WHEN uq.column_name IS NOT NULL THEN true ELSE false END AS is_unique,
+  pk.constraint_name AS primary_key_constraint,
+  uq.constraint_name AS unique_constraint,
   pg_catalog.col_description(pgc.oid, c.ordinal_position::int) AS column_comment,
   checks.check_constraints,
   fkeys.foreign_keys
@@ -384,7 +457,7 @@ LEFT JOIN pg_attrdef def
   ON def.adrelid = attr.attrelid
   AND def.adnum = attr.attnum
 LEFT JOIN (
-  SELECT kcu.column_name
+  SELECT kcu.column_name, tc.constraint_name
   FROM information_schema.table_constraints tc
   JOIN information_schema.key_column_usage kcu
     ON tc.constraint_name = kcu.constraint_name
@@ -394,6 +467,25 @@ LEFT JOIN (
     AND tc.table_schema = ${schemaLit}
     AND tc.table_name = ${tableLit}
 ) pk ON c.column_name = pk.column_name
+LEFT JOIN (
+  SELECT kcu.column_name, tc.constraint_name
+  FROM information_schema.table_constraints tc
+  JOIN information_schema.key_column_usage kcu
+    ON tc.constraint_name = kcu.constraint_name
+    AND tc.table_schema = kcu.table_schema
+    AND tc.table_name = kcu.table_name
+  WHERE tc.constraint_type = 'UNIQUE'
+    AND tc.table_schema = ${schemaLit}
+    AND tc.table_name = ${tableLit}
+    AND (
+      SELECT COUNT(*)::int
+      FROM information_schema.key_column_usage kcu2
+      WHERE kcu2.constraint_schema = tc.constraint_schema
+        AND kcu2.constraint_name = tc.constraint_name
+        AND kcu2.table_schema = tc.table_schema
+        AND kcu2.table_name = tc.table_name
+    ) = 1
+) uq ON c.column_name = uq.column_name
 LEFT JOIN (
   SELECT
     ccu.column_name,
@@ -477,7 +569,10 @@ SELECT
     WHEN 'd' THEN 'BY DEFAULT'
     ELSE NULL
   END AS identity_generation,
-  NULL::text AS serial_sequence,
+  pg_get_serial_sequence(
+    quote_ident(${schemaLit}) || '.' || quote_ident(${tableLit}),
+    a.attname
+  ) AS serial_sequence,
   CASE
     WHEN t.typname IN ('varchar', 'bpchar', 'bit', 'varbit') AND a.atttypmod > 0
       THEN a.atttypmod - 4
@@ -501,6 +596,15 @@ SELECT
   END AS datetime_precision,
   a.attnum AS ordinal_position,
   CASE WHEN pk.contype = 'p' THEN true ELSE false END AS is_primary_key,
+  CASE
+    WHEN uq.contype = 'u' AND cardinality(uq.conkey) = 1 THEN true
+    ELSE false
+  END AS is_unique,
+  pk.conname AS primary_key_constraint,
+  CASE
+    WHEN uq.contype = 'u' AND cardinality(uq.conkey) = 1 THEN uq.conname
+    ELSE NULL
+  END AS unique_constraint,
   NULL::text AS column_comment,
   NULL::text AS check_constraints,
   NULL::text AS foreign_keys,
@@ -519,6 +623,11 @@ LEFT JOIN pg_catalog.pg_constraint pk
   ON pk.conrelid = rel.rel_oid
  AND pk.contype = 'p'
  AND a.attnum = ANY (pk.conkey)
+LEFT JOIN pg_catalog.pg_constraint uq
+  ON uq.conrelid = rel.rel_oid
+ AND uq.contype = 'u'
+ AND a.attnum = ANY (uq.conkey)
+ AND cardinality(uq.conkey) = 1
 WHERE a.attname IS NOT NULL
    OR NOT EXISTS (
      SELECT 1

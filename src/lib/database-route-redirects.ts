@@ -1,7 +1,9 @@
 import { redirect } from '@tanstack/react-router'
 import {
   POSTGRES_DB_KIND,
+  isPostgresDatabaseTabSegment,
   postgresDatabaseHome,
+  postgresDatabaseTabLink,
 } from '@/lib/postgres-database-routes'
 import {
   type DatabaseRouteKind,
@@ -41,12 +43,27 @@ export function throwRedirectPostgresDbKind(
   },
 ): void {
   if (dbKind !== POSTGRES_DB_KIND) return
+
+  const tableId = params.tableId?.trim()
+  if (tableId && tableId !== '-' && isPostgresDatabaseTabSegment(tableId)) {
+    throw redirect({
+      ...postgresDatabaseTabLink(
+        params.projectId,
+        params.databaseId,
+        tableId,
+      ),
+      search: {},
+      replace: true,
+    })
+  }
+
   throw redirect({
     ...postgresDatabaseHome({
       projectId: params.projectId,
       databaseId: params.databaseId,
-      tableId: params.tableId ?? '-',
+      tableId: tableId && tableId !== '-' ? tableId : '-',
     }),
+    search: {},
     replace: true,
   })
 }

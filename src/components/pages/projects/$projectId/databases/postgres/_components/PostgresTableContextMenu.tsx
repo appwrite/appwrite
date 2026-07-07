@@ -26,6 +26,7 @@ import {
   Link2,
   Rows3,
   Settings,
+  Shield,
   Square,
   Terminal,
   Trash2,
@@ -39,6 +40,10 @@ import {
 } from '@/lib/postgres-database-routes'
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { buildPostgresDropTableSql } from '@/lib/postgres-table-ddl'
+import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
+import { useProject } from '@/lib/react-query/hooks/projects'
 import { usePostgresSidebar } from './PostgresSidebarContext'
 import { useT } from '@/lib/i18n/translate'
 
@@ -60,6 +65,7 @@ const TABLE_TABS: {
   { id: 'rows', label: 'Rows', path: 'rows', icon: Rows3 },
   { id: 'columns', label: 'Columns', path: 'columns', icon: LayoutGrid },
   { id: 'indexes', label: 'Indexes', path: 'indexes', icon: Key },
+  { id: 'security', label: 'Security', path: 'security', icon: Shield },
   { id: 'settings', label: 'Settings', path: 'settings', icon: Settings },
 ]
 
@@ -73,6 +79,10 @@ export function PostgresTableContextMenu({
 }: PostgresTableContextMenuProps) {
   const t = useT()
   const navigate = useNavigate()
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
+  const showSecurityTab = canShowTableSecuritySettings(access, features)
   const { openTableInSqlEditor } = usePostgresSidebar()
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -80,6 +90,14 @@ export function PostgresTableContextMenu({
   const nav = useMemo(
     () => postgresNav({ projectId, databaseId }).table({ tableId }),
     [projectId, databaseId, tableId],
+  )
+
+  const visibleTableTabs = useMemo(
+    () =>
+      TABLE_TABS.filter(
+        (tab) => tab.path !== 'security' || showSecurityTab,
+      ),
+    [showSecurityTab],
   )
 
   const tableHref = useMemo(() => {
@@ -98,6 +116,10 @@ export function PostgresTableContextMenu({
     }
     if (path === 'indexes') {
       navigate({ ...nav.indexes() })
+      return
+    }
+    if (path === 'security') {
+      navigate({ ...nav.security() })
       return
     }
     navigate({ ...nav.settings() })
@@ -162,7 +184,7 @@ export function PostgresTableContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-52">
-          {TABLE_TABS.map(({ id, label, path, icon: Icon }) => (
+          {visibleTableTabs.map(({ id, label, path, icon: Icon }) => (
             <ContextMenuItem key={id} onSelect={() => handleGoToTab(path)}>
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Icon className="size-4" />

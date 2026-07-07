@@ -54,6 +54,11 @@ import { CreateDatabase } from '../CreateDatabase'
 import { CreateTable } from '../CreateTable'
 import { TableContextMenu } from '../_components/TableContextMenu'
 import { DatabaseBackupsNavLink } from '../_components/DatabaseBackupsNavLink'
+import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComputeSpec'
+import {
+  DATABASE_SIDEBAR_LIST_STRIP_CLASS,
+  DATABASE_SIDEBAR_LIST_STRIP_ROW_CLASS,
+} from '../_components/database-sidebar-chrome'
 import { DatabaseSelector } from '../_components/DatabaseSelector'
 import { TableSelector } from '../_components/TableSelector'
 import {
@@ -315,11 +320,11 @@ export function Workspace({
       await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      toast.success(`${t('Created 50')} ${dbLabels.containerPlural}`)
+      toast.success(dbLabels.createdManyContainersSuccess)
     },
     onError: (error: Error) => {
       toast.error(
-        error.message || `Failed to create ${dbLabels.containerPlural}`,
+        error.message || dbLabels.failedToCreateContainer,
       )
     },
   })
@@ -809,7 +814,7 @@ export function Workspace({
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            {dbLabels.containerSingularTitle} not found
+            {dbLabels.containerNotFoundTitle}
           </p>
           <Button variant="link" onClick={handleBackToDatabase}>
             {t('Back to database')}
@@ -1100,12 +1105,12 @@ export function Workspace({
             </div>
           )}
         </div>
-        <div className="shrink-0 border-t border-border px-2 py-1.5">
-          <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
+        <div className={DATABASE_SIDEBAR_LIST_STRIP_CLASS}>
+          <div className={DATABASE_SIDEBAR_LIST_STRIP_ROW_CLASS}>
             <span className="shrink-0 tabular-nums">
               {sidebarTablesTotal === 0
                 ? `0 ${dbLabels.containerPlural}`
-                : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
+                : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} ${t('of')} ${(sidebarTablesTotal ?? 0).toLocaleString()} ${dbLabels.containerPlural}`}
             </span>
             <div className="flex items-center gap-0.5">
               <Button
@@ -1139,7 +1144,8 @@ export function Workspace({
       </div>
 
       {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
-      <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
+      <div className="flex shrink-0 flex-col border-t border-border bg-background px-2.5 pt-2 pb-2 has-[*[data-sidebar-spec]]:gap-2 has-[*[data-sidebar-spec]]:pb-0">
+        <div className="space-y-0.5">
         <Link
           {...dbNav.visualizer(tableNavParams)}
           className={cn(
@@ -1227,6 +1233,14 @@ export function Workspace({
             <span>{t('Settings')}</span>
           </Link>
         )}
+        </div>
+        <DatabaseSidebarComputeSpec
+          projectId={projectId}
+          databaseId={databaseId}
+          mode="product"
+          dbKind={DB_KIND}
+          variant="footer"
+        />
       </div>
     </div>
   )
@@ -1354,11 +1368,9 @@ export function Workspace({
                     await new Promise((resolve) =>
                       setTimeout(resolve, remaining),
                     )
-                    toast.success(
-                      `${dbLabels.recordPluralTitle} refreshed successfully`,
-                    )
+                    toast.success(dbLabels.recordsRefreshedSuccess)
                   } catch {
-                    toast.error(`${t('Failed to refresh')} ${dbLabels.recordPlural}`)
+                    toast.error(dbLabels.failedToRefreshRecords)
                   } finally {
                     setIsRefreshingRows(false)
                     refreshStartTimeRef.current = null
@@ -1527,9 +1539,9 @@ export function Workspace({
                 databaseId={databaseId}
                 value={tableId}
                 selectedName={selectedTable?.name}
-                placeholder={`Select ${dbLabels.containerSingular}`}
-                emptyLabel={`No ${dbLabels.containerPlural}`}
-                noResultsLabel={`No ${dbLabels.containerPlural} found`}
+                placeholder={dbLabels.selectContainerPlaceholder}
+                emptyLabel={dbLabels.emptyContainersShortLabel}
+                noResultsLabel={dbLabels.noContainerSearchResultsLabel}
                 createTooltip={dbLabels.createContainer}
                 itemIcon={ContainerListIcon}
                 createDisabled={noCreateTablePermission}

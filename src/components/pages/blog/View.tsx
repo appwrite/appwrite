@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   MarketingCtaSection,
+  MarketingCtaSignupButtons,
   MarketingHeroSection,
 } from '@/components/pages/marketing/MarketingSections'
 import { Button } from '@/components/ui/button'
@@ -201,14 +202,7 @@ export function View({
       </section>
 
       <MarketingCtaSection title="Ready to build?">
-        <Button variant="brandCta" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/sign-up" search={{ redirect: '/' }}>
-            Get started
-          </Link>
-        </Button>
-        <Button variant="outline" size="lg" className="h-10 text-[14px]" asChild>
-          <Link to="/pricing">View pricing</Link>
-        </Button>
+        <MarketingCtaSignupButtons />
       </MarketingCtaSection>
     </div>
   )

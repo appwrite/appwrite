@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { endOfDay, startOfDay, subDays } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
-import { RefreshCw } from 'lucide-react'
 import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { useProjectDatabase, useProject } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -138,22 +138,7 @@ export function DatabaseMonitorHeaderActions({
           onDateRangeChange={onDateRangeChange}
           className="h-7 min-w-[120px] text-[12px] @[560px]:min-w-[160px]"
         />
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefresh}
-                className="h-7 w-7 shrink-0 p-0"
-                type="button"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('Refresh')}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <RefreshButton onClick={onRefresh} className="h-7 w-7" />
       </div>
     </div>
   )

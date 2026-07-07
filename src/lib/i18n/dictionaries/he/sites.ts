@@ -30,8 +30,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Unnamed Site': 'אתר ללא שם',
   Never: 'אף פעם',
   'No sites yet': 'אין אתרים עדיין',
-  'Create your first site to start deploying static sites':
-    'צרו את האתר הראשון שלכם כדי להתחיל לפרוס אתרים סטטיים',
+  'Create your first site to get started':
+    'צרו את האתר הראשון שלכם כדי להתחיל',
   Deployed: 'נפרס',
   preview: 'תצוגה מקדימה',
   'Preview not available': 'תצוגה מקדימה אינה זמינה',
