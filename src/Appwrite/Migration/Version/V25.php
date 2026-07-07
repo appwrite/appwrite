@@ -102,6 +102,7 @@ class V25 extends Migration
             }
 
             $this->dbForProject->purgeCachedCollection($bucketTable);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $bucketTable);
         });
     }
 }
