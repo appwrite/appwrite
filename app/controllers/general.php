@@ -1664,7 +1664,6 @@ Http::get('/v1/ping')
     ->groups(['api', 'general'])
     ->desc('Test the connection between the Appwrite and the SDK.')
     ->label('scope', 'global')
-    ->label('event', 'projects.[projectId].ping')
     ->label('sdk', new Method(
         namespace: 'ping',
         group: null,
@@ -1699,6 +1698,7 @@ Http::get('/v1/ping')
             ])));
 
             $queueForEvents
+                ->setEvent('projects.[projectId].ping')
                 ->setParam('projectId', $project->getId())
                 ->setPayload($response->output($project, Response::MODEL_PROJECT));
         }
