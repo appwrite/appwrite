@@ -114,6 +114,8 @@ import { Route as MarketingChangelogEntryEntryRouteImport } from './routes/_mark
 import { Route as MarketingBlogPostSlugRouteImport } from './routes/_marketing/blog.post.$slug'
 import { Route as MarketingBlogCategoryCategoryRouteImport } from './routes/_marketing/blog.category.$category'
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
+import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
+import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
 import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/ticket/$eventSlug'
 import { Route as ApiInitCalendarEventSlugRouteImport } from './routes/_api/init/calendar/$eventSlug'
 import { Route as ApiGeneratorCoverEncodeRouteImport } from './routes/_api/generator/cover.encode'
@@ -886,6 +888,16 @@ const MarketingBlogAuthorAuthorRoute =
     path: '/blog/author/$author',
     getParentRoute: () => MarketingRoute,
   } as any)
+const AuthAuthOauth2SuccessRoute = AuthAuthOauth2SuccessRouteImport.update({
+  id: '/auth/oauth2/success',
+  path: '/auth/oauth2/success',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
+  id: '/auth/oauth2/failure',
+  path: '/auth/oauth2/failure',
+  getParentRoute: () => AuthRoute,
+} as any)
 const ApiInitTicketEventSlugRoute = ApiInitTicketEventSlugRouteImport.update({
   id: '/_api/init/ticket/$eventSlug',
   path: '/init/ticket/$eventSlug',
@@ -2293,6 +2305,7 @@ const PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBac
   )
 
 export interface FileRoutesByFullPath {
+  '/': typeof PublicIndexRoute
   '/discord': typeof DiscordRoute
   '/docs': typeof DocsRouteWithChildren
   '/generator': typeof GeneratorRouteWithChildren
@@ -2333,7 +2346,6 @@ export interface FileRoutesByFullPath {
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/': typeof PublicIndexRoute
   '/docs/': typeof DocsIndexRoute
   '/generator/': typeof GeneratorIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
@@ -2355,16 +2367,18 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
-  '/blog': typeof MarketingBlogIndexRoute
-  '/changelog': typeof MarketingChangelogIndexRoute
-  '/integrations': typeof MarketingIntegrationsIndexRoute
-  '/threads': typeof MarketingThreadsIndexRoute
+  '/blog/': typeof MarketingBlogIndexRoute
+  '/changelog/': typeof MarketingChangelogIndexRoute
+  '/integrations/': typeof MarketingIntegrationsIndexRoute
+  '/threads/': typeof MarketingThreadsIndexRoute
   '/account/': typeof PublicAccountIndexRoute
-  '/docs/partners': typeof DocsPartnersIndexRoute
-  '/generator/diagrams': typeof GeneratorDiagramsIndexRoute
+  '/docs/partners/': typeof DocsPartnersIndexRoute
+  '/generator/diagrams/': typeof GeneratorDiagramsIndexRoute
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
+  '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
   '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
@@ -2446,7 +2460,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging/': typeof PublicProjectsProjectIdMessagingIndexRoute
   '/projects/$projectId/realtime/': typeof PublicProjectsProjectIdRealtimeIndexRoute
   '/projects/$projectId/settings/': typeof PublicProjectsProjectIdSettingsIndexRoute
-  '/projects/$projectId/sites': typeof PublicProjectsProjectIdSitesIndexRoute
+  '/projects/$projectId/sites/': typeof PublicProjectsProjectIdSitesIndexRoute
   '/projects/$projectId/storage/': typeof PublicProjectsProjectIdStorageIndexRoute
   '/projects/$projectId/stores/': typeof PublicProjectsProjectIdStoresIndexRoute
   '/projects/$projectId/usage/': typeof PublicProjectsProjectIdUsageIndexRoute
@@ -2497,18 +2511,18 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/usage/$categoryId/$metricId': typeof PublicProjectsProjectIdUsageCategoryIdMetricIdRoute
   '/organizations/$orgId/apps/$appId/': typeof PublicOrganizationsOrgIdAppsAppIdIndexRoute
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
-  '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
+  '/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
-  '/projects/$projectId/messaging/providers': typeof PublicProjectsProjectIdMessagingProvidersIndexRoute
-  '/projects/$projectId/messaging/topics': typeof PublicProjectsProjectIdMessagingTopicsIndexRoute
+  '/projects/$projectId/messaging/providers/': typeof PublicProjectsProjectIdMessagingProvidersIndexRoute
+  '/projects/$projectId/messaging/topics/': typeof PublicProjectsProjectIdMessagingTopicsIndexRoute
   '/projects/$projectId/settings/domains/': typeof PublicProjectsProjectIdSettingsDomainsIndexRoute
   '/projects/$projectId/settings/migrations/': typeof PublicProjectsProjectIdSettingsMigrationsIndexRoute
   '/projects/$projectId/sites/$siteId/': typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
   '/projects/$projectId/sites/create/': typeof PublicProjectsProjectIdSitesCreateIndexRoute
   '/projects/$projectId/storage/$bucketId/': typeof PublicProjectsProjectIdStorageBucketIdIndexRoute
-  '/projects/$projectId/stores/$appId': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
+  '/projects/$projectId/stores/$appId/': typeof PublicProjectsProjectIdStoresAppIdIndexRoute
   '/projects/$projectId/auth/teams/$teamId/activity': typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute
   '/projects/$projectId/auth/teams/$teamId/members': typeof PublicProjectsProjectIdAuthTeamsTeamIdMembersRoute
   '/projects/$projectId/auth/users/$userId/activity': typeof PublicProjectsProjectIdAuthUsersUserIdActivityRoute
@@ -2568,8 +2582,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdRouteWithChildren
   '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdRouteWithChildren
   '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId': typeof PublicProjectsProjectIdSitesCreateRepositoriesInstallationIdRepositoryIdRoute
-  '/projects/$projectId/databases/$dbKind/$databaseId/overview': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
-  '/projects/$projectId/functions/$functionId/deployments/$deploymentId': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
+  '/projects/$projectId/databases/$dbKind/$databaseId/overview/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRoute
+  '/projects/$projectId/functions/$functionId/deployments/$deploymentId/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
   '/projects/$projectId/sites/$siteId/deployments/$deploymentId/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsDeploymentIdIndexRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdBackupsRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdColumnsRoute
@@ -2605,6 +2619,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdTablesTableIdIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof PublicIndexRoute
   '/discord': typeof DiscordRoute
   '/hello': typeof ApiHelloRoute
   '/join': typeof AuthJoinRoute
@@ -2642,7 +2657,6 @@ export interface FileRoutesByTo {
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
-  '/': typeof PublicIndexRoute
   '/docs': typeof DocsIndexRoute
   '/generator': typeof GeneratorIndexRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
@@ -2672,6 +2686,8 @@ export interface FileRoutesByTo {
   '/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
+  '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
   '/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
   '/blog/post/$slug': typeof MarketingBlogPostSlugRoute
@@ -2955,6 +2971,8 @@ export interface FileRoutesById {
   '/_api/generator/cover/encode': typeof ApiGeneratorCoverEncodeRoute
   '/_api/init/calendar/$eventSlug': typeof ApiInitCalendarEventSlugRoute
   '/_api/init/ticket/$eventSlug': typeof ApiInitTicketEventSlugRoute
+  '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
+  '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
   '/_marketing/blog/category/$category': typeof MarketingBlogCategoryCategoryRoute
   '/_marketing/blog/post/$slug': typeof MarketingBlogPostSlugRoute
@@ -3197,6 +3215,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/discord'
     | '/docs'
     | '/generator'
@@ -3237,7 +3256,6 @@ export interface FileRouteTypes {
     | '/generator/$generationId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/'
     | '/docs/'
     | '/generator/'
     | '/generator/cover'
@@ -3259,16 +3277,18 @@ export interface FileRouteTypes {
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
-    | '/blog'
-    | '/changelog'
-    | '/integrations'
-    | '/threads'
+    | '/blog/'
+    | '/changelog/'
+    | '/integrations/'
+    | '/threads/'
     | '/account/'
-    | '/docs/partners'
-    | '/generator/diagrams'
+    | '/docs/partners/'
+    | '/generator/diagrams/'
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/auth/oauth2/failure'
+    | '/auth/oauth2/success'
     | '/blog/author/$author'
     | '/blog/category/$category'
     | '/blog/post/$slug'
@@ -3350,7 +3370,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/'
     | '/projects/$projectId/realtime/'
     | '/projects/$projectId/settings/'
-    | '/projects/$projectId/sites'
+    | '/projects/$projectId/sites/'
     | '/projects/$projectId/storage/'
     | '/projects/$projectId/stores/'
     | '/projects/$projectId/usage/'
@@ -3401,18 +3421,18 @@ export interface FileRouteTypes {
     | '/projects/$projectId/usage/$categoryId/$metricId'
     | '/organizations/$orgId/apps/$appId/'
     | '/organizations/$orgId/domains/$domainId/'
-    | '/organizations/$orgId/marketplace/$appId'
+    | '/organizations/$orgId/marketplace/$appId/'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
-    | '/projects/$projectId/messaging/providers'
-    | '/projects/$projectId/messaging/topics'
+    | '/projects/$projectId/messaging/providers/'
+    | '/projects/$projectId/messaging/topics/'
     | '/projects/$projectId/settings/domains/'
     | '/projects/$projectId/settings/migrations/'
     | '/projects/$projectId/sites/$siteId/'
     | '/projects/$projectId/sites/create/'
     | '/projects/$projectId/storage/$bucketId/'
-    | '/projects/$projectId/stores/$appId'
+    | '/projects/$projectId/stores/$appId/'
     | '/projects/$projectId/auth/teams/$teamId/activity'
     | '/projects/$projectId/auth/teams/$teamId/members'
     | '/projects/$projectId/auth/users/$userId/activity'
@@ -3472,8 +3492,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId'
     | '/projects/$projectId/databases/postgres/$databaseId/tables/$tableId'
     | '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId'
-    | '/projects/$projectId/databases/$dbKind/$databaseId/overview'
-    | '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
+    | '/projects/$projectId/databases/$dbKind/$databaseId/overview/'
+    | '/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
     | '/projects/$projectId/sites/$siteId/deployments/$deploymentId/'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/backups'
     | '/projects/$projectId/databases/$dbKind/$databaseId/collections/$collectionId/columns'
@@ -3509,6 +3529,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/discord'
     | '/hello'
     | '/join'
@@ -3546,7 +3567,6 @@ export interface FileRouteTypes {
     | '/generator/$generationId'
     | '/llms-full/txt'
     | '/llms/txt'
-    | '/'
     | '/docs'
     | '/generator'
     | '/generator/cover'
@@ -3576,6 +3596,8 @@ export interface FileRouteTypes {
     | '/generator/cover/encode'
     | '/init/calendar/$eventSlug'
     | '/init/ticket/$eventSlug'
+    | '/auth/oauth2/failure'
+    | '/auth/oauth2/success'
     | '/blog/author/$author'
     | '/blog/category/$category'
     | '/blog/post/$slug'
@@ -3858,6 +3880,8 @@ export interface FileRouteTypes {
     | '/_api/generator/cover/encode'
     | '/_api/init/calendar/$eventSlug'
     | '/_api/init/ticket/$eventSlug'
+    | '/_auth/auth/oauth2/failure'
+    | '/_auth/auth/oauth2/success'
     | '/_marketing/blog/author/$author'
     | '/_marketing/blog/category/$category'
     | '/_marketing/blog/post/$slug'
@@ -4143,28 +4167,28 @@ declare module '@tanstack/react-router' {
     '/_public': {
       id: '/_public'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof PublicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_protected': {
       id: '/_protected'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_marketing': {
       id: '/_marketing'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof MarketingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
       id: '/_auth'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -4451,14 +4475,14 @@ declare module '@tanstack/react-router' {
     '/generator/diagrams/': {
       id: '/generator/diagrams/'
       path: '/diagrams'
-      fullPath: '/generator/diagrams'
+      fullPath: '/generator/diagrams/'
       preLoaderRoute: typeof GeneratorDiagramsIndexRouteImport
       parentRoute: typeof GeneratorRoute
     }
     '/docs/partners/': {
       id: '/docs/partners/'
       path: '/partners'
-      fullPath: '/docs/partners'
+      fullPath: '/docs/partners/'
       preLoaderRoute: typeof DocsPartnersIndexRouteImport
       parentRoute: typeof DocsRoute
     }
@@ -4472,28 +4496,28 @@ declare module '@tanstack/react-router' {
     '/_marketing/threads/': {
       id: '/_marketing/threads/'
       path: '/threads'
-      fullPath: '/threads'
+      fullPath: '/threads/'
       preLoaderRoute: typeof MarketingThreadsIndexRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/integrations/': {
       id: '/_marketing/integrations/'
       path: '/integrations'
-      fullPath: '/integrations'
+      fullPath: '/integrations/'
       preLoaderRoute: typeof MarketingIntegrationsIndexRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/changelog/': {
       id: '/_marketing/changelog/'
       path: '/changelog'
-      fullPath: '/changelog'
+      fullPath: '/changelog/'
       preLoaderRoute: typeof MarketingChangelogIndexRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_marketing/blog/': {
       id: '/_marketing/blog/'
       path: '/blog'
-      fullPath: '/blog'
+      fullPath: '/blog/'
       preLoaderRoute: typeof MarketingBlogIndexRouteImport
       parentRoute: typeof MarketingRoute
     }
@@ -4854,6 +4878,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketingBlogAuthorAuthorRouteImport
       parentRoute: typeof MarketingRoute
     }
+    '/_auth/auth/oauth2/success': {
+      id: '/_auth/auth/oauth2/success'
+      path: '/auth/oauth2/success'
+      fullPath: '/auth/oauth2/success'
+      preLoaderRoute: typeof AuthAuthOauth2SuccessRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/oauth2/failure': {
+      id: '/_auth/auth/oauth2/failure'
+      path: '/auth/oauth2/failure'
+      fullPath: '/auth/oauth2/failure'
+      preLoaderRoute: typeof AuthAuthOauth2FailureRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_api/init/ticket/$eventSlug': {
       id: '/_api/init/ticket/$eventSlug'
       path: '/init/ticket/$eventSlug'
@@ -4899,7 +4937,7 @@ declare module '@tanstack/react-router' {
     '/_public/projects/$projectId/sites/': {
       id: '/_public/projects/$projectId/sites/'
       path: '/sites'
-      fullPath: '/projects/$projectId/sites'
+      fullPath: '/projects/$projectId/sites/'
       preLoaderRoute: typeof PublicProjectsProjectIdSitesIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
@@ -5249,7 +5287,7 @@ declare module '@tanstack/react-router' {
     '/_public/projects/$projectId/stores/$appId/': {
       id: '/_public/projects/$projectId/stores/$appId/'
       path: '/$appId'
-      fullPath: '/projects/$projectId/stores/$appId'
+      fullPath: '/projects/$projectId/stores/$appId/'
       preLoaderRoute: typeof PublicProjectsProjectIdStoresAppIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdStoresRoute
     }
@@ -5291,14 +5329,14 @@ declare module '@tanstack/react-router' {
     '/_public/projects/$projectId/messaging/topics/': {
       id: '/_public/projects/$projectId/messaging/topics/'
       path: '/topics'
-      fullPath: '/projects/$projectId/messaging/topics'
+      fullPath: '/projects/$projectId/messaging/topics/'
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingTopicsIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
     }
     '/_public/projects/$projectId/messaging/providers/': {
       id: '/_public/projects/$projectId/messaging/providers/'
       path: '/providers'
-      fullPath: '/projects/$projectId/messaging/providers'
+      fullPath: '/projects/$projectId/messaging/providers/'
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingProvidersIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdMessagingRoute
     }
@@ -5326,7 +5364,7 @@ declare module '@tanstack/react-router' {
     '/_public/organizations/$orgId/marketplace/$appId/': {
       id: '/_public/organizations/$orgId/marketplace/$appId/'
       path: '/$appId'
-      fullPath: '/organizations/$orgId/marketplace/$appId'
+      fullPath: '/organizations/$orgId/marketplace/$appId/'
       preLoaderRoute: typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdMarketplaceRoute
     }
@@ -6054,14 +6092,14 @@ declare module '@tanstack/react-router' {
     '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': {
       id: '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
       path: '/deployments/$deploymentId'
-      fullPath: '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
+      fullPath: '/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
     }
     '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/': {
       id: '/_public/projects/$projectId/databases/$dbKind/$databaseId/overview/'
       path: '/overview'
-      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/overview'
+      fullPath: '/projects/$projectId/databases/$dbKind/$databaseId/overview/'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdRoute
     }
@@ -6330,6 +6368,8 @@ interface AuthRouteChildren {
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
+  AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
+  AuthAuthOauth2SuccessRoute: typeof AuthAuthOauth2SuccessRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -6342,6 +6382,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
+  AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
+  AuthAuthOauth2SuccessRoute: AuthAuthOauth2SuccessRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -7807,13 +7849,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

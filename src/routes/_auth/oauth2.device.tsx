@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { CheckCircle2, Loader2, MonitorSmartphone, XCircle } from 'lucide-react'
+import { Loader2, MonitorSmartphone } from 'lucide-react'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -14,6 +14,7 @@ import {
   OAuth2ConsentCard,
   type OAuth2Flow,
 } from '@/components/global/auth/OAuth2ConsentCard'
+import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -245,44 +246,19 @@ function OAuth2DevicePage() {
             app={app}
             accountLabel={account?.email || account?.name || undefined}
             flow={DEVICE_FLOW}
-            onDeviceDone={(outcome) =>
+            onDone={(outcome) =>
               setPhase(outcome === 'approved' ? 'approved' : 'denied')
             }
           />
         )}
 
-        {phase === 'approved' && (
-          <Card className="overflow-hidden p-6 md:p-8">
-            <div className="space-y-4 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/10">
-                <CheckCircle2 className="size-6 text-emerald-500" />
-              </div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                {t('Device connected')}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {t("You've authorized")} {app?.name ?? t('the application')}
-                {'. '}
-                {t('You can return to your device, it will continue automatically.')}
-              </p>
-            </div>
-          </Card>
-        )}
-
-        {phase === 'denied' && (
-          <Card className="overflow-hidden p-6 md:p-8">
-            <div className="space-y-4 text-center">
-              <div className="bg-muted mx-auto flex size-12 items-center justify-center rounded-full">
-                <XCircle className="text-muted-foreground size-6" />
-              </div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                {t('Request cancelled')}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {t('No access was granted. You can close this page.')}
-              </p>
-            </div>
-          </Card>
+        {(phase === 'approved' || phase === 'denied') && (
+          <OAuth2OutcomeCard
+            outcome={phase}
+            flow={DEVICE_FLOW}
+            app={app}
+            accountLabel={account?.email || account?.name || undefined}
+          />
         )}
 
         <div className="mt-10 flex justify-center md:mt-16">

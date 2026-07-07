@@ -7,7 +7,12 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
-import { OAuth2ConsentCard } from '@/components/global/auth/OAuth2ConsentCard'
+import {
+  OAuth2ConsentCard,
+  type OAuth2Outcome,
+} from '@/components/global/auth/OAuth2ConsentCard'
+import { OAuth2OutcomeCard } from '@/components/global/auth/OAuth2OutcomeCard'
+import { isWebRedirect } from '@/lib/oauth2/redirect'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -30,7 +35,17 @@ export const Route = createFileRoute('/_auth/oauth2/consent')({
   head: () => ({ meta: [{ title: pageTitle('Authorize application') }] }),
 })
 
-type Phase = 'loading' | 'ready' | 'error'
+type Phase = 'loading' | 'ready' | 'approved' | 'denied' | 'error'
+
+/**
+ * OIDC `max_age` must be a non-negative integer count of seconds. Anything else
+ * (e.g. `max_age=abc`) is dropped rather than forwarding `NaN`.
+ */
+function parseMaxAge(raw: string | undefined): number | undefined {
+  if (raw == null) return undefined
+  const value = Number(raw)
+  return Number.isInteger(value) && value >= 0 ? value : undefined
+}
 
 function OAuth2ConsentPage() {
   const t = useT()
@@ -42,6 +57,14 @@ function OAuth2ConsentPage() {
   const [account, setAccount] =
     useState<Models.User<Models.Preferences> | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [completedRedirectUrl, setCompletedRedirectUrl] = useState<
+    string | undefined
+  >(undefined)
+
+  const onDone = (outcome: OAuth2Outcome, redirectUrl?: string) => {
+    setCompletedRedirectUrl(redirectUrl)
+    setPhase(outcome === 'approved' ? 'approved' : 'denied')
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +74,7 @@ function OAuth2ConsentPage() {
     // loaded grant can never be approved against a different request.
     setPhase('loading')
     setError(null)
+    setCompletedRedirectUrl(undefined)
 
     const currentRelativeUrl = window.location.pathname + window.location.search
 
@@ -135,13 +159,25 @@ function OAuth2ConsentPage() {
             codeChallenge: search.code_challenge,
             codeChallengeMethod: search.code_challenge_method,
             prompt: search.prompt,
-            maxAge: search.max_age ? Number(search.max_age) : undefined,
+            maxAge: parseMaxAge(search.max_age),
             authorizationDetails: search.authorization_details,
           })
           if (cancelled) return
           if (result.redirectUrl) {
             // Already consented — go straight back to the client.
-            window.location.assign(result.redirectUrl)
+            window.location.href = result.redirectUrl
+            // A native deep link can't navigate the tab away, so show the
+            // success outcome (with an "Open app" retry) instead of a blank page.
+            if (!isWebRedirect(result.redirectUrl)) {
+              setCompletedRedirectUrl(result.redirectUrl)
+              setAccount(loggedInAccount)
+              const loadedApp = await sdk.forConsole.apps
+                .get({ appId: search.client_id })
+                .catch(() => null)
+              if (cancelled) return
+              setApp(loadedApp)
+              setPhase('approved')
+            }
             return
           }
           if (result.grantId) {
@@ -172,6 +208,8 @@ function OAuth2ConsentPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
+
+  const accountLabel = account?.email || account?.name || undefined
 
   return (
     <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
@@ -206,8 +244,19 @@ function OAuth2ConsentPage() {
           <OAuth2ConsentCard
             grant={grant}
             app={app}
-            accountLabel={account?.email || account?.name || undefined}
+            accountLabel={accountLabel}
             flow="authorization"
+            onDone={onDone}
+          />
+        )}
+
+        {(phase === 'approved' || phase === 'denied') && (
+          <OAuth2OutcomeCard
+            outcome={phase}
+            flow="authorization"
+            app={app}
+            accountLabel={accountLabel}
+            redirectUrl={completedRedirectUrl}
           />
         )}
 
