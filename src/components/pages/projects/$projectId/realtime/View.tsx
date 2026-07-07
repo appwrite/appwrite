@@ -11,13 +11,10 @@ import {
 } from 'react'
 import { useParams } from '@tanstack/react-router'
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
   Check,
   ChevronRight,
   Code2,
   Copy,
-  Info,
   ListCollapse,
   ListTree,
   Loader2,
@@ -46,6 +43,7 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectionCodeDialog } from './_components/ConnectionCodeDialog'
 import { CollapsibleJsonView } from './_components/CollapsibleJsonView'
 import { MessagesFilterBar } from './_components/MessagesFilterBar'
+import { MessageDirectionIcon } from './_components/MessageDirectionIcon'
 import { ReconnectBanner } from './_components/ReconnectBanner'
 import { ConfigurationPanel } from './_components/ConfigurationPanel'
 import { InsertSampleMessageMenu } from './_components/InsertSampleMessageMenu'
@@ -1250,36 +1248,6 @@ export function View() {
   )
 }
 
-function MessageDirectionIcon({ entry }: { entry: LogEntry }) {
-  const t = useT()
-  const type = entry.message.type || 'unknown'
-
-  if (type === 'info') {
-    return (
-      <Info
-        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-        aria-label={t('Info message')}
-      />
-    )
-  }
-
-  if (entry.direction === 'in') {
-    return (
-      <ArrowDownLeft
-        className="h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400"
-        aria-label={t('Incoming message')}
-      />
-    )
-  }
-
-  return (
-    <ArrowUpRight
-      className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-      aria-label={t('Outgoing message')}
-    />
-  )
-}
-
 function MessageRow({
   entry,
   sequence,
@@ -1326,7 +1294,10 @@ function MessageRow({
         onKeyDown={handleRowKeyDown}
         className="grid cursor-pointer grid-cols-[auto_1.75rem_0.875rem_minmax(0,1fr)] items-start gap-x-1.5 px-4 py-2.5 transition-colors hover:bg-muted/30"
       >
-        <MessageDirectionIcon entry={entry} />
+        <MessageDirectionIcon
+          direction={entry.direction}
+          type={entry.message.type || 'unknown'}
+        />
 
         <span className="pt-0.5 text-end font-mono text-[11px] tabular-nums leading-none text-muted-foreground">
           {sequence}

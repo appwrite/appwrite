@@ -51,6 +51,7 @@ export interface WizardFormData {
   buildCommand: string
   startCommand: string
   outputDirectory: string
+  fallbackFile: string
 
   // Environment variables
   variables: WizardVariable[]
@@ -91,6 +92,7 @@ const defaultFormData: WizardFormData = {
   buildCommand: '',
   startCommand: '',
   outputDirectory: '',
+  fallbackFile: '',
   variables: [],
   domain: '',
   domainValid: false,

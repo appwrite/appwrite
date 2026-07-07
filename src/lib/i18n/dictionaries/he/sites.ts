@@ -240,6 +240,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Output directory': 'תיקיית פלט',
   'Enter output directory': 'הזינו תיקיית פלט',
   'Fallback file': 'קובץ ברירת מחדל',
+  'Select a framework to configure the fallback file':
+    'בחרו framework כדי להגדיר את קובץ ברירת המחדל',
   "File to serve for routes that don't match any static files":
     'קובץ שיוגש עבור נתיבים שאינם תואמים לקבצים סטטיים',
   'Framework settings updated successfully': 'הגדרות ה-framework עודכנו בהצלחה',

@@ -25,6 +25,10 @@ import {
   type MessageFrameType,
   type MessageLogFilters,
 } from '@/lib/realtime/message-filters'
+import {
+  REALTIME_INCOMING_ICON_CLASS,
+  REALTIME_OUTGOING_ICON_CLASS,
+} from '@/lib/realtime/message-direction-styles'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -64,6 +68,12 @@ function FilterChip({
       </button>
     </span>
   )
+}
+
+function directionIconClass(value: MessageDirectionFilter) {
+  if (value === 'in') return REALTIME_INCOMING_ICON_CLASS
+  if (value === 'out') return REALTIME_OUTGOING_ICON_CLASS
+  return undefined
 }
 
 function directionSegmentClass(selected: boolean) {
@@ -151,7 +161,11 @@ export function MessagesFilterBar({
                 aria-pressed={selected}
                 onClick={() => onChange({ ...filters, direction: value })}
               >
-                {Icon ? <Icon className="h-3 w-3 shrink-0" /> : null}
+                {Icon ? (
+                  <Icon
+                    className={cn('h-3 w-3 shrink-0', directionIconClass(value))}
+                  />
+                ) : null}
                 {t(label)}
               </Button>
             )

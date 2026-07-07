@@ -9,6 +9,13 @@ export const INIT_TICKET_IMAGE_HEIGHT = 682
 export const INIT_TICKET_ASPECT_RATIO =
   INIT_TICKET_IMAGE_WIDTH / INIT_TICKET_IMAGE_HEIGHT
 export const INIT_TICKET_MAX_WIDTH_PX = 820
+/** OG renders at native image width; card UI maxes at INIT_TICKET_MAX_WIDTH_PX. */
+export const INIT_TICKET_OG_SCALE =
+  INIT_TICKET_IMAGE_WIDTH / INIT_TICKET_MAX_WIDTH_PX
+
+export function initTicketOgScalePx(value: number): number {
+  return Math.round(value * INIT_TICKET_OG_SCALE)
+}
 /** Width of the ticket when the section is collapsed (scale = this / max width). */
 export const INIT_TICKET_COLLAPSED_WIDTH_PX = 240
 
@@ -90,6 +97,45 @@ export function initTicketStubTitleClass(title: string): string {
 export function initTicketContentGridStyle(): { gridTemplateColumns: string } {
   const { main, stub } = initTicketColumnSplit()
   return { gridTemplateColumns: `${main}fr ${stub}fr` }
+}
+
+/** Pixel anchor box for OG stub (Satori handles % + transform poorly). */
+export function initTicketOgStubAnchorBox(stubW: number, contentH: number) {
+  const { right, bottom } = INIT_TICKET_STUB_LABEL_INSET
+  return {
+    // Bottom-left origin + -90° rotation: higher left pushes copy toward the stub's right edge.
+    left: Math.round(stubW * 0.86),
+    right: Math.round((right / 100) * stubW),
+    bottom: Math.round((bottom / 100) * contentH),
+  }
+}
+
+/** Pixel content box for OG/Satori rendering (percent insets are unreliable there). */
+export function initTicketOgContentBox() {
+  const contentX =
+    (INIT_TICKET_CONTENT_INSET.left / 100) * INIT_TICKET_IMAGE_WIDTH
+  const contentY =
+    (INIT_TICKET_CONTENT_INSET.top / 100) * INIT_TICKET_IMAGE_HEIGHT
+  const contentW =
+    INIT_TICKET_IMAGE_WIDTH *
+    ((100 - INIT_TICKET_CONTENT_INSET.left - INIT_TICKET_CONTENT_INSET.right) /
+      100)
+  const contentH =
+    INIT_TICKET_IMAGE_HEIGHT *
+    ((100 - INIT_TICKET_CONTENT_INSET.top - INIT_TICKET_CONTENT_INSET.bottom) /
+      100)
+  const { main, stub } = initTicketColumnSplit()
+  const mainW = (contentW * main) / (main + stub)
+  const stubW = contentW - mainW
+
+  return {
+    contentX,
+    contentY,
+    contentW,
+    contentH,
+    mainW,
+    stubW,
+  }
 }
 
 /** Front-face holder name — smaller clamp when the display name is long. */

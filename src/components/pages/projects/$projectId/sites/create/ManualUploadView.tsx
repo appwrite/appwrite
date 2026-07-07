@@ -72,6 +72,7 @@ export function ManualUploadView() {
   const [startCommand, setStartCommand] = useState(
     formData.startCommand || '',
   )
+  const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
@@ -93,6 +94,7 @@ export function ManualUploadView() {
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
       if (!startCommand) setStartCommand(ssrDefaults.startCommand)
+      if (!fallbackFile) setFallbackFile(defaults.fallbackFile)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework, getFrameworkDefaults])
@@ -178,7 +180,10 @@ export function ManualUploadView() {
         ),
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
-        fallbackFile: defaults.fallbackFile || undefined,
+        fallbackFile:
+          defaults.adapter === 'static'
+            ? fallbackFile || undefined
+            : undefined,
       })
 
       // 2. Create domain rule
@@ -440,6 +445,7 @@ export function ManualUploadView() {
                 setBuildCommand(defaults.buildCommand)
                 setOutputDirectory(defaults.outputDirectory)
                 setStartCommand(ssrDefaults.startCommand)
+                setFallbackFile(defaults.fallbackFile)
               }}
             >
               <SelectTrigger className="h-9 text-[13px]">
@@ -466,10 +472,12 @@ export function ManualUploadView() {
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
         startCommand={startCommand}
+        fallbackFile={fallbackFile}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
         onStartCommandChange={setStartCommand}
+        onFallbackFileChange={setFallbackFile}
         frameworkKey={framework}
       />
 

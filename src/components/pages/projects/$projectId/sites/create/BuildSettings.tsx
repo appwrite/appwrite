@@ -19,6 +19,7 @@ import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   frameworkHasSsrAdapter,
+  frameworkHasStaticAdapter,
   getFrameworkAdapterDefaults,
 } from '@/lib/frameworks'
 import { StartCommandLabel } from '../_components/StartCommandLabel'
@@ -30,10 +31,12 @@ interface BuildSettingsProps {
   buildCommand: string
   outputDirectory: string
   startCommand?: string
+  fallbackFile?: string
   onInstallCommandChange: (value: string) => void
   onBuildCommandChange: (value: string) => void
   onOutputDirectoryChange: (value: string) => void
   onStartCommandChange?: (value: string) => void
+  onFallbackFileChange?: (value: string) => void
   frameworkKey?: string
   disabled?: boolean
   className?: string
@@ -45,10 +48,12 @@ export function BuildSettings({
   buildCommand,
   outputDirectory,
   startCommand = '',
+  fallbackFile = '',
   onInstallCommandChange,
   onBuildCommandChange,
   onOutputDirectoryChange,
   onStartCommandChange,
+  onFallbackFileChange,
   frameworkKey,
   disabled = false,
   className,
@@ -58,8 +63,16 @@ export function BuildSettings({
   const { getFramework, getFrameworkDefaults } = useWizard()
   const framework = frameworkKey ? getFramework(frameworkKey) : undefined
   const showStartCommand = frameworkHasSsrAdapter(framework)
+  const isSsrOnlyFramework =
+    !!framework && !frameworkHasStaticAdapter(framework)
+  const showFallbackFile = !!onFallbackFileChange && !isSsrOnlyFramework
+  const fallbackDisabled = disabled || !frameworkKey
   const ssrDefaults = useMemo(
     () => getFrameworkAdapterDefaults(framework, 'ssr'),
+    [framework],
+  )
+  const staticDefaults = useMemo(
+    () => getFrameworkAdapterDefaults(framework, 'static'),
     [framework],
   )
 
@@ -68,6 +81,7 @@ export function BuildSettings({
     buildCommand: 'npm run build',
     outputDirectory: '.output',
     startCommand: '',
+    fallbackFile: '',
   })
 
   // Update defaults when framework changes
@@ -79,9 +93,15 @@ export function BuildSettings({
         buildCommand: createDefaults.buildCommand,
         outputDirectory: createDefaults.outputDirectory,
         startCommand: ssrDefaults.startCommand,
+        fallbackFile: staticDefaults.fallbackFile,
       })
     }
-  }, [frameworkKey, getFrameworkDefaults, ssrDefaults.startCommand])
+  }, [
+    frameworkKey,
+    getFrameworkDefaults,
+    ssrDefaults.startCommand,
+    staticDefaults.fallbackFile,
+  ])
 
   const handleResetInstall = () => {
     onInstallCommandChange(defaults.installCommand)
@@ -99,10 +119,15 @@ export function BuildSettings({
     onOutputDirectoryChange(defaults.outputDirectory)
   }
 
+  const handleResetFallback = () => {
+    onFallbackFileChange?.(defaults.fallbackFile)
+  }
+
   const isInstallModified = installCommand !== defaults.installCommand
   const isBuildModified = buildCommand !== defaults.buildCommand
   const isStartModified = startCommand !== defaults.startCommand
   const isOutputModified = outputDirectory !== defaults.outputDirectory
+  const isFallbackModified = fallbackFile !== defaults.fallbackFile
 
   return (
     <Accordion
@@ -244,6 +269,44 @@ export function BuildSettings({
                 className="h-9 font-mono text-[13px]"
               />
             </div>
+
+            {showFallbackFile && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="fallback-file" className="text-[13px]">
+                    {t('Fallback file')}
+                  </Label>
+                  {isFallbackModified && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResetFallback}
+                      disabled={disabled}
+                      className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                    >
+                      <RotateCcw className="me-1 h-3 w-3" />
+                      {t('Reset')}
+                    </Button>
+                  )}
+                </div>
+                <Input
+                  id="fallback-file"
+                  value={fallbackFile}
+                  onChange={(e) => onFallbackFileChange?.(e.target.value)}
+                  placeholder={defaults.fallbackFile || 'index.html'}
+                  disabled={fallbackDisabled}
+                  className="h-9 font-mono text-[13px]"
+                />
+                <p className="text-[12px] text-muted-foreground">
+                  {!frameworkKey
+                    ? t('Select a framework to configure the fallback file')
+                    : t(
+                        "File to serve for routes that don't match any static files",
+                      )}
+                </p>
+              </div>
+            )}
           </div>
         </AccordionContent>
       </AccordionItem>

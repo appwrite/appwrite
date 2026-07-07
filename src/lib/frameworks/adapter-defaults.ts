@@ -55,6 +55,13 @@ export function frameworkHasSsrAdapter(
   return framework?.adapters?.some((a) => a.key === 'ssr') ?? false
 }
 
+/** Whether the framework supports static hosting (has a `static` adapter). */
+export function frameworkHasStaticAdapter(
+  framework: Models.Framework | undefined,
+): boolean {
+  return framework?.adapters?.some((a) => a.key === 'static') ?? false
+}
+
 /** Start command for sites.create when the framework supports SSR. */
 export function getStartCommandForSiteCreate(
   framework: Models.Framework | undefined,

@@ -111,7 +111,7 @@
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "react": "19.1.1",
-    "react-day-picker": "^9.11.0",
+    "react-day-picker": "^9.12.0",
     "react-dom": "19.1.1",
     "react-hook-form": "^7.63.0",
     "react-markdown": "^10.1.0",

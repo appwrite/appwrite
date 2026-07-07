@@ -3,9 +3,11 @@ import type { Locale } from 'date-fns'
 import { enGB } from 'date-fns/locale/en-GB'
 import { he as heDateFns } from 'date-fns/locale/he'
 import { ja as jaDateFns } from 'date-fns/locale/ja'
-import { enGB as enDayPickerLocale } from 'react-day-picker/locale/en-GB'
-import { he as heDayPickerLocale } from 'react-day-picker/locale/he'
-import { ja as jaDayPickerLocale } from 'react-day-picker/locale/ja'
+import {
+  enGB as enDayPickerLocale,
+  he as heDayPickerLocale,
+  ja as jaDayPickerLocale,
+} from 'react-day-picker/locale'
 import {
   getActiveLanguage,
   type SupportedLanguage,

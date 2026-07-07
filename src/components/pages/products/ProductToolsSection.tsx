@@ -6,7 +6,13 @@ import {
   Radio,
   Sparkles,
   Terminal,
+  ArrowDownLeft,
+  ArrowUpRight,
 } from 'lucide-react'
+import {
+  REALTIME_INCOMING_ICON_CLASS,
+  REALTIME_OUTGOING_ICON_CLASS,
+} from '@/lib/realtime/message-direction-styles'
 import { ConnectCodeExample } from '@/components/global/shared/ConnectCodeExample'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { McpIcon } from '@/components/global/shared/McpIcon'
@@ -97,8 +103,20 @@ function CompactRealtimePreview({
 }) {
   return (
     <div className="mt-2.5 space-y-1.5 rounded-md border border-border bg-muted/20 px-3 py-2">
-      <p className="truncate font-mono text-[11px] leading-4 text-foreground/90">{channel}</p>
-      <p className="truncate font-mono text-[11px] leading-4 text-muted-foreground">{event}</p>
+      <p className="flex min-w-0 items-center gap-1.5 font-mono text-[11px] leading-4 text-foreground/90">
+        <ArrowUpRight
+          className={cn('size-3 shrink-0', REALTIME_OUTGOING_ICON_CLASS)}
+          aria-hidden
+        />
+        <span className="truncate">{channel}</span>
+      </p>
+      <p className="flex min-w-0 items-center gap-1.5 font-mono text-[11px] leading-4 text-muted-foreground">
+        <ArrowDownLeft
+          className={cn('size-3 shrink-0', REALTIME_INCOMING_ICON_CLASS)}
+          aria-hidden
+        />
+        <span className="truncate">{event}</span>
+      </p>
     </div>
   )
 }

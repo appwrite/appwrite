@@ -27,6 +27,7 @@ export {
   getFrameworkAdapterDefaults,
   getFrameworkCreateDefaults,
   frameworkHasSsrAdapter,
+  frameworkHasStaticAdapter,
   getStartCommandForSiteCreate,
 } from './adapter-defaults'
 

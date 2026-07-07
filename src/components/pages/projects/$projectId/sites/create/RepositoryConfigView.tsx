@@ -132,6 +132,7 @@ export function RepositoryConfigView({
   const [startCommand, setStartCommand] = useState(
     formData.startCommand || '',
   )
+  const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
@@ -182,6 +183,7 @@ export function RepositoryConfigView({
         setBuildCommand(data.buildCommand ?? defaults.buildCommand)
         setOutputDirectory(data.outputDirectory ?? defaults.outputDirectory)
         setStartCommand(ssrDefaults.startCommand)
+        setFallbackFile(defaults.fallbackFile)
         updateFormData({
           framework: detectedFramework,
           buildRuntime: defaults.buildRuntime,
@@ -189,6 +191,7 @@ export function RepositoryConfigView({
           buildCommand: data.buildCommand ?? defaults.buildCommand,
           startCommand: ssrDefaults.startCommand,
           outputDirectory: data.outputDirectory ?? defaults.outputDirectory,
+          fallbackFile: defaults.fallbackFile,
         })
       }
     },
@@ -241,6 +244,7 @@ export function RepositoryConfigView({
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
       if (!startCommand) setStartCommand(ssrDefaults.startCommand)
+      if (!fallbackFile) setFallbackFile(defaults.fallbackFile)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework, getFrameworkDefaults])
@@ -286,7 +290,10 @@ export function RepositoryConfigView({
         startCommand: getStartCommandForSiteCreate(frameworkModel, startCommand),
         outputDirectory: outputDirectory || undefined,
         adapter: defaults.adapter || undefined,
-        fallbackFile: defaults.fallbackFile || undefined,
+        fallbackFile:
+          defaults.adapter === 'static'
+            ? fallbackFile || undefined
+            : undefined,
         installationId,
         providerRepositoryId,
         providerBranch: branch,
@@ -599,6 +606,7 @@ export function RepositoryConfigView({
                     setBuildCommand(defaults.buildCommand)
                     setOutputDirectory(defaults.outputDirectory)
                     setStartCommand(ssrDefaults.startCommand)
+                    setFallbackFile(defaults.fallbackFile)
                   }}
                 >
                   <SelectTrigger className="h-9 text-[13px] flex-1 min-w-0">
@@ -732,10 +740,12 @@ export function RepositoryConfigView({
         buildCommand={buildCommand}
         outputDirectory={outputDirectory}
         startCommand={startCommand}
+        fallbackFile={fallbackFile}
         onInstallCommandChange={setInstallCommand}
         onBuildCommandChange={setBuildCommand}
         onOutputDirectoryChange={setOutputDirectory}
         onStartCommandChange={setStartCommand}
+        onFallbackFileChange={setFallbackFile}
         frameworkKey={framework}
       />
 

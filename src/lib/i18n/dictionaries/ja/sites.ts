@@ -116,6 +116,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Output directory': '出力ディレクトリ',
   'Enter output directory': '出力ディレクトリを入力',
   'Fallback file': 'フォールバックファイル',
+  'Select a framework to configure the fallback file':
+    'フォールバックファイルを設定するには Framework を選択してください',
   'Framework settings updated successfully': 'Framework 設定を更新しました',
   'Failed to update framework settings': 'Framework 設定の更新に失敗しました',
   'Framework is required': 'Framework は必須です',

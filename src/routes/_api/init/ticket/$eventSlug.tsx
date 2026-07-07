@@ -16,10 +16,16 @@ export const Route = createFileRoute('/_api/init/ticket/$eventSlug')({
         }
 
         const searchParams = new URL(request.url).searchParams
+        const siteOrigin = new URL(request.url).origin
         const { buildInitTicketImageRenderData, renderInitTicketImagePng } =
           await import('@/lib/init/ticket-image')
+        const { runWithCoverRenderContext } = await import(
+          '@/lib/cover-generator/render-context'
+        )
         const ticket = buildInitTicketImageRenderData(event, searchParams)
-        const image = await renderInitTicketImagePng(ticket)
+        const image = await runWithCoverRenderContext(siteOrigin, () =>
+          renderInitTicketImagePng(ticket),
+        )
         const body = image.buffer.slice(
           image.byteOffset,
           image.byteOffset + image.byteLength,
