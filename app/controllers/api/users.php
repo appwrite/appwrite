@@ -617,7 +617,7 @@ Http::post('/v1/users/:userId/targets')
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -667,7 +667,7 @@ Http::post('/v1/users/:userId/targets')
                 'userId' => $userId,
                 'userInternalId' => $user->getSequence(),
                 'identifier' => $identifier,
-                'name' => ($name !== '') ? $name : null,
+                'name' => $name ?: null,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -1306,7 +1306,8 @@ Http::patch('/v1/users/:userId/name')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, ?string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $name = $name ?? '';
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1783,7 +1784,8 @@ Http::patch('/v1/users/:userId/targets/:targetId')
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $name = $name ?? '';
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
