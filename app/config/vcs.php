@@ -6,6 +6,7 @@
  */
 
 use Appwrite\Auth\OAuth2\Github as GithubOAuth2;
+use Appwrite\Vcs\Provider;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 return [
@@ -14,7 +15,7 @@ return [
         'enabled' => true,
         'adapter' => GitHub::class,
         'oauth2' => GithubOAuth2::class,
-        'auth' => 'app',
+        'auth' => Provider::AUTH_APP,
         'envPrefix' => '_APP_VCS_GITHUB',
         'required' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
         'endpoint' => false, // true = read {envPrefix}_ENDPOINT (self-hosted providers)
