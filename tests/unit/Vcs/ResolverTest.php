@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Vcs;
 
+use Appwrite\Auth\OAuth2\Github as GithubOAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Provider;
 use Appwrite\Vcs\Resolver;
@@ -47,7 +48,7 @@ final class ResolverTest extends TestCase
             'name' => 'Test',
             'enabled' => true,
             'adapter' => GitHub::class,
-            'oauth2' => 'Appwrite\\Auth\\OAuth2\\Github',
+            'oauth2' => GithubOAuth2::class,
             'auth' => Provider::AUTH_OAUTH2,
             'envPrefix' => '_APP_VCS_TEST',
             'required' => ['TOKEN'],
