@@ -843,10 +843,10 @@ class Builds extends Action
                                     if (! $insideSeparation) {
                                         $separator = \strpos($logs, '{APPWRITE_DETECTION_SEPARATOR_START}');
                                         if ($separator !== false) {
+                                            $leftover = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
                                             $logs = \substr($logs, 0, $separator);
                                             $insideSeparation = true;
 
-                                            $leftover = \substr($logs, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_START}'));
                                             $separator = \strpos($leftover, '{APPWRITE_DETECTION_SEPARATOR_END}');
                                             if ($separator !== false) {
                                                 $logs .= \substr($leftover, $separator + strlen('{APPWRITE_DETECTION_SEPARATOR_END}'));
@@ -1325,6 +1325,13 @@ class Builds extends Action
         }
 
         [$logsBefore, $detectionLogsStart] = \explode('{APPWRITE_DETECTION_SEPARATOR_START}', $logs, 2);
+        if (! \str_contains($detectionLogsStart, '{APPWRITE_DETECTION_SEPARATOR_END}')) {
+            return [
+                'logs' => $logsBefore . $detectionLogsStart,
+                'detectionLogs' => '',
+            ];
+        }
+
         [$detectionLogs, $logsAfter] = \explode('{APPWRITE_DETECTION_SEPARATOR_END}', $detectionLogsStart, 2);
 
         return [
