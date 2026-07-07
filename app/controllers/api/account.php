@@ -21,6 +21,7 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -40,7 +41,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -80,8 +80,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
     // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
     $oauthProvider = null;
@@ -123,7 +122,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
-    $record = $geodb->get($request->getIP());
     $sessionSecret = $proofForToken->generate();
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
@@ -171,7 +169,19 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'factors' => [$factor],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'countryCode' => \strtolower($geoRecord->getCountryCode()),
+            'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+            'latitude' => $geoRecord->getLatitude(),
+            'longitude' => $geoRecord->getLongitude(),
+            'timeZone' => $geoRecord->getTimeZone(),
+            'weatherCode' => $geoRecord->getWeatherCode(),
+            'postalCode' => $geoRecord->getPostalCode(),
+            'autonomousSystemNumber' => $geoRecord->getAutonomousSystemNumber(),
+            'autonomousSystemOrganization' => $geoRecord->getAutonomousSystemOrganization(),
+            'connectionType' => $geoRecord->getConnectionType(),
+            'connectionUsageType' => $geoRecord->getConnectionUsageType(),
+            'connectionOrganization' => $geoRecord->getConnectionOrganization(),
+            'isp' => $geoRecord->getIsp(),
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $providerCredentials,
@@ -319,7 +329,8 @@ Http::post('/v1/account')
             Query::equal('providerEmail', [$email]),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -566,7 +577,8 @@ Http::get('/v1/account/sessions')
         $sessions = $user->getAttribute('sessions', []);
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
@@ -621,7 +633,8 @@ Http::delete('/v1/account/sessions')
         $sessions = $user->getAttribute('sessions', []);
         $currentSession = null;
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
             if (!$domainVerification) {
@@ -695,7 +708,8 @@ Http::get('/v1/account/sessions/:sessionId')
             ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
             : $sessionId;
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             if ($sessionId === $session->getId()) {
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
@@ -928,7 +942,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('hooks')
@@ -938,7 +952,7 @@ Http::post('/v1/account/sessions/email')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -962,7 +976,6 @@ Http::post('/v1/account/sessions/email')
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
         $secret = $proofForToken->generate();
         $session = new Document(array_merge(
             [
@@ -975,7 +988,19 @@ Http::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
+                'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+                'latitude' => $geoRecord->getLatitude(),
+                'longitude' => $geoRecord->getLongitude(),
+                'timeZone' => $geoRecord->getTimeZone(),
+                'weatherCode' => $geoRecord->getWeatherCode(),
+                'postalCode' => $geoRecord->getPostalCode(),
+                'autonomousSystemNumber' => $geoRecord->getAutonomousSystemNumber(),
+                'autonomousSystemOrganization' => $geoRecord->getAutonomousSystemOrganization(),
+                'connectionType' => $geoRecord->getConnectionType(),
+                'connectionUsageType' => $geoRecord->getConnectionUsageType(),
+                'connectionOrganization' => $geoRecord->getConnectionOrganization(),
+                'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1078,7 +1103,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1086,7 +1111,7 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, GeoRecord $geoRecord, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
@@ -1136,7 +1161,6 @@ Http::post('/v1/account/sessions/anonymous')
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
         $secret = $proofForToken->generate();
 
         $session = new Document(array_merge(
@@ -1149,7 +1173,19 @@ Http::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
+                'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+                'latitude' => $geoRecord->getLatitude(),
+                'longitude' => $geoRecord->getLongitude(),
+                'timeZone' => $geoRecord->getTimeZone(),
+                'weatherCode' => $geoRecord->getWeatherCode(),
+                'postalCode' => $geoRecord->getPostalCode(),
+                'autonomousSystemNumber' => $geoRecord->getAutonomousSystemNumber(),
+                'autonomousSystemOrganization' => $geoRecord->getAutonomousSystemOrganization(),
+                'connectionType' => $geoRecord->getConnectionType(),
+                'connectionUsageType' => $geoRecord->getConnectionUsageType(),
+                'connectionOrganization' => $geoRecord->getConnectionOrganization(),
+                'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1234,7 +1270,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -1434,8 +1470,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('geoRecord')
     ->inject('dbForPlatform')
-    ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
@@ -1444,7 +1480,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, GeoRecord $geoRecord, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1798,7 +1834,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $dbForProject->createDocument('identities', new Document([
@@ -1935,7 +1972,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             // If the `token` param is not set, we persist the session in a cookie
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
             $secret = $proofForToken->generate();
 
             $session = new Document(array_merge([
@@ -1951,7 +1987,19 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => \strtolower($geoRecord->getCountryCode()),
+                'continentCode' => $geoRecord->getContinentCode() === '--' ? null : $geoRecord->getContinentCode(),
+                'latitude' => $geoRecord->getLatitude(),
+                'longitude' => $geoRecord->getLongitude(),
+                'timeZone' => $geoRecord->getTimeZone(),
+                'weatherCode' => $geoRecord->getWeatherCode(),
+                'postalCode' => $geoRecord->getPostalCode(),
+                'autonomousSystemNumber' => $geoRecord->getAutonomousSystemNumber(),
+                'autonomousSystemOrganization' => $geoRecord->getAutonomousSystemOrganization(),
+                'connectionType' => $geoRecord->getConnectionType(),
+                'connectionUsageType' => $geoRecord->getConnectionUsageType(),
+                'connectionOrganization' => $geoRecord->getConnectionOrganization(),
+                'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -2513,7 +2561,8 @@ Http::post('/v1/account/tokens/email')
                 Query::equal('providerEmail', [$email]),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -2831,7 +2880,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -2839,10 +2888,10 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('domainVerification')
     ->inject('cookieDomain')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geoRecord, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -2882,7 +2931,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('bus')
     ->inject('store')
@@ -3370,7 +3419,8 @@ Http::patch('/v1/account/email')
             Query::notEqual('userInternalId', $user->getSequence()),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $emailMetadata = [
@@ -3446,7 +3496,8 @@ Http::patch('/v1/account/email')
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());

@@ -124,27 +124,6 @@ final class HealthTest extends Scope
         return $webhooksQueueHealth;
     }
 
-    public function testGetLogsQueueHealth(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_LOGS_QUEUE_HEALTH);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-
-        $logsQueueHealth = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertIsArray($logsQueueHealth['body']['data']);
-        $this->assertArrayNotHasKey('errors', $logsQueueHealth['body']);
-        $logsQueueHealth = $logsQueueHealth['body']['data']['healthGetQueueLogs'];
-        $this->assertIsArray($logsQueueHealth);
-
-        return $logsQueueHealth;
-    }
-
     public function testGetCertificatesQueueHealth(): array
     {
         $projectId = $this->getProject()['$id'];

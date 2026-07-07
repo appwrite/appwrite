@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_LOCKING_ENABLED',
+                'description' => 'Enable distributed locking for platform writes. Locks coordinate concurrent updates across API pods so read-modify-write operations on shared documents do not lose updates. By default, set to \'enabled\'. Set to \'disabled\' as an emergency kill switch; locks become no-ops and concurrent writes will race.',
+                'introduction' => '1.9.3',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
                 'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443, and you have set up wildcard certificates with DNS challenge.',
                 'introduction' => '',
@@ -348,6 +357,24 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_GEO_ENDPOINT',
+                'description' => 'Internal endpoint of the geo service used to resolve IP geolocation for locale and session enrichment. Leave empty to disable geolocation lookups. Defaults to the bundled `appwrite-geo` container.',
+                'introduction' => 'TBD',
+                'default' => 'http://appwrite-geo/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GEO_SECRET',
+                'description' => 'Bearer token used to authenticate requests from the Appwrite server to the geo service. Must match the `GEO_SECRET` configured on the `appwrite-geo` container. Change it from the default value before running in production.',
+                'introduction' => 'TBD',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => 'token'
             ]
         ],
     ],
