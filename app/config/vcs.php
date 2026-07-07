@@ -5,6 +5,7 @@
  * add an entry here (plus an OAuth2 adapter if auth is 'oauth2').
  */
 
+use Appwrite\Auth\OAuth2\Github as GithubOAuth2;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 return [
@@ -12,7 +13,7 @@ return [
         'name' => 'GitHub',
         'enabled' => true,
         'adapter' => GitHub::class,
-        'oauth2' => 'Appwrite\\Auth\\OAuth2\\Github',
+        'oauth2' => GithubOAuth2::class,
         'auth' => 'app',
         'envPrefix' => '_APP_VCS_GITHUB',
         'required' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
