@@ -1,10 +1,12 @@
 import sharp from 'sharp'
+import { buildInitTicketOgBackgroundDataUri } from '@/lib/init/og/init-ticket-og-background'
 import { readCoverPublicAssetBuffer } from '@/lib/cover-generator/public-assets'
 import { getFrameworkIconFile } from '@/lib/frameworks'
 import { getInitTicketStackOption } from '@/lib/init/ticket-stack'
 import type { InitTicketRenderData } from '@/lib/init/ticket-render-data'
 
 export type PreparedInitTicketOgData = {
+  uiBackgroundSrc: string
   backgroundSrc: string | null
   stackIcons: Array<{ src: string | null; label: string; iconKey: string }>
   githubIconSrc: string | null
@@ -84,6 +86,10 @@ export async function prepareInitTicketOgData(
   data: InitTicketRenderData,
 ): Promise<PreparedInitTicketOgData> {
   const usesDarkChrome = data.ticketAppearance.usesDarkChrome
+  const uiBackgroundSrc = buildInitTicketOgBackgroundDataUri(
+    data.ticketAppearance.accentColor,
+    usesDarkChrome,
+  )
 
   const [backgroundSrc, githubIconSrc, stackIcons] = await Promise.all([
     loadRasterImageDataUri(data.ticketAppearance.backgroundSrc),
@@ -108,5 +114,5 @@ export async function prepareInitTicketOgData(
     ),
   ])
 
-  return { backgroundSrc, stackIcons, githubIconSrc }
+  return { uiBackgroundSrc, backgroundSrc, stackIcons, githubIconSrc }
 }

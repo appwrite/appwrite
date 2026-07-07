@@ -66,6 +66,7 @@ import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog
 import { Route as GeneratorDiagramsGenerationIdRouteImport } from './routes/generator/diagrams/$generationId'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicInitTicketIdRouteImport } from './routes/_public/init.$ticketId'
 import { Route as PublicDebugOrgSetupPreviewRouteImport } from './routes/_public/debug.org-setup-preview'
 import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicAccountSessionsRouteImport } from './routes/_public/account.sessions'
@@ -622,6 +623,11 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicInitTicketIdRoute = PublicInitTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => PublicInitRoute,
+} as any)
 const PublicDebugOrgSetupPreviewRoute =
   PublicDebugOrgSetupPreviewRouteImport.update({
     id: '/debug/org-setup-preview',
@@ -2441,7 +2447,7 @@ export interface FileRoutesByFullPath {
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
-  '/init': typeof PublicInitRoute
+  '/init': typeof PublicInitRouteWithChildren
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/docs/$': typeof DocsSplatRoute
@@ -2470,6 +2476,7 @@ export interface FileRoutesByFullPath {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/init/$ticketId': typeof PublicInitTicketIdRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -2763,7 +2770,7 @@ export interface FileRoutesByTo {
   '/blocks': typeof PublicBlocksRoute
   '/cache': typeof PublicCacheRoute
   '/comps': typeof PublicCompsRoute
-  '/init': typeof PublicInitRoute
+  '/init': typeof PublicInitRouteWithChildren
   '/reset': typeof PublicResetRoute
   '/upgrade': typeof PublicUpgradeRoute
   '/docs/$': typeof DocsSplatRoute
@@ -2792,6 +2799,7 @@ export interface FileRoutesByTo {
   '/account/sessions': typeof PublicAccountSessionsRoute
   '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/init/$ticketId': typeof PublicInitTicketIdRoute
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
   '/blog': typeof MarketingBlogIndexRoute
   '/changelog': typeof MarketingChangelogIndexRoute
@@ -3056,7 +3064,7 @@ export interface FileRoutesById {
   '/_public/blocks': typeof PublicBlocksRoute
   '/_public/cache': typeof PublicCacheRoute
   '/_public/comps': typeof PublicCompsRoute
-  '/_public/init': typeof PublicInitRoute
+  '/_public/init': typeof PublicInitRouteWithChildren
   '/_public/reset': typeof PublicResetRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
   '/docs/$': typeof DocsSplatRoute
@@ -3085,6 +3093,7 @@ export interface FileRoutesById {
   '/_public/account/sessions': typeof PublicAccountSessionsRoute
   '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/debug/org-setup-preview': typeof PublicDebugOrgSetupPreviewRoute
+  '/_public/init/$ticketId': typeof PublicInitTicketIdRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/generator/diagrams/$generationId': typeof GeneratorDiagramsGenerationIdRoute
@@ -3412,6 +3421,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/init/$ticketId'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -3734,6 +3744,7 @@ export interface FileRouteTypes {
     | '/account/sessions'
     | '/debug/error-preview'
     | '/debug/org-setup-preview'
+    | '/init/$ticketId'
     | '/generator/diagrams/$generationId'
     | '/blog'
     | '/changelog'
@@ -4026,6 +4037,7 @@ export interface FileRouteTypes {
     | '/_public/account/sessions'
     | '/_public/debug/error-preview'
     | '/_public/debug/org-setup-preview'
+    | '/_public/init/$ticketId'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/generator/diagrams/$generationId'
@@ -4711,6 +4723,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_public/init/$ticketId': {
+      id: '/_public/init/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/init/$ticketId'
+      preLoaderRoute: typeof PublicInitTicketIdRouteImport
+      parentRoute: typeof PublicInitRoute
     }
     '/_public/debug/org-setup-preview': {
       id: '/_public/debug/org-setup-preview'
@@ -6733,6 +6752,18 @@ const PublicAccountRouteWithChildren = PublicAccountRoute._addFileChildren(
   PublicAccountRouteChildren,
 )
 
+interface PublicInitRouteChildren {
+  PublicInitTicketIdRoute: typeof PublicInitTicketIdRoute
+}
+
+const PublicInitRouteChildren: PublicInitRouteChildren = {
+  PublicInitTicketIdRoute: PublicInitTicketIdRoute,
+}
+
+const PublicInitRouteWithChildren = PublicInitRoute._addFileChildren(
+  PublicInitRouteChildren,
+)
+
 interface PublicOrganizationsOrgIdAppsAppIdRouteChildren {
   PublicOrganizationsOrgIdAppsAppIdBrandingRoute: typeof PublicOrganizationsOrgIdAppsAppIdBrandingRoute
   PublicOrganizationsOrgIdAppsAppIdLegalRoute: typeof PublicOrganizationsOrgIdAppsAppIdLegalRoute
@@ -8040,7 +8071,7 @@ interface PublicRouteChildren {
   PublicBlocksRoute: typeof PublicBlocksRoute
   PublicCacheRoute: typeof PublicCacheRoute
   PublicCompsRoute: typeof PublicCompsRoute
-  PublicInitRoute: typeof PublicInitRoute
+  PublicInitRoute: typeof PublicInitRouteWithChildren
   PublicResetRoute: typeof PublicResetRoute
   PublicUpgradeRoute: typeof PublicUpgradeRoute
   PublicIndexRoute: typeof PublicIndexRoute
@@ -8055,7 +8086,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicBlocksRoute: PublicBlocksRoute,
   PublicCacheRoute: PublicCacheRoute,
   PublicCompsRoute: PublicCompsRoute,
-  PublicInitRoute: PublicInitRoute,
+  PublicInitRoute: PublicInitRouteWithChildren,
   PublicResetRoute: PublicResetRoute,
   PublicUpgradeRoute: PublicUpgradeRoute,
   PublicIndexRoute: PublicIndexRoute,

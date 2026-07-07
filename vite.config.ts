@@ -193,7 +193,15 @@ export default defineConfig(async () => {
       ],
       // Serve TanStack store packages as native ESM. Pre-bundling cached an older
       // @tanstack/react-store without createAtom when router upgraded first.
-      exclude: ['@tanstack/react-store', '@tanstack/store', 'almostnode', 'sharp'],
+      exclude: [
+        '@tanstack/react-store',
+        '@tanstack/store',
+        'almostnode',
+        'sharp',
+        // Pre-bundling inlines a nested @radix-ui/react-direction copy and can load a
+        // second React instance, breaking hooks (useState of null) in ScrollArea.
+        '@radix-ui/react-scroll-area',
+      ],
     },
     ssr: {
       external: ['sharp', 'prismjs'],

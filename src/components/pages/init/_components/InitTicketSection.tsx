@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { buildInitTicketShareMessage } from '@/lib/init/ticket-prefs'
+import { buildInitTicketShareUrl } from '@/lib/init/init-ticket-share'
 import { useInitThemeUsesDarkImage } from '@/lib/init/use-init-theme-image'
 import { useInitTicketPrefs } from '@/lib/init/use-init-ticket-prefs'
+import { useSyncInitTicketImage } from '@/lib/init/use-sync-init-ticket-image'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { accountIdentitiesQueryOptions } from '@/lib/react-query/hooks/auth'
 import { buildInitTicketRenderData } from '@/lib/init/ticket-render-data'
@@ -59,9 +61,17 @@ interface InitTicketSectionProps {
   accountReady?: boolean
 }
 
-function buildShareUrl(): string {
+function buildFallbackShareUrl(): string {
   if (typeof window === 'undefined') return 'https://cloud.appwrite.io/init'
   return `${window.location.origin}/init`
+}
+
+function buildTicketShareUrl(ticketId?: string): string {
+  if (!ticketId) return buildFallbackShareUrl()
+  if (typeof window === 'undefined') {
+    return buildInitTicketShareUrl(ticketId, 'https://cloud.appwrite.io')
+  }
+  return buildInitTicketShareUrl(ticketId)
 }
 
 const shareMenuItemClass =
@@ -74,6 +84,8 @@ interface ShareActionsProps {
   shareButtonLabel?: string
   isSharing: boolean
   shareOpen: boolean
+  hasShareLink: boolean
+  shareDisabledTooltip?: string
   onShareOpenChange: (open: boolean) => void
   onNativeShare: () => void
   onCopyShareMessage: () => void
@@ -91,6 +103,8 @@ function ShareActions({
   shareButtonLabel,
   isSharing,
   shareOpen,
+  hasShareLink,
+  shareDisabledTooltip,
   onShareOpenChange,
   onNativeShare,
   onCopyShareMessage,
@@ -111,7 +125,7 @@ function ShareActions({
   const primaryShareLabel =
     shareButtonLabel ?? (isRecapMode ? 'Share ticket' : 'Share and win')
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !hasShareLink) {
     return (
       <div
         className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}
@@ -133,9 +147,21 @@ function ShareActions({
 
   return (
     <div className={cn('flex flex-wrap items-center gap-2', actionsAlignClass)}>
+      {!isAuthenticated ? (
+        <Button className={primaryButtonClass} asChild>
+          <Link to="/sign-up" search={{ redirect: '/init' }}>
+            <Ticket className={iconSizeClass} />
+            Claim your ticket
+          </Link>
+        </Button>
+      ) : null}
       <Popover open={shareOpen} onOpenChange={onShareOpenChange}>
         <PopoverTrigger asChild>
-          <Button className={primaryButtonClass} disabled={isSharing}>
+          <Button
+            className={primaryButtonClass}
+            disabled={isSharing || !hasShareLink}
+            title={!hasShareLink ? shareDisabledTooltip : undefined}
+          >
             <Trophy className={iconSizeClass} />
             {primaryShareLabel}
           </Button>
@@ -191,15 +217,17 @@ function ShareActions({
         </PopoverContent>
       </Popover>
 
-      <Button
-        type="button"
-        variant="outline"
-        className={buttonSizeClass}
-        onClick={onCustomize}
-      >
-        <SlidersHorizontal className={iconSizeClass} />
-        Customize
-      </Button>
+      {isAuthenticated ? (
+        <Button
+          type="button"
+          variant="outline"
+          className={buttonSizeClass}
+          onClick={onCustomize}
+        >
+          <SlidersHorizontal className={iconSizeClass} />
+          Customize
+        </Button>
+      ) : null}
     </div>
   )
 }
@@ -276,7 +304,21 @@ export function InitTicketSection({
     ],
   )
   const { holderName, ticketAppearance } = ticketRenderData
-  const shareUrl = buildShareUrl()
+
+  useSyncInitTicketImage({
+    eventSlug: event.slug,
+    account,
+    prefs,
+    renderData: ticketRenderData,
+    themeUsesDarkImage,
+    updatePrefs,
+  })
+
+  const shareUrl = buildTicketShareUrl(prefs.imageFileId)
+  const hasShareLink = Boolean(prefs.imageFileId)
+  const shareDisabledTooltip = hasShareLink
+    ? undefined
+    : 'Your ticket image is still generating'
 
   const shareMessage = useMemo(
     () =>
@@ -295,7 +337,7 @@ export function InitTicketSection({
     typeof navigator !== 'undefined' && typeof navigator.share === 'function'
 
   const handleNativeShare = async () => {
-    if (!isAuthenticated) return
+    if (!hasShareLink) return
     setIsSharing(true)
     try {
       await navigator.share({
@@ -383,6 +425,8 @@ export function InitTicketSection({
     shareButtonLabel: ticketCopy?.shareButtonLabel,
     isSharing,
     shareOpen,
+    hasShareLink,
+    shareDisabledTooltip,
     onShareOpenChange: setShareOpen,
     onNativeShare: () => void handleNativeShare(),
     onCopyShareMessage: () => void handleCopyShareMessage(),

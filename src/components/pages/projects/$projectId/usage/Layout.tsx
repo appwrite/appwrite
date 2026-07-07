@@ -24,7 +24,6 @@ import {
   type LucideIcon,
 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Sheet,
   SheetContent,
@@ -210,7 +209,6 @@ function MobileCategoryDrawer({
   const t = useT()
   const [open, setOpen] = useState(false)
   const location = useLocation()
-  const pageDirection = usePageDirection()
   const categories = useMemo(
     () => navGroups.flatMap((group) => group.categories),
     [navGroups],
@@ -245,7 +243,7 @@ function MobileCategoryDrawer({
             {t('Usage Categories')}
           </SheetTitle>
         </SheetHeader>
-        <ScrollArea className="h-[calc(100dvh-65px)]" dir={pageDirection}>
+        <div className="h-[calc(100dvh-65px)] overflow-y-auto overscroll-contain">
           <div className="px-3 py-4">
             <CategoryNavigation
               projectId={projectId}
@@ -253,7 +251,7 @@ function MobileCategoryDrawer({
               activeCategoryId={activeCategoryId}
             />
           </div>
-        </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   )
@@ -625,8 +623,11 @@ function UsageLayoutContent({
       </div>
 
       <div className={SECONDARY_SIDEBAR_LAYOUT_CLASS}>
-        <aside className={SECONDARY_SIDEBAR_ASIDE_CLASS} dir={pageDirection}>
-          <ScrollArea className="h-full" dir={pageDirection}>
+        <aside
+          className={cn(SECONDARY_SIDEBAR_ASIDE_CLASS, 'min-h-0 self-stretch')}
+          dir={pageDirection}
+        >
+          <div className="h-full overflow-y-auto overscroll-contain">
             <div className="px-3 py-4">
               <CategoryNavigation
                 projectId={projectId}
@@ -634,7 +635,7 @@ function UsageLayoutContent({
                 activeCategoryId={categoryId}
               />
             </div>
-          </ScrollArea>
+          </div>
         </aside>
 
         <div

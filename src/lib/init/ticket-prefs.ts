@@ -10,6 +10,10 @@ export interface InitTicketPrefs {
   displayName?: string
   holderTitle?: string
   stack: InitTicketStackId[]
+  /** Stored PNG file ID in the Init storage project for this event. */
+  imageFileId?: string
+  /** Render signature used to skip re-uploading unchanged ticket images. */
+  imageSignature?: string
   /** When true, the ticket section renders in the compact collapsed layout. */
   sectionCollapsed?: boolean
 }
@@ -43,10 +47,18 @@ export function parseInitTicketPrefs(value: unknown): InitTicketPrefs | null {
   const stack = parseInitTicketStack(record.stack)
   const sectionCollapsed =
     typeof record.sectionCollapsed === 'boolean' ? record.sectionCollapsed : undefined
+  const imageFileId =
+    typeof record.imageFileId === 'string' ? record.imageFileId.trim() : undefined
+  const imageSignature =
+    typeof record.imageSignature === 'string'
+      ? record.imageSignature.trim()
+      : undefined
   return {
     stack,
     ...(displayName ? { displayName } : {}),
     ...(holderTitle ? { holderTitle } : {}),
+    ...(imageFileId ? { imageFileId } : {}),
+    ...(imageSignature ? { imageSignature } : {}),
     ...(sectionCollapsed !== undefined ? { sectionCollapsed } : {}),
   }
 }

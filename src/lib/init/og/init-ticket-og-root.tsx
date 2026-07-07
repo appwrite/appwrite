@@ -4,6 +4,7 @@ import {
   initTicketOgContentBox,
   initTicketOgStubAnchorBox,
 } from '@/lib/init/ticket-layout'
+import { getInitTicketOgUiPalette } from '@/lib/init/og/init-ticket-og-background'
 import { InitTicketOgWordmark } from '@/lib/init/og/init-ticket-wordmark'
 import {
   getInitTicketOgPalette,
@@ -19,7 +20,7 @@ import {
 import type { PreparedInitTicketOgData } from '@/lib/init/og/prepare-init-ticket-og-data'
 import type { InitTicketRenderData } from '@/lib/init/ticket-render-data'
 
-type InitTicketOgRootProps = {
+type InitTicketOgSharedProps = {
   data: InitTicketRenderData
   prepared: PreparedInitTicketOgData
 }
@@ -130,7 +131,38 @@ function TicketStubOg({
   )
 }
 
-export function InitTicketOgRoot({ data, prepared }: InitTicketOgRootProps) {
+export function InitTicketOgBackgroundRoot({ data, prepared }: InitTicketOgSharedProps) {
+  const usesDarkChrome = data.ticketAppearance.usesDarkChrome
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        display: 'flex',
+        width: INIT_TICKET_IMAGE_WIDTH,
+        height: INIT_TICKET_IMAGE_HEIGHT,
+        overflow: 'hidden',
+        backgroundColor: getInitTicketOgUiPalette(usesDarkChrome).background,
+      }}
+    >
+      <img
+        src={prepared.uiBackgroundSrc}
+        alt=""
+        width={INIT_TICKET_IMAGE_WIDTH}
+        height={INIT_TICKET_IMAGE_HEIGHT}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: INIT_TICKET_IMAGE_WIDTH,
+          height: INIT_TICKET_IMAGE_HEIGHT,
+        }}
+      />
+    </div>
+  )
+}
+
+export function InitTicketOgTicketLayer({ data, prepared }: InitTicketOgSharedProps) {
   const usesDarkChrome = data.ticketAppearance.usesDarkChrome
   const palette = getInitTicketOgPalette(usesDarkChrome)
   const accentColor = resolveInitTicketOgAccentColor(
@@ -150,8 +182,7 @@ export function InitTicketOgRoot({ data, prepared }: InitTicketOgRootProps) {
         display: 'flex',
         width: INIT_TICKET_IMAGE_WIDTH,
         height: INIT_TICKET_IMAGE_HEIGHT,
-        overflow: 'hidden',
-        backgroundColor: '#0a0a0a',
+        backgroundColor: 'rgba(0, 0, 0, 0)',
       }}
     >
       {prepared.backgroundSrc ? (
