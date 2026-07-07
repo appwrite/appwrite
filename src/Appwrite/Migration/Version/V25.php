@@ -7,6 +7,7 @@ use Exception;
 use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 
 class V25 extends Migration
 {
@@ -72,6 +73,15 @@ class V25 extends Migration
                             Console::warning("Failed to create attribute \"status\" in collection {$id}: {$th->getMessage()}");
                         }
                         $this->dbForProject->purgeCachedCollection($id);
+
+                        // Backfill existing databases so the stored value matches the intended default.
+                        foreach ($this->documentsIterator($id, [Query::isNull('status')]) as $database) {
+                            try {
+                                $this->dbForProject->updateDocument($id, $database->getId(), $database->setAttribute('status', 'ready'));
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to backfill \"status\" for database {$database->getId()}: {$th->getMessage()}");
+                            }
+                        }
                     }
                     break;
             }
