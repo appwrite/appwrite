@@ -2531,7 +2531,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('parent'),
+                '$id' => ID::custom('folder'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2730,9 +2730,9 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_parent'),
+                '$id' => ID::custom('_key_folder'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['parent'],
+                'attributes' => ['folder'],
                 'lengths' => [256],
                 'orders' => [Database::ORDER_ASC],
             ],

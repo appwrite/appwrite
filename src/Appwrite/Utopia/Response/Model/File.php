@@ -49,7 +49,7 @@ class File extends Model
                 'default' => '',
                 'example' => 'Pink.png',
             ])
-            ->addRule('parent', [
+            ->addRule('folder', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Virtual folder containing the file, with a trailing slash. Empty for the bucket root.',
                 'default' => '',
@@ -57,7 +57,7 @@ class File extends Model
             ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Full virtual path of the file: the parent folder followed by the file name.',
+                'description' => 'Full virtual path of the file: the folder followed by the file name.',
                 'default' => '',
                 'example' => 'photos/2026/Pink.png',
             ])
@@ -139,9 +139,9 @@ class File extends Model
         $encryption = !empty($document->getAttribute('openSSLCipher', ''));
         $document->setAttribute('encryption', $encryption);
 
-        $parent = $document->getAttribute('parent') ?? '';
-        $document->setAttribute('parent', $parent);
-        $document->setAttribute('key', $parent . $document->getAttribute('name', ''));
+        $folder = $document->getAttribute('folder') ?? '';
+        $document->setAttribute('folder', $folder);
+        $document->setAttribute('key', $folder . $document->getAttribute('name', ''));
 
         return $document;
     }

@@ -53,7 +53,7 @@ class XList extends Action
                 ]
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-            ->param('parent', '', new Folder(), 'Virtual folder to list the child folders of. Defaults to the bucket root.', true)
+            ->param('folder', '', new Folder(), 'Virtual folder to list the child folders of. Defaults to the bucket root.', true)
             ->param('limit', 25, new Range(1, 100), 'Maximum number of folders to return. Must be between 1 and 100. A page shorter than this limit means the listing is complete.', true)
             ->param('cursor', '', new Folder(), 'Folder path returned last by a previous page, used to continue the listing.', true)
             ->inject('response')
@@ -65,7 +65,7 @@ class XList extends Action
 
     public function action(
         string $bucketId,
-        string $parent,
+        string $folder,
         int $limit,
         string $cursor,
         Response $response,
@@ -88,7 +88,7 @@ class XList extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $parent = Folder::normalize($parent);
+        $parent = Folder::normalize($folder);
         $cursor = Folder::normalize($cursor);
 
         if ($cursor !== '') {
@@ -105,12 +105,12 @@ class XList extends Action
         try {
             while (\count($folders) < $limit) {
                 $queries = [
-                    Query::greaterThan('parent', $seek),
-                    Query::orderAsc('parent'),
+                    Query::greaterThan('folder', $seek),
+                    Query::orderAsc('folder'),
                     Query::limit(1),
                 ];
                 if ($parent !== '') {
-                    $queries[] = Query::startsWith('parent', $parent);
+                    $queries[] = Query::startsWith('folder', $parent);
                 }
 
                 if ($fileSecurity && !$valid) {
@@ -123,7 +123,7 @@ class XList extends Action
                     break;
                 }
 
-                $fileParent = $results[0]->getAttribute('parent', '');
+                $fileParent = $results[0]->getAttribute('folder', '');
                 $segment = \explode('/', \substr($fileParent, \strlen($parent)))[0];
                 $key = $parent . $segment . '/';
 
@@ -145,10 +145,10 @@ class XList extends Action
     }
 
     /**
-     * Smallest string that sorts after every `parent` value inside the given
+     * Smallest string that sorts after every `folder` value inside the given
      * folder: the trailing '/' replaced with the next code point ('0'), so a
      * seek jumps past all of the folder's contents in one indexed query.
-     * Assumes the database orders `parent` values bytewise (binary collation),
+     * Assumes the database orders `folder` values bytewise (binary collation),
      * so nothing sorts between '/' (0x2F) and '0' (0x30).
      */
     private static function seekPast(string $folder): string

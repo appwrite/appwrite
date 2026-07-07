@@ -73,7 +73,7 @@ class V25 extends Migration
     }
 
     /**
-     * Add the virtual folder `parent` attribute and index to every
+     * Add the virtual folder `folder` attribute and index to every
      * per-bucket files collection.
      *
      * @return void
@@ -86,19 +86,19 @@ class V25 extends Migration
             Console::log("Migrating Bucket {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
             try {
-                $this->createAttributeFromCollection($this->dbForProject, $bucketTable, 'parent', 'files');
+                $this->createAttributeFromCollection($this->dbForProject, $bucketTable, 'folder', 'files');
             } catch (Duplicate) {
-                Console::warning("'parent' from {$bucketTable}: Column already exists");
+                Console::warning("'folder' from {$bucketTable}: Column already exists");
             } catch (Throwable $th) {
-                Console::warning("'parent' from {$bucketTable}: {$th->getMessage()}");
+                Console::warning("'folder' from {$bucketTable}: {$th->getMessage()}");
             }
 
             try {
-                $this->createIndexFromCollection($this->dbForProject, $bucketTable, '_key_parent', 'files');
+                $this->createIndexFromCollection($this->dbForProject, $bucketTable, '_key_folder', 'files');
             } catch (Duplicate) {
-                Console::warning("'_key_parent' from {$bucketTable}: Index already exists");
+                Console::warning("'_key_folder' from {$bucketTable}: Index already exists");
             } catch (Throwable $th) {
-                Console::warning("'_key_parent' from {$bucketTable}: {$th->getMessage()}");
+                Console::warning("'_key_folder' from {$bucketTable}: {$th->getMessage()}");
             }
 
             $this->dbForProject->purgeCachedCollection($bucketTable);

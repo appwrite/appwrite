@@ -62,7 +62,7 @@ class XList extends Action
             ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->param('parent', null, new Nullable(new Folder()), 'Filter results to files directly inside this virtual folder. Pass an empty string for the bucket root. Returns files from all folders when omitted.', true)
+            ->param('folder', null, new Nullable(new Folder()), 'Filter results to files directly inside this virtual folder. Pass an empty string for the bucket root. Returns files from all folders when omitted.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('mode')
@@ -76,7 +76,7 @@ class XList extends Action
         array $queries,
         string $search,
         bool $includeTotal,
-        ?string $parent,
+        ?string $folder,
         Response $response,
         Database $dbForProject,
         string $mode,
@@ -108,11 +108,11 @@ class XList extends Action
             $queries[] = Query::search('search', $search);
         }
 
-        if (!\is_null($parent)) {
-            $parent = Folder::normalize($parent);
-            $queries[] = $parent === ''
-                ? Query::or([Query::equal('parent', ['']), Query::isNull('parent')])
-                : Query::equal('parent', [$parent]);
+        if (!\is_null($folder)) {
+            $folder = Folder::normalize($folder);
+            $queries[] = $folder === ''
+                ? Query::or([Query::equal('folder', ['']), Query::isNull('folder')])
+                : Query::equal('folder', [$folder]);
         }
 
         $cursor = Query::getCursorQueries($queries, false);

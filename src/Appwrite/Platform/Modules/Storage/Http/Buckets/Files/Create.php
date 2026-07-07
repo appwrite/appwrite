@@ -86,7 +86,7 @@ class Create extends Action
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('parent', '', new Folder(), 'Virtual folder to place the file in, for example "photos/2026". Nest folders with `/`. Defaults to the bucket root.', true)
+            ->param('folder', '', new Folder(), 'Virtual folder to place the file in, for example "photos/2026". Nest folders with `/`. Defaults to the bucket root.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -105,7 +105,7 @@ class Create extends Action
         string $fileId,
         mixed $file,
         ?array $permissions,
-        string $parent,
+        string $folder,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -193,7 +193,7 @@ class Create extends Action
 
         $contentRange = $request->getHeaderLine('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
-        $parent = Folder::normalize($parent);
+        $folder = Folder::normalize($folder);
         $chunk = 1;
         $chunks = 1;
 
@@ -265,7 +265,7 @@ class Create extends Action
         };
 
         try {
-            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $parent, $path, $permissions, $response, &$completed): void {
+            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
                 $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                 if (!$file->isEmpty()) {
                     $chunks = $file->getAttribute('chunksTotal', 1);
@@ -296,7 +296,7 @@ class Create extends Action
                             'bucketId' => $bucket->getId(),
                             'bucketInternalId' => $bucket->getSequence(),
                             'name' => $fileName,
-                            'parent' => $parent,
+                            'folder' => $folder,
                             'path' => $path,
                             'signature' => '',
                             'mimeType' => '',
@@ -330,7 +330,7 @@ class Create extends Action
             return;
         }
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $parent, $path, $permissions, $queueForEvents, $response): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -433,7 +433,7 @@ class Create extends Action
                         'bucketId' => $bucket->getId(),
                         'bucketInternalId' => $bucket->getSequence(),
                         'name' => $fileName,
-                        'parent' => $parent,
+                        'folder' => $folder,
                         'path' => $path,
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,

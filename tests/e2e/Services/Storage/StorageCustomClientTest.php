@@ -1622,7 +1622,7 @@ final class StorageCustomClientTest extends Scope
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $bucketId = $bucket['body']['$id'];
 
-        $upload = function (string $parent, array $permissions) use ($bucketId): void {
+        $upload = function (string $folder, array $permissions) use ($bucketId): void {
             $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1630,7 +1630,7 @@ final class StorageCustomClientTest extends Scope
             ], [
                 'fileId' => ID::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-                'parent' => $parent,
+                'folder' => $folder,
                 'permissions' => $permissions,
             ]);
             $this->assertEquals(201, $file['headers']['status-code']);

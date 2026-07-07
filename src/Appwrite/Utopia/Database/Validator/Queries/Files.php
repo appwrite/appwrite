@@ -6,7 +6,7 @@ class Files extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'parent',
+        'folder',
         'signature',
         'mimeType',
         'sizeOriginal',
