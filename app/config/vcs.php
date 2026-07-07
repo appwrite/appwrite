@@ -5,6 +5,8 @@
  * add an entry here (plus an OAuth2 adapter if auth is 'oauth2').
  */
 
+use Appwrite\Auth\OAuth2\Gitea as GiteaOAuth2;
+use Appwrite\Auth\OAuth2\Github as GithubOAuth2;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -13,7 +15,7 @@ return [
         'name' => 'GitHub',
         'enabled' => true,
         'adapter' => GitHub::class,
-        'oauth2' => 'Appwrite\\Auth\\OAuth2\\Github',
+        'oauth2' => GithubOAuth2::class,
         'auth' => 'app',
         'envPrefix' => '_APP_VCS_GITHUB',
         'required' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
@@ -36,7 +38,7 @@ return [
         'name' => 'Gitea',
         'enabled' => true,
         'adapter' => Gitea::class,
-        'oauth2' => 'Appwrite\\Auth\\OAuth2\\Gitea',
+        'oauth2' => GiteaOAuth2::class,
         'auth' => 'oauth2',
         'envPrefix' => '_APP_VCS_GITEA',
         'required' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET'],
