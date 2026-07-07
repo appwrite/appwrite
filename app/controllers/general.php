@@ -1698,7 +1698,7 @@ Http::get('/v1/ping')
 
         $pingCount = $project->getAttribute('pingCount', 0) + 1;
 
-        if ($pingCount <= 1) {
+        if ($pingCount === 1) {
             $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
                 'pingCount' => $pingCount,
                 'pingedAt' => DateTime::now(),
