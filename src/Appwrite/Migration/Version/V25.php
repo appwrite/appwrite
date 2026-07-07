@@ -63,6 +63,17 @@ class V25 extends Migration
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+
+                case 'databases':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'status');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"status\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
             }
         }
     }
