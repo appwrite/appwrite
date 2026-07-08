@@ -20,7 +20,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
@@ -67,21 +67,18 @@ class Base extends Action
         return $allowedSpecifications[0];
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -98,13 +95,13 @@ class Base extends Action
             $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
             $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
             try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+                $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } elseif ($referenceType === 'commit') {
             try {
-                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+                $commitDetails = $vcs->getCommit($owner, $repositoryName, $reference);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
@@ -163,20 +160,17 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -193,13 +187,13 @@ class Base extends Action
             $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
             $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
             try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+                $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } elseif ($referenceType === 'commit') {
             try {
-                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+                $commitDetails = $vcs->getCommit($owner, $repositoryName, $reference);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }

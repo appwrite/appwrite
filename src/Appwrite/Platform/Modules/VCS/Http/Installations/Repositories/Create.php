@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -17,7 +18,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
 {
@@ -53,7 +53,7 @@ class Create extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('name', '', new Text(256), 'Repository name (slug)')
             ->param('private', '', new Boolean(false), 'Mark repository public or private')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -64,7 +64,7 @@ class Create extends Action
         string $installationId,
         string $name,
         bool $private,
-        GitHub $github,
+        Factory $vcsFactory,
         Document $user,
         Response $response,
         Database $dbForPlatform
@@ -128,13 +128,11 @@ class Create extends Action
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId);
+            $vcs = $vcsFactory->fromInstallation($installation);
+            $owner = $vcs->getOwnerName($providerInstallationId);
 
             try {
-                $repository = $github->createRepository($owner, $name, $private);
+                $repository = $vcs->createRepository($owner, $name, $private);
             } catch (Exception $exception) {
                 throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "GitHub failed to process the request: " . $exception->getMessage());
             }

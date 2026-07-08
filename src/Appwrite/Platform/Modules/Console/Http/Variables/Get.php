@@ -7,6 +7,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -46,14 +47,19 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON
             ))
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('platform')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, array $platform, Database $dbForProject)
-    {
+    public function action(
+        Factory $vcsFactory,
+        Response $response,
+        array $platform,
+        Database $dbForProject
+    ) {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
 
@@ -66,11 +72,7 @@ class Get extends Action
 
         $isDomainEnabled = $isAAAAValid || $isAValid || $isCNAMEValid;
 
-        $isVcsEnabled = !empty(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
+        $isVcsEnabled = !empty($vcsFactory->getProviders());
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 

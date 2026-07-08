@@ -20,6 +20,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Vcs\Factory;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -41,7 +42,6 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -128,7 +128,7 @@ class Create extends Base
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -172,7 +172,7 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github,
+        Factory $vcsFactory,
         Authorization $authorization,
         array $platform
     ) {
@@ -344,7 +344,7 @@ class Create extends Base
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
                     template: $template,
-                    github: $github,
+                    vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,

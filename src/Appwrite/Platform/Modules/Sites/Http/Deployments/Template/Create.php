@@ -12,6 +12,8 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory;
+use Utopia\VCS\Adapter\Git;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -26,7 +28,6 @@ use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -81,7 +82,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -102,7 +103,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        Factory $vcsFactory,
         Authorization $authorization,
         array $platform
     ) {
@@ -135,7 +136,7 @@ class Create extends Base
                 dbForPlatform: $dbForPlatform,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
                 authorization: $authorization,
                 platform: $platform
@@ -178,7 +179,7 @@ class Create extends Base
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
+            'providerBranch' => $type == Git::CLONE_TYPE_BRANCH ? $reference : '',
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',

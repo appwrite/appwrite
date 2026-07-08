@@ -5,6 +5,7 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,7 +19,6 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
@@ -227,11 +227,11 @@ Http::get('/v1/mock/github/callback')
     ->label('docs', false)
     ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
     ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
-    ->inject('gitHub')
+    ->inject('vcsFactory')
     ->inject('project')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForPlatform) {
+    ->action(function (string $providerInstallationId, string $projectId, Factory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -249,10 +249,9 @@ Http::get('/v1/mock/github/callback')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
 
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($providerInstallationId);
+        $vcs = $vcsFactory->fromProvider('github');
+        $vcs->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'), System::getEnv('_APP_VCS_GITHUB_APP_ID'));
+        $owner = $vcs->getOwnerName($providerInstallationId);
 
         $projectInternalId = $project->getSequence();
 
