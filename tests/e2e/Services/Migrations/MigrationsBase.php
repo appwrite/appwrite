@@ -695,6 +695,51 @@ trait MigrationsBase
         $this->assertEquals($databaseId, $response['body']['$id']);
         $this->assertEquals('Test Database', $response['body']['name']);
 
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        $this->assertMigrationSkipAndOverwrite(
+            [Resource::TYPE_DATABASE],
+            function () use ($databaseId, $destinationHeaders): void {
+                $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, $destinationHeaders, [
+                    'name' => 'Destination Database',
+                    'enabled' => false,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+            },
+            function (array $migration) use ($databaseId, $destinationHeaders): void {
+                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_DATABASE]['skip']);
+
+                $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, $destinationHeaders);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame('Destination Database', $response['body']['name']);
+                $this->assertFalse($response['body']['enabled']);
+            },
+            function () use ($databaseId, $sourceHeaders): void {
+                $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, $sourceHeaders, [
+                    'name' => 'Source Database Overwrite',
+                    'enabled' => true,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+            },
+            function (array $migration) use ($databaseId, $destinationHeaders): void {
+                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_DATABASE]['success']);
+
+                $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, $destinationHeaders);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame('Source Database Overwrite', $response['body']['name']);
+                $this->assertTrue($response['body']['enabled']);
+            },
+        );
+
         // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
@@ -802,6 +847,55 @@ trait MigrationsBase
         $this->assertEquals('name', $response['body']['key']);
         $this->assertEquals(100, $response['body']['size']);
         $this->assertEquals(true, $response['body']['required']);
+
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        $this->assertMigrationSkipAndOverwrite(
+            [Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN],
+            function () use ($databaseId, $tableId, $destinationHeaders): void {
+                $response = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $tableId, $destinationHeaders, [
+                    'name' => 'Destination Table',
+                    'permissions' => [],
+                    'rowSecurity' => false,
+                    'enabled' => false,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+            },
+            function (array $migration) use ($databaseId, $tableId, $destinationHeaders): void {
+                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_TABLE]['skip']);
+
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, $destinationHeaders);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame('Destination Table', $response['body']['name']);
+                $this->assertFalse($response['body']['enabled']);
+            },
+            function () use ($databaseId, $tableId, $sourceHeaders): void {
+                $response = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $tableId, $sourceHeaders, [
+                    'name' => 'Source Table Overwrite',
+                    'permissions' => [],
+                    'rowSecurity' => false,
+                    'enabled' => true,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+            },
+            function (array $migration) use ($databaseId, $tableId, $destinationHeaders): void {
+                $this->assertGreaterThanOrEqual(1, $migration['statusCounters'][Resource::TYPE_TABLE]['success']);
+
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, $destinationHeaders);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame('Source Table Overwrite', $response['body']['name']);
+                $this->assertTrue($response['body']['enabled']);
+            },
+        );
 
         // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
