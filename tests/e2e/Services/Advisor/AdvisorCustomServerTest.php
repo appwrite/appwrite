@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Advisor;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 
-class AdvisorCustomServerTest extends Scope
+final class AdvisorCustomServerTest extends Scope
 {
     use AdvisorBase;
     use ProjectCustom;

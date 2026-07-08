@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -40,6 +41,7 @@ class Delete extends Action
             ->label('event', 'sites.[siteId].deployments.[deploymentId].delete')
             ->label('audits.event', 'deployment.delete')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -89,8 +91,16 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+        try {
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
+        } catch (TransactionException) {
+            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+
+            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {

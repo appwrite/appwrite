@@ -102,6 +102,60 @@ abstract class Format
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    protected function getArrayItemsSchema(mixed $example): array
+    {
+        if (\is_string($example)) {
+            $decoded = \json_decode($example, true);
+            if (\is_array($decoded)) {
+                $example = $decoded;
+            }
+        }
+
+        if (!\is_array($example) || empty($example)) {
+            return ['type' => 'object'];
+        }
+
+        foreach ($example as $item) {
+            if ($item === null) {
+                continue;
+            }
+
+            if (\is_array($item)) {
+                if (!\array_is_list($item)) {
+                    return [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ];
+                }
+
+                return [
+                    'type' => 'array',
+                    'items' => $this->getArrayItemsSchema($item),
+                ];
+            }
+
+            if (\is_int($item) || \is_float($item)) {
+                return [
+                    'type' => 'number',
+                    'format' => 'double',
+                ];
+            }
+
+            return [
+                'type' => match (\gettype($item)) {
+                    'boolean' => 'boolean',
+                    'string' => 'string',
+                    default => 'object',
+                },
+            ];
+        }
+
+        return ['type' => 'object'];
+    }
+
+    /**
      * Set Services.
      *
      * Set services value

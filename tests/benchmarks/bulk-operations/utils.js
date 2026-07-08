@@ -1,5 +1,8 @@
 import http from 'k6/http';
 import { check } from 'k6';
+import { ENDPOINT } from '../config.js';
+
+export { ENDPOINT };
 
 /**
  * @typedef {Object} AuthHeaders
@@ -47,7 +50,7 @@ function assert(response, checkName, condition) {
  * - API Key creation
  * 
  * @param {Object} config Configuration object
- * @param {string} config.endpoint Base endpoint URL (e.g., 'http://localhost:80/v1')
+ * @param {string} config.endpoint Base endpoint URL (e.g., 'http://localhost:9520/v1')
  * @param {string} config.email Email for account creation
  * @param {string} config.password Password for account creation
  * @param {string} config.name Name for account creation
@@ -165,7 +168,7 @@ export function provisionProject(config) {
  * Example usage:
  * 
  * const config = {
- *     endpoint: 'http://localhost:80/v1',
+ *     endpoint: 'http://localhost:9520/v1',
  *     email: 'test@example.com',
  *     password: 'complex-password',
  *     name: 'Test User',

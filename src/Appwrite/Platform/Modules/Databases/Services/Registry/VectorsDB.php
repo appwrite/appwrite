@@ -19,7 +19,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Delet
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Get as GetIndex;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\XList as ListIndexes;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Update as UpdateCollection;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Usage\Get as GetCollectionUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Create as CreateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Delete as DeleteVectorDatabase;
@@ -32,8 +31,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Operations\C
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Update as UpdateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Update as UpdateVectorDatabase;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Usage\Get as GetVectorDatabaseUsage;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Usage\XList as ListVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\XList as ListVectorDatabases;
 use Utopia\Platform\Service;
 
@@ -56,8 +53,6 @@ class VectorsDB extends Base
         $service->addAction(UpdateVectorDatabase::getName(), new UpdateVectorDatabase());
         $service->addAction(DeleteVectorDatabase::getName(), new DeleteVectorDatabase());
         $service->addAction(ListVectorDatabases::getName(), new ListVectorDatabases());
-        $service->addAction(GetVectorDatabaseUsage::getName(), new GetVectorDatabaseUsage());
-        $service->addAction(ListVectorDatabaseUsage::getName(), new ListVectorDatabaseUsage());
     }
 
     private function registerCollectionActions(Service $service): void
@@ -67,7 +62,6 @@ class VectorsDB extends Base
         $service->addAction(UpdateCollection::getName(), new UpdateCollection());
         $service->addAction(DeleteCollection::getName(), new DeleteCollection());
         $service->addAction(ListCollections::getName(), new ListCollections());
-        $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
     }
 
     private function registerIndexActions(Service $service): void

@@ -162,7 +162,6 @@ trait Base
     public const string GET_ACCOUNT_SESSION = 'get_account_session';
     public const string GET_ACCOUNT_SESSIONS = 'get_account_sessions';
     public const string GET_ACCOUNT_PREFS = 'get_account_preferences';
-    public const string GET_ACCOUNT_LOGS = 'get_account_logs';
     public const string UPDATE_ACCOUNT_NAME = 'update_account_name';
     public const string UPDATE_ACCOUNT_EMAIL = 'update_account_email';
     public const string UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
@@ -183,7 +182,6 @@ trait Base
     public const string GET_USER_PREFERENCES = 'get_user_preferences';
     public const string GET_USER_SESSIONS = 'get_user_sessions';
     public const string GET_USER_MEMBERSHIPS = 'get_user_memberships';
-    public const string GET_USER_LOGS = 'get_user_logs';
     public const string UPDATE_USER_STATUS = 'update_user_status';
     public const string UPDATE_USER_NAME = 'update_user_name';
     public const string UPDATE_USER_EMAIL = 'update_user_email';
@@ -266,7 +264,6 @@ trait Base
     public const string GET_CACHE_HEALTH = 'get_cache_health';
     public const string GET_TIME_HEALTH = 'get_time_health';
     public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public const string GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
     public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
     public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
     public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
@@ -1514,16 +1511,6 @@ trait Base
                         }
                     }
                 }';
-            case self::GET_USER_LOGS:
-                return 'query listUserLogs($userId : String!) {
-                    usersListLogs(userId : $userId) {
-                        total
-                        logs {
-                            event
-                            userId
-                        }
-                    }
-                }';
             case self::GET_USERS:
                 return 'query listUsers($queries: [String!], $search: String) {
                     usersList(queries: $queries, search: $search) {
@@ -1957,18 +1944,6 @@ trait Base
                             _id
                             userId
                             expire
-                        }
-                    }
-                }';
-            case self::GET_ACCOUNT_LOGS:
-                return 'query getAccountLogs {
-                    accountListLogs {
-                        total
-                        logs {
-                            event
-                            userId
-                            ip
-                            countryName
                         }
                     }
                 }';
@@ -2472,12 +2447,6 @@ trait Base
             case self::GET_WEBHOOKS_QUEUE_HEALTH:
                 return 'query getWebhooksQueueHealth {
                     healthGetQueueWebhooks {
-                        size
-                    }
-                }';
-            case self::GET_LOGS_QUEUE_HEALTH:
-                return 'query getLogsQueueHealth {
-                    healthGetQueueLogs {
                         size
                     }
                 }';

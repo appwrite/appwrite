@@ -13,11 +13,10 @@ use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Push\Get as GetFileForP
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Update as UpdateFile;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\View\Get as GetFileView;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\XList as ListFiles;
+use Appwrite\Platform\Modules\Storage\Http\Buckets\Folders\XList as ListFolders;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Get as GetBucket;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Update as UpdateBucket;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\XList as ListBuckets;
-use Appwrite\Platform\Modules\Storage\Http\Usage\Get as GetBucketUsage;
-use Appwrite\Platform\Modules\Storage\Http\Usage\XList as ListUsage;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -44,8 +43,7 @@ class Http extends Service
         $this->addAction(GetFileView::getName(), new GetFileView());
         $this->addAction(GetFileForPush::getName(), new GetFileForPush());
 
-        // Usage
-        $this->addAction(ListUsage::getName(), new ListUsage());
-        $this->addAction(GetBucketUsage::getName(), new GetBucketUsage());
+        // Folders
+        $this->addAction(ListFolders::getName(), new ListFolders());
     }
 }

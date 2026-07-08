@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -148,6 +149,11 @@ $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublis
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
@@ -326,8 +332,6 @@ function getDevice(string $root, string $connection = ''): Device
         }
     }
 }
-
-$container->set('geodb', fn ($register) => $register->get('geodb'), ['register']);
 
 $container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 

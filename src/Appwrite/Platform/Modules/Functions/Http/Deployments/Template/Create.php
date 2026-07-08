@@ -48,6 +48,7 @@ class Create extends Base
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -173,19 +174,6 @@ class Create extends Base
             'type' => 'vcs',
             'activate' => $activate,
         ]));
-
-        $function = $function
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), new Document([
-            'latestDeploymentId' => $function->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $function->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $function->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
-        ]));
-
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
 

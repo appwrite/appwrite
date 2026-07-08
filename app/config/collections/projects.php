@@ -1306,7 +1306,7 @@ return [
                 'size' => 128,
                 'signed' => false,
                 'required' => false,
-                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'default' => APP_SITES_BUILD_SPECIFICATION_DEFAULT,
                 'filters' => [],
             ],
             [
@@ -1872,7 +1872,7 @@ return [
                 '$id' => ID::custom('buildLogs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000,
+                'size' => APP_LOG_LENGTH_LIMIT,
                 'signed' => true,
                 'required' => false,
                 'default' => '',

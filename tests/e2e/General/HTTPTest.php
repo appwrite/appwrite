@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\General;
 
 use Tests\E2E\Client;
@@ -8,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
 use Utopia\Config\Config;
 
-class HTTPTest extends Scope
+final class HTTPTest extends Scope
 {
     use ProjectNone;
     use SideNone;
@@ -54,7 +56,7 @@ class HTTPTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('# humanstxt.org/', $response['body']);
+        $this->assertStringContainsString('# humanstxt.org/', (string) $response['body']);
     }
 
     public function testRobots()
@@ -67,7 +69,7 @@ class HTTPTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code'], "Simple GET /robots.txt HTTP request failed: " . \json_encode($response));
-        $this->assertStringContainsString('# robotstxt.org/', $response['body']);
+        $this->assertStringContainsString('# robotstxt.org/', (string) $response['body']);
     }
 
     public function testAcmeChallenge()

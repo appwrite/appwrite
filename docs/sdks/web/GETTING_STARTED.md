@@ -15,7 +15,7 @@ Initialize your SDK with your Appwrite server API endpoint and project ID which 
 const client = new Client();
 
 client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
+    .setEndpoint('http://localhost:9520/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj') // Your project ID
 ;
 ```
@@ -44,7 +44,7 @@ account.create(ID.unique(), "email@example.com", "password", "Walter O'Brien")
 const client = new Client();
 
 client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
+    .setEndpoint('http://localhost:9520/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj')
 ;
 

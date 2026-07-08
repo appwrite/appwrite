@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\GraphQL;
 
 use Appwrite\GraphQL\Types\Mapper;
@@ -8,7 +10,7 @@ use GraphQL\Type\Definition\NamedType;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
 
-class BuilderTest extends TestCase
+final class BuilderTest extends TestCase
 {
     protected ?Response $response = null;
 
@@ -26,6 +28,6 @@ class BuilderTest extends TestCase
         $model = $this->response->getModel(Response::MODEL_TABLE);
         $type = Mapper::model(\ucfirst($model->getType()));
         $this->assertInstanceOf(NamedType::class, $type);
-        $this->assertEquals('Table', $type->name());
+        $this->assertSame('Table', $type->name());
     }
 }

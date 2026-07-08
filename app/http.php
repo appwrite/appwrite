@@ -11,9 +11,6 @@ use Swoole\Constant;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
-use Utopia\Audit\Adapter\Database as AdapterDatabase;
-use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
-use Utopia\Audit\Audit;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -270,8 +267,8 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             '$id' => ID::custom($index['$id']),
             'type' => $index['type'],
             'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
+            'lengths' => $index['lengths'] ?? [],
+            'orders' => $index['orders'] ?? [],
         ]), $collection['indexes']);
 
         $database->createCollection($key, $attributes, $indexes);
@@ -302,12 +299,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($container, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $container) {
             $authorization = $container->get('authorization');
-
-            if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
-                $adapter = new AdapterDatabase($dbForPlatform);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 $dbForPlatform->createDocument('buckets', new Document([
@@ -353,8 +344,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]), $files['indexes']);
 
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
@@ -399,8 +390,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
+                    'lengths' => $index['lengths'] ?? [],
+                    'orders' => $index['orders'] ?? [],
                 ]), $files['indexes']);
 
                 $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
@@ -453,12 +444,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     }
                     sleep($sleep);
                 }
-            }
-
-            if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
             }
 
             $collectionsCreated = 0;
@@ -529,6 +514,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
+    $error = null;
     try {
         $authorization = $app->context()->get('authorization');
 
@@ -542,7 +528,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
         $route = $app->match($request)?->route;
         Span::add('http.path', $route?->getPath() ?? 'unknown');
     } catch (\Throwable $th) {
-        Span::error($th);
+        $error = $th;
 
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -577,7 +563,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
             $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
 
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
@@ -631,7 +617,7 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
         $swooleResponse->end(\json_encode($output));
     } finally {
         Span::add('http.response.code', $response->getStatusCode());
-        Span::current()?->finish();
+        Span::current()?->finish(error: $error);
     }
 });
 

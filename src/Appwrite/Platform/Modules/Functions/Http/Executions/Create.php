@@ -11,9 +11,9 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
@@ -21,7 +21,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
@@ -67,6 +66,7 @@ class Create extends Base
             ->label('scope', ['executions.write', 'execution.write'])
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -81,7 +81,6 @@ class Create extends Base
                         model: Response::MODEL_EXECUTION,
                     )
                 ],
-                contentType: ContentType::MULTIPART,
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
@@ -99,7 +98,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('publisherForFunctions')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
@@ -127,7 +126,7 @@ class Create extends Base
         Event $queueForEvents,
         Context $usage,
         FunctionPublisher $publisherForFunctions,
-        Reader $geodb,
+        GeoRecord $geoRecord,
         Store $store,
         Token $proofForToken,
         Executor $executor,
@@ -242,16 +241,10 @@ class Create extends Base
         $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
 
-        if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
-                $eu = Config::getParam('locale-eu');
-
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
-            }
+        if (!empty($ip) && !$geoRecord->isEmpty()) {
+            $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+            $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+            $headers['x-appwrite-continent-eu'] = $geoRecord->isEu() ? 'true' : 'false';
         }
 
         $headersFiltered = [];
@@ -260,8 +253,6 @@ class Create extends Base
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
-
-
 
         $status = $async ? 'waiting' : 'processing';
 
@@ -326,6 +317,7 @@ class Create extends Base
                     'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
                     'schedule' => $scheduledAt,
                     'data' => $data,
                     'active' => true,
@@ -519,7 +511,7 @@ class Create extends Base
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
-        $acceptTypes = \explode(', ', $request->getHeader('accept'));
+        $acceptTypes = \explode(', ', $request->getHeaderLine('accept'));
         foreach ($acceptTypes as $acceptType) {
             if (\str_starts_with($acceptType, 'application/json') || \str_starts_with($acceptType, 'application/*')) {
                 $response->setContentType(Response::CONTENT_TYPE_JSON);

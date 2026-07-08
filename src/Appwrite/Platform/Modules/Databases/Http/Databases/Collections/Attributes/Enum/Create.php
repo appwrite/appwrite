@@ -46,6 +46,7 @@ class Create extends Action
             ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
             ->label('audits.event', 'attribute.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),

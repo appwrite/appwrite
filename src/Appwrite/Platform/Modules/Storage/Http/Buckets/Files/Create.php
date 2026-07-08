@@ -13,6 +13,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -62,6 +63,7 @@ class Create extends Action
             ->label('audits.event', 'file.create')
             ->label('event', 'buckets.[bucketId].files.[fileId].create')
             ->label('audits.resource', 'file/{response.$id}')
+            ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -84,6 +86,7 @@ class Create extends Action
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('folder', '', new Folder(), 'Virtual folder to place the file in, for example "photos/2026". Nest folders with `/`. Defaults to the bucket root.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -102,6 +105,7 @@ class Create extends Action
         string $fileId,
         mixed $file,
         ?array $permissions,
+        string $folder,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -187,8 +191,9 @@ class Create extends Action
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        $contentRange = $request->getHeader('content-range');
+        $contentRange = $request->getHeaderLine('content-range');
         $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
+        $folder = Folder::normalize($folder);
         $chunk = 1;
         $chunks = 1;
 
@@ -196,7 +201,7 @@ class Create extends Action
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
-            $fileId = $request->getHeader('x-appwrite-id', $fileId);
+            $fileId = $request->getHeaderLine('x-appwrite-id', $fileId);
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
@@ -260,8 +265,8 @@ class Create extends Action
         };
 
         try {
-            $locks($lockKey, 600, function () use ($bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $path, $permissions, $response, &$completed): void {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $locks($lockKey, 600, function () use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed): void {
+                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                 if (!$file->isEmpty()) {
                     $chunks = $file->getAttribute('chunksTotal', 1);
                     $uploaded = $file->getAttribute('chunksUploaded', 0);
@@ -291,6 +296,7 @@ class Create extends Action
                             'bucketId' => $bucket->getId(),
                             'bucketInternalId' => $bucket->getSequence(),
                             'name' => $fileName,
+                            'folder' => $folder,
                             'path' => $path,
                             'signature' => '',
                             'mimeType' => '',
@@ -324,8 +330,8 @@ class Create extends Action
             return;
         }
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $path, $permissions, $queueForEvents, $response): void {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response): void {
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
             if (!$file->isEmpty()) {
@@ -427,6 +433,7 @@ class Create extends Action
                         'bucketId' => $bucket->getId(),
                         'bucketInternalId' => $bucket->getSequence(),
                         'name' => $fileName,
+                        'folder' => $folder,
                         'path' => $path,
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
