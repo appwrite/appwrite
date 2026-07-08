@@ -14,7 +14,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-final class ResolverTest extends TestCase
+final class ManagerTest extends TestCase
 {
     protected function tearDown(): void
     {
