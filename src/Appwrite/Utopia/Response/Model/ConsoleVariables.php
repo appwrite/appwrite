@@ -68,7 +68,7 @@ class ConsoleVariables extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'List of configured VCS providers.',
                 'default' => [],
-                'example' => 'github',
+                'example' => ['github'],
                 'array' => true,
             ])
             ->addRule('_APP_DOMAIN_ENABLED', [

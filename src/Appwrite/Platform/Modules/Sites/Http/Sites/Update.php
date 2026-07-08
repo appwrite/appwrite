@@ -11,7 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -145,7 +145,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        Resolver $vcs,
+        Manager $vcs,
         Executor $executor,
         array $platform
     ) {

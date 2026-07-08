@@ -35,12 +35,14 @@ final class ProviderTest extends TestCase
             $this->assertTrue(\class_exists($config['oauth2']), "OAuth2 class missing for '{$key}'");
             $this->assertTrue(\is_subclass_of($config['oauth2'], OAuth2::class), "OAuth2 for '{$key}' must extend OAuth2");
             $this->assertContains($config['auth'], [Provider::AUTH_APP, Provider::AUTH_OAUTH2], "Invalid auth type for '{$key}'");
-            $this->assertStringStartsWith('_APP_VCS_', $config['envPrefix'], "Invalid env prefix for '{$key}'");
-            $this->assertNotEmpty($config['required'], "Required env keys missing for '{$key}'");
+            $this->assertNotEmpty($config['requiredEnvVariables'], "Required env variables missing for '{$key}'");
+            foreach ($config['requiredEnvVariables'] as $requiredKey) {
+                $this->assertStringStartsWith('_APP_VCS_', $config['envVariables'][$requiredKey] ?? '', "Env variable for required key '{$requiredKey}' missing or invalid for '{$key}'");
+            }
             $this->assertNotEmpty($config['headers']['event'] ?? '', "Event header missing for '{$key}'");
             $this->assertNotEmpty($config['headers']['signature'] ?? '', "Signature header missing for '{$key}'");
             foreach (['repository', 'branch', 'commit', 'file'] as $template) {
-                $this->assertArrayHasKey($template, $config['urls'], "URL template '{$template}' missing for '{$key}'");
+                $this->assertNotEmpty($config[$template . 'Url'] ?? '', "URL template '{$template}Url' missing for '{$key}'");
             }
 
             $provider = new Provider($key, $config);
@@ -63,10 +65,12 @@ final class ProviderTest extends TestCase
         \putenv('_APP_VCS_TEST_ENDPOINT=http://gitea:3000/');
 
         $provider = new Provider('test', [
-            'envPrefix' => '_APP_VCS_TEST',
-            'endpoint' => true,
+            'envVariables' => [
+                'ENDPOINT' => '_APP_VCS_TEST_ENDPOINT',
+                'BROWSER_ENDPOINT' => '_APP_VCS_TEST_BROWSER_ENDPOINT',
+            ],
             'browserEndpoint' => null,
-            'urls' => ['repository' => '{base}/{owner}/{repository}'],
+            'repositoryUrl' => '{base}/{owner}/{repository}',
         ]);
 
         $this->assertSame('http://gitea:3000', $provider->getEndpoint());
@@ -80,8 +84,8 @@ final class ProviderTest extends TestCase
     public function testIsConfigured(): void
     {
         $provider = new Provider('test', [
-            'envPrefix' => '_APP_VCS_TEST',
-            'required' => ['TOKEN'],
+            'envVariables' => ['TOKEN' => '_APP_VCS_TEST_TOKEN'],
+            'requiredEnvVariables' => ['TOKEN'],
         ]);
 
         $this->assertFalse($provider->isConfigured());

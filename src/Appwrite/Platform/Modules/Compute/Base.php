@@ -95,15 +95,15 @@ class Base extends Action
         return $owner;
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
         $provider = VcsProvider::fromKey($installation->getAttribute('provider', 'github'));
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
-        $owner = $this->initializeGitAdapter($github, $provider, $installation, $providerRepositoryId);
+        $owner = $this->initializeGitAdapter($vcs, $provider, $installation, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -120,13 +120,13 @@ class Base extends Action
             $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
             $branchUrl = $provider->getBranchUrl($owner, $repositoryName, $providerBranch);
             try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+                $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } elseif ($referenceType === 'commit') {
             try {
-                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+                $commitDetails = $vcs->getCommit($owner, $repositoryName, $reference);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
@@ -185,14 +185,14 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $provider = VcsProvider::fromKey($installation->getAttribute('provider', 'github'));
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
-        $owner = $this->initializeGitAdapter($github, $provider, $installation, $providerRepositoryId);
+        $owner = $this->initializeGitAdapter($vcs, $provider, $installation, $providerRepositoryId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -209,13 +209,13 @@ class Base extends Action
             $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
             $branchUrl = $provider->getBranchUrl($owner, $repositoryName, $providerBranch);
             try {
-                $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+                $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
         } elseif ($referenceType === 'commit') {
             try {
-                $commitDetails = $github->getCommit($owner, $repositoryName, $reference);
+                $commitDetails = $vcs->getCommit($owner, $repositoryName, $reference);
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
