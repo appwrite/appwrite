@@ -1849,6 +1849,63 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('Can\'t delete ongoing execution.', (string) $execution['body']['message']);
     }
 
+    public function testDeleteExecutionRejectsExecutionFromAnotherFunction(): void
+    {
+        $functionA = $this->setupTestDeployment();
+
+        $functionB = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Second Function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        $this->assertEquals(201, $functionB['headers']['status-code']);
+        $functionBId = $functionB['body']['$id'] ?? '';
+
+        $deploymentB = $this->createDeployment($functionBId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deploymentB['headers']['status-code']);
+        $deploymentBId = $deploymentB['body']['$id'] ?? '';
+
+        $this->assertEventually(function () use ($functionBId, $deploymentBId) {
+            $deployment = $this->getDeployment($functionBId, $deploymentBId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        $executionB = $this->createExecution($functionBId, [
+            'async' => 'false',
+        ]);
+
+        $this->assertEquals(201, $executionB['headers']['status-code']);
+        $executionBId = $executionB['body']['$id'] ?? '';
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionA['functionId'] . '/executions/' . $executionBId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $execution['headers']['status-code']);
+        $this->assertStringContainsString('Execution with the requested ID could not be found', (string) $execution['body']['message']);
+
+        $execution = $this->getExecution($functionBId, $executionBId);
+
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals($executionBId, $execution['body']['$id']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionBId . '/executions/' . $executionBId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+        $this->cleanupFunction($functionBId);
+    }
+
 
 
     public function testUpdateSpecs(): void
