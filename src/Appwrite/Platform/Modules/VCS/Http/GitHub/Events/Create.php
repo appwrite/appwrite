@@ -120,6 +120,12 @@ class Create extends Action
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                 if (!$project->isEmpty()) {
+                    $projectRegion = $project->getAttribute('region', '');
+                    $currentRegion = System::getEnv('_APP_REGION', 'default');
+                    if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+                        throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+                    }
+
                     $dbForProject = $getProjectDB($project);
 
                     foreach (['functions', 'sites'] as $collection) {
