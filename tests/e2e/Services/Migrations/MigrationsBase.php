@@ -238,6 +238,8 @@ trait MigrationsBase
         $this->assertNoMigrationCounterErrors($skip);
         $assertSkipped($skip);
 
+        // Duplicate resolution compares second-granularity timestamps, so make
+        // the source mutation strictly newer than the skipped destination state.
         sleep(1);
         $mutateSource();
 
@@ -2494,35 +2496,51 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $this->assertMigrationSkipAndOverwrite(
-            [Resource::TYPE_BUCKET, Resource::TYPE_FILE],
-            function () use ($bucketId, $fileId, $destinationHeaders, $file): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders, [
-                    'name' => 'destination-logo.png',
-                    'permissions' => $file['body']['$permissions'],
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $skip) use ($bucketId, $fileId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_FILE]['skip']);
-                $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
-                $this->assertEquals(200, $file['headers']['status-code']);
-                $this->assertSame('destination-logo.png', $file['body']['name']);
-            },
-            function () use ($bucketId, $fileId, $sourceHeaders, $file): void {
-                $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $sourceHeaders, [
-                    'name' => 'source-logo.png',
-                    'permissions' => $file['body']['$permissions'],
-                ]);
-                $this->assertEquals(200, $response['headers']['status-code']);
-            },
-            function (array $overwrite) use ($bucketId, $fileId, $destinationHeaders): void {
-                $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_FILE]['skip']);
-                $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
-                $this->assertEquals(200, $file['headers']['status-code']);
-                $this->assertSame('destination-logo.png', $file['body']['name']);
-            },
-        );
+        $updateDestination = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders, [
+            'name' => 'destination-logo.png',
+            'permissions' => $file['body']['$permissions'],
+        ]);
+        $this->assertEquals(200, $updateDestination['headers']['status-code']);
+
+        $skip = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_BUCKET, Resource::TYPE_FILE],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame('completed', $skip['status']);
+        $this->assertNoMigrationCounterErrors($skip);
+        $this->assertGreaterThanOrEqual(1, $skip['statusCounters'][Resource::TYPE_FILE]['skip']);
+
+        $fileAfterSkip = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
+        $this->assertEquals(200, $fileAfterSkip['headers']['status-code']);
+        $this->assertSame('destination-logo.png', $fileAfterSkip['body']['name']);
+
+        // Make the source-side file metadata newer than the skipped destination file.
+        sleep(1);
+        $updateSource = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $sourceHeaders, [
+            'name' => 'source-logo.png',
+            'permissions' => $file['body']['$permissions'],
+        ]);
+        $this->assertEquals(200, $updateSource['headers']['status-code']);
+
+        // File overwrite intentionally resolves as skip because file content is
+        // not updated in place during migration.
+        $overwrite = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_BUCKET, Resource::TYPE_FILE],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'overwrite',
+        ]);
+        $this->assertSame('completed', $overwrite['status']);
+        $this->assertNoMigrationCounterErrors($overwrite);
+        $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_FILE]['skip']);
+
+        $fileAfterOverwrite = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
+        $this->assertEquals(200, $fileAfterOverwrite['headers']['status-code']);
+        $this->assertSame('destination-logo.png', $fileAfterOverwrite['body']['name']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
@@ -2565,6 +2583,7 @@ trait MigrationsBase
             'variableId' => ID::unique(),
             'key' => 'FUNCTION_DUPLICATE_MODE',
             'value' => 'source-original',
+            'secret' => false,
         ]);
         $this->assertEquals(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
@@ -2771,6 +2790,7 @@ trait MigrationsBase
         ], [
             'key' => 'TEST_VAR',
             'value' => 'test_value',
+            'secret' => false,
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
