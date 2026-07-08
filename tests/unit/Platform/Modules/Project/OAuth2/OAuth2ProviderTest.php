@@ -91,7 +91,7 @@ final class OAuth2ProviderTest extends TestCase
         yield 'google' => [GoogleUpdate::class, ['clientId', 'clientSecret', 'prompt']];
         yield 'keycloak' => [KeycloakUpdate::class, ['clientId', 'clientSecret', 'endpoint', 'realmName']];
         yield 'microsoft' => [MicrosoftUpdate::class, ['applicationId', 'applicationSecret', 'tenant']];
-        yield 'oidc' => [OidcUpdate::class, ['clientId', 'clientSecret', 'wellKnownURL', 'authorizationURL', 'tokenURL', 'userInfoURL']];
+        yield 'oidc' => [OidcUpdate::class, ['clientId', 'clientSecret', 'wellKnownURL', 'authorizationURL', 'tokenURL', 'userInfoURL', 'prompt', 'maxAge']];
         yield 'okta' => [OktaUpdate::class, ['clientId', 'clientSecret', 'domain', 'authorizationServerId']];
     }
 
@@ -347,6 +347,8 @@ final class OAuth2ProviderTest extends TestCase
             null,
             null,
             null,
+            null,
+            null,
             true,
         ]);
 
@@ -365,6 +367,8 @@ final class OAuth2ProviderTest extends TestCase
             'https://idp.example/oauth2/authorize',
             'https://idp.example/oauth2/token',
             'https://idp.example/oauth2/userinfo',
+            null,
+            null,
             true,
         ]);
 
@@ -389,6 +393,8 @@ final class OAuth2ProviderTest extends TestCase
                 'https://idp.example/oauth2/authorize',
                 null,
                 'https://idp.example/oauth2/userinfo',
+                null,
+                null,
                 true,
             ],
             assertQueueParam: false,
@@ -417,6 +423,8 @@ final class OAuth2ProviderTest extends TestCase
                 'https://idp.example/oauth2/authorize',
                 'https://idp.example/oauth2/token',
                 'https://idp.example/oauth2/userinfo',
+                null,
+                null,
                 true,
             ],
         );
