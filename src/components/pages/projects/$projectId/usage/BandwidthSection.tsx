@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   createCompactBytesAxisTickFormatter,
@@ -52,7 +51,6 @@ import {
 import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
@@ -62,6 +60,7 @@ import {
   UsageMetricCardFooter,
   UsageMetricCardShell,
 } from './_components/UsageMetricCard'
+import { UsageSectionChartError } from './_components/UsageSectionChartError'
 
 const BANDWIDTH_DESCRIPTION =
   'Total inbound and outbound network traffic during the selected period. Includes API responses, file transfers, and function I/O.'
@@ -109,26 +108,21 @@ function UsageBandwidthChartArea({ children }: { children: ReactNode }) {
   )
 }
 
-function UsageBandwidthChartError({ onRetry }: { onRetry?: () => void }) {
-  const t = useT()
+function UsageBandwidthChartError({
+  error,
+  onRetry,
+}: {
+  error?: unknown
+  onRetry?: () => void
+}) {
   return (
     <UsageBandwidthChartArea>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
-        <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
-        <div className="max-w-sm">
-          <p className="text-[13px] font-medium text-foreground">
-            {t(OVERVIEW_BANDWIDTH_ERROR.title)}
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            {t(OVERVIEW_BANDWIDTH_ERROR.message)}
-          </p>
-        </div>
-        {onRetry ? (
-          <Button variant="outline" size="sm" onClick={onRetry}>
-            {t('Try again')}
-          </Button>
-        ) : null}
-      </div>
+      <UsageSectionChartError
+        error={error}
+        errorTitle={OVERVIEW_BANDWIDTH_ERROR.title}
+        errorMessage={OVERVIEW_BANDWIDTH_ERROR.message}
+        onRetry={onRetry}
+      />
     </UsageBandwidthChartArea>
   )
 }
@@ -139,6 +133,7 @@ type BandwidthChartCardProps = {
   dualChartPoints: BandwidthDualChartPoint[]
   isLoading: boolean
   isError: boolean
+  chartError?: unknown
   onRetry?: () => void
 }
 
@@ -148,6 +143,7 @@ function BandwidthChartCard({
   dualChartPoints,
   isLoading,
   isError,
+  chartError,
   onRetry,
 }: BandwidthChartCardProps) {
   const t = useT()
@@ -249,7 +245,7 @@ function BandwidthChartCard({
 
       <div className="flex flex-1 flex-col p-4">
         {isError ? (
-          <UsageBandwidthChartError onRetry={onRetry} />
+          <UsageBandwidthChartError error={chartError} onRetry={onRetry} />
         ) : isLoading ? (
           <ChartSkeleton />
         ) : chartData.length === 0 ? (
@@ -426,6 +422,7 @@ export function BandwidthSection({
     isLoading: isChartLoading,
     isPlaceholderData: isChartPlaceholderData,
     isError: isChartError,
+    error: chartError,
     refetch: refetchChart,
   } = useProjectBandwidthChartOnly(
     projectId,
@@ -493,6 +490,7 @@ export function BandwidthSection({
         dualChartPoints={dualChartPoints}
         isLoading={showChartLoading}
         isError={isChartError}
+        chartError={chartError}
         onRetry={handleRetryChart}
       />
 

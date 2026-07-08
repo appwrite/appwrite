@@ -7,6 +7,7 @@ import {
   setBodyResizeDragActive,
 } from '@/lib/layout/horizontal-resize'
 import {
+  SPREADSHEET_STICKY_BODY_Z,
   SPREADSHEET_STICKY_END_EDGE_SHADOW,
   SPREADSHEET_STICKY_END_HEADER_SHADOW,
   SPREADSHEET_STICKY_START_EDGE_SHADOW,
@@ -4557,6 +4558,7 @@ export function RowsSpreadsheet({
                   <td
                     className={cn(
                       'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
+                      SPREADSHEET_STICKY_BODY_Z,
                       useInlineDocumentPane &&
                         'min-w-[40px] max-w-[40px] shrink-0 box-border',
                       SPREADSHEET_STICKY_START_EDGE_SHADOW,
@@ -4699,6 +4701,7 @@ export function RowsSpreadsheet({
                   <td
                     className={cn(
                       'sticky end-0 border-b border-border p-0',
+                      SPREADSHEET_STICKY_BODY_Z,
                       useInlineDocumentPane && 'shrink-0 box-border',
                       SPREADSHEET_STICKY_END_EDGE_SHADOW,
                       !isInlinePreviewRow

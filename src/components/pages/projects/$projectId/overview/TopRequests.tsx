@@ -24,6 +24,7 @@ import {
   OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
   overviewChartPanelBodyClass,
+  overviewChartPanelChartAreaClass,
   overviewChartPanelHeaderClass,
   overviewChartPanelHeaderActionsClass,
   overviewTopBreakdownListClass,
@@ -66,7 +67,7 @@ interface TopRequestsProps {
   isError?: boolean
   onRetry?: () => void
   errorTitle?: string
-  errorMessage?: string
+  errorMessage?: ReactNode
 }
 
 interface RequestItem {
@@ -176,13 +177,14 @@ export function TopRequests({
       <div
         className={cn(
           overviewChartPanelHeaderClass,
-          headerAddon && 'mb-3 min-h-0 flex-col items-stretch gap-2',
+          headerAddon &&
+            'mb-3 h-auto min-h-[60px] flex-col items-stretch gap-2',
         )}
       >
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
           <h3
             className={cn(
-              'min-w-0 text-[13px] font-medium text-foreground',
+              'min-w-0 truncate text-[13px] font-medium text-foreground',
               headerAddon && 'truncate',
             )}
           >
@@ -214,15 +216,22 @@ export function TopRequests({
 
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
-          <OverviewChartPanelError
-            title={t(errorTitle)}
-            message={t(errorMessage)}
-            onRetry={onRetry}
-          />
+          <div className={overviewChartPanelChartAreaClass}>
+            <OverviewChartPanelError
+              title={t(errorTitle)}
+              message={
+                typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
+              }
+              onRetry={onRetry}
+            />
+          </div>
         ) : isLoading ? (
-          <OverviewChartPanelSkeleton variant="list" embedded />
+          <div className={overviewChartPanelChartAreaClass}>
+            <OverviewChartPanelSkeleton variant="list" embedded className="h-full min-h-0" />
+          </div>
         ) : (
-          <div className={overviewTopBreakdownListClass}>
+          <div className={overviewChartPanelChartAreaClass}>
+            <div className={overviewTopBreakdownListClass}>
             {showEmptyOverlay && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
                 {t('No data for this date range')}
@@ -347,6 +356,7 @@ export function TopRequests({
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </div>

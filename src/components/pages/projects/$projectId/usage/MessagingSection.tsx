@@ -104,6 +104,7 @@ export function MessagingSection({
           messagesQuery.isPlaceholderData,
         )}
         isError={messagesQuery.isError}
+        queryError={messagesQuery.error}
         errorTitle={MESSAGING_USAGE_ERROR.title}
         errorMessage={MESSAGING_USAGE_ERROR.message}
         formatTotal={formatMessagingCountTotal}
@@ -126,6 +127,7 @@ export function MessagingSection({
           topicsQuery.isPlaceholderData,
         )}
         isError={topicsQuery.isError}
+        queryError={topicsQuery.error}
         errorTitle={MESSAGING_USAGE_ERROR.title}
         errorMessage={MESSAGING_USAGE_ERROR.message}
         formatTotal={formatMessagingCountTotal}
@@ -148,6 +150,7 @@ export function MessagingSection({
           smsQuery.isPlaceholderData,
         )}
         isError={smsQuery.isError}
+        queryError={smsQuery.error}
         errorTitle={MESSAGING_USAGE_ERROR.title}
         errorMessage={MESSAGING_USAGE_ERROR.message}
         formatTotal={formatMessagingCountTotal}

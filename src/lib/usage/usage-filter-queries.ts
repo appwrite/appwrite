@@ -10,6 +10,7 @@ import {
   USAGE_FILTER_EXCLUDED_ATTRIBUTES,
 } from '@/lib/usage/usage-filter-configs'
 import type { FetchUsageOverviewOptions } from '@/lib/usage/usage-events-common'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 
 export type UsageFilterQueries = string[] | undefined
 
@@ -113,11 +114,16 @@ export function withUsageFetchOptions(
 export function mergeUsageFetchOptions(
   options: FetchUsageOverviewOptions | undefined,
   filterQueries: UsageFilterQueries,
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): FetchUsageOverviewOptions {
-  if (!filterQueries?.length) {
-    return options ?? {}
+  const withRetention: FetchUsageOverviewOptions = {
+    logRetentionHours,
+    ...options,
   }
-  return { ...options, queries: filterQueries }
+  if (!filterQueries?.length) {
+    return withRetention
+  }
+  return { ...withRetention, queries: filterQueries }
 }
 
 export function usageBreakdownQueries(

@@ -1823,4 +1823,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   avatars: 'アバター',
   Organizations: '組織',
   Install: 'インストール',
+  // Usage log retention
+  'Usage history limit reached': '利用履歴の上限に達しました',
+  'Your plan includes': 'ご利用中のプランには',
+  'days of usage history. Choose a shorter date range or upgrade for longer retention.':
+    '日分の利用履歴が含まれます。短い期間を選択するか、プランをアップグレードしてより長い保持期間をご利用ください。',
+  'Use shorter range': '期間を短くする',
+  'Date range exceeds log retention': '期間がログ保持期間を超えています',
+  'Upgrade plan': 'プランのアップグレード',
 }

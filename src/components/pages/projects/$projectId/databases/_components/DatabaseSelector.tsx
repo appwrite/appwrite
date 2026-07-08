@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { ChevronDown, Database, Loader2, Plus, Table2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Database, Loader2, Plus, Table2 } from 'lucide-react'
 import { DatabaseTypeIcon } from './DatabaseTypeIcon'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,9 +39,11 @@ import {
   databaseQueryOptions,
   useDatabaseSpecifications,
 } from '@/lib/react-query/hooks'
+import { formatDatabaseServiceLabel } from '@/lib/databases/database-service-icons'
 import {
   getNativeDatabaseEmptyLabel,
   matchesNativeEngine,
+  NATIVE_DATABASE_ENGINE_LABELS,
   type NativeDatabaseEngine,
 } from '@/lib/databases/native-database-engines'
 import { isNativeDedicatedDatabase } from '@/lib/database-routes'
@@ -121,6 +123,52 @@ function matchesSpecSearch(
     .join(' ')
 
   return specSearch.includes(query)
+}
+
+function getDatabaseTypeLabel(
+  item: Pick<DatabaseSelectorItem, 'apiType' | 'engine'>,
+): string | null {
+  const normalizedEngine = item.engine?.toLowerCase() ?? ''
+  if (
+    normalizedEngine === 'postgres' ||
+    normalizedEngine === 'postgresql'
+  ) {
+    return NATIVE_DATABASE_ENGINE_LABELS.postgres
+  }
+  if (normalizedEngine === 'mysql' || normalizedEngine === 'mariadb') {
+    return NATIVE_DATABASE_ENGINE_LABELS.mysql
+  }
+  if (item.apiType) {
+    return formatDatabaseServiceLabel(item.apiType)
+  }
+  return null
+}
+
+function DatabaseSelectorBreadcrumb({
+  typeLabel,
+  name,
+  translate,
+}: {
+  typeLabel: string | null
+  name: string
+  translate: (text: string) => string
+}) {
+  return (
+    <span className="flex min-w-0 items-center gap-1 text-[13px]">
+      {typeLabel ? (
+        <>
+          <span className="shrink-0 text-muted-foreground">
+            {translate(typeLabel)}
+          </span>
+          <ChevronRight
+            className="h-3 w-3 shrink-0 text-muted-foreground/60"
+            aria-hidden
+          />
+        </>
+      ) : null}
+      <span className="min-w-0 truncate font-medium text-foreground">{name}</span>
+    </span>
+  )
 }
 
 export function DatabaseSelector({
@@ -327,28 +375,33 @@ export function DatabaseSelector({
               </CommandEmpty>
             )}
             <CommandGroup>
-              {filteredItems.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    onSelect(item.id)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                    item.id === value && 'bg-accent/50',
-                  )}
-                >
-                  <DatabaseTypeIcon
-                    apiType={item.apiType}
-                    engine={item.engine}
-                  />
-                  <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
-                    {item.name}
-                  </span>
-                </button>
-              ))}
+              {filteredItems.map((item) => {
+                const typeLabel = getDatabaseTypeLabel(item)
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      onSelect(item.id)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'flex w-full cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1.5 text-start outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
+                      item.id === value && 'bg-accent/50',
+                    )}
+                  >
+                    <DatabaseTypeIcon
+                      apiType={item.apiType}
+                      engine={item.engine}
+                    />
+                    <DatabaseSelectorBreadcrumb
+                      typeLabel={typeLabel}
+                      name={item.name}
+                      translate={t}
+                    />
+                  </button>
+                )
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

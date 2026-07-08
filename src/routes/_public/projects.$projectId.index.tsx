@@ -9,6 +9,8 @@ import {
   executionsOverviewQueryOptions,
   gbHoursOverviewQueryOptions,
   overviewStorageOverviewQueryOptions,
+  fetchProject,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
 import { ensureProjectRegion } from '@/lib/project-region'
@@ -21,6 +23,7 @@ import {
 } from '@/lib/overview-chart-tabs'
 import { pageTitle } from '@/lib/utils/page-title'
 import { resolveUsageChartFiltersFromPrefs } from '@/lib/usage/usage-chart-filters'
+import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import type { UserPrefs } from '@/lib/user-prefs-keys'
 
@@ -31,6 +34,7 @@ const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
     parsedRange: { from: Date; to: Date },
     chartInterval: UsageChartInterval,
     includeBreakdown: boolean,
+    logRetentionHours: number,
   ) => ReturnType<
     | typeof bandwidthOverviewQueryOptions
     | typeof requestsOverviewQueryOptions
@@ -39,40 +43,50 @@ const OVERVIEW_CHART_PREFETCH_BY_TAB: Record<
     | typeof overviewStorageOverviewQueryOptions
   >
 > = {
-  bandwidth: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+  bandwidth: (projectId, parsedRange, chartInterval, includeBreakdown, logRetentionHours) =>
     bandwidthOverviewQueryOptions(
       projectId,
       parsedRange,
       chartInterval,
       includeBreakdown,
+      undefined,
+      logRetentionHours,
     ),
-  requests: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+  requests: (projectId, parsedRange, chartInterval, includeBreakdown, logRetentionHours) =>
     requestsOverviewQueryOptions(
       projectId,
       parsedRange,
       chartInterval,
       includeBreakdown,
+      undefined,
+      logRetentionHours,
     ),
-  executions: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+  executions: (projectId, parsedRange, chartInterval, includeBreakdown, logRetentionHours) =>
     executionsOverviewQueryOptions(
       projectId,
       parsedRange,
       chartInterval,
       includeBreakdown,
+      undefined,
+      logRetentionHours,
     ),
-  gbhours: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+  gbhours: (projectId, parsedRange, chartInterval, includeBreakdown, logRetentionHours) =>
     gbHoursOverviewQueryOptions(
       projectId,
       parsedRange,
       chartInterval,
       includeBreakdown,
+      undefined,
+      logRetentionHours,
     ),
-  storage: (projectId, parsedRange, chartInterval, includeBreakdown) =>
+  storage: (projectId, parsedRange, chartInterval, includeBreakdown, logRetentionHours) =>
     overviewStorageOverviewQueryOptions(
       projectId,
       parsedRange,
       chartInterval,
       includeBreakdown,
+      undefined,
+      logRetentionHours,
     ),
 }
 
@@ -114,6 +128,23 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
         const chartInterval = usageChartFilters.chartInterval
         const debugOverrides = loadDebugOverrides()
 
+        const project = await queryClient
+          .ensureQueryData({
+            queryKey: ['project', projectId],
+            queryFn: () => fetchProject(projectId),
+            staleTime: 5 * 60 * 1000,
+          })
+          .catch(() => null)
+
+        const organizationPlan = project?.teamId
+          ? await queryClient
+              .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+              .catch(() => null)
+          : null
+        const logRetentionHours = getUsageLogRetentionHoursFromPlan(
+          organizationPlan,
+        )
+
         // Usage is non-critical: prefetch in background; page renders with chart skeletons.
         const usagePrefetchTasks = OVERVIEW_CHART_TAB_ORDER.filter((tabId) =>
           isOverviewChartTabEnabled(tabId, debugOverrides),
@@ -124,6 +155,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
               parsedRange,
               chartInterval,
               tabId === 'bandwidth',
+              logRetentionHours,
             ),
           ),
         )

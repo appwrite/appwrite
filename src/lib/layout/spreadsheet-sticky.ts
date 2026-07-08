@@ -7,6 +7,13 @@
  * inline-end (physical right in LTR, physical left in RTL).
  */
 
+/**
+ * Body sticky edge cells (checkbox column, row actions) must sit above
+ * horizontally scrolling row content; without this, cells paint over the
+ * fixed column when scrolled.
+ */
+export const SPREADSHEET_STICKY_BODY_Z = 'z-10'
+
 /** Body cell: sticky start column edge facing scroll content (inline-end). */
 export const SPREADSHEET_STICKY_START_EDGE_SHADOW =
   'shadow-[inset_-1px_0_0_0_var(--border)] rtl:shadow-[inset_1px_0_0_0_var(--border)]'

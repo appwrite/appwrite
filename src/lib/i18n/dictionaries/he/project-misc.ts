@@ -1944,4 +1944,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '.env or xcconfig': '.env או xcconfig',
   '.env or env vars': '.env או משתני סביבה',
   'Build config / env': 'הגדרות build / סביבה',
+  // Usage log retention
+  'Usage history limit reached': 'הגעתם למגבלת היסטוריית שימוש',
+  'Your plan includes': 'התוכנית שלכם כוללת',
+  'days of usage history. Choose a shorter date range or upgrade for longer retention.':
+    'ימים של היסטוריית שימוש. בחרו טווח תאריכים קצר יותר או שדרגו לשמירה ארוכה יותר.',
+  'Use shorter range': 'טווח קצר יותר',
+  'Date range exceeds log retention': 'טווח התאריכים חורג משמירת הלוגים',
+  'Upgrade plan': 'שדרוג תוכנית',
 }

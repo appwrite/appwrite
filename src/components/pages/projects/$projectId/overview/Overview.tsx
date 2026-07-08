@@ -47,6 +47,7 @@ import {
   useProjectOverviewStorageOverview,
   useComputeBreakdownResources,
   useStorageBreakdownResources,
+  useOrganizationPlan,
 } from '@/lib/react-query/hooks'
 import {
   formatBandwidthTotal,
@@ -113,8 +114,12 @@ import {
   shouldShowUsageChartSkeleton,
   shouldShowUsageTabMetricSkeleton,
 } from '@/lib/usage/usage-chart-loading'
+import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
+import { resolveUsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
+import { UsageChartErrorMessage } from '../shared/UsageChartErrorMessage'
 import {
   OVERVIEW_METRIC_NOT_AVAILABLE,
+  OVERVIEW_BANDWIDTH_ERROR,
   OVERVIEW_REQUESTS_ERROR,
   OVERVIEW_EXECUTIONS_ERROR,
   OVERVIEW_GB_HOURS_ERROR,
@@ -209,6 +214,20 @@ export function View({ projectId, initialData }: ViewProps) {
   const [selectedPlatform, setSelectedPlatform] =
     useState<ProjectPlatform | null>(null)
   const { features, isCloud } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const usageLogRetentionDays = useMemo(
+    () =>
+      organizationPlan?.usageLogs != null &&
+      Number.isFinite(organizationPlan.usageLogs)
+        ? organizationPlan.usageLogs
+        : 30,
+    [organizationPlan?.usageLogs],
+  )
 
   const handleOverviewTabChange = (tabId: string) => {
     setActiveTab(tabId)
@@ -251,6 +270,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isFetching: isBandwidthFetching,
     isPlaceholderData: isBandwidthPlaceholderData,
     isError: isBandwidthError,
+    error: bandwidthError,
     refetch: refetchBandwidth,
   } = useProjectBandwidthOverview(
     projectId,
@@ -258,6 +278,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isOverviewChartTabVisible('bandwidth'),
     chartInterval,
     activeTab === 'bandwidth',
+    usageLogRetentionHours,
   )
 
   const {
@@ -266,6 +287,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isFetching: isRequestsFetching,
     isPlaceholderData: isRequestsPlaceholderData,
     isError: isRequestsError,
+    error: requestsError,
     refetch: refetchRequests,
   } = useProjectRequestsOverview(
     projectId,
@@ -273,6 +295,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isOverviewChartTabVisible('requests'),
     chartInterval,
     activeTab === 'requests',
+    usageLogRetentionHours,
   )
 
   const {
@@ -281,6 +304,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isFetching: isExecutionsFetching,
     isPlaceholderData: isExecutionsPlaceholderData,
     isError: isExecutionsError,
+    error: executionsError,
     refetch: refetchExecutions,
   } = useProjectExecutionsOverview(
     projectId,
@@ -288,6 +312,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isOverviewChartTabVisible('executions'),
     chartInterval,
     activeTab === 'executions',
+    usageLogRetentionHours,
   )
 
   const {
@@ -296,6 +321,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isFetching: isGbHoursFetching,
     isPlaceholderData: isGbHoursPlaceholderData,
     isError: isGbHoursError,
+    error: gbHoursError,
     refetch: refetchGbHours,
   } = useProjectGbHoursOverview(
     projectId,
@@ -303,6 +329,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isOverviewChartTabVisible('gbhours'),
     chartInterval,
     activeTab === 'gbhours',
+    usageLogRetentionHours,
   )
 
   const {
@@ -311,6 +338,7 @@ export function View({ projectId, initialData }: ViewProps) {
     isFetching: isStorageFetching,
     isPlaceholderData: isStoragePlaceholderData,
     isError: isStorageError,
+    error: storageError,
     refetch: refetchStorage,
   } = useProjectOverviewStorageOverview(
     projectId,
@@ -318,6 +346,53 @@ export function View({ projectId, initialData }: ViewProps) {
     isOverviewChartTabVisible('storage'),
     chartInterval,
     activeTab === 'storage',
+    usageLogRetentionHours,
+  )
+
+  const bandwidthErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        bandwidthError,
+        usageLogRetentionDays,
+        OVERVIEW_BANDWIDTH_ERROR,
+      ),
+    [bandwidthError, usageLogRetentionDays],
+  )
+  const requestsErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        requestsError,
+        usageLogRetentionDays,
+        OVERVIEW_REQUESTS_ERROR,
+      ),
+    [requestsError, usageLogRetentionDays],
+  )
+  const executionsErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        executionsError,
+        usageLogRetentionDays,
+        OVERVIEW_EXECUTIONS_ERROR,
+      ),
+    [executionsError, usageLogRetentionDays],
+  )
+  const gbHoursErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        gbHoursError,
+        usageLogRetentionDays,
+        OVERVIEW_GB_HOURS_ERROR,
+      ),
+    [gbHoursError, usageLogRetentionDays],
+  )
+  const storageErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        storageError,
+        usageLogRetentionDays,
+        OVERVIEW_STORAGE_ERROR,
+      ),
+    [storageError, usageLogRetentionDays],
   )
 
   const showBandwidthChartLoading = shouldShowUsageChartSkeleton(
@@ -970,7 +1045,7 @@ export function View({ projectId, initialData }: ViewProps) {
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
-                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'bandwidth'}
                     title="Bandwidth over time"
                     metric="bandwidth"
@@ -981,14 +1056,20 @@ export function View({ projectId, initialData }: ViewProps) {
                     }
                     isLoading={showBandwidthChartLoading}
                     isError={isBandwidthError}
-                    onRetry={() => void refetchBandwidth()}
+                    onRetry={
+                      bandwidthErrorCopy.isRetentionLimit
+                        ? undefined
+                        : () => void refetchBandwidth()
+                    }
                     formatValue={formatBandwidthValue}
+                    errorTitle={bandwidthErrorCopy.title}
+                    errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                   />
                 </div>
                 {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
-                      className="min-h-0 flex-1"
+                      className="h-full min-h-0 flex-1"
                       title="Top bandwidth consumers"
                       metric="bandwidth"
                       projectId={projectId}
@@ -998,7 +1079,13 @@ export function View({ projectId, initialData }: ViewProps) {
                       formatCount={formatBandwidthValue}
                       isLoading={showBandwidthChartLoading}
                       isError={isBandwidthError}
-                      onRetry={() => void refetchBandwidth()}
+                      onRetry={
+                        bandwidthErrorCopy.isRetentionLimit
+                          ? undefined
+                          : () => void refetchBandwidth()
+                      }
+                      errorTitle={bandwidthErrorCopy.title}
+                      errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                     />
                   </div>
                 ) : null}
@@ -1015,7 +1102,7 @@ export function View({ projectId, initialData }: ViewProps) {
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
-                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'requests'}
                     title="Requests over time"
                     metric="requests"
@@ -1026,16 +1113,20 @@ export function View({ projectId, initialData }: ViewProps) {
                     }
                     isLoading={showRequestsChartLoading}
                     isError={isRequestsError}
-                    onRetry={() => void refetchRequests()}
+                    onRetry={
+                      requestsErrorCopy.isRetentionLimit
+                        ? undefined
+                        : () => void refetchRequests()
+                    }
                     formatValue={formatRequestsValue}
-                    errorTitle={OVERVIEW_REQUESTS_ERROR.title}
-                    errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+                    errorTitle={requestsErrorCopy.title}
+                    errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                   />
                 </div>
                 {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
-                      className="min-h-0 flex-1"
+                      className="h-full min-h-0 flex-1"
                       title="Top requested endpoints"
                       metric="requests"
                       projectId={projectId}
@@ -1045,9 +1136,13 @@ export function View({ projectId, initialData }: ViewProps) {
                       formatCount={formatRequestsValue}
                       isLoading={showRequestsChartLoading}
                       isError={isRequestsError}
-                      onRetry={() => void refetchRequests()}
-                      errorTitle={OVERVIEW_REQUESTS_ERROR.title}
-                      errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+                      onRetry={
+                        requestsErrorCopy.isRetentionLimit
+                          ? undefined
+                          : () => void refetchRequests()
+                      }
+                      errorTitle={requestsErrorCopy.title}
+                      errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                     />
                   </div>
                 ) : null}
@@ -1064,20 +1159,26 @@ export function View({ projectId, initialData }: ViewProps) {
             >
                 <div className={overviewMainChartColumnClass}>
                   <OverviewStorageChart
-                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'storage'}
                     dateRange={dashboardChartDateRange}
                     chartInterval={chartInterval}
                     chartData={isStorageError ? [] : (storageUsage?.chartPoints ?? [])}
                     isLoading={showStorageChartLoading}
                     isError={isStorageError}
-                    onRetry={() => void refetchStorage()}
+                    onRetry={
+                      storageErrorCopy.isRetentionLimit
+                        ? undefined
+                        : () => void refetchStorage()
+                    }
+                    errorTitle={storageErrorCopy.title}
+                    errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                   />
                 </div>
                 {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
-                      className="min-h-0 flex-1"
+                      className="h-full min-h-0 flex-1"
                       title={activeStorageBreakdownTitle}
                       metric="storage"
                       breakdownVariant="resource"
@@ -1095,9 +1196,13 @@ export function View({ projectId, initialData }: ViewProps) {
                       formatCount={formatStorageValue}
                       isLoading={showStorageChartLoading}
                       isError={isStorageError}
-                      onRetry={() => void refetchStorage()}
-                      errorTitle={OVERVIEW_STORAGE_ERROR.title}
-                      errorMessage={OVERVIEW_STORAGE_ERROR.message}
+                      onRetry={
+                        storageErrorCopy.isRetentionLimit
+                          ? undefined
+                          : () => void refetchStorage()
+                      }
+                      errorTitle={storageErrorCopy.title}
+                      errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                     />
                   </div>
                 ) : null}
@@ -1114,7 +1219,7 @@ export function View({ projectId, initialData }: ViewProps) {
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
-                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'executions'}
                     title={COMPUTE_EXECUTIONS_CHART_TITLE}
                     metric="executions"
@@ -1125,16 +1230,20 @@ export function View({ projectId, initialData }: ViewProps) {
                     }
                     isLoading={showExecutionsChartLoading}
                     isError={isExecutionsError}
-                    onRetry={() => void refetchExecutions()}
+                    onRetry={
+                      executionsErrorCopy.isRetentionLimit
+                        ? undefined
+                        : () => void refetchExecutions()
+                    }
                     formatValue={formatExecutionsValue}
-                    errorTitle={OVERVIEW_EXECUTIONS_ERROR.title}
-                    errorMessage={OVERVIEW_EXECUTIONS_ERROR.message}
+                    errorTitle={executionsErrorCopy.title}
+                    errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
                   />
                 </div>
                 {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
-                      className="min-h-0 flex-1"
+                      className="h-full min-h-0 flex-1"
                       title={COMPUTE_EXECUTIONS_BREAKDOWN_TITLE}
                       metric="executions"
                       breakdownVariant="resource"
@@ -1147,9 +1256,13 @@ export function View({ projectId, initialData }: ViewProps) {
                       formatCount={formatExecutionsValue}
                       isLoading={showExecutionsChartLoading}
                       isError={isExecutionsError}
-                      onRetry={() => void refetchExecutions()}
-                      errorTitle={OVERVIEW_EXECUTIONS_ERROR.title}
-                      errorMessage={OVERVIEW_EXECUTIONS_ERROR.message}
+                      onRetry={
+                        executionsErrorCopy.isRetentionLimit
+                          ? undefined
+                          : () => void refetchExecutions()
+                      }
+                      errorTitle={executionsErrorCopy.title}
+                      errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
                     />
                   </div>
                 ) : null}
@@ -1166,7 +1279,7 @@ export function View({ projectId, initialData }: ViewProps) {
             >
                 <div className={overviewMainChartColumnClass}>
                   <RequestsChart
-                    className="@[700px]:min-h-0 @[700px]:flex-1"
+                    className="h-full min-h-0 flex-1"
                     isPanelVisible={activeTab === 'gbhours'}
                     title="Compute over time"
                     metric="gbhours"
@@ -1177,16 +1290,20 @@ export function View({ projectId, initialData }: ViewProps) {
                     }
                     isLoading={showGbHoursChartLoading}
                     isError={isGbHoursError}
-                    onRetry={() => void refetchGbHours()}
+                    onRetry={
+                      gbHoursErrorCopy.isRetentionLimit
+                        ? undefined
+                        : () => void refetchGbHours()
+                    }
                     formatValue={formatGbHoursValue}
-                    errorTitle={OVERVIEW_GB_HOURS_ERROR.title}
-                    errorMessage={OVERVIEW_GB_HOURS_ERROR.message}
+                    errorTitle={gbHoursErrorCopy.title}
+                    errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
                   />
                 </div>
                 {showUsageBreakdownPanels ? (
                   <div className={overviewBreakdownColumnClass}>
                     <TopRequests
-                      className="min-h-0 flex-1"
+                      className="h-full min-h-0 flex-1"
                       title="Top compute consumers"
                       metric="gbhours"
                       showUnitInfo
@@ -1200,9 +1317,13 @@ export function View({ projectId, initialData }: ViewProps) {
                       formatCount={formatGbHoursValue}
                       isLoading={showGbHoursChartLoading}
                       isError={isGbHoursError}
-                      onRetry={() => void refetchGbHours()}
-                      errorTitle={OVERVIEW_GB_HOURS_ERROR.title}
-                      errorMessage={OVERVIEW_GB_HOURS_ERROR.message}
+                      onRetry={
+                        gbHoursErrorCopy.isRetentionLimit
+                          ? undefined
+                          : () => void refetchGbHours()
+                      }
+                      errorTitle={gbHoursErrorCopy.title}
+                      errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
                     />
                   </div>
                 ) : null}

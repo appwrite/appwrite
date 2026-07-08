@@ -12,6 +12,10 @@ import {
   startOfMinute,
   subDays,
 } from 'date-fns'
+import {
+  DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  getUsageLogRetentionFloor,
+} from '@/lib/usage/usage-log-retention'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import type { Models } from '@appwrite.io/console'
@@ -189,12 +193,16 @@ export interface ProjectUsageTopEndpointsOverview {
   topEndpoints: UsageTopEndpoint[]
 }
 
+export type UsagePeriodComparisonMode = 'prior_window' | 'first_half'
+
 export interface OverviewUsagePeriod {
   from: Date
   to: Date
   previousFrom: Date
   previousTo: Date
   interval: UsageChartInterval
+  /** When `first_half`, change % compares the second half of the chart to the first half fetch. */
+  comparisonMode: UsagePeriodComparisonMode
 }
 
 export function resolveDateBounds(dateRange: DateRange | undefined): {
@@ -204,16 +212,39 @@ export function resolveDateBounds(dateRange: DateRange | undefined): {
   return resolveUsageDateBounds(dateRange)
 }
 
+function resolveFirstHalfComparisonPeriod(
+  from: Date,
+  to: Date,
+  calendarRange: boolean,
+): { previousFrom: Date; previousTo: Date } {
+  if (calendarRange) {
+    const rangeDays = Math.max(1, differenceInCalendarDays(to, from) + 1)
+    const halfDays = Math.max(1, Math.floor(rangeDays / 2))
+    return {
+      previousFrom: from,
+      previousTo: endOfDay(addDays(from, halfDays - 1)),
+    }
+  }
+
+  const midMs = from.getTime() + (to.getTime() - from.getTime()) / 2
+  return {
+    previousFrom: from,
+    previousTo: new Date(midMs),
+  }
+}
+
 export function resolveOverviewUsagePeriod(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): OverviewUsagePeriod {
   const { from, to } = resolveUsageDateBounds(dateRange)
+  const calendarRange = isFullCalendarDayRange(from, to)
 
   let previousFrom: Date
   let previousTo: Date
 
-  if (isFullCalendarDayRange(from, to)) {
+  if (calendarRange) {
     const rangeDays = Math.max(1, differenceInCalendarDays(to, from) + 1)
     previousTo = endOfDay(subDays(from, 1))
     previousFrom = startOfDay(subDays(previousTo, rangeDays - 1))
@@ -223,7 +254,31 @@ export function resolveOverviewUsagePeriod(
     previousFrom = new Date(from.getTime() - durationMs)
   }
 
-  return { from, to, previousFrom, previousTo, interval }
+  let comparisonMode: UsagePeriodComparisonMode = 'prior_window'
+
+  if (logRetentionHours > 0) {
+    const retentionFloor = getUsageLogRetentionFloor(logRetentionHours)
+    if (previousFrom.getTime() < retentionFloor.getTime()) {
+      const firstHalf = resolveFirstHalfComparisonPeriod(from, to, calendarRange)
+      previousFrom = firstHalf.previousFrom
+      previousTo = firstHalf.previousTo
+      comparisonMode = 'first_half'
+    }
+  }
+
+  return { from, to, previousFrom, previousTo, interval, comparisonMode }
+}
+
+export function sumUsageChartPointsForComparison(
+  chartPoints: UsageChartPoint[],
+  comparisonMode: UsagePeriodComparisonMode,
+): number {
+  if (comparisonMode === 'prior_window') {
+    return sumUsageChartPoints(chartPoints)
+  }
+
+  const midIndex = Math.ceil(chartPoints.length / 2)
+  return sumUsageChartPoints(chartPoints.slice(midIndex))
 }
 
 function get15MinuteIntervalStart(date: Date): Date {
@@ -247,6 +302,8 @@ function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
 export interface FetchUsageOverviewOptions {
   includeBreakdown?: boolean
   queries?: string[]
+  /** Plan log retention in hours; defaults to Pro (30 days). */
+  logRetentionHours?: number
 }
 
 interface ListUsageEventGroupsParams {
@@ -345,6 +402,7 @@ export function mergeTopEndpoints(
 
 function mergeUsageMetricSeries(
   results: UsageMetricSeriesResult[],
+  comparisonMode: UsagePeriodComparisonMode = 'prior_window',
 ): ProjectUsageMetricOverview {
   if (results.length === 0) {
     return { changePercent: 0, chartPoints: [], topEndpoints: [] }
@@ -359,7 +417,7 @@ function mergeUsageMetricSeries(
     chartPoints,
     topEndpoints: mergeTopEndpoints(results.map((result) => result.topEndpoints)),
     changePercent: computeChangePercent(
-      sumUsageChartPoints(chartPoints),
+      sumUsageChartPointsForComparison(chartPoints, comparisonMode),
       sumUsageChartPoints(previousChartPoints),
     ),
   }
@@ -426,6 +484,7 @@ export async function fetchUsageMetricsChartSeriesByMetric(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<
   Map<string, Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>>
 > {
@@ -439,7 +498,7 @@ export async function fetchUsageMetricsChartSeriesByMetric(
     previousFrom,
     previousTo,
     interval: resolvedInterval,
-  } = resolveOverviewUsagePeriod(dateRange, interval)
+  } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
   const [currentByMetric, previousByMetric] = await Promise.all([
     listUsageEventGroupsByMetric(projectId, {
@@ -491,6 +550,7 @@ async function fetchUsageMetricChartSeries(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>> {
   const chartSeriesByMetric = await fetchUsageMetricsChartSeriesByMetric(
     projectId,
@@ -498,6 +558,7 @@ async function fetchUsageMetricChartSeries(
     dateRange,
     interval,
     queries,
+    logRetentionHours,
   )
 
   return (
@@ -576,8 +637,17 @@ async function fetchUsageMetricSeries(
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
   const queries = options?.queries
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
   const [chartSeries, topEndpoints] = await Promise.all([
-    fetchUsageMetricChartSeries(projectId, metric, dateRange, interval, queries),
+    fetchUsageMetricChartSeries(
+      projectId,
+      metric,
+      dateRange,
+      interval,
+      queries,
+      logRetentionHours,
+    ),
     dimensions.length > 0 && includeBreakdown
       ? fetchUsageMetricBreakdown(
           projectId,
@@ -615,6 +685,13 @@ export async function fetchProjectUsageMetricsOverview(
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
   const queries = options?.queries
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+  const { comparisonMode } = resolveOverviewUsagePeriod(
+    dateRange,
+    interval,
+    logRetentionHours,
+  )
 
   const [chartSeriesByMetric, breakdownByMetric] = await Promise.all([
     fetchUsageMetricsChartSeriesByMetric(
@@ -623,6 +700,7 @@ export async function fetchProjectUsageMetricsOverview(
       dateRange,
       interval,
       queries,
+      logRetentionHours,
     ),
     includeBreakdown && dimensions.length > 0
       ? fetchUsageMetricsBreakdownByMetric(
@@ -643,7 +721,7 @@ export async function fetchProjectUsageMetricsOverview(
     topEndpoints: breakdownByMetric.get(metric) ?? [],
   }))
 
-  return mergeUsageMetricSeries(results)
+  return mergeUsageMetricSeries(results, comparisonMode)
 }
 
 /** Single-metric fetch with separate current/previous series (for multi-line charts). */
@@ -829,6 +907,7 @@ export async function fetchProjectUsageChartOverview(
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId) {
     return {
@@ -843,7 +922,8 @@ export async function fetchProjectUsageChartOverview(
     previousFrom,
     previousTo,
     interval: resolvedInterval,
-  } = resolveOverviewUsagePeriod(dateRange, interval)
+    comparisonMode,
+  } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
   const [currentGroups, previousGroups] = await Promise.all([
     listUsageEventGroupsForMetrics(projectId, metrics, {
@@ -877,7 +957,7 @@ export async function fetchProjectUsageChartOverview(
 
   return {
     changePercent: computeChangePercent(
-      sumUsageChartPoints(chartPoints),
+      sumUsageChartPointsForComparison(chartPoints, comparisonMode),
       sumUsageChartPoints(previousChartPoints),
     ),
     chartPoints,

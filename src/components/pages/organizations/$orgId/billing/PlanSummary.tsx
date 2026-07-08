@@ -145,7 +145,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   }, [aggregation?.breakdown])
 
   const { data: databaseSpecificationsData } = useQuery(
-    databaseSpecificationsQueryOptions(dedicatedDbSpecLookupProjectId),
+    databaseSpecificationsQueryOptions(dedicatedDbSpecLookupProjectId, 'Postgres'),
   )
 
   const dedicatedDbBillingSpecLookup = useMemo(

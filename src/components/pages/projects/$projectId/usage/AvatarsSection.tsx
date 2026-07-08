@@ -83,6 +83,7 @@ export function AvatarsSection({
           screenshotsQuery.isPlaceholderData,
         )}
         isError={screenshotsQuery.isError}
+        queryError={screenshotsQuery.error}
         errorTitle={AVATARS_USAGE_ERROR.title}
         errorMessage={AVATARS_USAGE_ERROR.message}
         formatTotal={formatAvatarsScreenshotsTotal}

@@ -107,6 +107,7 @@ export function AuthSection({
           mauQuery.isPlaceholderData,
         )}
         isError={mauQuery.isError}
+        queryError={mauQuery.error}
         errorTitle={AUTH_USAGE_ERROR.title}
         errorMessage={AUTH_USAGE_ERROR.message}
         formatTotal={formatAuthMauTotal}
@@ -129,6 +130,7 @@ export function AuthSection({
           otpQuery.isPlaceholderData,
         )}
         isError={otpQuery.isError}
+        queryError={otpQuery.error}
         errorTitle={AUTH_USAGE_ERROR.title}
         errorMessage={AUTH_USAGE_ERROR.message}
         formatTotal={formatAuthOtpTotal}
@@ -151,6 +153,7 @@ export function AuthSection({
           signupsQuery.isPlaceholderData,
         )}
         isError={signupsQuery.isError}
+        queryError={signupsQuery.error}
         errorTitle={AUTH_USAGE_ERROR.title}
         errorMessage={AUTH_USAGE_ERROR.message}
         formatTotal={formatAuthSignupsTotal}

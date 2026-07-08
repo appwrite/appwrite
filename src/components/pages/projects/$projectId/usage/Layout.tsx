@@ -45,6 +45,15 @@ import { UsageHistoricDataNote } from '../shared/UsageHistoricDataNote'
 import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
+import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
+import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  getUsageLogRetentionDaysFromPlan,
+  getUsageLogRetentionHoursFromPlan,
+  hasFiniteUsageLogRetention,
+} from '@/lib/usage/usage-log-retention'
+import { getUsageDateRangePresetByValue } from '@/lib/usage/usage-date-range-presets'
+import { UsageLogRetentionAlert } from './_components/UsageLogRetentionAlert'
 import {
   findUsageCategory,
   getUsageCategories,
@@ -463,10 +472,39 @@ function UsageLayoutContent({
   const {
     dateRange: usageDateRange,
     chartInterval,
+    dateRangePresetId,
     setDateRange: setUsageDateRange,
     setChartInterval,
     refreshRollingDateRange,
   } = useUsageChartFilters()
+
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const usageLogRetentionHours = useMemo(
+    () => getUsageLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const usageLogRetentionDays = useMemo(
+    () => getUsageLogRetentionDaysFromPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const { showAlert: showUsageHistoryLimitAlert } = useUsageHistoryLimitAlertState({
+    projectId,
+    dateRange: usageDateRange,
+    dateRangePresetId,
+    retentionHours: usageLogRetentionHours,
+    organizationPlan,
+  })
+
+  const handleAdjustUsageDateRange = useCallback(() => {
+    const fallbackPreset =
+      getUsageDateRangePresetByValue('14d') ??
+      getUsageDateRangePresetByValue('7d') ??
+      getUsageDateRangePresetByValue('24h')
+    if (fallbackPreset) {
+      setUsageDateRange(fallbackPreset.getRange())
+    }
+  }, [setUsageDateRange])
 
   const [state, setState] = useState<UsageState>('success')
   const contentScrollRef = useRef<HTMLDivElement>(null)
@@ -665,6 +703,9 @@ function UsageLayoutContent({
                 <UsageFiltersProvider
                   value={{
                     plan,
+                    organizationId: project?.teamId,
+                    usageLogRetentionHours,
+                    usageLogRetentionDays,
                     dateRange: usageDateRange,
                     chartInterval,
                     filterMap: usageFilterMap,
@@ -679,6 +720,14 @@ function UsageLayoutContent({
                     onAddBreakdownFilter: addBreakdownUsageFilter,
                   }}
                 >
+                  {showUsageHistoryLimitAlert &&
+                  hasFiniteUsageLogRetention(organizationPlan) ? (
+                    <UsageLogRetentionAlert
+                      retentionDays={usageLogRetentionDays}
+                      organizationId={project?.teamId}
+                      onAdjustRange={handleAdjustUsageDateRange}
+                    />
+                  ) : null}
                   <Outlet />
                 </UsageFiltersProvider>
               </>

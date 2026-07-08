@@ -11,6 +11,9 @@ import type { UsageBreakdownFilterEntry } from '@/lib/usage/usage-resource-filte
 
 export type UsageFiltersContextValue = {
   plan: 'free' | 'pro' | 'custom'
+  organizationId?: string | null
+  usageLogRetentionHours: number
+  usageLogRetentionDays: number
   dateRange: DateRange | undefined
   chartInterval: UsageChartInterval
   filterMap: FilterMap

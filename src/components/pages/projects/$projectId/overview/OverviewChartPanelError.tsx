@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
@@ -5,7 +6,7 @@ import { overviewChartPanelErrorClass } from './chart-panel'
 
 interface OverviewChartPanelErrorProps {
   title: string
-  message: string
+  message: ReactNode
   onRetry?: () => void
 }
 

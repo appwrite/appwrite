@@ -85,7 +85,7 @@ function isDedicatedDbFeatureEnabled(
   if (!dbKind) return true
   if (dbKind === 'documentsdb') return features.dedicatedDbsDocumentsDB
   if (dbKind === 'vectorsdb') return features.dedicatedDbsVectorsDB
-  return features.dedicatedDbsTablesDB
+  return true
 }
 
 export function DatabaseSidebarComputeSpec({

@@ -1456,23 +1456,21 @@ export function DatabaseDetailLayout({
             <span className="text-[13px]">{t('Security')}</span>
           </Link>
 
-          {features.dedicatedDbsTablesDB && (
-            <Link
-              to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
-              params={{ projectId, dbKind: dbKind, databaseId }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              <Cpu className="h-3.5 w-3.5 shrink-0" />
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-[13px]">
-                  {t('Upgrade database specs')}
-                </span>
-                <span className="text-[11px] text-muted-foreground/80">
-                  {t('Serverless')}
-                </span>
+          <Link
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+            params={{ projectId, dbKind: dbKind, databaseId }}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+          >
+            <Cpu className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[13px]">
+                {t('Upgrade database specs')}
               </span>
-            </Link>
-          )}
+              <span className="text-[11px] text-muted-foreground/80">
+                {t('Serverless')}
+              </span>
+            </span>
+          </Link>
 
           {features.databaseInsights && (
             <>
@@ -1678,23 +1676,21 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <span className="text-[13px]">{t('Security')}</span>
           </Link>
 
-          {features.dedicatedDbsTablesDB && (
-            <Link
-              to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
-              params={{ projectId, dbKind: dbKind, databaseId }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              <Cpu className="h-3.5 w-3.5 shrink-0" />
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-[13px]">
-                  {t('Upgrade database specs')}
-                </span>
-                <span className="text-[11px] text-muted-foreground/80">
-                  {t('Serverless')}
-                </span>
+          <Link
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+            params={{ projectId, dbKind: dbKind, databaseId }}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+          >
+            <Cpu className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-[13px]">
+                {t('Upgrade database specs')}
               </span>
-            </Link>
-          )}
+              <span className="text-[11px] text-muted-foreground/80">
+                {t('Serverless')}
+              </span>
+            </span>
+          </Link>
 
           {features.databaseInsights && (
             <>

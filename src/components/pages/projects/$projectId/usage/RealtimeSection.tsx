@@ -111,6 +111,7 @@ export function RealtimeSection({
           connectionsQuery.isPlaceholderData,
         )}
         isError={connectionsQuery.isError}
+        queryError={connectionsQuery.error}
         errorTitle={REALTIME_USAGE_ERROR.title}
         errorMessage={REALTIME_USAGE_ERROR.message}
         formatTotal={formatRealtimeConnectionsTotal}
@@ -133,6 +134,7 @@ export function RealtimeSection({
           messagesQuery.isPlaceholderData,
         )}
         isError={messagesQuery.isError}
+        queryError={messagesQuery.error}
         errorTitle={REALTIME_USAGE_ERROR.title}
         errorMessage={REALTIME_USAGE_ERROR.message}
         formatTotal={formatRealtimeMessagesTotal}
@@ -154,6 +156,7 @@ export function RealtimeSection({
           bandwidthQuery.isPlaceholderData,
         )}
         isError={bandwidthQuery.isError}
+        queryError={bandwidthQuery.error}
         errorTitle={REALTIME_USAGE_ERROR.title}
         errorMessage={REALTIME_USAGE_ERROR.message}
         inboundGradientId="usage-realtime-bandwidth-inbound-gradient"

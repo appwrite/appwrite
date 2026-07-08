@@ -55,8 +55,6 @@ export type ConsoleProfileFeatures = {
   databaseInsights: boolean
   /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
   dedicatedDbsSupport: boolean
-  /** Dedicated DBs support for Tables DB: show spec selector in wizard and "Upgrade database specs" in rows view. */
-  dedicatedDbsTablesDB: boolean
   /** Dedicated DBs support for Documents DB. */
   dedicatedDbsDocumentsDB: boolean
   /** Dedicated DBs support for Vectors DB. */
@@ -103,7 +101,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseBackups: 'Database backups',
   databaseInsights: 'Database insights',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
-  dedicatedDbsTablesDB: 'Dedicated DBs: Tables',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
   dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
   nativeDbsPostgres: 'Native DBs: PostgreSQL',
@@ -147,7 +144,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseBackups: true,
       databaseInsights: true,
       dedicatedDbsSupport: false,
-      dedicatedDbsTablesDB: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
       nativeDbsPostgres: false,
@@ -183,7 +179,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseBackups: false,
       databaseInsights: false,
       dedicatedDbsSupport: false,
-      dedicatedDbsTablesDB: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
       nativeDbsPostgres: false,

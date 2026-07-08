@@ -25,6 +25,9 @@ import {
 } from '@/lib/usage/chart-layout'
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { useOptionalUsageFilters } from '../usage-filters-context'
+import { UsageChartErrorMessage } from '../../shared/UsageChartErrorMessage'
+import { resolveUsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
+import { DEFAULT_USAGE_LOG_RETENTION_DAYS } from '@/lib/usage/usage-log-retention'
 import {
   createUsageChartAxisTickFormatter,
   getChartSeriesMax,
@@ -84,6 +87,9 @@ type UsageTimeSeriesChartCardProps = {
   chartPoints: { date: string; day: Date; total: number }[]
   isLoading: boolean
   isError: boolean
+  error?: unknown
+  /** @deprecated Prefer `error` */
+  queryError?: unknown
   errorTitle: string
   errorMessage: string
   formatTotal: (value: number) => string
@@ -106,6 +112,8 @@ export function UsageTimeSeriesChartCard({
   chartPoints,
   isLoading,
   isError,
+  error,
+  queryError,
   errorTitle,
   errorMessage,
   formatTotal,
@@ -118,6 +126,21 @@ export function UsageTimeSeriesChartCard({
 }: UsageTimeSeriesChartCardProps) {
   const t = useT()
   const usageFilters = useOptionalUsageFilters()
+  const resolvedQueryError = error ?? queryError
+  const resolvedErrorCopy = useMemo(
+    () =>
+      resolveUsageChartErrorCopy(
+        resolvedQueryError,
+        usageFilters?.usageLogRetentionDays ?? DEFAULT_USAGE_LOG_RETENTION_DAYS,
+        { title: errorTitle, message: errorMessage },
+      ),
+    [
+      resolvedQueryError,
+      usageFilters?.usageLogRetentionDays,
+      errorTitle,
+      errorMessage,
+    ],
+  )
   const chartData = useMemo(
     () =>
       chartPoints.map((point) => ({
@@ -197,13 +220,13 @@ export function UsageTimeSeriesChartCard({
               <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
               <div className="max-w-sm">
                 <p className="text-[13px] font-medium text-foreground">
-                  {t(errorTitle)}
+                  {t(resolvedErrorCopy.title)}
                 </p>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {t(errorMessage)}
+                  <UsageChartErrorMessage copy={resolvedErrorCopy} />
                 </p>
               </div>
-              {onRetry ? (
+              {onRetry && !resolvedErrorCopy.isRetentionLimit ? (
                 <Button variant="outline" size="sm" onClick={onRetry}>
                   {t('Try again')}
                 </Button>

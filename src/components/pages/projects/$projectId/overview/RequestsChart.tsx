@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, type ReactNode } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
@@ -65,7 +65,7 @@ interface RequestsChartProps {
   isError?: boolean
   onRetry?: () => void
   errorTitle?: string
-  errorMessage?: string
+  errorMessage?: ReactNode
   formatValue?: (value: number) => string
   /** When false, the chart body is not rendered (inactive overview tab). */
   isPanelVisible?: boolean
@@ -322,9 +322,9 @@ export const RequestsChart = memo(function RequestsChart({
   return (
     <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
       <div className={overviewChartPanelHeaderClass}>
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
           {title ? (
-            <span className="text-[13px] font-medium text-foreground">
+            <span className="truncate text-[13px] font-medium text-foreground">
               {t(title)}
             </span>
           ) : null}
@@ -365,11 +365,15 @@ export const RequestsChart = memo(function RequestsChart({
 
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
-          <OverviewChartPanelError
-            title={t(errorTitle)}
-            message={t(errorMessage)}
-            onRetry={onRetry}
-          />
+          <div className={overviewChartPanelChartAreaClass}>
+            <OverviewChartPanelError
+              title={t(errorTitle)}
+              message={
+                typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
+              }
+              onRetry={onRetry}
+            />
+          </div>
         ) : (
           <div
             className={cn(

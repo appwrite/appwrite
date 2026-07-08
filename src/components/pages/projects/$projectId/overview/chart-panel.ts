@@ -12,8 +12,11 @@ export {
   USAGE_CHART_Y_AXIS_WIDTH,
 } from '@/lib/usage/chart-layout'
 
-/** Header block above chart/breakdown body — fixed so tabs do not shift vertically. */
-export const OVERVIEW_CHART_PANEL_HEADER_MIN_HEIGHT = 40
+/** Header block above chart/breakdown body — fixed height so chart columns stay aligned. */
+export const OVERVIEW_CHART_PANEL_HEADER_HEIGHT = 60
+
+/** Body height below the header (matches {@link OVERVIEW_CHART_HEIGHT} on desktop rows). */
+export const OVERVIEW_CHART_PANEL_BODY_HEIGHT = 240
 
 /** Desktop row height when the breakdown column is visible (padding + header + list). */
 export const OVERVIEW_CHART_PANEL_ROW_HEIGHT_WITH_BREAKDOWN = 360
@@ -32,7 +35,7 @@ export const OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT =
 
 /** Fixed-height list so skeleton, partial, and full results share the same layout. */
 export const overviewTopBreakdownListClass =
-  'relative flex min-h-[276px] w-full min-w-0 flex-col gap-1'
+  'relative flex h-full min-h-0 w-full min-w-0 flex-col gap-1 overflow-hidden'
 
 /** One breakdown row — keep skeleton and data rows the same height. */
 export const overviewTopBreakdownRowClass =
@@ -64,35 +67,35 @@ export const overviewChartContentRowClass =
 
 /** Main chart column — grows to fill space not used by the breakdown panel. */
 export const overviewChartColumnClass =
-  'flex h-full w-full min-w-0 flex-col border-b border-border px-5 pb-8 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
+  'flex h-full w-full min-w-0 flex-col overflow-hidden border-b border-border px-5 pb-8 pt-3 @[700px]:min-h-0 @[700px]:min-w-0 @[700px]:flex-1 @[700px]:border-b-0 @[700px]:border-e'
 
 /** Breakdown column (top endpoints / consumers). */
 export const overviewBreakdownColumnClass =
-  'flex h-full min-h-0 w-full min-w-0 flex-col px-5 pb-8 pt-3 @[700px]:w-[400px] @[700px]:shrink-0'
+  'flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-5 pb-8 pt-3 @[700px]:w-[400px] @[700px]:shrink-0'
 
 export const overviewChartPanelHeaderClass =
-  'mb-4 flex min-h-10 shrink-0 flex-wrap items-start justify-between gap-x-3 gap-y-2 py-2.5'
+  'mb-4 flex h-[60px] shrink-0 flex-nowrap items-center justify-between gap-x-3'
 
-/** Legend rows, links, and other header actions — full width below the title on narrow containers. */
+/** Legend rows, links, and other header actions — single row beside the title. */
 export const overviewChartPanelHeaderActionsClass =
-  'flex w-full min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-1.5 @[420px]:w-auto @[420px]:justify-start'
+  'flex shrink-0 flex-nowrap items-center justify-end gap-x-4 gap-y-1.5'
 
 export const overviewChartPanelBodyClass =
-  'flex min-h-0 w-full min-w-0 flex-1 flex-col text-muted-foreground'
+  'flex h-[240px] w-full min-w-0 shrink-0 flex-col text-muted-foreground'
 
-/** Chart canvas — fixed on narrow viewports; fills remaining column height on wide layouts. */
+/** Chart canvas — fills the fixed panel body. */
 export const overviewChartPanelChartAreaClass =
-  'relative flex h-[240px] w-full min-w-0 shrink-0 flex-col @[700px]:min-h-0 @[700px]:h-auto @[700px]:flex-1'
+  'relative flex h-full min-h-0 w-full min-w-0 flex-col'
 
 /** Fills the chart area so ResponsiveContainer can measure 100% width and height. */
 export const overviewChartPanelChartFillClass =
   `absolute inset-0 min-h-0 min-w-0 ${FORCE_LTR_CLASS}`
 
 export const overviewChartPanelEmptyClass =
-  'flex h-full min-h-[240px] w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'
+  'flex h-full min-h-0 w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 text-[13px] text-muted-foreground'
 
 export const overviewChartPanelErrorClass =
-  'flex h-full min-h-[240px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center'
+  'flex h-full min-h-0 w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center'
 
 export const OVERVIEW_METRIC_NOT_AVAILABLE = 'N/A'
 

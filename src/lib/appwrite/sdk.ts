@@ -489,7 +489,7 @@ const sdkForProjectRaw = {
   tablesDB: new TablesDB(clientProject),
   documentsDB: new DocumentsDB(clientProject),
   vectorsDB: new VectorsDB(clientProject),
-  console: new Console(clientProject), // for suggestions API
+  console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),
   webhooks: new Webhooks(clientProject),
 }

@@ -1366,14 +1366,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
-                'Dedicated DBs: Tables DB',
-                'Spec selector in wizard and "Upgrade database specs" in rows view.',
-                'dedicatedDbsTablesDB',
-                profileId,
-                features.dedicatedDbsTablesDB,
-                { category: 'Databases' },
-              ),
-              createProfileFeatureFlagItem(
                 'Dedicated DBs: Documents DB',
                 'Dedicated DBs support for Documents DB.',
                 'dedicatedDbsDocumentsDB',
@@ -1746,7 +1738,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     currentFavicon,
     profileId,
     features.dedicatedDbsSupport,
-    features.dedicatedDbsTablesDB,
     features.dedicatedDbsDocumentsDB,
     features.dedicatedDbsVectorsDB,
     features.nativeDbsPostgres,

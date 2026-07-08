@@ -187,6 +187,7 @@ export function DatabasesSection({
           readsQuery.isPlaceholderData,
         )}
         isError={readsQuery.isError}
+        queryError={readsQuery.error}
         showBreakdown={showBreakdown}
         breakdowns={readsBreakdowns}
         databaseLookup={databaseLookup}
@@ -212,6 +213,7 @@ export function DatabasesSection({
           writesQuery.isPlaceholderData,
         )}
         isError={writesQuery.isError}
+        queryError={writesQuery.error}
         showBreakdown={showBreakdown}
         breakdowns={writesBreakdowns}
         databaseLookup={databaseLookup}
@@ -235,6 +237,7 @@ export function DatabasesSection({
           collectionsQuery.isPlaceholderData,
         )}
         isError={collectionsQuery.isError}
+        queryError={collectionsQuery.error}
         errorTitle={DATABASE_USAGE_ERROR.title}
         errorMessage={DATABASE_USAGE_ERROR.message}
         formatTotal={formatDatabaseCountTotal}
@@ -257,6 +260,7 @@ export function DatabasesSection({
           documentsQuery.isPlaceholderData,
         )}
         isError={documentsQuery.isError}
+        queryError={documentsQuery.error}
         errorTitle={DATABASE_USAGE_ERROR.title}
         errorMessage={DATABASE_USAGE_ERROR.message}
         formatTotal={formatDatabaseCountTotal}

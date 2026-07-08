@@ -205,6 +205,7 @@ export function ComputeUsageSection({
           executionsQuery.isPlaceholderData,
         )}
         isError={executionsQuery.isError}
+        queryError={executionsQuery.error}
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
         showBreakdown={showBreakdown}
@@ -240,6 +241,7 @@ export function ComputeUsageSection({
           gbHoursQuery.isPlaceholderData,
         )}
         isError={gbHoursQuery.isError}
+        queryError={gbHoursQuery.error}
         formatTotal={formatGbHoursTotal}
         formatValue={formatGbHoursValue}
         axisFormat="gbhours"

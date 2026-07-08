@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/tooltip'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { useProjectDatabase, useProject } from '@/lib/react-query/hooks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   formatDedicatedDatabaseRegionUnavailableDescription,
   projectSupportsDedicatedDatabaseCompute,
@@ -55,7 +54,6 @@ export function DatabaseMonitorHeaderActions({
   const t = useT()
   const { database } = useProjectDatabase(projectId, databaseId)
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
   const supportsDedicatedDatabaseCompute =
     projectSupportsDedicatedDatabaseCompute(project?.region)
   const databaseType =
@@ -67,16 +65,10 @@ export function DatabaseMonitorHeaderActions({
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
   const specLabel = spec?.label ?? specId
 
-  const wouldShowUpgrade =
-    showSpecActions &&
-    (features.dedicatedDbsTablesDB ||
-      !serverless ||
-      databaseType !== ApiDatabaseType.Tablesdb)
-
   const showUpgradeCta =
-    wouldShowUpgrade && supportsDedicatedDatabaseCompute
+    showSpecActions && supportsDedicatedDatabaseCompute
   const showUpgradeComingSoon =
-    wouldShowUpgrade && !supportsDedicatedDatabaseCompute
+    showSpecActions && !supportsDedicatedDatabaseCompute
 
   return (
     <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 @[560px]:gap-3">

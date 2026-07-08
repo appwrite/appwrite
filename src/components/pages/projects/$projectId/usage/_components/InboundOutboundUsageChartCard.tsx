@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import { AlertCircle } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { createCompactBytesAxisTickFormatter } from '@/lib/usage/format-metric'
@@ -29,12 +28,12 @@ import {
 import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from '../usage-filters-context'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   UsageMetricCardFooter,
   UsageMetricCardShell,
 } from './UsageMetricCard'
+import { UsageSectionChartError } from './UsageSectionChartError'
 
 const metricHeaderClass =
   'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
@@ -82,6 +81,9 @@ type InboundOutboundUsageChartCardProps = {
   dualChartPoints: BandwidthDualChartPoint[]
   isLoading: boolean
   isError: boolean
+  error?: unknown
+  /** @deprecated Prefer `error` */
+  queryError?: unknown
   errorTitle: string
   errorMessage: string
   inboundGradientId: string
@@ -100,6 +102,8 @@ export function InboundOutboundUsageChartCard({
   dualChartPoints,
   isLoading,
   isError,
+  error,
+  queryError,
   errorTitle,
   errorMessage,
   inboundGradientId,
@@ -207,22 +211,12 @@ export function InboundOutboundUsageChartCard({
       <div className="flex flex-1 flex-col p-4">
         {isError ? (
           <ChartArea>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
-              <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
-              <div className="max-w-sm">
-                <p className="text-[13px] font-medium text-foreground">
-                  {t(errorTitle)}
-                </p>
-                <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {t(errorMessage)}
-                </p>
-              </div>
-              {onRetry ? (
-                <Button variant="outline" size="sm" onClick={onRetry}>
-                  {t('Try again')}
-                </Button>
-              ) : null}
-            </div>
+            <UsageSectionChartError
+              error={error ?? queryError}
+              errorTitle={errorTitle}
+              errorMessage={errorMessage}
+              onRetry={onRetry}
+            />
           </ChartArea>
         ) : isLoading ? (
           <ChartSkeleton />

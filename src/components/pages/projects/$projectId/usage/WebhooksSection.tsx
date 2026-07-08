@@ -106,6 +106,7 @@ export function WebhooksSection({
           eventsSentQuery.isPlaceholderData,
         )}
         isError={eventsSentQuery.isError}
+        queryError={eventsSentQuery.error}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
         formatTotal={formatWebhooksCountTotal}
@@ -128,6 +129,7 @@ export function WebhooksSection({
           eventsFailedQuery.isPlaceholderData,
         )}
         isError={eventsFailedQuery.isError}
+        queryError={eventsFailedQuery.error}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
         formatTotal={formatWebhooksCountTotal}
@@ -150,6 +152,7 @@ export function WebhooksSection({
           countQuery.isPlaceholderData,
         )}
         isError={countQuery.isError}
+        queryError={countQuery.error}
         errorTitle={WEBHOOKS_USAGE_ERROR.title}
         errorMessage={WEBHOOKS_USAGE_ERROR.message}
         formatTotal={formatWebhooksCountTotal}

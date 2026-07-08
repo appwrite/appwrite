@@ -141,6 +141,7 @@ import {
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import { useT } from '@/lib/i18n/translate'
+import { SPREADSHEET_STICKY_BODY_Z } from '@/lib/layout/spreadsheet-sticky'
 
 const STORAGE_FILES_STACKED_COL_STYLES: Record<
   StorageFilesListColumnWidthKey,
@@ -2046,6 +2047,7 @@ export function View() {
                                 <td
                                   className={cn(
                                     'sticky start-0 w-10 border-b border-border px-2 py-1.5 text-center',
+                                    SPREADSHEET_STICKY_BODY_Z,
                                     splitFilesTable &&
                                       'min-w-[40px] max-w-[40px] shrink-0 box-border',
                                     STORAGE_SPREADSHEET_STICKY_START_EDGE_SHADOW,
@@ -2248,6 +2250,7 @@ export function View() {
                                 <td
                                   className={cn(
                                     'sticky end-0 border-b border-border p-0',
+                                    SPREADSHEET_STICKY_BODY_Z,
                                     splitFilesTable && 'shrink-0 box-border',
                                     STORAGE_SPREADSHEET_STICKY_END_EDGE_SHADOW,
                                     STORAGE_SPREADSHEET_BODY_STICKY_EDGE_BG_CLASS,

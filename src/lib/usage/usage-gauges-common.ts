@@ -13,6 +13,7 @@ import {
   type ProjectUsageChartOverview,
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 
 export type { UsageTopEndpoint, UsageChartInterval } from '@/lib/usage/usage-events-common'
 
@@ -236,6 +237,7 @@ export async function fetchProjectUsageGaugeChartSeries(
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<{
   chartPoints: ProjectUsageChartOverview['chartPoints']
   previousChartPoints: ProjectUsageChartOverview['chartPoints']
@@ -250,7 +252,7 @@ export async function fetchProjectUsageGaugeChartSeries(
     previousFrom,
     previousTo,
     interval: resolvedInterval,
-  } = resolveOverviewUsagePeriod(dateRange, interval)
+  } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
   const [currentGroups, previousGroups] = await Promise.all([
     listUsageGaugeGroupsForMetrics(projectId, metrics, {
@@ -293,6 +295,7 @@ export async function fetchProjectUsageGaugesChartOverview(
   metrics: readonly string[],
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
+  logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId || metrics.length === 0) {
     return { changePercent: 0, chartPoints: [] }
@@ -305,6 +308,7 @@ export async function fetchProjectUsageGaugesChartOverview(
       metrics,
       interval,
       queries,
+      logRetentionHours,
     )
 
   const currentLatest =
@@ -330,15 +334,23 @@ export async function fetchProjectUsageGaugeSnapshotOverview(
     dimensions: readonly string[]
     limit?: number
   },
-  options?: { includeBreakdown?: boolean; queries?: string[] },
+  options?: {
+    includeBreakdown?: boolean
+    queries?: string[]
+    logRetentionHours?: number
+  },
 ): Promise<ProjectUsageGaugeOverview> {
   if (!projectId) {
     return { changePercent: 0, latestValue: 0, topConsumers: [] }
   }
 
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
+
   const { from, to, previousFrom, previousTo } = resolveOverviewUsagePeriod(
     dateRange,
     interval,
+    logRetentionHours,
   )
 
   const includeBreakdown =

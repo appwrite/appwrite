@@ -58,6 +58,7 @@ type DatabaseOperationBentoCardProps = {
   changePercent: number
   isLoading: boolean
   isError: boolean
+  queryError?: unknown
   showBreakdown: boolean
   breakdowns: DatabaseBreakdownEntry[]
   databaseLookup: DatabaseBreakdownResourceMap | undefined
@@ -99,6 +100,7 @@ export function DatabaseOperationBentoCard({
   changePercent,
   isLoading,
   isError,
+  queryError,
   showBreakdown,
   breakdowns,
   databaseLookup,
@@ -126,6 +128,7 @@ export function DatabaseOperationBentoCard({
         chartPoints={chartPoints}
         isLoading={isLoading}
         isError={isError}
+        queryError={queryError}
         errorTitle={DATABASE_USAGE_ERROR.title}
         errorMessage={DATABASE_USAGE_ERROR.message}
         formatTotal={formatDatabaseOperationsTotal}

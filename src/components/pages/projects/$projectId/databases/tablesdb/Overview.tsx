@@ -1534,8 +1534,7 @@ export function Overview({
                 </div>
               </div>
 
-              {features.dedicatedDbsTablesDB &&
-                (supportsDedicatedDatabaseCompute ? (
+              {supportsDedicatedDatabaseCompute ? (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
@@ -1654,7 +1653,7 @@ export function Overview({
                     </p>
                   </div>
                 </div>
-                ))}
+                )}
 
               {/* Delete Database */}
               <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">

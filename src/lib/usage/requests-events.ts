@@ -77,6 +77,7 @@ export async function fetchProjectRequestsChartOverview(
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
+  logRetentionHours?: number,
 ): Promise<ProjectRequestsChartOverview> {
   const overview = await fetchProjectUsageChartOverview(
     projectId,
@@ -84,6 +85,7 @@ export async function fetchProjectRequestsChartOverview(
     REQUESTS_EVENT_METRICS,
     interval,
     queries,
+    logRetentionHours,
   )
 
   return {

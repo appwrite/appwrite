@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, type ReactNode } from 'react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useParams } from '@tanstack/react-router'
 import { useT } from '@/lib/i18n/translate'
@@ -75,6 +75,8 @@ type OverviewStorageChartProps = {
   isLoading?: boolean
   isError?: boolean
   onRetry?: () => void
+  errorTitle?: string
+  errorMessage?: ReactNode
   isPanelVisible?: boolean
 }
 
@@ -167,6 +169,8 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   isLoading = false,
   isError = false,
   onRetry,
+  errorTitle = OVERVIEW_STORAGE_ERROR.title,
+  errorMessage = OVERVIEW_STORAGE_ERROR.message,
   isPanelVisible = true,
 }: OverviewStorageChartProps) {
   const t = useT()
@@ -201,7 +205,9 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   return (
     <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
       <div className={overviewChartPanelHeaderClass}>
-        <span className="text-[13px] font-medium text-foreground">{t(title)}</span>
+        <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+          {t(title)}
+        </span>
         <div className={overviewChartPanelHeaderActionsClass}>
           {!showChartSkeleton && chartData.length > 0
             ? STORAGE_SERIES.map((series) => (
@@ -224,11 +230,15 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
 
       <div className={overviewChartPanelBodyClass}>
         {isError ? (
-          <OverviewChartPanelError
-            title={t(OVERVIEW_STORAGE_ERROR.title)}
-            message={t(OVERVIEW_STORAGE_ERROR.message)}
-            onRetry={onRetry}
-          />
+          <div className={overviewChartPanelChartAreaClass}>
+            <OverviewChartPanelError
+              title={t(errorTitle)}
+              message={
+                typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
+              }
+              onRetry={onRetry}
+            />
+          </div>
         ) : (
           <div
             className={cn(

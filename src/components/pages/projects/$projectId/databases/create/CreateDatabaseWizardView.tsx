@@ -53,7 +53,10 @@ import {
   mapDedicatedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
-import { DEFAULT_NEW_DATABASE_NAME } from '@/lib/default-new-database-name'
+import {
+  getNewDatabaseNameForType,
+  isAutoFilledNewDatabaseName,
+} from '@/lib/default-new-database-name'
 import { useAnalytics } from '@/hooks/use-analytics'
 import {
   calculateDedicatedDatabaseMonthlyCost,
@@ -201,7 +204,7 @@ export function CreateDatabaseWizardView() {
   const [specId, setSpecId] = useState<string | null>(null)
   const [haReplicaCount, setHaReplicaCount] = useState(0)
   const [pitrEnabled, setPitrEnabled] = useState(false)
-  const [name, setName] = useState(DEFAULT_NEW_DATABASE_NAME)
+  const [name, setName] = useState('')
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -209,8 +212,12 @@ export function CreateDatabaseWizardView() {
   const isDocumentsDB = dbType === 'DocumentsDB'
   const isVectorsDB = dbType === 'VectorsDB'
   const isNativeDb = isNativeDatabaseType(dbType)
+  const usesDedicatedTablesCompute =
+    isTablesDB &&
+    specId != null &&
+    specId !== SERVERLESS_DATABASE_SPEC_ID
   const usesDedicatedCompute =
-    isDocumentsDB || isVectorsDB || isNativeDb
+    isDocumentsDB || isVectorsDB || isNativeDb || usesDedicatedTablesCompute
 
   const regionUnavailableMessage =
     formatDedicatedDatabaseRegionUnavailableDescription(t)
@@ -262,13 +269,10 @@ export function CreateDatabaseWizardView() {
     regionUnavailableMessage,
   ])
 
-  /** Show specs section for native DBs and Documents/Vectors (always dedicated compute). */
+  /** Show specs section when type uses dedicated compute (incl. TablesDB). */
   const showSpecsForType =
     supportsDedicatedDatabaseCompute &&
-    (isDocumentsDB ||
-      isVectorsDB ||
-      (isTablesDB && features.dedicatedDbsTablesDB) ||
-      isNativeDb)
+    (isDocumentsDB || isVectorsDB || isTablesDB || isNativeDb)
 
   const selectableSpecs = useMemo(() => {
     if (isNativeDb || isDocumentsDB || isVectorsDB) {
@@ -280,7 +284,7 @@ export function CreateDatabaseWizardView() {
       )
       return [
         ...(serverlessSpec ? [{ ...serverlessSpec, comingSoon: false }] : []),
-        ...apiSpecOptions.map((spec) => ({ ...spec, comingSoon: true })),
+        ...apiSpecOptions,
       ]
     }
     return apiSpecOptions
@@ -355,6 +359,9 @@ export function CreateDatabaseWizardView() {
 
   const handleDbTypeSelect = (option: DbTypeChoice) => {
     setDbType(option.id)
+    if (isAutoFilledNewDatabaseName(name)) {
+      setName(getNewDatabaseNameForType(option.id))
+    }
     if (option.id === 'TablesDB') {
       setSpecId(SERVERLESS_DATABASE_SPEC_ID)
     } else if (option.id === 'DocumentsDB' || option.id === 'VectorsDB') {
@@ -530,15 +537,14 @@ export function CreateDatabaseWizardView() {
       selectedSpec != null &&
       !selectedSpec.comingSoon)
 
-  const showNameForm = Boolean(
-    dbType && !selectedDbType?.comingSoon && isSpecSelectionReady,
-  )
+  const showNameForm = Boolean(dbType && !selectedDbType?.comingSoon)
 
   const canCreate = Boolean(
     showNameForm &&
     name.trim().length > 0 &&
     dbType &&
-    !selectedDbType?.comingSoon,
+    !selectedDbType?.comingSoon &&
+    isSpecSelectionReady,
   )
   const isCreatePending = createMutation.isPending
   const footer = (
@@ -579,54 +585,7 @@ export function CreateDatabaseWizardView() {
       }
     >
       <div className="space-y-10">
-        {/* 1. Name & ID */}
-        <section>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="db-name">
-                {t('Name')} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="db-name"
-                type="text"
-                placeholder={t('My database')}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value)
-                  if (errors.name) setErrors((prev) => ({ ...prev, name: '' }))
-                }}
-                className={errors.name ? 'border-destructive' : ''}
-              />
-              {errors.name && (
-                <p className="text-[12px] text-destructive">{errors.name}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="db-id">{t('Database ID')}</Label>
-              <IdInput
-                id="db-id"
-                value={databaseId}
-                onChange={setDatabaseId}
-                maxLength={36}
-                placeholder={t('Leave blank to auto-generate')}
-                idFormat={
-                  isNativeDatabaseType(dbType) ||
-                  dbType === 'DocumentsDB' ||
-                  dbType === 'VectorsDB'
-                    ? 'dedicated'
-                    : 'default'
-                }
-              />
-              {errors.databaseId && (
-                <p className="text-[12px] text-destructive">
-                  {errors.databaseId}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* 2. Database type */}
+        {/* 1. Database type */}
         <section>
           <div className="mb-8">
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
@@ -728,6 +687,63 @@ export function CreateDatabaseWizardView() {
             ))}
           </div>
         </section>
+
+        {/* 2. Name & ID – revealed after type is selected */}
+        {showNameForm && (
+          <section className="pt-6 border-t border-border">
+            <div className="mb-8">
+              <h2 className="text-[15px] font-semibold text-foreground mb-1">
+                {t('Name your database')}
+              </h2>
+              <p className="text-[13px] text-muted-foreground">
+                {t('Choose a display name and optional custom ID.')}
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="db-name">
+                  {t('Name')} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="db-name"
+                  type="text"
+                  placeholder={t(getNewDatabaseNameForType(dbType))}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (errors.name) setErrors((prev) => ({ ...prev, name: '' }))
+                  }}
+                  className={errors.name ? 'border-destructive' : ''}
+                />
+                {errors.name && (
+                  <p className="text-[12px] text-destructive">{errors.name}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="db-id">{t('Database ID')}</Label>
+                <IdInput
+                  id="db-id"
+                  value={databaseId}
+                  onChange={setDatabaseId}
+                  maxLength={36}
+                  placeholder={t('Leave blank to auto-generate')}
+                  idFormat={
+                    isNativeDatabaseType(dbType) ||
+                    dbType === 'DocumentsDB' ||
+                    dbType === 'VectorsDB'
+                      ? 'dedicated'
+                      : 'default'
+                  }
+                />
+                {errors.databaseId && (
+                  <p className="text-[12px] text-destructive">
+                    {errors.databaseId}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* 3. Specifications (table) – revealed when type selected and that type has dedicated support */}
         {dbType && showSpecsForType && (

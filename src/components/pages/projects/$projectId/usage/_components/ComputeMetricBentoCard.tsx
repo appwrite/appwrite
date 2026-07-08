@@ -28,6 +28,7 @@ type ComputeMetricBentoCardProps = {
   changePercent: number
   isLoading: boolean
   isError: boolean
+  queryError?: unknown
   formatTotal: (value: number) => string
   formatValue: (value: number) => string
   axisFormat?: UsageChartAxisFormat
@@ -51,6 +52,7 @@ export function ComputeMetricBentoCard({
   changePercent,
   isLoading,
   isError,
+  queryError,
   formatTotal,
   formatValue,
   axisFormat = 'count',
@@ -81,6 +83,7 @@ export function ComputeMetricBentoCard({
             chartPoints={chartPoints}
             isLoading={isLoading}
             isError={isError}
+            queryError={queryError}
             errorTitle={COMPUTE_USAGE_ERROR.title}
             errorMessage={COMPUTE_USAGE_ERROR.message}
             formatTotal={formatTotal}

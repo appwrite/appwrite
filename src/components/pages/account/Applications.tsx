@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AppWindow, Package } from 'lucide-react'
+import { Package } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -57,7 +57,7 @@ function ConnectedAppAvatar({ app }: { app: Models.App | null }) {
 
   return (
     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted ring-1 ring-border/50">
-      <AppWindow className="h-4 w-4 text-muted-foreground" />
+      <Package className="h-4 w-4 text-muted-foreground" />
     </div>
   )
 }

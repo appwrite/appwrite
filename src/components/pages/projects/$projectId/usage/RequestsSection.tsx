@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   createCompactCountAxisTickFormatter,
@@ -55,7 +54,7 @@ import {
   UsageMetricCardFooter,
   UsageMetricCardShell,
 } from './_components/UsageMetricCard'
-import { Button } from '@/components/ui/button'
+import { UsageSectionChartError } from './_components/UsageSectionChartError'
 import { Skeleton } from '@/components/ui/skeleton'
 const API_REQUESTS_DESCRIPTION =
   'Total API requests during the selected period. Each call to your project endpoint counts as one request.'
@@ -102,26 +101,21 @@ function UsageRequestsChartArea({ children }: { children: ReactNode }) {
   )
 }
 
-function UsageRequestsChartError({ onRetry }: { onRetry?: () => void }) {
-  const t = useT()
+function UsageRequestsChartError({
+  error,
+  onRetry,
+}: {
+  error?: unknown
+  onRetry?: () => void
+}) {
   return (
     <UsageRequestsChartArea>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
-        <AlertCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
-        <div className="max-w-sm">
-          <p className="text-[13px] font-medium text-foreground">
-            {t(OVERVIEW_REQUESTS_ERROR.title)}
-          </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            {t(OVERVIEW_REQUESTS_ERROR.message)}
-          </p>
-        </div>
-        {onRetry ? (
-          <Button variant="outline" size="sm" onClick={onRetry}>
-            {t('Try again')}
-          </Button>
-        ) : null}
-      </div>
+      <UsageSectionChartError
+        error={error}
+        errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+        errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+        onRetry={onRetry}
+      />
     </UsageRequestsChartArea>
   )
 }
@@ -132,6 +126,7 @@ type RequestsChartCardProps = {
   chartPoints: { date: string; day: Date; total: number }[]
   isLoading: boolean
   isError: boolean
+  chartError?: unknown
   onRetry?: () => void
 }
 
@@ -141,6 +136,7 @@ function RequestsChartCard({
   chartPoints,
   isLoading,
   isError,
+  chartError,
   onRetry,
 }: RequestsChartCardProps) {
   const t = useT()
@@ -215,7 +211,7 @@ function RequestsChartCard({
 
       <div className="flex flex-1 flex-col p-4">
         {isError ? (
-          <UsageRequestsChartError onRetry={onRetry} />
+          <UsageRequestsChartError error={chartError} onRetry={onRetry} />
         ) : isLoading ? (
           <ChartSkeleton />
         ) : chartData.length === 0 ? (
@@ -333,6 +329,7 @@ export function RequestsSection({
     isLoading: isChartLoading,
     isPlaceholderData: isChartPlaceholderData,
     isError: isChartError,
+    error: chartError,
     refetch: refetchChart,
   } = useProjectRequestsChartOnly(
     projectId,
@@ -398,6 +395,7 @@ export function RequestsSection({
         chartPoints={chartPoints}
         isLoading={showChartLoading}
         isError={isChartError}
+        chartError={chartError}
         onRetry={handleRetryChart}
       />
 

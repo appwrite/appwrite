@@ -163,6 +163,7 @@ export function StorageSection({
           filesQuery.isPlaceholderData,
         )}
         isError={filesQuery.isError}
+        queryError={filesQuery.error}
         formatTotal={formatStorageBytesTotal}
         formatValue={formatStorageBytesValue}
         axisFormat="bytes"
@@ -188,6 +189,7 @@ export function StorageSection({
           deploymentsQuery.isPlaceholderData,
         )}
         isError={deploymentsQuery.isError}
+        queryError={deploymentsQuery.error}
         errorTitle={STORAGE_USAGE_ERROR.title}
         errorMessage={STORAGE_USAGE_ERROR.message}
         formatTotal={formatStorageBytesTotal}
@@ -211,6 +213,7 @@ export function StorageSection({
           buildsQuery.isPlaceholderData,
         )}
         isError={buildsQuery.isError}
+        queryError={buildsQuery.error}
         errorTitle={STORAGE_USAGE_ERROR.title}
         errorMessage={STORAGE_USAGE_ERROR.message}
         formatTotal={formatStorageBytesTotal}
@@ -235,6 +238,7 @@ export function StorageSection({
           imageTransformationsQuery.isPlaceholderData,
         )}
         isError={imageTransformationsQuery.isError}
+        queryError={imageTransformationsQuery.error}
         formatTotal={formatImageTransformationsTotal}
         formatValue={formatImageTransformationsValue}
         axisFormat="count"
