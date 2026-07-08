@@ -2517,7 +2517,8 @@ trait MigrationsBase
         $this->assertEquals(200, $fileAfterSkip['headers']['status-code']);
         $this->assertSame('destination-logo.png', $fileAfterSkip['body']['name']);
 
-        // Even when the source file is newer, overwrite should skip files.
+        // Even when a file cannot be updated in place, overwrite should replace
+        // only the matching destination file ID.
         sleep(1);
         $updateSource = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $sourceHeaders, [
             'name' => 'source-logo.png',
@@ -2525,8 +2526,6 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $updateSource['headers']['status-code']);
 
-        // File overwrite intentionally resolves as skip because file content is
-        // not updated in place during migration.
         $overwrite = $this->performMigrationSync([
             'resources' => [Resource::TYPE_BUCKET, Resource::TYPE_FILE],
             'endpoint' => $this->webEndpoint,
@@ -2536,11 +2535,11 @@ trait MigrationsBase
         ]);
         $this->assertSame('completed', $overwrite['status']);
         $this->assertNoMigrationCounterErrors($overwrite);
-        $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_FILE]['skip']);
+        $this->assertGreaterThanOrEqual(1, $overwrite['statusCounters'][Resource::TYPE_FILE]['success']);
 
         $fileAfterOverwrite = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $destinationHeaders);
         $this->assertEquals(200, $fileAfterOverwrite['headers']['status-code']);
-        $this->assertSame('destination-logo.png', $fileAfterOverwrite['body']['name']);
+        $this->assertSame('source-logo.png', $fileAfterOverwrite['body']['name']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
@@ -2721,6 +2720,62 @@ trait MigrationsBase
                 $this->assertSame('source-overwrite', $variable['body']['value']);
             },
         );
+
+        $destinationOnlyDeployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'code' => $this->packageFunction('basic'),
+            'activate' => false,
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertEquals(202, $destinationOnlyDeployment['headers']['status-code']);
+        $destinationOnlyDeploymentId = $destinationOnlyDeployment['body']['$id'];
+
+        $seedDeploymentDuplicate = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame('completed', $seedDeploymentDuplicate['status']);
+        $this->assertNoMigrationCounterErrors($seedDeploymentDuplicate);
+
+        $skipDeployment = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame('completed', $skipDeployment['status']);
+        $this->assertNoMigrationCounterErrors($skipDeployment);
+        $this->assertGreaterThanOrEqual(1, $skipDeployment['statusCounters'][Resource::TYPE_DEPLOYMENT]['skip']);
+
+        $deploymentAfterSkip = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $destinationHeaders);
+        $this->assertEquals(200, $deploymentAfterSkip['headers']['status-code']);
+
+        $overwriteDeployment = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'overwrite',
+        ]);
+        $this->assertSame('completed', $overwriteDeployment['status']);
+        $this->assertNoMigrationCounterErrors($overwriteDeployment);
+        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_DEPLOYMENT]['success']);
+
+        $this->assertEventually(function () use ($functionId, $deploymentId, $destinationHeaders): void {
+            $deploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $destinationHeaders);
+            $this->assertEquals(200, $deploymentAfterOverwrite['headers']['status-code']);
+            $this->assertSame('ready', $deploymentAfterOverwrite['body']['status']);
+        }, 120000, 500);
+
+        $destinationOnlyDeploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $destinationOnlyDeploymentId, $destinationHeaders);
+        $this->assertEquals(200, $destinationOnlyDeploymentAfterOverwrite['headers']['status-code']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -2930,6 +2985,61 @@ trait MigrationsBase
                 $this->assertSame('source-overwrite', $variable['body']['value']);
             },
         );
+
+        $destinationOnlyDeployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'code' => $this->packageSite('static'),
+            'activate' => false,
+        ]);
+        $this->assertEquals(202, $destinationOnlyDeployment['headers']['status-code']);
+        $destinationOnlyDeploymentId = $destinationOnlyDeployment['body']['$id'];
+
+        $seedDeploymentDuplicate = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame('completed', $seedDeploymentDuplicate['status']);
+        $this->assertNoMigrationCounterErrors($seedDeploymentDuplicate);
+
+        $skipDeployment = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame('completed', $skipDeployment['status']);
+        $this->assertNoMigrationCounterErrors($skipDeployment);
+        $this->assertGreaterThanOrEqual(1, $skipDeployment['statusCounters'][Resource::TYPE_SITE_DEPLOYMENT]['skip']);
+
+        $deploymentAfterSkip = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, $destinationHeaders);
+        $this->assertEquals(200, $deploymentAfterSkip['headers']['status-code']);
+
+        $overwriteDeployment = $this->performMigrationSync([
+            'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+            'onDuplicate' => 'overwrite',
+        ]);
+        $this->assertSame('completed', $overwriteDeployment['status']);
+        $this->assertNoMigrationCounterErrors($overwriteDeployment);
+        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_SITE_DEPLOYMENT]['success']);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId, $destinationHeaders): void {
+            $deploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, $destinationHeaders);
+            $this->assertEquals(200, $deploymentAfterOverwrite['headers']['status-code']);
+            $this->assertSame('ready', $deploymentAfterOverwrite['body']['status']);
+        }, 120000, 500);
+
+        $destinationOnlyDeploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $destinationOnlyDeploymentId, $destinationHeaders);
+        $this->assertEquals(200, $destinationOnlyDeploymentAfterOverwrite['headers']['status-code']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, [
