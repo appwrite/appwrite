@@ -207,7 +207,13 @@ class Create extends Base
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
 
         if ($useJobs) {
-            $jobs->create(...Job::build($project, $function, $deployment, $platform, $template));
+            // Public template: pull the source straight from GitHub's codeload
+            // tarball; unarchive strips the "{repo}-{ref}/" wrapper + the rootDirectory.
+            $source = [
+                'url' => "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}",
+                'subdir' => $rootDirectory,
+            ];
+            $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
         } else {
             $publisherForBuilds->enqueue(new BuildMessage(
                 project: $project,

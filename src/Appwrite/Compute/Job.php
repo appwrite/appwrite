@@ -32,12 +32,18 @@ final class Job
     /**
      * @return array<string, mixed> Named arguments for OpenRuntimes\Orchestrator\Jobs::create().
      */
+    /**
+     * @param  ?array{url: string, subdir?: string}  $source Remote tarball source
+     *   (template codeload URL, or a VCS presigned URL). When null, the source is
+     *   the deployment's own uploaded tarball, fetched from Appwrite via a
+     *   presigned token (manual upload / duplicate).
+     */
     public static function build(
         Document $project,
         Document $function,
         Document $deployment,
         array $platform,
-        ?Document $template = null,
+        ?array $source = null,
     ): array {
         $projectId = $project->getId();
         $deploymentId = $deployment->getId();
@@ -55,19 +61,18 @@ final class Job
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = System::getEnv('_APP_JOBS_ENDPOINT', "$protocol://{$platform['apiHostname']}");
 
-        // Source artifacts: manual/duplicate deployments download a presigned
-        // tarball from Appwrite; template deployments pull the public GitHub
-        // tarball directly (the unarchive auto-strips the "{repo}-{ref}/" wrapper
-        // and, via subdir, extracts just the template's rootDirectory). Either
-        // way the build input lands in /mnt/code/source.
-        if ($template !== null) {
-            $owner = $template->getAttribute('ownerName', '');
-            $repository = $template->getAttribute('repositoryName', '');
-            $reference = $template->getAttribute('referenceValue', '');
-            $rootDirectory = \trim($template->getAttribute('rootDirectory', ''), '/');
+        // Source artifacts, both ending in /mnt/code/source:
+        //  - remote tarball ($source): templates (public codeload URL) and VCS
+        //    (a short-lived presigned URL). The unarchive auto-strips the
+        //    "{repo}-{ref}/" wrapper and, via subdir, extracts just the
+        //    rootDirectory.
+        //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
+        //    over a presigned GET (manual upload / duplicate).
+        if ($source !== null) {
+            $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
-                new DownloadArtifact(id: 'source', in: "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}", out: 'source.tar.gz'),
-                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $rootDirectory !== '' ? $rootDirectory : null),
+                new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz'),
+                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null),
             ];
         } else {
             // Presigned source-download URL (GET, no request-body cap), fetched by
