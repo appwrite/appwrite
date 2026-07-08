@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "091a71ba9518a11bacfa660d4df558ba",
+    "content-hash": "e798bc265f64ece2a36b970f489e3a33",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4400,16 +4400,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.14.1",
+            "version": "dev-skip-override-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "926556113c770b3646cabeb042153969e3e0cadf"
+                "reference": "14d5cad190f2abfce0ff1e2816d8afc219bf2c3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/926556113c770b3646cabeb042153969e3e0cadf",
-                "reference": "926556113c770b3646cabeb042153969e3e0cadf",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/14d5cad190f2abfce0ff1e2816d8afc219bf2c3c",
+                "reference": "14d5cad190f2abfce0ff1e2816d8afc219bf2c3c",
                 "shasum": ""
             },
             "require": {
@@ -4449,9 +4449,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.14.1"
+                "source": "https://github.com/utopia-php/migration/tree/skip-override-migration"
             },
-            "time": "2026-06-30T13:18:56+00:00"
+            "time": "2026-07-08T09:04:04+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8354,10 +8354,18 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-skip-override-migration",
+            "alias": "1.14.1",
+            "alias_normalized": "1.14.1.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
+        "utopia-php/migration": 20,
         "utopia-php/platform": 5
     },
     "prefer-stable": true,
