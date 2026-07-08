@@ -2595,7 +2595,6 @@ trait MigrationsBase
             'secret' => true,
         ]);
         $this->assertEquals(201, $secretVariable['headers']['status-code']);
-        $secretVariableId = $secretVariable['body']['$id'];
 
         $deploymentId = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
@@ -2650,15 +2649,11 @@ trait MigrationsBase
         $this->assertEquals('node-22', $response['body']['runtime']);
         $this->assertEquals('index.js', $response['body']['entrypoint']);
 
-        $plainVariable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders);
-        $this->assertEquals(200, $plainVariable['headers']['status-code']);
-        $this->assertSame('source-original', $plainVariable['body']['value']);
-        $this->assertFalse($plainVariable['body']['secret']);
-
-        $migratedSecretVariable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $secretVariableId, $destinationHeaders);
-        $this->assertEquals(200, $migratedSecretVariable['headers']['status-code']);
-        $this->assertSame('', $migratedSecretVariable['body']['value']);
-        $this->assertTrue($migratedSecretVariable['body']['secret']);
+        $variables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', $destinationHeaders);
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertEquals(2, $variables['body']['total']);
+        $this->assertContains('FUNCTION_DUPLICATE_MODE', \array_column($variables['body']['variables'], 'key'));
+        $this->assertContains('FUNCTION_SECRET_MODE', \array_column($variables['body']['variables'], 'key'));
 
         $this->assertEventually(function () use ($functionId) {
             $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/', array_merge([
@@ -2690,9 +2685,12 @@ trait MigrationsBase
             [Resource::TYPE_FUNCTION, Resource::TYPE_ENVIRONMENT_VARIABLE],
             function () use ($functionId, $variableId, $destinationHeaders): void {
                 $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $destinationHeaders, $this->functionUpdatePayload('Destination Function'));
-                $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders, [
+                $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders);
+                $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $destinationHeaders, [
+                    'variableId' => $variableId,
                     'key' => 'FUNCTION_DUPLICATE_MODE',
                     'value' => 'destination-only',
+                    'secret' => false,
                 ]);
             },
             function (array $skip) use ($functionId, $variableId, $destinationHeaders): void {
@@ -2826,7 +2824,6 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals(201, $secretVariable['headers']['status-code']);
-        $secretVariableId = $secretVariable['body']['$id'];
 
         // Perform migration
         $result = $this->performMigrationSync([
@@ -2893,23 +2890,16 @@ trait MigrationsBase
         $this->assertContains('TEST_VAR', \array_column($variables['body']['variables'], 'key'));
         $this->assertContains('SECRET_TEST_VAR', \array_column($variables['body']['variables'], 'key'));
 
-        $plainVariable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders);
-        $this->assertEquals(200, $plainVariable['headers']['status-code']);
-        $this->assertSame('test_value', $plainVariable['body']['value']);
-        $this->assertFalse($plainVariable['body']['secret']);
-
-        $migratedSecretVariable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $secretVariableId, $destinationHeaders);
-        $this->assertEquals(200, $migratedSecretVariable['headers']['status-code']);
-        $this->assertSame('', $migratedSecretVariable['body']['value']);
-        $this->assertTrue($migratedSecretVariable['body']['secret']);
-
         $this->assertMigrationSkipAndOverwrite(
             [Resource::TYPE_SITE, Resource::TYPE_SITE_VARIABLE],
             function () use ($siteId, $variableId, $destinationHeaders): void {
                 $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $destinationHeaders, $this->siteUpdatePayload('Destination Site'));
-                $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders, [
+                $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders);
+                $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', $destinationHeaders, [
+                    'variableId' => $variableId,
                     'key' => 'TEST_VAR',
                     'value' => 'destination-only',
+                    'secret' => false,
                 ]);
             },
             function (array $skip) use ($siteId, $variableId, $destinationHeaders): void {
