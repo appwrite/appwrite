@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
+import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
@@ -117,8 +118,11 @@ function SignUpPage() {
           password: data.password,
         })
 
-        // MFA may be required before account.get succeeds
-        await sdk.forConsole.account.get()
+        // Detect MFA. Force a fresh fetch so it can't replay the guest account.get
+        // the _auth loader fires on load (cached/in-flight 401 "missing scopes
+        // account") — a race password managers hit by autofilling and submitting
+        // before that guest request settled.
+        await fetchConsoleAccount({ force: true })
       } catch (error: unknown) {
         if (
           error instanceof AppwriteException &&
