@@ -78,7 +78,7 @@ final class Job
                 // so unlike the uploaded-tarball path it can't size it. Stat the
                 // downloaded archive so the orchestrator reports its byte size in
                 // an artifact callback, which the worker records as sourceSize.
-                new StatArtifact(id: 'sourceSize', in: 'source.tar.gz', depends: 'source'),
+                new StatArtifact(id: 'sourceSize', in: 'source.tar.gz', depends: 'job'),
             ];
         } else {
             // Presigned source-download URL (GET, no request-body cap), fetched by

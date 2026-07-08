@@ -168,14 +168,12 @@ class Jobs extends Action
      */
     private function onArtifact(Database $dbForProject, Document $deployment, array $data): Document
     {
-        if (($data['id'] ?? '') !== 'sourceSize') {
+        if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
             return $deployment;
         }
 
-        // The stat callback payload shape is still settling upstream; accept the
-        // size flat or nested under 'stat'.
-        $stat = \is_array($data['stat'] ?? null) ? $data['stat'] : $data;
-        $size = (int) ($stat['size'] ?? $stat['bytes'] ?? 0);
+        // A stat artifact reports the file's byte size as its 'content'.
+        $size = (int) ($data['content'] ?? 0);
         if ($size <= 0) {
             return $deployment;
         }
