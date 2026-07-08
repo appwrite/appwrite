@@ -274,9 +274,12 @@ class Jobs extends Action
             BuildUsage::publish($usage, $function, $deployment, $project, $publisherForUsage);
         }
 
-        // Keep the function's "latest deployment" pointer + status current.
+        // Keep the function's "latest deployment" pointer + status current, and
+        // (re)activate its schedule so the scheduler enqueues cron executions —
+        // both mirror the executor Builds worker on build completion.
         if (! $function->isEmpty()) {
             $this->updateLatestDeployment($dbForProject, $function);
+            $this->schedule($dbForProject, $dbForPlatform, $function);
         }
 
         // Report the terminal outcome as a VCS commit status (jobs-built VCS
@@ -379,6 +382,33 @@ class Jobs extends Action
             'latestDeploymentInternalId' => $latest->getSequence(),
             'latestDeploymentCreatedAt' => $latest->getCreatedAt(),
             'latestDeploymentStatus' => $latest->getAttribute('status', ''),
+        ]));
+    }
+
+    /**
+     * (Re)activate the function's schedule document so the scheduler enqueues
+     * cron executions. Mirrors the executor Builds worker: a schedule is active
+     * only when the function has both a cron expression and an active
+     * deployment. Re-reads the function so it sees a deploymentId just set by
+     * activate().
+     */
+    private function schedule(Database $dbForProject, Database $dbForPlatform, Document $function): void
+    {
+        $scheduleId = $function->getAttribute('scheduleId', '');
+        if ($scheduleId === '') {
+            return;
+        }
+
+        $function = $dbForProject->getDocument('functions', $function->getId());
+        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
+        if ($schedule->isEmpty()) {
+            return;
+        }
+
+        $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+            'resourceUpdatedAt' => DateTime::now(),
+            'schedule' => $function->getAttribute('schedule', ''),
+            'active' => ! empty($function->getAttribute('schedule')) && ! empty($function->getAttribute('deploymentId')),
         ]));
     }
 
