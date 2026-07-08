@@ -7,7 +7,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -54,7 +54,7 @@ class Get extends Action
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, array $platform, Database $dbForProject, Resolver $vcs)
+    public function action(Response $response, array $platform, Database $dbForProject, Manager $vcs)
     {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();

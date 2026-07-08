@@ -6,8 +6,8 @@ namespace Tests\Unit\Vcs;
 
 use Appwrite\Auth\OAuth2\Github as GithubOAuth2;
 use Appwrite\Extend\Exception;
+use Appwrite\Vcs\Manager;
 use Appwrite\Vcs\Provider;
-use Appwrite\Vcs\Resolver;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -23,7 +23,7 @@ final class ResolverTest extends TestCase
 
     public function testDisabledProvidersAreNotRegistered(): void
     {
-        $resolver = new Resolver($this->cache(), [
+        $resolver = new Manager($this->cache(), [
             'github' => $this->githubConfig(),
             'legacy' => ['enabled' => false] + $this->githubConfig(),
         ]);
@@ -36,7 +36,7 @@ final class ResolverTest extends TestCase
 
     public function testUnknownProviderThrows(): void
     {
-        $resolver = new Resolver($this->cache(), ['github' => $this->githubConfig()]);
+        $resolver = new Manager($this->cache(), ['github' => $this->githubConfig()]);
 
         $this->expectException(Exception::class);
         $resolver->getProvider('bitbucket');
@@ -50,17 +50,15 @@ final class ResolverTest extends TestCase
             'adapter' => GitHub::class,
             'oauth2' => GithubOAuth2::class,
             'auth' => Provider::AUTH_OAUTH2,
-            'envPrefix' => '_APP_VCS_TEST',
-            'required' => ['TOKEN'],
-            'endpoint' => false,
+            'envVariables' => ['TOKEN' => '_APP_VCS_TEST_TOKEN'],
+            'requiredEnvVariables' => ['TOKEN'],
             'browserEndpoint' => 'https://example.com',
-            'urls' => [],
             'headers' => ['event' => 'x-test-event', 'signature' => 'x-test-signature'],
             'scopes' => [],
             'repositoryWebhook' => true,
         ];
 
-        $resolver = new Resolver($this->cache(), ['test' => $test]);
+        $resolver = new Manager($this->cache(), ['test' => $test]);
         $this->assertArrayNotHasKey('test', $resolver->getProviders());
         $this->assertFalse($resolver->isEnabled());
 
@@ -71,7 +69,7 @@ final class ResolverTest extends TestCase
 
     public function testProviderForInstallationDefaultsToGitHub(): void
     {
-        $resolver = new Resolver($this->cache(), ['github' => $this->githubConfig()]);
+        $resolver = new Manager($this->cache(), ['github' => $this->githubConfig()]);
 
         $provider = $resolver->getProviderForInstallation(new Document([]));
         $this->assertSame('github', $provider->getKey());
@@ -85,7 +83,7 @@ final class ResolverTest extends TestCase
         $config = $this->githubConfig();
         $config['auth'] = Provider::AUTH_OAUTH2;
 
-        $resolver = new Resolver($this->cache(), ['github' => $config]);
+        $resolver = new Manager($this->cache(), ['github' => $config]);
         $adapter = $resolver->createAdapter('github');
 
         $installation = new Document([

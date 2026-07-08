@@ -8,7 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -62,7 +62,7 @@ class Create extends Action
         string $installationId,
         string $name,
         bool $private,
-        Resolver $vcs,
+        Manager $vcs,
         Document $user,
         Response $response,
         Database $dbForPlatform

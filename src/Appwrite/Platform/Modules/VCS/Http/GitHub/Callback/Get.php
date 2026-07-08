@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -52,7 +52,7 @@ class Get extends Action
         string $setupAction,
         string $state,
         string $code,
-        Resolver $vcs,
+        Manager $vcs,
         Document $project,
         Response $response,
         Database $dbForPlatform,

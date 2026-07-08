@@ -58,7 +58,7 @@ class Provider
      */
     public function isConfigured(): bool
     {
-        foreach ($this->config['required'] ?? [] as $key) {
+        foreach ($this->config['requiredEnvVariables'] ?? [] as $key) {
             $value = $this->getEnv($key);
             if (empty($value) || $value === 'disabled') {
                 return false;
@@ -70,24 +70,28 @@ class Provider
 
     public function getEnv(string $key, string $default = ''): string
     {
-        return System::getEnv($this->getEnvName($key), $default);
+        $name = $this->getEnvName($key);
+
+        return empty($name) ? $default : System::getEnv($name, $default);
     }
 
     public function getEnvName(string $key): string
     {
-        return $this->config['envPrefix'] . '_' . $key;
+        return $this->config['envVariables'][$key] ?? '';
     }
 
     /**
-     * API endpoint for self-hosted providers, null when the adapter default applies.
+     * API endpoint: the ENDPOINT env var when the provider is self-hosted,
+     * otherwise the registry's fixed default (e.g. GitHub's api.github.com,
+     * which the adapter doesn't allow overriding).
      */
     public function getEndpoint(): ?string
     {
-        if (empty($this->config['endpoint'])) {
-            return null;
-        }
-
         $endpoint = $this->getEnv('ENDPOINT');
+
+        if (empty($endpoint)) {
+            $endpoint = $this->config['endpoint'] ?? '';
+        }
 
         return empty($endpoint) ? null : \rtrim($endpoint, '/');
     }
@@ -221,7 +225,7 @@ class Provider
      */
     protected function buildUrl(string $template, array $params): string
     {
-        $url = $this->config['urls'][$template] ?? '';
+        $url = $this->config[$template . 'Url'] ?? '';
         if (empty($url)) {
             return '';
         }

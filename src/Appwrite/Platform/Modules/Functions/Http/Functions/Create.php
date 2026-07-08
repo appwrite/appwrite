@@ -20,7 +20,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -172,7 +172,7 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        Resolver $vcs,
+        Manager $vcs,
         Authorization $authorization,
         array $platform
     ) {
@@ -347,7 +347,7 @@ class Create extends Base
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
                     template: $template,
-                    github: $adapter,
+                    vcs: $adapter,
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,

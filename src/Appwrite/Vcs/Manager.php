@@ -18,7 +18,7 @@ use Utopia\VCS\Adapter\Git;
  * Endpoints and workers inject this service (DI name `vcs`) and resolve the
  * adapter from an installation document instead of hardcoding a provider.
  */
-class Resolver
+class Manager
 {
     /**
      * @var array<string, Provider>
