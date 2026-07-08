@@ -15,8 +15,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@db18136
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@db18136
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@8df623c
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@8df623c
       '@appwrite.io/specs':
         specifier: github:appwrite/specs
         version: https://codeload.github.com/appwrite/specs/tar.gz/2d7c26d35cccf43780c82b873f2892b478dbca94
@@ -243,7 +243,7 @@ importers:
         specifier: 19.1.1
         version: 19.1.1
       react-day-picker:
-        specifier: ^9.11.0
+        specifier: ^9.12.0
         version: 9.14.0(react@19.1.1)
       react-dom:
         specifier: 19.1.1
@@ -423,8 +423,8 @@ packages:
   '@apm-js-collab/tracing-hooks@0.10.0':
     resolution: {integrity: sha512-2/Z3NTewJTruUkmsSnBC5bJlLNUd9keuD1OLlTEpim4FyLhm6m2Rnfv+wrFdUvFfhmH8CRdiDZBqBrn+wyaGuA==}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@db18136':
-    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@db18136}
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@8df623c':
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@8df623c}
     version: 15.2.0
     engines: {node: '>=18.0.0'}
 
@@ -5872,7 +5872,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@db18136':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@8df623c':
     dependencies:
       json-bigint: 1.0.0
 

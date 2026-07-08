@@ -58,6 +58,7 @@ import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComput
 import {
   DATABASE_SIDEBAR_LIST_STRIP_CLASS,
   DATABASE_SIDEBAR_LIST_STRIP_ROW_CLASS,
+  isSpreadsheetLikeTableTab,
 } from '../_components/database-sidebar-chrome'
 import { DatabaseSelector } from '../_components/DatabaseSelector'
 import { TableSelector } from '../_components/TableSelector'
@@ -291,7 +292,6 @@ export function Workspace({
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
-  const [canCreateIndex, setCanCreateIndex] = useState(true)
   const [isRefreshingRows, setIsRefreshingRows] = useState(false)
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
@@ -1277,22 +1277,18 @@ export function Workspace({
           (activeTab === 'rows' || activeTab === 'documents'
             ? noCreateRowPermission
             : activeTab === 'indexes'
-              ? noCreateTablePermission || !canCreateIndex
+              ? noCreateTablePermission
               : false)
         }
         createDisabledTooltip={
           !isDatabaseLevelView
             ? activeTab === 'indexes' && noCreateTablePermission
               ? createPermissionTooltip
-              : activeTab === 'indexes' && !canCreateIndex
-                ? t(
-                    'Add at least one non-relationship attribute to create indexes.',
-                  )
-                : activeTab === 'rows' || activeTab === 'documents'
-                  ? noCreateRowPermission
-                    ? createPermissionTooltip
-                    : undefined
+              : activeTab === 'rows' || activeTab === 'documents'
+                ? noCreateRowPermission
+                  ? createPermissionTooltip
                   : undefined
+                : undefined
             : undefined
         }
         onCreate={
@@ -1411,7 +1407,7 @@ export function Workspace({
           !isDatabaseLevelView && activeTab === 'rows' && !hasRows
         }
         beforeCreateButtons={undefined}
-        collapsible={!isDatabaseLevelView}
+        collapsible={!isDatabaseLevelView && isSpreadsheetLikeTableTab(activeTab)}
         fullWidthBorder
         fullWidth={
           !isDatabaseLevelView ||
@@ -1727,7 +1723,6 @@ export function Workspace({
                 onCreateReady={(openDialog) => {
                   openCreateIndexDialogRef.current = openDialog
                 }}
-                onIndexesAbilityChange={setCanCreateIndex}
               />
             ) : null}
             {activeTab === 'security' && (

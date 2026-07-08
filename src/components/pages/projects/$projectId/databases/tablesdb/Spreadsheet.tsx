@@ -2830,7 +2830,7 @@ export interface SpreadsheetProps {
   onCreateColumnReady?: (() => void) | null
   onCreateReady?: (openDialog: () => void) => void
   onSuggestReady?: (openDialog: () => void) => void
-  /** When provided (indexes tab), called with whether table has any non-relationship columns so parent can disable create/suggest index buttons */
+  /** TablesDB only: when provided (indexes tab), called with whether the table has any non-relationship columns so the parent can disable create/suggest index buttons. DocumentsDB and VectorsDB omit this; system fields ($id, $createdAt, …) are always indexable. */
   onIndexesAbilityChange?: (canCreate: boolean) => void
   onRowsCountChange?: (count: number) => void
   /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
@@ -6994,7 +6994,7 @@ export function IndexesSpreadsheet({
   const { columns: availableColumns, isLoading: columnsLoading } =
     useProjectTableColumns(projectId, databaseId, tableId)
 
-  // Notify parent when table has no non-relationship columns (disable create/suggest index buttons)
+  // TablesDB only: notify parent when the table has no non-relationship columns.
   useEffect(() => {
     if (!onIndexesAbilityChange || columnsLoading) return
     const nonRelationshipColumns =

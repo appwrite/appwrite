@@ -60,6 +60,7 @@ import { DatabaseSidebarComputeSpec } from '../_components/DatabaseSidebarComput
 import {
   DATABASE_SIDEBAR_LIST_STRIP_CLASS,
   DATABASE_SIDEBAR_LIST_STRIP_ROW_CLASS,
+  isSpreadsheetLikeTableTab,
 } from '../_components/database-sidebar-chrome'
 import { DatabaseSelector } from '../_components/DatabaseSelector'
 import { TableSelector } from '../_components/TableSelector'
@@ -1588,7 +1589,7 @@ export function Workspace({
             </Tooltip>
           ) : undefined
         }
-        collapsible={!isDatabaseLevelView}
+        collapsible={!isDatabaseLevelView && isSpreadsheetLikeTableTab(activeTab)}
         fullWidthBorder
         fullWidth={
           !isDatabaseLevelView ||

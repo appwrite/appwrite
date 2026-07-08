@@ -23,3 +23,17 @@ export const DATABASE_SIDEBAR_FOOTER_STRIP_ROW_CLASS =
 
 /** Cancel nav footer `px-2.5` so strip borders span the full sidebar width. */
 export const DATABASE_SIDEBAR_STRIP_FULL_BLEED_CLASS = '-mx-2.5'
+
+const SPREADSHEET_LIKE_TABLE_TABS = new Set([
+  'rows',
+  'documents',
+  'columns',
+  'indexes',
+])
+
+/** Table detail tabs that render a full-height spreadsheet grid. */
+export function isSpreadsheetLikeTableTab(
+  activeTab: string | undefined,
+): boolean {
+  return activeTab != null && SPREADSHEET_LIKE_TABLE_TABS.has(activeTab)
+}
