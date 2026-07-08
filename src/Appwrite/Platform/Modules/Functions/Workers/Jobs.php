@@ -113,6 +113,7 @@ class Jobs extends Action
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
                 'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
                 default => $deployment,
             };
@@ -155,6 +156,37 @@ class Jobs extends Action
         }
 
         return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update));
+    }
+
+    /**
+     * Record a reported artifact size. Remote-source builds (templates / VCS)
+     * fetch the source in the sidecar, so Appwrite can't size it the way the
+     * uploaded-tarball path does — the job stats the downloaded archive and the
+     * orchestrator reports its size here, which becomes the deployment's
+     * sourceSize. This arrives before the exit callback, so finalize folds it
+     * into totalSize.
+     */
+    private function onArtifact(Database $dbForProject, Document $deployment, array $data): Document
+    {
+        if (($data['id'] ?? '') !== 'sourceSize') {
+            return $deployment;
+        }
+
+        // The stat callback payload shape is still settling upstream; accept the
+        // size flat or nested under 'stat'.
+        $stat = \is_array($data['stat'] ?? null) ? $data['stat'] : $data;
+        $size = (int) ($stat['size'] ?? $stat['bytes'] ?? 0);
+        if ($size <= 0) {
+            return $deployment;
+        }
+
+        // Recompute totalSize too: this callback can land either side of exit
+        // (they arrive out of order), and finalize likewise derives totalSize
+        // from the current sourceSize — so whichever runs last, the two agree.
+        return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'sourceSize' => $size,
+            'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
+        ]));
     }
 
     /**

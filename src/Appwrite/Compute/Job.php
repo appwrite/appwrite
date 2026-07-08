@@ -6,6 +6,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Deployment\Token;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
@@ -73,6 +74,11 @@ final class Job
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz'),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null),
+                // Appwrite never sees the remote source (the sidecar fetches it),
+                // so unlike the uploaded-tarball path it can't size it. Stat the
+                // downloaded archive so the orchestrator reports its byte size in
+                // an artifact callback, which the worker records as sourceSize.
+                new StatArtifact(id: 'sourceSize', in: 'source.tar.gz', depends: 'source'),
             ];
         } else {
             // Presigned source-download URL (GET, no request-body cap), fetched by
@@ -128,7 +134,11 @@ final class Job
             ],
             'callback' => new Callback(
                 url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
-                events: [CallbackEvent::Log, CallbackEvent::Exit],
+                // Artifact callbacks only carry the source-size stat, which exists
+                // only for remote-source builds (templates / VCS).
+                events: $source !== null
+                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit]
+                    : [CallbackEvent::Log, CallbackEvent::Exit],
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
