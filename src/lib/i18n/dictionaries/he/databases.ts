@@ -931,19 +931,16 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Search': 'חיפוש',
   'Search algorithms...': 'חיפוש אלגוריתמים...',
   'Search columns...': 'חיפוש עמודות...',
-  'Search columns…': 'חיפוש עמודות…',
-  'Search attributes…': 'חיפוש מאפיינים…',
+  'Search attributes...': 'חיפוש מאפיינים…',
   'Search databases...': 'חיפוש מסדי נתונים...',
   'Search embedding models...': 'חיפוש מודלי embedding...',
-  'Search files': 'חיפוש קבצים',
+  'Search files...': 'חיפוש קבצים...',
   'Search indexes...': 'חיפוש אינדקסים...',
-  'Search queries': 'חיפוש שאילתות',
-  'Search related rows…': 'חיפוש שורות מקושרות…',
+  'Search queries...': 'חיפוש שאילתות',
+  'Search related rows...': 'חיפוש שורות מקושרות…',
   'Search rows...': 'חיפוש שורות...',
-  'Search schemas': 'חיפוש סכימות',
-  'Search schemas…': 'חיפוש סכימות…',
-  'Search tables': 'חיפוש טבלאות',
-  'Search tables…': 'חיפוש טבלאות…',
+  'Search schemas...': 'חיפוש סכימות...',
+  'Search tables...': 'חיפוש טבלאות...',
   'Search types...': 'חיפוש סוגים...',
   'Security': 'אבטחה',
   'Security has been updated': 'האבטחה עודכנה',
@@ -1456,7 +1453,7 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ה-primary מקבל כתיבות ומשכפל שינויים ל-read replicas להגדלת נפח שאילתות והתאוששות מהירה יותר.',
   'Configure read replicas and replication sync mode for failover resilience.':
     'הגדירו replicas לקריאה ומצב סנכרון שכפול לעמידות בכשלי failover.',
-  'Replication sync mode': 'מצב סנכרון שכפול',
+  'Sync mode': 'מצב סנכרון',
   'Choose how the primary confirms writes with read replicas.':
     'בחרו כיצד ה-primary מאשר כתיבות מול read replicas.',
   Mode: 'מצב',
@@ -1704,4 +1701,49 @@ export const heDatabasesDictionary: Record<string, string> = {
   'No roles available': 'אין תפקידים זמינים',
   'This role is not a member of any other roles.':
     'תפקיד זה אינו חבר באף תפקיד אחר.',
+  'Extensions': 'הרחבות',
+  'Extension': 'הרחבה',
+  'Search extensions...': 'חיפוש הרחבות...',
+  'Installing': 'מתקין',
+  'Uninstalling': 'מסיר',
+  'Installed': 'מותקן',
+  'Install': 'התקנה',
+  'Uninstall': 'הסרה',
+  'Install extension': 'התקנת הרחבה',
+  'Uninstall extension': 'הסרת הרחבה',
+  'Extension install started': 'התקנת ההרחבה החלה',
+  'Extension uninstall started': 'הסרת ההרחבה החלה',
+  'Failed to install extension': 'התקנת ההרחבה נכשלה',
+  'Failed to uninstall extension': 'הסרת ההרחבה נכשלה',
+  'Failed to load extensions': 'טעינת ההרחבות נכשלה',
+  'No extensions installed': 'אין הרחבות מותקנות',
+  'No extensions available': 'אין הרחבות זמינות',
+  'No extensions match your search': 'אין הרחבות שתואמות לחיפוש',
+  'No extensions': 'אין הרחבות',
+  'Install an extension from the available list to extend PostgreSQL capabilities.':
+    'התקינו הרחבה מהרשימה הזמינה כדי להרחיב את יכולות PostgreSQL.',
+  'All supported extensions are already installed on this database.':
+    'כל ההרחבות הנתמכות כבר מותקנות במסד נתונים זה.',
+  'Extensions for this database will appear here when available.':
+    'הרחבות למסד נתונים זה יופיעו כאן כשיהיו זמינות.',
+  "You don't have permission to manage extensions.":
+    'אין לכם הרשאה לנהל הרחבות.',
+  'Upgrade your plan or uninstall an extension to install more.':
+    'שדרגו את התוכנית או הסירו הרחבה כדי להתקין עוד.',
+  'An extension operation is already in progress.':
+    'פעולת הרחבה כבר מתבצעת.',
+  'Waiting for extension operation to complete...':
+    'ממתינים לסיום פעולת ההרחבה...',
+  'Refreshing extensions...': 'מרעננים הרחבות...',
+  'Installation runs in the background and may take a few minutes.':
+    'ההתקנה רצה ברקע ועשויה לקחת כמה דקות.',
+  'Loading extensions...': 'טוען הרחבות...',
+  'In progress': 'בתהליך',
+  'No extensions in progress': 'אין הרחבות בתהליך',
+  'Extensions being installed or uninstalled will appear here.':
+    'הרחבות בהתקנה או בהסרה יופיעו כאן.',
+  'No extensions match your filters': 'אין הרחבות שתואמות למסננים',
+  'Filter by category': 'סינון לפי קטגוריה',
+  'Install PostgreSQL extensions to add capabilities like vector search, geospatial data, and advanced indexing.':
+    'התקינו הרחבות PostgreSQL כדי להוסיף יכולות כמו חיפוש וקטורים, נתונים גיאו-מרחביים ואינדוקס מתקדם.',
 }

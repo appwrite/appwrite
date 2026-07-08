@@ -62,21 +62,21 @@ export function getStatusColor(status: StatusType): string {
     case 'active':
     case 'completed':
     case 'verified':
-      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
     case 'error':
     case 'failed':
     case 'unverified':
-      return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+      return 'bg-red-500/10 text-red-600 dark:text-red-400'
     case 'warning':
     case 'pending':
-      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
     case 'processing':
-      return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+      return 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
     case 'info':
-      return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
+      return 'bg-slate-500/10 text-slate-600 dark:text-slate-400'
     case 'inactive':
     default:
-      return 'bg-muted text-muted-foreground border-border'
+      return 'bg-muted text-muted-foreground'
   }
 }
 
@@ -98,18 +98,18 @@ export type InvoiceStatus =
 export function getInvoiceStatusColor(status: InvoiceStatus): string {
   switch (status) {
     case 'paid':
-      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
     case 'pending':
     case 'due':
     case 'requires_authentication':
-      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
     case 'overdue':
     case 'failed':
-      return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+      return 'bg-red-500/10 text-red-600 dark:text-red-400'
     case 'cancelled':
-      return 'bg-muted text-muted-foreground border-border'
+      return 'bg-muted text-muted-foreground'
     default:
-      return 'bg-muted text-muted-foreground border-border'
+      return 'bg-muted text-muted-foreground'
   }
 }
 
@@ -150,13 +150,13 @@ export type PlanType = CanonicalPlanId
 export function getPlanBadgeColor(plan: PlanType): string {
   switch (plan) {
     case 'custom':
-      return 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/20'
+      return 'bg-purple-500/10 text-purple-600 dark:text-purple-300'
     case 'pro':
     case 'education':
-      return 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-300 border-emerald-500/20'
+      return 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-300'
     case 'free':
     default:
-      return 'bg-muted text-muted-foreground border-border'
+      return 'bg-muted text-muted-foreground'
   }
 }
 
@@ -171,13 +171,13 @@ export type UsageStatus = 'normal' | 'warning' | 'critical'
 export function getUsageStatusColor(status: UsageStatus): string {
   switch (status) {
     case 'normal':
-      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
     case 'warning':
-      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
     case 'critical':
-      return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+      return 'bg-red-500/10 text-red-600 dark:text-red-400'
     default:
-      return 'bg-muted text-muted-foreground border-border'
+      return 'bg-muted text-muted-foreground'
   }
 }
 

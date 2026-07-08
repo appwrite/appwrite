@@ -273,7 +273,7 @@ export function AppLogoFilePicker({
                   setSearch(event.target.value.trim())
                   setPage(1)
                 }}
-                placeholder={t('Search files')}
+                placeholder={t('Search files...')}
                 className="h-8 text-[13px]"
               />
               <Button

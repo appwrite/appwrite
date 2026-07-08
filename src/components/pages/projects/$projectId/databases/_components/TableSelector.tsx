@@ -172,7 +172,7 @@ export function TableSelector({
           <Command shouldFilter={false}>
             <div className="relative">
               <CommandInput
-                placeholder={t('Search')}
+                placeholder={t('Search...')}
                 value={search}
                 onValueChange={setSearch}
                 className={cn('h-9', isFetching && 'pe-8')}

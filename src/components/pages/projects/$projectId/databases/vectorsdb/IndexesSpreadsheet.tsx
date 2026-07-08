@@ -68,13 +68,13 @@ interface IndexColumnEntry {
 
 const getIndexTypeColor = (type: string) => {
   const colors: Record<string, string> = {
-    key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     unique:
-      'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     fulltext:
-      'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      'bg-purple-500/10 text-purple-600 dark:text-purple-400',
   }
-  return colors[type] || 'bg-muted text-muted-foreground border-border'
+  return colors[type] || 'bg-muted text-muted-foreground'
 }
 
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'

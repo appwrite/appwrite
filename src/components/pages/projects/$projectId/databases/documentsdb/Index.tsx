@@ -529,7 +529,7 @@ export function IndexDrawer({
                           items={attributeSelectItems}
                           footerItems={attributeSelectFooterItems}
                           placeholder={t('Select attribute')}
-                          searchPlaceholder={t('Search attributes…')}
+                          searchPlaceholder={t('Search attributes...')}
                           disabled={isLoading}
                           triggerClassName={
                             errors.columns ? 'border-destructive' : undefined

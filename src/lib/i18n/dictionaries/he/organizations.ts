@@ -893,7 +893,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Save: 'שמירה',
   Score: 'ניקוד',
   Search: 'חיפוש',
-  'Search app settings': 'חיפוש בהגדרות האפליקציה',
+  'Search app settings...': 'חיפוש בהגדרות האפליקציה',
   'Search apps...': 'חיפוש אפליקציות...',
   'Search domains...': 'חיפוש דומיינים...',
   'Search files': 'חיפוש קבצים',

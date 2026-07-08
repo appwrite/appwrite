@@ -923,13 +923,8 @@ export function OAuth2ProvidersSection({
               </span>
             </div>
             <Badge
-              variant={enabled ? 'default' : 'secondary'}
-              className={cn(
-                'shrink-0 text-[11px]',
-                enabled
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                  : 'bg-muted text-muted-foreground',
-              )}
+              variant={enabled ? 'success' : 'secondary'}
+              className="shrink-0 text-[11px]"
             >
               {enabled ? t('enabled') : t('disabled')}
             </Badge>

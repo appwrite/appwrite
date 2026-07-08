@@ -22,9 +22,14 @@ export const POSTGRES_DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['tier', 'cpu', 'memory', 'upgrade', 'specification', 'price'],
   },
   {
-    sectionId: 'availability',
-    title: 'High availability',
-    keywords: ['replica', 'replicas', 'sync', 'failover', 'ha', 'topology', 'cluster'],
+    sectionId: 'replication',
+    title: 'Read replicas',
+    keywords: ['replica', 'replicas', 'failover', 'ha', 'topology', 'cluster'],
+  },
+  {
+    sectionId: 'replication',
+    title: 'Sync mode',
+    keywords: ['sync', 'async', 'synchronous', 'quorum', 'replication'],
   },
   {
     sectionId: 'network',
@@ -45,6 +50,18 @@ export const POSTGRES_DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     sectionId: 'connections',
     title: 'Connection pooler',
     keywords: ['pool', 'pooler', 'transaction', 'session', 'splitting'],
+  },
+  {
+    sectionId: 'extensions',
+    title: 'Extensions',
+    keywords: [
+      'extension',
+      'pgvector',
+      'postgis',
+      'install',
+      'uninstall',
+      'plugin',
+    ],
   },
   {
     sectionId: 'maintenance',

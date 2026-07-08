@@ -89,7 +89,7 @@ function PricingTierCard({ tier }: { tier: PricingTier }) {
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-[14px] font-semibold text-foreground">{t(tier.name)}</h3>
           {tier.popular ? (
-            <span className="rounded-full border border-[var(--brand-cta)]/20 bg-[var(--brand-cta)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-cta)]">
+            <span className="rounded-full bg-[var(--brand-cta)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-cta)]">
               {t('Popular')}
             </span>
           ) : null}

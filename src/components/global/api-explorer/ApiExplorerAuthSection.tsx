@@ -350,7 +350,7 @@ export function ApiExplorerAuthSection({
                   placeholder={
                     usersLoading ? t('Loading users…') : t('Select a project user')
                   }
-                  searchPlaceholder={t('Search by name, email, phone, or ID…')}
+                  searchPlaceholder={t('Search by name, email, phone, or ID...')}
                   emptyMessage={t('No users found')}
                   disabled={usersLoading}
                   onSearchChange={setUserSearch}

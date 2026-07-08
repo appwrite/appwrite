@@ -281,7 +281,7 @@ export function CoverBuiltInIconPicker({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={
-                  source === 'lucide' ? 'Search Lucide icons' : 'Search brand icons'
+                  source === 'lucide' ? 'Search Lucide icons...' : 'Search brand icons...'
                 }
                 className="h-9 ps-8 text-[13px]"
               />

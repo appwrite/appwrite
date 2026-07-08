@@ -91,8 +91,8 @@ export function BlockCard({
           )}
           {isReadonly && (
             <Badge
-              variant="outline"
-              className="h-5 gap-1 px-1.5 text-[11px] font-normal text-amber-600 border-amber-500/40 dark:text-amber-400"
+              variant="warning"
+              className="h-5 gap-1 px-1.5 text-[11px] font-normal"
               title={modeMeta.description}
             >
               <ModeIcon className="h-3 w-3" />

@@ -857,20 +857,20 @@ export function View({ initialData }: ViewProps = {}) {
 
   const getRecordTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      A: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-      AAAA: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      A: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+      AAAA: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
       CNAME:
-        'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
-      MX: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+        'bg-green-500/10 text-green-600 dark:text-green-400',
+      MX: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
       TXT: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20',
-      NS: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+      NS: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       SRV: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
-      CAA: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+      CAA: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
       HTTPS:
         'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
       ALIAS:
-        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'}
-    return colors[type] || 'bg-muted text-muted-foreground border-border'
+        'bg-amber-500/10 text-amber-600 dark:text-amber-400'}
+    return colors[type] || 'bg-muted text-muted-foreground'
   }
 
   // Domain not found only when we have no domain from hook and no initialData (never show while loading / first paint)
@@ -1438,7 +1438,7 @@ export function View({ initialData }: ViewProps = {}) {
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        'text-[11px] font-medium border bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+                                        'text-[11px] font-medium border bg-emerald-500/5 text-emerald-700 dark:text-emerald-400',
                                         'inline-flex items-center gap-1.5 px-2 py-0.5',
                                       )}
                                     >

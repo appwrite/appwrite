@@ -578,10 +578,10 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Response preview': 'תצוגה מקדימה של התגובה',
   'Reused across methods. Stored locally in this browser.':
     'משמש בכל המתודות. נשמר מקומית בדפדפן זה.',
-  'Search by name, email, phone, or ID…':
+  'Search by name, email, phone, or ID...':
     'חיפוש לפי שם, אימייל, טלפון או מזהה…',
   'Search methods': 'חיפוש מתודות',
-  'Search methods…': 'חיפוש מתודות…',
+  'Search methods...': 'חיפוש מתודות…',
   Select: 'בחירה',
   'Select a method to inspect and send a request.':
     'בחרו מתודה כדי לבדוק ולשלוח בקשה.',
@@ -642,7 +642,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   Reorder: 'שינוי סדר',
   'Resize terminal': 'שינוי גודל הטרמינל',
   'Retry setup': 'ניסיון הגדרה מחדש',
-  'Search output': 'חיפוש בפלט',
+  'Search output...': 'חיפוש בפלט',
   'Search terminal output': 'חיפוש בפלט הטרמינל',
   selection: 'הבחירה',
   'Setting up CLI': 'מגדיר את ה-CLI',

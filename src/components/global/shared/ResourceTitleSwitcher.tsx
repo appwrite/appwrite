@@ -124,16 +124,16 @@ function ResourceTitleListItemIcon({
 }
 
 const SEARCH_PLACEHOLDERS: Record<ResourceTitleKind, string> = {
-  function: 'Search functions…',
-  site: 'Search sites…',
-  user: 'Search users…',
-  team: 'Search teams…',
-  bucket: 'Search buckets…',
-  database: 'Search databases…',
-  table: 'Search tables…',
-  topic: 'Search topics…',
-  provider: 'Search providers…',
-  domain: 'Search domains…',
+  function: 'Search functions...',
+  site: 'Search sites...',
+  user: 'Search users...',
+  team: 'Search teams...',
+  bucket: 'Search buckets...',
+  database: 'Search databases...',
+  table: 'Search tables...',
+  topic: 'Search topics...',
+  provider: 'Search providers...',
+  domain: 'Search domains...',
 }
 
 const RESOURCE_ICONS: Record<ResourceTitleKind, LucideIcon> = {

@@ -102,7 +102,7 @@ export function BlocksList({ projectId }: { projectId: string | null }) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search"
+              placeholder="Search..."
               disabled={!projectId}
               className="h-8 w-48 rounded-md border border-border bg-background ps-7.5 pe-7 text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:border-border disabled:opacity-50"
               style={{ paddingInlineStart: '1.875rem' }}

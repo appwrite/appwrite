@@ -376,7 +376,7 @@ function ProjectCliShellPanel({ onResizingChange }: ProjectCliShellPanelProps) {
             title={
               terminalSearchOpen
                 ? t('Close search')
-                : `${t('Search output')} (⌘F)`
+                : `${t('Search output...')} (⌘F)`
             }
             aria-label={
               terminalSearchOpen

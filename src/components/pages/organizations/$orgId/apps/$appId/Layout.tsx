@@ -146,7 +146,7 @@ export function Layout({ initialData }: LayoutProps = {}) {
                   })
                 }
               }}
-              searchPlaceholder={t('Search app settings')}
+              searchPlaceholder={t('Search app settings...')}
               mobileNavAriaLabel={t('App settings sections')}
               desktopNavAriaLabel={t('App settings')}
             >

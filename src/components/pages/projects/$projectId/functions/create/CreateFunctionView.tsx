@@ -488,7 +488,7 @@ export function CreateFunctionView() {
                   <Input
                     value={repoSearch}
                     onChange={(e) => setRepoSearch(e.target.value)}
-                    placeholder={t('Search repositories')}
+                    placeholder={t('Search repositories...')}
                     className="h-9 ps-9 text-[13px]"
                   />
                 </div>

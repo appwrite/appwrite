@@ -1,7 +1,7 @@
 export const enCatalog = {
   app: {
     header: {
-      centerSearchPlaceholder: 'Search in docs',
+      centerSearchPlaceholder: 'Search in docs...',
       marketingNav: {
         products: 'Products',
         docs: 'Docs',

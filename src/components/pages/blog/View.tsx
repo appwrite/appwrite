@@ -119,7 +119,7 @@ export function View({
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') handleSearch()
                 }}
-                placeholder="Search articles"
+                placeholder="Search articles..."
                 className="h-10 ps-9 text-[13px]"
               />
             </div>
@@ -133,10 +133,10 @@ export function View({
               type="button"
               onClick={() => handleCategoryChange('Latest')}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors',
+                'rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors',
                 selectedCategory === 'Latest'
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-border bg-background text-muted-foreground hover:text-foreground',
+                  ? 'bg-foreground text-background'
+                  : 'bg-muted/60 text-muted-foreground hover:text-foreground',
               )}
             >
               Latest
@@ -150,10 +150,10 @@ export function View({
                   type="button"
                   onClick={() => handleCategoryChange(category.slug)}
                   className={cn(
-                    'rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors',
+                    'rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors',
                     isActive
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-border bg-background text-muted-foreground hover:text-foreground',
+                      ? 'bg-foreground text-background'
+                      : 'bg-muted/60 text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {category.name}

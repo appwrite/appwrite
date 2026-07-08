@@ -1022,7 +1022,7 @@ export function View() {
                   placeholder={
                     usersLoading ? t('Loading users…') : t('Select guest or user')
                   }
-                  searchPlaceholder={t('Search users or select guest…')}
+                  searchPlaceholder={t('Search users or select guest...')}
                   emptyMessage={t('No users found')}
                   disabled={authControlsDisabled}
                   isFetching={usersLoading}

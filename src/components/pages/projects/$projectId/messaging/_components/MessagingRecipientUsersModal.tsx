@@ -80,7 +80,7 @@ export function MessagingRecipientUsersModal({
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0 flex-1 min-h-0 flex flex-col gap-3">
           <Input
-            placeholder={t('Search users by name, email, or ID…')}
+            placeholder={t('Search users by name, email, or ID...')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)

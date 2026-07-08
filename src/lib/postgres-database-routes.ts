@@ -200,6 +200,12 @@ export function postgresNav(params: PostgresNavBase) {
         base,
       )
     },
+    settingsExtensions() {
+      return postgresDatabaseTabRoute(
+        '/projects/$projectId/databases/postgres/$databaseId/settings/extensions' as const,
+        base,
+      )
+    },
   }
 }
 

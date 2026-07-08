@@ -55,7 +55,7 @@ function DocsPageShellLayout({ children }: DocsPageShellProps) {
         marketingNav: true,
         headerTitleSuffix: 'Docs',
         centerSearch: true,
-        centerSearchPlaceholder: 'Search documentation',
+        centerSearchPlaceholder: 'Search documentation...',
         onCommandCenterOpen: docsSearch?.openDocsSearch,
       }}
       leftSidebar={{

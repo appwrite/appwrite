@@ -222,7 +222,7 @@ export function PostgresForeignKeySelector({
               onValueChange={handleSchemaChange}
               items={schemaItems}
               placeholder={schemasLoading ? t('Loading schemas…') : t('Select schema')}
-              searchPlaceholder={t('Search schemas…')}
+              searchPlaceholder={t('Search schemas...')}
               emptyMessage={t('No schemas found')}
               disabled={schemasLoading && schemaItems.length === 0}
               onSearchChange={setSchemaSearch}
@@ -252,7 +252,7 @@ export function PostgresForeignKeySelector({
                     ? t('Loading tables…')
                     : t('Select table')
               }
-              searchPlaceholder={t('Search tables…')}
+              searchPlaceholder={t('Search tables...')}
               emptyMessage={t('No tables found')}
               disabled={!value.schema || (tablesLoading && tableItems.length === 0)}
               onSearchChange={setTableSearch}
@@ -282,7 +282,7 @@ export function PostgresForeignKeySelector({
                     ? t('Loading columns…')
                     : t('Select column')
               }
-              searchPlaceholder={t('Search columns…')}
+              searchPlaceholder={t('Search columns...')}
               emptyMessage={t('No columns found')}
               disabled={!value.table || (columnsLoading && columnItems.length === 0)}
             />

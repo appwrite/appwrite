@@ -521,7 +521,7 @@ function PermissionRow({
               className={cn(
                 'rounded px-1.5 py-0.5 text-[0.58rem] font-medium uppercase tracking-wide',
                 line.accessStrong
-                  ? 'border border-amber-500/40 text-amber-600 dark:text-amber-400'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                   : 'bg-muted text-muted-foreground',
               )}
             >

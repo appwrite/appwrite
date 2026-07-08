@@ -887,19 +887,16 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Search': '検索',
   'Search algorithms...': 'アルゴリズムを検索...',
   'Search columns...': '列を検索...',
-  'Search columns…': '列を検索…',
-  'Search attributes…': '属性を検索…',
+  'Search attributes...': '属性を検索…',
   'Search databases...': 'データベースを検索...',
   'Search embedding models...': '埋め込みモデルを検索...',
-  'Search files': 'ファイルを検索',
+  'Search files...': 'ファイルを検索...',
   'Search indexes...': 'インデックスを検索...',
-  'Search queries': 'クエリを検索',
-  'Search related rows…': '関連行を検索…',
+  'Search queries...': 'クエリを検索',
+  'Search related rows...': '関連行を検索…',
   'Search rows...': '行を検索...',
-  'Search schemas': 'スキーマを検索',
-  'Search schemas…': 'スキーマを検索…',
-  'Search tables': 'テーブルを検索',
-  'Search tables…': 'テーブルを検索…',
+  'Search schemas...': 'スキーマを検索...',
+  'Search tables...': 'テーブルを検索...',
   'Search types...': 'タイプを検索...',
   'Security': 'セキュリティ',
   'Security has been updated': 'セキュリティを更新しました',
@@ -1398,7 +1395,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'プライマリが書き込みを受け付け、クエリのスケールと迅速な復旧のために変更を読み取りレプリカへレプリケーションします。',
   'Configure read replicas and replication sync mode for failover resilience.':
     'フェイルオーバー耐性のために読み取りレプリカとレプリケーション同期モードを設定します。',
-  'Replication sync mode': 'レプリケーション同期モード',
+  'Sync mode': '同期モード',
   'Choose how the primary confirms writes with read replicas.':
     'プライマリが読み取りレプリカと書き込みをどう確認するかを選択します。',
   Mode: 'モード',
@@ -1644,4 +1641,49 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'No roles available': '利用可能なロールがありません',
   'This role is not a member of any other roles.':
     'このロールは他のロールのメンバーではありません。',
+  'Extensions': '拡張機能',
+  'Extension': '拡張機能',
+  'Search extensions...': '拡張機能を検索...',
+  'Installing': 'インストール中',
+  'Uninstalling': 'アンインストール中',
+  'Installed': 'インストール済み',
+  'Install': 'インストール',
+  'Uninstall': 'アンインストール',
+  'Install extension': '拡張機能をインストール',
+  'Uninstall extension': '拡張機能をアンインストール',
+  'Extension install started': '拡張機能のインストールを開始しました',
+  'Extension uninstall started': '拡張機能のアンインストールを開始しました',
+  'Failed to install extension': '拡張機能のインストールに失敗しました',
+  'Failed to uninstall extension': '拡張機能のアンインストールに失敗しました',
+  'Failed to load extensions': '拡張機能の読み込みに失敗しました',
+  'No extensions installed': 'インストール済みの拡張機能はありません',
+  'No extensions available': '利用可能な拡張機能はありません',
+  'No extensions match your search': '検索条件に一致する拡張機能はありません',
+  'No extensions': '拡張機能がありません',
+  'Install an extension from the available list to extend PostgreSQL capabilities.':
+    '利用可能な一覧から拡張機能をインストールして PostgreSQL の機能を拡張できます。',
+  'All supported extensions are already installed on this database.':
+    'サポート対象の拡張機能はすべてこのデータベースにインストール済みです。',
+  'Extensions for this database will appear here when available.':
+    'このデータベースで利用可能な拡張機能がここに表示されます。',
+  "You don't have permission to manage extensions.":
+    '拡張機能を管理する権限がありません。',
+  'Upgrade your plan or uninstall an extension to install more.':
+    'プランをアップグレードするか、拡張機能をアンインストールしてから追加してください。',
+  'An extension operation is already in progress.':
+    '拡張機能の操作がすでに進行中です。',
+  'Waiting for extension operation to complete...':
+    '拡張機能の操作が完了するまで待機しています...',
+  'Refreshing extensions...': '拡張機能を更新しています...',
+  'Installation runs in the background and may take a few minutes.':
+    'インストールはバックグラウンドで実行され、数分かかる場合があります。',
+  'Loading extensions...': '拡張機能を読み込み中...',
+  'In progress': '進行中',
+  'No extensions in progress': '進行中の拡張機能はありません',
+  'Extensions being installed or uninstalled will appear here.':
+    'インストールまたはアンインストール中の拡張機能がここに表示されます。',
+  'No extensions match your filters': 'フィルターに一致する拡張機能はありません',
+  'Filter by category': 'カテゴリで絞り込み',
+  'Install PostgreSQL extensions to add capabilities like vector search, geospatial data, and advanced indexing.':
+    'ベクトル検索、地理空間データ、高度なインデックスなどの機能を追加するには、PostgreSQL 拡張機能をインストールしてください。',
 }

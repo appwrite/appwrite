@@ -1453,7 +1453,7 @@ export function CommandCenter({
     currentPage === 'shortcuts'
       ? 'Keyboard shortcuts'
       : currentPage === 'docs'
-        ? 'Search documentation'
+        ? 'Search documentation...'
         : currentPage === 'feedback'
           ? 'Send feedback'
           : currentPage === 'support'
@@ -1469,14 +1469,14 @@ export function CommandCenter({
     searchScope
       ? RESOURCE_SEARCH_PLACEHOLDERS[searchScope]
       : currentPage === 'sql-tabs'
-        ? 'Search query tabs…'
+        ? 'Search query tabs...'
         : context === 'docs'
-          ? 'Search commands and documentation pages…'
+          ? 'Search commands and documentation pages...'
           : context === 'org'
-            ? 'Search projects, settings, members…'
+            ? 'Search projects, settings, members...'
             : context === 'account'
-              ? 'Search account, sessions, security…'
-              : 'Search anything - pages, tabs, settings, resources…',
+              ? 'Search account, sessions, security...'
+              : 'Search anything - pages, tabs, settings, resources...',
   )
 
   return (
@@ -1623,7 +1623,7 @@ export function CommandCenter({
                 ← {t('Back')}
               </button>
               <CommandInput
-                placeholder={t('Search query tabs…')}
+                placeholder={t('Search query tabs...')}
                 value={search}
                 onValueChange={setSearch}
                 className="h-14 border-0 text-foreground placeholder:text-muted-foreground"

@@ -2,7 +2,10 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
-import { PostgresDatabaseHaCard } from '../_components/PostgresDatabaseConfigSettings'
+import {
+  PostgresDatabaseReplicasCard,
+  PostgresDatabaseSyncModeCard,
+} from '../_components/PostgresDatabaseConfigSettings'
 import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPage'
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
 
@@ -17,12 +20,20 @@ export function View() {
 
   const cards: SettingsCardItem[] = [
     {
-      id: 'high-availability',
+      id: 'replicas',
       search: {
-        title: 'High availability',
-        keywords: ['replica', 'replicas', 'sync', 'failover', 'ha', 'topology', 'cluster'],
+        title: 'Read replicas',
+        keywords: ['replica', 'replicas', 'failover', 'ha', 'topology', 'cluster'],
       },
-      node: <PostgresDatabaseHaCard {...cardProps} />,
+      node: <PostgresDatabaseReplicasCard {...cardProps} />,
+    },
+    {
+      id: 'sync-mode',
+      search: {
+        title: 'Sync mode',
+        keywords: ['sync', 'async', 'synchronous', 'quorum', 'replication'],
+      },
+      node: <PostgresDatabaseSyncModeCard {...cardProps} />,
     },
   ]
 

@@ -293,9 +293,9 @@ export function SchemaTablesSidebar({
                     type="text"
                     value={tableSearch}
                     onChange={(event) => setTableSearch(event.target.value)}
-                    placeholder={t('Search tables')}
+                    placeholder={t('Search tables...')}
                     className="h-8 ps-8 pe-8 text-[13px]"
-                    aria-label={t('Search tables')}
+                    aria-label={t('Search tables...')}
                     disabled={!selectedSchema}
                   />
                   {tableSearch ? (

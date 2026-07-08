@@ -210,32 +210,32 @@ interface IndexColumnEntry {
 const getColumnTypeColor = (type: string) => {
   const colors: Record<string, string> = {
     string:
-      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     varchar:
-      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-    text: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    text: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     mediumtext:
-      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     longtext:
-      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     integer:
-      'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      'bg-purple-500/10 text-purple-600 dark:text-purple-400',
     bigint:
-      'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+      'bg-violet-500/10 text-violet-600 dark:text-violet-400',
     float:
-      'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+      'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
     boolean:
-      'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
+      'bg-green-500/10 text-green-600 dark:text-green-400',
     datetime:
-      'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
-    email: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+      'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+    email: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
     ip: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
     url: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
-    enum: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    enum: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     relationship:
       'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
   }
-  return colors[type] || 'bg-muted text-muted-foreground border-border'
+  return colors[type] || 'bg-muted text-muted-foreground'
 }
 
 const getColumnDisplayType = (column: Record<string, unknown>) => {
@@ -258,13 +258,13 @@ const getColumnDisplayType = (column: Record<string, unknown>) => {
 // Helper function for index type colors
 const getIndexTypeColor = (type: string) => {
   const colors: Record<string, string> = {
-    key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     unique:
-      'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     fulltext:
-      'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      'bg-purple-500/10 text-purple-600 dark:text-purple-400',
   }
-  return colors[type] || 'bg-muted text-muted-foreground border-border'
+  return colors[type] || 'bg-muted text-muted-foreground'
 }
 
 // Reusable table styles for spreadsheet views
@@ -5715,7 +5715,7 @@ export function TableSettings({
         </div>
 
         {/* Danger Zone */}
-        <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
+        <div className="rounded-xl border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-red-600 dark:text-red-400">
               {t('Delete table')}
@@ -5724,7 +5724,7 @@ export function TableSettings({
               {t('The table will be permanently deleted, including all the rows within it. This action is irreversible.')}
             </p>
           </div>
-          <div className="border-t border-red-500/20" />
+          <div className="border-t" />
           <div className="px-6 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
@@ -5745,7 +5745,7 @@ export function TableSettings({
               </div>
             </div>
           </div>
-          <div className="px-6 py-4 border-t border-red-500/20 bg-red-500/5">
+          <div className="px-6 py-4 border-t bg-red-500/5">
             <Dialog open={showDelete} onOpenChange={setShowDelete}>
               <DialogTrigger asChild>
                 <Button

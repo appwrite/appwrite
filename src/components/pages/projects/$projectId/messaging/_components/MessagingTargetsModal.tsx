@@ -180,7 +180,7 @@ export function MessagingTargetsModal({
 
         <div className="px-6 pb-4 pt-0 flex-1 min-h-0 flex flex-col gap-4">
           <Input
-            placeholder={t('Search by name, email, phone or ID…')}
+            placeholder={t('Search by name, email, phone or ID...')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)

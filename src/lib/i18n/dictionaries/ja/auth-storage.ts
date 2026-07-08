@@ -743,7 +743,7 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Saved to your account. Team presets require owner or developer access.': 'アカウントに保存しました。チームプリセットにはオーナーまたは開発者のアクセス権が必要です。',
   'Scopes': 'スコープ',
   'Search OAuth2 server...': 'OAuth2 サーバーを検索...',
-  'Search buckets…': 'バケットを検索…',
+  'Search buckets...': 'バケットを検索…',
   'Search files...': 'ファイルを検索...',
   'Search languages...': '言語を検索...',
   'Search members...': 'メンバーを検索...',

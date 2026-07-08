@@ -133,7 +133,7 @@ export function View({
             <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
               <div>
                 <label htmlFor="integration-search" className="sr-only">
-                  {t('Search integrations')}
+                  {t('Search integrations...')}
                 </label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -141,7 +141,7 @@ export function View({
                     id="integration-search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder={t('Search integrations')}
+                    placeholder={t('Search integrations...')}
                     className="h-10 ps-9 text-[13px]"
                   />
                 </div>

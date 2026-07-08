@@ -275,7 +275,7 @@ export function ScopeEditor({
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={t('Search scopes…')}
+            placeholder={t('Search scopes...')}
             className="h-9 ps-9 text-[13px]"
             disabled={disabled}
           />

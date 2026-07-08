@@ -110,7 +110,7 @@ export function SearchableSelect({
   items,
   footerItems,
   placeholder = 'Select…',
-  searchPlaceholder = 'Search…',
+  searchPlaceholder = 'Search...',
   disabled = false,
   triggerClassName,
   contentClassName,

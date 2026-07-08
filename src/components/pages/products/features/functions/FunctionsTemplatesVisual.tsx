@@ -59,7 +59,7 @@ export function FunctionsTemplatesVisual() {
 
         <div className="flex items-center gap-2 rounded-lg border border-border bg-background/80 px-3 py-2">
           <Search className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="text-[11px] text-muted-foreground">{t('Search templates…')}</span>
+          <span className="text-[11px] text-muted-foreground">{t('Search templates...')}</span>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">

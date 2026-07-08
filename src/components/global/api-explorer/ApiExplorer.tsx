@@ -1256,7 +1256,7 @@ function MethodListPanel({
           <Input
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            placeholder={t('Search methods…')}
+            placeholder={t('Search methods...')}
             className="h-8 border-border/60 bg-background ps-8 pe-8 text-[13px]"
             aria-label={t('Search methods')}
             disabled={!service}

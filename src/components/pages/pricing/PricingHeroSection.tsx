@@ -71,7 +71,7 @@ export function StackConsolidationSection() {
             title={t('One platform. One subscription.')}
             className="max-w-2xl"
           />
-          <span className="inline-flex w-fit shrink-0 rounded-full border border-border bg-background/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex w-fit shrink-0 rounded-full bg-background/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
             {t('1 vendor • 1 subscription • 1 bill')}
           </span>
         </div>

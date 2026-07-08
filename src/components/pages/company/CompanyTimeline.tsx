@@ -310,7 +310,7 @@ function TimelineYearMarker({
       className="relative scroll-mt-28 pb-3 pt-1 first:pt-0"
     >
       <div className="flex justify-center py-0.5">
-        <span className="relative z-10 inline-flex rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold tracking-wide text-muted-foreground shadow-sm">
+        <span className="relative z-10 inline-flex rounded-full bg-background px-3 py-1 text-[11px] font-semibold tracking-wide text-muted-foreground shadow-sm">
           {year}
         </span>
       </div>

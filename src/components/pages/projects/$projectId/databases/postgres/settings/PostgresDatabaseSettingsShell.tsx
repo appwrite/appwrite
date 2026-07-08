@@ -13,11 +13,12 @@ import {
 type PostgresSettingsPath =
   | '/projects/$projectId/databases/postgres/$databaseId/settings'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/compute'
-  | '/projects/$projectId/databases/postgres/$databaseId/settings/availability'
+  | '/projects/$projectId/databases/postgres/$databaseId/settings/replication'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/network'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/storage'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/connections'
+  | '/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
 
 const POSTGRES_SETTINGS_TO: Record<
@@ -27,8 +28,8 @@ const POSTGRES_SETTINGS_TO: Record<
   '': '/projects/$projectId/databases/postgres/$databaseId/settings',
   compute:
     '/projects/$projectId/databases/postgres/$databaseId/settings/compute',
-  availability:
-    '/projects/$projectId/databases/postgres/$databaseId/settings/availability',
+  replication:
+    '/projects/$projectId/databases/postgres/$databaseId/settings/replication',
   network:
     '/projects/$projectId/databases/postgres/$databaseId/settings/network',
   pitr: '/projects/$projectId/databases/postgres/$databaseId/settings/pitr',
@@ -36,6 +37,8 @@ const POSTGRES_SETTINGS_TO: Record<
     '/projects/$projectId/databases/postgres/$databaseId/settings/storage',
   connections:
     '/projects/$projectId/databases/postgres/$databaseId/settings/connections',
+  extensions:
+    '/projects/$projectId/databases/postgres/$databaseId/settings/extensions',
   maintenance:
     '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance',
 }
@@ -49,11 +52,12 @@ function useActiveSettingsSection(pathname: string): string {
     if (
       [
         'compute',
-        'availability',
+        'replication',
         'network',
         'pitr',
         'storage',
         'connections',
+        'extensions',
         'maintenance',
       ].includes(next)
     ) {

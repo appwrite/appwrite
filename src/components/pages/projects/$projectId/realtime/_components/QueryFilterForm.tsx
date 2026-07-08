@@ -125,7 +125,7 @@ export function QueryFilterForm({
               { value: 'false', label: t('False') },
             ]}
             placeholder={t('Select value')}
-            searchPlaceholder={t('Search…')}
+            searchPlaceholder={t('Search...')}
             emptyMessage={t('No results')}
             disabled={disabled}
             triggerClassName={INPUT_CLASS}
@@ -207,7 +207,7 @@ export function QueryFilterForm({
               label: t(item.label),
             }))}
             placeholder={t('Type')}
-            searchPlaceholder={t('Search types…')}
+            searchPlaceholder={t('Search types...')}
             emptyMessage={t('No types found')}
             disabled={disabled}
             triggerClassName={INPUT_CLASS}
@@ -228,7 +228,7 @@ export function QueryFilterForm({
               label: t(operator.label),
             }))}
             placeholder={t('Operator')}
-            searchPlaceholder={t('Search operators…')}
+            searchPlaceholder={t('Search operators...')}
             emptyMessage={t('No operators found')}
             disabled={disabled}
             triggerClassName={INPUT_CLASS}

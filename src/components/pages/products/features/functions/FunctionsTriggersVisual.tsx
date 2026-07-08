@@ -69,7 +69,7 @@ function ComparisonDivider({ className }: { className?: string }) {
       className={cn('flex shrink-0 items-center justify-center py-1', className)}
       aria-hidden
     >
-      <span className="rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="rounded-full bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {t('or')}
       </span>
     </div>

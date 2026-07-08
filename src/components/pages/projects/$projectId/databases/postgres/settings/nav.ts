@@ -5,6 +5,7 @@ import {
   HardDrive,
   History,
   Plug,
+  Puzzle,
   Settings,
   ShieldCheck,
 } from 'lucide-react'
@@ -13,11 +14,12 @@ import type { LucideIcon } from 'lucide-react'
 export type PostgresDatabaseSettingsPathSuffix =
   | ''
   | 'compute'
-  | 'availability'
+  | 'replication'
   | 'network'
   | 'pitr'
   | 'storage'
   | 'connections'
+  | 'extensions'
   | 'maintenance'
 
 export type PostgresDatabaseSettingsNavItem = {
@@ -75,19 +77,18 @@ export const POSTGRES_DATABASE_SETTINGS_NAV: PostgresDatabaseSettingsNavItem[] =
       ],
     },
     {
-      id: 'availability',
-      label: 'High availability',
-      pathSuffix: 'availability',
+      id: 'replication',
+      label: 'Replication',
+      pathSuffix: 'replication',
       icon: ShieldCheck,
       keywords: [
-        'high availability',
-        'ha',
+        'replication',
         'replica',
         'replicas',
         'failover',
         'sync',
         'async',
-        'replication',
+        'ha',
       ],
     },
     {
@@ -148,6 +149,21 @@ export const POSTGRES_DATABASE_SETTINGS_NAV: PostgresDatabaseSettingsNavItem[] =
         'session',
         'read write',
         'splitting',
+      ],
+    },
+    {
+      id: 'extensions',
+      label: 'Extensions',
+      pathSuffix: 'extensions',
+      icon: Puzzle,
+      keywords: [
+        'extensions',
+        'extension',
+        'pgvector',
+        'postgis',
+        'install',
+        'uninstall',
+        'plugin',
       ],
     },
     {

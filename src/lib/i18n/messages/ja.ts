@@ -6,7 +6,7 @@ export const jaCatalog: EnCatalog = {
     ...enCatalog.app,
     header: {
       ...enCatalog.app.header,
-      centerSearchPlaceholder: 'ドキュメントを検索',
+      centerSearchPlaceholder: 'ドキュメントを検索...',
       marketingNav: {
         ...enCatalog.app.header.marketingNav,
         products: 'プロダクト',

@@ -148,7 +148,7 @@ export function ApiReferenceMethodsNavContent({
           <Input
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            placeholder="Search methods…"
+            placeholder="Search methods..."
             className="h-8 border-border/60 bg-background ps-8 pe-8 text-[13px]"
             aria-label="Search methods"
           />

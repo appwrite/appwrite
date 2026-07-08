@@ -1,4 +1,3 @@
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -42,18 +41,8 @@ export function PostgresReplicationSyncModePicker({
   const t = useT()
 
   return (
-    <div className="space-y-3">
-      <div>
-        <Label className="text-[13px] font-medium text-foreground">
-          {t('Replication sync mode')}
-        </Label>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {t('Choose how the primary confirms writes with read replicas.')}
-        </p>
-      </div>
-
-      <div className="overflow-hidden rounded-lg border border-border">
-        <Table>
+    <div className="overflow-hidden rounded-lg border border-border">
+      <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
               <TableHead className="w-[40px] px-4 py-3" />
@@ -115,8 +104,7 @@ export function PostgresReplicationSyncModePicker({
               )
             })}
           </TableBody>
-        </Table>
-      </div>
+      </Table>
     </div>
   )
 }

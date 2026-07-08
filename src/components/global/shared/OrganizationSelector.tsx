@@ -58,7 +58,7 @@ export function OrganizationSelector({
       onValueChange={onValueChange}
       items={items}
       placeholder={isLoading ? t('Loading…') : t(placeholder)}
-      searchPlaceholder={t('Search organizations…')}
+      searchPlaceholder={t('Search organizations...')}
       emptyMessage={t('No organizations found')}
       disabled={disabled || isLoading}
       triggerClassName={triggerClassName}

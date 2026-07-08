@@ -240,9 +240,9 @@ export function PostgresQueriesSidebarPanel({
               type="text"
               value={querySearch}
               onChange={(event) => setQuerySearch(event.target.value)}
-              placeholder={t('Search queries')}
+              placeholder={t('Search queries...')}
               className="h-8 ps-8 pe-8 text-[13px]"
-              aria-label={t('Search queries')}
+              aria-label={t('Search queries...')}
             />
             {querySearch ? (
               <Button

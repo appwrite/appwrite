@@ -116,7 +116,7 @@ export function CliTerminalSearch({
               onSearch(next, { caseSensitive: false })
             }}
             onKeyDown={handleInputKeyDown}
-            placeholder={t('Search output')}
+            placeholder={t('Search output...')}
             className="h-8 min-w-0 flex-1 border-0 bg-transparent px-2 text-[13px] shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
             aria-label={t('Search terminal output')}
           />

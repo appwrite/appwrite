@@ -919,9 +919,9 @@ export const heMarketingDictionary: Record<string, string> = {
   'Search': 'חיפוש',
   'Search 160+ TLDs with live pricing and private WHOIS. Manage DNS, connect Sites, Functions, or custom API domains, and provision TLS without leaving Appwrite.': // pragma: allowlist secret
     'חפשו ביותר מ-160 סיומות דומיין עם תמחור חי ו-WHOIS פרטי. נהלו DNS, חברו אתרים, פונקציות או דומייני API מותאמים והנפיקו TLS בלי לצאת מ-Appwrite.', // pragma: allowlist secret
-  'Search integrations': 'חיפוש אינטגרציות',
+  'Search integrations...': 'חיפוש אינטגרציות',
   'Search logs...': 'חיפוש בלוגים...',
-  'Search templates…': 'חיפוש תבניות…',
+  'Search templates...': 'חיפוש תבניות…',
   'Secure online payment processing': 'עיבוד תשלומים מקוון ומאובטח',
   'Security': 'אבטחה',
   'Security alerts': 'התראות אבטחה',

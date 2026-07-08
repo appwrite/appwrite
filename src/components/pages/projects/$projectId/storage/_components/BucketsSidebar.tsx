@@ -189,7 +189,7 @@ export function BucketsSidebar() {
               <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder={t('Search buckets…')}
+                placeholder={t('Search buckets...')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-8 ps-8 pe-2 text-[13px]"

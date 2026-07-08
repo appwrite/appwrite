@@ -743,7 +743,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Saved to your account. Team presets require owner or developer access.': 'נשמר לחשבון שלכם. ערכות צוות דורשות גישת בעלים או מפתח.',
   'Scopes': 'הרשאות גישה',
   'Search OAuth2 server...': 'חיפוש בשרת OAuth2...',
-  'Search buckets…': 'חיפוש באקטים…',
+  'Search buckets...': 'חיפוש באקטים…',
   'Search files...': 'חיפוש קבצים...',
   'Search languages...': 'חיפוש שפות...',
   'Search members...': 'חיפוש חברים...',

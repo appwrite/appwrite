@@ -128,7 +128,7 @@ export function MessagesFilterBar({
             onChange={(event) =>
               onChange({ ...filters, search: event.target.value })
             }
-            placeholder={t('Search messages…') /* pragma: allowlist secret */}
+            placeholder={t('Search messages...') /* pragma: allowlist secret */}
             spellCheck={false}
             className="h-9 w-full min-w-0 rounded-md border border-border bg-background ps-8 pe-8 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           />

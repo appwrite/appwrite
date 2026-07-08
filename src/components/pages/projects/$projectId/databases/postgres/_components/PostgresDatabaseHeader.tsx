@@ -67,7 +67,9 @@ export function PostgresDatabaseHeader({
       onRefresh={onRefresh}
       isRefreshing={isRefreshing}
       filterTrigger={filterTrigger}
-      showToolbarBottomBorder={databaseTab === 'roles' || databaseTab === 'enums'}
+      showToolbarBottomBorder={
+        databaseTab === 'roles' || databaseTab === 'enums'
+      }
     />
   )
 }

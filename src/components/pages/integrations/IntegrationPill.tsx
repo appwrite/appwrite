@@ -12,20 +12,20 @@ export function integrationPillClassName({
   variant = 'default',
 }: IntegrationPillOptions = {}) {
   const base =
-    'inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium shrink-0 transition-colors [&>svg]:size-3'
+    'inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-medium shrink-0 transition-colors [&>svg]:size-3'
 
   if (variant === 'success') {
     return cn(
       base,
-      'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     )
   }
 
   return cn(
     base,
     active
-      ? 'border-foreground bg-foreground text-background'
-      : 'border-border bg-background text-muted-foreground hover:text-foreground',
+      ? 'bg-foreground text-background'
+      : 'bg-muted/60 text-muted-foreground hover:text-foreground',
   )
 }
 

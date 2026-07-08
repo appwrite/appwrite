@@ -49,7 +49,7 @@ function useWriteAccess(canWrite: boolean, isPending: boolean) {
   return { writeDisabled, writeTooltip }
 }
 
-export function PostgresDatabaseHaCard({
+export function PostgresDatabaseReplicasCard({
   projectId,
   databaseId,
   database,
@@ -58,7 +58,6 @@ export function PostgresDatabaseHaCard({
   const t = useT()
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
-  const [syncMode, setSyncMode] = useState(database.syncMode || 'async')
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
     updateMutation.isPending,
@@ -66,21 +65,18 @@ export function PostgresDatabaseHaCard({
 
   useEffect(() => {
     setReplicaCount(database.replicas ?? 0)
-    setSyncMode(database.syncMode || 'async')
-  }, [database.replicas, database.syncMode])
+  }, [database.replicas])
 
   const replicaOption = useMemo(
     () => getReplicaOption(replicaCount),
     [replicaCount],
   )
 
-  const haDirty =
-    replicaCount !== (database.replicas ?? 0) ||
-    syncMode !== (database.syncMode || 'async')
+  const replicasDirty = replicaCount !== (database.replicas ?? 0)
 
-  const handleHaUpdate = () => {
+  const handleReplicasUpdate = () => {
     updateMutation.mutate(
-      { replicas: replicaCount, syncMode },
+      { replicas: replicaCount },
       {
         onSuccess: () => toast.success(t('High availability settings updated')),
         onError: (error) =>
@@ -98,11 +94,11 @@ export function PostgresDatabaseHaCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          {t('High availability')}
+          {t('Read replicas')}
         </h3>
         <p className="mt-2 text-[13px] text-muted-foreground">
           {t(
-            'Configure read replicas and replication sync mode for failover resilience.',
+            'Add read-only instances to scale query traffic and improve failover resilience alongside your primary database.',
           )}
         </p>
       </div>
@@ -185,7 +181,70 @@ export function PostgresDatabaseHaCard({
         ) : null}
 
         <PostgresHaClusterDiagram replicaCount={replicaCount} />
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={writeDisabled || !replicasDirty}
+          title={writeTooltip}
+          onClick={handleReplicasUpdate}
+        >
+          {t('Update')}
+        </Button>
+      </div>
+    </div>
+  )
+}
 
+export function PostgresDatabaseSyncModeCard({
+  projectId,
+  databaseId,
+  database,
+  canWrite,
+}: PostgresDatabaseSettingsCardProps) {
+  const t = useT()
+  const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const [syncMode, setSyncMode] = useState(database.syncMode || 'async')
+  const { writeDisabled, writeTooltip } = useWriteAccess(
+    canWrite,
+    updateMutation.isPending,
+  )
+
+  useEffect(() => {
+    setSyncMode(database.syncMode || 'async')
+  }, [database.syncMode])
+
+  const syncModeDirty = syncMode !== (database.syncMode || 'async')
+
+  const handleSyncModeUpdate = () => {
+    updateMutation.mutate(
+      { syncMode },
+      {
+        onSuccess: () => toast.success(t('High availability settings updated')),
+        onError: (error) =>
+          toast.error(
+            getErrorMessage(
+              error,
+              t('Failed to update high availability settings'),
+            ),
+          ),
+      },
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Sync mode')}
+        </h3>
+        <p className="mt-2 text-[13px] text-muted-foreground">
+          {t('Choose how the primary confirms writes with read replicas.')}
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
         <PostgresReplicationSyncModePicker
           syncMode={syncMode}
           onSyncModeChange={setSyncMode}
@@ -196,9 +255,9 @@ export function PostgresDatabaseHaCard({
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={writeDisabled || !haDirty}
+          disabled={writeDisabled || !syncModeDirty}
           title={writeTooltip}
-          onClick={handleHaUpdate}
+          onClick={handleSyncModeUpdate}
         >
           {t('Update')}
         </Button>

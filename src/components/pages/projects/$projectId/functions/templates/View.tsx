@@ -798,7 +798,7 @@ function TemplateCatalogFilters({
           <Input
             id="template-catalog-search"
             type="search"
-            placeholder={t('Search by name…')}
+            placeholder={t('Search by name...')}
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
             className="h-9 w-full border-border bg-background ps-9 pe-3 text-[13px] placeholder:text-muted-foreground"
@@ -830,7 +830,7 @@ function TemplateCatalogFilters({
             >
               <Command>
                 <CommandInput
-                  placeholder={t('Search use cases…')}
+                  placeholder={t('Search use cases...')}
                   className="h-9 text-[13px]"
                 />
                 {catalogUseCases.length > 0 ? (
@@ -904,7 +904,7 @@ function TemplateCatalogFilters({
             >
               <Command>
                 <CommandInput
-                  placeholder={t('Search runtimes…')}
+                  placeholder={t('Search runtimes...')}
                   className="h-9 text-[13px]"
                 />
                 {catalogRuntimes.length > 0 ? (

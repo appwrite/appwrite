@@ -154,7 +154,7 @@ export function MobileBucketSelector() {
           <PopoverContent className="w-[min(100vw-2rem,380px)] p-0" align="start">
             <Command shouldFilter={false}>
               <CommandInput
-                placeholder={t('Search buckets…')}
+                placeholder={t('Search buckets...')}
                 value={search}
                 onValueChange={setSearch}
               />

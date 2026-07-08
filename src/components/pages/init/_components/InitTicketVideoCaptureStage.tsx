@@ -119,7 +119,7 @@ function InitTicketRecordingChrome({ visible }: { visible: boolean }) {
     >
       <div
         className={cn(
-          'absolute start-3 top-3 flex items-center gap-2 rounded-full border border-red-500/35 bg-background/95 px-3 py-1.5 text-[12px] font-semibold tracking-wide text-red-600 shadow-md backdrop-blur-sm sm:start-4 sm:top-4',
+          'absolute start-3 top-3 flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1.5 text-[12px] font-semibold tracking-wide text-red-600 shadow-md backdrop-blur-sm sm:start-4 sm:top-4',
           visible ? 'opacity-100' : 'opacity-0',
         )}
       >

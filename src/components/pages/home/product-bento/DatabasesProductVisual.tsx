@@ -368,7 +368,7 @@ function DocumentsDbPanel({ playKey }: { playKey: number }) {
         <Badge
           variant="inactive"
           className={cn(
-            'h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color,border-color] duration-300 group-hover:border-green-500/30 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400',
+            'h-5 shrink-0 px-1.5 text-[10px] transition-[color,background-color] duration-300 group-hover:bg-green-500/10 group-hover:text-green-700 dark:group-hover:text-green-400',
             revealClass,
           )}
           style={shouldAnimate ? { animationDelay: '420ms' } : undefined}

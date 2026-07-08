@@ -77,11 +77,11 @@ const ACTION_CONFIG: Record<
 
 const ACTION_BADGE_HOVER_CLASS: Record<FirewallAction, string> = {
   block:
-    'group-hover:border-red-500/30 group-hover:bg-red-500/10 group-hover:text-red-700 dark:group-hover:text-red-400 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
+    'group-hover:bg-red-500/10 group-hover:text-red-700 dark:group-hover:text-red-400 motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
   allow:
-    'group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
+    'group-hover:bg-emerald-500/10 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
   challenge:
-    'group-hover:border-amber-500/30 group-hover:bg-amber-500/10 group-hover:text-amber-700 dark:group-hover:text-amber-400 motion-reduce:group-hover:border-border motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
+    'group-hover:bg-amber-500/10 group-hover:text-amber-700 dark:group-hover:text-amber-400 motion-reduce:group-hover:bg-muted motion-reduce:group-hover:text-foreground/80',
 }
 
 const REQUEST_TONE_CLASS = {
@@ -99,7 +99,7 @@ function ActionBadge({ action }: { action: FirewallAction }) {
     <Badge
       variant="inactive"
       className={cn(
-        'h-5 shrink-0 px-1.5 text-[9px] transition-[color,background-color,border-color] duration-300 sm:text-[10px]',
+        'h-5 shrink-0 px-1.5 text-[9px] transition-[color,background-color] duration-300 sm:text-[10px]',
         ACTION_BADGE_HOVER_CLASS[action],
       )}
     >

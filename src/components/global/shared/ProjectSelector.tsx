@@ -108,7 +108,7 @@ export function ProjectSelector({
       onValueChange={handleSelectProject}
       items={items}
       placeholder={t(placeholder)}
-      searchPlaceholder={t('Search projects…')}
+      searchPlaceholder={t('Search projects...')}
       emptyMessage={isFetching ? '' : t('No projects found')}
       disabled={disabled || !orgTeamId}
       triggerClassName={triggerClassName}

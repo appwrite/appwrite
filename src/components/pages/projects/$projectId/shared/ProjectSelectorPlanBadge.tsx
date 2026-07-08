@@ -87,14 +87,14 @@ export function ProjectSelectorPlanBadge({
   const t = useT()
   const label = upcomingDowngrade ? t('Downgraded') : getPlanDisplayName(plan)
   const colors = upcomingDowngrade
-    ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
     : getPlanBadgeColor(plan)
 
   if (!billingStress || upcomingDowngrade) {
     return (
       <span
         className={cn(
-          'shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium capitalize',
+          'shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize',
           colors,
           className,
         )}
@@ -113,7 +113,7 @@ export function ProjectSelectorPlanBadge({
     >
       <span
         className={cn(
-          'plan-badge-stress-inner relative isolate inline-flex shrink-0 items-center justify-center overflow-visible rounded border px-1.5 py-0.5 text-[10px] font-medium capitalize',
+          'plan-badge-stress-inner relative isolate inline-flex shrink-0 items-center justify-center overflow-visible rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize',
           colors,
         )}
       >

@@ -83,7 +83,7 @@ export function PricingPlanCard({ plan }: { plan: PricingPlan }) {
             {t(plan.name)}
           </h2>
           {plan.popular ? (
-            <span className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="rounded-full bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {t('Most popular')}
             </span>
           ) : null}

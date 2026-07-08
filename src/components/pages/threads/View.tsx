@@ -117,9 +117,9 @@ export function View({
                     handleSearch(event.currentTarget.value, selectedTags)
                   }
                 }}
-                placeholder="Search for threads"
+                placeholder="Search for threads..."
                 className="ps-9"
-                aria-label="Search for threads"
+                aria-label="Search for threads..."
               />
             </div>
           </div>

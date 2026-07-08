@@ -468,7 +468,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Role updated successfully': 'ロールを更新しました',
   'Run ended': '実行が終了しました',
   'SOC 2 type II report': 'SOC 2 Type II レポート',
-  'Search app settings': 'アプリ設定を検索',
+  'Search app settings...': 'アプリ設定を検索',
   'Search apps...': 'アプリを検索...',
   'Search domains...': 'ドメインを検索...',
   'Search files': 'ファイルを検索',

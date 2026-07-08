@@ -37,7 +37,7 @@ function PricingPromoPlanCard({ plan }: { plan: PricingPlan }) {
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-[15px] font-semibold text-foreground">{t(plan.name)}</h3>
         {plan.popular ? (
-          <span className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+          <span className="rounded-full bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
             {t('Most popular')}
           </span>
         ) : null}

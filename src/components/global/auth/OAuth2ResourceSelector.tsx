@@ -225,7 +225,7 @@ export function OAuth2ResourceSelector({
               <Input
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
-                placeholder={`${t('Search')} ${pluralLabel} ${t('by name')}`}
+                placeholder={`${t('Search')} ${pluralLabel} ${t('by name')}...`}
                 disabled={disabled}
                 className="h-8 text-sm"
               />

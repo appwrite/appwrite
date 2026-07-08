@@ -476,7 +476,7 @@ function HomePage() {
                             {item.title}
                           </h3>
                           {item.label ? (
-                            <span className="rounded-full border border-[var(--brand-cta)]/20 bg-[var(--brand-cta)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-cta)]">
+                            <span className="rounded-full bg-[var(--brand-cta)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-cta)]">
                               {item.label}
                             </span>
                           ) : null}

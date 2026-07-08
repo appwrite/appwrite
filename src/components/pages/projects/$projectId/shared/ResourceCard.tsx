@@ -174,10 +174,10 @@ export function ResourceCard({
               {statusLabel && (
                 <span
                   className={cn(
-                    'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium border',
+                    'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium',
                     status
                       ? getStatusColor(status)
-                      : 'bg-muted text-muted-foreground border-border',
+                      : 'bg-muted text-muted-foreground',
                   )}
                 >
                   {statusLabel}

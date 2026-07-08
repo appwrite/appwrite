@@ -6,7 +6,7 @@ export const heCatalog: EnCatalog = {
     ...enCatalog.app,
     header: {
       ...enCatalog.app.header,
-      centerSearchPlaceholder: 'חיפוש בדוקומנטציה',
+      centerSearchPlaceholder: 'חיפוש בדוקומנטציה...',
       marketingNav: {
         ...enCatalog.app.header.marketingNav,
         products: 'מוצרים',

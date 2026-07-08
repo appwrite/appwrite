@@ -50,7 +50,7 @@ export const CLI_SHELL_CONSOLE_SHORTCUTS: readonly TerminalShortcutRef[] = [
   },
   {
     id: 'terminal.search',
-    description: 'Search output',
+    description: 'Search output...',
     raw: CLI_SHELL_SEARCH_SHORTCUT_RAW,
   },
   {

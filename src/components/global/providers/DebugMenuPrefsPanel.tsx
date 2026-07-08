@@ -121,7 +121,7 @@ function PrefsSearchBar({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
-          placeholder="Search keys or values…"
+          placeholder="Search keys or values..."
           className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
         />
         {value && (

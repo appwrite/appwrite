@@ -568,7 +568,7 @@ export function FiltersPopoverContent({
                   label: t(u.label),
                 }))}
                 placeholder={t('Unit')}
-                searchPlaceholder={t('Search units…')}
+                searchPlaceholder={t('Search units...')}
                 emptyMessage={t('No units found')}
               />
             </div>
@@ -658,7 +658,7 @@ export function FiltersPopoverContent({
                   ]
             }
             placeholder={t('Select')}
-            searchPlaceholder={t('Search…')}
+            searchPlaceholder={t('Search...')}
             emptyMessage={t('No results')}
           />
         </div>
@@ -702,7 +702,7 @@ export function FiltersPopoverContent({
                 label: t(u.label),
               }))}
               placeholder={t('Unit')}
-              searchPlaceholder={t('Search units…')}
+              searchPlaceholder={t('Search units...')}
               emptyMessage={t('No units found')}
               triggerClassName="min-w-[100px]"
             />
@@ -742,7 +742,7 @@ export function FiltersPopoverContent({
                 : undefined,
             }))}
             placeholder={t('Select')}
-            searchPlaceholder={t('Search values…')}
+            searchPlaceholder={t('Search values...')}
             emptyMessage={t('No values found')}
           />
         </div>
@@ -864,7 +864,7 @@ export function FiltersPopoverContent({
                       label: t(o.label),
                     }))}
                     placeholder={t('Sort field')}
-                    searchPlaceholder={t('Search columns…')}
+                    searchPlaceholder={t('Search columns...')}
                     emptyMessage={t('No columns')}
                     triggerClassName="h-9 min-w-0 flex-1 text-[13px]"
                   />
@@ -950,7 +950,7 @@ export function FiltersPopoverContent({
                 }}
                 items={columns.map((c) => ({ value: c.id, label: t(c.title) }))}
                 placeholder={t('Column')}
-                searchPlaceholder={t('Search columns…')}
+                searchPlaceholder={t('Search columns...')}
                 emptyMessage={t('No columns found')}
               />
             </div>
@@ -982,7 +982,7 @@ export function FiltersPopoverContent({
                     : []
                 }
                 placeholder={t('Operator')}
-                searchPlaceholder={t('Search operators…')}
+                searchPlaceholder={t('Search operators...')}
                 emptyMessage={t('No operators found')}
               />
             </div>
@@ -1019,7 +1019,7 @@ export function FiltersPopoverContent({
                     { value: 'datetime', label: t('Date / time') },
                   ]}
                   placeholder={t('Type')}
-                  searchPlaceholder={t('Search…')}
+                  searchPlaceholder={t('Search...')}
                   emptyMessage={t('No types')}
                   triggerClassName="h-9 w-full text-[13px]"
                 />

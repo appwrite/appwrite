@@ -124,7 +124,7 @@ function ProjectSelectorPlanBadgeSlot({
   return (
     <span
       aria-hidden
-      className="invisible shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium capitalize"
+      className="invisible shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize"
     >
       Enterprise
     </span>
@@ -1023,7 +1023,7 @@ function ProjectSelectorContent({
                             className={cn(
                               'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
                               teamOrg.billingPlanDowngrade
-                                ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                 : getPlanBadgeColor(teamOrg.plan),
                             )}
                           >
@@ -1342,7 +1342,7 @@ function MobileProjectSelectorContent({
                           className={cn(
                             'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
                             teamOrg.billingPlanDowngrade
-                              ? 'border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                               : getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
