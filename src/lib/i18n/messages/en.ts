@@ -232,15 +232,12 @@ export const enCatalog = {
     debugMenu: {
       language: {
         label: 'Language',
-        autoLabel: 'Auto (browser)',
-        autoDescription: 'Use browser language (English, Hebrew, or Japanese).',
         englishLabel: 'English',
-        englishDescription: 'Force English copy.',
+        englishDescription: 'Use English copy.',
         hebrewLabel: 'Hebrew',
         hebrewDescription: 'Use Hebrew copy and RTL direction.',
         japaneseLabel: 'Japanese',
         japaneseDescription: 'Use Japanese copy.',
-        activeAuto: 'Auto (browser)',
         activeEnglish: 'English',
         activeHebrew: 'Hebrew (RTL)',
         activeJapanese: 'Japanese',

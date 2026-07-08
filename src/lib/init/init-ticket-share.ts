@@ -1,7 +1,11 @@
 import {
-  INIT_TICKET_IMAGE_HEIGHT,
-  INIT_TICKET_IMAGE_WIDTH,
+  INIT_TICKET_OG_EXPORT_HEIGHT,
+  INIT_TICKET_OG_EXPORT_WIDTH,
 } from '@/lib/init/ticket-layout'
+import {
+  INIT_TICKET_SHARE_SEO_DESCRIPTION,
+  INIT_TICKET_SHARE_SEO_TITLE,
+} from '@/lib/init/init-seo'
 import {
   getInitTicketStorageConfig,
   getInitTicketStorageFileViewUrl,
@@ -25,8 +29,8 @@ export function getInitTicketStorageFilePreviewUrl(fileId: string): string {
   const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
   const params = new URLSearchParams({
     project: projectId,
-    width: String(INIT_TICKET_IMAGE_WIDTH),
-    height: String(INIT_TICKET_IMAGE_HEIGHT),
+    width: String(INIT_TICKET_OG_EXPORT_WIDTH),
+    height: String(INIT_TICKET_OG_EXPORT_HEIGHT),
   })
   return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/preview?${params.toString()}`
 }
@@ -52,32 +56,30 @@ export function getInitTicketShareRouteMetaTags(params: {
   const siteOrigin = params.siteOrigin ?? getRequestSiteOrigin()
   const canonicalUrl = buildInitTicketShareUrl(params.ticketId, siteOrigin)
   const ogImage = getInitTicketStorageFilePreviewUrl(params.ticketId)
-  const title = pageTitle('Init ticket')
-  const description =
-    'Join Init week. Claim your personalized pass and share for a chance to win exclusive swag.'
+  const title = pageTitle(INIT_TICKET_SHARE_SEO_TITLE)
 
-  return getPageMetaTags({
+  return [...getPageMetaTags({
     title,
-    description,
+    description: INIT_TICKET_SHARE_SEO_DESCRIPTION,
     canonical: canonicalUrl,
     ogImage,
     ogType: 'website',
     siteOrigin,
   }).map((tag) => {
-    if (tag.property === 'og:image:width') {
+    if ('property' in tag && tag.property === 'og:image:width') {
       return {
         property: 'og:image:width',
-        content: String(INIT_TICKET_IMAGE_WIDTH),
+        content: String(INIT_TICKET_OG_EXPORT_WIDTH),
       }
     }
-    if (tag.property === 'og:image:height') {
+    if ('property' in tag && tag.property === 'og:image:height') {
       return {
         property: 'og:image:height',
-        content: String(INIT_TICKET_IMAGE_HEIGHT),
+        content: String(INIT_TICKET_OG_EXPORT_HEIGHT),
       }
     }
     return tag
-  })
+  })]
 }
 
 export function getInitTicketShareImageSrc(ticketId: string): string {

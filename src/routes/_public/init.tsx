@@ -1,12 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/init/View'
+import { getInitPageMetaTags } from '@/lib/init/init-seo'
 import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
-import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export const Route = createFileRoute('/_public/init')({
   component: InitPage,
-  head: () => ({ meta: [{ title: pageTitle('Init') }] }),
+  head: () => ({ meta: getInitPageMetaTags() }),
   loader: async ({ context }) => {
     if (typeof window === 'undefined') return
     if (!getActiveProfileFeatures().init) {

@@ -671,6 +671,7 @@ export function parseCoverRenderData(
         ),
         subtitle: searchParams.get('subtitle')?.trim() || undefined,
         eyebrow: formatCoverEyebrow(searchParams.get('eyebrow') ?? undefined),
+        cta: searchParams.get('cta')?.trim() || undefined,
       }
   }
 }
@@ -695,6 +696,7 @@ export function coverRenderDataToSearchParams(data: CoverRenderData): URLSearchP
       params.set('title', stripCoverTitleSuffix(data.title))
       setOptional('subtitle', data.subtitle)
       setOptional('eyebrow', formatCoverEyebrow(data.eyebrow))
+      setOptional('cta', data.cta)
       break
     case 'integration':
       setOptional('title', data.title ? stripCoverTitleSuffix(data.title) : undefined)

@@ -1,10 +1,9 @@
 import {
   COVER_HEIGHT,
   COVER_WIDTH,
-  type CoverThemeId,
 } from '@/lib/cover-generator/constants'
 import { parseCoverRenderData } from '@/lib/cover-generator/parse-params'
-import { DEFAULT_COVER_THEME_ID } from '@/lib/cover-generator/themes'
+import { DEFAULT_COVER_THEME_ID, type CoverThemeId } from '@/lib/cover-generator/themes'
 import type { CoverRenderData } from '@/lib/cover-generator/types'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 
@@ -17,12 +16,14 @@ export type OgImageParams = {
   title: string
   subtitle?: string
   eyebrow?: string
+  cta?: string
   theme?: CoverThemeId
 }
 
 const OG_TITLE_MAX_LENGTH = 120
 const OG_SUBTITLE_MAX_LENGTH = 160
 const OG_EYEBROW_MAX_LENGTH = 40
+const OG_CTA_MAX_LENGTH = 32
 
 function truncateOgText(value: string, maxLength: number): string {
   const trimmed = value.trim()
@@ -49,6 +50,10 @@ export function buildOgImageUrl(
       'eyebrow',
       truncateOgText(params.eyebrow, OG_EYEBROW_MAX_LENGTH),
     )
+  }
+
+  if (params.cta?.trim()) {
+    searchParams.set('cta', truncateOgText(params.cta, OG_CTA_MAX_LENGTH))
   }
 
   if (params.theme) {

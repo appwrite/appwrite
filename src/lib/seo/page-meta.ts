@@ -6,6 +6,8 @@ import {
   type OgImageParams,
 } from '@/lib/seo/og-image'
 
+export const SEO_SITE_NAME = 'Appwrite'
+
 export type PageSeoOptions = {
   title: string
   description?: string
@@ -13,6 +15,7 @@ export type PageSeoOptions = {
   ogType?: string
   ogImage?: string
   ogImageParams?: OgImageParams
+  siteName?: string
   siteOrigin?: string
 }
 
@@ -38,6 +41,7 @@ export function getPageMetaTags(options: PageSeoOptions) {
     ...(options.description
       ? [{ property: 'og:description', content: options.description }]
       : []),
+    { property: 'og:site_name', content: options.siteName ?? SEO_SITE_NAME },
     { property: 'og:type', content: options.ogType ?? 'website' },
     ...(options.canonical ? [{ property: 'og:url', content: options.canonical }] : []),
     { property: 'og:image', content: ogImage },

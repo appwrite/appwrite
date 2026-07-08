@@ -1,45 +1,23 @@
-import {
-  loadDebugOverrides,
-  type DebugLanguageOverride,
-} from '@/lib/debug-overrides'
+import { loadDebugOverrides } from '@/lib/debug-overrides'
 
 export type SupportedLanguage = 'en' | 'he' | 'ja'
 
 /**
- * Resolve a language preference ('auto' | 'en' | 'he' | 'ja') to a concrete language.
- * Pure function usable outside React (e.g. SDK initialization).
+ * Resolve a stored language preference to a concrete language.
+ * Defaults to English when unset or invalid.
  */
 export function resolveLanguagePreference(
-  preference: DebugLanguageOverride,
+  preference: DebugLanguageOverride | string,
 ): SupportedLanguage {
   if (preference === 'en' || preference === 'he' || preference === 'ja') {
     return preference
   }
-
-  if (typeof navigator === 'undefined') return 'en'
-
-  const browserLocales =
-    navigator.languages && navigator.languages.length > 0
-      ? navigator.languages
-      : [navigator.language]
-  const prefersHebrew = browserLocales.some(
-    (locale) =>
-      typeof locale === 'string' && locale.toLowerCase().startsWith('he'),
-  )
-  if (prefersHebrew) return 'he'
-
-  const prefersJapanese = browserLocales.some(
-    (locale) =>
-      typeof locale === 'string' && locale.toLowerCase().startsWith('ja'),
-  )
-  if (prefersJapanese) return 'ja'
-
   return 'en'
 }
 
 /**
- * Current active UI language, resolved from the debug override (or browser
- * locale in auto mode). Safe to call outside React and during SSR.
+ * Current active UI language from the stored preference.
+ * Safe to call outside React and during SSR.
  */
 export function getActiveLanguage(): SupportedLanguage {
   return resolveLanguagePreference(loadDebugOverrides().language)

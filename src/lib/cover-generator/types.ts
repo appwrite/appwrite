@@ -23,6 +23,7 @@ export type CoverSimpleTitleData = {
   title: string
   subtitle?: string
   eyebrow?: string
+  cta?: string
 }
 
 export type CoverIntegrationData = {

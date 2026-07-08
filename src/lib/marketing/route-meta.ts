@@ -14,6 +14,7 @@ type MarketingPageMetaInput = {
   ogImageTitle?: string
   ogImageSubtitle?: string
   ogImageEyebrow?: string
+  ogImageCta?: string
   canonical?: string
   ogType?: string
   siteOrigin?: string
@@ -43,6 +44,7 @@ export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag
             title: input.ogImageTitle ?? input.pageName,
             subtitle: input.ogImageSubtitle ?? input.description,
             eyebrow: input.ogImageEyebrow,
+            cta: input.ogImageCta,
           },
       siteOrigin,
     }) as unknown as MetaTag[],

@@ -33,7 +33,7 @@ const DEFAULT_LANGUAGE: SupportedLanguage = 'en'
 
 const I18nContext = createContext<I18nContextValue>({
   language: DEFAULT_LANGUAGE,
-  languagePreference: 'auto',
+  languagePreference: 'en',
   catalog: enCatalog,
 })
 

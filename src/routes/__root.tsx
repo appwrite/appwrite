@@ -92,23 +92,11 @@ const THEME_SCRIPT = `(function(){
       if (langPref === 'he') {
         resolvedLang = 'he';
         dir = 'rtl';
-      } else if (langPref === 'en') {
-        resolvedLang = 'en';
-        dir = 'ltr';
+      } else if (langPref === 'ja') {
+        resolvedLang = 'ja';
       } else {
-        var locales = navigator.languages && navigator.languages.length
-          ? navigator.languages
-          : [navigator.language];
-        var prefersHebrew = locales.some(function(l) {
-          return typeof l === 'string' && l.toLowerCase().startsWith('he');
-        });
-        if (prefersHebrew) {
-          resolvedLang = 'he';
-          dir = 'rtl';
-        } else {
-          var pd = localStorage.getItem('debug:pageDirection');
-          if (pd === 'rtl') dir = 'rtl';
-        }
+        var pd = localStorage.getItem('debug:pageDirection');
+        if (pd === 'rtl') dir = 'rtl';
       }
       e.setAttribute('lang', resolvedLang);
       e.setAttribute('dir', dir);

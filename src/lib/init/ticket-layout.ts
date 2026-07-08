@@ -6,6 +6,10 @@ export const INIT_TICKET_BG_SRC_SILVER = '/images/init/ticket-bg-silver.avif'
 
 export const INIT_TICKET_IMAGE_WIDTH = 1024
 export const INIT_TICKET_IMAGE_HEIGHT = 682
+/** Standard Open Graph export size (1.91:1). */
+export const INIT_TICKET_OG_EXPORT_WIDTH = 1200
+export const INIT_TICKET_OG_EXPORT_HEIGHT = 630
+export const INIT_TICKET_OG_CTA_BAR_HEIGHT = 88
 export const INIT_TICKET_ASPECT_RATIO =
   INIT_TICKET_IMAGE_WIDTH / INIT_TICKET_IMAGE_HEIGHT
 export const INIT_TICKET_MAX_WIDTH_PX = 820

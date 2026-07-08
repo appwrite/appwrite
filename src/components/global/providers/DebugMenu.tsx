@@ -921,21 +921,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     }))
 
     const languageDescription =
-      overrides.language === 'auto'
-        ? languageCopy.activeAuto
-        : overrides.language === 'he'
-          ? languageCopy.activeHebrew
-          : overrides.language === 'ja'
-            ? languageCopy.activeJapanese
-            : languageCopy.activeEnglish
+      overrides.language === 'he'
+        ? languageCopy.activeHebrew
+        : overrides.language === 'ja'
+          ? languageCopy.activeJapanese
+          : languageCopy.activeEnglish
 
     const languageOptions: MenuItem[] = (
       [
-        {
-          label: languageCopy.autoLabel,
-          value: 'auto' as const,
-          description: languageCopy.autoDescription,
-        },
         {
           label: languageCopy.englishLabel,
           value: 'en' as const,
