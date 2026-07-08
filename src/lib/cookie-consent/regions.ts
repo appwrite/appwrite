@@ -11,7 +11,7 @@ const GDPR_ALIGNED_COUNTRY_CODES = new Set(['GB', 'IS', 'LI', 'NO'])
  * Uses Appwrite Console locale (`sdk.forConsole.locale.get()`), primarily `eu`.
  */
 export function requiresCookieConsentBanner(
-  locale: Models.Locale | null | undefined,
+  locale: Models.CloudLocale | null | undefined,
 ): boolean {
   if (!locale?.countryCode) return false
   if (locale.eu) return true

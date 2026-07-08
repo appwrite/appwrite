@@ -39,12 +39,13 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { formatCardExpiry } from '../../organizations/$orgId/billing/utils'
 import { cn } from '@/lib/utils'
 import {
-  usePaymentMethods,
   useUpdatePaymentMethod,
   useDeletePaymentMethod,
+  fetchPaymentMethods,
   organizationsFullQueryOptions,
-  paymentMethodsQueryOptions} from '@/lib/react-query/hooks'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+  paymentMethodsQueryOptions,
+} from '@/lib/react-query/hooks'
+import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { EditPaymentMethodModal } from './EditPaymentMethod'
 import { DeletePaymentMethodModal } from './DeletePaymentMethod'
@@ -53,36 +54,33 @@ import { useT } from '@/lib/i18n/translate'
 
 interface AccountPaymentMethodsProps {
   onAddPaymentMethod?: () => void
+  initialData?: {
+    paymentMethods?: Awaited<ReturnType<typeof fetchPaymentMethods>>
+    organizations?: Models.Organization[]
+  }
 }
 
 export function AccountPaymentMethods({
-  onAddPaymentMethod}: AccountPaymentMethodsProps) {
+  onAddPaymentMethod,
+  initialData,
+}: AccountPaymentMethodsProps) {
   const t = useT()
-  const queryClient = useQueryClient()
-  const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
-    usePaymentMethods()
+  const { data: paymentMethodsData, isFetched: methodsFetched } = useQuery(
+    paymentMethodsQueryOptions(),
+  )
   useUpdatePaymentMethod()
   useDeletePaymentMethod()
 
-  const cachedMethods = queryClient.getQueryData<{
-    paymentMethods: Models.PaymentMethod[]
-    total: number
-  }>(paymentMethodsQueryOptions().queryKey)
   const paymentMethodsList =
-    allPaymentMethods.length > 0
-      ? allPaymentMethods
-      : cachedMethods?.paymentMethods ?? []
-  const showMethodsLoading =
-    methodsLoading && allPaymentMethods.length === 0 && !cachedMethods
+    paymentMethodsData?.paymentMethods ??
+    initialData?.paymentMethods?.paymentMethods ??
+    []
 
   const { data: organizationsData } = useQuery(organizationsFullQueryOptions())
 
-  const cachedOrganizations = queryClient.getQueryData<
-    Models.Organization[]
-  >(organizationsFullQueryOptions().queryKey)
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const organizations = organizationsData || cachedOrganizations || []
+  const organizations = organizationsData ?? initialData?.organizations ?? []
+  const hasResolvedData =
+    methodsFetched || initialData?.paymentMethods !== undefined
 
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -141,29 +139,8 @@ export function AccountPaymentMethods({
     setSelectedPaymentMethod(null)
   }
 
-  if (showMethodsLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Payment methods')}
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                {t('Manage your payment methods and billing information.')}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Loading payment methods...')}
-          </p>
-        </div>
-      </div>
-    )
+  if (!hasResolvedData) {
+    return null
   }
 
   if (completedPaymentMethods.length === 0) {

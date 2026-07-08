@@ -5,8 +5,19 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { AccountPaymentMethods } from './Payments/PaymentMethods'
 import { PaymentModal } from '../organizations/$orgId/billing/Payment'
+import type { Models } from '@appwrite.io/console'
+import type { fetchPaymentMethods } from '@/lib/react-query/hooks'
 
-export function AccountPaymentMethodsPage() {
+export type AccountPaymentMethodsInitialData = {
+  paymentMethods?: Awaited<ReturnType<typeof fetchPaymentMethods>>
+  organizations?: Models.Organization[]
+}
+
+export function AccountPaymentMethodsPage({
+  initialData,
+}: {
+  initialData?: AccountPaymentMethodsInitialData
+} = {}) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
 
   const cards = useMemo<SettingsCardItem[]>(
@@ -19,12 +30,13 @@ export function AccountPaymentMethodsPage() {
         },
         node: (
           <AccountPaymentMethods
+            initialData={initialData}
             onAddPaymentMethod={() => setPaymentModalOpen(true)}
           />
         ),
       },
     ],
-    [],
+    [initialData],
   )
 
   return (

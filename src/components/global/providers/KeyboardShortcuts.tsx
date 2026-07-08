@@ -31,6 +31,7 @@ import {
 } from '@/lib/console-access-checks'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { useCliShellOptional } from '@/components/global/cli-shell/CliShellProvider'
+import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 
 interface KeyboardShortcutsContextValue {
   openCommandCenter: () => void
@@ -73,6 +74,10 @@ export function KeyboardShortcutsProvider({
   const { access } = useOrganizationScopes(project?.teamId)
   const cliShell = useCliShellOptional()
   const toggleTerminal = cliShell?.toggle
+  const projectConnect = useProjectConnectDialog()
+  const openConnectMcp = useCallback(() => {
+    projectConnect?.openConnect('mcp')
+  }, [projectConnect])
 
   const navigateToSection = useCallback(
     (section: string) => {
@@ -348,6 +353,7 @@ export function KeyboardShortcutsProvider({
         onNavigateToResource={onNavigateToResource}
         onCreateResource={onCreateResource}
         onToggleTerminal={toggleTerminal}
+        onOpenConnectMcp={projectConnect ? openConnectMcp : undefined}
         projectId={projectId}
         initialSubPage={initialSubPage}
         onInitialSubPageConsumed={() => setInitialSubPage(null)}

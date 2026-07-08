@@ -35,7 +35,7 @@ export function getDedicatedDatabaseCreatePricing(
 
   const haReplicaRate =
     usage?.dedicatedDbHaReplica?.price ??
-    apiPricing?.haReplicaRate ??
+    apiPricing?.replicaRate ??
     DEFAULT_HA_REPLICA_RATE
 
   const pitrRate =

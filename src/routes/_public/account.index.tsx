@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
+import { AccountGeneral } from '@/components/pages/account/General'
 
 export const Route = createFileRoute('/_public/account/')({
   head: () => ({ meta: [{ title: pageTitle('General', 'Account') }] }),
@@ -7,5 +8,5 @@ export const Route = createFileRoute('/_public/account/')({
 })
 
 function AccountGeneralPage() {
-  return null
+  return <AccountGeneral />
 }

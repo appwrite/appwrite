@@ -74,6 +74,7 @@ import { Route as PublicAccountSecurityRouteImport } from './routes/_public/acco
 import { Route as PublicAccountPaymentsRouteImport } from './routes/_public/account.payments'
 import { Route as PublicAccountPaymentMethodsRouteImport } from './routes/_public/account.payment-methods'
 import { Route as PublicAccountBillingAddressesRouteImport } from './routes/_public/account.billing-addresses'
+import { Route as PublicAccountApplicationsRouteImport } from './routes/_public/account.applications'
 import { Route as MarketingThreadsThreadIdRouteImport } from './routes/_marketing/threads.$threadId'
 import { Route as MarketingProductsProductIdRouteImport } from './routes/_marketing/products.$productId'
 import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketing/integrations.$slug'
@@ -664,6 +665,12 @@ const PublicAccountBillingAddressesRoute =
   PublicAccountBillingAddressesRouteImport.update({
     id: '/billing-addresses',
     path: '/billing-addresses',
+    getParentRoute: () => PublicAccountRoute,
+  } as any)
+const PublicAccountApplicationsRoute =
+  PublicAccountApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
     getParentRoute: () => PublicAccountRoute,
   } as any)
 const MarketingThreadsThreadIdRoute =
@@ -2469,6 +2476,7 @@ export interface FileRoutesByFullPath {
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
+  '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -2792,6 +2800,7 @@ export interface FileRoutesByTo {
   '/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/products/$productId': typeof MarketingProductsProductIdRoute
   '/threads/$threadId': typeof MarketingThreadsThreadIdRoute
+  '/account/applications': typeof PublicAccountApplicationsRoute
   '/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/account/payments': typeof PublicAccountPaymentsRoute
@@ -3086,6 +3095,7 @@ export interface FileRoutesById {
   '/_marketing/integrations/$slug': typeof MarketingIntegrationsSlugRoute
   '/_marketing/products/$productId': typeof MarketingProductsProductIdRoute
   '/_marketing/threads/$threadId': typeof MarketingThreadsThreadIdRoute
+  '/_public/account/applications': typeof PublicAccountApplicationsRoute
   '/_public/account/billing-addresses': typeof PublicAccountBillingAddressesRoute
   '/_public/account/payment-methods': typeof PublicAccountPaymentMethodsRoute
   '/_public/account/payments': typeof PublicAccountPaymentsRoute
@@ -3414,6 +3424,7 @@ export interface FileRouteTypes {
     | '/integrations/$slug'
     | '/products/$productId'
     | '/threads/$threadId'
+    | '/account/applications'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -3737,6 +3748,7 @@ export interface FileRouteTypes {
     | '/integrations/$slug'
     | '/products/$productId'
     | '/threads/$threadId'
+    | '/account/applications'
     | '/account/billing-addresses'
     | '/account/payment-methods'
     | '/account/payments'
@@ -4030,6 +4042,7 @@ export interface FileRouteTypes {
     | '/_marketing/integrations/$slug'
     | '/_marketing/products/$productId'
     | '/_marketing/threads/$threadId'
+    | '/_public/account/applications'
     | '/_public/account/billing-addresses'
     | '/_public/account/payment-methods'
     | '/_public/account/payments'
@@ -4778,6 +4791,13 @@ declare module '@tanstack/react-router' {
       path: '/billing-addresses'
       fullPath: '/account/billing-addresses'
       preLoaderRoute: typeof PublicAccountBillingAddressesRouteImport
+      parentRoute: typeof PublicAccountRoute
+    }
+    '/_public/account/applications': {
+      id: '/_public/account/applications'
+      path: '/applications'
+      fullPath: '/account/applications'
+      preLoaderRoute: typeof PublicAccountApplicationsRouteImport
       parentRoute: typeof PublicAccountRoute
     }
     '/_marketing/threads/$threadId': {
@@ -6731,6 +6751,7 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 )
 
 interface PublicAccountRouteChildren {
+  PublicAccountApplicationsRoute: typeof PublicAccountApplicationsRoute
   PublicAccountBillingAddressesRoute: typeof PublicAccountBillingAddressesRoute
   PublicAccountPaymentMethodsRoute: typeof PublicAccountPaymentMethodsRoute
   PublicAccountPaymentsRoute: typeof PublicAccountPaymentsRoute
@@ -6740,6 +6761,7 @@ interface PublicAccountRouteChildren {
 }
 
 const PublicAccountRouteChildren: PublicAccountRouteChildren = {
+  PublicAccountApplicationsRoute: PublicAccountApplicationsRoute,
   PublicAccountBillingAddressesRoute: PublicAccountBillingAddressesRoute,
   PublicAccountPaymentMethodsRoute: PublicAccountPaymentMethodsRoute,
   PublicAccountPaymentsRoute: PublicAccountPaymentsRoute,

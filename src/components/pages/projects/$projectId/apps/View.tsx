@@ -11,7 +11,9 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformContextMenu } from './_components/PlatformContextMenu'
 import { PlatformIcon } from '@/components/global/shared/Icon'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import {
   usePlatforms,
   useProject,
@@ -26,6 +28,7 @@ import {
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -49,6 +52,7 @@ const supportedPlatforms = [
 
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
+  const projectConnect = useProjectConnectDialog()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
@@ -171,6 +175,27 @@ export function View({ initialData }: ViewProps = {}) {
                     </button>
                   ))}
                 </div>
+                {projectConnect ? (
+                  <>
+                    <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="font-medium text-foreground/80">
+                        {t('or')}
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="gap-1.5"
+                      onClick={() => projectConnect.openConnect('mcp')}
+                    >
+                      <McpIcon className="h-4 w-4" />
+                      {t('Build with an agent')}
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </EmptyState>
           ) : (

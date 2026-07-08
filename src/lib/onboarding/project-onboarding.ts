@@ -120,6 +120,19 @@ export interface OnboardingConnectStepDef {
   sdkKeys: readonly string[]
 }
 
+/**
+ * Optional Connect checklist row: install Appwrite MCP in a coding agent.
+ * Completion is client-local (localStorage), not an API stage.
+ */
+export const ONBOARDING_AGENT_STEP = {
+  id: 'agent' as const,
+  label: 'Connect your coding agent',
+  hint: 'Install Appwrite MCP in Cursor, Claude Code, Codex, or VS Code so your agent can manage this project.',
+  cta: 'Install MCP',
+  ctaDone: 'Open MCP',
+  debug: 'Done when the user opens Connect → MCP or skips this step (local only).',
+}
+
 export interface OnboardingProductGroupDef {
   id: ProductGroupId
   label: string

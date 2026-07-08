@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
-  accountIdentitiesQueryOptions,
   clearConsoleAccountCache,
+  fetchAccountIdentities,
   syncConsoleAccountAfterMutation,
   useAccountIdentities,
   useMFAFactors,
@@ -61,6 +61,7 @@ import {
   verifyMfaReauth,
 } from '@/components/global/auth/MfaReauthForm'
 import { useT } from '@/lib/i18n/translate'
+import { getSignInIdentities } from '@/lib/account-oauth2-grants'
 
 // Dependencies for query invalidation
 const Dependencies = {
@@ -434,16 +435,17 @@ export function UpdatePasswordSection() {
 // IDENTITIES SECTION
 // ============================================================================
 
-export function IdentitiesSection() {
+export function IdentitiesSection({
+  initialData,
+}: {
+  initialData?: Awaited<ReturnType<typeof fetchAccountIdentities>>
+} = {}) {
   const t = useT()
-  const { data, isLoading } = useAccountIdentities()
+  const { data, isFetched } = useAccountIdentities()
   const queryClient = useQueryClient()
-  const cachedData = queryClient.getQueryData<{
-    identities: Models.Identity[]
-    total: number
-  }>(accountIdentitiesQueryOptions().queryKey)
-  const identities = data?.identities || cachedData?.identities || []
-  const identitiesLoading = isLoading && !data && !cachedData
+  const identities = data?.identities ?? initialData?.identities ?? []
+  const hasResolvedData = isFetched || initialData !== undefined
+  const signInIdentities = getSignInIdentities(identities)
 
   const deleteIdentityMutation = useMutation({
     mutationFn: async (identityId: string) => {
@@ -486,25 +488,11 @@ export function IdentitiesSection() {
     return nameMap[provider.toLowerCase()] || provider
   }
 
-  if (identitiesLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Identities')}
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Loading identities...')}
-          </p>
-        </div>
-      </div>
-    )
+  if (!hasResolvedData) {
+    return null
   }
 
-  if (identities.length === 0) {
+  if (signInIdentities.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -559,7 +547,7 @@ export function IdentitiesSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {identities.map((identity) => (
+              {signInIdentities.map((identity) => (
                 <TableRow key={identity.$id}>
                   <TableCell>
                     <Badge

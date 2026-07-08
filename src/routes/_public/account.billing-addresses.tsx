@@ -6,6 +6,7 @@ import {
   countriesQueryOptions,
   organizationsFullQueryOptions,
 } from '@/lib/react-query/hooks'
+import { AccountBillingAddressesPage } from '@/components/pages/account/BillingAddressesPage'
 
 export const Route = createFileRoute('/_public/account/billing-addresses')({
   head: () => ({ meta: [{ title: pageTitle('Billing addresses', 'Account') }] }),
@@ -18,15 +19,18 @@ export const Route = createFileRoute('/_public/account/billing-addresses')({
     if (typeof window === 'undefined') return
 
     const { queryClient } = context
-    await Promise.all([
+    const [addresses, organizations] = await Promise.all([
       queryClient.ensureQueryData(billingAddressesQueryOptions()),
       queryClient.ensureQueryData(organizationsFullQueryOptions()),
-      queryClient.ensureQueryData(countriesQueryOptions()),
     ])
+    await queryClient.ensureQueryData(countriesQueryOptions())
+
+    return { addresses, organizations }
   },
   component: AccountBillingAddressesRoute,
 })
 
 function AccountBillingAddressesRoute() {
-  return null
+  const initialData = Route.useLoaderData()
+  return <AccountBillingAddressesPage initialData={initialData} />
 }

@@ -42,6 +42,11 @@ export const ACCOUNT_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['sessions', 'devices', 'logout', 'revoke'],
   },
   {
+    sectionId: 'applications',
+    title: 'Applications',
+    keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
+  },
+  {
     sectionId: 'payment-methods',
     title: 'Payment methods',
     keywords: ['card', 'credit card', 'stripe', 'payment method'],

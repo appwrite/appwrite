@@ -7,6 +7,7 @@ import {
   organizationsFullQueryOptions,
   paymentMethodsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { AccountPaymentMethodsPage } from '@/components/pages/account/PaymentMethodsPage'
 
 export const Route = createFileRoute('/_public/account/payment-methods')({
   head: () => ({ meta: [{ title: pageTitle('Payment methods', 'Account') }] }),
@@ -19,9 +20,12 @@ export const Route = createFileRoute('/_public/account/payment-methods')({
     if (typeof window === 'undefined') return
 
     const { queryClient } = context
-    await Promise.all([
+    const [paymentMethods, organizations] = await Promise.all([
       queryClient.ensureQueryData(paymentMethodsQueryOptions()),
       queryClient.ensureQueryData(organizationsFullQueryOptions()),
+    ])
+
+    await Promise.all([
       queryClient.prefetchQuery({
         queryKey: ['countries', 'console'],
         queryFn: fetchCountries,
@@ -33,10 +37,13 @@ export const Route = createFileRoute('/_public/account/payment-methods')({
         staleTime: 5 * 60 * 1000,
       }),
     ])
+
+    return { paymentMethods, organizations }
   },
   component: AccountPaymentMethodsRoute,
 })
 
 function AccountPaymentMethodsRoute() {
-  return null
+  const initialData = Route.useLoaderData()
+  return <AccountPaymentMethodsPage initialData={initialData} />
 }

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { fetchAccountIdentities } from '@/lib/react-query/hooks'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -10,7 +11,15 @@ import {
   UpdatePasswordSection,
 } from './Overview'
 
-export function AccountSecurity() {
+export type AccountSecurityInitialData = {
+  identities?: Awaited<ReturnType<typeof fetchAccountIdentities>>
+}
+
+export function AccountSecurity({
+  initialData,
+}: {
+  initialData?: AccountSecurityInitialData
+} = {}) {
   const { features } = useConsoleProfile()
 
   const cards = useMemo<SettingsCardItem[]>(() => {
@@ -32,7 +41,7 @@ export function AccountSecurity() {
           title: 'Identities',
           keywords: ['oauth', 'github', 'google', 'social', 'login'],
         },
-        node: <IdentitiesSection />,
+        node: <IdentitiesSection initialData={initialData?.identities} />,
       })
     }
 
@@ -48,7 +57,7 @@ export function AccountSecurity() {
     }
 
     return items
-  }, [features.accountIdentities, features.accountMfa])
+  }, [features.accountIdentities, features.accountMfa, initialData?.identities])
 
   return <SettingsCardsList cards={cards} />
 }

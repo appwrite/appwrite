@@ -250,6 +250,8 @@ interface CommandCenterProps {
   onOrgCreateProject?: () => void
   /** Project context: toggle the built-in CLI terminal panel */
   onToggleTerminal?: () => void
+  /** Project context: open Connect dialog on the MCP tab */
+  onOpenConnectMcp?: () => void
   projectId?: string | null
   orgId?: string | null
   /** When set while opening, navigates to this command center sub-page (e.g. shortcuts). */
@@ -286,6 +288,7 @@ export function CommandCenter({
   onInviteMember,
   onOrgCreateProject,
   onToggleTerminal,
+  onOpenConnectMcp,
   projectId,
   orgId,
   initialSubPage,
@@ -410,6 +413,7 @@ export function CommandCenter({
         onOrgCreateProject,
         onToggleTerminal,
         onSetTheme: setTheme,
+        onOpenConnectMcp,
       },
     }),
     [
@@ -431,6 +435,7 @@ export function CommandCenter({
       onInviteMember,
       onOrgCreateProject,
       onToggleTerminal,
+      onOpenConnectMcp,
       setTheme,
     ],
   )

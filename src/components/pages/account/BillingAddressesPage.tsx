@@ -4,8 +4,19 @@ import {
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { AccountBillingAddresses } from './Payments/BillingAddresses'
+import type { Models } from '@appwrite.io/console'
+import type { fetchBillingAddresses } from '@/lib/react-query/hooks'
 
-export function AccountBillingAddressesPage() {
+export type AccountBillingAddressesInitialData = {
+  addresses?: Awaited<ReturnType<typeof fetchBillingAddresses>>
+  organizations?: Models.Organization[]
+}
+
+export function AccountBillingAddressesPage({
+  initialData,
+}: {
+  initialData?: AccountBillingAddressesInitialData
+} = {}) {
   const cards = useMemo<SettingsCardItem[]>(
     () => [
       {
@@ -14,10 +25,10 @@ export function AccountBillingAddressesPage() {
           title: 'Billing addresses',
           keywords: ['address', 'country', 'city', 'postal', 'zip', 'street'],
         },
-        node: <AccountBillingAddresses />,
+        node: <AccountBillingAddresses initialData={initialData} />,
       },
     ],
-    [],
+    [initialData],
   )
 
   return <SettingsCardsList cards={cards} />

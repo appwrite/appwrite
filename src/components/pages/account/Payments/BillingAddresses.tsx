@@ -6,7 +6,7 @@
  */
 
 import { useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { MapPin, Link as LinkIcon, Plus, Pencil, Trash2 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -32,41 +32,41 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
-  useBillingAddresses,
   useCountries,
   useDeleteBillingAddress,
+  fetchBillingAddresses,
   organizationsFullQueryOptions,
-  billingAddressesQueryOptions} from '@/lib/react-query/hooks'
+  billingAddressesQueryOptions,
+} from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
 import { BillingAddressContextMenu } from './BillingAddressContextMenu'
 import { useT } from '@/lib/i18n/translate'
 
-export function AccountBillingAddresses() {
+export function AccountBillingAddresses({
+  initialData,
+}: {
+  initialData?: {
+    addresses?: Awaited<ReturnType<typeof fetchBillingAddresses>>
+    organizations?: Models.Organization[]
+  }
+} = {}) {
   const t = useT()
-  const queryClient = useQueryClient()
-  const { addresses: allAddresses, isLoading: addressesLoading } =
-    useBillingAddresses()
+  const { data: addressesData, isFetched: addressesFetched } = useQuery(
+    billingAddressesQueryOptions(),
+  )
   const { data: countriesData } = useCountries()
   useDeleteBillingAddress()
 
-  const cachedAddresses = queryClient.getQueryData<{
-    addresses: Models.BillingAddress[]
-    total: number
-  }>(billingAddressesQueryOptions().queryKey)
   const addresses =
-    allAddresses.length > 0 ? allAddresses : cachedAddresses?.addresses ?? []
-  const showAddressesLoading =
-    addressesLoading && allAddresses.length === 0 && !cachedAddresses
+    addressesData?.addresses ?? initialData?.addresses?.addresses ?? []
 
   const { data: organizationsData } = useQuery(organizationsFullQueryOptions())
 
-  const cachedOrganizations = queryClient.getQueryData<
-    Models.Organization[]
-  >(organizationsFullQueryOptions().queryKey)
-
-  const organizations = organizationsData || cachedOrganizations || []
+  const organizations = organizationsData ?? initialData?.organizations ?? []
+  const hasResolvedData =
+    addressesFetched || initialData?.addresses !== undefined
 
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -134,29 +134,8 @@ export function AccountBillingAddresses() {
     return parts.join(', ') || '-'
   }
 
-  if (showAddressesLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Billing addresses')}
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                {t('Manage your billing addresses for invoices and payments.')}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            {t('Loading addresses...')}
-          </p>
-        </div>
-      </div>
-    )
+  if (!hasResolvedData) {
+    return null
   }
 
   if (addresses.length === 0) {

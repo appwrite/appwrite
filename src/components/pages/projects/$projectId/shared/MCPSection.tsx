@@ -9,6 +9,7 @@ import {
   getVscodeMcpInstallUrl,
   openMcpInstallUrl,
 } from '@/lib/config/mcp'
+import { MCP_TRY_IT_PROMPTS } from '@/lib/mcp-adoption'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +17,7 @@ import {
   type CodeBlockLanguage,
 } from '@/components/global/shared/CodeBlock'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -70,13 +72,14 @@ const MCP_TOOLS: McpToolConfig[] = [
 
 /**
  * MCP server section: single remote Appwrite MCP server with per-tool install
- * instructions. Cursor and VS Code include a one-click Install action.
- * Reused in project settings Overview and Connect project modal (MCP tab).
+ * instructions, then a Try it checklist. Cursor and VS Code include a one-click
+ * Install action. Reused in project settings Overview and Connect project modal.
  */
 export function MCPSection({ compact = false }: MCPSectionProps) {
   const t = useT()
   const [selectedToolId, setSelectedToolId] = useState<McpToolId>('claude-code')
   const [copied, setCopied] = useState(false)
+  const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null)
 
   const selectedTool = useMemo(
     () =>
@@ -91,6 +94,13 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleCopyPrompt = (prompt: string) => {
+    navigator.clipboard.writeText(prompt)
+    setCopiedPrompt(prompt)
+    toast.success(t('Copied to clipboard'))
+    setTimeout(() => setCopiedPrompt(null), 2000)
+  }
+
   const description = (
     <p className={`text-[13px] text-muted-foreground${compact ? ' mb-4' : ''}`}>
       {t(
@@ -99,7 +109,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
       <DocsRouteLink
         rel="noreferrer"
         className="text-foreground underline hover:no-underline"
-        href="/docs/tooling/mcp"
+        href="/docs/tooling/ai/mcp-servers"
       >
         {t('docs')}
       </DocsRouteLink>{' '}
@@ -107,8 +117,11 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
     </p>
   )
 
-  const mainContent = (
+  const installContent = (
     <div className="space-y-2">
+      <h4 className="text-[13px] font-semibold text-foreground">
+        {t('1. Install')}
+      </h4>
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1.5">
           {MCP_TOOLS.map((tool) => {
@@ -173,6 +186,52 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
     </div>
   )
 
+  const tryItContent = (
+    <div className="space-y-4">
+      <h4 className="text-[13px] font-semibold text-foreground">
+        {t('2. Try it')}
+      </h4>
+      <p className="text-[13px] text-muted-foreground leading-relaxed">
+        {t(
+          'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.',
+        )}
+      </p>
+      <ul className="space-y-2">
+        {MCP_TRY_IT_PROMPTS.map((prompt) => (
+          <li
+            key={prompt}
+            className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2"
+          >
+            <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+              {t(prompt)}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
+              onClick={() => handleCopyPrompt(prompt)}
+            >
+              {copiedPrompt === prompt ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {t('Copy')}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+
+  const mainContent = (
+    <div className="space-y-6">
+      {installContent}
+      <div className="border-t border-border" />
+      {tryItContent}
+    </div>
+  )
+
   if (compact) {
     return (
       <div className="pt-4">
@@ -185,7 +244,8 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
+        <h3 className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
+          <McpIcon className="h-4 w-4" />
           {t('MCP server')}
         </h3>
       </div>

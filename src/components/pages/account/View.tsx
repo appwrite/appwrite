@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from '@tanstack/react-router'
+import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   CreditCard,
   LogOut,
   MapPin,
   Monitor,
+  Package,
   Settings,
   Shield,
 } from 'lucide-react'
@@ -18,16 +19,12 @@ import { ACCOUNT_SETTINGS_CARD_INDEX } from '@/lib/settings-search/account-setti
 import { useGlobalCommandShortcuts } from '@/lib/keyboard-shortcuts/use-global-command-shortcuts'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
-import { AccountGeneral } from './General'
-import { AccountSecurity } from './Security'
-import { AccountSessions } from './Sessions'
-import { AccountPaymentMethodsPage } from './PaymentMethodsPage'
-import { AccountBillingAddressesPage } from './BillingAddressesPage'
 
 export type AccountSectionId =
   | 'overview'
   | 'security'
   | 'sessions'
+  | 'applications'
   | 'payment-methods'
   | 'billing-addresses'
 
@@ -57,6 +54,7 @@ export function View() {
       const section = pathParts[accountIndex + 1]
       if (section === 'security') return 'security'
       if (section === 'sessions') return 'sessions'
+      if (section === 'applications') return 'applications'
       if (section === 'payment-methods') return 'payment-methods'
       if (section === 'billing-addresses') return 'billing-addresses'
     }
@@ -86,6 +84,13 @@ export function View() {
         to: '/account/sessions',
         icon: Monitor,
         keywords: ['sessions', 'devices', 'logout', 'revoke'],
+      },
+      {
+        id: 'applications',
+        label: t('Applications'),
+        to: '/account/applications',
+        icon: Package,
+        keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
       },
       ...(features.billing
         ? [
@@ -150,21 +155,6 @@ export function View() {
     onOpenShortcutsHelp: openAccountShortcutsHelp,
   })
 
-  const sectionContent = useMemo(() => {
-    switch (activeSection) {
-      case 'security':
-        return <AccountSecurity />
-      case 'sessions':
-        return <AccountSessions />
-      case 'payment-methods':
-        return features.billing ? <AccountPaymentMethodsPage /> : null
-      case 'billing-addresses':
-        return features.billing ? <AccountBillingAddressesPage /> : null
-      default:
-        return <AccountGeneral />
-    }
-  }, [activeSection, features.billing])
-
   return (
     <>
       <ConsoleLayout
@@ -207,7 +197,7 @@ export function View() {
                 }
               }}
             >
-              {sectionContent}
+              <Outlet />
             </SettingsLayoutShell>
           </div>
         </div>

@@ -49,6 +49,8 @@ export interface CommandContext {
     onOrgCreateProject?: () => void
     onToggleTerminal?: () => void
     onSetTheme?: (theme: 'light' | 'dark' | 'system') => void
+    /** Open project Connect dialog on the MCP tab. */
+    onOpenConnectMcp?: () => void
   }
 }
 

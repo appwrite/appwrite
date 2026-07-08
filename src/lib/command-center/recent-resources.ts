@@ -16,8 +16,8 @@ import type {
 } from './resource-search'
 
 export const RECENT_RESOURCES_STORAGE_KEY = 'console.recentResources'
-export const RECENT_RESOURCES_MAX_STORED = 20
-export const RECENT_RESOURCES_MAX_SHOWN = 8
+export const RECENT_RESOURCES_MAX_STORED = 10
+export const RECENT_RESOURCES_MAX_SHOWN = 3
 
 export interface RecentResource {
   /** Stable identity for deduplication (project + kind + resource id). */

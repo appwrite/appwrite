@@ -2,7 +2,15 @@
  * Account-scope entries (the user's own account at /account).
  */
 
-import { CreditCard, KeyRound, LogOut, MapPin, Shield, User } from 'lucide-react'
+import {
+  CreditCard,
+  KeyRound,
+  LogOut,
+  MapPin,
+  Package,
+  Shield,
+  User,
+} from 'lucide-react'
 import { registerCommands } from '../registry'
 import type { CommandEntry } from '../types'
 
@@ -36,6 +44,16 @@ const ACCOUNT: CommandEntry[] = [
     icon: LogOut,
     keywords: ['sessions', 'devices', 'logout', 'sign out'],
     to: () => '/account/sessions',
+  },
+  {
+    id: 'account.nav.applications',
+    scopes: ['account'],
+    kind: 'navigation',
+    label: 'Account · Applications',
+    description: 'OAuth applications authorized on your account',
+    icon: Package,
+    keywords: ['applications', 'oauth', 'authorized', 'consent', 'revoke'],
+    to: () => '/account/applications',
   },
   {
     id: 'account.nav.payment-methods',

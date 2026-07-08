@@ -5,6 +5,7 @@ import {
   accountIdentitiesQueryOptions,
   mfaFactorsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { AccountSecurity } from '@/components/pages/account/Security'
 
 export const Route = createFileRoute('/_public/account/security')({
   head: () => ({ meta: [{ title: pageTitle('Security', 'Account') }] }),
@@ -13,22 +14,22 @@ export const Route = createFileRoute('/_public/account/security')({
 
     const { queryClient } = context
     const features = getActiveProfileFeatures()
-    const fetches = [
-      ...(features.accountIdentities
-        ? [queryClient.ensureQueryData(accountIdentitiesQueryOptions())]
-        : []),
-      ...(features.accountMfa
-        ? [queryClient.ensureQueryData(mfaFactorsQueryOptions())]
-        : []),
-    ]
 
-    if (fetches.length > 0) {
-      await Promise.all(fetches)
-    }
+    const [identities, mfaFactors] = await Promise.all([
+      features.accountIdentities
+        ? queryClient.ensureQueryData(accountIdentitiesQueryOptions())
+        : Promise.resolve(undefined),
+      features.accountMfa
+        ? queryClient.ensureQueryData(mfaFactorsQueryOptions())
+        : Promise.resolve(undefined),
+    ])
+
+    return { identities, mfaFactors }
   },
   component: AccountSecurityPage,
 })
 
 function AccountSecurityPage() {
-  return null
+  const initialData = Route.useLoaderData()
+  return <AccountSecurity initialData={initialData} />
 }

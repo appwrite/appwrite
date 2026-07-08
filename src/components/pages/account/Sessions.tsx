@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { sdk, getBaseEndpoint } from '@/lib/appwrite/sdk'
-import { useAccountSessions } from '@/lib/react-query/hooks'
+import { useAccountSessions, fetchAccountSessions } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -133,26 +133,18 @@ function BrowserIcon({
   )
 }
 
-export function AccountSessions() {
+export function AccountSessions({
+  initialData,
+}: {
+  initialData?: Awaited<ReturnType<typeof fetchAccountSessions>>
+} = {}) {
   const t = useT()
-  const { data, isLoading } = useAccountSessions()
+  const { data, isFetched } = useAccountSessions()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  // Check cache directly - data is prefetched in route loader, so it should be available
-  // This matches the storage view pattern where data is guaranteed to be ready
-  const cachedData = queryClient.getQueryData<{
-    sessions: Models.Session[]
-    total: number
-  }>(['sessions', 'account'])
-
-  // Data is prefetched in route loader, so it should be available when component renders
-  // Use data from hook first, fallback to cache if hook hasn't hydrated yet
-  const sessions = data?.sessions || cachedData?.sessions || []
-
-  // Only show empty state if query has completed (not loading) and there are no sessions
-  // This matches the storage pattern: check isLoading first, then show empty state if not loading and empty
-  const sessionsLoading = isLoading && !data && !cachedData
+  const sessions = data?.sessions ?? initialData?.sessions ?? []
+  const hasResolvedData = isFetched || initialData !== undefined
 
   // All hooks must be called before any conditional returns (Rules of Hooks)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
@@ -287,20 +279,7 @@ export function AccountSessions() {
     return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
   }
 
-  if (sessionsLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-          <Monitor className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-[13px] text-muted-foreground">
-          {t('Loading sessions...')}
-        </p>
-      </div>
-    )
-  }
-
-  if (sessions.length === 0) {
+  if (hasResolvedData && sessions.length === 0) {
     return (
       <EmptyState
         icon={Monitor}
@@ -311,6 +290,10 @@ export function AccountSessions() {
         iconSize="md"
       />
     )
+  }
+
+  if (!hasResolvedData) {
+    return null
   }
 
   return (

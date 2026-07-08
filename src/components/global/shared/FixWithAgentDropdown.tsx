@@ -13,6 +13,8 @@ import {
   openAIChatDeeplink,
   type IDEConfig,
 } from '@/lib/config/ide'
+import { McpIcon } from '@/components/global/shared/McpIcon'
+import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -36,6 +38,7 @@ export function FixWithAgentDropdown({
 }: FixWithAgentDropdownProps) {
   const t = useT()
   const aiChatIDEs = getAIChatIDEs()
+  const projectConnect = useProjectConnectDialog()
 
   const handleOpenInIDE = (ide: IDEConfig) => {
     const deeplink = generateAIChatDeeplink(ide, prompt)
@@ -78,6 +81,14 @@ export function FixWithAgentDropdown({
           <Copy className="h-4 w-4" />
           <span className="ms-2">{t('Copy prompt')}</span>
         </DropdownMenuItem>
+        {projectConnect ? (
+          <DropdownMenuItem
+            onClick={() => projectConnect.openConnect('mcp')}
+          >
+            <McpIcon className="h-4 w-4" />
+            <span className="ms-2">{t('Install Appwrite MCP')}</span>
+          </DropdownMenuItem>
+        ) : null}
         <div className="my-1 h-px bg-border" />
         {aiChatIDEs.map((ide) => (
           <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>

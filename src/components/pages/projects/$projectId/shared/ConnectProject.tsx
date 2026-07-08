@@ -33,6 +33,7 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
 import {
@@ -1461,6 +1462,9 @@ export function ConnectProject({
                       : 'text-muted-foreground hover:text-foreground/80',
                   )}
                 >
+                  {tabId === 'mcp' ? (
+                    <McpIcon className="h-3.5 w-3.5 shrink-0" />
+                  ) : null}
                   {label}
                   {isActive && (
                     <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />

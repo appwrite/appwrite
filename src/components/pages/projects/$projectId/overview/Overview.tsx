@@ -104,6 +104,8 @@ import {
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { McpIcon } from '@/components/global/shared/McpIcon'
+import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
@@ -188,6 +190,7 @@ interface ViewProps {
 export function View({ projectId, initialData }: ViewProps) {
   const t = useT()
   const navigate = useNavigate()
+  const projectConnect = useProjectConnectDialog()
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [storageBreakdownType, setStorageBreakdownType] =
     useState<OverviewStorageBreakdownType>('files')
@@ -1256,6 +1259,27 @@ export function View({ projectId, initialData }: ViewProps) {
                     </Button>
                   ))}
                 </div>
+                {projectConnect ? (
+                  <>
+                    <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="font-medium text-foreground/80">
+                        {t('or')}
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="gap-1.5"
+                      onClick={() => projectConnect.openConnect('mcp')}
+                    >
+                      <McpIcon className="h-4 w-4" />
+                      {t('Build with an agent')}
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </EmptyState>
           ) : (

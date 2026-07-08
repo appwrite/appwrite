@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { Check, ChevronDown, ChevronRight, Lock, Minus } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -28,6 +28,7 @@ import {
   computeOnboardingProductBreakdown,
   getOnboardingGroupState,
   isOnboardingStepDone,
+  ONBOARDING_AGENT_STEP,
   ONBOARDING_CONNECT,
   ONBOARDING_PRODUCT_CATEGORIES,
   subStepCountsTowardProgress,
@@ -42,6 +43,12 @@ import {
   getEncouragementBand,
   pickEncouragementForBand,
 } from '@/lib/onboarding/progress-encouragement'
+import {
+  getOnboardingAgentStepState,
+  markOnboardingAgentStepDone,
+  markOnboardingAgentStepSkipped,
+} from '@/lib/mcp-adoption'
+import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
@@ -51,7 +58,7 @@ type OnboardingStepRow = OnboardingConnectStepDef | OnboardingSubStepDef
 const CONNECT_SECTION = {
   title: 'Connect',
   description:
-    'Register where your app runs and add API credentials so your code can call Appwrite.',
+    'Register where your app runs, add API credentials, and connect a coding agent with MCP.',
 }
 
 const CARD_SHELL =
@@ -546,6 +553,112 @@ function SubStepRow({
   )
 }
 
+function AgentConnectStepRow({
+  projectId,
+  isDebugModeOpen,
+}: {
+  projectId: string
+  isDebugModeOpen: boolean
+}) {
+  const t = useT()
+  const projectConnect = useProjectConnectDialog()
+  const [state, setState] = useState<OnboardingStepState>(() =>
+    getOnboardingAgentStepState(projectId),
+  )
+
+  useEffect(() => {
+    setState(getOnboardingAgentStepState(projectId))
+  }, [projectId])
+
+  const fulfilled = state !== 'pending'
+  const ctaLabel = t(
+    fulfilled ? ONBOARDING_AGENT_STEP.ctaDone : ONBOARDING_AGENT_STEP.cta,
+  )
+
+  const handleSkip = () => {
+    markOnboardingAgentStepSkipped(projectId)
+    setState('skipped')
+  }
+
+  const handleOpen = () => {
+    markOnboardingAgentStepDone(projectId)
+    setState('completed')
+    projectConnect?.openConnect('mcp')
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-3 py-3 sm:flex-row sm:items-stretch sm:gap-3',
+        ONBOARDING_ROW_X,
+      )}
+    >
+      <div className={cn('flex min-w-0 flex-1', ONBOARDING_ICON_GAP)}>
+        <div
+          className={cn(
+            ONBOARDING_ICON_COL,
+            'items-start pt-0.5 sm:items-center sm:self-stretch sm:pt-0',
+          )}
+        >
+          <StepStatusNotTrackedIcon />
+        </div>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <span
+            className={cn(
+              'text-[13px] font-medium block',
+              state === 'skipped'
+                ? 'text-muted-foreground'
+                : 'text-foreground',
+            )}
+          >
+            {t(ONBOARDING_AGENT_STEP.label)}
+            {state === 'skipped' ? (
+              <span className="sr-only"> ({t('skipped')})</span>
+            ) : null}
+          </span>
+          <p className="text-[12px] text-muted-foreground leading-relaxed">
+            {t(ONBOARDING_AGENT_STEP.hint)}
+          </p>
+          {isDebugModeOpen && (
+            <p className="text-[10px] text-amber-700/90 dark:text-amber-400/90 font-mono leading-snug pt-1">
+              {ONBOARDING_AGENT_STEP.debug}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex w-full shrink-0 items-center justify-end gap-1.5 sm:w-auto sm:self-center sm:ps-0">
+        {!fulfilled ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 shrink-0 px-2 text-[12px] font-normal text-muted-foreground hover:text-foreground"
+            onClick={handleSkip}
+          >
+            {t('Skip')}
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn(
+            'h-9 min-w-0 flex-1 gap-1.5 px-3 text-[12px] font-medium sm:h-8 sm:w-auto sm:max-w-[11rem] sm:flex-none',
+            fulfilled
+              ? 'text-muted-foreground'
+              : 'border-[color-mix(in_srgb,var(--brand-cta)_40%,var(--border))] bg-background text-[var(--brand-cta)] hover:bg-[color-mix(in_srgb,var(--brand-cta)_10%,transparent)] hover:text-[var(--brand-cta)]',
+          )}
+          onClick={handleOpen}
+          title={ctaLabel}
+        >
+          <span className="truncate">{ctaLabel}</span>
+          <ChevronRight className="size-3.5 shrink-0 opacity-70" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
   const { catalog } = useI18n()
@@ -629,6 +742,12 @@ export function View({ initialData }: ViewProps = {}) {
                 </li>
               )
             })}
+            <li key={ONBOARDING_AGENT_STEP.id}>
+              <AgentConnectStepRow
+                projectId={projectId}
+                isDebugModeOpen={isDebugModeOpen}
+              />
+            </li>
           </ul>
           </div>
 

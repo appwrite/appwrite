@@ -20,6 +20,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Address Line 2': 'שורת כתובת 2',
   'All sessions have been deleted': 'כל הסשנים נמחקו',
   'Apt, suite, etc. (optional)': 'דירה, קומה וכדומה (אופציונלי)',
+  Application: 'אפליקציה',
+  'Application access has been revoked': 'הגישה לאפליקציה בוטלה',
+  Applications: 'אפליקציות',
+  "Applications you've authorized to access your Appwrite account.":
+    'אפליקציות שאישרתם לגשת לחשבון Appwrite שלכם.',
   'Are you sure you want to delete this billing address? This action cannot be undone.':
     'האם למחוק את כתובת החיוב הזו? פעולה זו אינה ניתנת לביטול.',
   'Are you sure you want to delete this identity?':
@@ -36,7 +41,10 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'האם להתנתק מהמכשיר הזה? תצטרכו להתחבר מחדש כדי לגשת לחשבון מהמכשיר הזה.',
   'Are you sure you want to regenerate all recovery codes? All previously generated recovery codes will become invalid.':
     'האם ליצור מחדש את כל קודי השחזור? כל קודי השחזור שנוצרו בעבר יהפכו ללא תקפים.',
+  'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':
+    'האם לבטל את הגישה לאפליקציה הזו? ייתכן שתצטרכו לאשר אותה שוב כדי להשתמש בה.',
   'Authentication method': 'שיטת אימות',
+  Authorized: 'אושר',
   'Authenticator app': 'אפליקציית אימות',
   'Authenticator app has been connected': 'אפליקציית האימות חוברה',
   'Authenticator app has been deleted': 'אפליקציית האימות נמחקה',
@@ -65,6 +73,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Deleting it will remove it from those organizations.':
     'המחיקה תסיר את הקישור מהארגונים האלה.',
   'Device & Auth': 'מכשיר ואימות',
+  'Device flow': 'Device flow',
   'Each code can only be used once.': 'כל קוד ניתן לשימוש פעם אחת בלבד.',
   Email: 'אימייל',
   'Email has been updated': 'האימייל עודכן',
@@ -87,6 +96,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Failed to delete identity': 'מחיקת הזהות נכשלה',
   'Failed to delete payment method': 'מחיקת אמצעי התשלום נכשלה',
   'Failed to delete session': 'מחיקת הסשן נכשלה',
+  'Failed to revoke application access': 'ביטול הגישה לאפליקציה נכשל',
   'Failed to delete sessions': 'מחיקת הסשנים נכשלה',
   'Failed to get recovery codes': 'קבלת קודי השחזור נכשלה',
   'Failed to regenerate recovery codes': 'יצירה מחדש של קודי השחזור נכשלה',
@@ -109,6 +119,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Linked To': 'מקושר אל',
   'Linked to:': 'מקושר אל:',
   'Loading addresses...': 'טוען כתובות...',
+  'Loading applications...': 'טוען אפליקציות...',
   'Loading identities...': 'טוען זהויות...',
   'Loading payment methods...': 'טוען אמצעי תשלום...',
   'Loading sessions...': 'טוען סשנים...',
@@ -135,6 +146,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Name must be at least 2 characters': 'השם חייב להכיל לפחות 2 תווים',
   'New password': 'סיסמה חדשה',
   'No active sessions': 'אין סשנים פעילים',
+  'No applications connected': 'אין אפליקציות מחוברות',
+  'When you authorize an application through OAuth, it will appear here.':
+    'כשתאשרו אפליקציה דרך OAuth, היא תופיע כאן.',
   'No billing addresses': 'אין כתובות חיוב',
   'No country found.': 'לא נמצאה מדינה.',
   'No identities are currently available.': 'אין זהויות זמינות כרגע.',
@@ -165,6 +179,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Regenerate recovery codes': 'יצירה מחדש של קודי שחזור',
   Remove: 'הסרה',
   'Revoke session': 'ביטול סשן',
+  Revoke: 'ביטול גישה',
+  'Revoke application access': 'ביטול גישה לאפליקציה',
   'Save these recovery codes now. They won\'t be shown again.':
     'שמרו את קודי השחזור האלה עכשיו. הם לא יוצגו שוב.',
   'Scan QR code': 'סריקת קוד QR',

@@ -36,9 +36,10 @@ export function ProjectCliShellLayout({
   const { access } = useOrganizationScopes(project?.teamId)
   const showTerminal = canShowProjectTerminal(access, features)
 
+  // Connect provider wraps KeyboardShortcuts so Command Center can open Connect → MCP.
   const layout = (
-    <KeyboardShortcutsProvider projectId={projectId}>
-      <ProjectConnectDialogProvider projectId={projectId}>
+    <ProjectConnectDialogProvider projectId={projectId}>
+      <KeyboardShortcutsProvider projectId={projectId}>
         <ConsoleLayout
           sidebar={sidebar}
           header={{ projectId }}
@@ -54,8 +55,8 @@ export function ProjectCliShellLayout({
           <CsvImportBox projectId={projectId} />
           <CsvExportBox projectId={projectId} />
         </div>
-      </ProjectConnectDialogProvider>
-    </KeyboardShortcutsProvider>
+      </KeyboardShortcutsProvider>
+    </ProjectConnectDialogProvider>
   )
 
   if (!showTerminal) {
