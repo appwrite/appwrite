@@ -54,17 +54,6 @@ type DatabaseSidebarComputeSpecProps = {
   variant?: 'footer' | 'standalone'
 }
 
-function getDedicatedDatabaseId(db: {
-  $id: string
-  dedicatedDatabaseId?: unknown
-}): string {
-  const legacyId = (db as { dedicatedDatabaseId?: unknown }).dedicatedDatabaseId
-  if (typeof legacyId === 'string' && legacyId.trim() !== '') {
-    return legacyId.trim()
-  }
-  return db.$id
-}
-
 function getNextEnabledSpec(
   specs: SpecOption[],
   currentSlug: string | undefined,
@@ -175,10 +164,7 @@ export function DatabaseSidebarComputeSpec({
     const databaseType =
       (productDatabase as { databaseType?: ApiDatabaseType } | null)
         ?.databaseType ?? ApiDatabaseType.Tablesdb
-    const dedicatedId = productDatabase
-      ? getDedicatedDatabaseId(productDatabase)
-      : databaseId
-    const dedicated = dedicatedById.get(dedicatedId)
+    const dedicated = dedicatedById.get(databaseId)
     const apiSpecId = dedicated?.specification?.trim() || null
     const specSlug = getEffectiveDatabaseSpecIdForMonitoring(
       databaseType,

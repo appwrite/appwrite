@@ -44,6 +44,7 @@ import {
   type PostgresColumnTypeState,
 } from '@/lib/postgres-column-types'
 import {
+  buildPostgresSingleRequestDdlSql,
   isPostgresPrimaryKeyColumn,
   isPostgresUniqueColumn,
   type PostgresTableColumnRow,
@@ -353,7 +354,12 @@ export function PostgresTableColumnDrawer({
         return
       }
 
-      await executeSql.mutateAsync(statements.join(';\n'))
+      await executeSql.mutateAsync(
+        buildPostgresSingleRequestDdlSql(
+          statements,
+          isEditing ? 'Update table column' : 'Add table column',
+        ),
+      )
       toast.success(isEditing ? t('Column updated') : t('Column created'))
       onOpenChange(false)
       onSuccess()

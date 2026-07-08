@@ -74,6 +74,29 @@ export function prefixPostgresSqlComment(sql: string, comment: string): string {
   return `-- ${trimmedComment}\n${trimmedSql}`
 }
 
+function stripTrailingPostgresSqlSemicolon(sql: string): string {
+  return sql.trim().replace(/;\s*$/, '')
+}
+
+/** Wrap multiple DDL statements in one DO block (API allows one command per request). */
+export function buildPostgresSingleRequestDdlSql(
+  statements: string[],
+  traceComment: string,
+): string {
+  const normalized = statements
+    .map((statement) => stripTrailingPostgresSqlSemicolon(statement))
+    .filter(Boolean)
+  if (normalized.length === 0) return ''
+  if (normalized.length === 1) {
+    return prefixPostgresSqlComment(normalized[0]!, traceComment)
+  }
+  const body = normalized.map((statement) => `${statement};`).join('\n  ')
+  return prefixPostgresSqlComment(
+    `DO $appwrite_ddl$\nBEGIN\n  ${body}\nEND\n$appwrite_ddl$`,
+    traceComment,
+  )
+}
+
 export function escapePostgresLikePattern(value: string): string {
   return value
     .replace(/\\/g, '\\\\')

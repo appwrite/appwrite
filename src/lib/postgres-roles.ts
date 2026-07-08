@@ -1,5 +1,5 @@
 import { quotePostgresIdentifier } from '@/lib/postgres-database-routes'
-import { buildPostgresSingleRequestDdlSql } from '@/lib/postgres-enum-ddl'
+import { buildPostgresSingleRequestDdlSql } from '@/lib/postgres-sql'
 import { isPostgresTruthyFlag } from '@/lib/postgres-rls'
 import { prefixPostgresSqlComment, quotePostgresStringLiteral } from '@/lib/postgres-sql'
 

@@ -1110,8 +1110,7 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }
   }
 
-  // The SDK split dedicated databases into per-engine services, so list each
-  // engine and merge.
+  // List native PostgreSQL and MySQL databases and merge for selectors.
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     Query.orderDesc('$createdAt'),
@@ -1120,7 +1119,6 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
   const results = await Promise.allSettled([
     projectSdk.postgresql.list({ queries }),
     projectSdk.mysql.list({ queries }),
-    projectSdk.mongo.list({ queries }),
   ])
 
   const fulfilled = results.filter(

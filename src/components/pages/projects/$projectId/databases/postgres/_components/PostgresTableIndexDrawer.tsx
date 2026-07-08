@@ -17,6 +17,7 @@ import {
   buildPostgresCreateIndexSql,
   buildPostgresIndexCommentSql,
 } from '@/lib/postgres-table-ddl'
+import { buildPostgresSingleRequestDdlSql } from '@/lib/postgres-sql'
 import {
   useExecutePostgresSql,
   usePostgresTableColumns,
@@ -113,7 +114,9 @@ export function PostgresTableIndexDrawer({
         )
       }
 
-      await executeSql.mutateAsync(statements.join(';\n'))
+      await executeSql.mutateAsync(
+        buildPostgresSingleRequestDdlSql(statements, 'Create table index'),
+      )
       toast.success(t('Index created'))
       onOpenChange(false)
       onSuccess()

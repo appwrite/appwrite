@@ -52,11 +52,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       const profileFeatures = getActiveProfileFeatures()
       const supportsDedicatedDatabaseCompute =
         projectSupportsDedicatedDatabaseCompute(projectData?.region)
-      const shouldPrefetchDedicatedDatabases =
+      const shouldPrefetchNativeDatabases =
         supportsDedicatedDatabaseCompute &&
-        (profileFeatures.dedicatedDbsSupport ||
-          profileFeatures.nativeDbsPostgres ||
-          profileFeatures.nativeDbsMySQL)
+        (profileFeatures.nativeDbsPostgres || profileFeatures.nativeDbsMySQL)
 
       await Promise.all([
         queryClient.ensureQueryData(
@@ -101,7 +99,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               ),
             )
           : Promise.resolve(),
-        shouldPrefetchDedicatedDatabases
+        shouldPrefetchNativeDatabases
           ? queryClient.ensureQueryData(
               dedicatedDatabasesQueryOptions(projectId),
             )

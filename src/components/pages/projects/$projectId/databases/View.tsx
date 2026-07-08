@@ -1176,17 +1176,6 @@ export function View() {
           />
         ) : null}
 
-        {features.dedicatedDbsSupport && projectId ? (
-          <DedicatedDatabasesSection
-            projectId={projectId}
-            viewMode={viewMode}
-            regionSupported={supportsDedicatedDatabaseCompute}
-            excludeNativeEngines={
-              features.nativeDbsPostgres || features.nativeDbsMySQL
-            }
-          />
-        ) : null}
-
         {/* Bulk Delete Action Bar */}
         {selectedDatabases.size > 0 && (
           <div className="fixed bottom-4 start-1/2 z-50 -translate-x-1/2">

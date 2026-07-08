@@ -164,6 +164,12 @@ export function dbNavLink(kind: DatabaseRouteKind) {
   }
 }
 
+const PRODUCT_DEDICATED_API = new Set([
+  'tablesdb',
+  'documentsdb',
+  'vectorsdb',
+])
+
 export type DedicatedDatabaseLinkInput = {
   $id: string
   api: string
@@ -190,7 +196,7 @@ export function isProductOwnedDedicatedDatabase(
   return dedicatedApiToRouteKind(db.api ?? '') !== null
 }
 
-/** Native dedicated compute (`api` = nativedb or unset). */
+/** Native dedicated databases (`api` = nativedb or unset), not product-backed. */
 export function isNativeDedicatedDatabase(
   db: Pick<DedicatedDatabaseLinkInput, 'api'>,
 ): boolean {
@@ -200,7 +206,6 @@ export function isNativeDedicatedDatabase(
 export function needsDedicatedProductTypeLookup(
   db: DedicatedDatabaseLinkInput,
 ): boolean {
-  // Product `api` is authoritative; only probe when compute omits it.
   if (isProductOwnedDedicatedDatabase(db)) return false
   if (isNativeDedicatedDatabase(db) && isPostgresDedicatedEngine(db.engine)) {
     return false
@@ -232,12 +237,7 @@ function productDatabaseDeepLink(
   }
 }
 
-/**
- * Resolve the console home link for a dedicated database row.
- * Product APIs (`api` = tablesdb / documentsdb / vectorsdb) use those route
- * trees. Native postgres uses the postgres route tree. When compute omits
- * `api`, pass the resolved product route kind if known.
- */
+/** Resolve the console home link for a native or product-backed dedicated database row. */
 export function dedicatedDatabaseHomeLink(
   projectId: string,
   db: DedicatedDatabaseLinkInput,

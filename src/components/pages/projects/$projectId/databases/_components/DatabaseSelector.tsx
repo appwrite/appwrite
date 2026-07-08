@@ -101,17 +101,6 @@ type DatabaseSelectorItem = {
   specSlug?: string | null
 }
 
-function getDedicatedDatabaseId(db: {
-  $id: string
-  dedicatedDatabaseId?: unknown
-}): string {
-  const legacyId = (db as { dedicatedDatabaseId?: unknown }).dedicatedDatabaseId
-  if (typeof legacyId === 'string' && legacyId.trim() !== '') {
-    return legacyId.trim()
-  }
-  return db.$id
-}
-
 function matchesSpecSearch(
   query: string,
   specSlug: string | null | undefined,
@@ -216,16 +205,13 @@ export function DatabaseSelector({
   }, [dedicatedData?.databases])
 
   const productItems = useMemo((): DatabaseSelectorItem[] => {
-    return (productData?.databases ?? []).map((db) => {
-      const dedicatedId = getDedicatedDatabaseId(db)
-      return {
-        id: db.$id,
-        name: db.name,
-        apiType: db.type,
-        specSlug:
-          specSlugByDedicatedId.get(dedicatedId) ?? SERVERLESS_DATABASE_SPEC_ID,
-      }
-    })
+    return (productData?.databases ?? []).map((db) => ({
+      id: db.$id,
+      name: db.name,
+      apiType: db.type,
+      specSlug:
+        specSlugByDedicatedId.get(db.$id) ?? SERVERLESS_DATABASE_SPEC_ID,
+    }))
   }, [productData?.databases, specSlugByDedicatedId])
 
   const nativeItems = useMemo((): DatabaseSelectorItem[] => {
