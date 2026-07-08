@@ -22,7 +22,7 @@ export const Route = createFileRoute(
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(
-      databaseQueryOptions(projectId, databaseId),
+      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
     )
     const tablesData = await queryClient.ensureQueryData(
       tablesQueryOptions(

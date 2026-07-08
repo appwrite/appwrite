@@ -1,3 +1,4 @@
+import { type DatabaseRouteKind } from '@/lib/database-routes'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
 import {
@@ -79,7 +80,7 @@ export const Route = createFileRoute(
         tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
       ),
       // Fetch database - blocks navigation until ready
-      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
+      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)),
       // Fetch columns - blocks navigation until ready
       queryClient.ensureQueryData(
         tableColumnsQueryOptions(projectId, databaseId, tableId),
@@ -94,7 +95,7 @@ export const Route = createFileRoute(
       ),
     ])
     const database = queryClient.getQueryData<{ name?: string }>(
-      databaseQueryOptions(projectId, databaseId).queryKey,
+      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
     )
     const table = queryClient.getQueryData<{ name?: string }>(
       tableQueryOptions(projectId, databaseId, tableId).queryKey,

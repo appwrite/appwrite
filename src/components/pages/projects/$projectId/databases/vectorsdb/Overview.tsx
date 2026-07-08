@@ -195,6 +195,7 @@ export function Overview({
   const { database, isLoading: databaseLoading } = useProjectDatabase(
     projectId,
     databaseId,
+    DB_KIND,
   )
 
   /** Vectors DB - product is fixed in this module. */
@@ -223,6 +224,9 @@ export function Overview({
     requestedPage - 1,
     pageSize,
     searchValue,
+    'asc',
+    '$createdAt',
+    DB_KIND,
   )
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
@@ -236,6 +240,9 @@ export function Overview({
     displayedPage - 1,
     pageSize,
     searchValue,
+    'asc',
+    '$createdAt',
+    DB_KIND,
   )
 
   // Update displayed page only when requested page data is ready (no flash)

@@ -1,3 +1,4 @@
+import { type DatabaseRouteKind } from '@/lib/database-routes'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { projectQueryOptions, databaseQueryOptions } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -29,7 +30,7 @@ export const Route = createFileRoute(
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(
-      databaseQueryOptions(projectId, databaseId),
+      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
     )
     throw redirect({
       to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',

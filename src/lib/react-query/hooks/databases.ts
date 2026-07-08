@@ -607,13 +607,14 @@ export async function fetchProjectDatabasesByIds(
 export async function fetchProjectDatabase(
   projectId: string,
   databaseId: string,
+  routeKindHint?: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     return null
   }
 
   try {
-    const db = await getDatabaseModel(projectId, databaseId)
+    const db = await getDatabaseModel(projectId, databaseId, routeKindHint)
 
     if (!db) {
       return null
@@ -635,8 +636,8 @@ export async function fetchProjectDatabase(
 
 /**
  * Options for creating Appwrite product databases (TablesDB, DocumentsDB, VectorsDB).
- * DocumentsDB and VectorsDB always provision dedicated compute first; TablesDB uses
- * dedicated compute when `specification` is set and not serverless (`shared` slug).
+ * Dedicated tiers use the product API (`*.create` with `specification`). Engine
+ * provisioning is only used when HA replicas or PITR are requested on create.
  */
 export type CreateProjectDatabaseOptions = {
   specification?: string
@@ -734,6 +735,11 @@ export async function resolveProductRouteKindForDatabase(
 ): Promise<DatabaseRouteKind | null> {
   if (!projectId || !databaseId) return null
 
+  const cachedType = readCachedDatabaseType(projectId, databaseId)
+  if (cachedType) {
+    return databaseRouteKindFromApiType(cachedType)
+  }
+
   const projectSdk = sdk.forProject(projectId)
 
   if (hint) {
@@ -756,7 +762,13 @@ export function productRouteKindQueryOptions(
 ) {
   return queryOptions({
     queryKey: ['database', 'product-route-kind', projectId, databaseId],
-    queryFn: () => resolveProductRouteKindForDatabase(projectId!, databaseId!),
+    queryFn: async () => {
+      const cachedType = readCachedDatabaseType(projectId!, databaseId!)
+      if (cachedType) {
+        return databaseRouteKindFromApiType(cachedType)
+      }
+      return resolveProductRouteKindForDatabase(projectId!, databaseId!)
+    },
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -839,6 +851,31 @@ async function createProductDatabase(
   return await projectSdk.tablesDB.create(payload)
 }
 
+async function createProductDatabaseWithExistsRecovery(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  backend: DatabaseType,
+  params: {
+    databaseId: string
+    name: string
+    specification?: string
+  },
+): Promise<Models.Database> {
+  try {
+    return await createProductDatabase(projectSdk, backend, params)
+  } catch (error) {
+    if (!isDatabaseAlreadyExistsError(error)) {
+      throw error
+    }
+    const existing = await getProductDatabase(
+      projectSdk,
+      backend,
+      params.databaseId,
+    )
+    if (existing) return existing
+    throw error
+  }
+}
+
 /**
  * Provision dedicated compute owned by a product API (tablesdb / documentsdb /
  * vectorsdb). Engine is selected via the per-engine SDK service; `api` marks
@@ -880,10 +917,9 @@ async function provisionDedicatedCompute(
 
 /**
  * Create a new database in a project.
- * DocumentsDB and VectorsDB always provision dedicated compute (engine service
- * with `api` set to the product). TablesDB uses the serverless pool unless a
- * dedicated specification is provided. Dedicated product databases share one ID
- * between compute and the product API.
+ * Product databases are created in one call via the product SDK (`tablesDB`,
+ * `documentsDB`, or `vectorsDB`) with an optional `specification`. Engine
+ * provisioning is only used when HA replicas or PITR are requested on create.
  *
  * @param projectId - The project ID
  * @param data - { databaseId?: string; name: string }
@@ -922,6 +958,9 @@ export async function createProjectDatabase(
   }
 
   const name = data.name.trim()
+  const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
+  const pitrEnabled = options?.pitrEnabled === true
+  const needsEngineOptions = haReplicaCount > 0 || pitrEnabled
 
   if (useDedicated) {
     const specification = await resolveDedicatedSpecification(
@@ -930,35 +969,53 @@ export async function createProjectDatabase(
       options?.specification,
       dedicatedComputeEngineForProductBackend(backend),
     )
-    const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
-    const pitrEnabled = options?.pitrEnabled === true
 
-    await provisionDedicatedCompute(projectSdk, {
-      databaseId: productDatabaseId,
-      name,
-      specification,
-      backend,
-      haReplicaCount,
-      pitrEnabled,
-    })
+    let created: Models.Database
 
-    const created = await waitForProductDatabaseAfterExistsConflict(
-      projectSdk,
-      backend,
-      productDatabaseId,
-      20,
-    )
-    if (!created) {
-      throw new Error('Failed to create database')
+    if (needsEngineOptions) {
+      await provisionDedicatedCompute(projectSdk, {
+        databaseId: productDatabaseId,
+        name,
+        specification,
+        backend,
+        haReplicaCount,
+        pitrEnabled,
+      })
+
+      const polled = await waitForProductDatabaseAfterExistsConflict(
+        projectSdk,
+        backend,
+        productDatabaseId,
+        20,
+      )
+      if (!polled) {
+        throw new Error('Failed to create database')
+      }
+      created = polled
+    } else {
+      created = await createProductDatabaseWithExistsRecovery(
+        projectSdk,
+        backend,
+        {
+          databaseId: productDatabaseId,
+          name,
+          specification,
+        },
+      )
     }
+
     seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
     return normalizeProductDatabase(created, backend)
   }
 
-  const created = await createProductDatabase(projectSdk, backend, {
-    databaseId: productDatabaseId,
-    name,
-  })
+  const created = await createProductDatabaseWithExistsRecovery(
+    projectSdk,
+    backend,
+    {
+      databaseId: productDatabaseId,
+      name,
+    },
+  )
   seedDatabaseModelCache(projectId, productDatabaseId, created, backend)
   return normalizeProductDatabase(created, backend)
 }
@@ -1435,6 +1492,7 @@ export async function fetchProjectTables(
   search?: string,
   order: 'asc' | 'desc' = 'asc',
   sortBy: TablesSortBy = '$createdAt',
+  routeKindHint?: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
     return { tables: [], total: 0 }
@@ -1448,7 +1506,11 @@ export async function fetchProjectTables(
   ]
   const searchArg = search?.trim() || undefined
 
-  const kind = await resolveProjectDatabaseType(projectId, databaseId)
+  const kind = await resolveProjectDatabaseType(
+    projectId,
+    databaseId,
+    routeKindHint,
+  )
 
   if (kind === DatabaseType.Documentsdb) {
     try {
@@ -3102,6 +3164,7 @@ export function tablesQueryOptions(
   search?: string,
   order: 'asc' | 'desc' = 'asc',
   sortBy: TablesSortBy = '$createdAt',
+  routeKindHint?: DatabaseRouteKind,
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -3127,6 +3190,7 @@ export function tablesQueryOptions(
         normalizedSearch,
         order,
         sortBy,
+        routeKindHint,
       ),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -3211,10 +3275,11 @@ export function tableRowsQueryOptions(
 export function databaseQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  routeKindHint?: DatabaseRouteKind,
 ) {
   return queryOptions({
     queryKey: ['database', 'project', projectId, databaseId],
-    queryFn: () => fetchProjectDatabase(projectId!, databaseId!),
+    queryFn: () => fetchProjectDatabase(projectId!, databaseId!, routeKindHint),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -3560,6 +3625,7 @@ export function useProjectProductDatabases(
 export function useProjectDatabase(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  routeKindHint?: DatabaseRouteKind,
 ) {
   const {
     data: databaseData,
@@ -3567,7 +3633,7 @@ export function useProjectDatabase(
     isPending,
     error,
     refetch,
-  } = useQuery(databaseQueryOptions(projectId, databaseId))
+  } = useQuery(databaseQueryOptions(projectId, databaseId, routeKindHint))
 
   return {
     database: databaseData || null,
@@ -3596,6 +3662,7 @@ export function useProjectTables(
   search?: string,
   order: 'asc' | 'desc' = 'asc',
   sortBy: TablesSortBy = '$createdAt',
+  routeKindHint?: DatabaseRouteKind,
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -3616,6 +3683,7 @@ export function useProjectTables(
       normalizedSearch,
       order,
       sortBy,
+      routeKindHint,
     ),
   )
 

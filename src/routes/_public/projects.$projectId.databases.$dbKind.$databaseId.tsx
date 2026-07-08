@@ -24,6 +24,10 @@ export const Route = createFileRoute(
         replace: true,
       })
     }
+
+    // Pin product API routing before any get/probe so VectorsDB never hits DocumentsDB.
+    seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
+
     const { queryClient } = context
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
@@ -49,6 +53,7 @@ export const Route = createFileRoute(
       expected = await resolveProductRouteKindForDatabase(
         projectId,
         databaseId,
+        dbKind,
       )
       if (expected != null) {
         queryClient.setQueryData(routeKindKey, expected)
@@ -69,6 +74,7 @@ export const Route = createFileRoute(
       })
     }
 
+    // Re-seed after resolution in case cache was cleared during validation.
     seedDatabaseProductRouteKind(projectId, databaseId, dbKind)
   },
   component: DatabaseKindLayout,

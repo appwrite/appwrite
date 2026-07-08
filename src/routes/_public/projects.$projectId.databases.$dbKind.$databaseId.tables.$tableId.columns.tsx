@@ -1,3 +1,4 @@
+import { type DatabaseRouteKind } from '@/lib/database-routes'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { DatabaseType } from '@appwrite.io/console'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
@@ -82,7 +83,7 @@ export const Route = createFileRoute(
         tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
       ),
       // Fetch database - blocks navigation until ready
-      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
+      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)),
       // Fetch columns with URL filters/page/limit so component uses same query key (single request, filtered list)
       queryClient.ensureQueryData(
         tableColumnsQueryOptions(
@@ -106,7 +107,7 @@ export const Route = createFileRoute(
     const database = queryClient.getQueryData<{
       name?: string
       databaseType?: DatabaseType
-    }>(databaseQueryOptions(projectId, databaseId).queryKey)
+    }>(databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey)
     const dbType = database?.databaseType
     if (
       dbType === DatabaseType.Documentsdb ||

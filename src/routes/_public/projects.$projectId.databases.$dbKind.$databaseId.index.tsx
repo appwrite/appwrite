@@ -25,7 +25,11 @@ export const Route = createFileRoute(
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(
-      databaseQueryOptions(projectId, databaseId),
+      databaseQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+      ),
     )
     // Same query as table workspace sidebar first page (tablesdb/Workspace.tsx useProjectTables)
     const tablesData = await queryClient.ensureQueryData(
@@ -37,6 +41,7 @@ export const Route = createFileRoute(
         undefined,
         'asc',
         '$createdAt',
+        dbKind as DatabaseRouteKind,
       ),
     )
 

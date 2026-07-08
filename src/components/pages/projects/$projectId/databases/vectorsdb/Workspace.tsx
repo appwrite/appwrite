@@ -191,6 +191,7 @@ export function Workspace({
   const { database, isLoading: databaseLoading } = useProjectDatabase(
     projectId,
     databaseId,
+    DB_KIND,
   )
 
   const dbLabels = getLocalizedDatabaseConsoleLabels(t, DB_KIND)
@@ -212,6 +213,10 @@ export function Workspace({
     databaseId,
     0,
     TABLE_WORKSPACE_TABLES_LIST_LIMIT,
+    undefined,
+    'asc',
+    '$createdAt',
+    DB_KIND,
   )
 
   // Requested page query (drives fetch when user changes page)
@@ -223,6 +228,7 @@ export function Workspace({
     sidebarTablesSearch.trim() || undefined,
     sidebarTablesOrder,
     sidebarTablesSortBy,
+    DB_KIND,
   )
 
   // Displayed page query (what we show - stays until new page has loaded)
@@ -238,6 +244,7 @@ export function Workspace({
     sidebarTablesSearch.trim() || undefined,
     sidebarTablesOrder,
     sidebarTablesSortBy,
+    DB_KIND,
   )
 
   // Update displayed page only when requested page has finished loading
