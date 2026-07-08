@@ -14,8 +14,10 @@ import { toast } from 'sonner'
 import { X, Plus } from 'lucide-react'
 import { Calendar, Hash } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
+import { IndexTypeSelect } from '../_components/IndexTypeSelect'
+import type { CollectionIndexType } from '@/lib/databases/collection-index-types'
 
-export type IndexType = 'key' | 'unique' | 'fulltext' | 'spatial'
+export type IndexType = CollectionIndexType
 
 interface IndexColumnEntry {
   column: string
@@ -43,13 +45,6 @@ interface IndexDrawerProps {
   existingIndexes?: Array<{ key: string }>
   isLoading?: boolean
 }
-
-const INDEX_TYPES: { value: IndexType; label: string }[] = [
-  { value: 'key', label: 'Key' },
-  { value: 'unique', label: 'Unique' },
-  { value: 'fulltext', label: 'Fulltext' },
-  { value: 'spatial', label: 'Spatial' },
-]
 
 const ORDER_OPTIONS = [
   { value: 'ASC', label: 'ASC' },
@@ -410,32 +405,21 @@ export function IndexDrawer({
               <Label htmlFor="index-type" className="text-[12px] font-medium">
                 {t('Index Type')} <span className="text-destructive">*</span>
               </Label>
-              <Select
+              <IndexTypeSelect
+                id="index-type"
                 value={formData.type}
-                onValueChange={(value) => {
+                onChange={(type) => {
                   setFormData((prev) => ({
                     ...prev,
-                    type: value as IndexType,
-                    // Reset columns when type changes
+                    type,
                     columns:
-                      value === 'spatial'
+                      type === 'spatial'
                         ? [{ column: '', order: null, length: null }]
                         : [{ column: '', order: 'ASC', length: null }],
                   }))
                 }}
                 disabled={isLoading || isEditMode}
-              >
-                <SelectTrigger id="index-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {INDEX_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {t(type.label)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             {/* Columns */}

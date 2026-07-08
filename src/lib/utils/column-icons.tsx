@@ -3,7 +3,9 @@ import {
   Hash,
   Binary,
   ToggleLeft,
-  Calendar,
+  CalendarClock,
+  CalendarDays,
+  Clock,
   Mail,
   Link2,
   MapPin,
@@ -66,9 +68,13 @@ export function getColumnIcon(type: string): LucideIcon {
     case 'timestamptz':
     case 'timestamp with time zone':
     case 'timestamp without time zone':
+    case '$createdat':
+    case '$updatedat':
+      return CalendarClock
     case 'date':
+      return CalendarDays
     case 'time':
-      return Calendar
+      return Clock
     case 'email':
       return Mail
     case 'url':

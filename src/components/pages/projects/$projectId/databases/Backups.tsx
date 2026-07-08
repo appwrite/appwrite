@@ -436,7 +436,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               </p>
             </div>
             <div className="border-t border-border" />
-            <div className="px-6 py-4 min-h-[400px] flex flex-col items-center justify-center">
+            <div className="px-6 py-4 min-h-[400px]">
               <EmptyState
                 icon={Archive}
                 title={t('Ensure your data stays safe')}
@@ -444,7 +444,8 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   'Create backup policies to automate regular and secure data protection for your databases.',
                 )}
                 isEmpty={true}
-                iconSize="lg"
+                variant="centered"
+                iconSize="md"
               />
             </div>
           </div>
@@ -455,9 +456,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
         {/* Policies Section */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 flex flex-col">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -513,34 +514,25 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               </Button>
             )}
           </div>
-          <div>
+          <div className="flex-1">
             {isPoliciesActuallyLoading ? (
-              <div className="rounded-lg border border-border bg-card py-12 text-center">
+              <div className="flex h-full min-h-[280px] items-center justify-center rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">
                   {t('Loading policies...')}
                 </div>
               </div>
             ) : policies.length === 0 ? (
-              <div className="rounded-lg border border-border bg-card py-12 min-h-[280px] flex flex-col items-center justify-center">
-                <EmptyState
-                  icon={Archive}
-                  title={t('Ensure your data stays safe')}
-                  description={t(
-                    'Create a backup policy to automate regular and secure data protection.',
-                  )}
-                  isEmpty={true}
-                  iconSize="lg"
-                />
-                <Button
-                  variant="brandCta"
-                  onClick={() => setCreatePolicyDialogOpen(true)}
-                  size="sm"
-                  className="h-9 text-[13px] mt-4"
-                >
-                  <Plus className="me-1.5 h-4 w-4" />
-                  {t('Create policy')}
-                </Button>
-              </div>
+              <EmptyState
+                icon={Archive}
+                title={t('Ensure your data stays safe')}
+                description={t(
+                  'Create a backup policy to automate regular and secure data protection.',
+                )}
+                isEmpty={true}
+                variant="card"
+                iconSize="md"
+                className="flex h-full min-h-[280px] flex-col items-center justify-center"
+              />
             ) : (
               <div className="space-y-3">
                 {policies.map((policy) => {
@@ -634,7 +626,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         </div>
 
         {/* Backups Section */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 flex flex-col">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -651,33 +643,25 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               {t('Manual backup')}
             </Button>
           </div>
-          <div>
+          <div className="flex-1">
             {isArchivesActuallyLoading ? (
-              <div className="rounded-lg border border-border bg-card py-12 text-center">
+              <div className="flex h-full min-h-[280px] items-center justify-center rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">
                   {t('Loading backups...')}
                 </div>
               </div>
             ) : archives.length === 0 ? (
-              <div className="rounded-lg border border-border bg-card py-12 min-h-[280px] flex flex-col items-center justify-center">
-                <EmptyState
-                  icon={Archive}
-                  title={t('No backups yet')}
-                  description={t(
-                    'Create a manual backup or set up a policy to get started.',
-                  )}
-                  isEmpty={true}
-                  iconSize="lg"
-                />
-                <Button
-                  onClick={() => setCreateManualBackupDialogOpen(true)}
-                  size="sm"
-                  className="h-9 text-[13px] mt-4"
-                >
-                  <Plus className="me-1.5 h-4 w-4" />
-                  {t('Create manual backup')}
-                </Button>
-              </div>
+              <EmptyState
+                icon={Archive}
+                title={t('No backups yet')}
+                description={t(
+                  'Create a manual backup or set up a policy to get started.',
+                )}
+                isEmpty={true}
+                variant="card"
+                iconSize="md"
+                className="flex h-full min-h-[280px] flex-col items-center justify-center"
+              />
             ) : (
               <>
                 <div className="rounded-lg border border-border bg-card">

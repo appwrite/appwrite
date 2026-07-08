@@ -736,6 +736,10 @@ export function FiltersPopoverContent({
             items={vc.elements.map((el) => ({
               value: String(el.value),
               label: t(el.label),
+              description: el.description ? t(el.description) : undefined,
+              searchText: el.description
+                ? `${t(el.label)} ${t(el.description)}`
+                : undefined,
             }))}
             placeholder={t('Select')}
             searchPlaceholder={t('Search values…')}

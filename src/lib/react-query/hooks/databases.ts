@@ -31,6 +31,7 @@ import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/d
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import { getCollectionAttributeKey } from '@/lib/databases/collection-indexable-attributes'
 import {
   databaseRouteKindFromApiType,
   type DatabaseRouteKind,
@@ -395,17 +396,20 @@ function mapCollectionAttributesToColumnLike(
   attributes: unknown[] | undefined,
 ): unknown[] {
   if (!Array.isArray(attributes)) return []
-  return attributes.map((raw) => {
-    const a = raw as Record<string, unknown>
-    const key = String(a.key ?? '')
-    const type = String(a.type ?? 'string')
-    return {
-      ...a,
-      key,
-      type,
-      status: (a.status as string) || 'available',
-    }
-  })
+  return attributes
+    .map((raw) => {
+      const a = raw as Record<string, unknown>
+      const key = getCollectionAttributeKey(a)
+      if (!key) return null
+      const type = String(a.type ?? 'string')
+      return {
+        ...a,
+        key,
+        type,
+        status: (a.status as string) || 'available',
+      }
+    })
+    .filter((col) => col !== null)
 }
 
 function normalizeIndexesForTableUi<T extends Record<string, unknown>>(
@@ -1288,7 +1292,7 @@ export async function createProjectTable(
     const dimension =
       typeof data.dimension === 'number' && data.dimension > 0
         ? data.dimension
-        : 384
+        : 768
     return await projectSdk.vectorsDB.createCollection({
       databaseId,
       collectionId: tableId,

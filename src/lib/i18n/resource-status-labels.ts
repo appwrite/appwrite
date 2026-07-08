@@ -58,6 +58,8 @@ export function localizeTableIndexTypeLabel(type: string, t: Translator): string
       return t('Unique')
     case 'fulltext':
       return t('Fulltext')
+    case 'spatial':
+      return t('Spatial')
     default:
       return localizeResourceStatusLabel(type, t)
   }

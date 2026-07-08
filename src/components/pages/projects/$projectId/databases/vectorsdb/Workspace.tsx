@@ -88,7 +88,7 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
-import { IndexesSpreadsheet } from '../tablesdb/Spreadsheet'
+import { IndexesSpreadsheet } from './IndexesSpreadsheet'
 import { CollectionAttributesSpreadsheet } from '../_components/CollectionAttributesSpreadsheet'
 import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadsheet'
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
@@ -126,6 +126,7 @@ import {
   buildListSearchParams,
   urlFromRouterLocation,
   rowsFilterColumnsFromAttributes,
+  tableIndexesFilterColumns,
   type TableIndexForFilters,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -631,6 +632,7 @@ export function Workspace({
   }, [tableColumns, tableIndexes])
 
   const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
+  const [indexesFiltersOpen, setIndexesFiltersOpen] = useState(false)
 
   const navigateToRowsWithOpenCreate = useCallback(() => {
     navigate({
@@ -772,6 +774,48 @@ export function Workspace({
     () => queryParamToMap((search?.query as string | undefined) ?? null),
     [search?.query],
   )
+
+  const navigateTableDetailSearch = (updates: { query?: string }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...updates,
+        }
+        if ('query' in updates && updates.query === undefined) {
+          delete next.query
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const indexesApplyFilter = (
+    key: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
+    const newMap = new Map(tableDetailFilterMap)
+    if (replaceKey) newMap.delete(replaceKey)
+    newMap.set(key, queryStr)
+    navigateTableDetailSearch({
+      query: mapToQueryParam(newMap) || undefined,
+    })
+  }
+
+  const indexesRemoveFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.delete(key)
+    navigateTableDetailSearch({
+      query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+    })
+  }
+
+  const indexesClearAllFilters = () => {
+    navigateTableDetailSearch({ query: undefined })
+    setIndexesFiltersOpen(false)
+  }
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -1315,7 +1359,9 @@ export function Workspace({
         }
         showFilters={
           !isDatabaseLevelView &&
-          (activeTab === 'rows' || activeTab === 'documents')
+          (activeTab === 'rows' ||
+            activeTab === 'documents' ||
+            activeTab === 'indexes')
         }
         filterTrigger={
           !isDatabaseLevelView &&
@@ -1355,6 +1401,24 @@ export function Workspace({
                   replace: true,
                 })
               }}
+              teamId={project?.teamId}
+            />
+          ) : !isDatabaseLevelView && activeTab === 'indexes' ? (
+            <FiltersPopover
+              open={indexesFiltersOpen}
+              onOpenChange={setIndexesFiltersOpen}
+              columns={tableIndexesFilterColumns}
+              filterMap={tableDetailFilterMap}
+              onRemoveFilter={indexesRemoveFilter}
+              onClearAll={indexesClearAllFilters}
+              onApplyFilter={indexesApplyFilter}
+              resourceLabel={t('indexes')}
+              filterScope={`databases.indexes.${databaseId}.${tableId}`}
+              onApplyQuery={(queryParam) =>
+                navigateTableDetailSearch({
+                  query: queryParam ?? undefined,
+                })
+              }
               teamId={project?.teamId}
             />
           ) : undefined
@@ -1803,6 +1867,7 @@ export function Workspace({
           projectId={projectId}
           databaseId={databaseId}
           tableId={tableId}
+          dbKind={DB_KIND}
           open={exportCsvOpen}
           onOpenChange={setExportCsvOpen}
         />

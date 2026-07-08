@@ -147,11 +147,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   DocumentsRowCreateBridge,
   ColumnsSpreadsheet,
-  IndexesSpreadsheet,
   RowsSpreadsheet,
   TableSecurity,
   TableSettings,
 } from './Spreadsheet'
+import { IndexesSpreadsheet } from './IndexesSpreadsheet'
 import { Overview } from './Overview'
 import {
   DATABASE_TAB_LABELS,

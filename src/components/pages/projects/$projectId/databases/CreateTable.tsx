@@ -10,7 +10,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
+import { EmbeddingDimensionSelect } from '@/components/pages/projects/$projectId/databases/_components/EmbeddingDimensionSelect'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
+import {
+  DEFAULT_EMBEDDING_DIMENSION_PRESET,
+  EMBEDDING_DIMENSION_CUSTOM,
+  resolveEmbeddingDimension,
+  type EmbeddingDimensionPresetId,
+} from '@/lib/databases/embedding-dimension-presets'
 import { useT } from '@/lib/i18n/translate'
 
 /**
@@ -57,7 +64,9 @@ export function CreateTable({
   const t = useT()
   const [tableId, setTableId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
-  const [dimension, setDimension] = useState<string>('384')
+  const [embeddingPreset, setEmbeddingPreset] =
+    useState<EmbeddingDimensionPresetId>(DEFAULT_EMBEDDING_DIMENSION_PRESET)
+  const [customDimension, setCustomDimension] = useState<string>('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isCollection = variant === 'documents' || variant === 'vectors'
@@ -77,7 +86,8 @@ export function CreateTable({
   const resetForm = () => {
     setTableId(undefined)
     setName('')
-    setDimension('384')
+    setEmbeddingPreset(DEFAULT_EMBEDDING_DIMENSION_PRESET)
+    setCustomDimension('')
     setErrors({})
   }
 
@@ -99,8 +109,11 @@ export function CreateTable({
     }
 
     if (variant === 'vectors') {
-      const d = Number(dimension)
-      if (!Number.isFinite(d) || d < 1 || !Number.isInteger(d)) {
+      const resolvedDimension = resolveEmbeddingDimension(
+        embeddingPreset,
+        customDimension,
+      )
+      if (resolvedDimension == null) {
         newErrors.dimension = t(
           'Embedding dimension must be a positive integer',
         )
@@ -123,7 +136,13 @@ export function CreateTable({
       name: name.trim(),
     }
     if (variant === 'vectors') {
-      payload.dimension = Number(dimension)
+      const resolvedDimension = resolveEmbeddingDimension(
+        embeddingPreset,
+        customDimension,
+      )
+      if (resolvedDimension != null) {
+        payload.dimension = resolvedDimension
+      }
     }
 
     onCreate(payload)
@@ -177,26 +196,48 @@ export function CreateTable({
             </div>
 
             {variant === 'vectors' && (
-              <div className="space-y-2">
-                <Label htmlFor="dimension">
-                  {t('Embedding dimension')}{' '}
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="dimension"
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={dimension}
-                  onChange={(e) => {
-                    setDimension(e.target.value)
-                    if (errors.dimension) {
-                      setErrors((prev) => ({ ...prev, dimension: '' }))
-                    }
-                  }}
-                  disabled={isLoading}
-                  className={errors.dimension ? 'border-destructive' : ''}
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="embedding-model">
+                    {t('Embedding model')}{' '}
+                    <span className="text-destructive">*</span>
+                  </Label>
+                  <EmbeddingDimensionSelect
+                    id="embedding-model"
+                    value={embeddingPreset}
+                    onChange={(nextPreset) => {
+                      setEmbeddingPreset(nextPreset)
+                      if (errors.dimension) {
+                        setErrors((prev) => ({ ...prev, dimension: '' }))
+                      }
+                    }}
+                    disabled={isLoading}
+                  />
+                </div>
+                {embeddingPreset === EMBEDDING_DIMENSION_CUSTOM && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-dimension">
+                      {t('Embedding dimension')}{' '}
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="custom-dimension"
+                      type="number"
+                      min={1}
+                      step={1}
+                      placeholder={t('Enter embedding dimension')}
+                      value={customDimension}
+                      onChange={(e) => {
+                        setCustomDimension(e.target.value)
+                        if (errors.dimension) {
+                          setErrors((prev) => ({ ...prev, dimension: '' }))
+                        }
+                      }}
+                      disabled={isLoading}
+                      className={errors.dimension ? 'border-destructive' : ''}
+                    />
+                  </div>
+                )}
                 {errors.dimension && (
                   <p className="text-[12px] text-destructive">
                     {errors.dimension}

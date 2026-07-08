@@ -29,11 +29,15 @@ import {
 import {
   useProjectTable,
   useProjectTableColumns,
+  useProjectTableRows,
   useCreateCSVExport,
 } from '@/lib/react-query/hooks'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
+import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { buildCollectionExportColumnKeys } from '@/lib/databases/collection-indexable-attributes'
 
 const DELIMITERS = [
   { value: ',', label: 'Comma' },
@@ -48,37 +52,64 @@ export interface ExportCsvProps {
   projectId: string
   databaseId: string
   tableId: string
+  dbKind?: DatabaseRouteKind
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+}
+
+function isCollectionDatabaseKind(
+  dbKind: DatabaseRouteKind | undefined,
+): boolean {
+  return dbKind === 'documentsdb' || dbKind === 'vectorsdb'
 }
 
 export function ExportCsv({
   projectId,
   databaseId,
   tableId,
+  dbKind,
   open,
   onOpenChange,
   onSuccess,
 }: ExportCsvProps) {
   const t = useT()
+  const dbLabels = getLocalizedDatabaseConsoleLabels(t, dbKind ?? 'tablesdb')
+  const isCollectionExport = isCollectionDatabaseKind(dbKind)
   const { table } = useProjectTable(projectId, databaseId, tableId)
   const { columns: apiColumns } = useProjectTableColumns(
     projectId,
     databaseId,
     tableId,
+    undefined,
+    0,
+    1000,
+  )
+  const { rows: sampleDocumentRows } = useProjectTableRows(
+    projectId,
+    databaseId,
+    tableId,
+    0,
+    50,
   )
   const { addExportId } = useSessionMigrations(projectId)
   const createExport = useCreateCSVExport(projectId)
 
   const columnKeys = useMemo(() => {
+    if (isCollectionExport) {
+      return buildCollectionExportColumnKeys(
+        apiColumns,
+        sampleDocumentRows as Record<string, unknown>[],
+      )
+    }
+
     return (apiColumns || [])
       .map(
         (col: { key?: string; name?: string; $id?: string }) =>
           col.key || col.name || col.$id || '',
       )
       .filter(Boolean) as string[]
-  }, [apiColumns])
+  }, [apiColumns, isCollectionExport, sampleDocumentRows])
 
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set())
   const [delimiter, setDelimiter] = useState<string>(',')
@@ -166,10 +197,12 @@ export function ExportCsv({
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-4 py-3">
                 <h3 className="text-[15px] font-semibold text-foreground">
-                  {t('Columns')}
+                  {dbLabels.schemaPluralTitle}
                 </h3>
                 <p className="text-[13px] text-muted-foreground mt-1">
-                  {t('At least one column is required.')}
+                  {isCollectionExport
+                    ? t('At least one attribute is required')
+                    : t('At least one column is required.')}
                 </p>
               </div>
               <div className="border-t border-border px-4 py-3">

@@ -3,8 +3,8 @@
  * Use for column, operator, and value droplists in filters and elsewhere.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronDown, Loader2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, Loader2, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -29,12 +29,18 @@ export interface SearchableSelectItem {
   searchText?: string
   /** Secondary line shown in the dropdown list. */
   description?: string
+  /** When true, description is shown on the same line as the label. */
+  inlineDescription?: boolean
+  /** Optional leading icon in the trigger and list. */
+  icon?: LucideIcon
 }
 
 export interface SearchableSelectProps {
   value: string
   onValueChange: (value: string) => void
   items: SearchableSelectItem[]
+  /** Pinned below the scrollable list with a separator; not affected by search filtering. */
+  footerItems?: SearchableSelectItem[]
   placeholder?: string
   searchPlaceholder?: string
   disabled?: boolean
@@ -56,10 +62,53 @@ export interface SearchableSelectProps {
   onOpenChange?: (open: boolean) => void
 }
 
+function SearchableSelectItemContent({ item }: { item: SearchableSelectItem }) {
+  const ItemIcon = item.icon
+
+  if (!item.description && !ItemIcon) {
+    return <>{item.label}</>
+  }
+
+  if (item.inlineDescription) {
+    return (
+      <div className="flex min-w-0 items-center gap-2">
+        {ItemIcon ? (
+          <ItemIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        ) : null}
+        <span className="flex min-w-0 flex-1 items-center gap-1.5">
+          <span className="truncate">{item.label}</span>
+          {item.description ? (
+            <span className="shrink-0 text-[11px] text-muted-foreground">
+              {item.description}
+            </span>
+          ) : null}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex min-w-0 items-start gap-2">
+      {ItemIcon ? (
+        <ItemIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      ) : null}
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate">{item.label}</span>
+        {item.description ? (
+          <span className="truncate text-[11px] text-muted-foreground">
+            {item.description}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export function SearchableSelect({
   value,
   onValueChange,
   items,
+  footerItems,
   placeholder = 'Select…',
   searchPlaceholder = 'Search…',
   disabled = false,
@@ -79,13 +128,19 @@ export function SearchableSelect({
   const [open, setOpen] = useState(false)
   const listScrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const selectedLabel = items.find((i) => i.value === value)?.label ?? ''
+  const allItems = useMemo(
+    () => [...items, ...(footerItems ?? [])],
+    [items, footerItems],
+  )
+  const selectedItem = allItems.find((i) => i.value === value)
+  const selectedLabel = selectedItem?.label ?? ''
   const displayText =
     value && selectedLabel
       ? selectedLabel
       : showPlaceholderWhenEmpty
         ? placeholder
         : ''
+  const SelectedIcon = selectedItem?.icon
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -132,7 +187,19 @@ export function SearchableSelect({
             triggerClassName,
           )}
         >
-          <span className="truncate">{t(displayText || placeholder)}</span>
+          <span className="flex min-w-0 items-center gap-2 truncate">
+            {SelectedIcon ? (
+              <SelectedIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            ) : null}
+            <span className="flex min-w-0 items-center gap-1.5 truncate">
+              <span className="truncate">{t(displayText || placeholder)}</span>
+              {selectedItem?.inlineDescription && selectedItem.description ? (
+                <span className="shrink-0 text-[11px] text-muted-foreground">
+                  {selectedItem.description}
+                </span>
+              ) : null}
+            </span>
+          </span>
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -146,7 +213,7 @@ export function SearchableSelect({
           event.stopPropagation()
         }}
       >
-        <Command shouldFilter={!onSearchChange}>
+        <Command shouldFilter={!onSearchChange} className="overflow-hidden">
           <div className="relative">
             <CommandInput
               placeholder={t(searchPlaceholder)}
@@ -171,7 +238,7 @@ export function SearchableSelect({
               <div className="px-3 py-6 text-center text-[12px] text-muted-foreground">
                 {t('Loading…')}
               </div>
-            ) : items.length === 0 ? (
+            ) : items.length === 0 && !(footerItems?.length) ? (
               <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
                 {t(emptyMessage)}
               </CommandEmpty>
@@ -187,16 +254,7 @@ export function SearchableSelect({
                       setOpen(false)
                     }}
                   >
-                    {item.description ? (
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className="truncate">{item.label}</span>
-                        <span className="truncate text-[11px] text-muted-foreground">
-                          {item.description}
-                        </span>
-                      </div>
-                    ) : (
-                      item.label
-                    )}
+                    <SearchableSelectItemContent item={item} />
                   </CommandItem>
                 ))}
                 {hasNextPage ? (
@@ -210,6 +268,23 @@ export function SearchableSelect({
               </CommandGroup>
             )}
           </CommandList>
+          {footerItems && footerItems.length > 0 ? (
+            <div className="shrink-0 border-t border-border bg-popover p-1">
+              {footerItems.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className="relative flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-start text-[13px] outline-hidden hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => {
+                    onValueChange(item.value)
+                    setOpen(false)
+                  }}
+                >
+                  <SearchableSelectItemContent item={item} />
+                </button>
+              ))}
+            </div>
+          ) : null}
           {listFooter ? (
             <div className="border-t border-border px-3 py-2 text-[11px] tabular-nums text-muted-foreground">
               {listFooter}

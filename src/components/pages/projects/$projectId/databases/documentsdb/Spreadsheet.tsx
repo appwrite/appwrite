@@ -1187,6 +1187,14 @@ function RowEditDrawer({
     }
   }, [documentJsonBaseline, row])
 
+  const handleCancelInlineDocument = useCallback(() => {
+    if (isCreateMode) {
+      onOpenChange(false)
+      return
+    }
+    handleRevertInlineDocumentChanges()
+  }, [isCreateMode, onOpenChange, handleRevertInlineDocumentChanges])
+
   const handlePermissionsChange = (next: string[]) => {
     setRowPermissions(next)
     if (presentation === 'inline') {
@@ -2535,7 +2543,7 @@ function RowEditDrawer({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={handleRevertInlineDocumentChanges}
+                      onClick={handleCancelInlineDocument}
                       disabled={isSaving}
                       className="h-8 text-xs"
                     >
