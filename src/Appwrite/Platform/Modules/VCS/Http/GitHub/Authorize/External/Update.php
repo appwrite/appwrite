@@ -10,7 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -68,7 +68,7 @@ class Update extends Action
         string $installationId,
         string $repositoryId,
         string $providerPullRequestId,
-        Resolver $vcs,
+        Manager $vcs,
         Response $response,
         Document $project,
         Database $dbForPlatform,

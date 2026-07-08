@@ -16,7 +16,7 @@ use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Exception;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
@@ -148,7 +148,7 @@ class Builds extends Action
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                $vcs = new Resolver($cache);
+                $vcs = new Manager($cache);
                 $this->buildDeployment(
                     $deviceForFunctions,
                     $deviceForSites,
@@ -198,7 +198,7 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         Database $dbForPlatform,
         Database $dbForProject,
-        Resolver $vcs,
+        Manager $vcs,
         Document $project,
         Document $resource,
         Document $deployment,

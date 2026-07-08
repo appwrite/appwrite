@@ -8,7 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -104,7 +104,7 @@ class Create extends Action
         string $providerRepositoryId,
         string $type,
         string $providerRootDirectory,
-        Resolver $vcs,
+        Manager $vcs,
         Response $response,
         Database $dbForPlatform
     ) {

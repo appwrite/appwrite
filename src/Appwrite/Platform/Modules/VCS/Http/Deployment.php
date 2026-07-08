@@ -8,7 +8,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -31,7 +31,7 @@ trait Deployment
 {
     protected function createGitDeployments(
         Git $adapter,
-        Resolver $vcs,
+        Manager $vcs,
         string $providerInstallationId,
         ?Document $installation,
         array $repositories,
@@ -598,12 +598,12 @@ trait Deployment
 
     /**
      * Owner lookup that works across auth types. Delegates to
-     * Resolver::getOwner() (which prefers the installation's stored
+     * Manager::getOwner() (which prefers the installation's stored
      * organization for OAuth2 providers) whenever the installation document
      * is available; app-based webhook payloads carry the provider
      * installation id directly and don't require one.
      */
-    protected function getGitOwner(Git $adapter, Resolver $vcs, string $providerInstallationId, ?Document $installation, string $providerRepositoryId = ''): string
+    protected function getGitOwner(Git $adapter, Manager $vcs, string $providerInstallationId, ?Document $installation, string $providerRepositoryId = ''): string
     {
         if ($installation !== null) {
             return $vcs->getOwner($adapter, $installation, $providerRepositoryId);

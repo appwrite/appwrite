@@ -11,7 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -92,7 +92,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Resolver $vcs,
+        Manager $vcs,
         Authorization $authorization,
         array $platform
     ) {
@@ -121,7 +121,7 @@ class Create extends Base
             dbForPlatform: $dbForPlatform,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            github: $adapter,
+            vcs: $adapter,
             activate: $activate,
             authorization: $authorization,
             reference: $reference,

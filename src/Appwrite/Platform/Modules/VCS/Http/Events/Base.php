@@ -8,8 +8,8 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Manager;
 use Appwrite\Vcs\Provider;
-use Appwrite\Vcs\Resolver;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -54,7 +54,7 @@ abstract class Base extends Action
     }
 
     public function action(
-        Resolver $vcs,
+        Manager $vcs,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -114,7 +114,7 @@ abstract class Base extends Action
     protected function authenticateAdapter(
         Provider $provider,
         Git $adapter,
-        Resolver $vcs,
+        Manager $vcs,
         array $parsedPayload,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -242,7 +242,7 @@ abstract class Base extends Action
         Provider $provider,
         Git $adapter,
         array $parsedPayload,
-        Resolver $vcs,
+        Manager $vcs,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -295,7 +295,7 @@ abstract class Base extends Action
         Provider $provider,
         Git $adapter,
         array $parsedPayload,
-        Resolver $vcs,
+        Manager $vcs,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,

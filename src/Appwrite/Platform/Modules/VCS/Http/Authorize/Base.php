@@ -10,8 +10,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Manager;
 use Appwrite\Vcs\Provider;
-use Appwrite\Vcs\Resolver;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -70,7 +70,7 @@ abstract class Base extends Action
     public function action(
         string $success,
         string $failure,
-        Resolver $vcs,
+        Manager $vcs,
         Response $response,
         Document $project,
         array $platform
