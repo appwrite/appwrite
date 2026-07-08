@@ -46,16 +46,18 @@ return [
         'adapter' => Gitea::class,
         'oauth2' => GiteaOAuth2::class,
         'auth' => Provider::AUTH_OAUTH2,
-        'envPrefix' => '_APP_VCS_GITEA',
-        'required' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET'],
-        'endpoint' => true, // read _APP_VCS_GITEA_ENDPOINT (self-hosted, no fixed default)
-        'browserEndpoint' => null,
-        'urls' => [
-            'repository' => '{base}/{owner}/{repository}',
-            'branch' => '{base}/{owner}/{repository}/src/branch/{branch}',
-            'commit' => '{base}/{owner}/{repository}/commit/{commit}',
-            'file' => '{base}/{owner}/{repository}/src/branch/{reference}',
+        'envVariables' => [
+            'ENDPOINT' => '_APP_VCS_GITEA_ENDPOINT',
+            'BROWSER_ENDPOINT' => '_APP_VCS_GITEA_BROWSER_ENDPOINT',
+            'CLIENT_ID' => '_APP_VCS_GITEA_CLIENT_ID',
+            'CLIENT_SECRET' => '_APP_VCS_GITEA_CLIENT_SECRET',
+            'WEBHOOK_SECRET' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
         ],
+        'requiredEnvVariables' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET'],
+        'repositoryUrl' => '{base}/{owner}/{repository}',
+        'branchUrl' => '{base}/{owner}/{repository}/src/branch/{branch}',
+        'commitUrl' => '{base}/{owner}/{repository}/commit/{commit}',
+        'fileUrl' => '{base}/{owner}/{repository}/src/branch/{reference}',
         'headers' => [
             'event' => 'x-gitea-event',
             'signature' => 'x-gitea-signature',
