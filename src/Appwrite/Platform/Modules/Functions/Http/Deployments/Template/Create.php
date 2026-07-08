@@ -207,10 +207,23 @@ class Create extends Base
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
 
         if ($useJobs) {
+            // Templates can pin a version range (e.g. "0.3.*"); codeload only
+            // takes a concrete ref, so resolve the range to the highest matching
+            // tag (mirrors the executor's `git ls-remote --tags | tail -1`).
+            $ref = $reference;
+            if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
+                try {
+                    $tags = $github->listTags($owner, $repository, $reference);
+                    $ref = \end($tags) ?: $reference;
+                } catch (\Throwable) {
+                    // Fall back to the raw reference; the build surfaces a bad ref.
+                }
+            }
+
             // Public template: pull the source straight from GitHub's codeload
             // tarball; unarchive strips the "{repo}-{ref}/" wrapper + the rootDirectory.
             $source = [
-                'url' => "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}",
+                'url' => "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$ref}",
                 'subdir' => $rootDirectory,
             ];
             $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
