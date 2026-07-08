@@ -157,8 +157,6 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
-    public const MODEL_FOLDER = 'folder';
-    public const MODEL_FOLDER_LIST = 'folderList';
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';
     public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
 
