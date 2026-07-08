@@ -33,8 +33,7 @@ return [
     'databases.create' => true,
     'databases.createCollection' => true,
     'databases.createDocument' => true,
-    // Databases — dedicated (cloud, per engine). OR them in the UI for a single
-    // "created a dedicated database" milestone.
+    // Databases — dedicated
     'mysql.create' => true,
     'postgresql.create' => true,
     'mongo.create' => true,
