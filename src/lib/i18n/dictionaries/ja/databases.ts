@@ -1518,14 +1518,17 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Role name must use letters, numbers, and underscores only.':
     'ロール名は英字、数字、アンダースコアのみ使用できます。',
   'Can login': 'ログイン可',
+  'Login': 'ログイン',
   'Allow this role to sign in to the database.':
     'このロールがデータベースにサインインできるようにします。',
   'Password is required when login is enabled.':
     'ログインを有効にする場合はパスワードが必須です。',
   'Can create roles': 'ロール作成',
+  'Create roles': 'ロール作成',
   'Allow this role to create other roles.':
     'このロールが他のロールを作成できるようにします。',
   'Can create databases': 'データベース作成',
+  'Create DB': 'DB作成',
   'Allow this role to create databases.':
     'このロールがデータベースを作成できるようにします。',
   'Role created': 'ロールを作成しました',
@@ -1536,6 +1539,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'RLS ポリシーで参照するロールを作成し、データベースアクセスを制御します。',
   'Connection limit': '接続数の上限',
   'Valid until': '有効期限',
+  'Expiry': '期限',
   'Superuser': 'スーパーユーザー',
   'No roles match your search': '検索に一致するロールがありません',
   'Role deleted': 'ロールを削除しました',

@@ -142,7 +142,7 @@ export function ProjectListPlatformAvatars({
             <Link
               to="/projects/$projectId/apps"
               params={{ projectId }}
-              className={emptyAvatarClassName}
+              className={cn(emptyAvatarClassName, 'pointer-events-auto')}
               aria-label={t('Add platform')}
               onClick={(event) => event.stopPropagation()}
             >

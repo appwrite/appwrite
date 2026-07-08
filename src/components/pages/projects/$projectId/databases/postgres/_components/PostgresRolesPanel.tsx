@@ -60,7 +60,9 @@ type PostgresRolesPanelProps = {
   onCreateOpenChange: (open: boolean) => void
 }
 
-const rolesTableClassName = 'w-full min-w-[64rem] table-fixed'
+const rolesTableClassName = 'w-full min-w-[62rem] table-fixed'
+
+const rolesTableScrollWrapperClassName = 'inline-block min-w-full align-top'
 
 const ROLES_TABLE_HEAD_CLASS =
   'sticky top-0 z-10 bg-background px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground shadow-[inset_0_-1px_0_var(--border)]'
@@ -68,13 +70,13 @@ const ROLES_TABLE_HEAD_CLASS =
 function RolesTableColGroup() {
   return (
     <colgroup>
-      <col className="w-[18%]" />
-      <col className="w-[10%]" />
-      <col className="w-[12%]" />
-      <col className="w-[14%]" />
-      <col className="w-[12%]" />
-      <col className="w-[12%]" />
-      <col className="" />
+      <col className="w-[16rem]" />
+      <col className="w-[5rem]" />
+      <col className="w-[6.5rem]" />
+      <col className="w-[6.5rem]" />
+      <col className="w-[10.5rem]" />
+      <col className="w-[7.5rem]" />
+      <col />
       <col className="w-[100px]" />
     </colgroup>
   )
@@ -87,21 +89,37 @@ function RolesTableHead() {
       <TableRow className="border-b border-border hover:bg-transparent">
         <TableHead
           className={`${ROLES_TABLE_HEAD_CLASS} ps-6 sm:ps-8`}
+          title={t('Role name')}
         >
-          {t('Role name')}
+          {t('Role')}
         </TableHead>
-        <TableHead className={ROLES_TABLE_HEAD_CLASS}>{t('Can login')}</TableHead>
-        <TableHead className={ROLES_TABLE_HEAD_CLASS}>
-          {t('Can create roles')}
+        <TableHead className={ROLES_TABLE_HEAD_CLASS} title={t('Can login')}>
+          {t('Login')}
         </TableHead>
-        <TableHead className={ROLES_TABLE_HEAD_CLASS}>
-          {t('Can create databases')}
+        <TableHead
+          className={ROLES_TABLE_HEAD_CLASS}
+          title={t('Can create roles')}
+        >
+          {t('Create roles')}
         </TableHead>
-        <TableHead className={ROLES_TABLE_HEAD_CLASS}>
-          {t('Connection limit')}
+        <TableHead
+          className={ROLES_TABLE_HEAD_CLASS}
+          title={t('Can create databases')}
+        >
+          {t('Create DB')}
         </TableHead>
-        <TableHead className={ROLES_TABLE_HEAD_CLASS}>{t('Valid until')}</TableHead>
-        <TableHead className={ROLES_TABLE_HEAD_CLASS}>{t('Member of')}</TableHead>
+        <TableHead
+          className={ROLES_TABLE_HEAD_CLASS}
+          title={t('Connection limit')}
+        >
+          {t('Max connections')}
+        </TableHead>
+        <TableHead className={ROLES_TABLE_HEAD_CLASS} title={t('Valid until')}>
+          {t('Expiry')}
+        </TableHead>
+        <TableHead className={ROLES_TABLE_HEAD_CLASS} title={t('Member of')}>
+          {t('Membership')}
+        </TableHead>
         <TableHead
           className={`${ROLES_TABLE_HEAD_CLASS} w-[100px] text-end`}
         />
@@ -274,51 +292,56 @@ export function PostgresRolesPanel({
             aria-busy="true"
             aria-label={t('Loading roles…')}
           >
-            <Table withScrollContainer={false} className={rolesTableClassName}>
-              <RolesTableColGroup />
-              <RolesTableHead />
-              <TableBody>
-                <RolesSkeletonRows rowCount={8} />
-              </TableBody>
-            </Table>
-          </div>
-        ) : filteredRoles.length > 0 ? (
-          <>
-            <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+            <div className={rolesTableScrollWrapperClassName}>
               <Table withScrollContainer={false} className={rolesTableClassName}>
                 <RolesTableColGroup />
                 <RolesTableHead />
                 <TableBody>
-                  {filteredRoles.map((role) => {
-                    const protectedRole = isPostgresProtectedRole(role)
-                    const canDelete = canWrite && !protectedRole
-                    const canUpdate = canWrite && canUpdatePostgresRole(role)
-                    const membershipLabel = formatPostgresRoleMembership(
-                      role.member_of,
-                    )
+                  <RolesSkeletonRows rowCount={8} />
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ) : filteredRoles.length > 0 ? (
+          <>
+            <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">
+              <div className={rolesTableScrollWrapperClassName}>
+                <Table withScrollContainer={false} className={rolesTableClassName}>
+                  <RolesTableColGroup />
+                  <RolesTableHead />
+                  <TableBody>
+                    {filteredRoles.map((role) => {
+                      const protectedRole = isPostgresProtectedRole(role)
+                      const canDelete = canWrite && !protectedRole
+                      const canUpdate = canWrite && canUpdatePostgresRole(role)
+                      const membershipLabel = formatPostgresRoleMembership(
+                        role.member_of,
+                      )
 
-                    return (
-                      <TableRow key={role.role_name}>
-                        <TableCell className="min-w-0 whitespace-nowrap px-4 py-3 ps-6 sm:ps-8">
-                          <span className="text-[13px] font-medium text-foreground">
-                            {role.role_name}
-                          </span>
-                          {isPostgresBuiltinRole(role) ? (
-                            <Badge
-                              variant="info"
-                              className="ms-2 text-[10px] shrink-0"
-                            >
-                              {t('System')}
-                            </Badge>
-                          ) : null}
-                          {isPostgresRoleFlag(role.is_superuser) ? (
-                            <Badge
-                              variant="warning"
-                              className="ms-2 text-[10px] shrink-0"
-                            >
-                              {t('Superuser')}
-                            </Badge>
-                          ) : null}
+                      return (
+                        <TableRow key={role.role_name}>
+                        <TableCell className="min-w-0 px-4 py-3 ps-6 sm:ps-8">
+                          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="text-[13px] font-medium text-foreground">
+                              {role.role_name}
+                            </span>
+                            {isPostgresBuiltinRole(role) ? (
+                              <Badge
+                                variant="info"
+                                className="shrink-0 text-[10px]"
+                              >
+                                {t('System')}
+                              </Badge>
+                            ) : null}
+                            {isPostgresRoleFlag(role.is_superuser) ? (
+                              <Badge
+                                variant="warning"
+                                className="shrink-0 text-[10px]"
+                              >
+                                {t('Superuser')}
+                              </Badge>
+                            ) : null}
+                          </div>
                         </TableCell>
                         <TableCell className="min-w-0 whitespace-nowrap px-4 py-3">
                           <RoleFlagBadge
@@ -406,8 +429,9 @@ export function PostgresRolesPanel({
                       </TableRow>
                     )
                   })}
-                </TableBody>
-              </Table>
+                  </TableBody>
+                </Table>
+              </div>
             </div>
             <div className="h-[54px] shrink-0 border-t border-border bg-background px-4 sm:px-6">
               <div className="flex h-full items-center justify-between gap-3 py-3">

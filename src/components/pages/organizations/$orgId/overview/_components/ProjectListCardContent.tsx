@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
 import { PauseCircle } from '@/lib/icons'
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -44,7 +43,7 @@ export function ProjectListCardMain({
           </Badge>
         ) : null}
         {failedInvoiceWarning ? (
-          <div className="flex shrink-0 items-center">
+          <div className="pointer-events-auto flex shrink-0 items-center">
             {failedInvoiceWarning}
           </div>
         ) : null}
@@ -67,27 +66,23 @@ export function ProjectListCardFooter({
   showSettingsTab: boolean
   platformsByProjectId: Map<string, ProjectListPlatformsEntry>
 }) {
-  const t = useT()
   const platformsEntry = platformsByProjectId.get(project.$id)
 
   return (
     <div
-      className={cn(RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME, 'relative')}
+      className={cn(
+        RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+        'relative pointer-events-none',
+      )}
     >
-      <Link
-        to="/projects/$projectId"
-        params={{ projectId: project.$id }}
-        className="absolute inset-0"
-        aria-label={`${t('Open')} ${project.name}`}
-      />
       <div className="relative flex min-w-0 items-center gap-2">
         <ProjectListPlatformAvatars
           projectId={project.$id}
           platforms={platformsEntry?.platforms ?? []}
           isLoading={platformsEntry?.isLoading ?? true}
-          className="min-w-0 flex-1"
+          className="min-w-0 flex-1 pointer-events-auto"
         />
-        <div className="relative z-10 shrink-0">
+        <div className="relative z-10 shrink-0 pointer-events-auto">
           <ProjectListCardActionsMenu
             project={project}
             showSettingsTab={showSettingsTab}

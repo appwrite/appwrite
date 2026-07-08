@@ -1580,14 +1580,17 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Role name must use letters, numbers, and underscores only.':
     'שם התפקיד חייב להכיל אותיות, מספרים וקו תחתון בלבד.',
   'Can login': 'יכול להתחבר',
+  'Login': 'התחברות',
   'Allow this role to sign in to the database.':
     'לאפשר לתפקיד זה להתחבר למסד הנתונים.',
   'Password is required when login is enabled.':
     'סיסמה נדרשת כאשר התחברות מופעלת.',
   'Can create roles': 'יצירת תפקידים',
+  'Create roles': 'יצירת תפקידים',
   'Allow this role to create other roles.':
     'לאפשר לתפקיד זה ליצור תפקידים אחרים.',
   'Can create databases': 'יצירת מסדי נתונים',
+  'Create DB': 'יצירת מסד',
   'Allow this role to create databases.':
     'לאפשר לתפקיד זה ליצור מסדי נתונים.',
   'Role created': 'התפקיד נוצר',
@@ -1598,6 +1601,7 @@ export const heDatabasesDictionary: Record<string, string> = {
     'יצירת תפקידים לשימוש במדיניות RLS ולשליטה בגישה למסד הנתונים.',
   'Connection limit': 'מגבלת חיבורים',
   'Valid until': 'תקף עד',
+  'Expiry': 'תפוגה',
   'Superuser': 'משתמש-על',
   'No roles match your search': 'אין תפקידים שתואמים לחיפוש',
   'Role deleted': 'התפקיד נמחק',

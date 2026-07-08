@@ -65,16 +65,18 @@ const EMPTY_CHART_POINTS: UsageChartPoint[] = Array.from(
 )
 
 const projectChartLinkClassName =
-  'block min-w-0 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_*]:!cursor-pointer'
+  'pointer-events-auto block min-w-0 cursor-pointer rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_*]:!cursor-pointer'
 
 function ProjectRequestsChartLink({
   projectId,
   children,
   className,
+  style,
 }: {
   projectId: string
   children: ReactNode
   className?: string
+  style?: CSSProperties
 }) {
   const t = useT()
   return (
@@ -82,6 +84,7 @@ function ProjectRequestsChartLink({
       to="/projects/$projectId"
       params={{ projectId }}
       className={cn(projectChartLinkClassName, className)}
+      style={style}
       aria-label={t('View project')}
       onClick={(event) => event.stopPropagation()}
     >
@@ -615,7 +618,8 @@ export function ProjectListCardRequestsChart({
   className,
 }: ProjectListCardRequestsChartProps) {
   return (
-    <div
+    <ProjectRequestsChartLink
+      projectId={projectId}
       className={cn(RESOURCE_CARD_SECTION_DIVIDER_CLASSNAME, 'shrink-0')}
       style={
         {
@@ -623,15 +627,13 @@ export function ProjectListCardRequestsChart({
         } satisfies CSSProperties
       }
     >
-      <ProjectRequestsChartLink projectId={projectId}>
-        <ProjectListRequestsChartFromUsage
-          projectId={projectId}
-          usageByProjectId={usageByProjectId}
-          className={className}
-          variant="card"
-        />
-      </ProjectRequestsChartLink>
-    </div>
+      <ProjectListRequestsChartFromUsage
+        projectId={projectId}
+        usageByProjectId={usageByProjectId}
+        className={className}
+        variant="card"
+      />
+    </ProjectRequestsChartLink>
   )
 }
 

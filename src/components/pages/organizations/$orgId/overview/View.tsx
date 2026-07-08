@@ -2527,9 +2527,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             <Link
                                               to="/projects/$projectId"
                                               params={{
-                                                projectId: project.$id}}
+                                                projectId: project.$id,
+                                              }}
+                                              className="absolute inset-0 z-0"
+                                              aria-label={`${t('Open')} ${project.name}`}
+                                            />
+                                            <div
                                               className={cn(
-                                                'block min-w-0',
+                                                'relative z-[1] min-w-0 pointer-events-none',
                                                 (canReorderPinned ||
                                                   canPinProjectsResult) &&
                                                   'pe-10',
@@ -2549,7 +2554,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                   />
                                                 }
                                               />
-                                            </Link>
+                                            </div>
                                             {showProjectUsageCharts ? (
                                               <ProjectListCardRequestsChart
                                                 projectId={project.$id}
@@ -2748,9 +2753,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <Link
                                                 to="/projects/$projectId"
                                                 params={{
-                                                  projectId: project.$id}}
+                                                  projectId: project.$id,
+                                                }}
+                                                className="absolute inset-0 z-0"
+                                                aria-label={`${t('Open')} ${project.name}`}
+                                              />
+                                              <div
                                                 className={cn(
-                                                  'block min-w-0',
+                                                  'relative z-[1] min-w-0 pointer-events-none',
                                                   canPin &&
                                                     canPinProjectsResult &&
                                                     'pe-10',
@@ -2770,7 +2780,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                     />
                                                   }
                                                 />
-                                              </Link>
+                                              </div>
                                               {showProjectUsageCharts ? (
                                                 <ProjectListCardRequestsChart
                                                   projectId={project.$id}
