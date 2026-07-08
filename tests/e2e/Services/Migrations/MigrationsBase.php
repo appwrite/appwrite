@@ -2517,7 +2517,7 @@ trait MigrationsBase
         $this->assertEquals(200, $fileAfterSkip['headers']['status-code']);
         $this->assertSame('destination-logo.png', $fileAfterSkip['body']['name']);
 
-        // Make the source-side file metadata newer than the skipped destination file.
+        // Even when the source file is newer, overwrite should skip files.
         sleep(1);
         $updateSource = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $sourceHeaders, [
             'name' => 'source-logo.png',
@@ -2588,6 +2588,15 @@ trait MigrationsBase
         $this->assertEquals(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
+        $secretVariable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => 'FUNCTION_SECRET_MODE',
+            'value' => 'source-secret',
+            'secret' => true,
+        ]);
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $secretVariableId = $secretVariable['body']['$id'];
+
         $deploymentId = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
@@ -2616,7 +2625,7 @@ trait MigrationsBase
 
         $this->assertArrayHasKey(Resource::TYPE_ENVIRONMENT_VARIABLE, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['error']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['success']);
+        $this->assertEquals(2, $result['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['success']);
 
         $this->assertArrayHasKey(Resource::TYPE_DEPLOYMENT, $result['statusCounters']);
 
@@ -2641,6 +2650,15 @@ trait MigrationsBase
         $this->assertEquals('node-22', $response['body']['runtime']);
         $this->assertEquals('index.js', $response['body']['entrypoint']);
 
+        $plainVariable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $variableId, $destinationHeaders);
+        $this->assertEquals(200, $plainVariable['headers']['status-code']);
+        $this->assertSame('source-original', $plainVariable['body']['value']);
+        $this->assertFalse($plainVariable['body']['secret']);
+
+        $migratedSecretVariable = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables/' . $secretVariableId, $destinationHeaders);
+        $this->assertEquals(200, $migratedSecretVariable['headers']['status-code']);
+        $this->assertSame('', $migratedSecretVariable['body']['value']);
+        $this->assertTrue($migratedSecretVariable['body']['secret']);
 
         $this->assertEventually(function () use ($functionId) {
             $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/', array_merge([
@@ -2796,6 +2814,20 @@ trait MigrationsBase
         $this->assertEquals(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
+        $secretVariable = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-response-format' => '1.9.3'
+        ], [
+            'key' => 'SECRET_TEST_VAR',
+            'value' => 'secret_value',
+            'secret' => true,
+        ]);
+
+        $this->assertEquals(201, $secretVariable['headers']['status-code']);
+        $secretVariableId = $secretVariable['body']['$id'];
+
         // Perform migration
         $result = $this->performMigrationSync([
             'resources' => [
@@ -2815,7 +2847,7 @@ trait MigrationsBase
             $this->assertArrayHasKey($resource, $result['statusCounters']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
-            $this->assertEquals(1, $result['statusCounters'][$resource]['success']);
+            $this->assertEquals($resource === Resource::TYPE_SITE_VARIABLE ? 2 : 1, $result['statusCounters'][$resource]['success']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['processing']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['warning']);
         }
@@ -2857,8 +2889,19 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals(200, $variables['headers']['status-code']);
-        $this->assertEquals(1, $variables['body']['total']);
-        $this->assertEquals('TEST_VAR', $variables['body']['variables'][0]['key']);
+        $this->assertEquals(2, $variables['body']['total']);
+        $this->assertContains('TEST_VAR', \array_column($variables['body']['variables'], 'key'));
+        $this->assertContains('SECRET_TEST_VAR', \array_column($variables['body']['variables'], 'key'));
+
+        $plainVariable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $variableId, $destinationHeaders);
+        $this->assertEquals(200, $plainVariable['headers']['status-code']);
+        $this->assertSame('test_value', $plainVariable['body']['value']);
+        $this->assertFalse($plainVariable['body']['secret']);
+
+        $migratedSecretVariable = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables/' . $secretVariableId, $destinationHeaders);
+        $this->assertEquals(200, $migratedSecretVariable['headers']['status-code']);
+        $this->assertSame('', $migratedSecretVariable['body']['value']);
+        $this->assertTrue($migratedSecretVariable['body']['secret']);
 
         $this->assertMigrationSkipAndOverwrite(
             [Resource::TYPE_SITE, Resource::TYPE_SITE_VARIABLE],
