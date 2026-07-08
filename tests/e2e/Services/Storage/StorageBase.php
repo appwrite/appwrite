@@ -491,7 +491,7 @@ trait StorageBase
         $this->assertNotEmpty($webpView['body']);
     }
 
-    public function testCreateBucketFileWithParent(): void
+    public function testCreateBucketFileWithFolder(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -2036,7 +2036,7 @@ trait StorageBase
         $this->assertGreaterThanOrEqual(0, $bucket['body']['totalSize']);
     }
 
-    public function testListFilesByParent(): void
+    public function testListFilesByFolder(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -2083,24 +2083,22 @@ trait StorageBase
         // no filter -- all files
         $this->assertEquals(3, $list([])['total']);
 
-        // exact match -- immediate children only
-        $this->assertEquals(1, $list(['folder' => 'photos'])['total']);
-        $this->assertEquals('photos/', $list(['folder' => 'photos'])['files'][0]['folder']);
+        // exact match -- immediate children only, canonical form with trailing slash
+        $exact = $list(['queries' => [Query::equal('folder', ['photos/'])->toString()]]);
+        $this->assertEquals(1, $exact['total']);
+        $this->assertEquals('photos/', $exact['files'][0]['folder']);
+
+        // equality is against the stored canonical form -- no normalization on query values
+        $this->assertEquals(0, $list(['queries' => [Query::equal('folder', ['photos'])->toString()]])['total']);
 
         // root only
-        $this->assertEquals(1, $list(['folder' => ''])['total']);
-        $this->assertEquals('', $list(['folder' => ''])['files'][0]['folder']);
+        $root = $list(['queries' => [Query::equal('folder', [''])->toString()]]);
+        $this->assertEquals(1, $root['total']);
+        $this->assertEquals('', $root['files'][0]['folder']);
 
-        // recursive via queries
+        // recursive via prefix
         $recursive = $list(['queries' => [Query::startsWith('folder', 'photos/')->toString()]]);
         $this->assertEquals(2, $recursive['total']);
-
-        // invalid parent
-        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), ['folder' => '/photos']);
-        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
             'content-type' => 'application/json',
