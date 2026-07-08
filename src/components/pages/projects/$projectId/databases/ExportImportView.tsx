@@ -6,8 +6,8 @@ import {
   CheckCircle2,
   AlertCircle,
   FileDown,
-  FileUp,
 } from 'lucide-react'
+import { MessageDirectionIcon } from '@/components/pages/projects/$projectId/realtime/_components/MessageDirectionIcon'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -258,24 +258,13 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
               return (
                 <TableRow key={`${type}-${migration.$id}`}>
                   <TableCell className="px-4 py-3">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'text-[11px] font-medium border',
-                        isExport
-                          ? 'border-sky-500/30 text-sky-700 dark:text-sky-400'
-                          : 'border-violet-500/30 text-violet-700 dark:text-violet-400',
-                      )}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        {isExport ? (
-                          <FileDown className="h-3 w-3 shrink-0" />
-                        ) : (
-                          <FileUp className="h-3 w-3 shrink-0" />
-                        )}
-                        {isExport ? t('Export') : t('Import')}
-                      </span>
-                    </Badge>
+                    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground">
+                      <MessageDirectionIcon
+                        direction={isExport ? 'out' : 'in'}
+                        className="h-3.5 w-3.5"
+                      />
+                      {isExport ? t('Export') : t('Import')}
+                    </span>
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
