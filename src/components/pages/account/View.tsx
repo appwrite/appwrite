@@ -180,6 +180,7 @@ export function View() {
           titleRightContent={
             <button
               type="button"
+              data-testid="account-logout"
               onClick={async () => {
                 await signOut()
               }}

@@ -52,8 +52,8 @@ export function isCloudEndpointUrl(url: string): boolean {
 }
 
 function getStoredUrl(): string | null {
-  if (typeof window === 'undefined') return null
-  const stored = localStorage.getItem(DEBUG_ENDPOINT_URL_KEY)
+  if (typeof window === 'undefined' || !window.localStorage) return null
+  const stored = window.localStorage.getItem(DEBUG_ENDPOINT_URL_KEY)
   if (!stored || !stored.trim()) return null
   return stored.trim()
 }
@@ -137,13 +137,19 @@ export function setDebugEndpointOverride(
   preset: EndpointPresetId | null,
   customUrl?: string,
 ) {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined' || !window.localStorage) return
   if (preset === null) {
-    localStorage.removeItem(DEBUG_ENDPOINT_URL_KEY)
+    window.localStorage.removeItem(DEBUG_ENDPOINT_URL_KEY)
   } else if (preset === 'custom' && customUrl?.trim()) {
-    localStorage.setItem(DEBUG_ENDPOINT_URL_KEY, normalizeUrl(customUrl.trim()))
+    window.localStorage.setItem(
+      DEBUG_ENDPOINT_URL_KEY,
+      normalizeUrl(customUrl.trim()),
+    )
   } else if (preset !== 'custom' && ENDPOINT_PRESETS[preset]) {
-    localStorage.setItem(DEBUG_ENDPOINT_URL_KEY, ENDPOINT_PRESETS[preset].url)
+    window.localStorage.setItem(
+      DEBUG_ENDPOINT_URL_KEY,
+      ENDPOINT_PRESETS[preset].url,
+    )
   }
   window.dispatchEvent(new CustomEvent(DEBUG_ENDPOINT_CHANGE_EVENT))
 }

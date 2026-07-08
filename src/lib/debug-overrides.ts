@@ -104,11 +104,15 @@ export type DebugOverrides = {
   language: DebugLanguageOverride
 }
 
-const isBrowser = typeof window !== 'undefined'
+function getStorage(): Storage | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null
+  return window.localStorage
+}
 
 function readBooleanFromStorage(key: string, defaultValue = false) {
-  if (!isBrowser) return defaultValue
-  const raw = localStorage.getItem(key)
+  const storage = getStorage()
+  if (!storage) return defaultValue
+  const raw = storage.getItem(key)
   if (raw === null) return defaultValue
   return raw === 'true'
 }
@@ -118,15 +122,17 @@ function readStringFromStorage<T extends string>(
   allowedValues: readonly T[],
   defaultValue: T,
 ): T {
-  if (!isBrowser) return defaultValue
-  const raw = localStorage.getItem(key)
+  const storage = getStorage()
+  if (!storage) return defaultValue
+  const raw = storage.getItem(key)
   if (raw === null) return defaultValue
   return allowedValues.includes(raw as T) ? (raw as T) : defaultValue
 }
 
 function readNullableInitDayFromStorage(key: string): number | null {
-  if (!isBrowser) return null
-  const raw = localStorage.getItem(key)
+  const storage = getStorage()
+  if (!storage) return null
+  const raw = storage.getItem(key)
   if (raw === null || raw === 'auto') return null
   const parsed = Number.parseInt(raw, 10)
   if (!isValidInitMockCurrentDay(parsed)) return null
@@ -134,8 +140,9 @@ function readNullableInitDayFromStorage(key: string): number | null {
 }
 
 function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | null {
-  if (!isBrowser) return null
-  const raw = localStorage.getItem(key)
+  const storage = getStorage()
+  if (!storage) return null
+  const raw = storage.getItem(key)
   if (raw === null || raw === 'auto') return null
   return isInitTicketTypeId(raw) ? raw : null
 }
@@ -232,36 +239,40 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
   key: K,
   value: DebugOverrides[K],
 ) {
-  if (!isBrowser) return
   if (EPHEMERAL_OVERRIDE_KEYS.has(key)) {
     ;(ephemeralOverrides as Record<K, DebugOverrides[K]>)[key] = value
-    window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
+    }
     return
   }
+  const storage = getStorage()
+  if (!storage) return
   const storageKey = DEBUG_OVERRIDE_KEYS[key]
   if (typeof value === 'boolean') {
-    localStorage.setItem(storageKey, value ? 'true' : 'false')
+    storage.setItem(storageKey, value ? 'true' : 'false')
   } else if (typeof value === 'string') {
-    localStorage.setItem(storageKey, value)
+    storage.setItem(storageKey, value)
   } else if (value === null) {
-    localStorage.removeItem(storageKey)
+    storage.removeItem(storageKey)
   } else if (typeof value === 'number') {
-    localStorage.setItem(storageKey, String(value))
+    storage.setItem(storageKey, String(value))
   } else if (value) {
-    localStorage.setItem(storageKey, 'true')
+    storage.setItem(storageKey, 'true')
   } else {
-    localStorage.removeItem(storageKey)
+    storage.removeItem(storageKey)
   }
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
 export function resetDebugOverrides() {
-  if (!isBrowser) return
+  const storage = getStorage()
+  if (!storage) return
   EPHEMERAL_OVERRIDE_KEYS.forEach((key) => {
     delete ephemeralOverrides[key]
   })
   Object.values(DEBUG_OVERRIDE_KEYS).forEach((key) => {
-    localStorage.removeItem(key)
+    storage.removeItem(key)
   })
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
@@ -306,24 +317,26 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
 
 /** Clear persisted debug overrides used by the Feature flags submenu only. */
 export function resetFeatureFlagsMenuDebugOverrides() {
-  if (!isBrowser) return
+  const storage = getStorage()
+  if (!storage) return
   FEATURE_FLAGS_MENU_DEBUG_KEYS.forEach((key) => {
-    localStorage.removeItem(DEBUG_OVERRIDE_KEYS[key])
+    storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
   })
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
 /** Reset a single debug override from the Feature flags submenu to its default. */
 export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey) {
-  if (!isBrowser) return
-  localStorage.removeItem(DEBUG_OVERRIDE_KEYS[key])
+  const storage = getStorage()
+  if (!storage) return
+  storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
   window.dispatchEvent(new CustomEvent(DEBUG_OVERRIDE_EVENT))
 }
 
 export function subscribeToDebugOverrides(
   callback: (overrides: DebugOverrides) => void,
 ) {
-  if (!isBrowser) return () => undefined
+  if (typeof window === 'undefined') return () => undefined
 
   const handler = () => callback(loadDebugOverrides())
 

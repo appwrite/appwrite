@@ -94,7 +94,7 @@ function SettingsLayoutShellContent({
   onNavigateToSection,
   children,
   searchPlaceholder = 'Search settings...',
-  mobileNavAriaLabel = 'Settings section',
+  mobileNavAriaLabel = 'Settings navigation',
   desktopNavAriaLabel = 'Settings navigation',
   navWidthClassName = SETTINGS_LAYOUT_NAV_WIDTH_CLASS,
 }: Omit<SettingsLayoutShellProps, 'searchQuery' | 'onSearchQueryChange'>) {
@@ -157,7 +157,11 @@ function SettingsLayoutShellContent({
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:gap-8">
-      <div className="lg:hidden space-y-2" aria-label={t(mobileNavAriaLabel)}>
+      <nav
+        data-testid="settings-navigation"
+        className="lg:hidden space-y-2"
+        aria-label={t(mobileNavAriaLabel)}
+      >
         <SettingsSearchInput
           value={query}
           onChange={setQuery}
@@ -185,9 +189,10 @@ function SettingsLayoutShellContent({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </nav>
 
       <nav
+        data-testid="settings-navigation"
         className={cn(
           'hidden lg:flex sticky top-4 shrink-0 flex-col gap-2 self-start',
           navWidthClassName,

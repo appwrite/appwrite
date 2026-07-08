@@ -243,7 +243,7 @@ export function OAuth2ConsentCard({
         onDone?.('approved', result.redirectUrl)
         return
       }
-      window.location.href = result.redirectUrl
+      window.location.assign(result.redirectUrl)
       if (!isWebRedirect(result.redirectUrl)) {
         onDone?.('approved', result.redirectUrl)
       }
@@ -265,7 +265,7 @@ export function OAuth2ConsentCard({
         onDone?.('denied', result.redirectUrl)
         return
       }
-      window.location.href = result.redirectUrl
+      window.location.assign(result.redirectUrl)
       if (!isWebRedirect(result.redirectUrl)) {
         onDone?.('denied', result.redirectUrl)
       }
