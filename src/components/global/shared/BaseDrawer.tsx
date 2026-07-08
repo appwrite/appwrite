@@ -10,6 +10,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { handleModalOpenAutoFocus } from '@/lib/layout/modal-auto-focus'
 import { useT } from '@/lib/i18n/translate'
 
 export interface BaseDrawerProps {
@@ -102,57 +103,9 @@ export function BaseDrawer({
               }
             : (e) => {
                 // Prevent Radix from auto-focusing header buttons (e.g. close,
-                // copy-link) or in-content copy buttons. Only focus a real
-                // text-entry control if one exists in the body.
-                e.preventDefault()
-                const contentArea = contentRef.current
-                if (!contentArea) return
-                const inputSelector = [
-                  'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([disabled]):not([readonly]):not([tabindex="-1"])',
-                  'textarea:not([disabled]):not([readonly]):not([tabindex="-1"])',
-                  'select:not([disabled]):not([tabindex="-1"])',
-                  '[contenteditable="true"]:not([tabindex="-1"])',
-                ].join(', ')
-                const firstInput = contentArea.querySelector(
-                  inputSelector,
-                ) as HTMLElement | null
-                if (!firstInput) return
-
-                const placeCaretAtEnd = () => {
-                  if (
-                    firstInput instanceof HTMLInputElement ||
-                    firstInput instanceof HTMLTextAreaElement
-                  ) {
-                    const len = firstInput.value.length
-                    if (len > 0) {
-                      try {
-                        firstInput.setSelectionRange(len, len)
-                      } catch {
-                        // Some input types (e.g. number, email) don't support
-                        // selection APIs; safely ignore.
-                      }
-                    }
-                  } else if (firstInput.isContentEditable) {
-                    const selection = window.getSelection()
-                    if (selection) {
-                      const range = document.createRange()
-                      range.selectNodeContents(firstInput)
-                      range.collapse(false)
-                      selection.removeAllRanges()
-                      selection.addRange(range)
-                    }
-                  }
-                }
-
-                // Run after Radix's focus trap settles, then again on the next
-                // frame to override any onFocus handlers that select-all.
-                setTimeout(() => {
-                  firstInput.focus({ preventScroll: false })
-                  placeCaretAtEnd()
-                  requestAnimationFrame(() => {
-                    placeCaretAtEnd()
-                  })
-                }, 0)
+                // copy-link), tabs, or in-content copy buttons. Only focus a
+                // real text-entry control if one exists in the body.
+                handleModalOpenAutoFocus(e, contentRef.current)
               }
         }
         onCloseAutoFocus={(e) => {

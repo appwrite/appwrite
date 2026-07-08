@@ -203,9 +203,9 @@ const AVATAR_SERVICE_IMG = 'h-full w-full object-contain p-0.5'
 
 const AVATAR_SERVICE_FETCH_PX = 40
 
-function ActivityBrowserIcon({ code }: { code: string }) {
+function ActivityBrowserIcon({ code }: { code?: string }) {
   const [failed, setFailed] = useState(false)
-  const trimmed = code.trim()
+  const trimmed = code?.trim() ?? ''
   if (!trimmed || failed) {
     return (
       <div className={AVATAR_SERVICE_FRAME} aria-hidden>
