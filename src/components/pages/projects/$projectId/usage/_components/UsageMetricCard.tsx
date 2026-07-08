@@ -191,7 +191,7 @@ export function UsageBreakdownCard({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex min-h-0 flex-1 flex-col p-4">
         {isError ? (
           <UsageBreakdownListError
             title={errorTitle}
@@ -201,7 +201,7 @@ export function UsageBreakdownCard({
         ) : isLoading && items.length === 0 ? (
           <UsageBreakdownListSkeleton showLeadingIcon={showLeadingIcon} />
         ) : (
-          <div className={overviewTopBreakdownListClass}>
+          <div className={cn(overviewTopBreakdownListClass, 'flex-1')}>
             {showEmptyOverlay ? <UsageBreakdownListEmptyOverlay /> : null}
             <UsageBreakdownRowsList
               items={items}
@@ -223,14 +223,14 @@ export function UsageBreakdownCard({
 
   if (embedded) {
     return (
-      <div className={cn('flex min-h-0 flex-col', className)}>
+      <div className={cn('flex h-full min-h-0 flex-col', className)}>
         {breakdownContent}
       </div>
     )
   }
 
   return (
-    <UsageMetricCardShell>
+    <UsageMetricCardShell className={cn('h-full', className)}>
       {breakdownContent}
       <UsageMetricCardFooter description={description} />
     </UsageMetricCardShell>

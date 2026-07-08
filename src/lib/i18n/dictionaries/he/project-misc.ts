@@ -1949,6 +1949,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your plan includes': 'התוכנית שלכם כוללת',
   'days of usage history. Choose a shorter date range or upgrade for longer retention.':
     'ימים של היסטוריית שימוש. בחרו טווח תאריכים קצר יותר או שדרגו לשמירה ארוכה יותר.',
+  'days of usage history. Use a shorter range or upgrade for more.':
+    'ימים של היסטוריית שימוש. השתמשו בטווח קצר יותר או שדרגו לעוד.',
   'Use shorter range': 'טווח קצר יותר',
   'Date range exceeds log retention': 'טווח התאריכים חורג משמירת הלוגים',
   'Upgrade plan': 'שדרוג תוכנית',

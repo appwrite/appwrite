@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -20,46 +21,48 @@ export function UsageLogRetentionAlert({
   const showUpgradeCta = features.billing && !!organizationId
 
   return (
-    <div className="mb-6 flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:flex-row sm:items-start">
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium text-amber-800 dark:text-amber-200">
-          {t('Usage history limit reached')}
-        </p>
-        <p className="mt-1 text-[12px] leading-relaxed text-amber-700 dark:text-amber-300">
-          {t('Your plan includes')}{' '}
-          <span className="font-medium">{retentionDays}</span>{' '}
-          {t(
-            'days of usage history. Choose a shorter date range or upgrade for longer retention.',
-          )}
-        </p>
-      </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        {onAdjustRange ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 border-amber-300 bg-background/80 text-[12px] text-amber-800 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-950/40"
-            onClick={onAdjustRange}
-          >
-            {t('Use shorter range')}
-          </Button>
-        ) : null}
-        {showUpgradeCta ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 border-amber-300 bg-amber-100/80 text-[12px] font-medium text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50"
-            asChild
-          >
-            <Link
-              to="/organizations/$orgId/settings/billing"
-              params={{ orgId: organizationId! }}
-            >
-              {t('Upgrade plan')}
-            </Link>
-          </Button>
-        ) : null}
+    <div className="border-b border-border bg-amber-500/5">
+      <div className="w-full px-4 py-3 sm:px-6">
+        <Alert variant="default" className="border-amber-500/30 bg-transparent">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                {t('Usage history limit reached')}
+              </AlertTitle>
+              <AlertDescription className="col-start-2 block min-w-0 truncate whitespace-nowrap text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                {t('Your plan includes')}{' '}
+                <span className="font-medium">{retentionDays}</span>{' '}
+                {t(
+                  'days of usage history. Use a shorter range or upgrade for more.',
+                )}
+              </AlertDescription>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {onAdjustRange ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 border-amber-500/30 bg-transparent px-3 text-[12px] text-amber-700 hover:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                  onClick={onAdjustRange}
+                >
+                  {t('Use shorter range')}
+                </Button>
+              ) : null}
+              {showUpgradeCta ? (
+                <Button
+                  asChild
+                  size="sm"
+                  className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+                >
+                  <Link to="/upgrade" search={{ orgId: organizationId! }}>
+                    {t('Upgrade plan')}
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </Alert>
       </div>
     </div>
   )

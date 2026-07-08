@@ -498,7 +498,7 @@ export function UsageBreakdownRowsList({
           return (
             <div
               key={`empty-${index}`}
-              className={cn(overviewTopBreakdownRowClass, 'invisible')}
+              className={overviewTopBreakdownRowClass}
               aria-hidden
             />
           )

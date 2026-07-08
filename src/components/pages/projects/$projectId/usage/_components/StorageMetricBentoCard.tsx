@@ -64,7 +64,7 @@ export function StorageMetricBentoCard({
     <UsageMetricCardShell>
       <div
         className={cn(
-          'grid grid-cols-1 divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
+          'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0',
         )}
       >
         <div className="lg:col-span-2">

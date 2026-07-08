@@ -51,8 +51,8 @@ import {
   getUsageLogRetentionDaysFromPlan,
   getUsageLogRetentionHoursFromPlan,
   hasFiniteUsageLogRetention,
+  resolveShorterUsageDateRangePreset,
 } from '@/lib/usage/usage-log-retention'
-import { getUsageDateRangePresetByValue } from '@/lib/usage/usage-date-range-presets'
 import { UsageLogRetentionAlert } from './_components/UsageLogRetentionAlert'
 import {
   findUsageCategory,
@@ -497,14 +497,13 @@ function UsageLayoutContent({
   })
 
   const handleAdjustUsageDateRange = useCallback(() => {
-    const fallbackPreset =
-      getUsageDateRangePresetByValue('14d') ??
-      getUsageDateRangePresetByValue('7d') ??
-      getUsageDateRangePresetByValue('24h')
+    const fallbackPreset = resolveShorterUsageDateRangePreset(
+      usageLogRetentionHours,
+    )
     if (fallbackPreset) {
       setUsageDateRange(fallbackPreset.getRange())
     }
-  }, [setUsageDateRange])
+  }, [setUsageDateRange, usageLogRetentionHours])
 
   const [state, setState] = useState<UsageState>('success')
   const contentScrollRef = useRef<HTMLDivElement>(null)
@@ -612,52 +611,62 @@ function UsageLayoutContent({
       dir={pageDirection}
       className={cn('flex h-full flex-col overflow-hidden', className)}
     >
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="w-full px-4 py-6 sm:px-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-              <h1 className="text-[17px] font-semibold text-foreground">
-                {t('Usage')}
-              </h1>
-              <UsageHistoricDataNote className="min-w-0" />
-            </div>
+      <div className="shrink-0 bg-background">
+        <div className="border-b border-border">
+          <div className="w-full px-4 py-6 sm:px-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-[17px] font-semibold text-foreground">
+                  {t('Usage')}
+                </h1>
+                <UsageHistoricDataNote className="min-w-0" />
+              </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              {showUsageFilters ? (
-                <FiltersPopover
-                  open={filtersOpen}
-                  onOpenChange={setFiltersOpen}
-                  columns={usageFilterColumns}
-                  filterMap={usageFilterMap}
-                  onRemoveFilter={removeUsageFilter}
-                  onClearAll={clearAllUsageFilters}
-                  onApplyFilter={applyUsageFilter}
-                  resourceLabel="usage metrics"
-                  filterScope={usageFilterScope}
-                  onApplyQuery={applySavedUsageFilterQuery}
-                />
-              ) : null}
-              {showChartIntervalToggle ? (
-                <UsageChartIntervalToggle
-                  value={chartInterval}
-                  onValueChange={setChartInterval}
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                {showUsageFilters ? (
+                  <FiltersPopover
+                    open={filtersOpen}
+                    onOpenChange={setFiltersOpen}
+                    columns={usageFilterColumns}
+                    filterMap={usageFilterMap}
+                    onRemoveFilter={removeUsageFilter}
+                    onClearAll={clearAllUsageFilters}
+                    onApplyFilter={applyUsageFilter}
+                    resourceLabel="usage metrics"
+                    filterScope={usageFilterScope}
+                    onApplyQuery={applySavedUsageFilterQuery}
+                  />
+                ) : null}
+                {showChartIntervalToggle ? (
+                  <UsageChartIntervalToggle
+                    value={chartInterval}
+                    onValueChange={setChartInterval}
+                    dateRange={usageDateRange}
+                    className="h-9"
+                  />
+                ) : null}
+                <DateRangePicker
                   dateRange={usageDateRange}
+                  onDateRangeChange={setUsageDateRange}
                   className="h-9"
                 />
-              ) : null}
-              <DateRangePicker
-                dateRange={usageDateRange}
-                onDateRangeChange={setUsageDateRange}
-                className="h-9"
-              />
 
-              <RefreshButton
-                onClick={handleRefresh}
-                isRefreshing={isRefreshing}
-              />
+                <RefreshButton
+                  onClick={handleRefresh}
+                  isRefreshing={isRefreshing}
+                />
+              </div>
             </div>
           </div>
         </div>
+        {showUsageHistoryLimitAlert &&
+        hasFiniteUsageLogRetention(organizationPlan) ? (
+          <UsageLogRetentionAlert
+            retentionDays={usageLogRetentionDays}
+            organizationId={project?.teamId}
+            onAdjustRange={handleAdjustUsageDateRange}
+          />
+        ) : null}
       </div>
 
       <div className={SECONDARY_SIDEBAR_LAYOUT_CLASS}>
@@ -720,14 +729,6 @@ function UsageLayoutContent({
                     onAddBreakdownFilter: addBreakdownUsageFilter,
                   }}
                 >
-                  {showUsageHistoryLimitAlert &&
-                  hasFiniteUsageLogRetention(organizationPlan) ? (
-                    <UsageLogRetentionAlert
-                      retentionDays={usageLogRetentionDays}
-                      organizationId={project?.teamId}
-                      onAdjustRange={handleAdjustUsageDateRange}
-                    />
-                  ) : null}
                   <Outlet />
                 </UsageFiltersProvider>
               </>

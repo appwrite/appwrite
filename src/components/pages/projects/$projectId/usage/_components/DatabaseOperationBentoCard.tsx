@@ -32,7 +32,7 @@ const DATABASE_USAGE_ERROR = {
 } as const
 
 const breakdownRowGridClass =
-  'grid grid-cols-1 divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0'
+  'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0'
 
 type DatabaseBreakdownEntry =
   | DatabaseReadsBreakdownQueryEntry

@@ -33,9 +33,41 @@ export const OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT = OVERVIEW_ENDPOINT_BREAKDOWN_LIM
 export const OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT =
   COMPUTE_BREAKDOWN_RESOURCE_LIMIT
 
-/** Fixed-height list so skeleton, partial, and full results share the same layout. */
+/** Breakdown row height (matches {@link overviewTopBreakdownRowClass} `h-9`). */
+const OVERVIEW_BREAKDOWN_ROW_HEIGHT_PX = 36
+
+/** Gap between breakdown rows (matches `gap-1`). */
+const OVERVIEW_BREAKDOWN_ROW_GAP_PX = 4
+
+function overviewBreakdownListMinHeightPx(rowCount: number): number {
+  return (
+    rowCount * OVERVIEW_BREAKDOWN_ROW_HEIGHT_PX +
+    Math.max(0, rowCount - 1) * OVERVIEW_BREAKDOWN_ROW_GAP_PX
+  )
+}
+
+/** Min height for endpoint / usage-section breakdown lists (7 rows). */
+export const OVERVIEW_TOP_BREAKDOWN_LIST_MIN_HEIGHT_PX =
+  overviewBreakdownListMinHeightPx(OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT)
+
+/** Min height for compute overview breakdown lists (8 rows). */
+export const OVERVIEW_COMPUTE_BREAKDOWN_LIST_MIN_HEIGHT_PX =
+  overviewBreakdownListMinHeightPx(OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT)
+
+/** Fixed-height list so skeleton, partial, empty, and full results share the same layout. */
 export const overviewTopBreakdownListClass =
-  'relative flex h-full min-h-0 w-full min-w-0 flex-col gap-1 overflow-hidden'
+  'relative flex h-full min-h-[276px] w-full min-w-0 flex-col gap-1 overflow-hidden'
+
+export const overviewComputeBreakdownListClass =
+  'relative flex h-full min-h-[316px] w-full min-w-0 flex-col gap-1 overflow-hidden'
+
+export function overviewBreakdownListClassForRowCount(
+  rowCount: number = OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT,
+): string {
+  return rowCount === OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT
+    ? overviewComputeBreakdownListClass
+    : overviewTopBreakdownListClass
+}
 
 /** One breakdown row — keep skeleton and data rows the same height. */
 export const overviewTopBreakdownRowClass =

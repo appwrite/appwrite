@@ -27,7 +27,7 @@ import {
   overviewChartPanelChartAreaClass,
   overviewChartPanelHeaderClass,
   overviewChartPanelHeaderActionsClass,
-  overviewTopBreakdownListClass,
+  overviewBreakdownListClassForRowCount,
   overviewTopBreakdownRowClass,
 } from './chart-panel'
 import { OverviewChartPanelError } from './OverviewChartPanelError'
@@ -171,6 +171,7 @@ export function TopRequests({
     (_, index) => requestItems[index] ?? null,
   )
   const showEmptyOverlay = usesLiveItems && !isLoading && !isError && requestItems.length === 0
+  const breakdownListClass = overviewBreakdownListClassForRowCount(itemCount)
 
   return (
     <div className={cn('flex h-full min-w-0 flex-col', className)}>
@@ -231,7 +232,7 @@ export function TopRequests({
           </div>
         ) : (
           <div className={overviewChartPanelChartAreaClass}>
-            <div className={overviewTopBreakdownListClass}>
+            <div className={breakdownListClass}>
             {showEmptyOverlay && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
                 {t('No data for this date range')}

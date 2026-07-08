@@ -1,7 +1,8 @@
-import { useSyncExternalStore } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
 import { isUsageHistoryLimitExceededError } from '@/lib/usage/usage-history-errors'
+import { getUsageChartQueryRangeKeyPart } from '@/lib/usage/usage-date-range'
 import {
   hasFiniteUsageLogRetention,
   isUsageDateRangeBeyondRetention,
@@ -35,6 +36,10 @@ export function useUsageHistoryLimitAlertState({
   organizationPlan?: Models.BillingPlan | null
 }) {
   const queryClient = useQueryClient()
+  const currentRangeKeyPart = useMemo(
+    () => getUsageChartQueryRangeKeyPart(dateRange, dateRangePresetId),
+    [dateRange, dateRangePresetId],
+  )
 
   const hasUsageHistoryLimitError = useSyncExternalStore(
     (onStoreChange) =>
@@ -52,6 +57,7 @@ export function useUsageHistoryLimitAlertState({
         .some((query) => {
           if (query.state.status !== 'error') return false
           if (!isProjectUsageQueryKey(query.queryKey, projectId)) return false
+          if (!query.queryKey.includes(currentRangeKeyPart)) return false
           return isUsageHistoryLimitExceededError(query.state.error)
         })
     },

@@ -1,6 +1,10 @@
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
 import { resolveUsageChartFetchBounds } from '@/lib/usage/usage-date-range'
+import {
+  getUsageDateRangePresetByValue,
+  type UsageDateRangePreset,
+} from '@/lib/usage/usage-date-range-presets'
 
 /** Fallback when plan retention is unknown (Pro default). */
 export const DEFAULT_USAGE_LOG_RETENTION_DAYS = 30
@@ -53,4 +57,34 @@ export function isUsageDateRangeBeyondRetention(
   if (retentionHours <= 0) return false
   const { from } = resolveUsageChartFetchBounds(dateRange, presetId)
   return from.getTime() < getUsageLogRetentionFloor(retentionHours).getTime()
+}
+
+const SHORTER_USAGE_DATE_RANGE_PRESET_CANDIDATES = [
+  '14d',
+  '7d',
+  'today',
+  '24h',
+  '6h',
+  '1h',
+] as const
+
+/** Longest preset that fits within plan retention (for "Use shorter range" CTA). */
+export function resolveShorterUsageDateRangePreset(
+  retentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+): UsageDateRangePreset | undefined {
+  for (const value of SHORTER_USAGE_DATE_RANGE_PRESET_CANDIDATES) {
+    const preset = getUsageDateRangePresetByValue(value)
+    if (!preset) continue
+    if (
+      !isUsageDateRangeBeyondRetention(
+        preset.getRange(),
+        retentionHours,
+        preset.value,
+      )
+    ) {
+      return preset
+    }
+  }
+
+  return getUsageDateRangePresetByValue('24h')
 }
