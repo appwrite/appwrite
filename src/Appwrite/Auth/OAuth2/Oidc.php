@@ -312,7 +312,9 @@ class Oidc extends OAuth2
     protected function getUserinfoEndpoint(): string
     {
         $secret = $this->getAppSecret();
-        $endpoint = $secret['userInfoEndpoint'] ?? '';
+        // Read the legacy lowercase `userinfoEndpoint` key as a fallback so that
+        // OIDC configs stored via the old generic oauth2 PATCH endpoint keep working.
+        $endpoint = $secret['userInfoEndpoint'] ?? $secret['userinfoEndpoint'] ?? '';
         if (!empty($endpoint)) {
             return $endpoint;
         }
