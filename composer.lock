@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "17128527d9ef62968ea12eb43a81fdfb",
+    "content-hash": "091a71ba9518a11bacfa660d4df558ba",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3319,16 +3319,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.7.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "22a2cf6ca604e5cc6bf10f0f8240195f0baa063a"
+                "reference": "1d77657e9c91e48e873e6e096f9d4f55f778b11f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/22a2cf6ca604e5cc6bf10f0f8240195f0baa063a",
-                "reference": "22a2cf6ca604e5cc6bf10f0f8240195f0baa063a",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/1d77657e9c91e48e873e6e096f9d4f55f778b11f",
+                "reference": "1d77657e9c91e48e873e6e096f9d4f55f778b11f",
                 "shasum": ""
             },
             "require": {
@@ -3336,7 +3336,7 @@
                 "ext-openssl": "*",
                 "ext-scrypt": "*",
                 "ext-sodium": "*",
-                "php": ">=8.1"
+                "php": ">=8.3"
             },
             "type": "library",
             "autoload": {
@@ -3363,9 +3363,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/auth/issues",
-                "source": "https://github.com/utopia-php/auth/tree/0.7.0"
+                "source": "https://github.com/utopia-php/auth/tree/0.8.0"
             },
-            "time": "2026-06-22T11:58:24+00:00"
+            "time": "2026-07-08T05:10:32+00:00"
         },
         {
             "name": "utopia-php/cache",
