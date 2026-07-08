@@ -24,7 +24,6 @@
     },
     "require": {
         "ext-protobuf": "*",
-        "ext-opentelemetry": "*",
         "php": ">=8.0",
         "nyholm/psr7": "1.*",
         "open-telemetry/exporter-otlp": "1.*",
