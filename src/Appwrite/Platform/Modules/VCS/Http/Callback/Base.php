@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\Callback;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Resolver;
+use Appwrite\Vcs\Manager;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -54,7 +54,7 @@ abstract class Base extends Action
     public function action(
         string $code,
         string $state,
-        Resolver $vcs,
+        Manager $vcs,
         Response $response,
         Database $dbForPlatform,
         array $platform
