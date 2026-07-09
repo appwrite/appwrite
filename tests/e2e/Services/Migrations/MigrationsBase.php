@@ -2727,7 +2727,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], [
             'code' => $this->packageFunction('basic'),
-            'activate' => false,
+            'activate' => 'false',
             'entrypoint' => 'index.js',
         ]);
         $this->assertEquals(202, $destinationOnlyDeployment['headers']['status-code']);
@@ -2992,7 +2992,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], [
             'code' => $this->packageSite('static'),
-            'activate' => false,
+            'activate' => 'false',
         ]);
         $this->assertEquals(202, $destinationOnlyDeployment['headers']['status-code']);
         $destinationOnlyDeploymentId = $destinationOnlyDeployment['body']['$id'];
