@@ -37,6 +37,12 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/auth"
+        }
+    ],
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -57,7 +63,7 @@
         "utopia-php/agents": "2.*",
         "utopia-php/analytics": "0.15.*",
         "utopia-php/audit": "2.6.*",
-        "utopia-php/auth": "^0.8",
+        "utopia-php/auth": "^0.9",
         "utopia-php/cache": "^3.0.0",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
