@@ -23,6 +23,10 @@ interface ApiKeyDrawerProps {
   createdKeySecret?: string | null
   onCopy?: (text: string, field: string) => void
   copiedField?: string | null
+  /** Pre-filled name when opening the create drawer */
+  initialName?: string
+  /** Pre-selected scopes when opening the create drawer */
+  initialScopes?: string[]
 }
 
 function maskKey(key: string) {
@@ -39,6 +43,8 @@ export function ApiKeyDrawer({
   createdKeySecret,
   onCopy,
   copiedField,
+  initialName,
+  initialScopes,
 }: ApiKeyDrawerProps) {
   const t = useT()
   const [name, setName] = useState('')
@@ -139,14 +145,14 @@ export function ApiKeyDrawer({
       setErrors({})
       setExpiryOption(getExpiryOptionFromDate(existingExpire))
     } else {
-      // Create mode: no scopes selected by default
-      setName('')
+      // Create mode: optional pre-filled name and scopes
+      setName(initialName ?? '')
       setExpire('')
-      setScopes([])
+      setScopes(initialScopes ?? [])
       setErrors({})
       setExpiryOption('never')
     }
-  }, [open, apiKey])
+  }, [open, apiKey, initialName, initialScopes])
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isLoading) {

@@ -67,7 +67,7 @@ export function StorageS3Visual() {
         <div className="space-y-2">
           <MockCredentialRow
             label={t('Endpoint')}
-            value="https://cloud.appwrite.io/v1/storage/s3"
+            value="https://cloud.appwrite.io/v1/s3"
           />
           <MockCredentialRow label={t('Access key')} value="AKIA4EXAMPLEKEY" masked />
           <MockCredentialRow label={t('Secret key')} value="wJalrXUtnFEMIEXAMPLE" masked />

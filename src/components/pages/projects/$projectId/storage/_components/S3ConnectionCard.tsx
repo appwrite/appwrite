@@ -2,18 +2,21 @@ import { Server } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
+import { getProjectS3StorageEndpoint } from '@/lib/storage-s3'
 import { useT } from '@/lib/i18n/translate'
 
 export type S3ConnectionCardProps = {
+  projectId: string
   className?: string
 }
 
 /**
- * Sidebar teaser that opens the project Connect modal on the S3 tab (WIP).
+ * Sidebar teaser that opens the project Connect modal on the S3 tab.
  */
-export function S3ConnectionCard({ className }: S3ConnectionCardProps) {
+export function S3ConnectionCard({ projectId, className }: S3ConnectionCardProps) {
   const t = useT()
   const projectConnect = useProjectConnectDialog()
+  const s3Endpoint = projectId ? getProjectS3StorageEndpoint(projectId) : ''
 
   return (
     <div
@@ -29,8 +32,18 @@ export function S3ConnectionCard({ className }: S3ConnectionCardProps) {
             {t('S3-compatible access')}
           </p>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            {t('Project endpoint and credentials for external tooling - in progress.')}
+            {t(
+              'Project endpoint and credentials for rclone, Terraform, AWS CLI, and custom pipelines.',
+            )}
           </p>
+          {s3Endpoint ? (
+            <p
+              className="mt-1 truncate font-mono text-[10px] text-muted-foreground"
+              title={s3Endpoint}
+            >
+              {s3Endpoint}
+            </p>
+          ) : null}
         </div>
       </div>
       <Button

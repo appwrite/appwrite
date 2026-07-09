@@ -386,7 +386,7 @@ export function BucketsSidebar() {
         </div>
 
         <div className="shrink-0 border-t border-border px-2 py-2">
-          <S3ConnectionCard />
+          {projectId ? <S3ConnectionCard projectId={projectId} /> : null}
         </div>
       </div>
 

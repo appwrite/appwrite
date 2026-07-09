@@ -34,6 +34,7 @@ import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIco
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { McpIcon } from '@/components/global/shared/McpIcon'
+import { S3ConnectSection } from '@/components/pages/projects/$projectId/shared/S3ConnectSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
 import {
@@ -2035,18 +2036,12 @@ export function ConnectProject({
           </TabsContent>
           <TabsContent
             value="s3"
-            className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden"
+            className="min-h-0 flex-1 overflow-hidden px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
           >
-            <div className="space-y-3 pt-4">
-              <p className="text-[13px] leading-relaxed text-muted-foreground">
-                {t(
-                  'Use a project-scoped HTTPS endpoint with SigV4-compatible signing to attach Storage to rclone, IaC, or custom pipelines. Copyable endpoint, access key, and secret will appear here when the integration is ready.',
-                )}
-              </p>
-              <p className="text-[13px] leading-relaxed text-muted-foreground">
-                {t('Work in progress - nothing to copy yet.')}
-              </p>
-            </div>
+            <S3ConnectSection
+              projectId={projectId ?? ''}
+              onViewApiKeys={handleViewApiKeys}
+            />
           </TabsContent>
         </Tabs>
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

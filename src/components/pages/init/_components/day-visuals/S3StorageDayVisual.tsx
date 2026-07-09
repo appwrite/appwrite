@@ -84,7 +84,7 @@ export function S3StorageDayVisual() {
         <div className="space-y-1.5 overflow-hidden p-2.5">
           <MockCredentialRow
             label="Endpoint"
-            value="https://cloud.appwrite.io/v1/storage/s3"
+            value="https://cloud.appwrite.io/v1/s3"
             delayMs={0}
           />
           <MockCredentialRow
