@@ -9,7 +9,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -53,7 +52,7 @@ class Create extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('name', '', new Text(256), 'Repository name (slug)')
             ->param('private', '', new Boolean(false), 'Mark repository public or private')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -64,7 +63,7 @@ class Create extends Action
         string $installationId,
         string $name,
         bool $private,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Document $user,
         Response $response,
         Database $dbForPlatform
@@ -128,7 +127,7 @@ class Create extends Action
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $vcs = $vcsFactory->fromInstallation($installation);
+            $vcs = $vcsForInstallation($installation);
             $owner = $vcs->getOwnerName($providerInstallationId);
 
             try {

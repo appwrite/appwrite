@@ -16,7 +16,6 @@ use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Factory;
 use Exception;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
@@ -90,7 +89,7 @@ class Builds extends Action
             ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('publisherForUsage')
-            ->inject('vcsFactory')
+            ->inject('vcsForProvider')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
@@ -116,7 +115,7 @@ class Builds extends Action
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
-        Factory $vcsFactory,
+        callable $vcsForProvider,
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForSites,
@@ -146,7 +145,7 @@ class Builds extends Action
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                $vcs = $vcsFactory->fromProvider('github');
+                $vcs = $vcsForProvider('github');
                 $this->buildDeployment(
                     $deviceForFunctions,
                     $deviceForSites,

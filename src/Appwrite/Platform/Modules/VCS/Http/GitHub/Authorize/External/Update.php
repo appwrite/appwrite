@@ -10,7 +10,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -53,7 +52,7 @@ class Update extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('repositoryId', '', new Text(256), 'VCS Repository Id')
             ->param('providerPullRequestId', '', new Text(256), 'GitHub Pull Request Id')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -68,7 +67,7 @@ class Update extends Action
         string $installationId,
         string $repositoryId,
         string $providerPullRequestId,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Response $response,
         Document $project,
         Database $dbForPlatform,
@@ -101,7 +100,7 @@ class Update extends Action
         $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $vcs = $vcsFactory->fromInstallation($installation);
+        $vcs = $vcsForInstallation($installation);
 
         $repositories = [$repository];
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');

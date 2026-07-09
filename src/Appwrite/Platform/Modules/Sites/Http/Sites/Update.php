@@ -11,7 +11,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -108,7 +107,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('executor')
             ->inject('platform')
             ->callback($this->action(...));
@@ -145,7 +144,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Executor $executor,
         array $platform
     ) {
@@ -309,7 +308,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsForInstallation($installation), true, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

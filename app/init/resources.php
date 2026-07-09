@@ -348,6 +348,10 @@ $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapt
 
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
 
+$container->set('vcsForInstallation', fn (VcsFactory $vcsFactory) => fn (Document $installation) => $vcsFactory->fromInstallation($installation), ['vcsFactory']);
+
+$container->set('vcsForProvider', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->fromProvider($provider), ['vcsFactory']);
+
 $container->set('plan', fn () => []);
 
 $container->set('smsRates', fn () => []);
