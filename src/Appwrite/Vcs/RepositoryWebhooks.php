@@ -29,6 +29,12 @@ class RepositoryWebhooks
      * provider doesn't need one, or a `repositories` document already
      * exists for this installation + provider repository (an earlier
      * connection already went through this path).
+     *
+     * Callers must persist the current repository connection's document
+     * (via createDocument) before calling this — the idempotency check
+     * counts existing `repositories` rows for this installation +
+     * providerRepositoryId and expects to see itself already included
+     * (count 1 on first connection, 2+ on any repeat).
      */
     public function ensure(
         Git $adapter,

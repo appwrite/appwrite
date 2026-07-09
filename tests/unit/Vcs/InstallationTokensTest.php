@@ -28,7 +28,24 @@ final class InstallationTokensTest extends TestCase
             'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
-        $oauth2 = $this->fakeOAuth2(refreshCalls: 0);
+        $oauth2 = $this->fakeOAuth2();
+
+        $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+
+        $this->assertSame('valid-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame(0, $oauth2->refreshCalls);
+    }
+
+    public function testMissingExpiryIsNotRefreshed(): void
+    {
+        $installation = new Document([
+            '$id' => 'installation1',
+            'personalAccessToken' => 'valid-token',
+            'personalRefreshToken' => 'valid-refresh',
+            'personalAccessTokenExpiry' => null,
+        ]);
+
+        $oauth2 = $this->fakeOAuth2();
 
         $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
 
@@ -43,8 +60,9 @@ final class InstallationTokensTest extends TestCase
         $db->expects($this->once())
             ->method('updateDocument')
             ->with('installations', 'installation1', $this->callback(function (Document $update) {
-                return $update->getAttribute('personalAccessToken') === 'fresh-token'
-                    && $update->getAttribute('personalRefreshToken') === 'fresh-refresh';
+                $this->assertSame('fresh-token', $update->getAttribute('personalAccessToken'));
+                $this->assertSame('fresh-refresh', $update->getAttribute('personalRefreshToken'));
+                return true;
             }))
             ->willReturnArgument(2);
 
@@ -55,7 +73,7 @@ final class InstallationTokensTest extends TestCase
             'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
-        $oauth2 = $this->fakeOAuth2(refreshCalls: 1);
+        $oauth2 = $this->fakeOAuth2();
 
         $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
 
@@ -72,7 +90,7 @@ final class InstallationTokensTest extends TestCase
             'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
-        $oauth2 = $this->fakeOAuth2(refreshCalls: 0);
+        $oauth2 = $this->fakeOAuth2();
 
         $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2, $identity);
 
@@ -88,13 +106,13 @@ final class InstallationTokensTest extends TestCase
             'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
-        $oauth2 = $this->fakeOAuth2(refreshCalls: 1, emptyUserId: true);
+        $oauth2 = $this->fakeOAuth2(emptyUserId: true);
 
         $this->expectException(Exception::class);
         (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
     }
 
-    protected function fakeOAuth2(int $refreshCalls, bool $emptyUserId = false)
+    protected function fakeOAuth2(bool $emptyUserId = false)
     {
         return new class ($emptyUserId) extends OAuth2 {
             public int $refreshCalls = 0;

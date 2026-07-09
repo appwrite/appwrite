@@ -38,7 +38,12 @@ class InstallationTokens
 
         $installation = $installation->setAttribute('personalAccessToken', $accessToken);
 
-        if (!empty($accessTokenExpiry) && new \DateTime($accessTokenExpiry) >= new \DateTime('now')) {
+        // A missing expiry means the provider issued a non-expiring token
+        // (or none was recorded yet) -- treat it as not expired rather than
+        // forcing a refresh on every call.
+        $isExpired = !empty($accessTokenExpiry) && new \DateTime($accessTokenExpiry) < new \DateTime('now');
+
+        if (!$isExpired) {
             return $installation;
         }
 
