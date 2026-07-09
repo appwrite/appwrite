@@ -286,6 +286,60 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+  gitea:
+    image: gitea/gitea:1.22.6
+    container_name: appwrite-gitea
+    profiles:
+      - vcs
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__ROOT_URL=http://gitea:3000/
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__repository__DEFAULT_BRANCH=main
+      - GITEA__webhook__ALLOWED_HOST_LIST=*
+      - GITEA__webhook__SKIP_TLS_VERIFY=true
+    volumes:
+      - appwrite-gitea:/data
+    ports:
+      - "9515:3000"
+    networks:
+      - appwrite
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/api/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+  gitea-setup:
+    image: gitea/gitea:1.22.6
+    container_name: appwrite-gitea-setup
+    profiles:
+      - vcs
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      - GITEA_URL=http://gitea:3000
+      - GITEA_ADMIN_USER=appwrite
+      - GITEA_ADMIN_PASSWORD=password
+      - GITEA_ADMIN_EMAIL=appwrite@localhost.test
+    volumes:
+      - appwrite-gitea:/data
+      - ./dev/gitea/setup.sh:/setup.sh:ro
+    networks:
+      - appwrite
+    command:
+      ["/bin/sh", "-c", "/setup.sh && touch /tmp/ready && tail -f /dev/null"]
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/ready"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
   appwrite-task-scheduler-functions:
     build:
       context: .
@@ -574,3 +628,5 @@ networks:
     ipam:
       config:
         - subnet: 172.16.238.0/24
+volumes:
+  appwrite-gitea: null
