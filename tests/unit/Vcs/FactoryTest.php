@@ -91,6 +91,17 @@ final class FactoryTest extends TestCase
         $this->assertSame(['test'], $factory->getProviders());
     }
 
+    public function testGetWebhookSecret(): void
+    {
+        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+
+        $this->assertSame('', $factory->getWebhookSecret('github'));
+
+        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET=hunter2');
+        $this->assertSame('hunter2', $factory->getWebhookSecret('github'));
+        \putenv('_APP_VCS_GITHUB_WEBHOOK_SECRET');
+    }
+
     protected function cache(): Cache
     {
         return new Cache(new None());
@@ -110,6 +121,7 @@ final class FactoryTest extends TestCase
                 'APP_ID' => '_APP_VCS_GITHUB_APP_ID',
                 'CLIENT_ID' => '_APP_VCS_GITHUB_CLIENT_ID',
                 'CLIENT_SECRET' => '_APP_VCS_GITHUB_CLIENT_SECRET',
+                'WEBHOOK_SECRET' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
             ],
             'requiredEnvVariables' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
         ];
