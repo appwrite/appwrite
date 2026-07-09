@@ -75,9 +75,15 @@ class V25 extends Migration
                         $this->dbForProject->purgeCachedCollection($id);
 
                         // Backfill existing databases so the stored value matches the intended default.
-                        foreach ($this->documentsIterator($id, [Query::isNull('status')]) as $database) {
+                        // Materialize the matched documents before updating any of them: updating
+                        // "status" removes rows from the isNull() set, and the offset-based iterator
+                        // would otherwise skip un-processed rows as the filtered set shrinks mid-scan.
+                        $databases = \iterator_to_array($this->documentsIterator($id, [Query::isNull('status')]));
+                        foreach ($databases as $database) {
                             try {
-                                $this->dbForProject->updateDocument($id, $database->getId(), $database->setAttribute('status', 'ready'));
+                                $this->dbForProject->updateDocument($id, $database->getId(), new Document([
+                                    'status' => 'ready',
+                                ]));
                             } catch (Throwable $th) {
                                 Console::warning("Failed to backfill \"status\" for database {$database->getId()}: {$th->getMessage()}");
                             }
