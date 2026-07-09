@@ -13,7 +13,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -112,7 +111,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
@@ -149,7 +148,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Executor $executor,
         Authorization $authorization,
         array $platform
@@ -309,7 +308,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsForInstallation($installation), true, $platform);
         }
 
         // Inform scheduler if function is still active

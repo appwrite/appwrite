@@ -8,7 +8,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -97,7 +96,7 @@ class XList extends Action
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -108,7 +107,7 @@ class XList extends Action
         string $type,
         string $search,
         array $queries,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -123,7 +122,7 @@ class XList extends Action
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $vcs = $vcsFactory->fromInstallation($installation);
+        $vcs = $vcsForInstallation($installation);
 
         $queries = Query::parseQueries($queries);
         $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
