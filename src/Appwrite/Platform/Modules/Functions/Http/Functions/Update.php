@@ -248,9 +248,16 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             $providerAdapter = $vcsFactory->fromInstallation($installation);
-            $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-            $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+            if ($providerAdapter->requiresRepositoryWebhook()) {
+                try {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                } catch (\Throwable $error) {
+                    $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                    throw $error;
+                }
+            }
         }
 
         $live = true;

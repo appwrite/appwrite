@@ -67,7 +67,11 @@ class Create extends Action
         $signature = $request->getHeaderLine($vcs->getSignatureHeaderName(), '');
         $secretKey = System::getEnv('_APP_VCS_GITEA_WEBHOOK_SECRET', '');
 
-        $valid = empty($secretKey) ? true : $vcs->validateWebhookEvent($payload, $signature, $secretKey);
+        // Fail closed, unlike GitHub App deliveries: those also carry a
+        // signed JWT Appwrite always validates, so an empty webhook secret
+        // there still leaves a real check in place. Gitea has no such
+        // fallback -- an empty secret here would mean no verification at all.
+        $valid = !empty($secretKey) && $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.gitea.event.signature.valid', $valid);
 
         if (!$valid) {
@@ -97,6 +101,14 @@ class Create extends Action
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
         if ($installation->isEmpty()) {
+            return null;
+        }
+
+        // `repositories` has no provider attribute -- providerRepositoryId is
+        // provider-scoped numeric IDs from independent servers, so a GitHub
+        // and a Gitea repository can collide on the same ID. Filter by the
+        // matched installation's own provider instead of the query.
+        if ($installation->getAttribute('provider', 'github') !== 'gitea') {
             return null;
         }
 
