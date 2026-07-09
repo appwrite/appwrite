@@ -81,6 +81,7 @@ import { Route as MarketingIntegrationsSlugRouteImport } from './routes/_marketi
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
+import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
@@ -701,6 +702,11 @@ const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
 const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
   id: '/oauth2/consent',
   path: '/oauth2/consent',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
+  id: '/auth/magic-url',
+  path: '/auth/magic-url',
   getParentRoute: () => AuthRoute,
 } as any)
 const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
@@ -2445,6 +2451,7 @@ export interface FileRoutesByFullPath {
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
+  '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/blog/$page': typeof MarketingBlogPageRoute
@@ -2766,6 +2773,7 @@ export interface FileRoutesByTo {
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
+  '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
   '/blog/$page': typeof MarketingBlogPageRoute
@@ -3058,6 +3066,7 @@ export interface FileRoutesById {
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
+  '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
@@ -3384,6 +3393,7 @@ export interface FileRouteTypes {
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
+    | '/auth/magic-url'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/blog/$page'
@@ -3705,6 +3715,7 @@ export interface FileRouteTypes {
     | '/generator/cover'
     | '/generator/diagram'
     | '/og/image.png'
+    | '/auth/magic-url'
     | '/oauth2/consent'
     | '/oauth2/device'
     | '/blog/$page'
@@ -3996,6 +4007,7 @@ export interface FileRouteTypes {
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
     | '/_api/og/image.png'
+    | '/_auth/auth/magic-url'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
     | '/_marketing/blog/$page'
@@ -4797,6 +4809,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth2/consent'
       fullPath: '/oauth2/consent'
       preLoaderRoute: typeof AuthOauth2ConsentRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/magic-url': {
+      id: '/_auth/auth/magic-url'
+      path: '/auth/magic-url'
+      fullPath: '/auth/magic-url'
+      preLoaderRoute: typeof AuthAuthMagicUrlRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_api/og/image.png': {
@@ -6588,6 +6607,7 @@ interface AuthRouteChildren {
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+  AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
@@ -6602,6 +6622,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+  AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,

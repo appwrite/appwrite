@@ -21,7 +21,8 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/reset' ||
     pathname === '/join' ||
     pathname === '/mfa' ||
-    pathname === '/verify-email'
+    pathname === '/verify-email' ||
+    pathname === '/auth/magic-url'
   )
 }
 

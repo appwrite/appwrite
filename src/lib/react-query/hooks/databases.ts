@@ -27,6 +27,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/dedicated-database-id'
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
@@ -54,6 +55,32 @@ import {
 } from './constants'
 
 const MERGED_DATABASE_LIST_LIMIT = 500
+
+/**
+ * DocumentsDB/VectorsDB endpoints only exist on deployments with the matching
+ * profile flag (cloud dedicated DBs). Skipping the calls keeps self-hosted
+ * consoles from spamming 404s.
+ */
+function listProductDatabasesIfEnabled(
+  projectSdk: ReturnType<typeof sdk.forProject>,
+  backend: DatabaseType,
+  queries: string[],
+): Promise<Models.DatabaseList> {
+  const features = getActiveProfileFeatures()
+  if (backend === DatabaseType.Documentsdb) {
+    if (!features.dedicatedDbsDocumentsDB) {
+      return Promise.resolve({ total: 0, databases: [] })
+    }
+    return projectSdk.documentsDB.list({ queries })
+  }
+  if (backend === DatabaseType.Vectorsdb) {
+    if (!features.dedicatedDbsVectorsDB) {
+      return Promise.resolve({ total: 0, databases: [] })
+    }
+    return projectSdk.vectorsDB.list({ queries })
+  }
+  return projectSdk.tablesDB.list({ queries })
+}
 
 /**
  * Module-level dedup for `getDatabaseModel`.
@@ -461,8 +488,16 @@ export async function fetchProjectDatabases(
   ]
 
   const settled = await Promise.allSettled([
-    projectSdk.documentsDB.list({ queries: mergeQueries }),
-    projectSdk.vectorsDB.list({ queries: mergeQueries }),
+    listProductDatabasesIfEnabled(
+      projectSdk,
+      DatabaseType.Documentsdb,
+      mergeQueries,
+    ),
+    listProductDatabasesIfEnabled(
+      projectSdk,
+      DatabaseType.Vectorsdb,
+      mergeQueries,
+    ),
     projectSdk.tablesDB.list({ queries: mergeQueries }),
   ])
 
@@ -523,14 +558,11 @@ export async function fetchProjectProductDatabases(
     Query.offset(page * limit),
   ]
 
-  let response: Models.DatabaseList
-  if (backend === DatabaseType.Documentsdb) {
-    response = await projectSdk.documentsDB.list({ queries })
-  } else if (backend === DatabaseType.Vectorsdb) {
-    response = await projectSdk.vectorsDB.list({ queries })
-  } else {
-    response = await projectSdk.tablesDB.list({ queries })
-  }
+  const response = await listProductDatabasesIfEnabled(
+    projectSdk,
+    backend,
+    queries,
+  )
 
   const databases = (response.databases ?? []).map((db) =>
     normalizeProductDatabase(db, backend),
@@ -567,12 +599,14 @@ export async function fetchProjectDatabasesByIds(
 
   const projectSdk = sdk.forProject(projectId)
   const settled = await Promise.allSettled([
-    projectSdk.documentsDB.list({
-      queries: [idQuery, Query.limit(validIds.length)],
-    }),
-    projectSdk.vectorsDB.list({
-      queries: [idQuery, Query.limit(validIds.length)],
-    }),
+    listProductDatabasesIfEnabled(projectSdk, DatabaseType.Documentsdb, [
+      idQuery,
+      Query.limit(validIds.length),
+    ]),
+    listProductDatabasesIfEnabled(projectSdk, DatabaseType.Vectorsdb, [
+      idQuery,
+      Query.limit(validIds.length),
+    ]),
     projectSdk.tablesDB.list({
       queries: [idQuery, Query.limit(validIds.length)],
     }),
@@ -706,11 +740,14 @@ async function getProductDatabase(
   backend: DatabaseType,
   databaseId: string,
 ): Promise<Models.Database | null> {
+  const features = getActiveProfileFeatures()
   try {
     if (backend === DatabaseType.Documentsdb) {
+      if (!features.dedicatedDbsDocumentsDB) return null
       return await projectSdk.documentsDB.get({ databaseId })
     }
     if (backend === DatabaseType.Vectorsdb) {
+      if (!features.dedicatedDbsVectorsDB) return null
       return await projectSdk.vectorsDB.get({ databaseId })
     }
     return await projectSdk.tablesDB.get({ databaseId })
@@ -1126,8 +1163,18 @@ export async function createNativeDatabase(
   })
 }
 
+/** True when any feature needing the shared compute-tier specs endpoint is on. */
+function isDatabaseSpecificationsSupported(): boolean {
+  const features = getActiveProfileFeatures()
+  return (
+    features.dedicatedDbsSupport ||
+    features.nativeDbsPostgres ||
+    features.nativeDbsMySQL
+  )
+}
+
 export async function fetchDatabaseSpecifications(projectId: string) {
-  if (!projectId) {
+  if (!projectId || !isDatabaseSpecificationsSupported()) {
     return { specifications: [], total: 0, pricing: null }
   }
 
@@ -1150,7 +1197,7 @@ export function databaseSpecificationsQueryOptions(
   return queryOptions({
     queryKey: ['database-specifications', 'project', projectId],
     queryFn: () => fetchDatabaseSpecifications(projectId!),
-    enabled: !!projectId,
+    enabled: !!projectId && isDatabaseSpecificationsSupported(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -1166,21 +1213,36 @@ export function useDatabaseSpecifications(
   return useQuery(databaseSpecificationsQueryOptions(projectId))
 }
 
+/** True when at least one native DB engine (PostgreSQL/MySQL) is available. */
+function isNativeDatabasesSupported(): boolean {
+  const features = getActiveProfileFeatures()
+  return features.nativeDbsPostgres || features.nativeDbsMySQL
+}
+
 export async function fetchProjectDedicatedDatabases(projectId: string) {
   if (!projectId) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }
   }
 
   // List native PostgreSQL and MySQL databases and merge for selectors.
+  // Each engine's endpoint only exists when its profile flag is on.
+  const features = getActiveProfileFeatures()
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     Query.orderDesc('$createdAt'),
     Query.limit(MERGED_DATABASE_LIST_LIMIT),
   ]
-  const results = await Promise.allSettled([
-    projectSdk.postgresql.list({ queries }),
-    projectSdk.mysql.list({ queries }),
-  ])
+  const engineLists: Promise<Models.DedicatedDatabaseList>[] = []
+  if (features.nativeDbsPostgres) {
+    engineLists.push(projectSdk.postgresql.list({ queries }))
+  }
+  if (features.nativeDbsMySQL) {
+    engineLists.push(projectSdk.mysql.list({ queries }))
+  }
+  if (engineLists.length === 0) {
+    return { databases: [] as Models.DedicatedDatabase[], total: 0 }
+  }
+  const results = await Promise.allSettled(engineLists)
 
   const fulfilled = results.filter(
     (r): r is PromiseFulfilledResult<Models.DedicatedDatabaseList> =>
@@ -1223,7 +1285,7 @@ export function dedicatedDatabasesQueryOptions(
   return queryOptions({
     queryKey: ['dedicated-databases', 'project', projectId],
     queryFn: () => fetchProjectDedicatedDatabases(projectId!),
-    enabled: !!projectId,
+    enabled: !!projectId && isNativeDatabasesSupported(),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,

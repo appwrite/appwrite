@@ -9,6 +9,7 @@ import { AccountAccessBlockedScreen } from '@/components/global/auth/AccountAcce
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   resolvePostAuthOrganizationId,
 } from '@/lib/ensure-personal-org'
@@ -34,6 +35,10 @@ export const Route = createFileRoute('/_public/')({
       const isAccountBlocked =
         !!queryError && isHttpForbiddenError(queryError)
       if (!isMfaRequired && !isAccountBlocked) {
+        // Profiles without marketing pages (self-hosted) go straight to sign-in.
+        if (!getActiveProfileFeatures().marketing) {
+          throw redirect({ to: '/sign-in', replace: true })
+        }
         throw redirect({ to: '/home', replace: true })
       }
       return

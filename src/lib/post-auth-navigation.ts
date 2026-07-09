@@ -16,6 +16,7 @@ const AUTH_PAGE_PATHS = [
   '/join',
   '/mfa',
   '/verify-email',
+  '/auth/magic-url',
 ] as const
 
 export function isValidRelativeRedirect(url: string): boolean {

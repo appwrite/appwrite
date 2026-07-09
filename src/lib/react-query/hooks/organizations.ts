@@ -728,7 +728,15 @@ export async function createOrganization(orgData: {
   taxId?: string | null
 }) {
   if (!isMultiTenancyEnabled()) {
-    throw new Error('This console profile supports only one organization')
+    // Single-tenant profiles allow exactly one organization: the personal-org
+    // bootstrap may create the first, but creating another is blocked. This
+    // check-then-create is not atomic (the API has no single-org constraint),
+    // which is acceptable: the bootstrap is the only first-org path and runs
+    // sequentially, and single-tenant profiles expose no create-org UI.
+    const existing = await fetchOrganizations()
+    if ((existing.total ?? existing.teams?.length ?? 0) > 0) {
+      throw new Error('This console profile supports only one organization')
+    }
   }
 
   if (!orgData.name.trim()) {
