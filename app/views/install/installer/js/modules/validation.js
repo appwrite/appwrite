@@ -26,8 +26,8 @@
 
     const isValidIPv6 = (host) => {
         try {
-            const url = new URL(`http://[${host}]`);
-            return url.hostname.toLowerCase() === host.toLowerCase();
+            new URL(`http://[${host}]`);
+            return true;
         } catch (error) {
             return false;
         }
