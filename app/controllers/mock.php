@@ -281,6 +281,62 @@ Http::get('/v1/mock/github/callback')
         ]);
     });
 
+Http::get('/v1/mock/gitea/callback')
+    ->desc('Create installation document using Gitea OAuth2 tokens')
+    ->groups(['mock', 'api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID of the project where Gitea is to be installed')
+    ->param('giteaUserId', '', new Text(256), 'Gitea user ID')
+    ->param('organization', '', new Text(256), 'Gitea username or organization')
+    ->param('accessToken', '', new Text(2048), 'Gitea access token')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $giteaUserId, string $organization, string $accessToken, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND, 'Project with the ID from state could not be found.');
+        }
+
+        if (empty($giteaUserId) || empty($organization) || empty($accessToken)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing Gitea installation details');
+        }
+
+        $projectInternalId = $project->getSequence();
+        $teamId = $project->getAttribute('teamId', '');
+
+        $installation = $dbForPlatform->createDocument('installations', new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
+            'providerInstallationId' => $giteaUserId,
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
+            'provider' => 'gitea',
+            'organization' => $organization,
+            'personal' => true,
+            'personalAccessToken' => $accessToken,
+            'personalRefreshToken' => '',
+            'personalAccessTokenExpiry' => null,
+        ]));
+
+        $response->json([
+            'installationId' => $installation->getId(),
+        ]);
+    });
+
 Http::shutdown()
     ->groups(['mock'])
     ->inject('response')

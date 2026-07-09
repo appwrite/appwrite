@@ -4,6 +4,7 @@
  * VCS provider registry, read by Appwrite\Vcs\Factory.
  */
 
+use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 return [
@@ -19,5 +20,16 @@ return [
             'WEBHOOK_SECRET' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
         ],
         'requiredEnvVariables' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
+    ],
+    'gitea' => [
+        'enabled' => true,
+        'adapter' => Gitea::class,
+        'envVariables' => [
+            'ENDPOINT' => '_APP_VCS_GITEA_ENDPOINT',
+            'CLIENT_ID' => '_APP_VCS_GITEA_CLIENT_ID',
+            'CLIENT_SECRET' => '_APP_VCS_GITEA_CLIENT_SECRET',
+            'WEBHOOK_SECRET' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
+        ],
+        'requiredEnvVariables' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET'],
     ],
 ];

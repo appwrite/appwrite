@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -109,6 +110,7 @@ class Update extends Base
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('platform')
             ->callback($this->action(...));
@@ -146,6 +148,7 @@ class Update extends Base
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
         Factory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         array $platform
     ) {
@@ -241,6 +244,11 @@ class Update extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
+
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
         }
 
         $live = true;

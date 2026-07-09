@@ -11,6 +11,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -102,6 +104,8 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->callback($this->action(...));
     }
 
@@ -133,7 +137,9 @@ class Create extends Base
         Database $dbForProject,
         Document $project,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Factory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -215,6 +221,12 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]);
             $repository = $dbForPlatform->createDocument('repositories', $repository);
+
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
 

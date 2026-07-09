@@ -350,7 +350,7 @@ $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapt
 
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
-$container->set('repositoryWebhooks', fn () => new RepositoryWebhooks(), []);
+$container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 
 $container->set('plan', fn () => []);
 

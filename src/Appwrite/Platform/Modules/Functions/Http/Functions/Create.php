@@ -21,6 +21,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -129,6 +130,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -173,6 +175,7 @@ class Create extends Base
         Database $dbForPlatform,
         Request $request,
         Factory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         array $platform
     ) {
@@ -302,6 +305,11 @@ class Create extends Base
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
+
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
 
             $function->setAttribute('repositoryId', $repository->getId());
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
