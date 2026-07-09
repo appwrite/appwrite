@@ -148,6 +148,17 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['status'], \json_encode($response['body'], JSON_PRETTY_PRINT));
         $this->assertNotEmpty($response['body']);
+
+        $matching = \array_filter($response['body'], function ($hook) {
+            $url = $hook['config']['url'] ?? '';
+            $events = $hook['events'] ?? [];
+
+            return \str_contains($url, '/vcs/gitea/events')
+                && \in_array('push', $events, true)
+                && \in_array('pull_request', $events, true);
+        });
+
+        $this->assertNotEmpty($matching, 'No hook registered with the expected Appwrite webhook URL and events: ' . \json_encode($response['body'], JSON_PRETTY_PRINT));
     }
 
     private function waitForDeployment(string $functionId, string $deploymentId): array
@@ -237,7 +248,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         }
 
         if ($basic) {
-            \curl_setopt($ch, CURLOPT_USERPWD, 'appwrite:password');
+            $adminUser = System::getEnv('_TESTS_GITEA_ADMIN_USER', 'appwrite');
+            $adminPassword = System::getEnv('_TESTS_GITEA_ADMIN_PASSWORD', 'password');
+            \curl_setopt($ch, CURLOPT_USERPWD, $adminUser . ':' . $adminPassword);
         }
 
         if (!empty($body)) {
@@ -249,6 +262,8 @@ final class VCSGiteaConsoleClientTest extends Scope
         $response = \curl_exec($ch);
         $status = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = \curl_error($ch);
+
+        \curl_close($ch);
 
         $decoded = \json_decode($response ?: '', true);
 
