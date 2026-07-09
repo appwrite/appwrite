@@ -194,6 +194,6 @@ final class HTTPTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('text/html', $response['headers']['content-type']);
+        $this->assertStringContainsString('text/html', (string) $response['headers']['content-type']);
     }
 }
