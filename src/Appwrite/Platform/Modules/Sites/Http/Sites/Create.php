@@ -223,9 +223,19 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             $providerAdapter = $vcsFactory->fromInstallation($installation);
-            $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-            $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+            if ($providerAdapter->requiresRepositoryWebhook()) {
+                try {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                } catch (\Throwable $error) {
+                    // Don't leave an orphaned repositories document behind -- it
+                    // would make the next retry's connection count look like a
+                    // repeat, silently skipping webhook creation.
+                    $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                    throw $error;
+                }
+            }
 
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());

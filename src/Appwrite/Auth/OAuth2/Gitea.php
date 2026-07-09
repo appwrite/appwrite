@@ -27,8 +27,14 @@ class Gitea extends OAuth2
     /**
      * @var array
      */
+    // The resulting personal token is reused for every VCS operation on the
+    // installation (list/create repos, read contents, create webhooks,
+    // comment on PRs) via Factory::fromInstallation(), not just login.
     protected array $scopes = [
         'read:user',
+        'read:repository',
+        'write:repository',
+        'read:organization',
     ];
 
     /**
