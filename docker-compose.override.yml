@@ -36,6 +36,8 @@ services:
       - _APP_MESSAGE_PUSH_TEST_DSN
       - _TESTS_OAUTH2_GITHUB_CLIENT_ID
       - _TESTS_OAUTH2_GITHUB_CLIENT_SECRET
+      - _TESTS_GITEA_ADMIN_USER
+      - _TESTS_GITEA_ADMIN_PASSWORD
   appwrite-realtime:
     build:
       context: .
@@ -313,8 +315,8 @@ services:
         condition: service_healthy
     environment:
       - GITEA_URL=http://gitea:3000
-      - GITEA_ADMIN_USER=appwrite
-      - GITEA_ADMIN_PASSWORD=password
+      - GITEA_ADMIN_USER=${_TESTS_GITEA_ADMIN_USER:-appwrite}
+      - GITEA_ADMIN_PASSWORD=${_TESTS_GITEA_ADMIN_PASSWORD:-password}
       - GITEA_ADMIN_EMAIL=appwrite@localhost.test
     volumes:
       - appwrite-gitea:/data
