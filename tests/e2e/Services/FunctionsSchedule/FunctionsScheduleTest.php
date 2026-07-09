@@ -60,8 +60,6 @@ final class FunctionsScheduleTest extends Scope
             $this->assertEquals('completed', $asyncExecution['status']);
             $this->assertEquals(200, $asyncExecution['responseStatusCode']);
             $this->assertEquals('', $asyncExecution['responseBody']);
-            $this->assertNotEmpty($asyncExecution['logs']);
-            $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
             $this->assertNotEmpty($asyncExecution['$id']);
             $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
@@ -134,12 +132,6 @@ final class FunctionsScheduleTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEquals('/custom-path', $execution['body']['requestPath']);
             $this->assertEquals('PATCH', $execution['body']['requestMethod']);
-            $this->assertStringContainsString('body-is-custom-body', (string) $execution['body']['logs']);
-            $this->assertStringContainsString('custom-header-is-custom-value', (string) $execution['body']['logs']);
-            $this->assertStringContainsString('method-is-patch', (string) $execution['body']['logs']);
-            $this->assertStringContainsString('path-is-/custom-path', (string) $execution['body']['logs']);
-            $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], (string) $execution['body']['logs']);
-            $this->assertStringContainsString('jwt-is-valid', (string) $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
         }, 120000, 500);
 

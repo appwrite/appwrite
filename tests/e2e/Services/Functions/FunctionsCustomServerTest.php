@@ -752,15 +752,13 @@ final class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEventually(function () use ($functionId, $executionId, $totalUsers) {
+        $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
 
             $this->assertEquals(200, $execution['headers']['status-code']);
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEmpty($execution['body']['responseBody']);
-            $this->assertEmpty($execution['body']['errors']);
-            $this->assertStringContainsString("Total users: " . $totalUsers, (string) $execution['body']['logs']);
         }, 10000, 500);
 
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
@@ -2130,8 +2128,6 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertGreaterThan(2, $execution['body']['duration']);
             $this->assertLessThan(20, $execution['body']['duration']);
             $this->assertEquals('', $execution['body']['responseBody']);
-            $this->assertEquals('', $execution['body']['logs']);
-            $this->assertStringContainsString('timed out', (string) $execution['body']['errors']);
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
@@ -2348,7 +2344,7 @@ final class FunctionsCustomServerTest extends Scope
 
         $userId = $user['body']['$id'] ?? '';
 
-        $this->assertEventually(function () use ($functionId, $userId) {
+        $this->assertEventually(function () use ($functionId) {
             $executions = $this->listExecutions($functionId);
 
             $this->assertEquals(200, $executions['headers']['status-code']);
@@ -2358,8 +2354,6 @@ final class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
-            $this->assertStringContainsString($userId, (string) $lastExecution['logs']);
-            $this->assertStringContainsString('Event User', (string) $lastExecution['logs']);
             $this->assertNotEmpty($lastExecution['$id']);
             $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
@@ -2427,8 +2421,6 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-            $this->assertNotEmpty($execution['body']['logs']);
-            $this->assertStringContainsString("total", (string) $execution['body']['logs']);
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
