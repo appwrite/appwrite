@@ -4,7 +4,7 @@ namespace Appwrite\Bus\Events;
 
 use Utopia\Bus\Event;
 
-class ExecutionLogged implements Event
+class ExecutionScheduled implements Event
 {
     /**
      * @param array<string, mixed> $execution
