@@ -117,6 +117,14 @@ class Factory
         return $adapter;
     }
 
+    /**
+     * Webhook secret configured for a provider, empty if none is set.
+     */
+    public function getWebhookSecret(string $key): string
+    {
+        return $this->getEnv($key, 'WEBHOOK_SECRET');
+    }
+
     protected function getEnv(string $key, string $name): string
     {
         $variable = $this->registry[$key]['envVariables'][$name] ?? '';
