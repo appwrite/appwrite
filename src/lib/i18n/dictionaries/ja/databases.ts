@@ -76,6 +76,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'バックアップ ID をクリップボードにコピーしました',
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
+  'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
   'Backups': 'バックアップ',
   'backups': 'バックアップ',
@@ -290,6 +291,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database name updated successfully': 'データベース名を更新しました',
   'Database not found': 'データベースが見つかりません',
   'Database restore initiated': 'データベースの復元を開始しました',
+  'Database password reset': 'データベースパスワードをリセットしました',
+  'Database password reset': 'データベースパスワードをリセットしました',
   'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.': 'データベース行の最大サイズは 64 KB です。varchar 列は文字あたり 4 バイトと小さなオーバーヘッドを使用します。text、mediumtext、longtext 列はコンテンツの長さに関係なく約 20 バイトのみを使用します。',
   'database selected': 'データベースを選択',
   'Database size over time from pg_database_size, relative to provisioned storage.': 'pg_database_size からの経時的なデータベースサイズ (プロビジョニングされたストレージに対する比率)。',
@@ -456,6 +459,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed to export SVG': 'SVG のエクスポートに失敗しました',
   'Failed to load connections': '接続の読み込みに失敗しました',
   'Failed to load credentials': '認証情報の読み込みに失敗しました',
+  'Failed to reset database password': 'データベースパスワードのリセットに失敗しました',
   'Failed to load databases': 'データベースの読み込みに失敗しました',
   'Failed to load dedicated databases': '専用データベースの読み込みに失敗しました',
   'Failed to load metrics': 'メトリクスの読み込みに失敗しました',
@@ -839,8 +843,11 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Resize table and document preview': 'テーブルとドキュメントプレビューのサイズ変更',
   'Restore': '復元',
   'Restore backup': 'バックアップの復元',
+  'Restore this database from the selected backup. All current data will be replaced.': '選択したバックアップからこのデータベースを復元します。現在のデータはすべて置き換えられます。',
   'Restore target': '復元先',
   'Restore your database to a specific moment in time, beyond the latest scheduled backup. Useful for recovering from accidental deletes, failed migrations, or bad writes.': '最新のスケジュールバックアップを超えて、特定の時点にデータベースを復元します。誤削除、失敗したマイグレーション、不正な書き込みからの復旧に役立ちます。',
+  'Reset database password': 'データベースパスワードをリセット',
+  'Reset database password?': 'データベースパスワードをリセットしますか？',
   'Retained for': '保持期間',
   'Retained for 1 day': '1 日間保持',
   'Retained for 1 week': '1 週間保持',
@@ -1102,6 +1109,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Write SQL in the editor above and run your query. Results will appear in this panel.': '上のエディターに SQL を記述してクエリを実行してください。結果はこのパネルに表示されます。',
   'Years': '年',
   "You don't have permission to change database settings.": 'データベース設定を変更する権限がありません。',
+  "You don't have permission to reset the database password.": 'データベースパスワードをリセットする権限がありません。',
   "You don't have permission to create databases.": 'データベースを作成する権限がありません。',
   "You don't have permission to create databases or tables.": 'データベースまたはテーブルを作成する権限がありません。',
   "You don't have permission to create schemas.": 'スキーマを作成する権限がありません。',
@@ -1362,6 +1370,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'When the most recent metrics snapshot was collected.': '最新のメトリクススナップショットが収集された日時です。',
   'Sample data only. Instance metrics will be provided by the usage service.': 'サンプルデータのみです。インスタンスのメトリクスは使用量サービスから提供されます。',
   'A DSN (Data Source Name) is a single PostgreSQL URI with host, port, database, credentials, and SSL settings. Paste it into ORMs, CLI tools, or any client that accepts a connection string.': 'DSN (Data Source Name) は、ホスト、ポート、データベース、認証情報、SSL 設定を含む単一の PostgreSQL URI です。ORM、CLI ツール、または接続文字列を受け付ける任意のクライアントに貼り付けて使用できます。',
+  'A new password will be generated immediately. Apps and clients using the current password will stop connecting until you update them.': '新しいパスワードがすぐに生成されます。現在のパスワードを使用しているアプリやクライアントは、更新するまで接続できなくなります。',
   'Install psql with PostgreSQL or a standalone client package (for example, libpq on macOS). Paste a connect command into your terminal, enter your password when prompted, then run SQL or meta-commands like \\dt to list tables.': 'PostgreSQL または単体のクライアントパッケージ (macOS では libpq など) で psql をインストールしてください。接続コマンドをターミナルに貼り付け、求められたらパスワードを入力し、SQL や \\dt などのメタコマンドを実行してテーブルを一覧表示できます。',
   'Create a PostgreSQL database from the create database wizard.': 'データベース作成ウィザードから PostgreSQL データベースを作成します。',
   'Create a MySQL database from the create database wizard.': 'データベース作成ウィザードから MySQL データベースを作成します。',
@@ -1395,6 +1404,31 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'プライマリが書き込みを受け付け、クエリのスケールと迅速な復旧のために変更を読み取りレプリカへレプリケーションします。',
   'Configure read replicas and replication sync mode for failover resilience.':
     'フェイルオーバー耐性のために読み取りレプリカとレプリケーション同期モードを設定します。',
+  'Choose which cluster member accepts reads and writes. Promoting a read replica triggers a manual failover.':
+    '読み書きを受け付けるクラスタメンバーを選択します。読み取りレプリカを昇格させると手動フェイルオーバーが開始されます。',
+  'Loading cluster members…': 'クラスタメンバーを読み込み中…',
+  'No cluster members are available yet.': 'クラスタメンバーはまだ利用できません。',
+  Instance: 'インスタンス',
+  Role: 'ロール',
+  'Replication lag': 'レプリケーション遅延',
+  Primary: 'プライマリ',
+  'Not found': '見つかりません',
+  '{seconds}s lag': '遅延 {seconds} 秒',
+  'The current primary is {instance}. Select a read replica and promote it to move write traffic.':
+    '現在のプライマリは {instance} です。書き込みトラフィックを移すには、読み取りレプリカを選択して昇格してください。',
+  'Refreshing cluster members…': 'クラスタメンバーを更新中…',
+  'Promote to primary': 'プライマリに昇格',
+  'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.':
+    '{instance} をプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。フェイルオーバー完了まで書き込みが一時的に利用できない場合があります。',
+  'Promote the selected read replica to primary? The current primary will become a read replica.':
+    '選択した読み取りレプリカをプライマリに昇格しますか？現在のプライマリは読み取りレプリカになります。',
+  'Failover started': 'フェイルオーバーを開始しました',
+  'Failed to start failover': 'フェイルオーバーの開始に失敗しました',
+  'Select a read replica to promote.': '昇格する読み取りレプリカを選択してください。',
+  'Only active replicas can be promoted to primary.':
+    'プライマリに昇格できるのはアクティブなレプリカのみです。',
+  'Failover is unavailable while the database status is {status}.':
+    'データベースのステータスが {status} の間はフェイルオーバーを利用できません。',
   'Sync mode': '同期モード',
   'Choose how the primary confirms writes with read replicas.':
     'プライマリが読み取りレプリカと書き込みをどう確認するかを選択します。',
@@ -1453,6 +1487,10 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Read/write splitting': '読み取り/書き込み分割',
   'Connection pooler settings updated': 'コネクションプーラーの設定を更新しました',
   'Failed to update connection pooler settings': 'コネクションプーラーの設定更新に失敗しました',
+  'Host and port use the pooler endpoint.':
+    'ホストとポートはプーラーエンドポイントを使用します。',
+  'Update database name, compute resources, and maintenance settings.':
+    'データベース名、コンピュートリソース、メンテナンス設定を更新します。',
   'Maintenance window': 'メンテナンスウィンドウ',
   'Minor version upgrades and maintenance tasks run during this weekly window (UTC).':
     'マイナーバージョンアップグレードとメンテナンスタスクは、この週次ウィンドウ (UTC) 中に実行されます。',

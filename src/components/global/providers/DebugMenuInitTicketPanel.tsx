@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Loader2, RotateCcw } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import { DebugMenuSwitch } from '@/components/global/providers/DebugMenuSwitch'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { getActiveLaunchEvent } from '@/lib/init/events'
+import { resetInitTicketImagePrefs } from '@/lib/init/reset-init-ticket-image-prefs'
+import {
+  readInitTicketPrefsFromAccountPrefs,
+  readInitTicketPrefsFromStorage,
+} from '@/lib/init/ticket-prefs'
 import {
   formatInitMockTicketType,
   type InitTicketTypeId,
@@ -35,10 +46,48 @@ const TICKET_TYPE_OPTIONS: {
 
 export function DebugMenuInitTicketPanel() {
   const [overrides, setOverrides] = useState(loadDebugOverrides)
+  const [isResettingImage, setIsResettingImage] = useState(false)
+  const { account, isAuthenticated } = useAuth()
+  const queryClient = useQueryClient()
+  const activeEvent = getActiveLaunchEvent()
   const mockEnabled = overrides.mockInitTicketType !== null
   const selectedType = overrides.mockInitTicketType ?? 'standard'
 
+  const storedTicketPrefs =
+    account && activeEvent
+      ? (readInitTicketPrefsFromAccountPrefs(
+          account.prefs as Record<string, unknown> | undefined,
+          activeEvent.id,
+        ) ??
+        readInitTicketPrefsFromStorage(activeEvent.id, account.$id))
+      : null
+  const hasStoredTicketImage = Boolean(storedTicketPrefs?.imageFileId)
+
   useEffect(() => subscribeToDebugOverrides(setOverrides), [])
+
+  const handleResetTicketImage = async () => {
+    if (!account || !activeEvent || isResettingImage) return
+
+    setIsResettingImage(true)
+    try {
+      await resetInitTicketImagePrefs({
+        eventId: activeEvent.id,
+        userId: account.$id,
+        accountPrefs: account.prefs as Record<string, unknown> | undefined,
+        queryClient,
+      })
+      toast.success(
+        typeof window !== 'undefined' &&
+          window.location.pathname.startsWith('/init')
+          ? 'Ticket image reset. Regenerating now on /init.'
+          : 'Ticket image reset. Open /init to regenerate your share image.',
+      )
+    } catch {
+      toast.error('Could not reset ticket image')
+    } finally {
+      setIsResettingImage(false)
+    }
+  }
 
   return (
     <div className="space-y-4 px-1 py-1" aria-label="Init ticket mock">
@@ -94,6 +143,41 @@ export function DebugMenuInitTicketPanel() {
           </p>
         </div>
       ) : null}
+
+      <div className="rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] px-3 py-3">
+        <div className="space-y-1">
+          <p className="text-[13px] font-medium text-foreground">
+            Reset ticket image
+          </p>
+          <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
+            {isAuthenticated
+              ? hasStoredTicketImage
+                ? 'Clears the saved share image from your prefs. The /init page regenerates and saves a new one automatically.'
+                : 'No saved ticket image in your prefs. Open /init to generate one.'
+              : 'Sign in to clear your saved ticket image and regenerate it on /init.'}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3 h-8 w-full text-[12px]"
+          disabled={!isAuthenticated || !activeEvent || isResettingImage}
+          onClick={() => void handleResetTicketImage()}
+        >
+          {isResettingImage ? (
+            <>
+              <Loader2 className="me-1.5 size-3.5 animate-spin" />
+              Resetting
+            </>
+          ) : (
+            <>
+              <RotateCcw className="me-1.5 size-3.5" />
+              Reset ticket image
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }

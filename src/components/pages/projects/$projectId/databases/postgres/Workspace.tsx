@@ -155,9 +155,7 @@ export function PostgresSqlWorkbenchContent({
     const trimmed = editorActiveTab.sql.trim()
     if (!trimmed) return
 
-    if (editorActiveTab.error) {
-      setActiveTabResult(editorActiveTab.result, null, 'query')
-    }
+    setActiveTabResult(null, null, 'query')
 
     try {
       const result = await executeSql.mutateAsync(trimmed)
@@ -168,8 +166,6 @@ export function PostgresSqlWorkbenchContent({
     }
   }, [
     addRecentQuery,
-    editorActiveTab.error,
-    editorActiveTab.result,
     editorActiveTab.sql,
     executeSql,
     setActiveTabResult,
@@ -179,9 +175,7 @@ export function PostgresSqlWorkbenchContent({
     const trimmed = editorActiveTab.sql.trim()
     if (!trimmed) return
 
-    if (editorActiveTab.error) {
-      setActiveTabResult(editorActiveTab.result, null, 'explain')
-    }
+    setActiveTabResult(null, null, 'explain', null)
 
     try {
       const explanation = await explainSql.mutateAsync(trimmed)
@@ -190,8 +184,6 @@ export function PostgresSqlWorkbenchContent({
       setActiveTabResult(null, error, 'explain', null)
     }
   }, [
-    editorActiveTab.error,
-    editorActiveTab.result,
     editorActiveTab.sql,
     explainSql,
     setActiveTabResult,

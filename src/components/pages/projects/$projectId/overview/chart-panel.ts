@@ -46,7 +46,7 @@ function overviewBreakdownListMinHeightPx(rowCount: number): number {
   )
 }
 
-/** Min height for endpoint / usage-section breakdown lists (7 rows). */
+/** Min height for endpoint / usage-section breakdown lists (6 rows). */
 export const OVERVIEW_TOP_BREAKDOWN_LIST_MIN_HEIGHT_PX =
   overviewBreakdownListMinHeightPx(OVERVIEW_TOP_BREAKDOWN_ITEM_COUNT)
 
@@ -56,7 +56,7 @@ export const OVERVIEW_COMPUTE_BREAKDOWN_LIST_MIN_HEIGHT_PX =
 
 /** Fixed-height list so skeleton, partial, empty, and full results share the same layout. */
 export const overviewTopBreakdownListClass =
-  'relative flex h-full min-h-[276px] w-full min-w-0 flex-col gap-1 overflow-hidden'
+  'relative flex h-full min-h-[236px] w-full min-w-0 flex-col gap-1 overflow-hidden'
 
 export const overviewComputeBreakdownListClass =
   'relative flex h-full min-h-[316px] w-full min-w-0 flex-col gap-1 overflow-hidden'

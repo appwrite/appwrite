@@ -57,7 +57,6 @@ const RESERVED_SEGMENTS = new Set([
   'executions',
   'overview',
   'monitor',
-  'insights',
   'backups',
   'connections',
   'visualizer',

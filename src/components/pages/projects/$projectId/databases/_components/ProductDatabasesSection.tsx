@@ -379,7 +379,6 @@ function ProductDatabasesSectionContent({
                 showSecuritySettings={showDbSecuritySettings}
                 showMonitor={features.usageStats}
                 showBackups={features.databaseBackups}
-                showInsights={features.databaseInsights}
               >
                 <Link
                   {...databaseDeepLink(

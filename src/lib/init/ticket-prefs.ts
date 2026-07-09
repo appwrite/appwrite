@@ -6,6 +6,14 @@ import {
 
 export const INIT_TICKET_PREFS_KEY_PREFIX = 'console.init.ticket'
 
+export const INIT_TICKET_PREFS_CHANGE_EVENT = 'initTicketPrefsChange'
+
+export type InitTicketPrefsChangeDetail = {
+  eventId: string
+  userId: string
+  prefs: InitTicketPrefs
+}
+
 export interface InitTicketPrefs {
   displayName?: string
   holderTitle?: string
@@ -161,6 +169,26 @@ export function formatInitTicketNumber(userId?: string | null): string {
   if (!userId) return '#INIT-000000'
   const suffix = userId.replace(/[^a-z0-9]/gi, '').slice(-6).toUpperCase()
   return `#INIT-${suffix.padStart(6, '0')}`
+}
+
+export function stripInitTicketImageFromPrefs(
+  prefs: InitTicketPrefs,
+): InitTicketPrefs {
+  const { imageFileId: _imageFileId, imageSignature: _imageSignature, ...rest } =
+    prefs
+  return rest
+}
+
+export function notifyInitTicketPrefsChange(
+  detail: InitTicketPrefsChangeDetail,
+): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(
+    new CustomEvent<InitTicketPrefsChangeDetail>(
+      INIT_TICKET_PREFS_CHANGE_EVENT,
+      { detail },
+    ),
+  )
 }
 
 export function buildInitTicketShareMessage(params: {

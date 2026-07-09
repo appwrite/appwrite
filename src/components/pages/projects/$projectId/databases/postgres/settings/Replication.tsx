@@ -6,6 +6,7 @@ import {
   PostgresDatabaseReplicasCard,
   PostgresDatabaseSyncModeCard,
 } from '../_components/PostgresDatabaseConfigSettings'
+import { PostgresDatabasePrimaryCard } from '../_components/PostgresDatabasePrimaryCard'
 import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPage'
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
 
@@ -27,6 +28,25 @@ export function View() {
       },
       node: <PostgresDatabaseReplicasCard {...cardProps} />,
     },
+    ...(database.replicas && database.replicas > 0
+      ? [
+          {
+            id: 'primary',
+            search: {
+              title: 'Primary instance',
+              keywords: [
+                'primary',
+                'main',
+                'leader',
+                'failover',
+                'promote',
+                'promotion',
+              ],
+            },
+            node: <PostgresDatabasePrimaryCard {...cardProps} />,
+          } satisfies SettingsCardItem,
+        ]
+      : []),
     {
       id: 'sync-mode',
       search: {

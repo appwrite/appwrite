@@ -17,7 +17,6 @@ type PostgresSettingsPath =
   | '/projects/$projectId/databases/postgres/$databaseId/settings/network'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/pitr'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/storage'
-  | '/projects/$projectId/databases/postgres/$databaseId/settings/connections'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/extensions'
   | '/projects/$projectId/databases/postgres/$databaseId/settings/maintenance'
 
@@ -35,8 +34,6 @@ const POSTGRES_SETTINGS_TO: Record<
   pitr: '/projects/$projectId/databases/postgres/$databaseId/settings/pitr',
   storage:
     '/projects/$projectId/databases/postgres/$databaseId/settings/storage',
-  connections:
-    '/projects/$projectId/databases/postgres/$databaseId/settings/connections',
   extensions:
     '/projects/$projectId/databases/postgres/$databaseId/settings/extensions',
   maintenance:
@@ -56,7 +53,6 @@ function useActiveSettingsSection(pathname: string): string {
         'network',
         'pitr',
         'storage',
-        'connections',
         'extensions',
         'maintenance',
       ].includes(next)

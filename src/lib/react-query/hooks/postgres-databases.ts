@@ -945,14 +945,6 @@ export type UpdatePostgresDatabaseInput = {
   storageAutoscalingMaxGb?: number
 }
 
-export type UpdatePostgresDatabasePoolerInput = {
-  databaseId: string
-  mode?: string
-  maxConnections?: number
-  defaultPoolSize?: number
-  readWriteSplitting?: boolean
-}
-
 export async function updatePostgresDatabase(
   projectId: string,
   input: UpdatePostgresDatabaseInput,
@@ -977,22 +969,18 @@ export async function updatePostgresDatabaseMaintenance(
   })
 }
 
-export async function updatePostgresDatabasePooler(
-  projectId: string,
-  input: UpdatePostgresDatabasePoolerInput,
-) {
-  const { databaseId, ...params } = input
-  return sdk.forProject(projectId).postgresql.updatePooler({
-    databaseId,
-    ...params,
-  })
-}
-
 export async function deletePostgresDatabase(
   projectId: string,
   databaseId: string,
 ) {
   return sdk.forProject(projectId).postgresql.delete({ databaseId })
+}
+
+export async function resetPostgresDatabaseCredentials(
+  projectId: string,
+  databaseId: string,
+) {
+  return sdk.forProject(projectId).postgresql.updateCredentials({ databaseId })
 }
 
 export function useUpdatePostgresDatabase(
@@ -1043,25 +1031,26 @@ export function useUpdatePostgresDatabaseMaintenance(
   })
 }
 
-export function useUpdatePostgresDatabasePooler(
+export function useResetPostgresDatabaseCredentials(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (
-      input: Omit<UpdatePostgresDatabasePoolerInput, 'databaseId'>,
-    ) =>
-      updatePostgresDatabasePooler(projectId!, {
-        databaseId: databaseId!,
-        ...input,
-      }),
-    onSuccess: async (pooler) => {
+    mutationFn: () => resetPostgresDatabaseCredentials(projectId!, databaseId!),
+    onSuccess: async (database) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
-        postgresDatabasePoolerQueryOptions(projectId, databaseId).queryKey,
-        pooler,
+        postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
+        database,
       )
+      queryClient.setQueryData(
+        postgresDatabaseCredentialsQueryOptions(projectId, databaseId).queryKey,
+        mapDedicatedDatabaseCredentials(database),
+      )
+      await queryClient.invalidateQueries({
+        queryKey: ['dedicated-databases', 'project', projectId],
+      })
     },
   })
 }

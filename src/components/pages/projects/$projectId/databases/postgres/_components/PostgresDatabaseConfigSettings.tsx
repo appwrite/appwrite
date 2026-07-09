@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Minus, Plus, X } from 'lucide-react'
+import { Info, Minus, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Select,
   SelectContent,
@@ -18,20 +26,26 @@ import {
   MAX_DEDICATED_DB_HA_REPLICA_COUNT,
 } from '@/lib/database-create-pricing'
 import {
-  usePostgresDatabasePooler,
+  useDatabaseSpecifications,
+  usePostgresMetricsSnapshot,
   useUpdatePostgresDatabase,
-  useUpdatePostgresDatabasePooler,
 } from '@/lib/react-query/hooks'
+import { formatCompactBytes } from '@/lib/usage/format-metric'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { PostgresReplicationSyncModePicker } from './PostgresReplicationSyncModePicker'
 import { PostgresHaClusterDiagram } from './PostgresHaClusterDiagram'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
 
-const POOLER_MODE_OPTIONS = [
-  { value: 'transaction', label: 'Transaction' },
-  { value: 'session', label: 'Session' },
-] as const
+function getStorageUsageTone(
+  percentage: number | null,
+): 'normal' | 'warning' | 'critical' {
+  if (percentage == null) return 'normal'
+  if (percentage >= 90) return 'critical'
+  if (percentage >= 75) return 'warning'
+  return 'normal'
+}
 
 function getReplicaOption(count: number) {
   return (
@@ -540,6 +554,12 @@ export function PostgresDatabaseStorageCard({
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const { data: specificationsData, isLoading: specificationsLoading } =
+    useDatabaseSpecifications(projectId)
+  const { snapshot, isLoading: snapshotLoading } = usePostgresMetricsSnapshot(
+    projectId,
+    databaseId,
+  )
   const [storageAutoscaling, setStorageAutoscaling] = useState(
     database.storageAutoscaling === true,
   )
@@ -571,6 +591,40 @@ export function PostgresDatabaseStorageCard({
     autoscalingThreshold !==
       String(database.storageAutoscalingThresholdPercent ?? '') ||
     autoscalingMaxGb !== String(database.storageAutoscalingMaxGb ?? '')
+
+  const storageLimitGb = useMemo(() => {
+    if (database.storage && database.storage > 0) {
+      return database.storage
+    }
+    const rawSpec = specificationsData?.specifications?.find(
+      (spec) => spec.slug === database.specification,
+    )
+    if (rawSpec?.includedStorage && rawSpec.includedStorage > 0) {
+      return rawSpec.includedStorage
+    }
+    return null
+  }, [database.specification, database.storage, specificationsData?.specifications])
+
+  const storageLimitBytes = useMemo(() => {
+    if (storageLimitGb == null || storageLimitGb <= 0) return null
+    return storageLimitGb * 1_000_000_000
+  }, [storageLimitGb])
+
+  const storageUsagePercent = useMemo(() => {
+    if (!snapshot || storageLimitBytes == null || storageLimitBytes <= 0) {
+      return null
+    }
+    return (snapshot.databaseSizeBytes / storageLimitBytes) * 100
+  }, [snapshot, storageLimitBytes])
+
+  const storageUsageTone = getStorageUsageTone(storageUsagePercent)
+
+  const awaitingStorageLimit =
+    storageLimitBytes == null && specificationsLoading
+  const awaitingSnapshot =
+    storageLimitBytes != null && snapshotLoading && snapshot == null
+  const storageUsageLoading = awaitingStorageLimit || awaitingSnapshot
+  const showStorageProgress = storageLimitBytes != null || awaitingStorageLimit
 
   const handleStorageUpdate = () => {
     const parsedThreshold = Number.parseInt(autoscalingThreshold, 10)
@@ -606,6 +660,79 @@ export function PostgresDatabaseStorageCard({
             'Configure automatic storage expansion when disk usage reaches a threshold.',
           )}
         </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4 space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <Label className="text-[13px]">{t('Storage used')}</Label>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="max-w-xs text-[12px] leading-relaxed"
+              >
+                <p>
+                  {t(
+                    'On-disk database size compared to provisioned storage for this instance.',
+                  )}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="flex min-h-[18px] items-baseline gap-2">
+          {storageUsageLoading ? (
+            <>
+              <Skeleton className="h-[18px] w-14 shrink-0 rounded-sm" />
+              <Skeleton className="h-3 w-40 max-w-full shrink-0 rounded-sm" />
+            </>
+          ) : (
+            <>
+              <span className="text-[15px] font-semibold tabular-nums text-foreground">
+                {snapshot
+                  ? formatCompactBytes(snapshot.databaseSizeBytes)
+                  : '0B'}
+              </span>
+              {storageLimitBytes != null ? (
+                <span className="text-[12px] text-muted-foreground">
+                  {`/ ${formatCompactBytes(storageLimitBytes)} available${
+                    storageUsagePercent != null
+                      ? ` · ${storageUsagePercent.toFixed(1)}%`
+                      : ''
+                  }`}
+                </span>
+              ) : null}
+            </>
+          )}
+        </div>
+        {showStorageProgress ? (
+          storageUsageLoading ? (
+            <Skeleton className="h-1.5 w-full rounded-full" />
+          ) : storageUsagePercent != null ? (
+            <Progress
+              value={Math.min(100, Math.max(0, storageUsagePercent))}
+              className={cn(
+                'h-1.5',
+                storageUsageTone === 'critical' &&
+                  '[&_[data-slot=progress-indicator]]:bg-red-500',
+                storageUsageTone === 'warning' &&
+                  '[&_[data-slot=progress-indicator]]:bg-amber-500',
+                storageUsageTone === 'normal' &&
+                  'bg-[var(--chart-brand)]/15 [&_[data-slot=progress-indicator]]:bg-[var(--chart-brand)]',
+              )}
+            />
+          ) : (
+            <div className="h-1.5" />
+          )
+        ) : null}
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
@@ -666,173 +793,6 @@ export function PostgresDatabaseStorageCard({
           {t('Update')}
         </Button>
       </div>
-    </div>
-  )
-}
-
-export function PostgresDatabasePoolerCard({
-  projectId,
-  databaseId,
-  canWrite,
-}: PostgresDatabaseSettingsCardProps) {
-  const t = useT()
-  const poolerMutation = useUpdatePostgresDatabasePooler(projectId, databaseId)
-  const { pooler } = usePostgresDatabasePooler(projectId, databaseId)
-  const [poolerMode, setPoolerMode] = useState(pooler?.mode || 'transaction')
-  const [poolerMaxConnections, setPoolerMaxConnections] = useState(
-    String(pooler?.maxConnections ?? ''),
-  )
-  const [poolerDefaultPoolSize, setPoolerDefaultPoolSize] = useState(
-    String(pooler?.defaultPoolSize ?? ''),
-  )
-  const [poolerReadWriteSplitting, setPoolerReadWriteSplitting] = useState(
-    pooler?.readWriteSplitting !== false,
-  )
-  const { writeDisabled, writeTooltip } = useWriteAccess(
-    canWrite,
-    poolerMutation.isPending,
-  )
-
-  useEffect(() => {
-    if (!pooler) return
-    setPoolerMode(pooler.mode || 'transaction')
-    setPoolerMaxConnections(String(pooler.maxConnections ?? ''))
-    setPoolerDefaultPoolSize(String(pooler.defaultPoolSize ?? ''))
-    setPoolerReadWriteSplitting(pooler.readWriteSplitting !== false)
-  }, [pooler])
-
-  const poolerDirty =
-    !!pooler?.enabled &&
-    (poolerMode !== (pooler.mode || 'transaction') ||
-      poolerMaxConnections !== String(pooler.maxConnections ?? '') ||
-      poolerDefaultPoolSize !== String(pooler.defaultPoolSize ?? '') ||
-      poolerReadWriteSplitting !== (pooler.readWriteSplitting !== false))
-
-  const handlePoolerUpdate = () => {
-    const maxConnections = Number.parseInt(poolerMaxConnections, 10)
-    const defaultPoolSize = Number.parseInt(poolerDefaultPoolSize, 10)
-    poolerMutation.mutate(
-      {
-        mode: poolerMode,
-        maxConnections: Number.isFinite(maxConnections)
-          ? maxConnections
-          : undefined,
-        defaultPoolSize: Number.isFinite(defaultPoolSize)
-          ? defaultPoolSize
-          : undefined,
-        readWriteSplitting: poolerReadWriteSplitting,
-      },
-      {
-        onSuccess: () => toast.success(t('Connection pooler settings updated')),
-        onError: (error) =>
-          toast.error(
-            getErrorMessage(
-              error,
-              t('Failed to update connection pooler settings'),
-            ),
-          ),
-      },
-    )
-  }
-
-  return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Connection pooler')}
-        </h3>
-        <p className="mt-2 text-[13px] text-muted-foreground">
-          {t(
-            'Configure pooled connections when the pooler sidecar is attached to this database.',
-          )}
-        </p>
-      </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4">
-        {!pooler?.enabled ? (
-          <p className="text-[13px] text-muted-foreground">
-            {t('Connection pooler is not enabled for this database.')}
-          </p>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-[13px]">{t('Pool mode')}</Label>
-              <Select
-                value={poolerMode}
-                onValueChange={setPoolerMode}
-                disabled={writeDisabled}
-              >
-                <SelectTrigger className="h-9 max-w-xs text-[13px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {POOLER_MODE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {t(option.label)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="pooler-max-connections" className="text-[13px]">
-                  {t('Max pooled connections')}
-                </Label>
-                <Input
-                  id="pooler-max-connections"
-                  type="number"
-                  min={1}
-                  value={poolerMaxConnections}
-                  onChange={(e) => setPoolerMaxConnections(e.target.value)}
-                  disabled={writeDisabled}
-                  className="h-9 text-[13px]"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pooler-default-size" className="text-[13px]">
-                  {t('Default pool size')}
-                </Label>
-                <Input
-                  id="pooler-default-size"
-                  type="number"
-                  min={1}
-                  value={poolerDefaultPoolSize}
-                  onChange={(e) => setPoolerDefaultPoolSize(e.target.value)}
-                  disabled={writeDisabled}
-                  className="h-9 text-[13px]"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="pooler-rw-split" className="text-[13px]">
-                {t('Read/write splitting')}
-              </Label>
-              <Switch
-                id="pooler-rw-split"
-                checked={poolerReadWriteSplitting}
-                onCheckedChange={setPoolerReadWriteSplitting}
-                disabled={writeDisabled}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-      {pooler?.enabled ? (
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={writeDisabled || !poolerDirty || poolerMutation.isPending}
-            title={writeTooltip}
-            onClick={handlePoolerUpdate}
-          >
-            {t('Update')}
-          </Button>
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -122,13 +122,6 @@ const topRequests: RequestItem[] = [
     path: '/auth/v1/health',
     count: 88,
   },
-  {
-    id: '507f1f77bcf86cd799439406',
-    method: 'GET',
-    statusCode: 200,
-    path: '/auth/v1/health',
-    count: 88,
-  },
 ]
 
 export function TopRequests({

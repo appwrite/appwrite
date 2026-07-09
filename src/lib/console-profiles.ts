@@ -51,8 +51,6 @@ export type ConsoleProfileFeatures = {
   aiAssistant: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
-  /** Database analytics and insights */
-  databaseInsights: boolean
   /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
   dedicatedDbsSupport: boolean
   /** Dedicated DBs support for Documents DB. */
@@ -99,7 +97,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   orgApiKeys: 'Org API keys',
   aiAssistant: 'AI assistant',
   databaseBackups: 'Database backups',
-  databaseInsights: 'Database insights',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
   dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
@@ -142,7 +139,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       orgApiKeys: false,
       aiAssistant: true,
       databaseBackups: true,
-      databaseInsights: true,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
@@ -177,7 +173,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       orgApiKeys: false,
       aiAssistant: false,
       databaseBackups: false,
-      databaseInsights: false,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,

@@ -312,7 +312,7 @@ export function PostgresExtensionsPanel({
   }, [filter, rows, searchValue, selectedCategories])
 
   const displayRows = useMemo(
-    () => sortPostgresExtensionRows(filteredRows, 'key', 'asc'),
+    () => sortPostgresExtensionRows(filteredRows, 'status', 'asc'),
     [filteredRows],
   )
 
@@ -459,123 +459,127 @@ export function PostgresExtensionsPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-0.5">
-        <div className="relative w-48 shrink-0">
-          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('Search extensions...')}
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            className={cn(
-              'h-8 w-full ps-9 text-[13px]',
-              searchValue && 'pe-9',
-            )}
+      <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="relative w-48">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('Search extensions...')}
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              className={cn(
+                'h-8 w-full ps-9 text-[13px]',
+                searchValue && 'pe-9',
+              )}
+            />
+            {searchValue ? (
+              <button
+                type="button"
+                onClick={() => setSearchValue('')}
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                aria-label={t('Clear search')}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+          <PostgresExtensionsHeaderLimit
+            projectId={projectId}
+            databaseId={databaseId}
           />
-          {searchValue ? (
-            <button
+        </div>
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
+          <div
+            className="hidden h-4 w-px shrink-0 bg-border sm:block"
+            aria-hidden
+          />
+          <PostgresSegmentedToggle
+            value={filter}
+            onValueChange={setFilter}
+            options={filterOptions}
+            ariaLabel="Extension filters"
+            variant="inline"
+          />
+          {categories.length > 0 ? (
+            <>
+              <div
+                className="hidden h-4 w-px shrink-0 bg-border sm:block"
+                aria-hidden
+              />
+              <Popover
+                open={categoryPopoverOpen}
+                onOpenChange={setCategoryPopoverOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={
+                      selectedCategories.size > 0 ? 'secondary' : 'outline'
+                    }
+                    size="sm"
+                    className="h-8 shrink-0 text-[12px]"
+                    aria-label={t('Filter by category')}
+                  >
+                    <Tags className="me-1.5 h-3.5 w-3.5" />
+                    {t('Category')}
+                    {selectedCategories.size > 0 ? (
+                      <span className="ms-1.5 text-muted-foreground">
+                        {selectedCategories.size}
+                      </span>
+                    ) : null}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-56 p-2">
+                  <div className="max-h-[min(40dvh,280px)] overflow-y-auto">
+                    {categories.map((category) => {
+                      const checked = selectedCategories.has(category)
+                      return (
+                        <label
+                          key={category}
+                          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-muted/60"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(value) =>
+                              toggleCategory(category, value === true)
+                            }
+                          />
+                          <span className="min-w-0 truncate">{category}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                  {selectedCategories.size > 0 ? (
+                    <div className="mt-2 border-t border-border pt-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-full text-[12px]"
+                        onClick={() => setSelectedCategories(new Set())}
+                      >
+                        {t('All categories')}
+                      </Button>
+                    </div>
+                  ) : null}
+                </PopoverContent>
+              </Popover>
+            </>
+          ) : null}
+          {hasPanelFilters ? (
+            <Button
               type="button"
-              onClick={() => setSearchValue('')}
-              className="absolute end-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
-              aria-label={t('Clear search')}
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 text-[12px]"
+              onClick={clearFilters}
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
+              {t('Clear filters')}
+            </Button>
           ) : null}
         </div>
-        <PostgresExtensionsHeaderLimit
-          projectId={projectId}
-          databaseId={databaseId}
-        />
-        <div
-          className="hidden h-4 w-px shrink-0 bg-border sm:block"
-          aria-hidden
-        />
-        <PostgresSegmentedToggle
-          value={filter}
-          onValueChange={setFilter}
-          options={filterOptions}
-          ariaLabel="Extension filters"
-          variant="inline"
-        />
-        {categories.length > 0 ? (
-          <>
-            <div
-              className="hidden h-4 w-px shrink-0 bg-border sm:block"
-              aria-hidden
-            />
-            <Popover
-              open={categoryPopoverOpen}
-              onOpenChange={setCategoryPopoverOpen}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant={
-                    selectedCategories.size > 0 ? 'secondary' : 'outline'
-                  }
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  aria-label={t('Filter by category')}
-                >
-                  <Tags className="me-1.5 h-3.5 w-3.5" />
-                  {t('Category')}
-                  {selectedCategories.size > 0 ? (
-                    <span className="ms-1.5 text-muted-foreground">
-                      {selectedCategories.size}
-                    </span>
-                  ) : null}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-56 p-2">
-                <div className="max-h-[min(40dvh,280px)] overflow-y-auto">
-                  {categories.map((category) => {
-                    const checked = selectedCategories.has(category)
-                    return (
-                      <label
-                        key={category}
-                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-muted/60"
-                      >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(value) =>
-                            toggleCategory(category, value === true)
-                          }
-                        />
-                        <span className="min-w-0 truncate">{category}</span>
-                      </label>
-                    )
-                  })}
-                </div>
-                {selectedCategories.size > 0 ? (
-                  <div className="mt-2 border-t border-border pt-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-full text-[12px]"
-                      onClick={() => setSelectedCategories(new Set())}
-                    >
-                      {t('All categories')}
-                    </Button>
-                  </div>
-                ) : null}
-              </PopoverContent>
-            </Popover>
-          </>
-        ) : null}
-        {hasPanelFilters ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 text-[12px]"
-            onClick={clearFilters}
-          >
-            {t('Clear filters')}
-          </Button>
-        ) : null}
         <RefreshButton
-          className="ms-auto shrink-0"
+          className="shrink-0"
           onClick={() => void refetch()}
           isRefreshing={isFetching}
         />

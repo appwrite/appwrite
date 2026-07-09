@@ -438,16 +438,7 @@ export function PostgresSidebarProvider({
     setEditorTabState((prev) => ({
       ...prev,
       tabs: prev.tabs.map((tab) =>
-        tab.id === prev.activeTabId
-          ? {
-              ...tab,
-              sql,
-              result: null,
-              explainResult: null,
-              error: null,
-              resultKind: undefined,
-            }
-          : tab,
+        tab.id === prev.activeTabId ? { ...tab, sql } : tab,
       ),
     }))
   }, [])

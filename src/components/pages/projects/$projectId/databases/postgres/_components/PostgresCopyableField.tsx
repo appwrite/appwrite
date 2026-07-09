@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Check, Copy, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,7 @@ type PostgresCopyableFieldProps = {
   mono?: boolean
   masked?: boolean
   isLoading?: boolean
+  labelAction?: ReactNode
 }
 
 export function PostgresCopyableField({
@@ -21,6 +22,7 @@ export function PostgresCopyableField({
   mono = true,
   masked = false,
   isLoading = false,
+  labelAction,
 }: PostgresCopyableFieldProps) {
   const t = useT()
   const [copied, setCopied] = useState(false)
@@ -50,9 +52,12 @@ export function PostgresCopyableField({
 
   return (
     <div>
-      <Label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Label>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </Label>
+        {labelAction}
+      </div>
       <div className="relative">
         <Input
           value={value}

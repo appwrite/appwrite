@@ -28,6 +28,11 @@ export const POSTGRES_DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'replication',
+    title: 'Primary instance',
+    keywords: ['primary', 'main', 'leader', 'failover', 'promote', 'promotion'],
+  },
+  {
+    sectionId: 'replication',
     title: 'Sync mode',
     keywords: ['sync', 'async', 'synchronous', 'quorum', 'replication'],
   },
@@ -45,11 +50,6 @@ export const POSTGRES_DATABASE_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     sectionId: 'storage',
     title: 'Storage',
     keywords: ['autoscaling', 'disk', 'threshold', 'gb'],
-  },
-  {
-    sectionId: 'connections',
-    title: 'Connection pooler',
-    keywords: ['pool', 'pooler', 'transaction', 'session', 'splitting'],
   },
   {
     sectionId: 'extensions',

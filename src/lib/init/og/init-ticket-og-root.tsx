@@ -1,8 +1,6 @@
 import {
   INIT_TICKET_IMAGE_HEIGHT,
   INIT_TICKET_IMAGE_WIDTH,
-  INIT_TICKET_OG_CTA_BAR_HEIGHT,
-  INIT_TICKET_OG_EXPORT_WIDTH,
   initTicketOgContentBox,
   initTicketOgStubAnchorBox,
 } from '@/lib/init/ticket-layout'
@@ -21,7 +19,6 @@ import {
 } from '@/lib/init/og/init-ticket-og-styles'
 import type { PreparedInitTicketOgData } from '@/lib/init/og/prepare-init-ticket-og-data'
 import type { InitTicketRenderData } from '@/lib/init/ticket-render-data'
-import { INIT_OG_CTA_LABEL } from '@/lib/init/init-seo'
 
 type InitTicketOgSharedProps = {
   data: InitTicketRenderData
@@ -368,49 +365,3 @@ export function InitTicketOgTicketLayer({ data, prepared }: InitTicketOgSharedPr
   )
 }
 
-export function InitTicketOgCtaBar({
-  usesDarkChrome,
-  accentColor,
-  label = INIT_OG_CTA_LABEL,
-}: {
-  usesDarkChrome: boolean
-  accentColor: string
-  label?: string
-}) {
-  const palette = getInitTicketOgUiPalette(usesDarkChrome)
-  const ctaColor = resolveInitTicketOgAccentColor(accentColor)
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        width: INIT_TICKET_OG_EXPORT_WIDTH,
-        height: INIT_TICKET_OG_CTA_BAR_HEIGHT,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: palette.background,
-        borderTop: `1px solid ${palette.border}`,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 999,
-          backgroundColor: ctaColor,
-          padding: '14px 32px',
-        }}
-      >
-        <div
-          style={initTicketOgTextStyle(28, '#ffffff', {
-            fontWeight: 600,
-            lineHeight: 1,
-          })}
-        >
-          {label}
-        </div>
-      </div>
-    </div>
-  )
-}

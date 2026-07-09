@@ -8,13 +8,11 @@ const TAB_DESCRIPTIONS: Partial<Record<PostgresDatabaseTab, string>> = {
   visualizer:
     'Explore database schema structure from the compute API schema endpoint.',
   monitor: 'View database metrics and usage over time.',
-  insights:
-    'Review performance insights and slow query logs for this database.',
   backups: 'Create backups, configure policies, and restore from snapshots.',
   connections:
     'View active client sessions connected to this database instance.',
   settings:
-    'Update database name, compute resources, pooler, and maintenance settings.',
+    'Update database name, compute resources, and maintenance settings.',
 }
 
 type TabPlaceholderProps = {

@@ -15,7 +15,6 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
-  BarChart3,
   Cpu,
 } from 'lucide-react'
 import {
@@ -1046,7 +1045,6 @@ export function View() {
                     showSecuritySettings={showDbSecuritySettings}
                     showMonitor={features.usageStats}
                     showBackups={features.databaseBackups}
-                    showInsights={features.databaseInsights}
                   >
                     <Link
                       {...databaseDeepLink(
@@ -1472,18 +1470,6 @@ export function DatabaseDetailLayout({
             </span>
           </Link>
 
-          {features.databaseInsights && (
-            <>
-              {/* Insights Link - Coming Soon */}
-              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground/50">
-                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 text-[13px]">{t('Insights')}</span>
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  {t('Soon')}
-                </span>
-              </span>
-            </>
-          )}
           {features.databaseBackups && (
             <DatabaseBackupsNavLink
               projectId={projectId}
@@ -1692,18 +1678,6 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             </span>
           </Link>
 
-          {features.databaseInsights && (
-            <>
-              {/* Insights Link - Coming Soon */}
-              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground/50">
-                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 text-[13px]">{t('Insights')}</span>
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  {t('Soon')}
-                </span>
-              </span>
-            </>
-          )}
           {features.databaseBackups && (
             <DatabaseBackupsNavLink
               projectId={projectId}

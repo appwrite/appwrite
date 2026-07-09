@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import {
   AlertCircle,
   AlertTriangle,
@@ -9,9 +8,12 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
+  useOrganizationScopes,
   usePostgresDatabase,
   usePostgresDatabaseCredentials,
   usePostgresDatabasePooler,
+  useProject,
+  useResetPostgresDatabaseCredentials,
 } from '@/lib/react-query/hooks'
 import {
   buildPostgresConnectSnippetDisplayCode,
@@ -30,12 +32,20 @@ import {
 } from '@/lib/postgres-connect-snippets'
 import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
 import { maskPostgresConnectionStringPassword } from '@/lib/postgres-connection-string'
-import { postgresNav } from '@/lib/postgres-database-routes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
 import { CodeSnippetCopyButton } from '@/components/global/shared/CodeSnippetCopyButton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -55,6 +65,8 @@ import {
 import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 import { PostgresCopyableField } from './PostgresCopyableField'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
+import { canCreateDatabase } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 
 const POSTGRES_DOCS_URL = '/docs/products/databases'
@@ -110,26 +122,27 @@ async function copyText(successMessage: string, value: string, errorMessage: str
 }
 
 type PostgresConnectDetailsProps = {
-  projectId: string
-  databaseId: string
   database: NonNullable<ReturnType<typeof usePostgresDatabase>['database']>
   credentials: DedicatedDatabaseCredentials
   endpointInfo: PostgresConnectionEndpointInfo
   snippets: ReturnType<typeof buildPostgresConnectSnippets> | null
-  onClose: () => void
+  canResetPassword: boolean
+  resetPasswordDisabledTooltip?: string
+  resetPasswordPending: boolean
+  onResetPassword: () => void
 }
 
 function PostgresConnectDetails({
-  projectId,
-  databaseId,
   database,
   credentials,
   endpointInfo,
   snippets,
-  onClose,
+  canResetPassword,
+  resetPasswordDisabledTooltip,
+  resetPasswordPending,
+  onResetPassword,
 }: PostgresConnectDetailsProps) {
   const t = useT()
-  const nav = postgresNav({ projectId, databaseId })
 
   const databaseName =
     credentials.database || credentials.tcpDatabase || undefined
@@ -174,6 +187,17 @@ function PostgresConnectDetails({
           label={t('Password')}
           value={credentials.password}
           masked
+          labelAction={
+            <button
+              type="button"
+              className="shrink-0 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!canResetPassword || resetPasswordPending}
+              title={resetPasswordDisabledTooltip}
+              onClick={onResetPassword}
+            >
+              {t('Reset password')}
+            </button>
+          }
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -188,15 +212,7 @@ function PostgresConnectDetails({
       </div>
       {endpointInfo.poolerEnabled ? (
         <p className="text-[12px] text-muted-foreground">
-          Host and port use the pooler endpoint. Configure the pooler in{' '}
-          <Link
-            {...nav.settings()}
-            className="font-medium text-foreground underline-offset-4 hover:underline"
-            onClick={onClose}
-          >
-            {t('Settings')}
-          </Link>
-          .
+          {t('Host and port use the pooler endpoint.')}
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2">
@@ -447,6 +463,10 @@ export function PostgresConnectDialog({
 }: PostgresConnectDialogProps) {
   const t = useT()
   const [methodTab, setMethodTab] = useState<PostgresConnectTab>('details')
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
+  const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { access } = useOrganizationScopes(project?.teamId)
 
   const { database, isLoading: databaseLoading } = usePostgresDatabase(
     projectId,
@@ -459,6 +479,15 @@ export function PostgresConnectDialog({
     refetch: refetchCredentials,
   } = usePostgresDatabaseCredentials(projectId, databaseId)
   const { pooler } = usePostgresDatabasePooler(projectId, databaseId)
+  const resetPasswordMutation = useResetPostgresDatabaseCredentials(
+    projectId,
+    databaseId,
+  )
+
+  const canResetPassword = canCreateDatabase(access, features)
+  const resetPasswordDisabledTooltip = !canResetPassword
+    ? t("You don't have permission to reset the database password.")
+    : undefined
 
   const isLoading =
     (databaseLoading && !database) ||
@@ -487,10 +516,26 @@ export function PostgresConnectDialog({
   useEffect(() => {
     if (open) return
     setMethodTab('details')
+    setResetPasswordOpen(false)
   }, [open])
 
+  const handleResetPassword = () => {
+    resetPasswordMutation.mutate(undefined, {
+      onSuccess: () => {
+        setResetPasswordOpen(false)
+        toast.success(t('Database password reset'))
+      },
+      onError: (error) => {
+        toast.error(
+          getErrorMessage(error, t('Failed to reset database password')),
+        )
+      },
+    })
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,800px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-start">
           <DialogTitle>{t('Credentials')}</DialogTitle>
@@ -567,13 +612,14 @@ export function PostgresConnectDialog({
                 className={cn('mt-0 data-[state=inactive]:hidden', CONNECT_TAB_CONTENT_HEIGHT)}
               >
                 <PostgresConnectDetails
-                  projectId={projectId}
-                  databaseId={databaseId}
                   database={database}
                   credentials={credentials}
                   endpointInfo={endpointInfo}
                   snippets={snippets}
-                  onClose={() => onOpenChange(false)}
+                  canResetPassword={canResetPassword}
+                  resetPasswordDisabledTooltip={resetPasswordDisabledTooltip}
+                  resetPasswordPending={resetPasswordMutation.isPending}
+                  onResetPassword={() => setResetPasswordOpen(true)}
                 />
               </TabsContent>
 
@@ -683,6 +729,35 @@ export function PostgresConnectDialog({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <AlertDialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
+        <AlertDialogContent className="sm:max-w-md p-0">
+          <AlertDialogHeader className="px-6 pt-6 pb-4 text-left">
+            <AlertDialogTitle>{t('Reset database password?')}</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px] mt-2">
+              {t(
+                'A new password will be generated immediately. Apps and clients using the current password will stop connecting until you update them.',
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="border-t border-border" />
+          <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel disabled={resetPasswordMutation.isPending}>
+              {t('Cancel')}
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={resetPasswordMutation.isPending}
+              onClick={handleResetPassword}
+            >
+              {t('Reset database password')}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

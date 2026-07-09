@@ -3,6 +3,7 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_INIT_TICKET_PREFS,
+  INIT_TICKET_PREFS_CHANGE_EVENT,
   mergeInitTicketPrefsIntoAccountPrefs,
   readInitTicketGuestPrefsFromStorage,
   readInitTicketPrefsFromAccountPrefs,
@@ -10,6 +11,7 @@ import {
   writeInitTicketGuestPrefsToStorage,
   writeInitTicketPrefsToStorage,
   type InitTicketPrefs,
+  type InitTicketPrefsChangeDetail,
 } from '@/lib/init/ticket-prefs'
 
 const SAVE_DEBOUNCE_MS = 600
@@ -76,6 +78,24 @@ export function useInitTicketPrefs(
     },
     [persistPrefs],
   )
+
+  useEffect(() => {
+    if (!userId || typeof window === 'undefined') return
+
+    const handlePrefsChange = (event: Event) => {
+      const detail = (event as CustomEvent<InitTicketPrefsChangeDetail>).detail
+      if (detail.eventId !== eventId || detail.userId !== userId) return
+      setPrefs(detail.prefs)
+    }
+
+    window.addEventListener(INIT_TICKET_PREFS_CHANGE_EVENT, handlePrefsChange)
+    return () => {
+      window.removeEventListener(
+        INIT_TICKET_PREFS_CHANGE_EVENT,
+        handlePrefsChange,
+      )
+    }
+  }, [eventId, userId])
 
   useEffect(() => {
     return () => {

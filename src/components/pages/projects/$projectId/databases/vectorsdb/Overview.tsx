@@ -9,7 +9,6 @@ import {
   Table2,
   CheckCircle2,
   AlertCircle,
-  BarChart3,
   ExternalLink,
   Download,
   FileJson,
@@ -45,7 +44,6 @@ import {
 } from '../_components/DatabaseMonitorHeaderActions'
 import { DatabaseMonitorMobileNav } from '../_components/DatabaseMonitorMobileNav'
 import type { DateRange } from 'react-day-picker'
-import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
 import { SchemaVisualizer } from './SchemaVisualizer'
 import { SchemaExportDialog } from '../SchemaExport'
 import {
@@ -138,7 +136,6 @@ export interface OverviewProps {
     | 'backups'
     | 'export-import'
     | 'security'
-    | 'insights'
     | 'settings'
     | 'visualizer'
     | 'monitor'
@@ -522,12 +519,11 @@ export function Overview({
     features,
   )
 
-  // Redirect from monitor/backups/insights when feature disabled
+  // Redirect from monitor/backups when feature disabled
   useEffect(() => {
     if (
       (activeTab === 'monitor' && !features.usageStats) ||
-      (activeTab === 'backups' && !features.databaseBackups) ||
-      (activeTab === 'insights' && !features.databaseInsights)
+      (activeTab === 'backups' && !features.databaseBackups)
     ) {
       navigate({
         to: '/projects/$projectId/databases/$dbKind/$databaseId/',
@@ -539,7 +535,6 @@ export function Overview({
     activeTab,
     features.usageStats,
     features.databaseBackups,
-    features.databaseInsights,
     projectId,
     databaseId,
     DB_KIND,
@@ -607,16 +602,6 @@ export function Overview({
               },
             ]
           : []),
-        ...(features.databaseInsights
-          ? [
-              {
-                id: 'insights' as const,
-                label: 'Insights',
-                to: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
-                params: { projectId, dbKind: DB_KIND, databaseId },
-              },
-            ]
-          : []),
         ...(features.databaseBackups
           ? [
               {
@@ -651,7 +636,6 @@ export function Overview({
       dbLabels.databaseOverviewTabLabel,
       features.usageStats,
       features.databaseBackups,
-      features.databaseInsights,
       showDbSecuritySettings,
     ],
   )
@@ -1338,63 +1322,6 @@ export function Overview({
               dateRange={monitorDateRange}
               chartTick={monitorChartTick}
             />
-          </div>
-        )}
-
-        {activeTab === 'insights' && (
-          <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-            <ComingSoonCurtain
-              featureId="database-insights"
-              message={t(
-                'Get powerful analytics and insights about your database performance and usage patterns.',
-              )}
-            >
-              <div className="space-y-6">
-                {/* Placeholder content for coming soon feature */}
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {t('Database analytics')}
-                    </h3>
-                    <p className="text-[13px] text-muted-foreground mt-2">
-                      {t('View detailed metrics about your database performance')}
-                    </p>
-                  </div>
-                  <div className="border-t border-border" />
-                  <div className="px-6 py-4">
-                    <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
-                      <BarChart3 className="h-16 w-16 text-muted-foreground/30" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                    <div className="px-6 py-4">
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        {t('Query performance')}
-                      </h3>
-                    </div>
-                    <div className="border-t border-border" />
-                    <div className="px-6 py-4">
-                      <div className="h-48 bg-muted/30 rounded-lg" />
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                    <div className="px-6 py-4">
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        {t('Usage patterns')}
-                      </h3>
-                    </div>
-                    <div className="border-t border-border" />
-                    <div className="px-6 py-4">
-                      <div className="h-48 bg-muted/30 rounded-lg" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ComingSoonCurtain>
           </div>
         )}
 

@@ -8,7 +8,6 @@ export type OverviewContentTab =
   | 'backups'
   | 'export-import'
   | 'security'
-  | 'insights'
   | 'settings'
   | 'visualizer'
   | 'monitor'
@@ -18,7 +17,6 @@ export type OverviewContentTab =
 export type DatabaseTabId =
   | 'visualizer'
   | 'monitor'
-  | 'insights'
   | 'backups'
   | 'export-import'
   | 'db-security'
@@ -44,7 +42,6 @@ export const DATABASE_TAB_TO_OVERVIEW: Record<
 > = {
   visualizer: 'visualizer',
   monitor: 'monitor',
-  insights: 'insights',
   backups: 'backups',
   'export-import': 'export-import',
   'db-security': 'security',
@@ -55,7 +52,6 @@ export const DATABASE_TAB_TO_OVERVIEW: Record<
 export const DATABASE_TAB_LABELS: Record<DatabaseTabId, string> = {
   visualizer: 'Visualizer',
   monitor: 'Monitor',
-  insights: 'Insights',
   backups: 'Backups',
   'export-import': 'Export / Import',
   'db-security': 'Security',

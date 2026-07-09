@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router'
 import {
   Activity,
   Archive,
-  BarChart3,
   Cable,
   KeyRound,
   Settings,
@@ -73,24 +72,6 @@ export function PostgresDatabaseNav({
           <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Monitor')}</span>
         </Link>
       ) : null}
-      {features.databaseInsights ? (
-        <Link
-          {...nav.insights()}
-          className={navLinkClass(activeTab === 'insights')}
-        >
-          <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Insights')}</span>
-        </Link>
-      ) : null}
-      {features.databaseBackups ? (
-        <Link
-          {...nav.backups()}
-          className={navLinkClass(activeTab === 'backups')}
-        >
-          <Archive className="h-3.5 w-3.5 shrink-0" />
-          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Backups')}</span>
-        </Link>
-      ) : null}
       <Link
         {...nav.connections()}
         className={navLinkClass(activeTab === 'connections')}
@@ -102,6 +83,15 @@ export function PostgresDatabaseNav({
         <Users className="h-3.5 w-3.5 shrink-0" />
         <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Roles')}</span>
       </Link>
+      {features.databaseBackups ? (
+        <Link
+          {...nav.backups()}
+          className={navLinkClass(activeTab === 'backups')}
+        >
+          <Archive className="h-3.5 w-3.5 shrink-0" />
+          <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{t('Backups')}</span>
+        </Link>
+      ) : null}
       {showSettings ? (
         <Link
           {...nav.settings()}

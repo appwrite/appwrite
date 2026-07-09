@@ -25,7 +25,6 @@ export const DATABASE_LEVEL_TAB_PATH = {
   backups: '/projects/$projectId/databases/$dbKind/$databaseId/backups',
   'export-import':
     '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
-  insights: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
   monitor: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
   'db-security': '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
   'db-settings': '/projects/$projectId/databases/$dbKind/$databaseId/settings',

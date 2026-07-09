@@ -2,10 +2,7 @@ import { ImageResponse } from '@vercel/og'
 import type { ReactElement } from 'react'
 import { buildInitTicketOgBackgroundSvg } from '@/lib/init/og/init-ticket-og-background'
 import { loadInitTicketOgFonts } from '@/lib/init/og/fonts'
-import {
-  InitTicketOgCtaBar,
-  InitTicketOgTicketLayer,
-} from '@/lib/init/og/init-ticket-og-root'
+import { InitTicketOgTicketLayer } from '@/lib/init/og/init-ticket-og-root'
 import {
   initTicketOgShadowPlacement,
   warpInitTicketOgPerspective,
@@ -14,7 +11,6 @@ import { prepareInitTicketOgData } from '@/lib/init/og/prepare-init-ticket-og-da
 import {
   INIT_TICKET_IMAGE_HEIGHT,
   INIT_TICKET_IMAGE_WIDTH,
-  INIT_TICKET_OG_CTA_BAR_HEIGHT,
   INIT_TICKET_OG_EXPORT_HEIGHT,
   INIT_TICKET_OG_EXPORT_WIDTH,
 } from '@/lib/init/ticket-layout'
@@ -23,11 +19,6 @@ import type { InitTicketRenderData } from '@/lib/init/ticket-render-data'
 const TICKET_RENDER_OPTIONS = {
   width: INIT_TICKET_IMAGE_WIDTH,
   height: INIT_TICKET_IMAGE_HEIGHT,
-}
-
-const CTA_RENDER_OPTIONS = {
-  width: INIT_TICKET_OG_EXPORT_WIDTH,
-  height: INIT_TICKET_OG_CTA_BAR_HEIGHT,
 }
 
 async function renderOgPng(
@@ -69,35 +60,25 @@ async function compositeInitTicketOgExport(params: {
   ticketLayerPng: Buffer
   usesDarkChrome: boolean
   accentColor: string
-  fonts: Awaited<ReturnType<typeof loadInitTicketOgFonts>>
 }): Promise<Uint8Array> {
   const sharp = (await import('sharp')).default
-  const topPadding = 18
-  const contentHeight =
-    INIT_TICKET_OG_EXPORT_HEIGHT - INIT_TICKET_OG_CTA_BAR_HEIGHT - topPadding
+  const edgePadding = 24
+  const contentHeight = INIT_TICKET_OG_EXPORT_HEIGHT - edgePadding * 2
+  const contentWidth = INIT_TICKET_OG_EXPORT_WIDTH - edgePadding * 2
   const scale = Math.min(
     contentHeight / INIT_TICKET_IMAGE_HEIGHT,
-    (INIT_TICKET_OG_EXPORT_WIDTH - 48) / INIT_TICKET_IMAGE_WIDTH,
+    contentWidth / INIT_TICKET_IMAGE_WIDTH,
   )
   const scaledWidth = Math.round(INIT_TICKET_IMAGE_WIDTH * scale)
   const scaledHeight = Math.round(INIT_TICKET_IMAGE_HEIGHT * scale)
   const left = Math.round((INIT_TICKET_OG_EXPORT_WIDTH - scaledWidth) / 2)
-  const top =
-    topPadding + Math.round((contentHeight - scaledHeight) / 2)
+  const top = Math.round((INIT_TICKET_OG_EXPORT_HEIGHT - scaledHeight) / 2)
 
-  const [scaledTicketLayer, ctaBarPng, backgroundPng] = await Promise.all([
+  const [scaledTicketLayer, backgroundPng] = await Promise.all([
     sharp(params.ticketLayerPng)
       .resize(scaledWidth, scaledHeight, { fit: 'fill' })
       .png()
       .toBuffer(),
-    renderOgPng(
-      <InitTicketOgCtaBar
-        usesDarkChrome={params.usesDarkChrome}
-        accentColor={params.accentColor}
-      />,
-      params.fonts,
-      CTA_RENDER_OPTIONS,
-    ),
     sharp(
       Buffer.from(
         buildInitTicketOgBackgroundSvg(
@@ -113,14 +94,7 @@ async function compositeInitTicketOgExport(params: {
   ])
 
   const output = await sharp(backgroundPng)
-    .composite([
-      { input: scaledTicketLayer, left, top },
-      {
-        input: ctaBarPng,
-        left: 0,
-        top: INIT_TICKET_OG_EXPORT_HEIGHT - INIT_TICKET_OG_CTA_BAR_HEIGHT,
-      },
-    ])
+    .composite([{ input: scaledTicketLayer, left, top }])
     .png()
     .toBuffer()
 
@@ -164,6 +138,5 @@ export async function renderInitTicketImageWithOg(
     ticketLayerPng,
     usesDarkChrome,
     accentColor: data.ticketAppearance.accentColor,
-    fonts,
   })
 }

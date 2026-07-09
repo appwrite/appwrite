@@ -137,12 +137,6 @@ export function dbNavLink(kind: DatabaseRouteKind) {
         params: baseDatabaseOnly(p),
       }
     },
-    insights(p: DbNavLinkParams) {
-      return {
-        to: '/projects/$projectId/databases/$dbKind/$databaseId/insights',
-        params: baseDatabaseOnly(p),
-      }
-    },
     monitor(p: DbNavLinkParams) {
       return {
         to: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',

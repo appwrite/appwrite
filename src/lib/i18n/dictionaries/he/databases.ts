@@ -76,6 +76,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup ID copied to clipboard': 'מזהה הגיבוי הועתק ללוח',
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
+  'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
   'Backups': 'גיבויים',
   'backups': 'גיבויים',
@@ -291,6 +292,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database name updated successfully': 'שם מסד הנתונים עודכן בהצלחה',
   'Database not found': 'מסד הנתונים לא נמצא',
   'Database restore initiated': 'שחזור מסד הנתונים החל',
+  'Database password reset': 'סיסמת מסד הנתונים אופסה',
   'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.': 'לשורות במסד הנתונים יש גודל מרבי של 64 KB. עמודות varchar משתמשות ב-4 בייטים לכל תו בתוספת תקורה קטנה. עמודות text, mediumtext ו-longtext משתמשות רק בכ-20 בייטים ללא תלות באורך התוכן.',
   'database selected': 'מסד נתונים נבחר',
   'Database size over time from pg_database_size, relative to provisioned storage.': 'גודל מסד הנתונים לאורך זמן לפי pg_database_size, ביחס לאחסון שהוקצה.',
@@ -457,6 +459,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed to export SVG': 'ייצוא ה-SVG נכשל',
   'Failed to load connections': 'טעינת החיבורים נכשלה',
   'Failed to load credentials': 'טעינת פרטי הגישה נכשלה',
+  'Failed to reset database password': 'איפוס סיסמת מסד הנתונים נכשל',
   'Failed to load databases': 'טעינת מסדי הנתונים נכשלה',
   'Failed to load dedicated databases': 'טעינת מסדי הנתונים הייעודיים נכשלה',
   'Failed to load metrics': 'טעינת המדדים נכשלה',
@@ -883,8 +886,11 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Resize table and document preview': 'שינוי גודל תצוגת הטבלה והמסמך',
   'Restore': 'שחזור',
   'Restore backup': 'שחזור גיבוי',
+  'Restore this database from the selected backup. All current data will be replaced.': 'שחזרו מסד נתונים זה מהגיבוי שנבחר. כל הנתונים הנוכחיים יוחלפו.',
   'Restore target': 'יעד השחזור',
   'Restore your database to a specific moment in time, beyond the latest scheduled backup. Useful for recovering from accidental deletes, failed migrations, or bad writes.': 'שחזרו את מסד הנתונים לרגע מסוים בזמן, מעבר לגיבוי המתוזמן האחרון. שימושי לשחזור ממחיקות בטעות, מיגרציות שנכשלו או כתיבות שגויות.',
+  'Reset database password': 'איפוס סיסמת מסד הנתונים',
+  'Reset database password?': 'לאפס את סיסמת מסד הנתונים?',
   'Retained for': 'נשמר למשך',
   'Retained for 1 day': 'נשמר למשך יום אחד',
   'Retained for 1 week': 'נשמר למשך שבוע אחד',
@@ -1145,6 +1151,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Write SQL in the editor above and run your query. Results will appear in this panel.': 'כתבו SQL בעורך שלמעלה והריצו את השאילתה. התוצאות יופיעו בחלונית זו.',
   'Years': 'שנים',
   'You don\'t have permission to change database settings.': 'אין לכם הרשאה לשנות את הגדרות מסד הנתונים.',
+  'You don\'t have permission to reset the database password.': 'אין לכם הרשאה לאפס את סיסמת מסד הנתונים.',
   'You don\'t have permission to create databases.': 'אין לכם הרשאה ליצור מסדי נתונים.',
   'You don\'t have permission to create databases or tables.': 'אין לכם הרשאה ליצור מסדי נתונים או טבלאות.',
   'You don\'t have permission to create schemas.': 'אין לכם הרשאה ליצור סכימות.',
@@ -1285,6 +1292,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Commands': 'פקודות',
   'A DSN (Data Source Name) is a single PostgreSQL URI with host, port, database, credentials, and SSL settings. Paste it into ORMs, CLI tools, or any client that accepts a connection string.':
     'DSN (Data Source Name) הוא URI יחיד של PostgreSQL עם host, port, database, credentials והגדרות SSL. הדביקו אותו ב-ORMs, בכלי CLI או בכל לקוח שמקבל מחרוזת חיבור.',
+  'A new password will be generated immediately. Apps and clients using the current password will stop connecting until you update them.':
+    'סיסמה חדשה תיווצר מיד. אפליקציות ולקוחות שמשתמשים בסיסמה הנוכחית יפסיקו להתחבר עד שתעדכנו אותם.',
   'Install psql with PostgreSQL or a standalone client package (for example, libpq on macOS). Paste a connect command into your terminal, enter your password when prompted, then run SQL or meta-commands like \\dt to list tables.':
     'התקינו psql עם PostgreSQL או חבילת לקוח standalone (למשל libpq ב-macOS). הדביקו פקודת connect לטרמינל, הזינו סיסמה כשתתבקשו, ואז הריצו SQL או meta-commands כמו \\dt כדי לרשום טבלאות.',
   SSL: 'SSL',
@@ -1453,6 +1462,31 @@ export const heDatabasesDictionary: Record<string, string> = {
     'ה-primary מקבל כתיבות ומשכפל שינויים ל-read replicas להגדלת נפח שאילתות והתאוששות מהירה יותר.',
   'Configure read replicas and replication sync mode for failover resilience.':
     'הגדירו replicas לקריאה ומצב סנכרון שכפול לעמידות בכשלי failover.',
+  'Choose which cluster member accepts reads and writes. Promoting a read replica triggers a manual failover.':
+    'בחרו איזה חבר באשכול מקבל קריאות וכתיבות. קידום read replica מפעיל failover ידני.',
+  'Loading cluster members…': 'טוען חברי אשכול…',
+  'No cluster members are available yet.': 'אין עדיין חברי אשכול זמינים.',
+  Instance: 'מופע',
+  Role: 'תפקיד',
+  'Replication lag': 'עיכוב שכפול',
+  Primary: 'Primary',
+  'Not found': 'לא נמצא',
+  '{seconds}s lag': 'עיכוב {seconds} שניות',
+  'The current primary is {instance}. Select a read replica and promote it to move write traffic.':
+    'ה-primary הנוכחי הוא {instance}. בחרו read replica וקדמו אותו כדי להעביר תעבורת כתיבה.',
+  'Refreshing cluster members…': 'מרענן חברי אשכול…',
+  'Promote to primary': 'קידום ל-primary',
+  'Promote {instance} to primary? The current primary will become a read replica. Writes may be briefly unavailable while failover completes.':
+    'לקדם את {instance} ל-primary? ה-primary הנוכחי יהפוך ל-read replica. ייתכן שכתיבות לא יהיו זמינות לזמן קצר עד לסיום ה-failover.',
+  'Promote the selected read replica to primary? The current primary will become a read replica.':
+    'לקדם את read replica שנבחר ל-primary? ה-primary הנוכחי יהפוך ל-read replica.',
+  'Failover started': 'Failover התחיל',
+  'Failed to start failover': 'הפעלת failover נכשלה',
+  'Select a read replica to promote.': 'בחרו read replica לקידום.',
+  'Only active replicas can be promoted to primary.':
+    'רק replicas פעילים ניתנים לקידום ל-primary.',
+  'Failover is unavailable while the database status is {status}.':
+    'Failover אינו זמין כל עוד סטטוס מסד הנתונים הוא {status}.',
   'Sync mode': 'מצב סנכרון',
   'Choose how the primary confirms writes with read replicas.':
     'בחרו כיצד ה-primary מאשר כתיבות מול read replicas.',
@@ -1514,6 +1548,10 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Read/write splitting': 'פיצול קריאה/כתיבה',
   'Connection pooler settings updated': 'הגדרות Connection pooler עודכנו',
   'Failed to update connection pooler settings': 'עדכון הגדרות Connection pooler נכשל',
+  'Host and port use the pooler endpoint.':
+    'Host ו-Port משתמשים ב-endpoint של ה-pooler.',
+  'Update database name, compute resources, and maintenance settings.':
+    'עדכון שם מסד הנתונים, משאבי compute והגדרות תחזוקה.',
   'Maintenance window': 'חלון תחזוקה',
   'Minor version upgrades and maintenance tasks run during this weekly window (UTC).':
     'שדרוגי גרסה minor ומשימות תחזוקה מתבצעים בחלון שבועי זה (UTC).',

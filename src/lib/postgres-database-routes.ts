@@ -19,7 +19,6 @@ export type PostgresDatabaseTab =
   | 'visualizer'
   | 'enums'
   | 'monitor'
-  | 'insights'
   | 'backups'
   | 'connections'
   | 'roles'
@@ -33,7 +32,6 @@ export const POSTGRES_DATABASE_TAB_LABELS: Record<
   visualizer: 'Visualizer',
   enums: 'Enums',
   monitor: 'Monitor',
-  insights: 'Insights',
   backups: 'Backups',
   connections: 'Connections',
   roles: 'Roles',
@@ -164,12 +162,6 @@ export function postgresNav(params: PostgresNavBase) {
         base,
       )
     },
-    insights() {
-      return postgresDatabaseTabRoute(
-        '/projects/$projectId/databases/postgres/$databaseId/insights' as const,
-        base,
-      )
-    },
     backups() {
       return postgresDatabaseTabRoute(
         '/projects/$projectId/databases/postgres/$databaseId/backups' as const,
@@ -225,7 +217,6 @@ const POSTGRES_DATABASE_TAB_SEGMENTS: PostgresDatabaseTab[] = [
   'visualizer',
   'enums',
   'monitor',
-  'insights',
   'backups',
   'connections',
   'roles',
@@ -253,8 +244,6 @@ export function postgresDatabaseTabLink(
       return nav.enums()
     case 'monitor':
       return nav.monitor()
-    case 'insights':
-      return nav.insights()
     case 'backups':
       return nav.backups()
     case 'connections':

@@ -4,7 +4,6 @@ import {
   Globe,
   HardDrive,
   History,
-  Plug,
   Puzzle,
   Settings,
   ShieldCheck,
@@ -18,7 +17,6 @@ export type PostgresDatabaseSettingsPathSuffix =
   | 'network'
   | 'pitr'
   | 'storage'
-  | 'connections'
   | 'extensions'
   | 'maintenance'
 
@@ -86,6 +84,8 @@ export const POSTGRES_DATABASE_SETTINGS_NAV: PostgresDatabaseSettingsNavItem[] =
         'replica',
         'replicas',
         'failover',
+        'primary',
+        'promote',
         'sync',
         'async',
         'ha',
@@ -133,22 +133,6 @@ export const POSTGRES_DATABASE_SETTINGS_NAV: PostgresDatabaseSettingsNavItem[] =
         'threshold',
         'gb',
         'expansion',
-      ],
-    },
-    {
-      id: 'connections',
-      label: 'Connection pooler',
-      pathSuffix: 'connections',
-      icon: Plug,
-      keywords: [
-        'pooler',
-        'pool',
-        'connection',
-        'pooled',
-        'transaction',
-        'session',
-        'read write',
-        'splitting',
       ],
     },
     {

@@ -128,10 +128,10 @@ export type ExtensionStatusFilter =
   | 'in_progress'
 
 const EXTENSION_STATUS_SORT_RANK: Record<PostgresExtensionRowStatus, number> = {
-  installing: 0,
+  installed: 0,
   uninstalling: 1,
-  available: 2,
-  installed: 3,
+  installing: 2,
+  available: 3,
 }
 
 function compareStrings(a: string, b: string, order: ExtensionSortOrder): number {
@@ -146,20 +146,28 @@ export function sortPostgresExtensionRows(
 ): PostgresExtensionRow[] {
   const sorted = [...rows]
   sorted.sort((a, b) => {
+    let primary = 0
     switch (sortBy) {
       case 'key':
-        return compareStrings(a.key, b.key, sortOrder)
+        primary = compareStrings(a.key, b.key, sortOrder)
+        break
       case 'category':
-        return compareStrings(a.category || '', b.category || '', sortOrder)
+        primary = compareStrings(a.category || '', b.category || '', sortOrder)
+        break
       case 'status':
-        return (
+        primary =
           (EXTENSION_STATUS_SORT_RANK[a.status] -
             EXTENSION_STATUS_SORT_RANK[b.status]) *
           (sortOrder === 'asc' ? 1 : -1)
-        )
+        break
       case 'description':
-        return compareStrings(a.description || '', b.description || '', sortOrder)
+        primary = compareStrings(a.description || '', b.description || '', sortOrder)
+        break
     }
+
+    if (primary !== 0) return primary
+
+    return compareStrings(a.key, b.key, 'asc')
   })
   return sorted
 }
@@ -241,5 +249,5 @@ export function buildPostgresExtensionRows(args: {
     rows.push({ ...info, status })
   }
 
-  return rows.sort((a, b) => a.key.localeCompare(b.key))
+  return sortPostgresExtensionRows(rows, 'status', 'asc')
 }

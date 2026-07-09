@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { TabPlaceholder } from '@/components/pages/projects/$projectId/databases/postgres/TabPlaceholder'
+import { View as PostgresBackupsView } from '@/components/pages/projects/$projectId/databases/postgres/Backups'
 import { prefetchPostgresShellData } from '@/components/pages/projects/$projectId/databases/postgres/postgres-tab-route-loader'
 import {
   POSTGRES_DATABASE_TAB_LABELS,
@@ -7,6 +7,11 @@ import {
 } from '@/lib/postgres-database-routes'
 import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  POSTGRES_BACKUPS_PAGE_SIZE,
+  postgresBackupPoliciesQueryOptions,
+  postgresBackupsQueryOptions,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/postgres/$databaseId/backups',
@@ -31,15 +36,34 @@ export const Route = createFileRoute(
   }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return { database: null }
-    return prefetchPostgresShellData(
-      context.queryClient,
-      params.projectId,
-      params.databaseId,
+    const { projectId, databaseId } = params
+    const { queryClient } = context
+    const shellData = await prefetchPostgresShellData(
+      queryClient,
+      projectId,
+      databaseId,
     )
+    await Promise.all([
+      queryClient.ensureQueryData(
+        postgresBackupPoliciesQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        postgresBackupsQueryOptions(
+          projectId,
+          databaseId,
+          0,
+          POSTGRES_BACKUPS_PAGE_SIZE,
+        ),
+      ),
+    ]).catch(() => {
+      /* Backups still render with per-query error states */
+    })
+    return shellData
   },
   component: PostgresBackupsPage,
 })
 
 function PostgresBackupsPage() {
-  return <TabPlaceholder tab="backups" />
+  const { projectId, databaseId } = Route.useParams()
+  return <PostgresBackupsView projectId={projectId} databaseId={databaseId} />
 }

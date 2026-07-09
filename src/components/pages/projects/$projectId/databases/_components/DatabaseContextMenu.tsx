@@ -17,7 +17,6 @@ import {
   Table2,
   Workflow,
   Shield,
-  BarChart3,
   Archive,
   ArrowRightLeft,
   Settings,
@@ -46,7 +45,6 @@ interface DatabaseContextMenuProps {
   showSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
-  showInsights: boolean
   children: React.ReactNode
 }
 
@@ -56,7 +54,6 @@ export function DatabaseContextMenu({
   showSecuritySettings,
   showMonitor,
   showBackups,
-  showInsights,
   children,
 }: DatabaseContextMenuProps) {
   const t = useT()
@@ -73,7 +70,6 @@ export function DatabaseContextMenu({
       | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
       | '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
       | '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
-      | '/projects/$projectId/databases/$dbKind/$databaseId/insights'
       | '/projects/$projectId/databases/$dbKind/$databaseId/backups'
       | '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
       | '/projects/$projectId/databases/$dbKind/$databaseId/settings',
@@ -128,18 +124,6 @@ export function DatabaseContextMenu({
           >
             <ContextMenuIcon icon={Shield} />
             {t('Security')}
-          </ContextMenuItem>
-        )}
-        {showInsights && (
-          <ContextMenuItem
-            onSelect={() =>
-              navigateToTab(
-                '/projects/$projectId/databases/$dbKind/$databaseId/insights',
-              )
-            }
-          >
-            <ContextMenuIcon icon={BarChart3} />
-            {t('Insights')}
           </ContextMenuItem>
         )}
         {showBackups && (

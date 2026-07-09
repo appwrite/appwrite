@@ -17,7 +17,6 @@ import {
   ChevronRight,
   AlertCircle,
   ArrowUpDown,
-  BarChart3,
   Network,
   Download,
   Search,
@@ -1231,19 +1230,6 @@ export function Workspace({
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span>{t('Security')}</span>
-          </Link>
-        )}
-        {features.databaseInsights && (
-          <Link
-            {...dbNav.insights(tableNavParams)}
-            className={cn(
-              secondarySidebarNavLinkClassName(databaseTab === 'insights'
-                , 'transition-colors duration-150'),
-            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
-            )}
-          >
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span>{t('Insights')}</span>
           </Link>
         )}
         {features.databaseBackups && (
