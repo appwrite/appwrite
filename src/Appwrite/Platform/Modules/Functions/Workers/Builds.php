@@ -504,7 +504,7 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                     $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
-                    $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
+                    $deployment->setAttribute('providerCommitUrl', $vcs->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                         'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
                         'providerCommitAuthorUrl' => $deployment->getAttribute('providerCommitAuthorUrl'),

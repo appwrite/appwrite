@@ -93,7 +93,7 @@ class Base extends Action
         // TODO: Support tag in future
         if ($referenceType === 'branch') {
             $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = $vcs->getBranchUrl($owner, $repositoryName, $providerBranch);
             try {
                 $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
@@ -110,10 +110,10 @@ class Base extends Action
             // Goal is to set providerBranch, so build worker knows what to clone as base
             // Without this, clone command would be cloning empty branch, and failing
             $providerBranch = $function->getAttribute('providerBranch', 'main');
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = $vcs->getBranchUrl($owner, $repositoryName, $providerBranch);
         }
 
-        $repositoryUrl = "https://github.com/$owner/$repositoryName";
+        $repositoryUrl = $vcs->getRepositoryUrl($owner, $repositoryName);
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
@@ -185,7 +185,7 @@ class Base extends Action
         // TODO: Support tag in future
         if ($referenceType === 'branch') {
             $providerBranch = empty($reference) ? $site->getAttribute('providerBranch', 'main') : $reference;
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = $vcs->getBranchUrl($owner, $repositoryName, $providerBranch);
             try {
                 $commitDetails = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch);
             } catch (\Throwable $error) {
@@ -202,10 +202,10 @@ class Base extends Action
             // Goal is to set providerBranch, so build worker knows what to clone as base
             // Without this, clone command would be cloning empty branch, and failing
             $providerBranch = $site->getAttribute('providerBranch', 'main');
-            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+            $branchUrl = $vcs->getBranchUrl($owner, $repositoryName, $providerBranch);
         }
 
-        $repositoryUrl = "https://github.com/$owner/$repositoryName";
+        $repositoryUrl = $vcs->getRepositoryUrl($owner, $repositoryName);
 
         $commands = [];
         if (!empty($site->getAttribute('installCommand', ''))) {

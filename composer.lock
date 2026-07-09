@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "091a71ba9518a11bacfa660d4df558ba",
+    "content-hash": "8aefd65f2026fdfc298af8867d4a5b0b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5124,16 +5124,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "4.2.4",
+            "version": "dev-feat/appwrite-provider-parity",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "f19c61daa1e9594734d85ae25b3e90ba2b350d33"
+                "reference": "c6e3769aa9bdc87334b38a60620e5d96cf4ef760"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/f19c61daa1e9594734d85ae25b3e90ba2b350d33",
-                "reference": "f19c61daa1e9594734d85ae25b3e90ba2b350d33",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/c6e3769aa9bdc87334b38a60620e5d96cf4ef760",
+                "reference": "c6e3769aa9bdc87334b38a60620e5d96cf4ef760",
                 "shasum": ""
             },
             "require": {
@@ -5167,9 +5167,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/4.2.4"
+                "source": "https://github.com/utopia-php/vcs/tree/feat/appwrite-provider-parity"
             },
-            "time": "2026-06-25T13:27:19+00:00"
+            "time": "2026-07-09T07:55:13+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -8354,11 +8354,19 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/vcs",
+            "version": "dev-feat/appwrite-provider-parity",
+            "alias": "4.99.99",
+            "alias_normalized": "4.99.99.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
-        "utopia-php/platform": 5
+        "utopia-php/platform": 5,
+        "utopia-php/vcs": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
