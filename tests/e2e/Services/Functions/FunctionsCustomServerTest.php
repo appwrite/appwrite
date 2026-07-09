@@ -759,6 +759,7 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEmpty($execution['body']['responseBody']);
+            $this->assertEmpty($execution['body']['errors']);
         }, 10000, 500);
 
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
