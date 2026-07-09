@@ -7,7 +7,7 @@ export const USAGE_RESOURCE_TYPE_VIEW_LABEL = 'Resource type'
 
 export type UsageResourceBreakdownDimension = Extract<
   UsageEventBreakdownDimension,
-  'resourceId' | 'resource'
+  'resourceId' | 'resourceType'
 >
 
 export type UsageResourceBreakdownView = {
@@ -24,7 +24,7 @@ export const USAGE_RESOURCE_BREAKDOWN_VIEWS: readonly UsageResourceBreakdownView
       labelVariant: 'mono',
     },
     {
-      dimension: 'resource',
+      dimension: 'resourceType',
       label: USAGE_RESOURCE_TYPE_VIEW_LABEL,
       labelVariant: 'default',
     },
@@ -43,13 +43,13 @@ export function splitUsageBreakdownEntries<
     standardEntries: entries.filter(
       (entry) =>
         entry.section.dimension !== 'resourceId' &&
-        entry.section.dimension !== 'resource',
+        entry.section.dimension !== 'resourceType',
     ),
     resourceIdEntry: entries.find(
       (entry) => entry.section.dimension === 'resourceId',
     ),
     resourceTypeEntry: entries.find(
-      (entry) => entry.section.dimension === 'resource',
+      (entry) => entry.section.dimension === 'resourceType',
     ),
   }
 }

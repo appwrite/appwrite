@@ -24,6 +24,7 @@ import { AlertCircle, Cpu, Loader2, type LucideIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import {
   MySQLDolphinIcon,
+  MongoDbLeafIcon,
   PostgresElephantIcon,
 } from './database-mascot-icons'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -61,7 +62,11 @@ type DedicatedDatabasesSectionProps = {
   excludeNativeEngines?: boolean
 }
 
-type SectionIcon = LucideIcon | typeof PostgresElephantIcon | typeof MySQLDolphinIcon
+type SectionIcon =
+  | LucideIcon
+  | typeof PostgresElephantIcon
+  | typeof MySQLDolphinIcon
+  | typeof MongoDbLeafIcon
 
 type DedicatedSectionCopy = {
   title: string
@@ -110,16 +115,32 @@ function getDedicatedSectionCopy(
     }
   }
 
+  if (nativeEngine === 'mongo') {
+    return {
+      title: NATIVE_DATABASE_ENGINE_LABELS.mongo,
+      description:
+        'A dedicated MongoDB database for document workloads, flexible schemas, and existing MongoDB applications.',
+      loadingLabel: 'Loading MongoDB databases...',
+      failedLabel: 'Failed to load MongoDB databases',
+      refreshFailedLabel: "Couldn't refresh MongoDB databases",
+      emptyTitle: getNativeDatabaseEmptyLabel('mongo'),
+      emptyDescription:
+        'Create a MongoDB database from the create database wizard.',
+      icon: MongoDbLeafIcon,
+      showEngineColumn: false,
+    }
+  }
+
   return {
     title: 'Dedicated databases',
     description:
-      'Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.',
+      'Always-on dedicated databases for PostgreSQL, MySQL, MongoDB, and product-backed engines.',
     loadingLabel: 'Loading dedicated databases...',
     failedLabel: 'Failed to load dedicated databases',
     refreshFailedLabel: "Couldn't refresh dedicated databases",
     emptyTitle: 'No dedicated databases yet',
     emptyDescription:
-      'Create a PostgreSQL or MySQL database to get started with dedicated compute.',
+      'Create a PostgreSQL, MySQL, or MongoDB database to get started with dedicated compute.',
     icon: Cpu,
     showEngineColumn: true,
   }

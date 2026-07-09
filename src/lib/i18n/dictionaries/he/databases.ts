@@ -46,7 +46,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.': 'תווים מותרים: a-z, A-Z, 0-9, -, ., _. לאחר היצירה לא ניתן לשנות את מפתח העמודה, כדי לשמור על שלמות הנתונים.',
   'always require collection-level permissions, regardless of document security settings.': 'תמיד דורשות הרשאות ברמת האוסף, ללא תלות בהגדרות אבטחת המסמכים.',
   'always require table-level permissions, regardless of row security settings.': 'תמיד דורשות הרשאות ברמת הטבלה, ללא תלות בהגדרות אבטחת השורות.',
-  'Always-on dedicated databases for PostgreSQL, MySQL, and product-backed engines.': 'מסדי נתונים ייעודיים הפועלים תמיד עבור PostgreSQL, MySQL ומנועים מבוססי מוצר.',
+  'Always-on dedicated databases for PostgreSQL, MySQL, MongoDB, and product-backed engines.': 'מסדי נתונים ייעודיים הפועלים תמיד עבור PostgreSQL, MySQL, MongoDB ומנועים מבוססי מוצר.',
   'Application': 'אפליקציה',
   'Apply': 'החלה',
   'Approve': 'אישור',
@@ -188,7 +188,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create a collection with a fixed embedding dimension for vector similarity search.': 'צרו אוסף עם ממד embedding קבוע לחיפוש דמיון וקטורי.',
   'Create a new table to store structured data with columns and rows.': 'צרו טבלה חדשה לאחסון נתונים מובנים עם עמודות ושורות.',
   'Create a new table with the same column structure as the source table.': 'צרו טבלה חדשה עם מבנה עמודות זהה לטבלת המקור.',
-  'Create a PostgreSQL or MySQL database to get started with dedicated compute.': 'צרו מסד נתונים PostgreSQL או MySQL כדי להתחיל עם מחשוב ייעודי.',
+  'Create a PostgreSQL, MySQL, or MongoDB database to get started with dedicated compute.': 'צרו מסד נתונים PostgreSQL, MySQL או MongoDB כדי להתחיל עם מחשוב ייעודי.',
   'Create an index to improve query performance on this table.': 'צרו אינדקס כדי לשפר את ביצועי השאילתות בטבלה זו.',
   'Create backup policy': 'יצירת מדיניות גיבוי',
   'Create backups, configure policies, and restore from snapshots.':
@@ -198,6 +198,19 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create column': 'יצירת עמודה',
   'Create columns first': 'צרו עמודות תחילה',
   'Create database': 'יצירת מסד נתונים',
+  'Creating database': 'יוצר מסד נתונים',
+  'Allocating dedicated compute for your database.':
+    'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
+  'Configuring continuous backups for your database.':
+    'מגדיר גיבויים רציפים למסד הנתונים שלכם.',
+  'Configuring high availability': 'מגדיר high availability',
+  'Enabling point-in-time recovery': 'מפעיל point-in-time recovery',
+  'Preparing your database workspace.': 'מכין את סביבת העבודה של מסד הנתונים.',
+  'Provisioning compute': 'מספק compute',
+  'Setting up read replicas for failover resilience.':
+    'מגדיר read replicas לעמידות ב-failover.',
+  'Setting up your database': 'מגדיר את מסד הנתונים שלכם',
+  'Setting up your database resource.': 'מגדיר את משאב מסד הנתונים שלכם.',
   'Create database or table': 'יצירת מסד נתונים או טבלה',
   'Create Index': 'יצירת אינדקס',
   'Create index': 'יצירת אינדקס',
@@ -998,6 +1011,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Spatial indexes can only have one column': 'אינדקסים מרחביים יכולים לכלול עמודה אחת בלבד',
   'Specification': 'מפרט',
   'Specifications': 'מפרטים',
+  'Rename query tab': 'שינוי שם לשונית השאילתה',
   'SQL editor': 'עורך SQL',
   'Started': 'זמן התחלה',
   'Connection state': 'מצב החיבור',
@@ -1248,6 +1262,8 @@ export const heDatabasesDictionary: Record<string, string> = {
     'מסד PostgreSQL ייעודי לעומסי relational, לכלי SQL ולסכימות portable.',
   'A dedicated MySQL database for common relational workloads and existing MySQL applications.':
     'מסד MySQL ייעודי לעומסי relational נפוצים ולאפליקציות MySQL קיימות.',
+  'A dedicated MongoDB database for document workloads, flexible schemas, and existing MongoDB applications.':
+    'מסד MongoDB ייעודי לעומסי מסמכים, לסכימות גמישות ולאפליקציות MongoDB קיימות.',
   'Serverless and dedicated TablesDB databases for structured app data.':
     'מסדי TablesDB serverless וייעודיים לנתוני אפליקציה מובנים.',
   'Get powerful analytics and insights about your database performance and usage patterns.':
@@ -1385,16 +1401,22 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Coming soon in your project region. Available in': 'בקרוב באזור הפרויקט שלכם. זמין ב-',
   'No PostgreSQL databases found': 'לא נמצאו מסדי PostgreSQL',
   'No MySQL databases found': 'לא נמצאו מסדי MySQL',
+  'No MongoDB databases found': 'לא נמצאו מסדי MongoDB',
   'Loading PostgreSQL databases...': 'טוען מסדי PostgreSQL...',
   'Loading MySQL databases...': 'טוען מסדי MySQL...',
+  'Loading MongoDB databases...': 'טוען מסדי MongoDB...',
   'Failed to load PostgreSQL databases': 'טעינת מסדי PostgreSQL נכשלה',
   'Failed to load MySQL databases': 'טעינת מסדי MySQL נכשלה',
+  'Failed to load MongoDB databases': 'טעינת מסדי MongoDB נכשלה',
   "Couldn't refresh PostgreSQL databases": 'לא ניתן לרענן את מסדי PostgreSQL',
   "Couldn't refresh MySQL databases": 'לא ניתן לרענן את מסדי MySQL',
+  "Couldn't refresh MongoDB databases": 'לא ניתן לרענן את מסדי MongoDB',
   'Create a PostgreSQL database from the create database wizard.':
     'צרו מסד PostgreSQL מאשף יצירת מסד הנתונים.',
   'Create a MySQL database from the create database wizard.':
     'צרו מסד MySQL מאשף יצירת מסד הנתונים.',
+  'Create a MongoDB database from the create database wizard.':
+    'צרו מסד MongoDB מאשף יצירת מסד הנתונים.',
   'Database ID must be 36 characters or less.': 'מזהה מסד הנתונים חייב להיות באורך 36 תווים לכל היותר.',
   'Database ID must contain only letters and numbers (no hyphens, underscores, or periods).': 'מזהה מסד הנתונים חייב להכיל רק אותיות ומספרים (ללא מקפים, קווים תחתונים או נקודות).',
   'Database ID must contain only letters and numbers. Leave the ID blank to auto-generate one, or choose a custom ID without hyphens, underscores, or periods.': 'מזהה מסד הנתונים חייב להכיל רק אותיות ומספרים. השאירו את השדה ריק ליצירה אוטומטית, או בחרו מזהה מותאם ללא מקפים, קווים תחתונים או נקודות.',
@@ -1449,6 +1471,31 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Paused': 'מושהה',
   'Compute tier update started': 'עדכון רמת המחשוב התחיל',
   'Failed to update compute tier': 'עדכון רמת המחשוב נכשל',
+  'Database is scaling': 'מסד הנתונים משנה קנה מידה',
+  'Database is provisioning': 'מסד הנתונים בהקצאה',
+  'Database is restoring': 'מסד הנתונים משוחזר',
+  'Database is paused': 'מסד הנתונים מושהה',
+  'Database is inactive': 'מסד הנתונים לא פעיל',
+  'Database update failed': 'עדכון מסד הנתונים נכשל',
+  'Database is deleted': 'מסד הנתונים נמחק',
+  'Database is not ready': 'מסד הנתונים לא מוכן',
+  'Current status': 'סטטוס נוכחי',
+  'A compute tier change is in progress. Some operations may be temporarily unavailable.':
+    'שינוי רמת המחשוב מתבצע. חלק מהפעולות עשויות להיות לא זמינות באופן זמני.',
+  'Dedicated compute is being provisioned for this database.':
+    'מוקצה מחשוב ייעודי עבור מסד נתונים זה.',
+  'This database is being restored. Some operations may be unavailable until it is ready again.':
+    'מסד נתונים זה משוחזר. חלק מהפעולות עשויות להיות לא זמינות עד שיחזור למצב מוכן.',
+  'This database is paused. Resume it in Settings to restore access.':
+    'מסד נתונים זה מושהה. חידשו אותו בהגדרות כדי להחזיר גישה.',
+  'This database is inactive. Some operations may be unavailable until it is ready again.':
+    'מסד נתונים זה לא פעיל. חלק מהפעולות עשויות להיות לא זמינות עד שיחזור למצב מוכן.',
+  'This database could not complete its last operation. Review settings or contact support.':
+    'מסד נתונים זה לא הצליח להשלים את הפעולה האחרונה. בדקו בהגדרות או פנו לתמיכה.',
+  'This database has been deleted and is no longer available.':
+    'מסד נתונים זה נמחק ואינו זמין עוד.',
+  'This database is not ready yet. Some operations may be unavailable until the operation completes.':
+    'מסד נתונים זה עדיין לא מוכן. חלק מהפעולות עשויות להיות לא זמינות עד שהפעולה תושלם.',
   'Max connections': 'מקסימום חיבורים',
   'Change the compute tier for this database. Upgrades apply with zero downtime via rolling cutover.':
     'שנו את רמת המחשוב של מסד נתונים זה. שדרוגים מתבצעים ללא השבתה באמצעות rolling cutover.',

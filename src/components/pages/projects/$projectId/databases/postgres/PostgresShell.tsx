@@ -13,6 +13,7 @@ import {
   PostgresDatabaseHeaderSlotProvider,
   type PostgresDatabaseHeaderSlotProps,
 } from './_components/PostgresDatabaseHeaderSlotContext'
+import { DedicatedDatabaseStatusHeaderAlert } from '../_components/DedicatedDatabaseStatusHeaderAlert'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
 import { useT } from '@/lib/i18n/translate'
@@ -160,6 +161,7 @@ function PostgresShellLayout({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <DedicatedDatabaseStatusHeaderAlert status={database.status} />
       {showDesktopSidebar ? (
         <TableViewResizableLayout
           className="min-h-0 flex-1"

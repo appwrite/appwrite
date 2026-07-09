@@ -36,7 +36,7 @@ const DIMENSION_LABEL_COLUMN: Record<UsageEventBreakdownDimension, string> = {
   deviceName: 'Device',
   teamId: 'Team ID',
   resourceId: 'Resource ID',
-  resource: 'Resource type',
+  resourceType: 'Resource type',
 }
 
 function escapeCsvCell(value: string): string {

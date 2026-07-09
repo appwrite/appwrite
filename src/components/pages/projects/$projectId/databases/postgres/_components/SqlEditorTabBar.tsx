@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/sortable'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { ChevronUp, Plus, X } from 'lucide-react'
+import { MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH } from '@/lib/user-prefs-keys'
 import type { SqlEditorTab } from './PostgresSidebarContext'
 import { SqlEditorTabContextMenu } from './SqlEditorTabContextMenu'
 import { getAxisRestrictedDragModifiers, sortableAxisTransform } from '@/lib/dnd-modifiers'
@@ -41,6 +43,7 @@ type SqlEditorTabBarProps = {
   onCreateTab: () => void
   onCloseTab: (tabId: string) => void
   onReorderTabs: (activeId: string, overId: string) => void
+  onRenameTab: (tabId: string, title: string) => void
   headerCollapsed?: boolean
   onToggleHeaderCollapsed?: () => void
 }
@@ -54,6 +57,7 @@ type SortableTabProps = {
   hasOtherTabs: boolean
   onSelectTab: (tabId: string) => void
   onCloseTab: (tabId: string) => void
+  onRenameTab: (tabId: string, title: string) => void
 }
 
 function SortableTab({
@@ -65,7 +69,12 @@ function SortableTab({
   hasOtherTabs,
   onSelectTab,
   onCloseTab,
+  onRenameTab,
 }: SortableTabProps) {
+  const t = useT()
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftTitle, setDraftTitle] = useState(tab.title)
+  const editInputRef = useRef<HTMLInputElement>(null)
   const {
     attributes,
     listeners,
@@ -86,6 +95,40 @@ function SortableTab({
         transform: sortableAxisTransform(transform, 'horizontal'),
         transition,
       }
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraftTitle(tab.title)
+    }
+  }, [isEditing, tab.title])
+
+  useEffect(() => {
+    if (!isEditing) return
+    editInputRef.current?.focus()
+    editInputRef.current?.select()
+  }, [isEditing])
+
+  const startEditing = () => {
+    onSelectTab(tab.id)
+    setDraftTitle(tab.title)
+    setIsEditing(true)
+  }
+
+  const cancelEditing = () => {
+    setDraftTitle(tab.title)
+    setIsEditing(false)
+  }
+
+  const commitEditing = () => {
+    const trimmed = draftTitle.trim()
+    if (!trimmed || trimmed === tab.title) {
+      cancelEditing()
+      return
+    }
+
+    onRenameTab(tab.id, trimmed)
+    setIsEditing(false)
+  }
 
   return (
     <div
@@ -114,13 +157,52 @@ function SortableTab({
           <button
             ref={setActivatorNodeRef}
             type="button"
-            onClick={() => onSelectTab(tab.id)}
-            className="flex h-full min-w-0 flex-1 cursor-grab items-center px-2.5 text-start active:cursor-grabbing"
-            title={tab.title}
-            {...attributes}
-            {...listeners}
+            onClick={() => {
+              if (!isEditing) onSelectTab(tab.id)
+            }}
+            className={cn(
+              'flex h-full min-w-0 flex-1 items-center px-2.5 text-start',
+              !isEditing && 'cursor-grab active:cursor-grabbing',
+            )}
+            title={isEditing ? undefined : tab.title}
+            {...(isEditing ? {} : attributes)}
+            {...(isEditing ? {} : listeners)}
           >
-            <span className="truncate text-[12px] font-medium">{tab.title}</span>
+            {isEditing ? (
+              <Input
+                ref={editInputRef}
+                value={draftTitle}
+                maxLength={MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH}
+                onChange={(event) => setDraftTitle(event.target.value)}
+                onBlur={commitEditing}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    commitEditing()
+                  }
+                  if (event.key === 'Escape') {
+                    event.preventDefault()
+                    cancelEditing()
+                  }
+                }}
+                onClick={(event) => event.stopPropagation()}
+                onDoubleClick={(event) => event.stopPropagation()}
+                onPointerDown={(event) => event.stopPropagation()}
+                className="h-6 min-h-6 max-h-6 w-full min-w-0 rounded-sm border-0 bg-transparent px-0 py-0 text-[12px] font-medium leading-6 shadow-none outline-none focus-visible:border-0 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring/50 focus-visible:ring-offset-0"
+                aria-label={t('Rename query tab')}
+              />
+            ) : (
+              <span
+                className="truncate text-[12px] font-medium"
+                onDoubleClick={(event) => {
+                  event.stopPropagation()
+                  event.preventDefault()
+                  startEditing()
+                }}
+              >
+                {tab.title}
+              </span>
+            )}
           </button>
           {canClose ? (
             <button
@@ -167,6 +249,7 @@ export function SqlEditorTabBar({
   onCreateTab,
   onCloseTab,
   onReorderTabs,
+  onRenameTab,
   headerCollapsed = false,
   onToggleHeaderCollapsed,
 }: SqlEditorTabBarProps) {
@@ -245,6 +328,7 @@ export function SqlEditorTabBar({
           hasOtherTabs={canClose}
           onSelectTab={onSelectTab}
           onCloseTab={onCloseTab}
+          onRenameTab={onRenameTab}
         />
       ))}
     </div>

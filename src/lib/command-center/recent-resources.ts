@@ -8,6 +8,13 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { isDatabaseRouteKind } from '@/lib/database-routes'
+import {
+  isMongoEngine,
+  isMysqlEngine,
+  isPostgresEngine,
+  NATIVE_DATABASE_ENGINE_LABELS,
+} from '@/lib/databases/native-database-engines'
+import { formatDatabaseServiceLabel } from '@/lib/databases/database-service-icons'
 import { isStoragePlaceholderBucketId } from '@/lib/storage-routes'
 import { getMessageSearchLabel } from './resource-search'
 import type {
@@ -17,7 +24,12 @@ import type {
 
 export const RECENT_RESOURCES_STORAGE_KEY = 'console.recentResources'
 export const RECENT_RESOURCES_MAX_STORED = 10
-export const RECENT_RESOURCES_MAX_SHOWN = 3
+export const RECENT_RESOURCES_MAX_SHOWN = 5
+
+export type RecentDatabaseIconHints = {
+  apiType?: string
+  engine?: string
+}
 
 export interface RecentResource {
   /** Stable identity for deduplication (project + kind + resource id). */
@@ -32,6 +44,10 @@ export interface RecentResource {
   /** Canonical path to open the resource. */
   href: string
   viewedAt: number
+  /** Product database API type (tablesdb, documentsdb, vectorsdb). */
+  databaseApiType?: string
+  /** Native dedicated database engine (postgres, mysql, mongo). */
+  databaseEngine?: string
 }
 
 type ParsedResourceRef = {
@@ -85,6 +101,153 @@ function named(value: unknown): string | undefined {
     return record.email.trim()
   }
   return undefined
+}
+
+/** Parse database icon hints from a stored recent-resource href. */
+export function parseDatabaseIconHintsFromHref(
+  href: string,
+): RecentDatabaseIconHints {
+  const parts = href.split('/').filter(Boolean)
+  const databasesIndex = parts.indexOf('databases')
+  if (databasesIndex === -1) return {}
+
+  const segment = parts[databasesIndex + 1]
+  if (!segment) return {}
+
+  if (isPostgresEngine(segment)) return { engine: 'postgres' }
+  if (isMysqlEngine(segment)) return { engine: 'mysql' }
+  if (isMongoEngine(segment)) return { engine: 'mongo' }
+  if (isDatabaseRouteKind(segment)) return { apiType: segment }
+
+  return {}
+}
+
+function findDedicatedDatabaseInCache(
+  queryClient: QueryClient,
+  projectId: string,
+  resourceId: string,
+): Models.DedicatedDatabase | undefined {
+  const entries = queryClient.getQueriesData({
+    queryKey: ['dedicated-databases', 'project', projectId],
+  })
+  for (const [, data] of entries) {
+    if (!data || typeof data !== 'object') continue
+    const list = (data as { databases?: Models.DedicatedDatabase[] }).databases
+    if (!list) continue
+    const hit = list.find((item) => item.$id === resourceId)
+    if (hit) return hit
+  }
+  return undefined
+}
+
+function hintsFromDedicatedDatabase(
+  db: Models.DedicatedDatabase,
+): RecentDatabaseIconHints {
+  const api = db.api?.toLowerCase().trim() ?? ''
+  if (api === 'tablesdb' || api === 'documentsdb' || api === 'vectorsdb') {
+    return { apiType: api }
+  }
+
+  const engine = db.engine?.toLowerCase().trim() ?? ''
+  if (isPostgresEngine(engine)) return { engine: 'postgres' }
+  if (isMysqlEngine(engine)) return { engine: 'mysql' }
+  if (isMongoEngine(engine)) return { engine: 'mongo' }
+  if (engine) return { engine }
+
+  return {}
+}
+
+/** Resolve database icon hints for a recent resource (href first, then cache). */
+export function resolveRecentDatabaseIconHints(
+  queryClient: QueryClient,
+  ref: Pick<ParsedResourceRef, 'projectId' | 'resourceId' | 'href' | 'kind'>,
+): RecentDatabaseIconHints {
+  if (ref.kind !== 'database') return {}
+
+  const fromHref = parseDatabaseIconHintsFromHref(ref.href)
+  if (fromHref.apiType || fromHref.engine) return fromHref
+
+  const { projectId, resourceId } = ref
+
+  const postgresDb = queryClient.getQueryData([
+    'postgres-database',
+    'project',
+    projectId,
+    resourceId,
+  ])
+  if (postgresDb) return { engine: 'postgres' }
+
+  const dedicatedDb = findDedicatedDatabaseInCache(
+    queryClient,
+    projectId,
+    resourceId,
+  )
+  if (dedicatedDb) return hintsFromDedicatedDatabase(dedicatedDb)
+
+  const productDb = queryClient.getQueryData([
+    'database',
+    'project',
+    projectId,
+    resourceId,
+  ]) as Models.Database | undefined
+  if (productDb?.type) {
+    return { apiType: String(productDb.type) }
+  }
+
+  const apiTypeFromList = findInListCache<Models.Database>(
+    queryClient,
+    ['databases', 'project', projectId],
+    (item) => item.$id === resourceId,
+    (item) => (item.type ? String(item.type) : undefined),
+  )
+  if (apiTypeFromList) return { apiType: apiTypeFromList }
+
+  return {}
+}
+
+export function getRecentResourceDatabaseIconHints(
+  entry: Pick<
+    RecentResource,
+    'kind' | 'href' | 'databaseApiType' | 'databaseEngine'
+  >,
+): RecentDatabaseIconHints {
+  if (entry.kind !== 'database') return {}
+  if (entry.databaseApiType || entry.databaseEngine) {
+    return {
+      apiType: entry.databaseApiType,
+      engine: entry.databaseEngine,
+    }
+  }
+  return parseDatabaseIconHintsFromHref(entry.href)
+}
+
+/** Human-readable database product or engine label for recent-resource breadcrumbs. */
+export function formatRecentDatabaseTypeLabel(
+  hints: RecentDatabaseIconHints,
+): string | null {
+  const normalizedEngine = hints.engine?.toLowerCase() ?? ''
+  if (isPostgresEngine(normalizedEngine)) {
+    return NATIVE_DATABASE_ENGINE_LABELS.postgres
+  }
+  if (isMysqlEngine(normalizedEngine)) {
+    return NATIVE_DATABASE_ENGINE_LABELS.mysql
+  }
+  if (isMongoEngine(normalizedEngine)) {
+    return NATIVE_DATABASE_ENGINE_LABELS.mongo
+  }
+  if (hints.apiType) {
+    return formatDatabaseServiceLabel(hints.apiType)
+  }
+  return null
+}
+
+export function getRecentResourceBreadcrumbs(entry: RecentResource): string[] {
+  if (entry.kind !== 'database') return entry.breadcrumbs
+
+  const typeLabel = formatRecentDatabaseTypeLabel(
+    getRecentResourceDatabaseIconHints(entry),
+  )
+  return typeLabel ? [typeLabel] : entry.breadcrumbs
 }
 
 function findInListCache<T>(
@@ -470,17 +633,33 @@ export function buildRecentResource(
   ref: ParsedResourceRef,
   name: string,
   viewedAt: number = Date.now(),
+  databaseIconHints: RecentDatabaseIconHints = {},
 ): RecentResource {
+  const databaseTypeLabel =
+    ref.kind === 'database'
+      ? formatRecentDatabaseTypeLabel(databaseIconHints)
+      : null
+  const breadcrumbs =
+    ref.kind === 'database' && databaseTypeLabel
+      ? [databaseTypeLabel]
+      : ref.breadcrumbs
+
   return {
     key: resourceKey(ref.projectId, ref.kind, ref.resourceId),
     kind: ref.kind,
     name,
-    breadcrumbs: ref.breadcrumbs,
+    breadcrumbs,
     projectId: ref.projectId,
     section: ref.section,
     resourceId: ref.resourceId,
     href: ref.href,
     viewedAt,
+    ...(ref.kind === 'database' && databaseIconHints.apiType
+      ? { databaseApiType: databaseIconHints.apiType }
+      : {}),
+    ...(ref.kind === 'database' && databaseIconHints.engine
+      ? { databaseEngine: databaseIconHints.engine }
+      : {}),
   }
 }
 
@@ -543,11 +722,36 @@ function isRecentResource(value: unknown): value is RecentResource {
 
 export function filterRecentResources(
   list: RecentResource[],
-  options: { projectId?: string | null; limit?: number } = {},
+  options: {
+    projectId?: string | null
+    limit?: number
+    /** Omit the newest entry when it matches the page the user is already on. */
+    skipNewestWhenMatches?: Pick<
+      RecentResource,
+      'projectId' | 'kind' | 'resourceId'
+    > | null
+  } = {},
 ): RecentResource[] {
-  const { projectId, limit = RECENT_RESOURCES_MAX_SHOWN } = options
+  const {
+    projectId,
+    limit = RECENT_RESOURCES_MAX_SHOWN,
+    skipNewestWhenMatches,
+  } = options
   const filtered = projectId
     ? list.filter((item) => item.projectId === projectId)
     : list
-  return filtered.slice(0, limit)
+
+  let start = 0
+  const newest = filtered[0]
+  if (
+    skipNewestWhenMatches &&
+    newest &&
+    newest.projectId === skipNewestWhenMatches.projectId &&
+    newest.kind === skipNewestWhenMatches.kind &&
+    newest.resourceId === skipNewestWhenMatches.resourceId
+  ) {
+    start = 1
+  }
+
+  return filtered.slice(start, start + limit)
 }

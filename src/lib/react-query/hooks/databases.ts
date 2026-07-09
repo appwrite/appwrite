@@ -32,6 +32,11 @@ import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/d
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
+import {
+  normalizePostgresExecutionResult,
+  wrapPostgresSqlForDisplay,
+} from '@/lib/postgres-execution-values'
 import { getCollectionAttributeKey } from '@/lib/databases/collection-indexable-attributes'
 import {
   databaseRouteKindFromApiType,
@@ -124,6 +129,140 @@ export function invalidateDatabaseModel(
   databaseModelInflight.delete(key)
   databaseTypeCache.delete(key)
   databaseTypeInflight.delete(key)
+}
+
+const DEDICATED_DATABASE_READY_STATUSES = new Set(['ready', 'paused'])
+
+/** Refetch product and dedicated database list queries after create/delete. */
+export async function refetchProjectDatabaseLists(
+  queryClient: QueryClient,
+  projectId: string,
+): Promise<void> {
+  await Promise.all([
+    queryClient.refetchQueries({
+      queryKey: ['databases', 'project', projectId],
+      type: 'all',
+    }),
+    queryClient.refetchQueries({
+      queryKey: ['dedicated-databases', 'project', projectId],
+      type: 'all',
+    }),
+  ])
+}
+
+/** Poll dedicated database status until ready or timeout. */
+export async function waitForDedicatedDatabaseReady(
+  projectId: string,
+  databaseId: string,
+  maxAttempts = 30,
+): Promise<boolean> {
+  let intervalMs = 500
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const { databases } = await fetchProjectDedicatedDatabases(projectId)
+      const status = databases.find((db) => db.$id === databaseId)?.status
+      if (status && DEDICATED_DATABASE_READY_STATUSES.has(status)) {
+        return true
+      }
+      if (status === 'failed' || status === 'error') {
+        return false
+      }
+    } catch {
+      /* retry */
+    }
+    if (attempt < maxAttempts - 1) {
+      await sleep(intervalMs)
+      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    }
+  }
+  return false
+}
+
+export type CreatedDatabaseWorkspaceKind =
+  | { type: 'product'; backend: DatabaseType }
+  | { type: 'native'; engine: NativeDatabaseEngine }
+
+async function probeProductDatabaseTablesList(
+  projectId: string,
+  databaseId: string,
+  backend: DatabaseType,
+): Promise<boolean> {
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [Query.limit(1)]
+  try {
+    if (backend === DatabaseType.Documentsdb) {
+      await projectSdk.documentsDB.listCollections({ databaseId, queries })
+      return true
+    }
+    if (backend === DatabaseType.Vectorsdb) {
+      await projectSdk.vectorsDB.listCollections({ databaseId, queries })
+      return true
+    }
+    await projectSdk.tablesDB.listTables({ databaseId, queries })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function probeNativeDatabaseSchemasList(
+  projectId: string,
+  databaseId: string,
+  engine: NativeDatabaseEngine,
+): Promise<boolean> {
+  try {
+    const projectSdk = sdk.forProject(projectId)
+    if (engine === 'postgres') {
+      const sql = buildPostgresListSchemasSql({ limit: 1, offset: 0 })
+      const execution = await projectSdk.postgresql.createExecution({
+        databaseId,
+        sql: wrapPostgresSqlForDisplay(sql),
+      })
+      normalizePostgresExecutionResult(execution)
+      return true
+    }
+    const execution = await projectSdk.mysql.createExecution({
+      databaseId,
+      sql: 'SHOW DATABASES',
+    })
+    normalizePostgresExecutionResult(execution)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** True when the created database workspace can load schemas or tables/collections. */
+export async function canLoadCreatedDatabaseWorkspace(
+  projectId: string,
+  databaseId: string,
+  kind: CreatedDatabaseWorkspaceKind,
+): Promise<boolean> {
+  if (!projectId || !databaseId) return false
+  if (kind.type === 'native') {
+    return probeNativeDatabaseSchemasList(projectId, databaseId, kind.engine)
+  }
+  return probeProductDatabaseTablesList(projectId, databaseId, kind.backend)
+}
+
+/** Poll until schemas (native) or tables/collections (product) can be loaded. */
+export async function waitForCreatedDatabaseWorkspaceReady(
+  projectId: string,
+  databaseId: string,
+  kind: CreatedDatabaseWorkspaceKind,
+  maxAttempts = 40,
+): Promise<boolean> {
+  let intervalMs = 500
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (await canLoadCreatedDatabaseWorkspace(projectId, databaseId, kind)) {
+      return true
+    }
+    if (attempt < maxAttempts - 1) {
+      await sleep(intervalMs)
+      intervalMs = Math.min(Math.round(intervalMs * 1.25), 3000)
+    }
+  }
+  return false
 }
 
 function seedDatabaseModelCache(
@@ -1169,7 +1308,8 @@ function isDatabaseSpecificationsSupported(): boolean {
   return (
     features.dedicatedDbsSupport ||
     features.nativeDbsPostgres ||
-    features.nativeDbsMySQL
+    features.nativeDbsMySQL ||
+    features.nativeDbsMongo
   )
 }
 
@@ -1213,10 +1353,14 @@ export function useDatabaseSpecifications(
   return useQuery(databaseSpecificationsQueryOptions(projectId))
 }
 
-/** True when at least one native DB engine (PostgreSQL/MySQL) is available. */
+/** True when at least one native DB engine (PostgreSQL/MySQL/MongoDB) is available. */
 function isNativeDatabasesSupported(): boolean {
   const features = getActiveProfileFeatures()
-  return features.nativeDbsPostgres || features.nativeDbsMySQL
+  return (
+    features.nativeDbsPostgres ||
+    features.nativeDbsMySQL ||
+    features.nativeDbsMongo
+  )
 }
 
 export async function fetchProjectDedicatedDatabases(projectId: string) {
@@ -1224,7 +1368,7 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }
   }
 
-  // List native PostgreSQL and MySQL databases and merge for selectors.
+  // List native PostgreSQL, MySQL, and MongoDB databases and merge for selectors.
   // Each engine's endpoint only exists when its profile flag is on.
   const features = getActiveProfileFeatures()
   const projectSdk = sdk.forProject(projectId)
@@ -1238,6 +1382,9 @@ export async function fetchProjectDedicatedDatabases(projectId: string) {
   }
   if (features.nativeDbsMySQL) {
     engineLists.push(projectSdk.mysql.list({ queries }))
+  }
+  if (features.nativeDbsMongo) {
+    engineLists.push(projectSdk.mongo.list({ queries }))
   }
   if (engineLists.length === 0) {
     return { databases: [] as Models.DedicatedDatabase[], total: 0 }

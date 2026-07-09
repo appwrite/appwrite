@@ -1,4 +1,4 @@
-export type NativeDatabaseEngine = 'postgres' | 'mysql'
+export type NativeDatabaseEngine = 'postgres' | 'mysql' | 'mongo'
 
 export const NATIVE_DATABASE_ENGINE_LABELS: Record<
   NativeDatabaseEngine,
@@ -6,6 +6,7 @@ export const NATIVE_DATABASE_ENGINE_LABELS: Record<
 > = {
   postgres: 'PostgreSQL',
   mysql: 'MySQL',
+  mongo: 'MongoDB',
 }
 
 function normalizeDatabaseEngine(engine: string | undefined): string {
@@ -22,13 +23,18 @@ export function isMysqlEngine(engine: string | undefined): boolean {
   return normalized === 'mysql' || normalized === 'mariadb'
 }
 
+export function isMongoEngine(engine: string | undefined): boolean {
+  const normalized = normalizeDatabaseEngine(engine)
+  return normalized === 'mongodb' || normalized === 'mongo'
+}
+
 export function matchesNativeEngine(
   engine: string | undefined,
   nativeEngine: NativeDatabaseEngine,
 ): boolean {
-  return nativeEngine === 'postgres'
-    ? isPostgresEngine(engine)
-    : isMysqlEngine(engine)
+  if (nativeEngine === 'postgres') return isPostgresEngine(engine)
+  if (nativeEngine === 'mysql') return isMysqlEngine(engine)
+  return isMongoEngine(engine)
 }
 
 export function getNativeDatabaseEmptyLabel(

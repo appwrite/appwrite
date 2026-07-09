@@ -11,7 +11,7 @@ export const USAGE_EVENT_FILTER_ATTRIBUTES = [
   'method',
   'status',
   'service',
-  'resource',
+  'resourceType',
   'resourceId',
   'country',
   'region',
@@ -25,7 +25,7 @@ export const USAGE_EVENT_FILTER_ATTRIBUTES = [
 /** listGauges filter attributes (teamId excluded from console UI). */
 export const USAGE_GAUGE_FILTER_ATTRIBUTES = [
   'service',
-  'resource',
+  'resourceType',
   'resourceId',
 ] as const
 
@@ -135,7 +135,7 @@ const NETWORK_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   enumColumn('method', 'Method', HTTP_METHODS),
   stringColumn('status', 'Status'),
   enumColumn('service', 'Service', NETWORK_SERVICES),
-  stringColumn('resource', 'Resource type'),
+  stringColumn('resourceType', 'Resource type'),
   stringColumn('resourceId', 'Resource ID'),
   stringColumn('country', 'Country'),
   stringColumn('region', 'Region'),
@@ -149,27 +149,27 @@ const NETWORK_EVENT_FILTER_COLUMNS: FilterColumn[] = [
 /** Storage gauge metrics (listGauges). */
 const STORAGE_GAUGE_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
-  stringColumn('resource', 'Resource type', GAUGE_OPERATORS),
+  stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
   enumColumn('service', 'Service', [{ value: 'storage', label: 'storage' }], GAUGE_OPERATORS),
 ]
 
 /** Compute executions / GB-hours (listEvents). */
 const COMPUTE_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceId', 'Resource ID'),
-  stringColumn('resource', 'Resource type'),
+  stringColumn('resourceType', 'Resource type'),
   enumColumn('service', 'Service', COMPUTE_SERVICES),
 ]
 
 /** Function executions / GB-hours (listEvents). */
 const FUNCTIONS_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceId', 'Function ID'),
-  stringColumn('resource', 'Resource type'),
+  stringColumn('resourceType', 'Resource type'),
 ]
 
 /** Site executions / GB-hours (listEvents). */
 const SITES_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceId', 'Site ID'),
-  stringColumn('resource', 'Resource type'),
+  stringColumn('resourceType', 'Resource type'),
 ]
 
 /** Database reads/writes + collection/document gauges (mixed). */
@@ -177,7 +177,7 @@ const DATABASES_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
   enumColumn('service', 'Service', DATABASE_SERVICES, GAUGE_OPERATORS),
   stringColumn('path', 'API path'),
-  stringColumn('resource', 'Resource type', GAUGE_OPERATORS),
+  stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
 
 /** Realtime metrics (listEvents, project-scoped). */
@@ -197,7 +197,7 @@ const AUTH_FILTER_COLUMNS: FilterColumn[] = [
     GAUGE_OPERATORS,
   ),
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
-  stringColumn('resource', 'Resource type', GAUGE_OPERATORS),
+  stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
 
 /** Avatars screenshots (listEvents). */
@@ -211,14 +211,14 @@ const AVATARS_EVENT_FILTER_COLUMNS: FilterColumn[] = [
 const MESSAGING_FILTER_COLUMNS: FilterColumn[] = [
   enumColumn('service', 'Service', [{ value: 'messaging', label: 'messaging' }], GAUGE_OPERATORS),
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
-  stringColumn('resource', 'Resource type', GAUGE_OPERATORS),
+  stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
 
 /** Webhook deliveries (events) and webhook count (gauges). */
 const WEBHOOKS_FILTER_COLUMNS: FilterColumn[] = [
   enumColumn('service', 'Service', [{ value: 'webhooks', label: 'webhooks' }], GAUGE_OPERATORS),
   stringColumn('resourceId', 'Resource ID', GAUGE_OPERATORS),
-  stringColumn('resource', 'Resource type', GAUGE_OPERATORS),
+  stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
 ]
 
 const CATEGORY_FILTER_COLUMNS: Record<string, FilterColumn[]> = {

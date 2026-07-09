@@ -61,6 +61,8 @@ export type ConsoleProfileFeatures = {
   nativeDbsPostgres: boolean
   /** Native MySQL databases via the `mysql` SDK service. */
   nativeDbsMySQL: boolean
+  /** Native MongoDB databases via the `mongo` SDK service. */
+  nativeDbsMongo: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -102,6 +104,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   dedicatedDbsVectorsDB: 'Dedicated DBs: Vectors',
   nativeDbsPostgres: 'Native DBs: PostgreSQL',
   nativeDbsMySQL: 'Native DBs: MySQL',
+  nativeDbsMongo: 'Native DBs: MongoDB',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -144,6 +147,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsVectorsDB: false,
       nativeDbsPostgres: false,
       nativeDbsMySQL: false,
+      nativeDbsMongo: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -178,6 +182,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsVectorsDB: false,
       nativeDbsPostgres: false,
       nativeDbsMySQL: false,
+      nativeDbsMongo: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

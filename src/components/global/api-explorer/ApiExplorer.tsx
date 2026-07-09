@@ -403,6 +403,7 @@ export function ApiExplorer({
       features.dedicatedDbsVectorsDB,
       features.nativeDbsPostgres,
       features.nativeDbsMySQL,
+      features.nativeDbsMongo,
     ],
   )
 

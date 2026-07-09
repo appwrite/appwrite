@@ -74,7 +74,7 @@ async function fetchExecutionsOverviewForMetrics(
           projectId,
           metrics[0],
           dateRange,
-          'resource',
+          'resourceType',
           COMPUTE_BREAKDOWN_RESOURCE_LIMIT,
           queries,
         )

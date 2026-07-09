@@ -101,15 +101,15 @@ async function listUsageGaugeGroups(
 
 function mapGaugeBreakdownGroups(
   groups: Models.UsageDataPoint[],
-  dimension: 'resourceId' | 'resource',
+  dimension: 'resourceId' | 'resourceType',
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
   const latestByKey = new Map<string, { value: number; timeMs: number }>()
 
   for (const group of groups) {
     const key =
-      dimension === 'resource'
-        ? group.resource?.trim()
+      dimension === 'resourceType'
+        ? group.resourceType?.trim()
         : group.resourceId?.trim()
     if (!key) continue
 
@@ -202,7 +202,7 @@ export async function fetchUsageGaugeBreakdown(
 
   return mapGaugeBreakdownGroups(
     groups,
-    dimensions[0] === 'resource' ? 'resource' : 'resourceId',
+    dimensions[0] === 'resourceType' ? 'resourceType' : 'resourceId',
     breakdownLimit,
   )
 }

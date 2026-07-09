@@ -54,7 +54,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
         projectSupportsDedicatedDatabaseCompute(projectData?.region)
       const shouldPrefetchNativeDatabases =
         supportsDedicatedDatabaseCompute &&
-        (profileFeatures.nativeDbsPostgres || profileFeatures.nativeDbsMySQL)
+        (profileFeatures.nativeDbsPostgres ||
+          profileFeatures.nativeDbsMySQL ||
+          profileFeatures.nativeDbsMongo)
 
       await Promise.all([
         queryClient.ensureQueryData(

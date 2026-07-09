@@ -68,7 +68,7 @@ export type UsageEventBreakdownDimension =
   | 'deviceName'
   | 'teamId'
   | 'resourceId'
-  | 'resource'
+  | 'resourceType'
 
 export interface UsageBreakdownItem {
   id: string
@@ -107,8 +107,8 @@ function getUsageDataPointBreakdownLabel(
       return point.teamId?.trim() || 'Unknown'
     case 'resourceId':
       return point.resourceId?.trim() || 'Unknown'
-    case 'resource':
-      return point.resource?.trim() || 'Unknown'
+    case 'resourceType':
+      return point.resourceType?.trim() || 'Unknown'
     default:
       return 'Unknown'
   }
@@ -313,7 +313,6 @@ interface ListUsageEventGroupsParams {
   endAt: string
   dimensions?: string[]
   queries?: string[]
-  resource?: string
   resourceId?: string
 }
 
@@ -451,9 +450,9 @@ function mapBreakdownGroupsToEndpoints(
         count: group.value,
       }
     })
-  } else if (dimensions.length === 1 && dimensions[0] === 'resource') {
+  } else if (dimensions.length === 1 && dimensions[0] === 'resourceType') {
     items = groups.map((group, index) => {
-      const resource = group.resource?.trim() || ''
+      const resource = group.resourceType?.trim() || ''
       return {
         id: resource || `resource-type-${index}`,
         method: '',
@@ -825,7 +824,6 @@ async function listUsageEventGroupsByMetric(
     endAt: string
     dimensions?: string[]
     queries?: string[]
-    resource?: string
     resourceId?: string
   } = {
     metrics: [...params.metrics],
@@ -841,9 +839,6 @@ async function listUsageEventGroupsByMetric(
   }
   if (params.queries?.length) {
     request.queries = params.queries
-  }
-  if (params.resource) {
-    request.resource = params.resource
   }
   if (params.resourceId) {
     request.resourceId = params.resourceId

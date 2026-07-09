@@ -43,10 +43,11 @@ export const API_SERVICE_ORDER = [
   'vectorsDB',
   'postgresql',
   'mysql',
+  'mongo',
 ] as const
 
 /** Console-only SDK services — never shown in the explorer or API reference nav. */
-export const INTERNAL_API_SERVICES = ['mongo'] as const
+export const INTERNAL_API_SERVICES = [] as const
 
 /** Database API services shown only when a matching console profile feature is enabled. */
 export const FEATURE_GATED_DATABASE_API_SERVICES = [
@@ -54,6 +55,7 @@ export const FEATURE_GATED_DATABASE_API_SERVICES = [
   'vectorsDB',
   'postgresql',
   'mysql',
+  'mongo',
 ] as const
 
 export type FeatureGatedDatabaseApiService =
@@ -65,6 +67,7 @@ export type DatabaseApiServiceFeatures = Pick<
   | 'dedicatedDbsVectorsDB'
   | 'nativeDbsPostgres'
   | 'nativeDbsMySQL'
+  | 'nativeDbsMongo'
 >
 
 /**
@@ -87,6 +90,7 @@ export const API_EXPLORER_PRODUCT_GROUPS: ApiExplorerProductGroupDefinition[] =
         'vectorsDB',
         'postgresql',
         'mysql',
+        'mongo',
       ],
     },
     {
@@ -151,6 +155,7 @@ export function getFeatureGatedDatabaseApiServices(
   if (features.dedicatedDbsVectorsDB) services.push('vectorsDB')
   if (features.nativeDbsPostgres) services.push('postgresql')
   if (features.nativeDbsMySQL) services.push('mysql')
+  if (features.nativeDbsMongo) services.push('mongo')
   return services
 }
 
@@ -216,6 +221,7 @@ export const API_SERVICE_LABELS: Record<string, string> = {
   vectorsDB: 'VectorsDB',
   postgresql: 'PostgreSQL',
   mysql: 'MySQL',
+  mongo: 'MongoDB',
 }
 
 export function filterAllowedServices(

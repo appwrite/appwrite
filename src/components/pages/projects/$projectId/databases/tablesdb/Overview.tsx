@@ -28,6 +28,8 @@ import {
   useOrganizationScopes,
   createProjectTable,
   invalidateDatabaseModel,
+  deleteProjectDatabase,
+  refetchProjectDatabaseLists,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
@@ -465,15 +467,11 @@ export function Overview({
   // Mutation to delete database
   const deleteDatabaseMutation = useMutation({
     mutationFn: async (databaseId: string) => {
-      const projectSdk = sdk.forProject(projectId)
-      await projectSdk.tablesDB.delete({ databaseId })
+      await deleteProjectDatabase(projectId, databaseId)
     },
     onSuccess: async () => {
       invalidateDatabaseModel(projectId, databaseId)
-      // Refetch databases list so the list view shows updated data (uses refetchOnMount: false)
-      await queryClient.refetchQueries({
-        queryKey: ['databases', 'project', projectId],
-      })
+      await refetchProjectDatabaseLists(queryClient, projectId)
       toast.success(t('Database deleted successfully'))
 
       // Close the dialog and reset confirmation

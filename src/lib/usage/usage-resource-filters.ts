@@ -41,14 +41,14 @@ export function getUsageResourceFilterEntries(
   if (resources.computeResource) {
     return [
       { dimension: 'resourceId', value: resourceId },
-      { dimension: 'resource', value: resources.computeResource.type },
+      { dimension: 'resourceType', value: resources.computeResource.type },
     ]
   }
 
   if (resources.storageResource) {
     return [
       { dimension: 'resourceId', value: resourceId },
-      { dimension: 'resource', value: 'bucket' },
+      { dimension: 'resourceType', value: 'bucket' },
     ]
   }
 
@@ -56,7 +56,7 @@ export function getUsageResourceFilterEntries(
     return [
       { dimension: 'resourceId', value: resourceId },
       {
-        dimension: 'resource',
+        dimension: 'resourceType',
         value: `database/${resources.tableResource.databaseId}/table`,
       },
     ]
@@ -65,7 +65,7 @@ export function getUsageResourceFilterEntries(
   if (resources.databaseResource) {
     return [
       { dimension: 'resourceId', value: resourceId },
-      { dimension: 'resource', value: 'database' },
+      { dimension: 'resourceType', value: 'database' },
     ]
   }
 

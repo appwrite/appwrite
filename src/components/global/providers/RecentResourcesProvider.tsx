@@ -14,6 +14,7 @@ import {
   filterRecentResources,
   parseRecentResourceRef,
   readRecentResourcesFromStorage,
+  resolveRecentDatabaseIconHints,
   resolveRecentResourceName,
   upsertRecentResource,
   writeRecentResourcesToStorage,
@@ -25,6 +26,10 @@ interface RecentResourcesContextType {
   getRecentResources: (options?: {
     projectId?: string | null
     limit?: number
+    skipNewestWhenMatches?: Pick<
+      RecentResource,
+      'projectId' | 'kind' | 'resourceId'
+    > | null
   }) => RecentResource[]
 }
 
@@ -56,7 +61,9 @@ export function RecentResourcesProvider({
         existing &&
         current[0]?.key === entry.key &&
         existing.name === entry.name &&
-        existing.href === entry.href
+        existing.href === entry.href &&
+        existing.databaseApiType === entry.databaseApiType &&
+        existing.databaseEngine === entry.databaseEngine
       ) {
         return current
       }
@@ -86,7 +93,8 @@ export function RecentResourcesProvider({
       if (done) return
       const name = resolveRecentResourceName(queryClient, ref)
       if (!name) return
-      recordResource(buildRecentResource(ref, name))
+      const databaseIconHints = resolveRecentDatabaseIconHints(queryClient, ref)
+      recordResource(buildRecentResource(ref, name, Date.now(), databaseIconHints))
       finish()
     }
 

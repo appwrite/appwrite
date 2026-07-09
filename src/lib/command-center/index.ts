@@ -27,6 +27,9 @@ export {
 export {
   RECENT_RESOURCES_MAX_SHOWN,
   filterRecentResources,
+  getRecentResourceDatabaseIconHints,
+  getRecentResourceBreadcrumbs,
+  parseRecentResourceRef,
   type RecentResource,
 } from './recent-resources'
 

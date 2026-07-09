@@ -102,7 +102,7 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     labelVariant: 'mono',
   },
   {
-    dimension: 'resource',
+    dimension: 'resourceType',
     title: 'Resources',
     description: 'Request volume grouped by resource.',
     metricId: 'breakdown-resources',

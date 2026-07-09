@@ -1,7 +1,7 @@
 import { Database } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getDatabaseServiceLucideIcon } from '@/lib/databases/database-service-icons'
-import { MySQLDolphinIcon, PostgresElephantIcon } from './database-mascot-icons'
+import { MySQLDolphinIcon, MongoDbLeafIcon, PostgresElephantIcon } from './database-mascot-icons'
 
 type DatabaseTypeIconProps = {
   /** Appwrite SDK `database.type` */
@@ -24,6 +24,9 @@ function resolveDatabaseTypeIcon({
   }
   if (normalizedEngine === 'mysql' || normalizedEngine === 'mariadb') {
     return <MySQLDolphinIcon className={iconClass} />
+  }
+  if (normalizedEngine === 'mongo' || normalizedEngine === 'mongodb') {
+    return <MongoDbLeafIcon className={iconClass} />
   }
 
   const normalizedType = String(apiType ?? '').toLowerCase()

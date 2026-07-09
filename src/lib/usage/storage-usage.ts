@@ -235,7 +235,7 @@ async function fetchStorageGaugeUsageOverview(
             metric,
             from,
             to,
-            ['resource'],
+            ['resourceType'],
             OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
             queries,
           )

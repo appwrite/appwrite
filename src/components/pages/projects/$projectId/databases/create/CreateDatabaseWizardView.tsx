@@ -3,7 +3,7 @@
  * DB type → specifications (table) → name & create.
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Table as TableIcon, Braces, Layers } from 'lucide-react'
 import {
@@ -12,6 +12,11 @@ import {
 } from '../_components/database-mascot-icons'
 import { CreateDatabaseSummary } from '../_components/CreateDatabaseSummary'
 import { CreateDatabaseDedicatedOptions } from '../_components/CreateDatabaseDedicatedOptions'
+import {
+  CreateDatabaseSetupProgress,
+  type DatabaseSetupPhase,
+  type DatabaseSetupProgressState,
+} from './CreateDatabaseSetupProgress'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +38,9 @@ import {
   createNativeDatabase,
   createProjectDatabase,
   databaseSpecificationsQueryOptions,
+  refetchProjectDatabaseLists,
   seedCreatedDatabaseCaches,
+  waitForCreatedDatabaseWorkspaceReady,
   useOrganizationPlan,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -172,6 +179,23 @@ function nativeDatabaseEngine(t: 'Postgres' | 'MySQL'): 'postgres' | 'mysql' {
   return t === 'Postgres' ? 'postgres' : 'mysql'
 }
 
+const SETUP_STEP_MIN_MS = 700
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+async function advanceSetupPhase(
+  setSetupProgress: Dispatch<SetStateAction<DatabaseSetupProgressState | null>>,
+  phase: DatabaseSetupPhase,
+  minDurationMs = SETUP_STEP_MIN_MS,
+): Promise<void> {
+  setSetupProgress((prev) => (prev ? { ...prev, phase } : prev))
+  await sleep(minDurationMs)
+}
+
 export function CreateDatabaseWizardView() {
   const t = useT()
   const { projectId } = useParams({ strict: false })
@@ -207,6 +231,9 @@ export function CreateDatabaseWizardView() {
   const [name, setName] = useState('')
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [setupProgress, setSetupProgress] =
+    useState<DatabaseSetupProgressState | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   const isTablesDB = dbType === 'TablesDB'
   const isDocumentsDB = dbType === 'DocumentsDB'
@@ -418,83 +445,61 @@ export function CreateDatabaseWizardView() {
         pitrEnabled,
       })
     },
-    onSuccess: async (database) => {
-      if (!isNativeDatabaseType(dbType) && database.$id && dbType) {
-        seedCreatedDatabaseCaches(
-          queryClient,
-          pid,
-          database.$id,
-          wizardBackend(dbType),
-          database as Models.Database,
-        )
-      }
-      track('Resource Created', {
-        surface: 'create_database_wizard',
-        resource: 'database',
-        database_type: dbType ?? 'unknown',
-        spec: selectedSpec?.id ?? 'none',
-        has_custom_id: Boolean(databaseId?.trim()),
-      })
-      toast.success(t('Database created'))
-      if (isNativeDatabaseType(dbType)) {
-        if (dbType === 'Postgres') {
-          navigate({
-            ...postgresDatabaseHome({
-              projectId: pid,
-              databaseId: database.$id,
-              tableId: '-',
-            }),
-          })
-          return
-        }
+  })
+
+  const finishDatabaseCreation = async (
+    database: Models.Database | Models.DedicatedDatabase,
+  ) => {
+    if (!isNativeDatabaseType(dbType) && database.$id && dbType) {
+      seedCreatedDatabaseCaches(
+        queryClient,
+        pid,
+        database.$id,
+        wizardBackend(dbType),
+        database as Models.Database,
+      )
+    }
+    track('Resource Created', {
+      surface: 'create_database_wizard',
+      resource: 'database',
+      database_type: dbType ?? 'unknown',
+      spec: selectedSpec?.id ?? 'none',
+      has_custom_id: Boolean(databaseId?.trim()),
+    })
+    await refetchProjectDatabaseLists(queryClient, pid)
+    toast.success(t('Database created'))
+
+    if (isNativeDatabaseType(dbType)) {
+      if (dbType === 'Postgres') {
         navigate({
-          to: '/projects/$projectId/databases',
-          params: { projectId: pid },
+          ...postgresDatabaseHome({
+            projectId: pid,
+            databaseId: database.$id,
+            tableId: '-',
+          }),
         })
         return
       }
       navigate({
-        to: DATABASE_HOME_TO,
-        params: {
-          projectId: pid,
-          dbKind: databaseRouteKindFromApiType(
-            (database as { type?: DatabaseType }).type ??
-              (dbType ? wizardBackend(dbType) : undefined),
-          ),
-          databaseId: database.$id,
-        },
+        to: '/projects/$projectId/databases',
+        params: { projectId: pid },
       })
-      void Promise.all([
-        queryClient.refetchQueries({
-          queryKey: ['databases', 'project', pid],
-          type: 'all',
-        }),
-        queryClient.refetchQueries({
-          queryKey: ['dedicated-databases', 'project', pid],
-          type: 'all',
-        }),
-      ])
-    },
-    onError: (error) => {
-      track('Resource Creation Failed', {
-        surface: 'create_database_wizard',
-        resource: 'database',
-        database_type: dbType ?? 'unknown',
-        spec: selectedSpec?.id ?? 'none',
-        error_name: error instanceof Error ? error.name : 'unknown',
-      })
-      const fallback = t('Failed to create database')
-      const message =
-        isNativeDatabaseType(dbType) ||
-        dbType === 'DocumentsDB' ||
-        dbType === 'VectorsDB'
-          ? formatDedicatedDatabaseCreateError(error, fallback)
-          : getErrorMessage(error) || fallback
-      toast.error(t(message))
-    },
-  })
+      return
+    }
+    navigate({
+      to: DATABASE_HOME_TO,
+      params: {
+        projectId: pid,
+        dbKind: databaseRouteKindFromApiType(
+          (database as { type?: DatabaseType }).type ??
+            (dbType ? wizardBackend(dbType) : undefined),
+        ),
+        databaseId: database.$id,
+      },
+    })
+  }
 
-  const handleCreate = () => {
+  const handleCreateDatabase = async () => {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) newErrors.name = t('Name is required')
     if (isNativeDatabaseType(dbType)) {
@@ -518,6 +523,12 @@ export function CreateDatabaseWizardView() {
       })
       return
     }
+
+    const trimmedName = name.trim()
+    const showProvisioningStep = usesDedicatedCompute
+    const showHaStep = haReplicaCount > 0
+    const showPitrStep = pitrEnabled
+
     track('Form Submitted', {
       surface: 'create_database_wizard',
       resource: 'database',
@@ -525,10 +536,69 @@ export function CreateDatabaseWizardView() {
       spec: selectedSpec?.id ?? 'none',
       has_custom_id: Boolean(databaseId?.trim()),
     })
-    createMutation.mutate({
-      databaseId: databaseId?.trim() || undefined,
-      name: name.trim(),
+
+    setSetupProgress({
+      phase: 'creating',
+      databaseName: trimmedName,
+      showProvisioningStep,
+      showHaStep,
+      showPitrStep,
     })
+    setIsCreating(true)
+
+    try {
+      const database = await createMutation.mutateAsync({
+        databaseId: databaseId?.trim() || undefined,
+        name: trimmedName,
+      })
+
+      const workspaceKind = isNativeDatabaseType(dbType)
+        ? { type: 'native' as const, engine: nativeDatabaseEngine(dbType) }
+        : {
+            type: 'product' as const,
+            backend: wizardBackend(dbType!),
+          }
+
+      const workspaceReadyPromise = waitForCreatedDatabaseWorkspaceReady(
+        pid,
+        database.$id,
+        workspaceKind,
+      )
+
+      if (showProvisioningStep) {
+        await advanceSetupPhase(setSetupProgress, 'provisioning')
+      }
+      if (showHaStep) {
+        await advanceSetupPhase(setSetupProgress, 'configuring-ha')
+      }
+      if (showPitrStep) {
+        await advanceSetupPhase(setSetupProgress, 'enabling-backups')
+      }
+
+      await workspaceReadyPromise
+
+      await advanceSetupPhase(setSetupProgress, 'complete')
+      await finishDatabaseCreation(database)
+    } catch (error) {
+      setSetupProgress(null)
+      track('Resource Creation Failed', {
+        surface: 'create_database_wizard',
+        resource: 'database',
+        database_type: dbType ?? 'unknown',
+        spec: selectedSpec?.id ?? 'none',
+        error_name: error instanceof Error ? error.name : 'unknown',
+      })
+      const fallback = t('Failed to create database')
+      const message =
+        isNativeDatabaseType(dbType) ||
+        dbType === 'DocumentsDB' ||
+        dbType === 'VectorsDB'
+          ? formatDedicatedDatabaseCreateError(error, fallback)
+          : getErrorMessage(error) || fallback
+      toast.error(t(message))
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   const isSpecSelectionReady =
@@ -546,19 +616,33 @@ export function CreateDatabaseWizardView() {
     !selectedDbType?.comingSoon &&
     isSpecSelectionReady,
   )
-  const isCreatePending = createMutation.isPending
+  const isCreatePending = isCreating || createMutation.isPending
   const footer = (
     <div className="flex w-full justify-end">
       <Button
         type="button"
         disabled={!canCreate || isCreatePending}
-        onClick={handleCreate}
+        onClick={() => void handleCreateDatabase()}
         data-analytics-track="manual"
       >
         {t('Create database')}
       </Button>
     </div>
   )
+
+  if (setupProgress) {
+    return (
+      <WizardLayout
+        title={t('Create database')}
+        fullscreen
+        useSidebar={false}
+        skipInitialFieldFocus
+        fallbackPath={`/projects/${pid}/databases`}
+      >
+        <CreateDatabaseSetupProgress progress={setupProgress} />
+      </WizardLayout>
+    )
+  }
 
   return (
     <WizardLayout

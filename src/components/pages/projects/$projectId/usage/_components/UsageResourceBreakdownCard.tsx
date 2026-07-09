@@ -74,7 +74,7 @@ function UsageResourceBreakdownDimensionToggle({
       size="sm"
       value={value}
       onValueChange={(next) => {
-        if (next === 'resourceId' || next === 'resource') {
+        if (next === 'resourceId' || next === 'resourceType') {
           onValueChange(next)
         }
       }}

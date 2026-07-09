@@ -1398,6 +1398,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Databases' },
               ),
               createProfileFeatureFlagItem(
+                'Native DBs: MongoDB',
+                'Enable dedicated MongoDB databases in the databases list.',
+                'nativeDbsMongo',
+                profileId,
+                features.nativeDbsMongo,
+                { category: 'Databases' },
+              ),
+              createProfileFeatureFlagItem(
                 'Console user verification',
                 'Require email verification after signup; redirect to verify-email page on cloud.',
                 'userVerification',
@@ -1742,6 +1750,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.dedicatedDbsVectorsDB,
     features.nativeDbsPostgres,
     features.nativeDbsMySQL,
+    features.nativeDbsMongo,
     features.userVerification,
     features.oauthApps,
     features.oauth2Server,

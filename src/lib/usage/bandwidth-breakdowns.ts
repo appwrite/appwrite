@@ -103,7 +103,7 @@ export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] 
     labelVariant: 'mono',
   },
   {
-    dimension: 'resource',
+    dimension: 'resourceType',
     title: 'Resources',
     description: 'Bandwidth grouped by resource.',
     metricId: 'breakdown-resources',

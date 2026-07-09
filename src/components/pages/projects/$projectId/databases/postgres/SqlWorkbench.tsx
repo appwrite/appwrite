@@ -38,6 +38,7 @@ type SqlWorkbenchProps = {
   onCreateTab: () => void
   onCloseTab: (tabId: string) => void
   onReorderTabs: (activeId: string, overId: string) => void
+  onRenameTab: (tabId: string, title: string) => void
   onRun: () => void
   onExplain: () => void
   isRunning: boolean
@@ -64,6 +65,7 @@ export function SqlWorkbench({
   onCreateTab,
   onCloseTab,
   onReorderTabs,
+  onRenameTab,
   onRun,
   onExplain,
   isRunning,
@@ -246,6 +248,7 @@ export function SqlWorkbench({
                   onCreateTab={onCreateTab}
                   onCloseTab={onCloseTab}
                   onReorderTabs={onReorderTabs}
+                  onRenameTab={onRenameTab}
                   headerCollapsed={isHeaderCollapsed}
                   onToggleHeaderCollapsed={() =>
                     setIsHeaderCollapsed((collapsed) => !collapsed)

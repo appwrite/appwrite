@@ -13,6 +13,10 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  invalidateDatabaseModel,
+  refetchProjectDatabaseLists,
+} from './databases'
+import {
   mapDedicatedDatabaseCredentials,
   type DedicatedDatabaseConnectionList,
   type DedicatedDatabaseCredentials,
@@ -141,6 +145,10 @@ import {
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 import { DEFAULT_STALE_TIME } from './constants'
+import {
+  DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  shouldPollDedicatedDatabaseStatus,
+} from '@/lib/databases/dedicated-database-status'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
 
 function isPostgresEngine(engine: string | undefined): boolean {
@@ -1062,11 +1070,13 @@ export function useDeletePostgresDatabase(
   return useMutation({
     mutationFn: (databaseId: string) =>
       deletePostgresDatabase(projectId!, databaseId),
-    onSuccess: async () => {
+    onSuccess: async (_data, databaseId) => {
       if (!projectId) return
-      await queryClient.refetchQueries({
-        queryKey: ['dedicated-databases', 'project', projectId],
+      invalidateDatabaseModel(projectId, databaseId)
+      queryClient.removeQueries({
+        queryKey: postgresDatabaseQueryOptions(projectId, databaseId).queryKey,
       })
+      await refetchProjectDatabaseLists(queryClient, projectId)
     },
   })
 }
@@ -1518,10 +1528,14 @@ export function usePostgresDatabase(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
-    postgresDatabaseQueryOptions(projectId, databaseId),
-  )
-  return { database: data ?? null, isLoading, error, refetch }
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    ...postgresDatabaseQueryOptions(projectId, databaseId),
+    refetchInterval: (query) =>
+      shouldPollDedicatedDatabaseStatus(query.state.data?.status)
+        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
+        : false,
+  })
+  return { database: data ?? null, isLoading, error, refetch, isFetching }
 }
 
 export function postgresSidebarSchemasInfiniteQueryOptions(

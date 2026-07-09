@@ -36,6 +36,7 @@ import {
   createProjectTable,
   invalidateDatabaseModel,
   deleteProjectDatabase,
+  refetchProjectDatabaseLists,
 } from '@/lib/react-query/hooks'
 import {
   GRID_DEFAULT_PAGE_SIZE,
@@ -529,10 +530,7 @@ export function View() {
       databaseIds.forEach((id) => invalidateDatabaseModel(projectId, id))
     },
     onSuccess: async () => {
-      // Refetch databases list so the UI updates (list uses refetchOnMount: false)
-      await queryClient.refetchQueries({
-        queryKey: ['databases', 'project', projectId],
-      })
+      await refetchProjectDatabaseLists(queryClient, projectId!)
       toast.success(
         selectedDatabases.size === 1
           ? t('Database deleted successfully')
@@ -1171,6 +1169,15 @@ export function View() {
             viewMode={viewMode}
             regionSupported={supportsDedicatedDatabaseCompute}
             nativeEngine="mysql"
+          />
+        ) : null}
+
+        {features.nativeDbsMongo && projectId ? (
+          <DedicatedDatabasesSection
+            projectId={projectId}
+            viewMode={viewMode}
+            regionSupported={supportsDedicatedDatabaseCompute}
+            nativeEngine="mongo"
           />
         ) : null}
 

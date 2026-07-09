@@ -114,7 +114,7 @@ export function formatBreakdownLabel(
   if (dimension === 'service') {
     return translateUnknownBreakdownLabel(formatUsageServiceLabel(label))
   }
-  if (dimension === 'resource') {
+  if (dimension === 'resourceType') {
     return translateUnknownBreakdownLabel(formatUsageResourceTypeLabel(label))
   }
   if (labelVariant === 'mono') {

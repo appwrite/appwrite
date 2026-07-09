@@ -43,6 +43,7 @@ export function PostgresDatabaseDangerZoneCard({
         navigate({
           to: '/projects/$projectId/databases',
           params: { projectId },
+          replace: true,
         })
       },
       onError: (error) => {

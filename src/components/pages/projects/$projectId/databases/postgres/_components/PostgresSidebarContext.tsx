@@ -85,6 +85,7 @@ type PostgresSidebarContextValue = {
   closeOtherTabs: (tabId: string) => void
   duplicateQueryTab: (sql: string) => void
   reorderTabs: (activeId: string, overId: string) => void
+  renameTab: (tabId: string, title: string) => void
   setActiveTabId: (tabId: string) => void
   updateActiveTabSql: (sql: string) => void
   setActiveTabResult: (
@@ -621,6 +622,23 @@ export function PostgresSidebarProvider({
     })
   }, [])
 
+  const renameTab = useCallback((tabId: string, title: string) => {
+    const trimmed = title.trim()
+    if (!trimmed) return
+
+    setEditorTabState((prev) => {
+      if (!prev.tabs.some((tab) => tab.id === tabId)) return prev
+
+      const nextTitle = trimmed.slice(0, MAX_POSTGRES_SQL_EDITOR_TAB_TITLE_LENGTH)
+      return {
+        ...prev,
+        tabs: prev.tabs.map((tab) =>
+          tab.id === tabId ? { ...tab, title: nextTitle } : tab,
+        ),
+      }
+    })
+  }, [])
+
   const value = useMemo(
     () => ({
       panel,
@@ -647,6 +665,7 @@ export function PostgresSidebarProvider({
       closeOtherTabs,
       duplicateQueryTab,
       reorderTabs,
+      renameTab,
       setActiveTabId,
       updateActiveTabSql,
       setActiveTabResult,
@@ -676,6 +695,7 @@ export function PostgresSidebarProvider({
       closeOtherTabs,
       duplicateQueryTab,
       reorderTabs,
+      renameTab,
       updateActiveTabSql,
       setActiveTabResult,
     ],

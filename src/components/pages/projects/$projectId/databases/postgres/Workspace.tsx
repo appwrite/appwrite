@@ -86,6 +86,7 @@ export function PostgresSqlWorkbenchContent({
     createTab,
     closeTab,
     reorderTabs,
+    renameTab,
     addRecentQuery,
     focusTableRouteTab,
   } = usePostgresSidebar()
@@ -268,6 +269,7 @@ export function PostgresSqlWorkbenchContent({
         onCreateTab={createTab}
         onCloseTab={closeTab}
         onReorderTabs={reorderTabs}
+        onRenameTab={renameTab}
         onRun={handleRunSql}
         onExplain={handleExplainSql}
         isRunning={executeSql.isPending}

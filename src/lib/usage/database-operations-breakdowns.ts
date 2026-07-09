@@ -30,7 +30,7 @@ export const DATABASE_OPERATIONS_BREAKDOWN_SECTIONS: readonly DatabaseOperations
       labelVariant: 'mono',
     },
     {
-      dimension: 'resource',
+      dimension: 'resourceType',
       title: 'Resources',
       description: 'Operations grouped by resource.',
       metricId: 'breakdown-resources',

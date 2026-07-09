@@ -193,6 +193,7 @@ function ApiReferenceSectionSubnavShell({
       features.dedicatedDbsVectorsDB,
       features.nativeDbsPostgres,
       features.nativeDbsMySQL,
+      features.nativeDbsMongo,
     ],
   )
 

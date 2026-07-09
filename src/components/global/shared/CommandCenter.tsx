@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -71,6 +71,9 @@ import {
   getCommandsForContext,
   PROJECT_RESOURCE_KIND_LABELS,
   RECENT_RESOURCES_MAX_SHOWN,
+  getRecentResourceDatabaseIconHints,
+  getRecentResourceBreadcrumbs,
+  parseRecentResourceRef,
   searchCommands,
   searchCommandsWithScores,
   getMessageSearchLabel,
@@ -89,6 +92,7 @@ import { CommandCenterFeedbackView } from '@/components/global/shared/CommandCen
 import { CommandCenterSupportView } from '@/components/global/shared/CommandCenterSupportView'
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
 import { useRecentResourcesSafe } from '@/components/global/providers/RecentResourcesProvider'
+import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
@@ -571,26 +575,56 @@ export function CommandCenter({
   const recentCommands: RuntimeCommand[] = useMemo(() => {
     if (!isProjectContext || !projectId) return []
 
+    const currentRef = parseRecentResourceRef(location.pathname)
     const items =
       recentResources?.getRecentResources({
         projectId,
         limit: RECENT_RESOURCES_MAX_SHOWN,
+        skipNewestWhenMatches: currentRef
+          ? {
+              projectId: currentRef.projectId,
+              kind: currentRef.kind,
+              resourceId: currentRef.resourceId,
+            }
+          : null,
       }) ?? []
 
-    return items.map((entry) => ({
-      id: `recent.${entry.key}`,
-      label: entry.name,
-      breadcrumbs: entry.breadcrumbs,
-      icon: RESOURCE_KIND_ICONS[entry.kind],
-      kind: 'action' as CommandKind,
-      group: 'Recent',
-      // Prefer the stored resource path so postgres / product-kind URLs stay correct.
-      select: () => {
-        onOpenChange(false)
-        navigateToHref(navigate, entry.href)
-      },
-    }))
-  }, [isProjectContext, projectId, recentResources, navigate, onOpenChange])
+    return items.map((entry) => {
+      const databaseIconHints =
+        entry.kind === 'database'
+          ? getRecentResourceDatabaseIconHints(entry)
+          : null
+
+      return {
+        id: `recent.${entry.key}`,
+        label: entry.name,
+        breadcrumbs: getRecentResourceBreadcrumbs(entry),
+        icon: RESOURCE_KIND_ICONS[entry.kind],
+        iconElement:
+          databaseIconHints && (databaseIconHints.apiType || databaseIconHints.engine) ? (
+            <DatabaseTypeIcon
+              apiType={databaseIconHints.apiType}
+              engine={databaseIconHints.engine}
+              className="h-3.5 w-3.5"
+            />
+          ) : undefined,
+        kind: 'action' as CommandKind,
+        group: 'Recent',
+        // Prefer the stored resource path so postgres / product-kind URLs stay correct.
+        select: () => {
+          onOpenChange(false)
+          navigateToHref(navigate, entry.href)
+        },
+      }
+    })
+  }, [
+    isProjectContext,
+    projectId,
+    recentResources,
+    navigate,
+    onOpenChange,
+    location.pathname,
+  ])
 
   // ── Dynamic resource fetching (search by user-typed term) ────────────────
   const hasSearch = search.trim().length > 0
@@ -1777,7 +1811,8 @@ export function CommandCenter({
                           className="group flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"
                         >
                           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted group-data-[selected=true]:bg-accent">
-                            {Icon && <Icon className="h-3.5 w-3.5" />}
+                            {cmd.iconElement ??
+                              (Icon && <Icon className="h-3.5 w-3.5" />)}
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <p className="truncate text-[13px] font-medium">
@@ -1853,6 +1888,8 @@ interface RuntimeCommand {
   /** Breadcrumb trail segments (recent resources). Each segment is translated. */
   breadcrumbs?: string[]
   icon?: LucideIcon
+  /** Custom icon node (e.g. database mascots) overrides `icon` when set. */
+  iconElement?: ReactNode
   shortcut?: string
   kind: CommandKind
   group?: string
