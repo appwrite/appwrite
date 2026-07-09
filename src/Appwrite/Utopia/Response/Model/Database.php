@@ -55,6 +55,7 @@ class Database extends Model
                 'example' => 'ready',
                 'enum' => ['provisioning', 'ready', 'failed'],
                 'enumSDKName' => 'DatabaseStatus',
+                'required' => false
             ]);
     }
 
