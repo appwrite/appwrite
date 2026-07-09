@@ -24,10 +24,11 @@ import {
   useProjectStorageBuildsChart,
   useProjectStorageDeploymentsChart,
   useProjectStorageFilesUsage,
-  useStorageBreakdownResources,
+  useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
+import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { StorageMetricBentoCard } from './_components/StorageMetricBentoCard'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -79,24 +80,33 @@ export function StorageSection({
     chartInterval,
   )
 
-  const breakdownBucketIds = useMemo(() => {
+  const breakdownItems = useMemo(() => {
     if (!showBreakdown) return []
 
-    const ids = new Set<string>()
-    for (const item of [
-      ...(filesQuery.data?.topConsumers ?? []),
-      ...(imageTransformationsQuery.data?.topConsumers ?? []),
-    ]) {
-      if (item.id) ids.add(item.id)
-    }
-    return Array.from(ids)
+    return [
+      ...(filesQuery.isError
+        ? []
+        : topConsumersToBreakdownItems(filesQuery.data?.topConsumers ?? [])),
+      ...(imageTransformationsQuery.isError
+        ? []
+        : topConsumersToBreakdownItems(
+            imageTransformationsQuery.data?.topConsumers ?? [],
+          )),
+    ]
   }, [
     filesQuery.data?.topConsumers,
+    filesQuery.isError,
     imageTransformationsQuery.data?.topConsumers,
+    imageTransformationsQuery.isError,
     showBreakdown,
   ])
 
-  const { data: storageBreakdownResources } = useStorageBreakdownResources(
+  const breakdownBucketIds = useMemo(
+    () => getUsageBreakdownResourceIds(breakdownItems),
+    [breakdownItems],
+  )
+
+  const { storageLookup } = useUsageResourceBreakdownLookups(
     projectId,
     breakdownBucketIds,
     showBreakdown && breakdownBucketIds.length > 0,
@@ -138,13 +148,6 @@ export function StorageSection({
     : topConsumersToBreakdownItems(
         imageTransformationsQuery.data?.topConsumers ?? [],
       )
-  const filesResourceTypeBreakdownItems = filesQuery.isError
-    ? []
-    : (filesQuery.data?.resourceTypeBreakdown ?? [])
-  const imageTransformationsResourceTypeBreakdownItems =
-    imageTransformationsQuery.isError
-      ? []
-      : (imageTransformationsQuery.data?.resourceTypeBreakdown ?? [])
 
   return (
     <div className="space-y-6">
@@ -169,8 +172,7 @@ export function StorageSection({
         axisFormat="bytes"
         showBreakdown={showBreakdown}
         breakdownItems={filesBreakdownItems}
-        resourceTypeBreakdownItems={filesResourceTypeBreakdownItems}
-        breakdownLookup={storageBreakdownResources?.resources}
+        breakdownLookup={storageLookup}
         onRetry={handleRetryAll}
         docsHref={STORAGE_DOCS_HREF}
       />
@@ -244,8 +246,7 @@ export function StorageSection({
         axisFormat="count"
         showBreakdown={showBreakdown}
         breakdownItems={imageTransformationsBreakdownItems}
-        resourceTypeBreakdownItems={imageTransformationsResourceTypeBreakdownItems}
-        breakdownLookup={storageBreakdownResources?.resources}
+        breakdownLookup={storageLookup}
         onRetry={handleRetryAll}
         docsHref={IMAGE_TRANSFORMATIONS_DOCS_HREF}
       />

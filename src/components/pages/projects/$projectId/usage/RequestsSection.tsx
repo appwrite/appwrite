@@ -46,7 +46,7 @@ import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/Cha
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { useUsageFilters } from './usage-filters-context'
 import { useT } from '@/lib/i18n/translate'
-import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import {
@@ -344,14 +344,14 @@ export function RequestsSection({
     showBreakdown,
   )
 
-  const { standardEntries, resourceIdEntry, resourceTypeEntry } = useMemo(
+  const { standardEntries, resourceEntry } = useMemo(
     () => splitUsageBreakdownEntries(breakdowns),
     [breakdowns],
   )
 
   const resourceBreakdownIds = useMemo(() => {
-    return resourceIdEntry?.items.map((item) => item.label) ?? []
-  }, [resourceIdEntry?.items])
+    return getUsageBreakdownResourceIds(resourceEntry?.items ?? [])
+  }, [resourceEntry?.items])
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
@@ -431,20 +431,13 @@ export function RequestsSection({
             </div>
           ))}
 
-          {resourceIdEntry && resourceTypeEntry ? (
+          {resourceEntry ? (
             <div className="flex h-full min-h-0 flex-col">
               <UsageResourceBreakdownCard
-                description={resourceIdEntry.section.description}
-                resourceIdView={{
-                  items: resourceIdEntry.items,
-                  isLoading: resourceIdEntry.isLoading,
-                  isError: resourceIdEntry.isError,
-                }}
-                resourceTypeView={{
-                  items: resourceTypeEntry.items,
-                  isLoading: resourceTypeEntry.isLoading,
-                  isError: resourceTypeEntry.isError,
-                }}
+                description={resourceEntry.section.description}
+                items={resourceEntry.items}
+                isLoading={resourceEntry.isLoading}
+                isError={resourceEntry.isError}
                 countryLookups={countryLookups}
                 computeLookup={computeLookup}
                 databaseLookup={databaseLookup}
@@ -454,16 +447,12 @@ export function RequestsSection({
                 errorMessage={OVERVIEW_REQUESTS_ERROR.message}
                 formatValue={formatRequestsValue}
                 onRetry={handleRetryAll}
-                onShowMore={(dimension) =>
+                onShowMore={() =>
                   setBreakdownDrawer({
-                    title:
-                      dimension === 'resourceId'
-                        ? 'Resources · Resource ID'
-                        : 'Resources · Resource type',
-                    description: resourceIdEntry.section.description,
-                    dimension,
-                    labelVariant:
-                      dimension === 'resourceId' ? 'mono' : 'default',
+                    title: 'Resources',
+                    description: resourceEntry.section.description,
+                    dimension: 'resource',
+                    labelVariant: 'default',
                   })
                 }
               />

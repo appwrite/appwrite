@@ -34,7 +34,6 @@ type ComputeMetricBentoCardProps = {
   axisFormat?: UsageChartAxisFormat
   showBreakdown: boolean
   breakdownItems: UsageBreakdownItem[]
-  resourceTypeBreakdownItems: UsageBreakdownItem[]
   breakdownLookup: ComputeBreakdownResourceMap | undefined
   breakdownTitleAddon?: React.ReactNode
   onRetry: () => void
@@ -58,7 +57,6 @@ export function ComputeMetricBentoCard({
   axisFormat = 'count',
   showBreakdown,
   breakdownItems,
-  resourceTypeBreakdownItems,
   breakdownLookup,
   breakdownTitleAddon,
   onRetry,
@@ -97,16 +95,9 @@ export function ComputeMetricBentoCard({
           <UsageResourceBreakdownCard
             embedded
             description={description}
-            resourceIdView={{
-              items: breakdownItems,
-              isLoading,
-              isError,
-            }}
-            resourceTypeView={{
-              items: resourceTypeBreakdownItems,
-              isLoading,
-              isError,
-            }}
+            items={breakdownItems}
+            isLoading={isLoading}
+            isError={isError}
             computeLookup={breakdownLookup}
             errorTitle={COMPUTE_USAGE_ERROR.title}
             errorMessage={COMPUTE_USAGE_ERROR.message}

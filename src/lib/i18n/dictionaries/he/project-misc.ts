@@ -1269,6 +1269,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Status codes': 'קודי סטטוס',
   'Services': 'שירותים',
   'Hostnames': 'שמות מארח',
+  'IP addresses': 'כתובות IP',
   'Operating systems': 'מערכות הפעלה',
   'Client types': 'סוגי לקוח',
   'Clients': 'לקוחות',
@@ -1284,6 +1285,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Request volume grouped by caller country.': 'נפח בקשות מקובץ לפי מדינת המקור.',
   'Request volume grouped by Appwrite region.': 'נפח בקשות מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
   'Request volume grouped by caller hostname.': 'נפח בקשות מקובץ לפי שם המארח של המקור.',
+  'Request volume grouped by caller IP address.': 'נפח בקשות מקובץ לפי כתובת IP של המקור.',
   'Request volume grouped by client operating system.': 'נפח בקשות מקובץ לפי מערכת ההפעלה של הלקוח.',
   'Request volume grouped by client type.': 'נפח בקשות מקובץ לפי סוג הלקוח.',
   'Request volume grouped by client name.': 'נפח בקשות מקובץ לפי שם הלקוח.',
@@ -1296,6 +1298,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bandwidth grouped by caller country.': 'רוחב פס מקובץ לפי מדינת המקור.',
   'Bandwidth grouped by Appwrite region.': 'רוחב פס מקובץ לפי אזור Appwrite.', // pragma: allowlist secret
   'Bandwidth grouped by caller hostname.': 'רוחב פס מקובץ לפי שם המארח של המקור.',
+  'Bandwidth grouped by caller IP address.': 'רוחב פס מקובץ לפי כתובת IP של המקור.',
   'Bandwidth grouped by client operating system.': 'רוחב פס מקובץ לפי מערכת ההפעלה של הלקוח.',
   'Bandwidth grouped by client type.': 'רוחב פס מקובץ לפי סוג הלקוח.',
   'Bandwidth grouped by client name.': 'רוחב פס מקובץ לפי שם הלקוח.',
@@ -1303,6 +1306,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Bandwidth grouped by resource ID.': 'רוחב פס מקובץ לפי מזהה משאב.',
   'API paths': 'נתיבי API',
   'Operations grouped by database.': 'פעולות מקובצות לפי מסד נתונים.',
+  'Operations grouped by resource.': 'פעולות מקובצות לפי משאב.',
+  'Operations grouped by caller IP address.': 'פעולות מקובצות לפי כתובת IP של המקור.',
   'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).': 'פעולות מקובצות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
   'API endpoint paths driving database operations.': 'נתיבי נקודות קצה של API שמניעים פעולות מסד נתונים.',
   'Products': 'מוצרים',

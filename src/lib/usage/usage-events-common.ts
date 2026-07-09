@@ -51,6 +51,7 @@ export interface UsageTopEndpoint {
   statusCode: number
   path: string
   count: number
+  resourceType?: string
 }
 
 /** Dimensions supported by usage.listEvents for event metrics. */
@@ -62,6 +63,7 @@ export type UsageEventBreakdownDimension =
   | 'country'
   | 'region'
   | 'hostname'
+  | 'ip'
   | 'osName'
   | 'clientType'
   | 'clientName'
@@ -69,11 +71,20 @@ export type UsageEventBreakdownDimension =
   | 'teamId'
   | 'resourceId'
   | 'resourceType'
+  /** Composite breakdown by resource type and ID (listEvents dimensions: resourceId + resourceType). */
+  | 'resource'
+
+export const USAGE_RESOURCE_BREAKDOWN_DIMENSIONS = [
+  'resourceId',
+  'resourceType',
+] as const
 
 export interface UsageBreakdownItem {
   id: string
   label: string
   count: number
+  resourceId?: string
+  resourceType?: string
 }
 
 function getUsageDataPointBreakdownLabel(
@@ -95,6 +106,8 @@ function getUsageDataPointBreakdownLabel(
       return point.region?.trim() || 'Unknown'
     case 'hostname':
       return point.hostname?.trim() || 'Unknown'
+    case 'ip':
+      return point.ip?.trim() || 'Unknown'
     case 'osName':
       return point.osName?.trim() || 'Unknown'
     case 'clientType':
@@ -109,9 +122,37 @@ function getUsageDataPointBreakdownLabel(
       return point.resourceId?.trim() || 'Unknown'
     case 'resourceType':
       return point.resourceType?.trim() || 'Unknown'
+    case 'resource':
+      return point.resourceId?.trim() || 'Unknown'
     default:
       return 'Unknown'
   }
+}
+
+function getUsageBreakdownItemMergeKey(item: UsageBreakdownItem): string {
+  if (item.resourceId && item.resourceType) {
+    return `${item.resourceType}\0${item.resourceId}`
+  }
+  return item.label
+}
+
+function mapBreakdownGroupsForResourceDimensions(
+  groups: Models.UsageDataPoint[],
+  limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+): UsageBreakdownItem[] {
+  const items = groups.map((group, index) => {
+    const resourceId = group.resourceId?.trim() || 'Unknown'
+    const resourceType = group.resourceType?.trim() || 'Unknown'
+    return {
+      id: `resource-${resourceType}-${resourceId}-${index}`,
+      label: resourceId,
+      count: group.value,
+      resourceId,
+      resourceType,
+    }
+  })
+
+  return items.sort((a, b) => b.count - a.count).slice(0, limit)
 }
 
 function mapBreakdownGroupsForDimension(
@@ -119,6 +160,10 @@ function mapBreakdownGroupsForDimension(
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageBreakdownItem[] {
+  if (dimension === 'resource') {
+    return mapBreakdownGroupsForResourceDimensions(groups, limit)
+  }
+
   const items = groups.map((group, index) => {
     const label = getUsageDataPointBreakdownLabel(group, dimension)
     return {
@@ -140,7 +185,7 @@ export function mergeUsageBreakdownItems(
 
   for (const list of lists) {
     for (const item of list) {
-      const key = item.label
+      const key = getUsageBreakdownItemMergeKey(item)
       const existing = grouped.get(key)
       if (existing) {
         existing.count += item.count
@@ -170,8 +215,13 @@ export async function fetchProjectUsageEventBreakdown(
 
   const { from, to } = resolveOverviewUsagePeriod(dateRange)
 
+  const dimensions =
+    dimension === 'resource'
+      ? [...USAGE_RESOURCE_BREAKDOWN_DIMENSIONS]
+      : [dimension]
+
   const groups = await listUsageEventGroupsForMetric(projectId, metric, {
-    dimensions: [dimension],
+    dimensions,
     startAt: from.toISOString(),
     endAt: to.toISOString(),
     queries,
@@ -439,7 +489,22 @@ function mapBreakdownGroupsToEndpoints(
 ): UsageTopEndpoint[] {
   let items: UsageTopEndpoint[]
 
-  if (dimensions.length === 1 && dimensions[0] === 'resourceId') {
+  if (dimensions.length === 2 &&
+    dimensions.includes('resourceId') &&
+    dimensions.includes('resourceType')) {
+    items = groups.map((group, index) => {
+      const resourceId = group.resourceId?.trim() || ''
+      const resourceType = group.resourceType?.trim() || ''
+      return {
+        id: resourceId || `resource-${index}`,
+        method: '',
+        statusCode: 0,
+        path: resourceId,
+        count: group.value,
+        resourceType,
+      }
+    })
+  } else if (dimensions.length === 1 && dimensions[0] === 'resourceId') {
     items = groups.map((group, index) => {
       const resourceId = group.resourceId?.trim() || ''
       return {

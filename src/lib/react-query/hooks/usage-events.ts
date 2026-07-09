@@ -2200,7 +2200,7 @@ export function useProjectDatabaseReadsBreakdownDrawer(
     ...databaseReadsBreakdownDrawerQueryOptions(
       projectId,
       dateRange,
-      dimension ?? 'resourceId',
+      dimension ?? 'resource',
       filterQueries,
     ),
     enabled: enabled && !!projectId && !!dimension,
@@ -2219,7 +2219,7 @@ export function useProjectDatabaseWritesBreakdownDrawer(
     ...databaseWritesBreakdownDrawerQueryOptions(
       projectId,
       dateRange,
-      dimension ?? 'resourceId',
+      dimension ?? 'resource',
       filterQueries,
     ),
     enabled: enabled && !!projectId && !!dimension,

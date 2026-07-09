@@ -67,6 +67,13 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     labelVariant: 'mono',
   },
   {
+    dimension: 'ip',
+    title: 'IP addresses',
+    description: 'Request volume grouped by caller IP address.',
+    metricId: 'breakdown-ip',
+    labelVariant: 'mono',
+  },
+  {
     dimension: 'osName',
     title: 'Operating systems',
     description: 'Request volume grouped by client operating system.',
@@ -95,14 +102,7 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     labelVariant: 'default',
   },
   {
-    dimension: 'resourceId',
-    title: 'Resources',
-    description: 'Request volume grouped by resource.',
-    metricId: 'breakdown-resources',
-    labelVariant: 'mono',
-  },
-  {
-    dimension: 'resourceType',
+    dimension: 'resource',
     title: 'Resources',
     description: 'Request volume grouped by resource.',
     metricId: 'breakdown-resources',

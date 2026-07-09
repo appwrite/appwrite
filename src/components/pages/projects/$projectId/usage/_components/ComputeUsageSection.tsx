@@ -26,16 +26,17 @@ import {
 } from '@/lib/usage/compute-usage'
 import {
   refetchProjectComputeUsageQueries,
-  useComputeBreakdownResources,
   useProjectExecutionsOverview,
   useProjectFunctionExecutionsOverview,
   useProjectFunctionGbHoursOverview,
   useProjectGbHoursOverview,
   useProjectSiteExecutionsOverview,
   useProjectSiteGbHoursOverview,
+  useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
+import { getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { GbHoursUnitInfo } from '../../overview/GbHoursUnitInfo'
 import { ComputeMetricBentoCard } from './ComputeMetricBentoCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -110,24 +111,33 @@ export function ComputeUsageSection({
         ? siteGbHoursQuery
         : combinedGbHoursQuery
 
-  const breakdownResourceIds = useMemo(() => {
+  const breakdownItems = useMemo(() => {
     if (!showBreakdown) return []
 
-    const ids = new Set<string>()
-    for (const item of [
-      ...(executionsQuery.data?.topConsumers ?? []),
-      ...(gbHoursQuery.data?.topConsumers ?? []),
-    ]) {
-      if (item.id) ids.add(item.id)
-    }
-    return Array.from(ids)
+    return [
+      ...(executionsQuery.isError
+        ? []
+        : topConsumersToBreakdownItems(
+            executionsQuery.data?.topConsumers ?? [],
+          )),
+      ...(gbHoursQuery.isError
+        ? []
+        : topConsumersToBreakdownItems(gbHoursQuery.data?.topConsumers ?? [])),
+    ]
   }, [
     executionsQuery.data?.topConsumers,
+    executionsQuery.isError,
     gbHoursQuery.data?.topConsumers,
+    gbHoursQuery.isError,
     showBreakdown,
   ])
 
-  const { data: breakdownResources } = useComputeBreakdownResources(
+  const breakdownResourceIds = useMemo(
+    () => getUsageBreakdownResourceIds(breakdownItems),
+    [breakdownItems],
+  )
+
+  const { computeLookup } = useUsageResourceBreakdownLookups(
     projectId,
     breakdownResourceIds,
     showBreakdown && breakdownResourceIds.length > 0,
@@ -216,12 +226,7 @@ export function ComputeUsageSection({
                 executionsQuery.data?.topConsumers ?? [],
               )
         }
-        resourceTypeBreakdownItems={
-          executionsQuery.isError
-            ? []
-            : (executionsQuery.data?.resourceTypeBreakdown ?? [])
-        }
-        breakdownLookup={breakdownResources?.resources}
+        breakdownLookup={computeLookup}
         onRetry={handleRetryAll}
         docsHref={docsHref}
       />
@@ -251,12 +256,7 @@ export function ComputeUsageSection({
             ? []
             : topConsumersToBreakdownItems(gbHoursQuery.data?.topConsumers ?? [])
         }
-        resourceTypeBreakdownItems={
-          gbHoursQuery.isError
-            ? []
-            : (gbHoursQuery.data?.resourceTypeBreakdown ?? [])
-        }
-        breakdownLookup={breakdownResources?.resources}
+        breakdownLookup={computeLookup}
         breakdownTitleAddon={<GbHoursUnitInfo />}
         onRetry={handleRetryAll}
         docsHref={docsHref}

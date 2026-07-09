@@ -7,7 +7,6 @@ import {
 } from '@/lib/usage/format-metric'
 import {
   type FetchUsageOverviewOptions,
-  type UsageBreakdownItem,
   type UsageChartInterval,
   type UsageChartPoint,
   type UsageTopEndpoint,
@@ -64,13 +63,11 @@ export interface StorageUsageChartOverview {
 
 export interface StorageFilesUsageOverview extends StorageUsageChartOverview {
   topConsumers: StorageTopConsumer[]
-  resourceTypeBreakdown: UsageBreakdownItem[]
 }
 
 export interface StorageImageTransformationsOverview
   extends StorageUsageChartOverview {
   topConsumers: StorageTopConsumer[]
-  resourceTypeBreakdown: UsageBreakdownItem[]
 }
 
 export const STORAGE_FILE_DESCRIPTION =
@@ -204,53 +201,35 @@ async function fetchStorageGaugeUsageOverview(
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
   const queries = options?.queries
-  const { from, to } = resolveOverviewUsagePeriod(dateRange, interval)
 
-  const [chartOverview, snapshotOverview, resourceTypeConsumers] =
-    await Promise.all([
-      fetchProjectUsageGaugesChartOverview(
-        projectId,
-        dateRange,
-        [metric],
-        interval,
-        queries,
-      ),
-      includeBreakdown
-        ? fetchProjectUsageGaugeSnapshotOverview(
-            projectId,
-            dateRange,
-            metric,
-            interval,
-            { dimensions: ['resourceId'] },
-            options,
-          )
-        : Promise.resolve({
-            changePercent: 0,
-            latestValue: 0,
-            topConsumers: [],
-          }),
-      includeBreakdown
-        ? fetchUsageGaugeBreakdown(
-            projectId,
-            metric,
-            from,
-            to,
-            ['resourceType'],
-            OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
-            queries,
-          )
-        : Promise.resolve([]),
-    ])
+  const [chartOverview, snapshotOverview] = await Promise.all([
+    fetchProjectUsageGaugesChartOverview(
+      projectId,
+      dateRange,
+      [metric],
+      interval,
+      queries,
+    ),
+    includeBreakdown
+      ? fetchProjectUsageGaugeSnapshotOverview(
+          projectId,
+          dateRange,
+          metric,
+          interval,
+          { dimensions: ['resourceId', 'resourceType'] },
+          options,
+        )
+      : Promise.resolve({
+          changePercent: 0,
+          latestValue: 0,
+          topConsumers: [],
+        }),
+  ])
 
   return {
     changePercent: chartOverview.changePercent,
     chartPoints: chartOverview.chartPoints,
     topConsumers: snapshotOverview.topConsumers,
-    resourceTypeBreakdown: resourceTypeConsumers.map((item) => ({
-      id: item.id,
-      label: item.path,
-      count: item.count,
-    })),
   }
 }
 
@@ -271,7 +250,7 @@ export async function fetchProjectStorageOverview(
     BUCKET_FILE_STORAGE_GAUGE_METRIC,
     interval,
     {
-      dimensions: ['resourceId'],
+      dimensions: ['resourceId', 'resourceType'],
     },
     options,
   )
@@ -404,7 +383,7 @@ export async function fetchProjectOverviewStorageOverview(
           BUCKET_FILE_STORAGE_GAUGE_METRIC,
           from,
           to,
-          ['resourceId'],
+          ['resourceId', 'resourceType'],
           OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
           queries,
         )
@@ -415,7 +394,7 @@ export async function fetchProjectOverviewStorageOverview(
           DEPLOYMENTS_STORAGE_GAUGE_METRIC,
           from,
           to,
-          ['resourceId'],
+          ['resourceId', 'resourceType'],
           OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
           queries,
         )
@@ -426,7 +405,7 @@ export async function fetchProjectOverviewStorageOverview(
           BUILDS_STORAGE_GAUGE_METRIC,
           from,
           to,
-          ['resourceId'],
+          ['resourceId', 'resourceType'],
           OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
           queries,
         )

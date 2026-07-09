@@ -1,34 +1,35 @@
-import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
+import type {
+  UsageBreakdownItem,
+  UsageEventBreakdownDimension,
+} from '@/lib/usage/usage-events-common'
+import { parseTableUsageResourceType } from '@/lib/usage/usage-resource-filters'
 
 export const USAGE_RESOURCES_BREAKDOWN_TITLE = 'Resources'
 
-export const USAGE_RESOURCE_ID_VIEW_LABEL = 'Resource ID'
-export const USAGE_RESOURCE_TYPE_VIEW_LABEL = 'Resource type'
-
 export type UsageResourceBreakdownDimension = Extract<
   UsageEventBreakdownDimension,
-  'resourceId' | 'resourceType'
+  'resource'
 >
 
-export type UsageResourceBreakdownView = {
-  dimension: UsageResourceBreakdownDimension
-  label: string
-  labelVariant: 'mono' | 'default'
-}
+export function getUsageBreakdownResourceIds(
+  items: UsageBreakdownItem[],
+): string[] {
+  const ids = new Set<string>()
 
-export const USAGE_RESOURCE_BREAKDOWN_VIEWS: readonly UsageResourceBreakdownView[] =
-  [
-    {
-      dimension: 'resourceId',
-      label: USAGE_RESOURCE_ID_VIEW_LABEL,
-      labelVariant: 'mono',
-    },
-    {
-      dimension: 'resourceType',
-      label: USAGE_RESOURCE_TYPE_VIEW_LABEL,
-      labelVariant: 'default',
-    },
-  ] as const
+  for (const item of items) {
+    const resourceId = (item.resourceId ?? item.label).trim()
+    if (!resourceId) continue
+
+    ids.add(resourceId)
+
+    const tableDatabaseId = parseTableUsageResourceType(item.resourceType ?? '')
+    if (tableDatabaseId) {
+      ids.add(`${tableDatabaseId}/${resourceId}`)
+    }
+  }
+
+  return Array.from(ids)
+}
 
 export function splitUsageBreakdownEntries<
   T extends { section: { dimension: UsageEventBreakdownDimension } },
@@ -36,20 +37,25 @@ export function splitUsageBreakdownEntries<
   entries: T[],
 ): {
   standardEntries: T[]
-  resourceIdEntry?: T
-  resourceTypeEntry?: T
+  resourceEntry?: T
 } {
   return {
     standardEntries: entries.filter(
-      (entry) =>
-        entry.section.dimension !== 'resourceId' &&
-        entry.section.dimension !== 'resourceType',
+      (entry) => entry.section.dimension !== 'resource',
     ),
-    resourceIdEntry: entries.find(
-      (entry) => entry.section.dimension === 'resourceId',
-    ),
-    resourceTypeEntry: entries.find(
-      (entry) => entry.section.dimension === 'resourceType',
+    resourceEntry: entries.find(
+      (entry) => entry.section.dimension === 'resource',
     ),
   }
+}
+
+export function collectUsageResourceBreakdownItems<
+  T extends {
+    section: { dimension: UsageEventBreakdownDimension }
+    items: UsageBreakdownItem[]
+  },
+>(entries: T[]): UsageBreakdownItem[] {
+  return entries
+    .filter((entry) => entry.section.dimension === 'resource')
+    .flatMap((entry) => entry.items)
 }

@@ -23,18 +23,18 @@ export type DatabaseOperationsBreakdownSection = {
 export const DATABASE_OPERATIONS_BREAKDOWN_SECTIONS: readonly DatabaseOperationsBreakdownSection[] =
   [
     {
-      dimension: 'resourceId',
-      title: 'Resources',
-      description: 'Operations grouped by resource.',
-      metricId: 'breakdown-resources',
-      labelVariant: 'mono',
-    },
-    {
-      dimension: 'resourceType',
+      dimension: 'resource',
       title: 'Resources',
       description: 'Operations grouped by resource.',
       metricId: 'breakdown-resources',
       labelVariant: 'default',
+    },
+    {
+      dimension: 'ip',
+      title: 'IP addresses',
+      description: 'Operations grouped by caller IP address.',
+      metricId: 'breakdown-ip',
+      labelVariant: 'mono',
     },
     {
       dimension: 'service',

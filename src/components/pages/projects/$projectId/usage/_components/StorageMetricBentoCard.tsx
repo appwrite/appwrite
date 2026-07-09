@@ -33,7 +33,6 @@ type StorageMetricBentoCardProps = {
   axisFormat?: UsageChartAxisFormat
   showBreakdown: boolean
   breakdownItems: UsageBreakdownItem[]
-  resourceTypeBreakdownItems: UsageBreakdownItem[]
   breakdownLookup: StorageBreakdownResourceMap | undefined
   onRetry: () => void
   docsHref?: string
@@ -55,7 +54,6 @@ export function StorageMetricBentoCard({
   axisFormat = 'bytes',
   showBreakdown,
   breakdownItems,
-  resourceTypeBreakdownItems,
   breakdownLookup,
   onRetry,
   docsHref,
@@ -92,16 +90,9 @@ export function StorageMetricBentoCard({
           <UsageResourceBreakdownCard
             embedded
             description={description}
-            resourceIdView={{
-              items: breakdownItems,
-              isLoading,
-              isError,
-            }}
-            resourceTypeView={{
-              items: resourceTypeBreakdownItems,
-              isLoading,
-              isError,
-            }}
+            items={breakdownItems}
+            isLoading={isLoading}
+            isError={isError}
             storageLookup={breakdownLookup}
             errorTitle={STORAGE_USAGE_ERROR.title}
             errorMessage={STORAGE_USAGE_ERROR.message}

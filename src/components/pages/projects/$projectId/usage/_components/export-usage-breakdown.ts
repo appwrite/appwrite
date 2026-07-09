@@ -30,6 +30,7 @@ const DIMENSION_LABEL_COLUMN: Record<UsageEventBreakdownDimension, string> = {
   country: 'Country',
   region: 'Region',
   hostname: 'Hostname',
+  ip: 'IP address',
   osName: 'OS',
   clientType: 'Client type',
   clientName: 'Client name',
@@ -37,6 +38,7 @@ const DIMENSION_LABEL_COLUMN: Record<UsageEventBreakdownDimension, string> = {
   teamId: 'Team ID',
   resourceId: 'Resource ID',
   resourceType: 'Resource type',
+  resource: 'Resource',
 }
 
 function escapeCsvCell(value: string): string {
@@ -75,7 +77,7 @@ function buildUsageBreakdownExportRows(
   return items.map((item) => ({
     label: item.label,
     displayLabel: formatBreakdownLabel(
-      item.label,
+      item,
       labelVariant,
       dimension,
       countryLookups,

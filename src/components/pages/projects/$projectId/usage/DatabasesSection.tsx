@@ -20,18 +20,20 @@ import {
 } from '@/lib/usage/database-usage'
 import {
   refetchProjectDatabaseUsageQueries,
-  useDatabaseBreakdownResources,
-  useTableBreakdownResources,
   useProjectDatabaseCollectionsChart,
   useProjectDatabaseDocumentsChart,
   useProjectDatabaseReadsBreakdowns,
   useProjectDatabaseReadsChart,
   useProjectDatabaseWritesBreakdowns,
   useProjectDatabaseWritesChart,
+  useUsageResourceBreakdownLookups,
 } from '@/lib/react-query/hooks'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { useRefresh } from '@/components/global/shared/RefreshContext'
-import { parseDatabaseIdFromUsageResourceLabel } from '@/lib/usage/resolve-database-breakdown-resources'
+import {
+  collectUsageResourceBreakdownItems,
+  getUsageBreakdownResourceIds,
+} from '@/lib/usage/usage-resources-breakdown'
 import { DatabaseOperationBentoCard } from './_components/DatabaseOperationBentoCard'
 import { UsageTimeSeriesChartCard } from './_components/UsageTimeSeriesChartCard'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
@@ -105,39 +107,28 @@ export function DatabasesSection({
     showBreakdown,
   )
 
-  const databaseResourceLabels = useMemo(() => {
-    if (!showBreakdown) return []
-
-    const labels = new Set<string>()
-    for (const { section, items } of [...readsBreakdowns, ...writesBreakdowns]) {
-      if (section.dimension !== 'resourceId') continue
-      for (const item of items) {
-        if (item.label.trim()) labels.add(item.label)
-      }
-    }
-    return Array.from(labels)
-  }, [readsBreakdowns, writesBreakdowns, showBreakdown])
-
-  const databaseResourceIds = useMemo(
+  const resourceBreakdownItems = useMemo(
     () =>
-      databaseResourceLabels.map((label) =>
-        parseDatabaseIdFromUsageResourceLabel(label),
-      ),
-    [databaseResourceLabels],
+      showBreakdown
+        ? collectUsageResourceBreakdownItems([
+            ...readsBreakdowns,
+            ...writesBreakdowns,
+          ])
+        : [],
+    [readsBreakdowns, writesBreakdowns, showBreakdown],
   )
 
-  const { data: databaseBreakdownResources } = useDatabaseBreakdownResources(
-    projectId,
-    databaseResourceIds,
-    showBreakdown && databaseResourceIds.length > 0,
+  const resourceLookupIds = useMemo(
+    () => getUsageBreakdownResourceIds(resourceBreakdownItems),
+    [resourceBreakdownItems],
   )
-  const { data: tableBreakdownResources } = useTableBreakdownResources(
-    projectId,
-    databaseResourceLabels,
-    showBreakdown && databaseResourceLabels.length > 0,
-  )
-  const databaseLookup = databaseBreakdownResources?.resources
-  const tableLookup = tableBreakdownResources?.resources
+
+  const { computeLookup, databaseLookup, storageLookup, tableLookup } =
+    useUsageResourceBreakdownLookups(
+      projectId,
+      resourceLookupIds,
+      showBreakdown && resourceLookupIds.length > 0,
+    )
 
   useEffect(() => {
     registerRefreshHandler(
@@ -190,7 +181,9 @@ export function DatabasesSection({
         queryError={readsQuery.error}
         showBreakdown={showBreakdown}
         breakdowns={readsBreakdowns}
+        computeLookup={computeLookup}
         databaseLookup={databaseLookup}
+        storageLookup={storageLookup}
         tableLookup={tableLookup}
         onRetry={handleRetryAll}
         onOpenBreakdownDrawer={setBreakdownDrawer}
@@ -216,7 +209,9 @@ export function DatabasesSection({
         queryError={writesQuery.error}
         showBreakdown={showBreakdown}
         breakdowns={writesBreakdowns}
+        computeLookup={computeLookup}
         databaseLookup={databaseLookup}
+        storageLookup={storageLookup}
         tableLookup={tableLookup}
         onRetry={handleRetryAll}
         onOpenBreakdownDrawer={setBreakdownDrawer}
@@ -286,8 +281,10 @@ export function DatabasesSection({
               ? 'database-reads'
               : 'database-writes'
           }
+          computeLookup={computeLookup}
           databaseLookup={databaseLookup}
-        tableLookup={tableLookup}
+          storageLookup={storageLookup}
+          tableLookup={tableLookup}
         />
       ) : null}
     </div>

@@ -58,6 +58,7 @@ import {
 import {
   formatUsageResourceTypeLabel,
   getUsageResourceFilterEntries,
+  resolveUsageResourceBreakdownItem,
   type UsageBreakdownFilterEntry,
 } from '@/lib/usage/usage-resource-filters'
 
@@ -76,7 +77,7 @@ function translateUnknownBreakdownLabel(value: string): string {
 }
 
 export function formatBreakdownLabel(
-  label: string,
+  item: UsageBreakdownItem,
   labelVariant: 'mono' | 'default',
   dimension: UsageEventBreakdownDimension,
   countryLookups: CountryLookups | null,
@@ -85,6 +86,17 @@ export function formatBreakdownLabel(
   storageLookup?: StorageBreakdownResourceMap | null,
   tableLookup?: TableBreakdownResourceMap | null,
 ): string {
+  const label = item.label
+
+  if (dimension === 'resource') {
+    const resolved = resolveUsageResourceBreakdownItem(item, {
+      databaseLookup,
+      computeLookup,
+      storageLookup,
+      tableLookup,
+    })
+    return `${resolved.typeLabel} / ${resolved.name}`
+  }
   if (dimension === 'resourceId') {
     const computeResource = resolveComputeBreakdownResource(
       label,
@@ -243,29 +255,39 @@ export function UsageBreakdownRow({
   const showServiceIcons = dimension === 'service'
   const showStatusBadges = dimension === 'status'
   const showMethodBadges = dimension === 'method'
+  const resolvedResource =
+    dimension === 'resource'
+      ? resolveUsageResourceBreakdownItem(item, {
+          databaseLookup,
+          computeLookup,
+          storageLookup,
+          tableLookup,
+        })
+      : null
   const computeResource =
     dimension === 'resourceId'
       ? resolveComputeBreakdownResource(item.label, computeLookup)
-      : undefined
+      : resolvedResource?.computeResource
   const storageResource =
     dimension === 'resourceId' && !computeResource
       ? resolveStorageBreakdownResource(item.label, storageLookup)
-      : undefined
+      : resolvedResource?.storageResource
   const tableResource =
     dimension === 'resourceId' && !computeResource && !storageResource
       ? resolveTableBreakdownResource(item.label, tableLookup)
-      : undefined
+      : resolvedResource?.tableResource
   const databaseResource =
     dimension === 'resourceId' &&
     !computeResource &&
     !storageResource &&
     !tableResource
       ? resolveDatabaseBreakdownResource(item.label, databaseLookup)
-      : undefined
+      : resolvedResource?.databaseResource
   const showDatabaseIcons = !!databaseResource
+  const showResourceBreakdownLabel = dimension === 'resource' && !!resolvedResource
 
   const displayLabel = formatBreakdownLabel(
-    item.label,
+    item,
     labelVariant,
     dimension,
     countryLookups,
@@ -283,14 +305,18 @@ export function UsageBreakdownRow({
   const handleAddFilter = () => {
     if (!canAddFilter || !onAddFilter) return
 
-    if (dimension === 'resourceId') {
+    if (dimension === 'resourceId' || dimension === 'resource') {
       onAddFilter(
-        getUsageResourceFilterEntries(item.label, {
-          computeResource,
-          storageResource,
-          tableResource,
-          databaseResource,
-        }),
+        getUsageResourceFilterEntries(
+          item.resourceId ?? item.label,
+          {
+            computeResource,
+            storageResource,
+            tableResource,
+            databaseResource,
+          },
+          item.resourceType,
+        ),
       )
       return
     }
@@ -340,7 +366,19 @@ export function UsageBreakdownRow({
               />
             </div>
           ) : null}
-          {computeResource ? (
+          {showResourceBreakdownLabel && resolvedResource ? (
+            <BreakdownResourceRowLabel
+              typeLabel={resolvedResource.typeLabel}
+              name={
+                (item.resourceId ?? item.label) === resolvedResource.name
+                  ? truncateMiddle(
+                      compactUsagePathIds(resolvedResource.name),
+                      PATH_DISPLAY_MAX,
+                    )
+                  : resolvedResource.name
+              }
+            />
+          ) : computeResource ? (
             <BreakdownResourceRowLabel
               typeLabel={getComputeBreakdownResourceTypeLabel(
                 computeResource.type,

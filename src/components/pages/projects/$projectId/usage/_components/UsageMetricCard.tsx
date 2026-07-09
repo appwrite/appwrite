@@ -148,13 +148,15 @@ export function UsageBreakdownCard({
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
   const showServiceIcons = dimension === 'service'
-  const showDatabaseIcons =
-    dimension === 'resourceId' && !!databaseLookup && items.length > 0
+  const showResourceIcons =
+    (dimension === 'resource' || dimension === 'resourceId') &&
+    !!(databaseLookup || computeLookup || storageLookup || tableLookup) &&
+    items.length > 0
   const showLeadingIcon =
     showCountryFlags ||
     showHostnameFavicons ||
     showServiceIcons ||
-    showDatabaseIcons
+    showResourceIcons
   const showEmptyOverlay = !isLoading && !isError && items.length === 0
   const showShowMore =
     !isError &&

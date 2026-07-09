@@ -4,6 +4,8 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
+import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
+import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
 import type { TableBreakdownResourceMap } from '@/lib/usage/resolve-table-breakdown-resources'
 import {
   formatDatabaseOperationsTotal,
@@ -15,7 +17,6 @@ import type {
 } from '@/lib/react-query/hooks/usage-events'
 import type { DatabaseOperationsBreakdownSection } from '@/lib/usage/database-operations-breakdowns'
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
-import type { UsageResourceBreakdownDimension } from '@/lib/usage/usage-resources-breakdown'
 import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
 import {
@@ -32,7 +33,7 @@ const DATABASE_USAGE_ERROR = {
 } as const
 
 const breakdownRowGridClass =
-  'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-3 lg:divide-x lg:divide-y-0'
+  'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0 xl:grid-cols-4'
 
 type DatabaseBreakdownEntry =
   | DatabaseReadsBreakdownQueryEntry
@@ -61,7 +62,9 @@ type DatabaseOperationBentoCardProps = {
   queryError?: unknown
   showBreakdown: boolean
   breakdowns: DatabaseBreakdownEntry[]
+  computeLookup?: ComputeBreakdownResourceMap | undefined
   databaseLookup: DatabaseBreakdownResourceMap | undefined
+  storageLookup?: StorageBreakdownResourceMap | undefined
   tableLookup?: TableBreakdownResourceMap | undefined
   onRetry: () => void
   onOpenBreakdownDrawer: (payload: DatabaseBreakdownDrawerPayload) => void
@@ -75,17 +78,6 @@ function breakdownDrawerTitle(
 ): string {
   const prefix = operation === 'reads' ? t('Reads') : t('Writes')
   return `${prefix} · ${t(section.title)}`
-}
-
-function resourcesDrawerTitle(
-  operation: 'reads' | 'writes',
-  dimension: UsageResourceBreakdownDimension,
-  t: ReturnType<typeof useT>,
-): string {
-  const prefix = operation === 'reads' ? t('Reads') : t('Writes')
-  const suffix =
-    dimension === 'resourceId' ? t('Resource ID') : t('Resource type')
-  return `${prefix} · ${t('Resources')} · ${suffix}`
 }
 
 export function DatabaseOperationBentoCard({
@@ -103,14 +95,16 @@ export function DatabaseOperationBentoCard({
   queryError,
   showBreakdown,
   breakdowns,
+  computeLookup,
   databaseLookup,
+  storageLookup,
   tableLookup,
   onRetry,
   onOpenBreakdownDrawer,
   docsHref,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
-  const { standardEntries, resourceIdEntry, resourceTypeEntry } = useMemo(
+  const { standardEntries, resourceEntry } = useMemo(
     () => splitUsageBreakdownEntries(breakdowns),
     [breakdowns],
   )
@@ -138,34 +132,28 @@ export function DatabaseOperationBentoCard({
 
       {showBreakdown ? (
         <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
-          {resourceIdEntry && resourceTypeEntry ? (
+          {resourceEntry ? (
             <UsageResourceBreakdownCard
               embedded
-              description={resourceIdEntry.section.description}
-              resourceIdView={{
-                items: resourceIdEntry.items,
-                isLoading: resourceIdEntry.isLoading,
-                isError: resourceIdEntry.isError,
-              }}
-              resourceTypeView={{
-                items: resourceTypeEntry.items,
-                isLoading: resourceTypeEntry.isLoading,
-                isError: resourceTypeEntry.isError,
-              }}
+              description={resourceEntry.section.description}
+              items={resourceEntry.items}
+              isLoading={resourceEntry.isLoading}
+              isError={resourceEntry.isError}
+              computeLookup={computeLookup}
               databaseLookup={databaseLookup}
+              storageLookup={storageLookup}
               tableLookup={tableLookup}
               errorTitle={DATABASE_USAGE_ERROR.title}
               errorMessage={DATABASE_USAGE_ERROR.message}
               formatValue={formatDatabaseOperationsValue}
               onRetry={onRetry}
-              onShowMore={(dimension) =>
+              onShowMore={() =>
                 onOpenBreakdownDrawer({
                   operation,
-                  title: resourcesDrawerTitle(operation, dimension, t),
-                  description: resourceIdEntry.section.description,
-                  dimension,
-                  labelVariant:
-                    dimension === 'resourceId' ? 'mono' : 'default',
+                  title: `${operation === 'reads' ? t('Reads') : t('Writes')} · ${t('Resources')}`,
+                  description: resourceEntry.section.description,
+                  dimension: 'resource',
+                  labelVariant: 'default',
                 })
               }
             />
@@ -181,7 +169,9 @@ export function DatabaseOperationBentoCard({
               items={items}
               labelVariant={section.labelVariant}
               countryLookups={null}
+              computeLookup={computeLookup}
               databaseLookup={databaseLookup}
+              storageLookup={storageLookup}
               tableLookup={tableLookup}
               isLoading={isLoading}
               isError={isError}

@@ -101,35 +101,54 @@ async function listUsageGaugeGroups(
 
 function mapGaugeBreakdownGroups(
   groups: Models.UsageDataPoint[],
-  dimension: 'resourceId' | 'resourceType',
+  dimensions: readonly string[],
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
-  const latestByKey = new Map<string, { value: number; timeMs: number }>()
+  const useResourceDimensions =
+    dimensions.includes('resourceId') && dimensions.includes('resourceType')
+  const dimension = dimensions[0] === 'resourceType' ? 'resourceType' : 'resourceId'
+  const latestByKey = new Map<
+    string,
+    { value: number; timeMs: number; resourceType?: string }
+  >()
 
   for (const group of groups) {
-    const key =
-      dimension === 'resourceType'
-        ? group.resourceType?.trim()
-        : group.resourceId?.trim()
+    const resourceId = group.resourceId?.trim()
+    const resourceType = group.resourceType?.trim()
+    const key = useResourceDimensions
+      ? resourceId && resourceType
+        ? `${resourceType}\0${resourceId}`
+        : undefined
+      : dimension === 'resourceType'
+        ? resourceType
+        : resourceId
     if (!key) continue
 
     const timeMs = parseISO(group.time).getTime()
     const existing = latestByKey.get(key)
     if (!existing || timeMs >= existing.timeMs) {
-      latestByKey.set(key, { value: group.value, timeMs })
+      latestByKey.set(key, {
+        value: group.value,
+        timeMs,
+        resourceType: useResourceDimensions ? resourceType : undefined,
+      })
     }
   }
 
   return Array.from(latestByKey.entries())
     .sort((a, b) => b[1].value - a[1].value)
     .slice(0, limit)
-    .map(([key, { value }]) => ({
-      id: key,
-      method: '',
-      statusCode: 0,
-      path: key,
-      count: value,
-    }))
+    .map(([key, { value, resourceType }]) => {
+      const resourceId = useResourceDimensions ? key.split('\0')[1] ?? key : key
+      return {
+        id: resourceId,
+        method: '',
+        statusCode: 0,
+        path: resourceId,
+        count: value,
+        resourceType,
+      }
+    })
 }
 
 /** @deprecated Use mapGaugeBreakdownGroups */
@@ -137,7 +156,7 @@ function mapGaugeResourceBreakdownGroups(
   groups: Models.UsageDataPoint[],
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageTopEndpoint[] {
-  return mapGaugeBreakdownGroups(groups, 'resourceId', limit)
+  return mapGaugeBreakdownGroups(groups, ['resourceId'], limit)
 }
 
 /** Latest gauge snapshot in a window (most recent by time, client-side). */
@@ -202,7 +221,7 @@ export async function fetchUsageGaugeBreakdown(
 
   return mapGaugeBreakdownGroups(
     groups,
-    dimensions[0] === 'resourceType' ? 'resourceType' : 'resourceId',
+    dimensions,
     breakdownLimit,
   )
 }

@@ -52,7 +52,7 @@ import { useRefresh } from '@/components/global/shared/RefreshContext'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { Skeleton } from '@/components/ui/skeleton'
-import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
+import { splitUsageBreakdownEntries, getUsageBreakdownResourceIds } from '@/lib/usage/usage-resources-breakdown'
 import { UsageResourceBreakdownCard } from './_components/UsageResourceBreakdownCard'
 import { UsageBreakdownDrawer } from './_components/UsageBreakdownDrawer'
 import {
@@ -437,14 +437,14 @@ export function BandwidthSection({
     showBreakdown,
   )
 
-  const { standardEntries, resourceIdEntry, resourceTypeEntry } = useMemo(
+  const { standardEntries, resourceEntry } = useMemo(
     () => splitUsageBreakdownEntries(breakdowns),
     [breakdowns],
   )
 
   const resourceBreakdownIds = useMemo(() => {
-    return resourceIdEntry?.items.map((item) => item.label) ?? []
-  }, [resourceIdEntry?.items])
+    return getUsageBreakdownResourceIds(resourceEntry?.items ?? [])
+  }, [resourceEntry?.items])
 
   const { computeLookup, databaseLookup, storageLookup, tableLookup } =
     useUsageResourceBreakdownLookups(
@@ -526,20 +526,13 @@ export function BandwidthSection({
             </div>
           ))}
 
-          {resourceIdEntry && resourceTypeEntry ? (
+          {resourceEntry ? (
             <div className="flex h-full min-h-0 flex-col">
               <UsageResourceBreakdownCard
-                description={resourceIdEntry.section.description}
-                resourceIdView={{
-                  items: resourceIdEntry.items,
-                  isLoading: resourceIdEntry.isLoading,
-                  isError: resourceIdEntry.isError,
-                }}
-                resourceTypeView={{
-                  items: resourceTypeEntry.items,
-                  isLoading: resourceTypeEntry.isLoading,
-                  isError: resourceTypeEntry.isError,
-                }}
+                description={resourceEntry.section.description}
+                items={resourceEntry.items}
+                isLoading={resourceEntry.isLoading}
+                isError={resourceEntry.isError}
                 countryLookups={countryLookups}
                 computeLookup={computeLookup}
                 databaseLookup={databaseLookup}
@@ -549,16 +542,12 @@ export function BandwidthSection({
                 errorMessage={OVERVIEW_BANDWIDTH_ERROR.message}
                 formatValue={formatBandwidthValue}
                 onRetry={handleRetryAll}
-                onShowMore={(dimension) =>
+                onShowMore={() =>
                   setBreakdownDrawer({
-                    title:
-                      dimension === 'resourceId'
-                        ? 'Resources · Resource ID'
-                        : 'Resources · Resource type',
-                    description: resourceIdEntry.section.description,
-                    dimension,
-                    labelVariant:
-                      dimension === 'resourceId' ? 'mono' : 'default',
+                    title: 'Resources',
+                    description: resourceEntry.section.description,
+                    dimension: 'resource',
+                    labelVariant: 'default',
                   })
                 }
               />

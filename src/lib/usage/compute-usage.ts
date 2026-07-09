@@ -39,5 +39,7 @@ export function topConsumersToBreakdownItems(
     id: item.id,
     label: item.path,
     count: item.count,
+    resourceId: item.path,
+    resourceType: item.resourceType,
   }))
 }

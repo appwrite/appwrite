@@ -16,6 +16,7 @@ export const USAGE_EVENT_FILTER_ATTRIBUTES = [
   'country',
   'region',
   'hostname',
+  'ip',
   'osName',
   'clientType',
   'clientName',
@@ -140,6 +141,7 @@ const NETWORK_EVENT_FILTER_COLUMNS: FilterColumn[] = [
   stringColumn('country', 'Country'),
   stringColumn('region', 'Region'),
   stringColumn('hostname', 'Hostname'),
+  stringColumn('ip', 'IP address'),
   stringColumn('osName', 'Operating system'),
   stringColumn('clientType', 'Client type'),
   stringColumn('clientName', 'Client name'),
@@ -178,6 +180,7 @@ const DATABASES_FILTER_COLUMNS: FilterColumn[] = [
   enumColumn('service', 'Service', DATABASE_SERVICES, GAUGE_OPERATORS),
   stringColumn('path', 'API path'),
   stringColumn('resourceType', 'Resource type', GAUGE_OPERATORS),
+  stringColumn('ip', 'IP address'),
 ]
 
 /** Realtime metrics (listEvents, project-scoped). */
