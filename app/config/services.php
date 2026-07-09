@@ -335,7 +335,7 @@ return [
         'tests' => true,
         'optional' => false,
         'icon' => '',
-        'platforms' => ['client', 'server', 'console'],
+        'platforms' => ['console'],
     ],
     'advisor' => [
         'key' => 'advisor',

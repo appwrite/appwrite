@@ -1921,4 +1921,5 @@ trait StorageBase
         /* will always be 0 in tests because the worker runs hourly! */
         $this->assertGreaterThanOrEqual(0, $bucket['body']['totalSize']);
     }
+
 }
