@@ -18,6 +18,8 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -347,6 +349,8 @@ $container->set('servers', function () {
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+$container->set('installationTokens', fn () => new InstallationTokens(), []);
+$container->set('repositoryWebhooks', fn () => new RepositoryWebhooks(), []);
 
 $container->set('plan', fn () => []);
 

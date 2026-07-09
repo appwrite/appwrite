@@ -10,8 +10,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
@@ -54,6 +54,7 @@ class Create extends Action
             ->param('name', '', new Text(256), 'Repository name (slug)')
             ->param('private', '', new Boolean(false), 'Mark repository public or private')
             ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -65,6 +66,7 @@ class Create extends Action
         string $name,
         bool $private,
         Factory $vcsFactory,
+        InstallationTokens $installationTokens,
         Document $user,
         Response $response,
         Database $dbForPlatform
@@ -78,11 +80,8 @@ class Create extends Action
         if ($installation->getAttribute('personal', false) === true) {
             $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
-            $accessToken = $installation->getAttribute('personalAccessToken');
-            $refreshToken = $installation->getAttribute('personalRefreshToken');
-            $accessTokenExpiry = $installation->getAttribute('personalAccessTokenExpiry');
-
-            if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
+            $identity = null;
+            if (empty($installation->getAttribute('personalAccessToken')) || empty($installation->getAttribute('personalRefreshToken')) || empty($installation->getAttribute('personalAccessTokenExpiry'))) {
                 $identity = $dbForPlatform->findOne('identities', [
                     Query::equal('provider', ['github']),
                     Query::equal('userInternalId', [$user->getSequence()]),
@@ -90,36 +89,10 @@ class Create extends Action
                 if ($identity->isEmpty()) {
                     throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
                 }
-
-                $accessToken = $accessToken ?? $identity->getAttribute('providerAccessToken');
-                $refreshToken = $refreshToken ?? $identity->getAttribute('providerRefreshToken');
-                $accessTokenExpiry = $accessTokenExpiry ?? $identity->getAttribute('providerAccessTokenExpiry');
             }
 
-            $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
-            if ($isExpired) {
-                $oauth2->refreshTokens($refreshToken);
-
-                $accessToken = $oauth2->getAccessToken('');
-                $refreshToken = $oauth2->getRefreshToken('');
-
-                $verificationId = $oauth2->getUserID($accessToken);
-
-                if (empty($verificationId)) {
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
-                }
-
-                $installation = $installation
-                    ->setAttribute('personalAccessToken', $accessToken)
-                    ->setAttribute('personalRefreshToken', $refreshToken)
-                    ->setAttribute('personalAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
-
-                $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-                    'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
-                    'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
-                    'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
-                ]));
-            }
+            $installation = $installationTokens->refresh($installation, $dbForPlatform, $oauth2, $identity);
+            $accessToken = $installation->getAttribute('personalAccessToken');
 
             try {
                 $repository = $oauth2->createRepository($accessToken, $name, $private);
