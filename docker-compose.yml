@@ -213,20 +213,35 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/console:8.7.11
+    image: appwrite/vibes:0.3.1
     restart: unless-stopped
     networks:
       - appwrite
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'bun -e "fetch(''http://localhost:3000/health'').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"'
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    environment:
+      - VITE_CONSOLE_PROFILE=self-hosted
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
       - traefik.docker.network=appwrite
-      - traefik.http.services.appwrite_console.loadbalancer.server.port=80
+      - traefik.http.services.appwrite_console.loadbalancer.server.port=3000
+      - traefik.http.middlewares.appwrite_console_compat.redirectregex.regex=^(https?://[^/]+)/console(?:/(.*))?$$
+      - traefik.http.middlewares.appwrite_console_compat.redirectregex.replacement=$${1}/$${2}
+      - traefik.http.middlewares.appwrite_console_compat.redirectregex.permanent=false
       - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`)
+      - traefik.http.routers.appwrite_console_http.middlewares=appwrite_console_compat
       - traefik.http.routers.appwrite_console_http.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
+      - traefik.http.routers.appwrite_console_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`)
+      - traefik.http.routers.appwrite_console_https.middlewares=appwrite_console_compat
       - traefik.http.routers.appwrite_console_https.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.tls=true
   appwrite-realtime:

@@ -26,6 +26,7 @@ final class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_OPTIONS, '/', \array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -51,6 +52,7 @@ final class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/humans.txt', \array_merge([
             'origin' => 'http://localhost',
         ]));
@@ -64,6 +66,7 @@ final class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
         ]));
@@ -77,6 +80,7 @@ final class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg');
 
         // 'Unknown path', but validation passed
@@ -87,8 +91,8 @@ final class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd');
 
-        // 'Unknown path', but validation passed
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // 'Invalid challenge token', traversal rejected by validation
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     public function testVersions()
@@ -96,6 +100,7 @@ final class HTTPTest extends Scope
         /**
          * Test without header
          */
+        $this->client->setEndpoint('http://localhost');
         $response = $this->client->call(Client::METHOD_GET, '/versions', \array_merge([
             'content-type' => 'application/json',
         ], $this->getHeaders()));
@@ -172,11 +177,23 @@ final class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $this->client->setEndpoint('http://localhost');
 
         $endpoint = '/invite?membershipId=123&userId=asdf';
 
-        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [], [], true, false);
 
         $this->assertEquals('/console' . $endpoint, $response['headers']['location']);
+    }
+
+    public function testConsoleServed()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('text/html', $response['headers']['content-type']);
     }
 }
