@@ -149,6 +149,7 @@ import {
   DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
   shouldPollDedicatedDatabaseStatus,
 } from '@/lib/databases/dedicated-database-status'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { matchesNativeEngine } from '@/lib/databases/native-database-engines'
 
 function isPostgresEngine(engine: string | undefined): boolean {
@@ -997,11 +998,13 @@ export function useUpdatePostgresDatabase(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: Omit<UpdatePostgresDatabaseInput, 'databaseId'>) =>
-      updatePostgresDatabase(projectId!, {
+    mutationFn: (input: Omit<UpdatePostgresDatabaseInput, 'databaseId'>) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return updatePostgresDatabase(projectId!, {
         databaseId: databaseId!,
         ...input,
-      }),
+      })
+    },
     onSuccess: async (database) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
@@ -1027,8 +1030,10 @@ export function useUpdatePostgresDatabaseMaintenance(
     }: {
       day: string
       hourUtc: number
-    }) =>
-      updatePostgresDatabaseMaintenance(projectId!, databaseId!, day, hourUtc),
+    }) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return updatePostgresDatabaseMaintenance(projectId!, databaseId!, day, hourUtc)
+    },
     onSuccess: async (database) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
@@ -1045,7 +1050,10 @@ export function useResetPostgresDatabaseCredentials(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => resetPostgresDatabaseCredentials(projectId!, databaseId!),
+    mutationFn: () => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return resetPostgresDatabaseCredentials(projectId!, databaseId!)
+    },
     onSuccess: async (database) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(
@@ -1068,8 +1076,10 @@ export function useDeletePostgresDatabase(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (databaseId: string) =>
-      deletePostgresDatabase(projectId!, databaseId),
+    mutationFn: (databaseId: string) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId)
+      return deletePostgresDatabase(projectId!, databaseId)
+    },
     onSuccess: async (_data, databaseId) => {
       if (!projectId) return
       invalidateDatabaseModel(projectId, databaseId)
@@ -1434,14 +1444,16 @@ export function useUpdatePostgresTableRow(
     mutationFn: (params: {
       identity: PostgresRowIdentity
       changes: Record<string, RowCellValue>
-    }) =>
-      updatePostgresTableRow(
+    }) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return updatePostgresTableRow(
         projectId,
         databaseId,
         tableId,
         params.identity,
         params.changes,
-      ),
+      )
+    },
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
@@ -1457,8 +1469,10 @@ export function useCreatePostgresTableRow(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (values: Record<string, RowCellValue>) =>
-      createPostgresTableRow(projectId, databaseId, tableId, values),
+    mutationFn: (values: Record<string, RowCellValue>) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return createPostgresTableRow(projectId, databaseId, tableId, values)
+    },
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
@@ -1480,8 +1494,10 @@ export function useDeletePostgresTableRow(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (identity: PostgresRowIdentity) =>
-      deletePostgresTableRow(projectId, databaseId, tableId, identity),
+    mutationFn: (identity: PostgresRowIdentity) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return deletePostgresTableRow(projectId, databaseId, tableId, identity)
+    },
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
@@ -1497,8 +1513,10 @@ export function useDeletePostgresTableRows(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (identities: PostgresRowIdentity[]) =>
-      deletePostgresTableRows(projectId, databaseId, tableId, identities),
+    mutationFn: (identities: PostgresRowIdentity[]) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return deletePostgresTableRows(projectId, databaseId, tableId, identities)
+    },
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
@@ -1514,8 +1532,10 @@ export function useCommitPostgresRowEdits(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (edits: PendingPostgresRowCellEdit[]) =>
-      commitPostgresRowEdits(projectId, databaseId, tableId, edits),
+    mutationFn: (edits: PendingPostgresRowCellEdit[]) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return commitPostgresRowEdits(projectId, databaseId, tableId, edits)
+    },
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['postgres-table-rows', 'project', projectId, databaseId, tableId],
@@ -2175,9 +2195,12 @@ export function useExplainPostgresSql(
   projectId: string,
   databaseId: string,
 ) {
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (query: string) =>
-      explainPostgresDatabaseQuery(projectId, databaseId, query),
+    mutationFn: (query: string) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return explainPostgresDatabaseQuery(projectId, databaseId, query)
+    },
   })
 }
 
@@ -2226,8 +2249,10 @@ export function useExecutePostgresSql(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (sql: string) =>
-      executePostgresDatabaseSql(projectId, databaseId, sql),
+    mutationFn: (sql: string) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return executePostgresDatabaseSql(projectId, databaseId, sql)
+    },
     onSuccess: () =>
       refreshPostgresDatabaseCaches(queryClient, projectId, databaseId),
   })

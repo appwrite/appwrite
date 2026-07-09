@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { DEFAULT_STALE_TIME } from './constants'
 
 const EXTENSIONS_POLL_INTERVAL_MS = 3000
@@ -81,8 +82,10 @@ export function useInstallPostgresDatabaseExtension(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (name: string) =>
-      installPostgresDatabaseExtension(projectId!, databaseId!, name),
+    mutationFn: (name: string) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return installPostgresDatabaseExtension(projectId!, databaseId!, name)
+    },
     onSuccess: async () => {
       if (!projectId || !databaseId) return
       await queryClient.invalidateQueries({
@@ -98,8 +101,14 @@ export function useUninstallPostgresDatabaseExtension(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (extensionName: string) =>
-      uninstallPostgresDatabaseExtension(projectId!, databaseId!, extensionName),
+    mutationFn: (extensionName: string) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return uninstallPostgresDatabaseExtension(
+        projectId!,
+        databaseId!,
+        extensionName,
+      )
+    },
     onSuccess: async () => {
       if (!projectId || !databaseId) return
       await queryClient.invalidateQueries({

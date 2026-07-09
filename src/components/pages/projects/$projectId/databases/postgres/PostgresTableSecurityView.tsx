@@ -1,9 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import { postgresNav } from '@/lib/postgres-database-routes'
 import { usePostgresTableHeaderSlot } from './_components/PostgresTableHeaderSlotContext'
 import { PostgresTableSecurityPanel } from './_components/PostgresTableSecurityPanel'
@@ -19,10 +16,7 @@ export function PostgresTableSecurityView({
 }: PostgresTableSecurityViewProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite } = usePostgresTableWriteAccess()
 
   usePostgresTableHeaderSlot({})
 

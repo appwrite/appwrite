@@ -8,14 +8,11 @@ import {
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
   useCancelPostgresBackend,
-  useOrganizationScopes,
   usePostgresActiveConnections,
-  useProject,
   useTerminatePostgresBackend,
   useTerminatePostgresIdleInTransaction,
 } from '@/lib/react-query/hooks'
-import { canCreateDatabase } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { usePostgresAdminWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import {
   backendTypeBadgeVariant,
   connectionStateBadgeVariant,
@@ -235,9 +232,14 @@ export function PostgresConnectionDetails({
 }: PostgresConnectionDetailsProps) {
   const t = useT()
   const { openQueryTab } = usePostgresSidebar()
-  const { features } = useConsoleProfile()
-  const { project } = useProject(projectId)
-  const { access } = useOrganizationScopes(project?.teamId)
+  const {
+    canWrite: canManageConnections,
+    writeTooltip: manageDisabledTooltip,
+  } = usePostgresAdminWriteAccess({
+    permissionDeniedTooltip: t(
+      "You don't have permission to manage connections.",
+    ),
+  })
 
   const [backendScope, setBackendScope] =
     useState<PostgresConnectionBackendScope>('clients')
@@ -263,11 +265,6 @@ export function PostgresConnectionDetails({
     projectId,
     databaseId,
   )
-
-  const canManageConnections = canCreateDatabase(access, features)
-  const manageDisabledTooltip = canManageConnections
-    ? undefined
-    : "You don't have permission to manage connections."
 
   const scopedConnections = useMemo(
     () =>

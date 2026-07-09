@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import { usePostgresRoles } from '@/lib/react-query/hooks'
 import { usePostgresDatabaseHeaderSlot } from './_components/PostgresDatabaseHeaderSlotContext'
 import { PostgresRolesPanel } from './_components/PostgresRolesPanel'
@@ -16,10 +13,7 @@ type PostgresRolesViewProps = {
 export function PostgresRolesView({ databaseId }: PostgresRolesViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite, writeTooltip } = usePostgresTableWriteAccess()
 
   const [searchValue, setSearchValue] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
@@ -34,14 +28,12 @@ export function PostgresRolesView({ databaseId }: PostgresRolesViewProps) {
       createLabel: canWrite ? t('Create role') : undefined,
       onCreate: canWrite ? () => setCreateOpen(true) : undefined,
       createDisabled: !canWrite,
-      createDisabledTooltip: canWrite
-        ? undefined
-        : t("You don't have permission to modify table structure."),
+      createDisabledTooltip: writeTooltip,
       showRefresh: true,
       onRefresh: () => void refetch(),
       isRefreshing: isFetching,
     }),
-    [canWrite, isFetching, refetch, searchValue, t],
+    [canWrite, isFetching, refetch, searchValue, t, writeTooltip],
   )
 
   usePostgresDatabaseHeaderSlot(headerSlot)

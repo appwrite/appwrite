@@ -1479,6 +1479,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database update failed': 'עדכון מסד הנתונים נכשל',
   'Database is deleted': 'מסד הנתונים נמחק',
   'Database is not ready': 'מסד הנתונים לא מוכן',
+  'Database operations are disabled while the database is in a failed state.':
+    'פעולות מסד הנתונים מושבתות כל עוד מסד הנתונים במצב כשל.',
   'Current status': 'סטטוס נוכחי',
   'A compute tier change is in progress. Some operations may be temporarily unavailable.':
     'שינוי רמת המחשוב מתבצע. חלק מהפעולות עשויות להיות לא זמינות באופן זמני.',

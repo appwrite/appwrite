@@ -38,6 +38,8 @@ type SqlEditorActionBarProps = {
   onFormat: () => void
   onRun: () => void
   onExplain: () => void
+  runDisabledTooltip?: string
+  explainDisabledTooltip?: string
 }
 
 function ActionDivider() {
@@ -86,6 +88,8 @@ export function SqlEditorActionBar({
   onFormat,
   onRun,
   onExplain,
+  runDisabledTooltip,
+  explainDisabledTooltip,
 }: SqlEditorActionBarProps) {
   const t = useT()
   const { isMac } = usePlatform()
@@ -191,11 +195,13 @@ export function SqlEditorActionBar({
           <ShortcutTooltip
             enabled={canExplain}
             disabledReason={
-              isExplaining
-                ? t('Query explanation is running.')
-                : isRunning
-                  ? t('Query is running.')
-                  : t('Write SQL before explaining a query.')
+              !canExplain && explainDisabledTooltip
+                ? explainDisabledTooltip
+                : isExplaining
+                  ? t('Query explanation is running.')
+                  : isRunning
+                    ? t('Query is running.')
+                    : t('Write SQL before explaining a query.')
             }
             enabledLabel={`${t('Explain')} (${explainShortcut})`}
           >
@@ -221,11 +227,13 @@ export function SqlEditorActionBar({
           <ShortcutTooltip
             enabled={canRun}
             disabledReason={
-              isRunning
-                ? t('Query is running.')
-                : isExplaining
-                  ? t('Query explanation is running.')
-                  : t('Write SQL before running a query.')
+              !canRun && runDisabledTooltip
+                ? runDisabledTooltip
+                : isRunning
+                  ? t('Query is running.')
+                  : isExplaining
+                    ? t('Query explanation is running.')
+                    : t('Write SQL before running a query.')
             }
             enabledLabel={`${t('Run')} (${runShortcut})`}
           >

@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { canCreateDatabase } from '@/lib/console-access-checks'
+import { usePostgresAdminWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import {
   formatDedicatedSpecCpu,
   formatDedicatedSpecMemory,
@@ -15,10 +15,8 @@ import {
   type SpecOption,
 } from '@/lib/database-specs'
 import { postgresNav } from '@/lib/postgres-database-routes'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   useDatabaseSpecifications,
-  useOrganizationScopes,
   usePostgresDatabase,
   useProject,
 } from '@/lib/react-query/hooks'
@@ -113,9 +111,9 @@ export function PostgresSpecificationCard({
   databaseId,
 }: PostgresSpecificationCardProps) {
   const t = useT()
-  const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
-  const { access } = useOrganizationScopes(project?.teamId)
+  const { canWrite: canUpgrade, writeTooltip: upgradeDisabledTooltip } =
+    usePostgresAdminWriteAccess()
   const { database, isLoading: databaseLoading } = usePostgresDatabase(
     projectId,
     databaseId,
@@ -143,7 +141,6 @@ export function PostgresSpecificationCard({
     [specs, database?.specification],
   )
 
-  const canUpgrade = canCreateDatabase(access, features)
   const billingEnabled = getActiveProfileFeatures().billing
   const nav = postgresNav({ projectId, databaseId })
 
@@ -216,7 +213,8 @@ export function PostgresSpecificationCard({
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <p className="text-[13px]">
-            {t("You don't have permission to change database settings.")}
+            {upgradeDisabledTooltip ??
+              t("You don't have permission to change database settings.")}
           </p>
         </TooltipContent>
       </Tooltip>

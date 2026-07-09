@@ -49,10 +49,7 @@ import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBa
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
 import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 import { useT } from '@/lib/i18n/translate'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import { CreateTable } from './_components/CreateTable'
 import { CreateSchema } from './_components/CreateSchema'
 import { PostgresSchemaToolsNav } from './_components/PostgresSchemaToolsNav'
@@ -76,10 +73,10 @@ export function SchemaTablesSidebar({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { account } = useAuth()
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canModifyTableStructure = canShowTableSecuritySettings(access, features)
+  const { canWrite: canModifyTableStructure, writeTooltip: tableWriteTooltip } =
+    usePostgresTableWriteAccess({
+      permissionDeniedTooltip: t("You don't have permission to create schemas."),
+    })
   const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()
   const [createSchemaOpen, setCreateSchemaOpen] = useState(false)
   const [createTableOpen, setCreateTableOpen] = useState(false)
@@ -174,12 +171,14 @@ export function SchemaTablesSidebar({
   const showSchemasLoading =
     schemasLoading && loadedSchemas.length === 0 && !selectedSchema
   const createSchemaDisabledReason = !canModifyTableStructure
-    ? t("You don't have permission to create schemas.")
+    ? (tableWriteTooltip ??
+      t("You don't have permission to create schemas."))
     : undefined
   const createTableDisabledReason = !selectedSchema
     ? t('Select a schema to create a table.')
     : !canModifyTableStructure
-      ? t("You don't have permission to modify table structure.")
+      ? (tableWriteTooltip ??
+        t("You don't have permission to modify table structure."))
       : undefined
 
   const prevSelectedTableIdRef = useRef(selectedTableId)

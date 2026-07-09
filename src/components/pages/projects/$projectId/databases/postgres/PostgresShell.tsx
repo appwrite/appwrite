@@ -14,6 +14,7 @@ import {
   type PostgresDatabaseHeaderSlotProps,
 } from './_components/PostgresDatabaseHeaderSlotContext'
 import { DedicatedDatabaseStatusHeaderAlert } from '../_components/DedicatedDatabaseStatusHeaderAlert'
+import { DatabaseOperationsLockProvider } from '../_components/DatabaseOperationsLockContext'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
 import { useT } from '@/lib/i18n/translate'
@@ -71,16 +72,18 @@ export function PostgresShell({ children }: PostgresShellProps) {
       projectId={projectId}
       databaseId={databaseId}
     >
-      <PostgresShellLayout
-        projectId={projectId}
-        databaseId={databaseId}
-        tableId={routeTableId}
-        databaseTab={databaseTab}
-        database={database}
-        showDesktopSidebar={showDesktopSidebar}
-      >
-        {children}
-      </PostgresShellLayout>
+      <DatabaseOperationsLockProvider status={database.status}>
+        <PostgresShellLayout
+          projectId={projectId}
+          databaseId={databaseId}
+          tableId={routeTableId}
+          databaseTab={databaseTab}
+          database={database}
+          showDesktopSidebar={showDesktopSidebar}
+        >
+          {children}
+        </PostgresShellLayout>
+      </DatabaseOperationsLockProvider>
     </PostgresConnectDialogProvider>
   )
 }

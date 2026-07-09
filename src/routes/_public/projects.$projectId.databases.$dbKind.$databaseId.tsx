@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { isDatabaseRouteKind } from '@/lib/database-routes'
 import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
+import { DatabaseOperationsLockProvider } from '@/components/pages/projects/$projectId/databases/_components/DatabaseOperationsLockContext'
 import {
   productRouteKindQueryOptions,
   projectQueryOptions,
@@ -81,5 +82,13 @@ export const Route = createFileRoute(
 })
 
 function DatabaseKindLayout() {
-  return <Outlet />
+  const { projectId, databaseId } = Route.useParams()
+  return (
+    <DatabaseOperationsLockProvider
+      projectId={projectId}
+      databaseId={databaseId}
+    >
+      <Outlet />
+    </DatabaseOperationsLockProvider>
+  )
 }

@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import {
   usePostgresTableColumns,
   usePostgresTableIndexes,
@@ -41,10 +38,7 @@ export function TableStructureContent({
 }: TableStructureViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite, writeTooltip } = usePostgresTableWriteAccess()
 
   const {
     refetch: refetchColumns,
@@ -82,9 +76,7 @@ export function TableStructureContent({
         createLabel: canWrite ? t('Add column') : undefined,
         onCreate: canWrite ? () => setColumnCreateOpen(true) : undefined,
         createDisabled: !canWrite,
-        createDisabledTooltip: canWrite
-          ? undefined
-          : t("You don't have permission to modify table structure."),
+        createDisabledTooltip: writeTooltip,
         showRefresh: true,
         onRefresh: () => void refetchColumns(),
         isRefreshing: columnsFetching,
@@ -96,9 +88,7 @@ export function TableStructureContent({
         createLabel: canWrite ? t('Create index') : undefined,
         onCreate: canWrite ? () => setIndexCreateOpen(true) : undefined,
         createDisabled: !canWrite,
-        createDisabledTooltip: canWrite
-          ? undefined
-          : t("You don't have permission to modify table structure."),
+        createDisabledTooltip: writeTooltip,
         showRefresh: true,
         onRefresh: () => void refetchIndexes(),
         isRefreshing: indexesFetching,
@@ -108,6 +98,7 @@ export function TableStructureContent({
   }, [
     activeTab,
     canWrite,
+    writeTooltip,
     columnsFetching,
     indexesFetching,
     refetchColumns,

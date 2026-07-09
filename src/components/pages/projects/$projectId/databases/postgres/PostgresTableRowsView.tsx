@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation, useSearch } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
 import {
   useDeletePostgresTableRows,
   usePostgresTableRows,
@@ -63,10 +60,9 @@ export function PostgresTableRowsView({
   const location = useLocation()
   const routeSearch = useSearch({ strict: false }) as Record<string, unknown> | undefined
 
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite, writeTooltip } = usePostgresTableWriteAccess({
+    permissionDeniedTooltip: t("You don't have permission to modify rows."),
+  })
 
   const rowsListUrl = useMemo(
     () => urlFromRouterLocation(location, window.location.origin),
@@ -396,9 +392,7 @@ export function PostgresTableRowsView({
     createLabel: canWrite ? t('Create row') : undefined,
     onCreate: canWrite ? openCreateRow : undefined,
     createDisabled: !canWrite,
-    createDisabledTooltip: canWrite
-      ? undefined
-      : t("You don't have permission to modify rows."),
+    createDisabledTooltip: writeTooltip,
     showRefresh: true,
     onRefresh: handleRefresh,
     isRefreshing: isFetching,

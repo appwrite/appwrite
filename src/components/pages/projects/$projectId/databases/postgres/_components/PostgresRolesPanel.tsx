@@ -29,10 +29,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
 import {
   useExecutePostgresSql,
   usePostgresRoles,
@@ -194,10 +191,7 @@ export function PostgresRolesPanel({
 }: PostgresRolesPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite } = usePostgresTableWriteAccess()
 
   const { roles, isLoading, refetch } = usePostgresRoles(projectId, databaseId)
   const executeSql = useExecutePostgresSql(projectId, databaseId)

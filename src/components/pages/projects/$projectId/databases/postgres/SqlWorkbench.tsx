@@ -50,6 +50,10 @@ type SqlWorkbenchProps = {
   account: { prefs?: Record<string, unknown> } | undefined
   teamId: string | null | undefined
   canSaveTeam: boolean
+  canRun?: boolean
+  runDisabledTooltip?: string
+  canExplain?: boolean
+  explainDisabledTooltip?: string
   /** Content below SQL results (e.g. selected table rows). */
   children?: ReactNode
 }
@@ -77,6 +81,10 @@ export function SqlWorkbench({
   account,
   teamId,
   canSaveTeam,
+  canRun: operationsEnabled = true,
+  runDisabledTooltip,
+  canExplain: explainEnabled = true,
+  explainDisabledTooltip,
   children,
 }: SqlWorkbenchProps) {
   const t = useT()
@@ -87,8 +95,8 @@ export function SqlWorkbench({
   const sqlEditorRef = useRef<PostgresSqlCodeEditorRef>(null)
   const hasSql = !!sql.trim()
   const isBusy = isRunning || isExplaining
-  const canRunQuery = !isBusy && hasSql
-  const canExplainQuery = !isBusy && hasSql
+  const canRunQuery = operationsEnabled && !isBusy && hasSql
+  const canExplainQuery = explainEnabled && !isBusy && hasSql
   const canSaveQuery = hasSql
   const canFormatQuery = hasSql
   const errorMessage = error ? getErrorMessage(error) : null
@@ -290,6 +298,12 @@ export function SqlWorkbench({
               onFormat={() => onSqlChange(formatPostgresSql(sql))}
               onRun={onRun}
               onExplain={onExplain}
+              runDisabledTooltip={
+                !operationsEnabled ? runDisabledTooltip : undefined
+              }
+              explainDisabledTooltip={
+                !explainEnabled ? explainDisabledTooltip : undefined
+              }
             />
           </div>
         </div>

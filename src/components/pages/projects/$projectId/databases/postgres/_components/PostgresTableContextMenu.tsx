@@ -41,6 +41,7 @@ import {
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { buildPostgresDropTableSql } from '@/lib/postgres-table-ddl'
 import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
+import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
@@ -83,6 +84,7 @@ export function PostgresTableContextMenu({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId ?? undefined)
   const showSecurityTab = canShowTableSecuritySettings(access, features)
+  const { canWrite } = usePostgresTableWriteAccess()
   const { openTableInSqlEditor } = usePostgresSidebar()
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -259,13 +261,17 @@ export function PostgresTableContextMenu({
             </span>
             {t('Open in new window')}
           </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Trash2 className="size-4" />
-            </span>
-            {t('Delete')}
-          </ContextMenuItem>
+          {canWrite ? (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                  <Trash2 className="size-4" />
+                </span>
+                {t('Delete')}
+              </ContextMenuItem>
+            </>
+          ) : null}
         </ContextMenuContent>
       </ContextMenu>
 

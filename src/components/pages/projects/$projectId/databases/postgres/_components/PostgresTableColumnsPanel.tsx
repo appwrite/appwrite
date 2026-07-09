@@ -22,10 +22,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
 import {
   useExecutePostgresSql,
   usePostgresTableColumns} from '@/lib/react-query/hooks'
@@ -71,10 +68,7 @@ export function PostgresTableColumnsPanel({
   onCreateDialogOpenChange}: PostgresTableColumnsPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite } = usePostgresTableWriteAccess()
 
   const { columns, isLoading, refetch } = usePostgresTableColumns(
     projectId,

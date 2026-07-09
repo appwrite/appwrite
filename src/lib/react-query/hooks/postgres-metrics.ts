@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { executePostgresDatabaseSql } from './postgres-databases'
 import {
@@ -351,12 +352,14 @@ export function useCancelPostgresBackend(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (pid: number) =>
-      executePostgresDatabaseSql(
+    mutationFn: (pid: number) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return executePostgresDatabaseSql(
         projectId,
         databaseId,
         buildPostgresCancelBackendSql(pid),
-      ),
+      )
+    },
     onSuccess: async () => {
       await refreshPostgresActiveConnections(queryClient, projectId, databaseId)
       toast.success('Query canceled')
@@ -373,12 +376,14 @@ export function useTerminatePostgresBackend(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (pid: number) =>
-      executePostgresDatabaseSql(
+    mutationFn: (pid: number) => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return executePostgresDatabaseSql(
         projectId,
         databaseId,
         buildPostgresTerminateBackendSql(pid),
-      ),
+      )
+    },
     onSuccess: async () => {
       await refreshPostgresActiveConnections(queryClient, projectId, databaseId)
       toast.success('Connection terminated')
@@ -395,12 +400,14 @@ export function useTerminatePostgresIdleInTransaction(
 ) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () =>
-      executePostgresDatabaseSql(
+    mutationFn: () => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
+      return executePostgresDatabaseSql(
         projectId,
         databaseId,
         POSTGRES_TERMINATE_IDLE_IN_TRANSACTION_SQL,
-      ),
+      )
+    },
     onSuccess: async () => {
       await refreshPostgresActiveConnections(queryClient, projectId, databaseId)
       toast.success('Idle in transaction connections terminated')

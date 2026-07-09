@@ -31,10 +31,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
-import { useProject } from '@/lib/react-query/hooks/projects'
+import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
 import {
   useExecutePostgresSql,
   usePostgresTableInfo,
@@ -75,10 +72,7 @@ export function PostgresTableSecurityPanel({
 }: PostgresTableSecurityPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
-  const canWrite = canShowTableSecuritySettings(access, features)
+  const { canWrite } = usePostgresTableWriteAccess()
 
   const { tableInfo, isLoading: tableInfoLoading } = usePostgresTableInfo(
     projectId,

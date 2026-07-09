@@ -1,4 +1,3 @@
-import { useParams } from '@tanstack/react-router'
 import { canCreateDatabase } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -6,6 +5,8 @@ import {
   usePostgresDatabase,
   useProject,
 } from '@/lib/react-query/hooks'
+import { useParams } from '@tanstack/react-router'
+import { usePostgresAdminWriteAccess } from '../_components/PostgresDatabaseWriteLockContext'
 
 export function usePostgresDatabaseSettingsPage() {
   const { projectId, databaseId } = useParams({ strict: false }) as {
@@ -16,7 +17,7 @@ export function usePostgresDatabaseSettingsPage() {
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const { database, isLoading } = usePostgresDatabase(projectId, databaseId)
-  const canWrite = canCreateDatabase(access, features)
+  const { canWrite } = usePostgresAdminWriteAccess()
 
   return {
     projectId,
@@ -24,5 +25,6 @@ export function usePostgresDatabaseSettingsPage() {
     database,
     canWrite,
     isLoading,
+    permissionCanWrite: canCreateDatabase(access, features),
   }
 }

@@ -8,11 +8,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  useOrganizationScopes,
   usePostgresDatabase,
   usePostgresDatabaseCredentials,
   usePostgresDatabasePooler,
-  useProject,
   useResetPostgresDatabaseCredentials,
 } from '@/lib/react-query/hooks'
 import {
@@ -65,8 +63,7 @@ import {
 import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 import { PostgresCopyableField } from './PostgresCopyableField'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { canCreateDatabase } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { usePostgresAdminWriteAccess } from './PostgresDatabaseWriteLockContext'
 import { useT } from '@/lib/i18n/translate'
 
 const POSTGRES_DOCS_URL = '/docs/products/databases'
@@ -464,9 +461,14 @@ export function PostgresConnectDialog({
   const t = useT()
   const [methodTab, setMethodTab] = useState<PostgresConnectTab>('details')
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
-  const { features } = useConsoleProfile()
-  const { project } = useProject(projectId)
-  const { access } = useOrganizationScopes(project?.teamId)
+  const {
+    canWrite: canResetPassword,
+    writeTooltip: resetPasswordDisabledTooltip,
+  } = usePostgresAdminWriteAccess({
+    permissionDeniedTooltip: t(
+      "You don't have permission to reset the database password.",
+    ),
+  })
 
   const { database, isLoading: databaseLoading } = usePostgresDatabase(
     projectId,
@@ -483,11 +485,6 @@ export function PostgresConnectDialog({
     projectId,
     databaseId,
   )
-
-  const canResetPassword = canCreateDatabase(access, features)
-  const resetPasswordDisabledTooltip = !canResetPassword
-    ? t("You don't have permission to reset the database password.")
-    : undefined
 
   const isLoading =
     (databaseLoading && !database) ||

@@ -33,12 +33,10 @@ import {
   RESOURCE_CARD_BASE_CLASSNAME,
   RESOURCE_CARD_GRID_CLASSNAME,
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
-import { canCreateDatabase } from '@/lib/console-access-checks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { usePostgresAdminWriteAccess } from './PostgresDatabaseWriteLockContext'
 import {
   useInstallPostgresDatabaseExtension,
   useOrganizationPlan,
-  useOrganizationScopes,
   usePostgresDatabaseExtensions,
   useProject,
   useUninstallPostgresDatabaseExtension,
@@ -210,10 +208,9 @@ export function PostgresExtensionsPanel({
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId ?? undefined)
   const { plan } = useOrganizationPlan(project?.teamId)
-  const canManage = canCreateDatabase(access, features)
+  const { canWrite: canManage, writeTooltip: manageWriteTooltip } =
+    usePostgresAdminWriteAccess()
 
   const [searchValue, setSearchValue] = useState('')
   const [filter, setFilter] = useState<ExtensionStatusFilter>('all')
@@ -444,7 +441,10 @@ export function PostgresExtensionsPanel({
 
   const getInstallDisabledReason = (row: PostgresExtensionRow): string | undefined => {
     if (!canManage) {
-      return t("You don't have permission to manage extensions.")
+      return (
+        manageWriteTooltip ??
+        t("You don't have permission to manage extensions.")
+      )
     }
     if (atExtensionLimit) {
       return t('Upgrade your plan or uninstall an extension to install more.')

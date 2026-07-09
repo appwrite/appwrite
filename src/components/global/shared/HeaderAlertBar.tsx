@@ -61,8 +61,8 @@ export function HeaderAlertBar({
         className,
       )}
     >
-      <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
-        <Icon className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" aria-hidden />
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
         <div className="min-w-0 flex-1 text-[13px] font-medium leading-snug">
           {children}
         </div>

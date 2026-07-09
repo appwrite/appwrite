@@ -32,6 +32,7 @@ import { getDedicatedDatabaseIdError, resolveDedicatedDatabaseId } from '@/lib/d
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
 import {
   normalizePostgresExecutionResult,
@@ -4231,6 +4232,7 @@ export function useCreateProjectTableRow(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await createProjectTableRow(
         projectId,
         databaseId,
@@ -4278,6 +4280,7 @@ export function useUpdateProjectTableRow(
       if (!projectId || !databaseId || !tableId || !rowId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await updateProjectTableRow(
         projectId,
         databaseId,
@@ -4314,6 +4317,7 @@ export function useDeleteProjectTableRow(
       if (!projectId || !databaseId || !tableId || !rowId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await deleteProjectTableRow(projectId, databaseId, tableId, rowId)
     },
     onSuccess: async () => {
@@ -4353,6 +4357,7 @@ export function useCreateProjectTableRows(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await createProjectTableRows(
         projectId,
         databaseId,
@@ -4391,6 +4396,7 @@ export function useCreateProjectTableColumn(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await createProjectTableColumn(
         projectId,
         databaseId,
@@ -4437,6 +4443,7 @@ export function useUpdateProjectTableColumn(
       if (!projectId || !databaseId || !tableId || !columnKey) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await updateProjectTableColumn(
         projectId,
         databaseId,
@@ -4478,6 +4485,7 @@ export function useDeleteProjectTableColumn(
       if (!projectId || !databaseId || !tableId || !columnKey) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await deleteProjectTableColumn(
         projectId,
         databaseId,
@@ -4541,6 +4549,7 @@ export function useCreateProjectTableIndex(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await createProjectTableIndex(
         projectId,
         databaseId,
@@ -4581,6 +4590,7 @@ export function useDeleteProjectTableIndex(
       if (!projectId || !databaseId || !tableId || !indexKey) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await deleteProjectTableIndex(
         projectId,
         databaseId,
@@ -4627,6 +4637,7 @@ export function useUpdateProjectTable(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await updateProjectTable(projectId, databaseId, tableId, data)
     },
     onSuccess: () => {
@@ -4659,6 +4670,7 @@ export function useDeleteProjectTable(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       return await deleteProjectTable(projectId, databaseId, tableId)
     },
     onSuccess: async () => {

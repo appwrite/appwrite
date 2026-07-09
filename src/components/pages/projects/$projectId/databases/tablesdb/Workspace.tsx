@@ -74,8 +74,6 @@ import { ExportCsv } from '../_components/ExportCsv'
 
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
-  canCreateDatabase,
-  canCreateRow,
   canShowTableSecuritySettings,
   canShowDatabaseSecuritySettings,
 } from '@/lib/console-access-checks'
@@ -89,8 +87,14 @@ import {
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 import { DocumentsJsonSpreadsheet } from '../_components/DocumentsJsonSpreadsheet'
 import { TableViewResizableLayout } from '../_components/TableViewResizableLayout'
+import {
+  useDatabaseAdminOperationsAccess,
+  useDatabaseRowOperationsAccess,
+  useDatabaseTableOperationsAccess,
+} from '../_components/DatabaseOperationsLockContext'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -317,6 +321,7 @@ export function Workspace({
   // Debug: create 50 random containers (only when debug mode is open and on tables list)
   const createFiftyTablesMutation = useMutation({
     mutationFn: async () => {
+      requireOperationalDatabase(queryClient, projectId, databaseId)
       const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
       for (const name of names) {
         await createProjectTable(projectId, databaseId, { name })
@@ -343,12 +348,12 @@ export function Workspace({
     access,
     features,
   )
-  const noCreateTablePermission = !canShowTableSecuritySettings(
-    access,
-    features,
-  )
-  const noCreateDbPermission = !canCreateDatabase(access, features)
-  const noCreateRowPermission = !canCreateRow(access, features)
+  const adminWriteAccess = useDatabaseAdminOperationsAccess()
+  const tableWriteAccess = useDatabaseTableOperationsAccess()
+  const rowWriteAccess = useDatabaseRowOperationsAccess()
+  const noCreateTablePermission = !tableWriteAccess.canWrite
+  const noCreateDbPermission = !adminWriteAccess.canWrite
+  const noCreateRowPermission = !rowWriteAccess.canWrite
   const showDbSecuritySettings = canShowDatabaseSecuritySettings(
     access,
     features,
@@ -422,7 +427,10 @@ export function Workspace({
       tableId?: string
       name: string
       dimension?: number
-    }) => createProjectTable(projectId!, databaseId!, data),
+    }) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return createProjectTable(projectId!, databaseId!, data)
+    },
     onSuccess: async (table) => {
       toast.success(`${table.name} ${t('has been created')}`)
       // Refetch tables and wait for it to complete before navigating

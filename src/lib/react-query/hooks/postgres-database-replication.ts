@@ -8,6 +8,7 @@ import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
 import { postgresDatabaseQueryOptions } from './postgres-databases'
+import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
 
 export async function fetchPostgresDatabaseReplicas(
   projectId: string,
@@ -84,8 +85,14 @@ export function useCreatePostgresDatabaseFailover(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ targetReplicaId }: { targetReplicaId: string }) =>
-      createPostgresDatabaseFailover(projectId!, databaseId!, targetReplicaId),
+    mutationFn: ({ targetReplicaId }: { targetReplicaId: string }) => {
+      requireOperationalDatabase(queryClient, projectId!, databaseId!)
+      return createPostgresDatabaseFailover(
+        projectId!,
+        databaseId!,
+        targetReplicaId,
+      )
+    },
     onSuccess: async (database) => {
       if (!projectId || !databaseId) return
       queryClient.setQueryData(

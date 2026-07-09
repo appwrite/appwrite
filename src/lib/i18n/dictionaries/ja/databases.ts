@@ -1419,6 +1419,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database update failed': 'データベースの更新に失敗しました',
   'Database is deleted': 'データベースは削除済み',
   'Database is not ready': 'データベースは準備できていません',
+  'Database operations are disabled while the database is in a failed state.':
+    'データベースが失敗状態のため、データベース操作は無効です。',
   'Current status': '現在のステータス',
   'A compute tier change is in progress. Some operations may be temporarily unavailable.':
     'コンピュートティアの変更を実行中です。一部の操作が一時的に利用できない場合があります。',
