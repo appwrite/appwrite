@@ -20,8 +20,7 @@
  *
  * Connection listing uses `postgresql.createExecution` + `pg_stat_activity`
  * (see `fetchPostgresDatabaseConnections` / `fetchPostgresActiveConnections`).
- * Query EXPLAIN still has no dedicated endpoint; it is gated via
- * DEDICATED_FEATURE_UNAVAILABLE until wired to `createExecution` with EXPLAIN.
+ * Query EXPLAIN runs via `postgresql.createExecution` with `EXPLAIN (FORMAT JSON)`.
  *
  * Note: `mongo` has no `createExecution` or `getPooler`.
  */
