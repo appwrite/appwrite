@@ -11,7 +11,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use Utopia\Config\Config;
@@ -109,7 +108,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('platform')
@@ -147,7 +146,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         array $platform
@@ -245,7 +244,7 @@ class Update extends Base
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
 
-            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            $providerAdapter = $vcsForInstallation($installation);
             if ($providerAdapter->requiresRepositoryWebhook()) {
                 try {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
@@ -324,7 +323,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsForInstallation($installation), true, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

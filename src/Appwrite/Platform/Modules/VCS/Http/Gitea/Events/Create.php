@@ -8,7 +8,6 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -37,7 +36,8 @@ class Create extends Action
             ->desc('Create event')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
-            ->inject('vcsFactory')
+            ->inject('vcsForProvider')
+            ->inject('vcsForInstallation')
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -49,7 +49,8 @@ class Create extends Action
     }
 
     public function action(
-        Factory $vcsFactory,
+        callable $vcsForProvider,
+        callable $vcsForInstallation,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -58,7 +59,7 @@ class Create extends Action
         BuildPublisher $publisherForBuilds,
         array $platform
     ) {
-        $vcs = $vcsFactory->fromProvider('gitea');
+        $vcs = $vcsForProvider('gitea');
 
         $event = $request->getHeaderLine($vcs->getEventHeaderName(), '');
         Span::add('vcs.gitea.event.name', $event);
@@ -81,8 +82,8 @@ class Create extends Action
         $parsedPayload = $vcs->getEvent($event, $payload);
 
         match ($event) {
-            'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
-            'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            'push' => $this->handlePushEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
         };
 
@@ -96,7 +97,7 @@ class Create extends Action
      * carry their own personal token — repositories matching the same
      * providerRepositoryId can belong to different Appwrite installations.
      */
-    private function resolveAdapterForRepository(Document $repository, Factory $vcsFactory, Database $dbForPlatform, Authorization $authorization): ?Git
+    private function resolveAdapterForRepository(Document $repository, callable $vcsForInstallation, Database $dbForPlatform, Authorization $authorization): ?Git
     {
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
@@ -113,7 +114,7 @@ class Create extends Action
         }
 
         try {
-            return $vcsFactory->fromInstallation($installation);
+            return $vcsForInstallation($installation);
         } catch (\Throwable $error) {
             Console::warning("Failed to resolve Gitea adapter for installation '{$installation->getId()}': " . $error->getMessage());
             return null;
@@ -122,7 +123,7 @@ class Create extends Action
 
     private function handlePushEvent(
         array $parsedPayload,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -159,7 +160,7 @@ class Create extends Action
         $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
 
         foreach ($repositories as $repository) {
-            $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $dbForPlatform, $authorization);
+            $adapter = $this->resolveAdapterForRepository($repository, $vcsForInstallation, $dbForPlatform, $authorization);
 
             if ($adapter === null) {
                 continue;
@@ -173,7 +174,7 @@ class Create extends Action
 
     private function handlePullRequestEvent(
         array $parsedPayload,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -211,7 +212,7 @@ class Create extends Action
             ]));
 
             foreach ($repositories as $repository) {
-                $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $dbForPlatform, $authorization);
+                $adapter = $this->resolveAdapterForRepository($repository, $vcsForInstallation, $dbForPlatform, $authorization);
 
                 if ($adapter === null) {
                     continue;
