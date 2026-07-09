@@ -1,5 +1,8 @@
 export const SEO_INDEXABLE_HOSTS = ['appwrite.io', 'www.appwrite.io'] as const
 
+/** Set to false to allow indexing on all hosts (no noindex headers or blocking robots.txt). */
+export const BLOCK_NON_PRODUCTION_SEO = false
+
 export const NOINDEX_ROBOTS_META = {
   name: 'robots',
   content: 'noindex, nofollow',
@@ -14,6 +17,7 @@ export function normalizeRequestHost(host: string): string {
 }
 
 export function isSeoIndexableHost(host: string): boolean {
+  if (!BLOCK_NON_PRODUCTION_SEO) return true
   return SEO_INDEXABLE_HOST_SET.has(normalizeRequestHost(host))
 }
 
