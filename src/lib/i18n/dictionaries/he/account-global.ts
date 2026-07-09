@@ -769,4 +769,17 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   // Global shell
   'Skip to content': 'דילוג לתוכן',
   'Loading wizard...': 'טוען אשף...',
+
+  // Notification center
+  'Mark all as read': 'סימון הכל כנקרא',
+  'Loading notifications...': 'טוען התראות...',
+  'No notifications yet': 'אין התראות עדיין',
+  'We will notify you here when something needs your attention.':
+    'נודיע לכם כאן כשמשהו ידרוש את תשומת לבכם.',
+  'Stay updated on your projects and resources.':
+    'הישארו מעודכנים לגבי הפרויקטים והמשאבים שלכם.',
+  '1 unread notification': 'התראה אחת שלא נקראה',
+  'unread notifications': 'התראות שלא נקראו',
+  Unread: 'לא נקרא',
+  'Refreshing...': 'מרענן...',
 }

@@ -45,6 +45,7 @@ import {
   Presences,
   Usage,
   Webhooks,
+  Notifications,
 } from '@appwrite.io/console'
 import {
   getDebugEndpointBaseUrl,
@@ -234,6 +235,7 @@ function createConsoleSdkRaw(client: Client) {
     presences: new Presences(client),
     usage: new Usage(client),
     webhooks: new Webhooks(client),
+    notifications: new Notifications(client),
   }
 }
 

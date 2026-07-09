@@ -89,6 +89,7 @@ import { useKeyboardShortcutsContext } from '@/components/global/providers/Keybo
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
+import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
 import { useAIChat } from '@/components/global/providers/AIChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
@@ -1125,6 +1126,11 @@ export function ConsoleHeader({
                   <Search className="h-4 w-4" />
                 </button>
               ) : null}
+
+              {/* Notifications */}
+              <div className="flex shrink-0">
+                <NotificationCenterPopover />
+              </div>
 
               {/* Feedback - hidden on small containers */}
               <div className="hidden @[800px]:flex shrink-0">

@@ -644,4 +644,17 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Close: '閉じる',
   Dismiss: '閉じる',
   Download: 'ダウンロード',
+
+  // Notification center
+  'Mark all as read': 'すべて既読にする',
+  'Loading notifications...': '通知を読み込み中...',
+  'No notifications yet': '通知はまだありません',
+  'We will notify you here when something needs your attention.':
+    '対応が必要なときは、ここにお知らせします。',
+  'Stay updated on your projects and resources.':
+    'プロジェクトとリソースの更新をここで確認できます。',
+  '1 unread notification': '未読の通知が 1 件',
+  'unread notifications': '件の未読通知',
+  Unread: '未読',
+  'Refreshing...': '更新中...',
 }
