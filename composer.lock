@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9fb1fb88559be6ad0be7d51248fd86dd",
+    "content-hash": "50b6e587a70f02a5896790012248f50f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4409,16 +4409,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.14.1",
+            "version": "1.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "926556113c770b3646cabeb042153969e3e0cadf"
+                "reference": "3bb4428e4fb7a29f120f73f87d0a2519a2a414a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/926556113c770b3646cabeb042153969e3e0cadf",
-                "reference": "926556113c770b3646cabeb042153969e3e0cadf",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3bb4428e4fb7a29f120f73f87d0a2519a2a414a4",
+                "reference": "3bb4428e4fb7a29f120f73f87d0a2519a2a414a4",
                 "shasum": ""
             },
             "require": {
@@ -4458,9 +4458,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.14.1"
+                "source": "https://github.com/utopia-php/migration/tree/1.16.0"
             },
-            "time": "2026-06-30T13:18:56+00:00"
+            "time": "2026-07-09T05:46:44+00:00"
         },
         {
             "name": "utopia-php/mongo",
