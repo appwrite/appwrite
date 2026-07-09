@@ -60,21 +60,6 @@ class Database extends Model
     }
 
     /**
-     * A null status is treated as ready.
-     *
-     * @param Document $document
-     * @return Document
-     */
-    public function filter(Document $document): Document
-    {
-        if (empty($document->getAttribute('status'))) {
-            $document->setAttribute('status', 'ready');
-        }
-
-        return $document;
-    }
-
-    /**
      * Get Name
      *
      * @return string
