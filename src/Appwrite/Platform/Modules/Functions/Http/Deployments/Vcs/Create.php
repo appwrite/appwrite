@@ -11,7 +11,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -73,7 +72,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -90,7 +89,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -115,7 +114,7 @@ class Create extends Base
             dbForProject: $dbForProject,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            vcs: $vcsFactory->fromInstallation($installation),
+            vcs: $vcsForInstallation($installation),
             activate: $activate,
             platform: $platform,
             reference: $reference,

@@ -8,7 +8,6 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -38,7 +37,7 @@ class Create extends Action
             ->desc('Create event')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
-            ->inject('vcsFactory')
+            ->inject('vcsForProvider')
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -50,7 +49,7 @@ class Create extends Action
     }
 
     public function action(
-        Factory $vcsFactory,
+        callable $vcsForProvider,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -61,7 +60,7 @@ class Create extends Action
     ) {
         $this->preprocessEvent($request);
 
-        $vcs = $vcsFactory->fromProvider('github');
+        $vcs = $vcsForProvider('github');
 
         $event = $request->getHeaderLine('x-github-event', '');
         Span::add('vcs.github.event.name', $event);

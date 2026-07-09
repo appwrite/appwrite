@@ -20,7 +20,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Vcs\Factory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
@@ -129,7 +128,7 @@ class Create extends Base
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('platform')
@@ -174,7 +173,7 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         array $platform
@@ -306,7 +305,7 @@ class Create extends Base
                 'providerPullRequestIds' => []
             ]));
 
-            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            $providerAdapter = $vcsForInstallation($installation);
             if ($providerAdapter->requiresRepositoryWebhook()) {
                 try {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
@@ -359,7 +358,7 @@ class Create extends Base
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
                     template: $template,
-                    vcs: $vcsFactory->fromInstallation($installation),
+                    vcs: $vcsForInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,

@@ -8,7 +8,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
@@ -48,7 +47,7 @@ class Get extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->inject('vcsFactory')
+            ->inject('vcsForInstallation')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -57,7 +56,7 @@ class Get extends Action
     public function action(
         string $installationId,
         string $providerRepositoryId,
-        Factory $vcsFactory,
+        callable $vcsForInstallation,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -68,7 +67,7 @@ class Get extends Action
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $vcs = $vcsFactory->fromInstallation($installation);
+        $vcs = $vcsForInstallation($installation);
 
         $owner = $vcs->getOwnerName($providerInstallationId);
         try {
