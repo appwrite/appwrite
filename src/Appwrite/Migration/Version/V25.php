@@ -8,7 +8,7 @@ use Throwable;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Query;
 
 class V25 extends Migration
 {
@@ -19,9 +19,6 @@ class V25 extends Migration
     {
         Console::info('Migrating collections');
         $this->migrateCollections();
-
-        Console::info('Migrating buckets');
-        $this->migrateBuckets();
     }
 
     /**
@@ -68,41 +65,33 @@ class V25 extends Migration
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+
+                case 'databases':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'status');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"status\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        // Backfill existing databases so the stored value matches the intended default.
+                        // Materialize the matched documents before updating any of them: updating
+                        // "status" removes rows from the isNull() set, and the offset-based iterator
+                        // would otherwise skip un-processed rows as the filtered set shrinks mid-scan.
+                        $databases = \iterator_to_array($this->documentsIterator($id, [Query::isNull('status')]));
+                        foreach ($databases as $database) {
+                            try {
+                                $this->dbForProject->updateDocument($id, $database->getId(), new Document([
+                                    'status' => 'ready',
+                                ]));
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to backfill \"status\" for database {$database->getId()}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    break;
             }
         }
-    }
-
-    /**
-     * Add the virtual folder `folder` attribute and index to every
-     * per-bucket files collection.
-     *
-     * @return void
-     * @throws Throwable
-     */
-    private function migrateBuckets(): void
-    {
-        $this->dbForProject->foreach('buckets', function (Document $bucket) {
-            $bucketTable = "bucket_{$bucket->getSequence()}";
-            Console::log("Migrating Bucket {$bucket->getId()} ({$bucket->getAttribute('name')})");
-
-            try {
-                $this->createAttributeFromCollection($this->dbForProject, $bucketTable, 'folder', 'files');
-            } catch (Duplicate) {
-                Console::warning("'folder' from {$bucketTable}: Column already exists");
-            } catch (Throwable $th) {
-                Console::warning("'folder' from {$bucketTable}: {$th->getMessage()}");
-            }
-
-            try {
-                $this->createIndexFromCollection($this->dbForProject, $bucketTable, '_key_folder', 'files');
-            } catch (Duplicate) {
-                Console::warning("'_key_folder' from {$bucketTable}: Index already exists");
-            } catch (Throwable $th) {
-                Console::warning("'_key_folder' from {$bucketTable}: {$th->getMessage()}");
-            }
-
-            $this->dbForProject->purgeCachedCollection($bucketTable);
-            $this->dbForProject->purgeCachedDocument(Database::METADATA, $bucketTable);
-        });
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e798bc265f64ece2a36b970f489e3a33",
+    "content-hash": "fe2cb2198062d5871d94af4dad16261a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3319,16 +3319,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.8.0",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "1d77657e9c91e48e873e6e096f9d4f55f778b11f"
+                "reference": "c9a5e909b0d9942f953340af0877b9be18acf288"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/1d77657e9c91e48e873e6e096f9d4f55f778b11f",
-                "reference": "1d77657e9c91e48e873e6e096f9d4f55f778b11f",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/c9a5e909b0d9942f953340af0877b9be18acf288",
+                "reference": "c9a5e909b0d9942f953340af0877b9be18acf288",
                 "shasum": ""
             },
             "require": {
@@ -3344,7 +3344,16 @@
                     "Utopia\\Auth\\": "src/Auth"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\Auth\\": "tests/Auth"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit --configuration phpunit.xml"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3356,16 +3365,16 @@
             ],
             "description": "A simple PHP authentication library",
             "keywords": [
-                "Authentication",
                 "auth",
+                "authentication",
                 "php",
                 "security"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/auth/issues",
-                "source": "https://github.com/utopia-php/auth/tree/0.8.0"
+                "source": "https://github.com/utopia-php/auth/tree/0.9.0",
+                "issues": "https://github.com/utopia-php/auth/issues"
             },
-            "time": "2026-07-08T05:10:32+00:00"
+            "time": "2026-07-09T04:39:23+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -4404,12 +4413,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "b2c5fc6921583db13ea98fbb605804c68d6420e3"
+                "reference": "921490d3866fa7bc457d706d2a3993245f96eefc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b2c5fc6921583db13ea98fbb605804c68d6420e3",
-                "reference": "b2c5fc6921583db13ea98fbb605804c68d6420e3",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/921490d3866fa7bc457d706d2a3993245f96eefc",
+                "reference": "921490d3866fa7bc457d706d2a3993245f96eefc",
                 "shasum": ""
             },
             "require": {
@@ -4435,7 +4444,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4448,10 +4475,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/skip-override-migration"
+                "source": "https://github.com/utopia-php/migration/tree/skip-override-migration",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-07-08T18:59:21+00:00"
+            "time": "2026-07-09T20:40:45+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8358,8 +8385,8 @@
         {
             "package": "utopia-php/migration",
             "version": "dev-skip-override-migration",
-            "alias": "1.14.1",
-            "alias_normalized": "1.14.1.0"
+            "alias": "1.17.2",
+            "alias_normalized": "1.17.2.0"
         }
     ],
     "minimum-stability": "dev",

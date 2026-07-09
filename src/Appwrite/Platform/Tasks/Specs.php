@@ -171,12 +171,6 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'Mode' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Mode',
-                    'description' => '',
-                    'in' => 'header',
-                ],
                 'DevKey' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Dev-Key',
@@ -262,12 +256,6 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Session',
                     'description' => 'The user session to authenticate with',
-                    'in' => 'header',
-                ],
-                'Mode' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Appwrite-Mode',
-                    'description' => '',
                     'in' => 'header',
                 ],
                 'ForwardedUserAgent' => [
