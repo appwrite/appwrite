@@ -69,6 +69,17 @@ return [
                 'signed' => true,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('status'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ]
         ],
         'indexes' => [

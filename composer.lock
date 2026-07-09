@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8aefd65f2026fdfc298af8867d4a5b0b",
+    "content-hash": "b0afe45c66cd9b375e4b17aea773651e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3319,16 +3319,16 @@
         },
         {
             "name": "utopia-php/auth",
-            "version": "0.8.0",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/auth.git",
-                "reference": "1d77657e9c91e48e873e6e096f9d4f55f778b11f"
+                "reference": "c9a5e909b0d9942f953340af0877b9be18acf288"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/auth/zipball/1d77657e9c91e48e873e6e096f9d4f55f778b11f",
-                "reference": "1d77657e9c91e48e873e6e096f9d4f55f778b11f",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/c9a5e909b0d9942f953340af0877b9be18acf288",
+                "reference": "c9a5e909b0d9942f953340af0877b9be18acf288",
                 "shasum": ""
             },
             "require": {
@@ -3344,7 +3344,16 @@
                     "Utopia\\Auth\\": "src/Auth"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\Auth\\": "tests/Auth"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit --configuration phpunit.xml"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3356,16 +3365,16 @@
             ],
             "description": "A simple PHP authentication library",
             "keywords": [
-                "Authentication",
                 "auth",
+                "authentication",
                 "php",
                 "security"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/auth/issues",
-                "source": "https://github.com/utopia-php/auth/tree/0.8.0"
+                "source": "https://github.com/utopia-php/auth/tree/0.9.0",
+                "issues": "https://github.com/utopia-php/auth/issues"
             },
-            "time": "2026-07-08T05:10:32+00:00"
+            "time": "2026-07-09T04:39:23+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -4400,16 +4409,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.14.1",
+            "version": "1.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "926556113c770b3646cabeb042153969e3e0cadf"
+                "reference": "3bb4428e4fb7a29f120f73f87d0a2519a2a414a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/926556113c770b3646cabeb042153969e3e0cadf",
-                "reference": "926556113c770b3646cabeb042153969e3e0cadf",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3bb4428e4fb7a29f120f73f87d0a2519a2a414a4",
+                "reference": "3bb4428e4fb7a29f120f73f87d0a2519a2a414a4",
                 "shasum": ""
             },
             "require": {
@@ -4449,9 +4458,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.14.1"
+                "source": "https://github.com/utopia-php/migration/tree/1.16.0"
             },
-            "time": "2026-06-30T13:18:56+00:00"
+            "time": "2026-07-09T05:46:44+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5128,12 +5137,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "c6e3769aa9bdc87334b38a60620e5d96cf4ef760"
+                "reference": "c3bc979e355bb1c1c8600082bb375af10740c785"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/c6e3769aa9bdc87334b38a60620e5d96cf4ef760",
-                "reference": "c6e3769aa9bdc87334b38a60620e5d96cf4ef760",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/c3bc979e355bb1c1c8600082bb375af10740c785",
+                "reference": "c3bc979e355bb1c1c8600082bb375af10740c785",
                 "shasum": ""
             },
             "require": {
@@ -5169,7 +5178,7 @@
                 "issues": "https://github.com/utopia-php/vcs/issues",
                 "source": "https://github.com/utopia-php/vcs/tree/feat/appwrite-provider-parity"
             },
-            "time": "2026-07-09T07:55:13+00:00"
+            "time": "2026-07-09T09:03:44+00:00"
         },
         {
             "name": "utopia-php/websocket",
