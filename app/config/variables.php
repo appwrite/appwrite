@@ -1210,6 +1210,60 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_VCS_GITEA_ENDPOINT',
+                'description' => 'Gitea API endpoint used by Appwrite for server-side VCS operations.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_BROWSER_ENDPOINT',
+                'description' => 'Gitea browser endpoint used for redirects and user-facing repository links. Defaults to _APP_VCS_GITEA_ENDPOINT.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_ID',
+                'description' => 'Gitea OAuth2 client ID.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_SECRET',
+                'description' => 'Gitea OAuth2 client secret.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
+                'description' => 'Gitea repository webhook secret.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_WEBHOOK_URL',
+                'description' => 'Public or internal Appwrite endpoint used as the base URL for provider-created repository webhooks.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

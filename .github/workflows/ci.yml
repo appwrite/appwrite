@@ -454,21 +454,33 @@ jobs:
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
-            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
+            COMPOSE_PROFILES_VALUE="mariadb"
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "MongoDB" ]; then
-            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            COMPOSE_PROFILES_VALUE="mongodb"
             echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
+            COMPOSE_PROFILES_VALUE="postgresql"
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
+
+          if [ "${{ matrix.service.name }}" = "VCS" ]; then
+            COMPOSE_PROFILES_VALUE="${COMPOSE_PROFILES_VALUE},vcs"
+            echo "_APP_VCS_GITEA_ENDPOINT=http://gitea:3000" >> $GITHUB_ENV
+            echo "_APP_VCS_GITEA_BROWSER_ENDPOINT=http://localhost:9515" >> $GITHUB_ENV
+            echo "_APP_VCS_GITEA_CLIENT_ID=appwrite-ci" >> $GITHUB_ENV
+            echo "_APP_VCS_GITEA_CLIENT_SECRET=appwrite-ci-secret" >> $GITHUB_ENV
+            echo "_APP_VCS_GITEA_WEBHOOK_SECRET=appwrite-vcs-secret" >> $GITHUB_ENV
+            echo "_APP_VCS_WEBHOOK_URL=http://appwrite/v1" >> $GITHUB_ENV
+          fi
+
+          echo "COMPOSE_PROFILES=${COMPOSE_PROFILES_VALUE}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
