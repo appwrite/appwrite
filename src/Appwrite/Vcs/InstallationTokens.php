@@ -8,22 +8,12 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
-/**
- * Refreshes and persists an installation's personal OAuth2 tokens.
- *
- * Only relevant for personal (OAuth2-authenticated) installations. Owns the
- * one database write this concern needs, so adapter construction (Factory)
- * stays free of persistence.
- */
+// Owns the one database write OAuth2 token refresh needs, so Factory stays
+// free of persistence.
 class InstallationTokens
 {
-    /**
-     * Returns the installation with a valid, unexpired access token attached.
-     * Falls back to $identity's tokens when the installation has none yet
-     * (first repository action after connecting a personal installation).
-     * Refreshes and persists to `installations` only when the token is
-     * actually expired.
-     */
+    // Falls back to $identity's tokens when the installation has none yet --
+    // the first repository action after connecting a personal installation.
     public function refresh(Document $installation, Database $dbForPlatform, OAuth2 $oauth2, ?Document $identity = null): Document
     {
         $accessToken = $installation->getAttribute('personalAccessToken');
