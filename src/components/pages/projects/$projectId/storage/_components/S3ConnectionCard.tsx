@@ -65,7 +65,7 @@ export function S3ConnectionCard({ projectId, className }: S3ConnectionCardProps
             <button
               type="button"
               onClick={handleCopyEndpoint}
-              className="flex size-7 shrink-0 items-center justify-center rounded border border-border bg-background/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded border border-border bg-background/80 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label={t('Copy')}
             >
               {copied ? (
