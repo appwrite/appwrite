@@ -309,6 +309,7 @@ abstract class Base extends Action
             'paypal' => Paypal\Update::class,
             'paypalSandbox' => PaypalSandbox\Update::class,
             'gitlab' => Gitlab\Update::class,
+            'appwrite' => Appwrite\Update::class,
             'authentik' => Authentik\Update::class,
             'auth0' => Auth0\Update::class,
             'fusionauth' => FusionAuth\Update::class,

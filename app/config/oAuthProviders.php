@@ -24,6 +24,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Apple',
     ],
+    'appwrite' => [
+        'name' => 'Appwrite',
+        'developers' => 'https://appwrite.io/docs/products/auth',
+        'icon' => 'icon-appwrite',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Appwrite',
+    ],
     'auth0' => [
         'name' => 'Auth0',
         'developers' => 'https://auth0.com/developers',
