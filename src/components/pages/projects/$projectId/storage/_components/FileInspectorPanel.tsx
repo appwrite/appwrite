@@ -21,6 +21,7 @@ import {
   useProject,
   useOrganizationScopes,
   Dependencies,
+  removeCachedFile,
 } from '@/lib/react-query/hooks'
 import { canShowBucketSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -246,7 +247,8 @@ export function FileInspectorPanel({
         fileId: targetFileId,
       })
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, targetFileId) => {
+      removeCachedFile(queryClient, projectId!, bucketId!, targetFileId)
       await queryClient.refetchQueries({ queryKey: Dependencies.FILES })
       toast.success(t('File has been deleted'))
       setDeleteDialogOpen(false)

@@ -39,6 +39,7 @@ import {
   FILES_DEFAULT_SORT_BY,
   FILES_DEFAULT_SORT_ORDER,
   fileQueryOptions,
+  removeCachedFile,
   getBucketFromProjectCaches,
   getConsoleAccountFromCache,
   fetchConsoleAccount,
@@ -297,6 +298,15 @@ export function View() {
 
   useEffect(() => {
     if (inspectorFileId) setStackedDrawerFileId(undefined)
+  }, [inspectorFileId])
+
+  const prevInspectorFileIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    const prev = prevInspectorFileIdRef.current
+    prevInspectorFileIdRef.current = inspectorFileId
+    if (prev && !inspectorFileId) {
+      setStackedDrawerFileId(undefined)
+    }
   }, [inspectorFileId])
 
   const queryClient = useQueryClient()
@@ -809,7 +819,10 @@ export function View() {
         ),
       )
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, fileIds) => {
+      for (const id of fileIds) {
+        removeCachedFile(queryClient, projectId!, bucketId!, id)
+      }
       // Refetch files list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: Dependencies.FILES,
@@ -821,12 +834,14 @@ export function View() {
       )
       setSelectedFiles(new Set())
       setDeleteDialogOpen(false)
+      setStackedDrawerFileId(undefined)
       navigate({
         to: '/projects/$projectId/storage/$bucketId',
         params: { projectId: projectId!, bucketId: bucketId! },
         search: (prev: Record<string, unknown>) => {
           const next = { ...prev } as Record<string, unknown>
           delete next.file
+          delete next.filePanel
           return next
         },
         replace: true,

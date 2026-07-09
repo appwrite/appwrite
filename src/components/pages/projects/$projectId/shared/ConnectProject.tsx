@@ -33,7 +33,6 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
-import { McpIcon } from '@/components/global/shared/McpIcon'
 import { S3ConnectSection } from '@/components/pages/projects/$projectId/shared/S3ConnectSection'
 import { TerraformConnectSection } from '@/components/pages/projects/$projectId/shared/TerraformConnectSection'
 import { ConnectCodePanel } from '@/components/global/shared/ConnectCodeExample'
@@ -1276,13 +1275,15 @@ export type ConnectProjectTab =
   | 's3'
 
 const CONNECT_PROJECT_TAB_IDS = [
+  'mcp',
   'app',
   'cli',
-  'mcp',
   'skills',
   'terraform',
   's3',
 ] as const satisfies readonly ConnectProjectTab[]
+
+export const DEFAULT_CONNECT_PROJECT_TAB: ConnectProjectTab = 'mcp'
 
 interface ConnectProjectProps {
   open: boolean
@@ -1299,7 +1300,7 @@ export function ConnectProject({
   onOpenChange,
   projectId,
   initialSdk = 'web',
-  initialConnectTab = 'app',
+  initialConnectTab = DEFAULT_CONNECT_PROJECT_TAB,
 }: ConnectProjectProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -1361,9 +1362,14 @@ export function ConnectProject({
       ),
     [sdkId, frameworkId, usingId, runtime, endpoint, projectId],
   )
-  const [connectTab, setConnectTab] = useState<ConnectProjectTab>('app')
+  const [connectTab, setConnectTab] = useState<ConnectProjectTab>(
+    DEFAULT_CONNECT_PROJECT_TAB,
+  )
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setConnectTab(DEFAULT_CONNECT_PROJECT_TAB)
+      return
+    }
     setConnectTab(initialConnectTab)
   }, [open, initialConnectTab])
 
@@ -1463,9 +1469,6 @@ export function ConnectProject({
                       : 'text-muted-foreground hover:text-foreground/80',
                   )}
                 >
-                  {tabId === 'mcp' ? (
-                    <McpIcon className="h-3.5 w-3.5 shrink-0" />
-                  ) : null}
                   {label}
                   {isActive && (
                     <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />

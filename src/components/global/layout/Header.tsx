@@ -680,7 +680,7 @@ export function ConsoleHeader({
                 <button
                   type="button"
                   className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
-                  onClick={() => projectConnectDialog?.openConnect('app')}
+                  onClick={() => projectConnectDialog?.openConnect()}
                 >
                   <Plug2 className="h-4 w-4" />
                   {headerCopy.actions.connect}

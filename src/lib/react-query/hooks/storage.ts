@@ -541,6 +541,18 @@ export function useBucketFiles(
   )
 }
 
+/** Drop cached single-file data after delete so the inspector cannot show stale previews. */
+export function removeCachedFile(
+  queryClient: QueryClient,
+  projectId: string,
+  bucketId: string,
+  fileId: string,
+) {
+  queryClient.removeQueries({
+    queryKey: ['file', 'project', projectId, 'bucket', bucketId, fileId],
+  })
+}
+
 /**
  * Hook to fetch a single file by ID
  */

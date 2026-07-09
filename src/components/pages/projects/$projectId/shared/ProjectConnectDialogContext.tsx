@@ -6,7 +6,11 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { ConnectProject, type ConnectProjectTab } from './ConnectProject'
+import {
+  ConnectProject,
+  DEFAULT_CONNECT_PROJECT_TAB,
+  type ConnectProjectTab,
+} from './ConnectProject'
 
 type ProjectConnectDialogContextValue = {
   openConnect: (tab?: ConnectProjectTab) => void
@@ -28,10 +32,10 @@ export function ProjectConnectDialogProvider({
 }) {
   const [open, setOpen] = useState(false)
   const [initialConnectTab, setInitialConnectTab] =
-    useState<ConnectProjectTab>('app')
+    useState<ConnectProjectTab>(DEFAULT_CONNECT_PROJECT_TAB)
 
   const openConnect = useCallback((tab?: ConnectProjectTab) => {
-    setInitialConnectTab(tab ?? 'app')
+    setInitialConnectTab(tab ?? DEFAULT_CONNECT_PROJECT_TAB)
     setOpen(true)
   }, [])
 

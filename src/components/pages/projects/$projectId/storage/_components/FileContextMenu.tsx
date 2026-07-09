@@ -39,7 +39,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { fetchFile } from '@/lib/react-query/hooks'
+import { fetchFile, removeCachedFile, Dependencies } from '@/lib/react-query/hooks'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -76,10 +76,24 @@ function useFileActions(
       await projectSdk.storage.deleteFile({ bucketId, fileId: file.id })
     },
     onSuccess: async () => {
+      removeCachedFile(queryClient, projectId, bucketId, file.id)
       await queryClient.refetchQueries({
-        queryKey: ['files', 'project', projectId, 'bucket', bucketId]})
+        queryKey: Dependencies.FILES,
+      })
       toast.success(t('File deleted'))
       setDeleteDialogOpen(false)
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: { projectId, bucketId },
+        search: (prev: Record<string, unknown>) => {
+          if (prev.file !== file.id) return prev
+          const next = { ...prev }
+          delete next.file
+          delete next.filePanel
+          return next
+        },
+        replace: true,
+      })
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || t('Failed to delete file'))
