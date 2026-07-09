@@ -17,6 +17,7 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
+use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
@@ -49,6 +50,26 @@ class Builds extends Action
     public static function getName(): string
     {
         return 'builds';
+    }
+
+    /**
+     * Truncate build logs to the length allowed by the deployments "buildLogs"
+     * attribute. Large site builds (heavy prerender/bundle output) can exceed
+     * it, which makes persisting the deployment throw a Structure exception and
+     * report the build as failed even though it actually succeeded. Keep the
+     * tail — it holds the build result and any error — mirroring how execution
+     * logs are trimmed elsewhere in this codebase.
+     */
+    private function truncateBuildLogs(string $logs): string
+    {
+        $limit = APP_LOG_LENGTH_LIMIT;
+        if (\strlen($logs) <= $limit) {
+            return $logs;
+        }
+
+        $warning = "[WARNING] Logs truncated. The output exceeded {$limit} characters.\n";
+
+        return $warning . \substr($logs, -($limit - \strlen($warning)));
     }
 
     /**
@@ -728,7 +749,7 @@ class Builds extends Action
                         } else {
                             $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
-                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '');
+                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '', $resource->getAttribute('framework', ''));
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
@@ -757,6 +778,14 @@ class Builds extends Action
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
                         $err = new BuildException(type: AppwriteException::BUILD_TIMEOUT, previous: $error);
+                    } catch (ExecutorException $error) {
+                        $span?->set('build.runtime.error_type', $error::class);
+                        $span?->set('build.runtime.error_message', $error->getMessage());
+                        $span?->set('build.runtime.executor_error_type', $error->getType());
+
+                        $err = $error->getType() === ExecutorException::BUILD_FAILED
+                            ? new BuildException($error->getMessage(), previous: $error)
+                            : $error;
                     } catch (\Throwable $error) {
                         $span?->set('build.runtime.error_type', $error::class);
                         $span?->set('build.runtime.error_message', $error->getMessage());
@@ -843,9 +872,9 @@ class Builds extends Action
                                     }
 
                                     if ($affected) {
-                                        $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
+                                        $deployment = $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($currentLogs));
                                         $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                                            'buildLogs' => $currentLogs,
+                                            'buildLogs' => $this->truncateBuildLogs($currentLogs),
                                         ]));
 
                                         $queueForRealtime
@@ -901,7 +930,7 @@ class Builds extends Action
 
             ['logs' => $logs, 'detectionLogs' => $detectionLogs] = $this->splitSiteDetectionLogs($logs);
 
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
@@ -937,7 +966,7 @@ class Builds extends Action
             $logs = $deployment->getAttribute('buildLogs', '');
             $date = \date('H:i:s');
             $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
 
             /** Update the status */
             $endTime = DateTime::now();
@@ -1191,12 +1220,12 @@ class Builds extends Action
             Span::add('deployment.status', 'failed');
             Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            $deployment->setAttribute('buildLogs', $message);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($message));
             $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                 'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
                 'buildDuration' => $deployment->getAttribute('buildDuration'),
                 'status' => 'failed',
-                'buildLogs' => $message,
+                'buildLogs' => $this->truncateBuildLogs($message),
             ]));
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
@@ -1370,7 +1399,7 @@ class Builds extends Action
         return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
     }
 
-    protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
+    protected function prepareSiteBuildCommand(string $command, string $outputDirectory, string $framework): string
     {
         $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
 
@@ -1378,7 +1407,14 @@ class Builds extends Action
             $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
         }
 
-        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+        foreach (SSR::FRAMEWORK_FILES[$framework] ?? [] as $file) {
+            $listFilesCommand .= ' && ( [ -e ' . \escapeshellarg($file) . ' ] && echo ' . \escapeshellarg($file) . ' || true )';
+        }
+
+        // Static fallback detection only needs to distinguish 0, 1, or 2+ HTML files, so cap the output
+        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -name \'*.html\' -print | head -n 2';
+
+        $listFilesCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
 
         if (empty($command)) {
             return $listFilesCommand;
@@ -1554,7 +1590,7 @@ class Builds extends Action
             $date = \date('H:i:s');
             $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Git action failed. Deployment will continue. [0m\n";
 
-            $deployment->setAttribute('buildLogs', $logs);
+            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                 'buildLogs' => $deployment->getAttribute('buildLogs'),
             ]));
@@ -1626,7 +1662,7 @@ class Builds extends Action
                 $date = \date('H:i:s');
                 $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
 
-                $deployment->setAttribute('buildLogs', $logs);
+                $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($logs));
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'buildLogs' => $deployment->getAttribute('buildLogs'),
                 ]));

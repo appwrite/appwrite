@@ -1606,4 +1606,5 @@ final class StorageCustomClientTest extends Scope
         ]);
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
 }

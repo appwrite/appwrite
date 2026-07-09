@@ -53,6 +53,21 @@ class OAuth2Oidc extends OAuth2Base
                 'description' => 'OpenID Connect user info endpoint URL.',
                 'default' => '',
                 'example' => 'https://myoauth.com/oauth2/userinfo',
+            ])
+            ->addRule('prompt', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'OpenID Connect prompt values controlling the authentication and consent screens.',
+                'default' => [],
+                'example' => ['consent'],
+                'array' => true,
+                'enum' => ['none', 'login', 'consent', 'select_account'],
+            ])
+            ->addRule('maxAge', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum authentication age in seconds. When set, the user must have authenticated within this many seconds.',
+                'default' => null,
+                'example' => 3600,
+                'required' => false,
             ]);
     }
 

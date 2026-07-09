@@ -6,6 +6,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\AntiVirus\Get as GetAntivirus;
 use Appwrite\Platform\Modules\Health\Http\Health\Cache\Get as GetCache;
 use Appwrite\Platform\Modules\Health\Http\Health\Certificate\Get as GetCertificate;
 use Appwrite\Platform\Modules\Health\Http\Health\DB\Get as GetDB;
+use Appwrite\Platform\Modules\Health\Http\Health\Geo\Get as GetGeo;
 use Appwrite\Platform\Modules\Health\Http\Health\Get as GetHealth;
 use Appwrite\Platform\Modules\Health\Http\Health\PubSub\Get as GetPubSub;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Audits\Get as GetQueueAudits;
@@ -15,7 +16,6 @@ use Appwrite\Platform\Modules\Health\Http\Health\Queue\Databases\Get as GetQueue
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Deletes\Get as GetQueueDeletes;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed\Get as GetFailedJobs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Functions\Get as GetQueueFunctions;
-use Appwrite\Platform\Modules\Health\Http\Health\Queue\Logs\Get as GetQueueLogs;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Mails\Get as GetQueueMails;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Messaging\Get as GetQueueMessaging;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations\Get as GetQueueMigrations;
@@ -46,10 +46,10 @@ class Http extends Service
         $this->addAction(GetStorageLocal::getName(), new GetStorageLocal());
         $this->addAction(GetStorage::getName(), new GetStorage());
         $this->addAction(GetAntivirus::getName(), new GetAntivirus());
+        $this->addAction(GetGeo::getName(), new GetGeo());
 
         $this->addAction(GetQueueAudits::getName(), new GetQueueAudits());
         $this->addAction(GetQueueWebhooks::getName(), new GetQueueWebhooks());
-        $this->addAction(GetQueueLogs::getName(), new GetQueueLogs());
         $this->addAction(GetQueueCertificates::getName(), new GetQueueCertificates());
         $this->addAction(GetQueueBuilds::getName(), new GetQueueBuilds());
         $this->addAction(GetQueueDatabases::getName(), new GetQueueDatabases());

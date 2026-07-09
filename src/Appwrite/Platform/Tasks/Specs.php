@@ -153,6 +153,12 @@ class Specs extends Action
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
                 ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -233,6 +239,12 @@ class Specs extends Action
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',
@@ -320,6 +332,12 @@ class Specs extends Action
                     'name' => 'X-Appwrite-JWT',
                     'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
+                ],
+                'Bearer' => [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                    'description' => 'The OAuth access token to authenticate with',
                 ],
                 'Locale' => [
                     'type' => 'apiKey',

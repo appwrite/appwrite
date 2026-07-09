@@ -69,6 +69,17 @@ return [
                 'signed' => true,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('status'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ]
         ],
         'indexes' => [
@@ -1872,7 +1883,7 @@ return [
                 '$id' => ID::custom('buildLogs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000,
+                'size' => APP_LOG_LENGTH_LIMIT,
                 'signed' => true,
                 'required' => false,
                 'default' => '',

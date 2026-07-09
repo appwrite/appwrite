@@ -37,6 +37,12 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/auth"
+        }
+    ],
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -57,7 +63,7 @@
         "utopia-php/agents": "2.*",
         "utopia-php/analytics": "0.15.*",
         "utopia-php/audit": "2.6.*",
-        "utopia-php/auth": "^0.7",
+        "utopia-php/auth": "^0.9",
         "utopia-php/cache": "^3.0.0",
         "utopia-php/cli": "^0.24",
         "utopia-php/compression": "0.1.*",
@@ -77,7 +83,7 @@
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^1.2",
-        "utopia-php/migration": "1.14.*",
+        "utopia-php/migration": "1.16.*",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",

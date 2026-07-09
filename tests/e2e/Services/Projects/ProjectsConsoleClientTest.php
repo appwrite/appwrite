@@ -836,7 +836,7 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $id = $response['body']['$id'];
 
-        // Increase ping 3x
+        // Ping 3x; only the first is recorded, so pingCount stays at 1
         for ($i = 0; $i < 3; $i++) {
             $response = $this->client->call(
                 Client::METHOD_GET,
@@ -1113,7 +1113,7 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertSame('', $response['body']['smtpUsername']);
         $this->assertSame('', $response['body']['smtpPassword']); // Write only
         $this->assertSame('', $response['body']['smtpSecure']);
-        $this->assertSame(3, $response['body']['pingCount']);
+        $this->assertSame(1, $response['body']['pingCount']);
 
         $this->assertIsString($response['body']['pingedAt']);
         $this->assertNotEmpty($response['body']['pingedAt']);
@@ -1531,6 +1531,28 @@ final class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderDesc('accessedAt')->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('accessedAt')->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testGetProjectUsage(): void

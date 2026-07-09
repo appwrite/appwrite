@@ -323,6 +323,20 @@ return [
         'icon' => '/images/services/messaging.png',
         'platforms' => ['client', 'server', 'console'],
     ],
+    'notifications' => [
+        'key' => 'notifications',
+        'name' => 'Notifications',
+        'subtitle' => 'The Notifications service allows you to read and manage your Appwrite Console notifications.',
+        'description' => '/docs/services/notifications.md',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => true,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['console'],
+    ],
     'advisor' => [
         'key' => 'advisor',
         'name' => 'Advisor',

@@ -37,7 +37,7 @@ class Update extends Action
                 group: null,
                 name: 'update',
                 description: '/docs/references/notifications/update-notification.md',
-                auth: [AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

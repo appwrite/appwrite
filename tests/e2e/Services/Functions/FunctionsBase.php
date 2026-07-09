@@ -321,16 +321,6 @@ trait FunctionsBase
         return $deployment;
     }
 
-    protected function getUsage(string $functionId, mixed $params): mixed
-    {
-        $usage = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-
-        return $usage;
-    }
-
     protected function getTemplate(string $templateId)
     {
         $template = $this->client->call(Client::METHOD_GET, '/functions/templates/' . $templateId, array_merge([

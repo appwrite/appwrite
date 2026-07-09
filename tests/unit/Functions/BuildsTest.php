@@ -45,20 +45,22 @@ final class BuildsTest extends TestCase
 
     public function testSiteBuildCommandAppendsDetectionFileListing(): void
     {
-        $command = $this->callBuilds('prepareSiteBuildCommand', 'npm run build', './dist folder');
+        $command = $this->callBuilds('prepareSiteBuildCommand', 'npm run build', './dist folder', 'astro');
 
         $this->assertStringStartsWith('npm run build && echo "{APPWRITE_DETECTION_SEPARATOR_START}"', $command);
         $this->assertStringContainsString('cd /usr/local/build && cd \'./dist folder\'', (string) $command);
-        $this->assertStringContainsString('find . -name \'node_modules\' -prune -o -type f -print', (string) $command);
+        $this->assertStringContainsString('( [ -e \'server/entry.mjs\' ] && echo \'server/entry.mjs\' || true )', (string) $command);
+        $this->assertStringContainsString('find . -name \'node_modules\' -prune -o -type f -name \'*.html\' -print | head -n 2', (string) $command);
         $this->assertStringEndsWith('echo "{APPWRITE_DETECTION_SEPARATOR_END}"', $command);
     }
 
     public function testSiteBuildCommandCanBeOnlyDetectionFileListing(): void
     {
-        $command = $this->callBuilds('prepareSiteBuildCommand', '', '');
+        $command = $this->callBuilds('prepareSiteBuildCommand', '', '', 'sveltekit');
 
         $this->assertStringStartsWith('echo "{APPWRITE_DETECTION_SEPARATOR_START}"', $command);
-        $this->assertStringContainsString('cd /usr/local/build && find .', (string) $command);
+        $this->assertStringContainsString('cd /usr/local/build && ( [ -e \'handler.js\' ] && echo \'handler.js\' || true )', (string) $command);
+        $this->assertStringContainsString('find . -name \'node_modules\' -prune -o -type f -name \'*.html\' -print | head -n 2', (string) $command);
     }
 
     public function testSplitSiteDetectionLogsRemovesDetectionBlock(): void
@@ -142,6 +144,24 @@ final class BuildsTest extends TestCase
         $dbForProject->expects($this->once())->method('updateDocument');
 
         $this->callBuilds('disconnectVcs', $resource, $dbForProject, $dbForPlatform);
+    }
+
+    public function testTruncateBuildLogsKeepsShortLogsUnchanged(): void
+    {
+        $logs = "Build finished.\n";
+
+        $this->assertSame($logs, $this->callBuilds('truncateBuildLogs', $logs));
+    }
+
+    public function testTruncateBuildLogsTrimsOversizedLogsToLimitKeepingTail(): void
+    {
+        $oversized = \str_repeat('a', APP_LOG_LENGTH_LIMIT + 5000) . 'TAIL_MARKER';
+
+        $result = (string) $this->callBuilds('truncateBuildLogs', $oversized);
+
+        $this->assertLessThanOrEqual(APP_LOG_LENGTH_LIMIT, \strlen($result));
+        $this->assertStringContainsString('[WARNING] Logs truncated.', $result);
+        $this->assertStringEndsWith('TAIL_MARKER', $result);
     }
 
     private function callBuilds(string $method, mixed ...$arguments): mixed

@@ -892,6 +892,37 @@ trait StorageBase
         $this->assertEquals(404, $file8['headers']['status-code']);
     }
 
+    public function testFilePreviewOversized(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/image-bomb.png'), 'image/png', 'image-bomb.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(400, $preview['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED, $preview['body']['type']);
+        $this->assertStringContainsString('60000x1', $preview['body']['message']);
+    }
+
     public function testFilePreviewCache(): void
     {
         $data = $this->setupBucketFile();
@@ -1890,4 +1921,5 @@ trait StorageBase
         /* will always be 0 in tests because the worker runs hourly! */
         $this->assertGreaterThanOrEqual(0, $bucket['body']['totalSize']);
     }
+
 }

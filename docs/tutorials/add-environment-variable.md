@@ -24,11 +24,11 @@ This information is also used to generate the website documentation at https://a
 
 If the newly introduced environment variable has a default value, add it to the `.env` and `Dockerfile` along with other environment variables. `.env` file uses settings for Appwrite development environment.
 
-### Add to Docker Compose file and template
+### Add to Docker Compose file
 
-Add the new environment variables to the `docker-compose.yml` and `app/views/install/compose.phtml` for each docker service that requires access to those environment variables.
+Add the new environment variables to `docker-compose.yml` for each Docker service that requires access to those environment variables.
 
-The `docker-compose.yml` file is used by the Appwrite maintainers during development, whereas the `app/views/install/compose.phtml` file is used by the Appwrite setup script.
+The setup script generates the install compose file from `docker-compose.yml`, so changes should be made in the base compose file instead of a separate template. Run `npm run format:compose` after editing compose files.
 
 With these steps, your environment variable is properly added and can be accessed inside Appwrite code and any other containers where it is passed. You can access and use those variables to implement the features you are trying to achieve.
 
