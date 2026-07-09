@@ -14,6 +14,17 @@ import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { pageTitle } from '@/lib/utils/page-title'
 
+export function buildInitTicketShareOgImagePath(ticketId: string): string {
+  return `/init/${ticketId}/og.png`
+}
+
+export function getInitTicketShareOgImageUrl(
+  ticketId: string,
+  siteOrigin?: string,
+): string {
+  return resolveSiteAssetUrl(buildInitTicketShareOgImagePath(ticketId), siteOrigin)
+}
+
 export function buildInitTicketSharePath(ticketId: string): string {
   return `/init/${ticketId}`
 }
@@ -23,16 +34,6 @@ export function buildInitTicketShareUrl(
   siteOrigin?: string,
 ): string {
   return resolveSiteAssetUrl(buildInitTicketSharePath(ticketId), siteOrigin)
-}
-
-export function getInitTicketStorageFilePreviewUrl(fileId: string): string {
-  const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
-  const params = new URLSearchParams({
-    project: projectId,
-    width: String(INIT_TICKET_OG_EXPORT_WIDTH),
-    height: String(INIT_TICKET_OG_EXPORT_HEIGHT),
-  })
-  return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/preview?${params.toString()}`
 }
 
 export async function initTicketStorageFileExists(fileId: string): Promise<boolean> {
@@ -55,7 +56,7 @@ export function getInitTicketShareRouteMetaTags(params: {
 }) {
   const siteOrigin = params.siteOrigin ?? getRequestSiteOrigin()
   const canonicalUrl = buildInitTicketShareUrl(params.ticketId, siteOrigin)
-  const ogImage = getInitTicketStorageFilePreviewUrl(params.ticketId)
+  const ogImage = getInitTicketShareOgImageUrl(params.ticketId, siteOrigin)
   const title = pageTitle(INIT_TICKET_SHARE_SEO_TITLE)
 
   return [...getPageMetaTags({

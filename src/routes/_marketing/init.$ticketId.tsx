@@ -7,8 +7,10 @@ import {
   initTicketStorageFileExists,
 } from '@/lib/init/init-ticket-share'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
+import { MARKETING_PAGE_ROUTE_STATIC_DATA } from '@/lib/marketing/route-static-data'
 
-export const Route = createFileRoute('/_public/init/$ticketId')({
+export const Route = createFileRoute('/_marketing/init/$ticketId')({
+  staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   loader: async ({ params }) => {
     if (!getActiveProfileFeatures().init) {

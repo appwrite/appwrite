@@ -16,6 +16,19 @@ export const INIT_TICKET_SHARE_SEO_DESCRIPTION =
 
 export const INIT_OG_CTA_LABEL = 'Claim your ticket'
 
+export const INIT_PAGE_OG_IMAGE_PATH = '/og/init.png'
+
+export const INIT_PAGE_OG_IMAGE_PARAMS = {
+  title: 'Five days of Appwrite product launches',
+  subtitle: 'Claim your personalized Init pass and join live sessions.',
+  eyebrow: 'Init week · July 20–24',
+  cta: INIT_OG_CTA_LABEL,
+} as const
+
+export function getInitPageOgImageUrl(siteOrigin?: string): string {
+  return resolveSiteAssetUrl(INIT_PAGE_OG_IMAGE_PATH, siteOrigin)
+}
+
 export function getInitPageMetaTags(siteOrigin?: string) {
   const origin = siteOrigin ?? getRequestSiteOrigin()
 
@@ -23,12 +36,7 @@ export function getInitPageMetaTags(siteOrigin?: string) {
     title: pageTitle(INIT_PAGE_SEO_TITLE),
     description: INIT_PAGE_SEO_DESCRIPTION,
     canonical: resolveSiteAssetUrl('/init', origin),
-    ogImageParams: {
-      title: 'Five days of Appwrite product launches',
-      subtitle: 'Claim your personalized Init pass and join live sessions.',
-      eyebrow: 'Init week · July 20–24',
-      cta: INIT_OG_CTA_LABEL,
-    },
+    ogImage: getInitPageOgImageUrl(origin),
     siteOrigin: origin,
   })]
 }

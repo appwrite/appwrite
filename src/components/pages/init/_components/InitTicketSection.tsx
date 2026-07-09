@@ -5,6 +5,7 @@ import type { Models } from '@appwrite.io/console'
 import type { InitDisplayEvent } from '@/lib/init/types'
 import { buildInitTicketShareMessage } from '@/lib/init/ticket-prefs'
 import { buildInitTicketShareUrl } from '@/lib/init/init-ticket-share'
+import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
 import { useInitThemeUsesDarkImage } from '@/lib/init/use-init-theme-image'
 import { useInitTicketPrefs } from '@/lib/init/use-init-ticket-prefs'
 import { useSyncInitTicketImage } from '@/lib/init/use-sync-init-ticket-image'
@@ -62,14 +63,16 @@ interface InitTicketSectionProps {
 }
 
 function buildFallbackShareUrl(): string {
-  if (typeof window === 'undefined') return 'https://cloud.appwrite.io/init'
+  if (typeof window === 'undefined') {
+    return `${getDefaultSiteOrigin()}/init`
+  }
   return `${window.location.origin}/init`
 }
 
 function buildTicketShareUrl(ticketId?: string): string {
   if (!ticketId) return buildFallbackShareUrl()
   if (typeof window === 'undefined') {
-    return buildInitTicketShareUrl(ticketId, 'https://cloud.appwrite.io')
+    return buildInitTicketShareUrl(ticketId, getDefaultSiteOrigin())
   }
   return buildInitTicketShareUrl(ticketId)
 }

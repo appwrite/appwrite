@@ -5,6 +5,7 @@ import { ensureConsoleAccountQueryData } from '@/lib/react-query/hooks/auth'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export const Route = createFileRoute('/_public/init')({
+  ssr: true,
   component: InitPage,
   head: () => ({ meta: getInitPageMetaTags() }),
   loader: async ({ context }) => {
