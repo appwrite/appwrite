@@ -6,6 +6,7 @@ namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -406,6 +407,7 @@ final class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Group('ceOnly')]
     public function testGetExecution(): array
     {
         $execution = $this->setupExecution();

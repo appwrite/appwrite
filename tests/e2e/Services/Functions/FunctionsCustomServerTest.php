@@ -7,6 +7,7 @@ namespace Tests\E2E\Services\Functions;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -1606,12 +1607,12 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($execution['body']['responseHeaders']);
         $this->assertEmpty($execution['body']['responseBody']); // For HEAD requests, response body is empty
 
-        /** Executions are not persisted, so deletes return 404 */
+        /** 404 on Server CE (executions are not persisted), 204 on platforms that persist them */
         $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(404, $execution['headers']['status-code']);
+        $this->assertContains($execution['headers']['status-code'], [204, 404]);
 
         /** Test create execution with 400 status code */
         $execution = $this->createExecution($data['functionId'], [
@@ -1623,14 +1624,15 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(400, $execution['body']['responseStatusCode']);
 
-        /** Executions are not persisted, so deletes return 404 */
+        /** 404 on Server CE (executions are not persisted), 204 on platforms that persist them */
         $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(404, $execution['headers']['status-code']);
+        $this->assertContains($execution['headers']['status-code'], [204, 404]);
     }
 
+    #[Group('ceOnly')]
     public function testListExecutions(): void
     {
         $data = $this->setupTestExecution();
@@ -1693,6 +1695,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertLessThan(1.500, $execution['body']['duration']);
     }
 
+    #[Group('ceOnly')]
     public function testGetExecution(): void
     {
         $data = $this->setupTestExecution();
@@ -1710,6 +1713,7 @@ final class FunctionsCustomServerTest extends Scope
     }
 
 
+    #[Group('ceOnly')]
     public function testDeleteExecution(): void
     {
         // Create fresh execution for this test since we delete it
