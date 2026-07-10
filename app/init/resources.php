@@ -17,7 +17,7 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Appwrite\Platform\Modules\Functions\Workers\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Platform\Modules\Functions\Workers\Screenshots\Client;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -25,9 +25,9 @@ use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
+use Utopia\Client as UtopiaClient;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -73,7 +73,7 @@ $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'
 $container->set('executor', fn () => new Executor(), []);
 
 $container->set('jobs', function () {
-    $client = (new Client(new CurlAdapter()))
+    $client = (new UtopiaClient(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
         ->withTimeout(30);
 
@@ -88,8 +88,8 @@ $container->set('jobs', function () {
     return new Jobs($client);
 }, []);
 
-$container->set('screenshots', fn () => new ScreenshotsClient(
-    (new Client(new SwooleAdapter()))
+$container->set('screenshots', fn () => new Client(
+    (new UtopiaClient(new SwooleAdapter()))
         ->withTimeout((float) System::getEnv('_APP_SITES_TIMEOUT', 30)),
     System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1') . '/screenshots',
 ), []);

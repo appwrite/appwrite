@@ -6,7 +6,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
-use Appwrite\Platform\Modules\Functions\Workers\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Platform\Modules\Functions\Workers\Screenshots\Client;
 use Appwrite\Role;
 use Exception;
 use Utopia\Compression\Compression;
@@ -59,7 +59,7 @@ class Screenshots extends Action
         Document $project,
         Device $deviceForFiles,
         Telemetry $telemetry,
-        ScreenshotsClient $screenshots,
+        Client $screenshots,
     ): void {
         Span::add('project.id', $project->getId());
 
