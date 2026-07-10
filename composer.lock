@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "50b6e587a70f02a5896790012248f50f",
+    "content-hash": "d67184492e8ec8670d0e31f02d10b421",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4409,16 +4409,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.16.0",
+            "version": "1.17.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "3bb4428e4fb7a29f120f73f87d0a2519a2a414a4"
+                "reference": "80f7f49e79ad57a0b5200b043e2b1bfeade8a190"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3bb4428e4fb7a29f120f73f87d0a2519a2a414a4",
-                "reference": "3bb4428e4fb7a29f120f73f87d0a2519a2a414a4",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/80f7f49e79ad57a0b5200b043e2b1bfeade8a190",
+                "reference": "80f7f49e79ad57a0b5200b043e2b1bfeade8a190",
                 "shasum": ""
             },
             "require": {
@@ -4458,9 +4458,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.16.0"
+                "source": "https://github.com/utopia-php/migration/tree/1.17.2"
             },
-            "time": "2026-07-09T05:46:44+00:00"
+            "time": "2026-07-09T19:53:43+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5371,16 +5371,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "2.0.0",
+            "version": "2.4.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "60a2e804c1464494d763e5ff6bfff9b188502253"
+                "reference": "ebdb3af8bee5669879644c262e704d83dbeb438a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/60a2e804c1464494d763e5ff6bfff9b188502253",
-                "reference": "60a2e804c1464494d763e5ff6bfff9b188502253",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ebdb3af8bee5669879644c262e704d83dbeb438a",
+                "reference": "ebdb3af8bee5669879644c262e704d83dbeb438a",
                 "shasum": ""
             },
             "require": {
@@ -5395,7 +5395,7 @@
                 "brianium/paratest": "7.*",
                 "phpunit/phpunit": "11.*",
                 "rector/rector": "^2.4",
-                "squizlabs/php_codesniffer": "3.*"
+                "squizlabs/php_codesniffer": "4.*"
             },
             "type": "library",
             "autoload": {
@@ -5417,9 +5417,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/2.0.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/2.4.5"
             },
-            "time": "2026-06-11T05:54:24+00:00"
+            "time": "2026-07-09T15:23:08+00:00"
         },
         {
             "name": "brianium/paratest",

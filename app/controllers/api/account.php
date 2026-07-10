@@ -77,8 +77,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/console/auth/oauth2/success';
-$oauthDefaultFailure = '/console/auth/oauth2/failure';
+$oauthDefaultSuccess = '/auth/oauth2/success';
+$oauthDefaultFailure = '/auth/oauth2/failure';
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -189,6 +189,24 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $detector->getClient(),
         $detector->getDevice()
     ));
+
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
+        $identity = $authorization->skip(fn () => $dbForProject->findOne('identities', [
+            Query::equal('provider', [$oauthProvider]),
+            Query::equal('userInternalId', [$user->getSequence()]),
+        ]));
+
+        if ($identity->isEmpty()) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $session
+            ->setAttribute('providerUid', $identity->getAttribute('providerUid'))
+            ->setAttribute('providerRefreshToken', $identity->getAttribute('providerRefreshToken'))
+            ->setAttribute('providerAccessToken', $identity->getAttribute('providerAccessToken'))
+            ->setAttribute('providerAccessTokenExpiry', $identity->getAttribute('providerAccessTokenExpiry'))
+            ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
+    }
 
     $authorization->addRole(Role::user($user->getId())->toString());
 
@@ -2352,7 +2370,7 @@ Http::post('/v1/account/tokens/magic-url')
             } elseif ($protocol === 'http' && $port !== '80') {
                 $callbackBase .= ':' . $port;
             }
-            $url = $callbackBase . '/console/auth/magic-url';
+            $url = $callbackBase . '/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
