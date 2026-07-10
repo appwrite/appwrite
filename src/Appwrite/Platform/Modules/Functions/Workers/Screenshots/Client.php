@@ -11,6 +11,7 @@ final readonly class Client
     public function __construct(
         private ClientInterface $client,
         private string $uri,
+        private Request\Factory $requests = new Request\Factory(),
     ) {
     }
 
@@ -19,7 +20,7 @@ final readonly class Client
      */
     public function capture(array $config): string
     {
-        $request = (new Request\Factory())->json(Method::POST, $this->uri, $config);
+        $request = $this->requests->json(Method::POST, $this->uri, $config);
         $response = $this->client->sendRequest($request);
 
         if ($response->getStatusCode() >= 400) {
