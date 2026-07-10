@@ -11,6 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class XList extends Base
 {
@@ -52,10 +53,18 @@ class XList extends Base
     public function action(Response $response)
     {
         $frameworks = Config::getParam('frameworks');
+        $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
 
         foreach ($frameworks as $key => $framework) {
             if (!empty($framework['adapters'])) {
                 $frameworks[$key]['adapters'] = \array_values($framework['adapters']);
+            }
+
+            if (!empty($allowList) && !empty($framework['runtimes'])) {
+                $frameworks[$key]['runtimes'] = \array_values(\array_filter(
+                    $framework['runtimes'],
+                    fn ($runtime) => \in_array($runtime, $allowList, true)
+                ));
             }
         }
 
