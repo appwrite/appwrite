@@ -472,12 +472,6 @@ jobs:
 
           if [ "${{ matrix.service.name }}" = "VCS" ]; then
             COMPOSE_PROFILES_VALUE="${COMPOSE_PROFILES_VALUE},vcs"
-            echo "_APP_VCS_GITEA_ENDPOINT=http://gitea:3000" >> $GITHUB_ENV
-            echo "_APP_VCS_GITEA_BROWSER_ENDPOINT=http://localhost:9515" >> $GITHUB_ENV
-            echo "_APP_VCS_GITEA_CLIENT_ID=appwrite-ci" >> $GITHUB_ENV
-            echo "_APP_VCS_GITEA_CLIENT_SECRET=appwrite-ci-secret" >> $GITHUB_ENV
-            echo "_APP_VCS_GITEA_WEBHOOK_SECRET=appwrite-vcs-secret" >> $GITHUB_ENV
-            echo "_APP_VCS_WEBHOOK_URL=http://appwrite/v1" >> $GITHUB_ENV
           fi
 
           echo "COMPOSE_PROFILES=${COMPOSE_PROFILES_VALUE}" >> $GITHUB_ENV
