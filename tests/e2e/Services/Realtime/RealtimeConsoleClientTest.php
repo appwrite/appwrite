@@ -1086,19 +1086,15 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertEquals("waiting", $response['data']['payload']['status']);
         $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']);
 
-        $response = json_decode($client->receive(), true);
-        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
-        $this->assertEquals("processing", $response['data']['payload']['status']);
-
-        $response = json_decode($client->receive(), true);
-        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
-        $this->assertEquals("building", $response['data']['payload']['status']);
-
+        // Consume the build lifecycle updates. The status model is
+        // waiting → building → ready/failed (the jobs backend has no intermediate
+        // "processing" phase and may interleave extra update events), so assert
+        // the meaningful milestones tolerantly rather than a fixed positional
+        // sequence: the build reaches "building" with a growing log, then a
+        // terminal "ready" carrying the build metadata.
+        $sawBuilding = false;
         $previousBuildLogs = null;
+        $payload = null;
         while (true) {
             $response = json_decode($client->receive(), true);
             $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
@@ -1106,37 +1102,28 @@ final class RealtimeConsoleClientTest extends Scope
             $this->assertContains("projects.{$projectId}", $response['data']['channels']);
             $this->assertArrayHasKey('buildLogs', $response['data']['payload']);
 
-            if (!empty($response['data']['payload']['buildSize'])) {
-                $this->assertNotEmpty($response['data']['payload']['buildStartedAt']);
-                $this->assertNotEmpty($response['data']['payload']['buildPath']);
-                $this->assertNotEmpty($response['data']['payload']['buildSize']);
-                $this->assertNotEmpty($response['data']['payload']['totalSize']);
-                $this->assertNotEmpty($response['data']['payload']['buildLogs']);
+            $payload = $response['data']['payload'];
+            $this->assertNotEquals('failed', $payload['status']);
+
+            if ($payload['status'] === 'building') {
+                $sawBuilding = true;
+                if ($previousBuildLogs !== null) {
+                    $this->assertNotEquals($previousBuildLogs, $payload['buildLogs']);
+                }
+                $previousBuildLogs = $payload['buildLogs'];
+            }
+
+            if ($payload['status'] === 'ready' && !empty($payload['buildDuration']) && !empty($payload['buildEndedAt'])) {
                 break;
             }
-
-            // Ignore comparison for first payload
-            if ($previousBuildLogs !== null) {
-                $this->assertNotEquals($previousBuildLogs, $response['data']['payload']['buildLogs']);
-            }
-
-            $previousBuildLogs = $response['data']['payload']['buildLogs'];
-
-            $this->assertEquals('building', $response['data']['payload']['status']);
         }
 
-        $response = json_decode($client->receive(), true);
-        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
-        $this->assertEquals("ready", $response['data']['payload']['status']);
-
-        $response = json_decode($client->receive(), true);
-        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.update", $response['data']['events']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("projects.{$projectId}", $response['data']['channels']);
-        $this->assertNotEmpty($response['data']['payload']['buildDuration']);
-        $this->assertNotEmpty($response['data']['payload']['buildEndedAt']);
+        $this->assertTrue($sawBuilding);
+        $this->assertNotEmpty($payload['buildStartedAt']);
+        $this->assertNotEmpty($payload['buildPath']);
+        $this->assertNotEmpty($payload['buildSize']);
+        $this->assertNotEmpty($payload['totalSize']);
+        $this->assertNotEmpty($payload['buildLogs']);
 
         $client->close();
     }
