@@ -97,6 +97,27 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame('identity-token', $result->getAttribute('personalAccessToken'));
     }
 
+    public function testMissingRefreshTokenThrowsClearError(): void
+    {
+        $installation = new Document([
+            '$id' => 'installation1',
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => null,
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        $oauth2 = $this->fakeOAuth2();
+
+        try {
+            (new InstallationTokens())->refresh($installation, $this->db(), $oauth2);
+            $this->fail('Expected an Exception');
+        } catch (Exception $e) {
+            $this->assertSame(Exception::GENERAL_PROVIDER_FAILURE, $e->getType());
+        }
+
+        $this->assertSame(0, $oauth2->refreshCalls);
+    }
+
     public function testFailedRefreshThrows(): void
     {
         $installation = new Document([

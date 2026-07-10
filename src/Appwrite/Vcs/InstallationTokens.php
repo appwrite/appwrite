@@ -37,6 +37,10 @@ class InstallationTokens
             return $installation;
         }
 
+        if (empty($refreshToken)) {
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'This installation has no refresh token on file. Please reconnect it.');
+        }
+
         $oauth2->refreshTokens($refreshToken);
 
         $accessToken = $oauth2->getAccessToken('');
