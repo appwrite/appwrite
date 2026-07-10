@@ -5371,16 +5371,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "2.0.0",
+            "version": "2.4.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "60a2e804c1464494d763e5ff6bfff9b188502253"
+                "reference": "ebdb3af8bee5669879644c262e704d83dbeb438a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/60a2e804c1464494d763e5ff6bfff9b188502253",
-                "reference": "60a2e804c1464494d763e5ff6bfff9b188502253",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ebdb3af8bee5669879644c262e704d83dbeb438a",
+                "reference": "ebdb3af8bee5669879644c262e704d83dbeb438a",
                 "shasum": ""
             },
             "require": {
@@ -5395,7 +5395,7 @@
                 "brianium/paratest": "7.*",
                 "phpunit/phpunit": "11.*",
                 "rector/rector": "^2.4",
-                "squizlabs/php_codesniffer": "3.*"
+                "squizlabs/php_codesniffer": "4.*"
             },
             "type": "library",
             "autoload": {
@@ -5417,9 +5417,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/2.0.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/2.4.5"
             },
-            "time": "2026-06-11T05:54:24+00:00"
+            "time": "2026-07-09T15:23:08+00:00"
         },
         {
             "name": "brianium/paratest",
