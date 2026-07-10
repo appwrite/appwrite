@@ -1642,14 +1642,15 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $name = $userDecoded['name']['firstName'] . ' ' . $userDecoded['name']['lastName'];
             }
         }
-        $email = $oauth2->getUserEmail($accessToken);
+        $providerEmail = $oauth2->getUserEmail($accessToken);
+        $email = $providerEmail;
 
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
+                Query::equal('providerEmail', [$providerEmail]),
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
@@ -1703,10 +1704,42 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
+            $emails = [$email];
+            if ($user->isEmpty()) {
+                try {
+                    $parsedEmail = new Email($providerEmail);
+                    $canonical = $parsedEmail->getCanonical();
+                    $canonicalize = (
+                        $project->getId() === 'console'
+                        || ($plan['supportsCanonicalEmailValidation'] ?? false)
+                    )
+                        && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
+                        && $isVerified;
+                    $email = $canonicalize ? $canonical : $providerEmail;
+                    $emails = array_values(array_unique([$email, $providerEmail]));
+                    $emailMetadata = [
+                        'emailCanonical' => $canonical,
+                        'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
+                        'emailIsCorporate' => $parsedEmail->isCorporate(),
+                        'emailIsDisposable' => $parsedEmail->isDisposable(),
+                        'emailIsFree' => $parsedEmail->isFree(),
+                    ];
+                } catch (\Throwable) {
+                    $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
+                }
+            }
+
             // If user is not found, check if there is a user with the same email
             if ($user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
-                    Query::equal('email', [$email]),
+                    Query::equal('email', $emails),
                 ]);
                 if (!$userWithEmail->isEmpty()) {
                     if (!$isVerified) {
@@ -1719,7 +1752,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             // If user is not found, check if there is an identity with the same email
             if ($user->isEmpty()) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                    Query::equal('providerEmail', [$email]),
+                    Query::equal('providerEmail', [$providerEmail]),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     if (!$isVerified) {
@@ -1738,28 +1771,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if ($total >= $limit) {
                         $failureRedirect(Exception::USER_COUNT_EXCEEDED);
                     }
-                }
-
-                $emailMetadata = [
-                    'emailCanonical' => null,
-                    'emailIsCanonical' => null,
-                    'emailIsCorporate' => null,
-                    'emailIsDisposable' => null,
-                    'emailIsFree' => null,
-                ];
-
-                try {
-                    $parsedEmail = new Email($email);
-                    $canonical = $parsedEmail->getCanonical();
-                    $emailMetadata = [
-                        'emailCanonical' => $canonical,
-                        'emailIsCanonical' => $parsedEmail->get() === $canonical,
-                        'emailIsCorporate' => $parsedEmail->isCorporate(),
-                        'emailIsDisposable' => $parsedEmail->isDisposable(),
-                        'emailIsFree' => $parsedEmail->isFree(),
-                    ];
-                } catch (\Throwable) {
-                    $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
                 }
 
                 if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
@@ -1848,7 +1859,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $userId = $user->getId();
 
             $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                Query::equal('providerEmail', [$email]),
+                Query::equal('providerEmail', [$providerEmail]),
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
@@ -1867,7 +1878,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userId' => $userId,
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
-                'providerEmail' => $email,
+                'providerEmail' => $providerEmail,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
@@ -1885,7 +1896,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (empty($user->getAttribute('email'))) {
-            $email = $oauth2->getUserEmail($accessToken);
             $emailMetadata = [
                 'emailCanonical' => null,
                 'emailIsCanonical' => null,
@@ -1895,11 +1905,18 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             ];
 
             try {
-                $parsedEmail = new Email($email);
+                $parsedEmail = new Email($providerEmail);
                 $canonical = $parsedEmail->getCanonical();
+                $canonicalize = (
+                    $project->getId() === 'console'
+                    || ($plan['supportsCanonicalEmailValidation'] ?? false)
+                )
+                    && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
+                    && $oauth2->isEmailVerified($accessToken);
+                $email = $canonicalize ? $canonical : $providerEmail;
                 $emailMetadata = [
                     'emailCanonical' => $canonical,
-                    'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                    'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
                     'emailIsCorporate' => $parsedEmail->isCorporate(),
                     'emailIsDisposable' => $parsedEmail->isDisposable(),
                     'emailIsFree' => $parsedEmail->isFree(),
