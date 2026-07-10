@@ -88,7 +88,7 @@ $container->set('jobs', function () {
     return new Jobs($client);
 }, []);
 
-$container->set('clientForScreenshots', fn () => new ScreenshotsClient(
+$container->set('screenshots', fn () => new ScreenshotsClient(
     (new Client(new SwooleAdapter()))
         ->withTimeout((float) System::getEnv('_APP_SITES_TIMEOUT', 30)),
     System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1') . '/screenshots',

@@ -47,7 +47,7 @@ class Screenshots extends Action
             ->inject('project')
             ->inject('deviceForFiles')
             ->inject('telemetry')
-            ->inject('clientForScreenshots')
+            ->inject('screenshots')
             ->callback($this->action(...));
     }
 
@@ -59,7 +59,7 @@ class Screenshots extends Action
         Document $project,
         Device $deviceForFiles,
         Telemetry $telemetry,
-        ScreenshotsClient $clientForScreenshots,
+        ScreenshotsClient $screenshots,
     ): void {
         Span::add('project.id', $project->getId());
 
@@ -162,8 +162,8 @@ class Screenshots extends Action
             ]);
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $clientForScreenshots, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $clientForScreenshots, &$screenshotError) {
+            $captures = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $screenshots, &$screenshotError) {
+                return function () use ($key, $configs, $apiKey, $site, $screenshots, &$screenshotError) {
                     try {
                         $config = $configs[$key];
 
@@ -178,7 +178,7 @@ class Screenshots extends Action
                             $config['sleep'] = $framework['screenshotSleep'];
                         }
 
-                        $screenshot = $clientForScreenshots->capture($config);
+                        $screenshot = $screenshots->capture($config);
 
                         return ['key' => $key, 'screenshot' => $screenshot];
                     } catch (\Throwable $th) {
@@ -192,12 +192,12 @@ class Screenshots extends Action
                 throw new \Exception($screenshotError);
             }
 
-            Span::add('screenshot.count', \count($screenshots));
+            Span::add('screenshot.count', \count($captures));
 
             $mimeType = "image/png";
             $updates = new Document([]);
 
-            foreach ($screenshots as $data) {
+            foreach ($captures as $data) {
                 $key = $data['key'];
                 $screenshot = $data['screenshot'];
 
