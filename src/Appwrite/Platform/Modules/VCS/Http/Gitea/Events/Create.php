@@ -97,21 +97,30 @@ class Create extends Action
      * carry their own personal token — repositories matching the same
      * providerRepositoryId can belong to different Appwrite installations.
      */
-    private function resolveAdapterForRepository(Document $repository, callable $vcsForInstallation, Database $dbForPlatform, Authorization $authorization): ?Git
+    /**
+     * `repositories` has no provider attribute -- providerRepositoryId is
+     * provider-scoped numeric IDs from independent servers, so a GitHub
+     * and a Gitea repository can collide on the same ID. Filter by the
+     * matched installation's own provider instead of the query.
+     */
+    private function isGiteaRepository(Document $repository, Database $dbForPlatform, Authorization $authorization): bool
     {
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
         if ($installation->isEmpty()) {
+            return false;
+        }
+
+        return $installation->getAttribute('provider', 'github') === 'gitea';
+    }
+
+    private function resolveAdapterForRepository(Document $repository, callable $vcsForInstallation, Database $dbForPlatform, Authorization $authorization): ?Git
+    {
+        if (!$this->isGiteaRepository($repository, $dbForPlatform, $authorization)) {
             return null;
         }
 
-        // `repositories` has no provider attribute -- providerRepositoryId is
-        // provider-scoped numeric IDs from independent servers, so a GitHub
-        // and a Gitea repository can collide on the same ID. Filter by the
-        // matched installation's own provider instead of the query.
-        if ($installation->getAttribute('provider', 'github') !== 'gitea') {
-            return null;
-        }
+        $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
         try {
             return $vcsForInstallation($installation);
@@ -253,6 +262,10 @@ class Create extends Action
             ]));
 
             foreach ($repositories as $repository) {
+                if (!$this->isGiteaRepository($repository, $dbForPlatform, $authorization)) {
+                    continue;
+                }
+
                 $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
 
                 if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
