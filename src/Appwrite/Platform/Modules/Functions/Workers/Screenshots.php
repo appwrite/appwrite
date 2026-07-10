@@ -9,8 +9,6 @@ use Appwrite\Permission;
 use Appwrite\Platform\Modules\Functions\Workers\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Role;
 use Exception;
-use Utopia\Client;
-use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClient;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -49,6 +47,7 @@ class Screenshots extends Action
             ->inject('project')
             ->inject('deviceForFiles')
             ->inject('telemetry')
+            ->inject('clientForScreenshots')
             ->callback($this->action(...));
     }
 
@@ -59,7 +58,8 @@ class Screenshots extends Action
         Database $dbForProject,
         Document $project,
         Device $deviceForFiles,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        ScreenshotsClient $clientForScreenshots,
     ): void {
         Span::add('project.id', $project->getId());
 
@@ -113,8 +113,6 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $timeout = \intval($site->getAttribute('timeout', '15'));
-
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
@@ -164,8 +162,8 @@ class Screenshots extends Action
             ]);
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $timeout, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $timeout, &$screenshotError) {
+            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $clientForScreenshots, &$screenshotError) {
+                return function () use ($key, $configs, $apiKey, $site, $clientForScreenshots, &$screenshotError) {
                     try {
                         $config = $configs[$key];
 
@@ -180,12 +178,7 @@ class Screenshots extends Action
                             $config['sleep'] = $framework['screenshotSleep'];
                         }
 
-                        $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-                        $client = new ScreenshotsClient(
-                            (new Client(new SwooleClient()))
-                                ->withTimeout($timeout)
-                        );
-                        $screenshot = $client->capture($browserEndpoint . '/screenshots', $config);
+                        $screenshot = $clientForScreenshots->capture($config);
 
                         return ['key' => $key, 'screenshot' => $screenshot];
                     } catch (\Throwable $th) {

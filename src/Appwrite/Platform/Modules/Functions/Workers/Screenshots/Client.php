@@ -8,16 +8,18 @@ use Utopia\Psr7\Request;
 
 final readonly class Client
 {
-    public function __construct(private ClientInterface $client)
-    {
+    public function __construct(
+        private ClientInterface $client,
+        private string $uri,
+    ) {
     }
 
     /**
      * @param array<string, mixed> $config
      */
-    public function capture(string $url, array $config): string
+    public function capture(array $config): string
     {
-        $request = (new Request\Factory())->json(Method::POST, $url, $config);
+        $request = (new Request\Factory())->json(Method::POST, $this->uri, $config);
         $response = $this->client->sendRequest($request);
 
         if ($response->getStatusCode() >= 400) {

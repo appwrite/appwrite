@@ -17,9 +17,9 @@ final class ClientTest extends TestCase
     public function testCaptureSendsJsonRequestAndReturnsScreenshot(): void
     {
         $http = new FakeClient(new Response(body: new Stream('screenshot')));
-        $client = new Client($http);
+        $client = new Client($http, 'http://browser/v1/screenshots');
 
-        $screenshot = $client->capture('http://browser/v1/screenshots', [
+        $screenshot = $client->capture([
             'url' => 'https://example.com',
             'theme' => 'dark',
         ]);
@@ -37,14 +37,15 @@ final class ClientTest extends TestCase
 
     public function testCaptureThrowsResponseBodyOnFailure(): void
     {
-        $client = new Client(new FakeClient(
-            new Response(500, body: new Stream('browser failed'))
-        ));
+        $client = new Client(
+            new FakeClient(new Response(500, body: new Stream('browser failed'))),
+            'http://browser/v1/screenshots',
+        );
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('browser failed');
 
-        $client->capture('http://browser/v1/screenshots', []);
+        $client->capture([]);
     }
 }
 
