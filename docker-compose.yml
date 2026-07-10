@@ -213,18 +213,10 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/vibes:0.3.1
+    image: appwrite/vibes:0.3.3
     restart: unless-stopped
     networks:
       - appwrite
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - 'bun -e "fetch(''http://localhost:3000/health'').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"'
-      interval: 5s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
     labels:
