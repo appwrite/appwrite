@@ -1,28 +1,43 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { getInitTicketShareImageSrc } from '@/lib/init/init-ticket-share'
 import {
+  INIT_TICKET_ASPECT_RATIO,
   INIT_TICKET_IMAGE_HEIGHT,
   INIT_TICKET_IMAGE_WIDTH,
 } from '@/lib/init/ticket-layout'
+import { cn } from '@/lib/utils'
 
 type InitTicketShareViewProps = {
   ticketId: string
+  imageSrc?: string
 }
 
-export function View({ ticketId }: InitTicketShareViewProps) {
-  const imageSrc = getInitTicketShareImageSrc(ticketId)
+export function View({ ticketId, imageSrc: imageSrcFromLoader }: InitTicketShareViewProps) {
+  const imageSrc = imageSrcFromLoader ?? getInitTicketShareImageSrc(ticketId)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-background px-4 py-10 sm:px-6">
-      <div className="w-full max-w-[820px] space-y-6 text-center">
-        <div className="overflow-hidden rounded-xl border border-border bg-card/40 shadow-sm">
+    <div className="mx-auto w-full max-w-[820px] px-4 py-10 sm:px-6 sm:py-12">
+      <div className="space-y-6 text-center">
+        <div
+          className="relative w-full overflow-hidden rounded-xl border border-border bg-muted/30 shadow-sm"
+          style={{ aspectRatio: INIT_TICKET_ASPECT_RATIO }}
+        >
           <img
             src={imageSrc}
             alt="Init ticket"
             width={INIT_TICKET_IMAGE_WIDTH}
             height={INIT_TICKET_IMAGE_HEIGHT}
-            className="h-auto w-full"
+            decoding="async"
+            fetchPriority="high"
+            loading="eager"
+            onLoad={() => setImageLoaded(true)}
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover transition-opacity duration-200',
+              imageLoaded ? 'opacity-100' : 'opacity-0',
+            )}
           />
         </div>
         <div className="space-y-3">
