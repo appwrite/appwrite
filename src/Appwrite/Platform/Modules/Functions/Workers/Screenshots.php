@@ -182,14 +182,14 @@ class Screenshots extends Action
 
                         return ['key' => $key, 'screenshot' => $screenshot];
                     } catch (\Throwable $th) {
-                        $screenshotError = $th->getMessage();
+                        $screenshotError = $th;
                         return;
                     }
                 };
             }, \array_keys($configs)));
 
-            if (!\is_null($screenshotError)) {
-                throw new \Exception($screenshotError);
+            if ($screenshotError instanceof \Throwable) {
+                throw $screenshotError;
             }
 
             Span::add('screenshot.count', \count($captures));

@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers\Screenshots;
 
+use Appwrite\AppwriteException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -21,10 +23,26 @@ final readonly class Client
     public function capture(array $config): string
     {
         $request = $this->requests->json(Method::POST, $this->uri, $config);
-        $response = $this->client->sendRequest($request);
+        try {
+            $response = $this->client->sendRequest($request);
+        } catch (ClientExceptionInterface $error) {
+            throw new AppwriteException($error->getMessage());
+        }
 
         if ($response->getStatusCode() >= 400) {
-            throw new \Exception((string) $response->getBody());
+            $body = (string) $response->getBody();
+            $error = \json_decode($body, true);
+
+            if (\is_array($error)) {
+                throw new AppwriteException(
+                    \is_string($error['message'] ?? null) ? $error['message'] : $body,
+                    $response->getStatusCode(),
+                    \is_string($error['type'] ?? null) ? $error['type'] : '',
+                    $body,
+                );
+            }
+
+            throw new AppwriteException($body, $response->getStatusCode(), response: $body);
         }
 
         return (string) $response->getBody();
