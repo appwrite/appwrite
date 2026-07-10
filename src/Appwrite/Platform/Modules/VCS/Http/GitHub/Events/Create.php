@@ -38,6 +38,7 @@ class Create extends Action
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
             ->inject('vcsForProvider')
+            ->inject('vcsForInstallation')
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -50,6 +51,7 @@ class Create extends Action
 
     public function action(
         callable $vcsForProvider,
+        callable $vcsForInstallation,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -76,14 +78,12 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
         }
 
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $parsedPayload = $vcs->getEvent($event, $payload);
 
         match ($event) {
             GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $githubAppId, $privateKey, $vcs, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
-            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $privateKey, $githubAppId, $vcs, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsForInstallation, $vcs, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsForInstallation, $vcs, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
         };
 
@@ -182,8 +182,7 @@ class Create extends Action
 
     private function handlePushEvent(
         array $parsedPayload,
-        string $githubAppId,
-        string $privateKey,
+        callable $vcsForInstallation,
         Git $vcs,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -211,7 +210,10 @@ class Create extends Action
         Span::add('vcs.github.event.branch', $providerBranch);
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
-        $vcs->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = $vcsForInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
 
         // Find associated repositories
         $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
@@ -228,8 +230,7 @@ class Create extends Action
 
     private function handlePullRequestEvent(
         array $parsedPayload,
-        string $privateKey,
-        string $githubAppId,
+        callable $vcsForInstallation,
         Git $vcs,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -263,7 +264,10 @@ class Create extends Action
                 return;
             }
 
-            $vcs->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            $vcs = $vcsForInstallation(new Document([
+                'provider' => 'github',
+                'providerInstallationId' => $providerInstallationId,
+            ]));
 
             try {
                 $commitDetails = $vcs->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
