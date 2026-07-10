@@ -27,7 +27,32 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Accessed': 'גישה אחרונה',
   'Active': 'פעיל',
   'Active tokens for this client will stop working.': 'טוקנים פעילים של לקוח זה יפסיקו לפעול.',
+  'All active tokens for this client will stop working immediately. This cannot be undone.':
+    'כל הטוקנים הפעילים של לקוח זה יפסיקו לפעול מיד. לא ניתן לבטל פעולה זו.',
+  'App disabled': 'האפליקציה הושבתה',
+  'App enabled': 'האפליקציה הופעלה',
+  'App updated': 'האפליקציה עודכנה',
   'Activity': 'פעילות',
+  'Back to apps': 'חזרה לאפליקציות',
+  'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
+    'אפליקציות מושבתות לא יכולות להתחיל תהליכי הרשאה חדשים. טוקנים קיימים נשארים בתוקף עד לשלילתם.',
+  'Failed to revoke tokens': 'שלילת הטוקנים נכשלה',
+  'Invalidate all access and refresh tokens issued to this client. Users will need to authorize the app again.':
+    'שלילת כל טוקני הגישה והרענון שהונפקו ללקוח זה. משתמשים יצטרכו לאשר מחדש את האפליקציה.',
+  'Logo URL': 'כתובת URL של לוגו',
+  'Name and descriptions shown on the OAuth2 consent screen.':
+    'שם ותיאורים שמוצגים במסך ההסכמה של OAuth2.',
+  'Optional description for the consent screen': 'תיאור אופציונלי למסך ההסכמה',
+  'Revoke all tokens': 'שלילת כל הטוקנים',
+  'Revoke tokens': 'שלילת טוקנים',
+  'Short summary for the consent screen': 'סיכום קצר למסך ההסכמה',
+  'This client can request authorization.': 'לקוח זה יכול לבקש הרשאה.',
+  'This client is disabled.': 'לקוח זה מושבת.',
+  'Tokens revoked': 'הטוקנים נשללו',
+  'Consent screen': 'מסך הסכמה',
+  'OAuth2 client settings and consent screen details.':
+    'הגדרות לקוח OAuth2 ופרטי מסך ההסכמה.',
+  'Update app': 'עדכון אפליקציה',
   'Add': 'הוספה',
   'Add Label': 'הוספת תווית',
   'Add a new messaging target for this user.': 'הוסיפו יעד הודעות חדש למשתמש זה.',
@@ -144,6 +169,12 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Client ID': 'מזהה לקוח',
   'Client name': 'שם לקוח',
   'Client type': 'סוג לקוח',
+  'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).':
+    'אפליקציות backend או SSR שיכולות לשמור סוד לקוח (Node, Next.js, Nuxt).',
+  'Native or static web apps that cannot store a client secret (iOS, Android, SPA).':
+    'אפליקציות native או ווב סטטי שאינן יכולות לשמור סוד לקוח (iOS, Android, SPA).',
+  'For TVs, CLIs on a remote server, and other devices where typing a password is difficult.':
+    'עבור טלוויזיות, CLIs בשרת מרוחק, ומכשירים אחרים שבהם הקלדת סיסמה קשה.',
   'Close': 'סגירה',
   'Close file preview': 'סגירת תצוגה מקדימה של הקובץ',
   'Code': 'קוד',
@@ -597,7 +628,20 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'OAuth2 server section': 'אזור שרת OAuth2',
   'OAuth2 settings': 'הגדרות OAuth2',
   'OIDC': 'OIDC',
+  'OIDC discovery': 'Discovery של OIDC',
   'OIDC discovery URL': 'כתובת discovery של OIDC',
+  'Authorization endpoint': 'נקודת קצה להרשאה',
+  'Token endpoint': 'נקודת קצה לטוקנים',
+  'Introspection endpoint': 'נקודת קצה ל-introspection',
+  'JWKS URI': 'JWKS URI',
+  'UserInfo endpoint': 'נקודת קצה ל-UserInfo',
+  'Revocation endpoint': 'נקודת קצה לביטול',
+  'Common endpoints from the discovery document. Most OAuth libraries only need the discovery URL.':
+    'נקודות קצה נפוצות ממסמך ה-discovery. רוב ספריות ה-OAuth צריכות רק את כתובת ה-discovery.',
+  'Share this URL with integrators. OAuth libraries fetch it once to learn authorize, token, and JWKS endpoints.':
+    'שתפו כתובת זו עם אינטגרטורים. ספריות OAuth שולפות אותה פעם אחת כדי ללמוד את נקודות הקצה של הרשאה, טוקנים ו-JWKS.',
+  'Point your consent screen at the authorization URL and choose which scopes clients can request.':
+    'כוונו את מסך ההסכמה לכתובת ההרשאה ובחרו אילו היקפי הרשאה לקוחות יכולים לבקש.',
   'OTP Session': 'סשן OTP',
   'Okta': 'Okta',
   'One-time password code': 'קוד חד-פעמי (OTP)',
@@ -1065,7 +1109,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'of': 'מתוך',
   'of original': 'מהמקור',
   'only if they have bucket permissions': 'רק אם יש להם הרשאות באקט',
-  'openid, profile, and email are always included. Add up to': 'openid, ‏profile ו-email נכללים תמיד. הוסיפו עד',
+  'openid, profile, email, and phone are always included. Add up to':
+    'openid, ‏profile, ‏email ו-phone נכללים תמיד. הוסיפו עד',
   'or': 'או',
   'passwords': 'סיסמאות',
   'permissions': 'הרשאות',

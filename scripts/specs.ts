@@ -27,9 +27,25 @@ type ServiceConfig = {
   className: string
   dtsFile: string
   openApiTag?: string
+  /**
+   * Where the service is mounted on the console SDK wrapper.
+   * - project: sdk.forProject(projectId).…
+   * - console: sdk.forConsole.…
+   * - both: available on console and project clients
+   */
+  sdkScope?: 'project' | 'console' | 'both'
 }
 
 const SERVICES: ServiceConfig[] = [
+  {
+    id: 'apps',
+    title: 'Apps',
+    sdkAccessor: 'apps',
+    basePath: '/v1/apps',
+    className: 'Apps',
+    dtsFile: 'apps.d.ts',
+    sdkScope: 'both',
+  },
   {
     id: 'postgresql',
     title: 'PostgreSQL',
@@ -229,12 +245,11 @@ function groupEndpointsByResource(endpoints: HttpEndpoint[]): Map<string, HttpEn
     const parts = endpoint.path.split('/').filter(Boolean)
     // /v1/service/... -> use from index 2 onward
     const resourceParts = parts.slice(2)
+    const staticPart = resourceParts.find((p) => !p.startsWith('{'))
     const key =
       resourceParts.length === 0
         ? 'root'
-        : resourceParts.every((p) => p.startsWith('{'))
-          ? resourceParts[resourceParts.length - 1].replace(/[{}]/g, '')
-          : resourceParts[0]
+        : (staticPart ?? resourceParts[resourceParts.length - 1].replace(/[{}]/g, ''))
 
     const existing = groups.get(key) ?? []
     existing.push(endpoint)
@@ -244,12 +259,46 @@ function groupEndpointsByResource(endpoints: HttpEndpoint[]): Map<string, HttpEn
   return groups
 }
 
-function resourceTitle(key: string): string {
-  if (key === 'root') return 'Databases'
+function resourceTitle(key: string, service: ServiceConfig): string {
+  if (key === 'root') return service.title
   return key
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function sdkCallPrefixes(service: ServiceConfig): string[] {
+  const scope = service.sdkScope ?? 'project'
+  if (scope === 'console') return [`sdk.forConsole.${service.sdkAccessor}`]
+  if (scope === 'both') {
+    return [
+      `sdk.forConsole.${service.sdkAccessor}`,
+      `sdk.forProject(projectId).${service.sdkAccessor}`,
+    ]
+  }
+  return [`sdk.forProject(projectId).${service.sdkAccessor}`]
+}
+
+function renderSdkAccessorLine(service: ServiceConfig): string {
+  const scope = service.sdkScope ?? 'project'
+  if (scope === 'console') {
+    return `SDK accessor: \`sdk.forConsole.${service.sdkAccessor}\``
+  }
+  if (scope === 'both') {
+    return `SDK accessors: \`sdk.forConsole.${service.sdkAccessor}\` (organization / console) and \`sdk.forProject(projectId).${service.sdkAccessor}\` (project OAuth2 server apps)`
+  }
+  return `SDK accessor: \`sdk.forProject(projectId).${service.sdkAccessor}\``
+}
+
+function renderAuthNote(service: ServiceConfig): string {
+  const scope = service.sdkScope ?? 'project'
+  if (scope === 'console') {
+    return 'All paths are relative to the console API endpoint (`{endpoint}/v1/...`). Authenticated console requests require a session cookie or `X-Appwrite-Key`.'
+  }
+  if (scope === 'both') {
+    return 'All paths are relative to the API endpoint (`{endpoint}/v1/...`). Console-scoped calls use the console client session; project-scoped calls require `X-Appwrite-Project` and a session or API key.'
+  }
+  return 'All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.'
 }
 
 function renderMethodSection(
@@ -260,6 +309,7 @@ function renderMethodSection(
   const primary = endpoints[0]
   const anchor = `${service.id}-${slugify(method.name)}`
   const lines: string[] = []
+  const prefixes = sdkCallPrefixes(service)
 
   lines.push(`<a id="${anchor}"></a>`)
   lines.push('')
@@ -294,20 +344,21 @@ function renderMethodSection(
 
   lines.push('**SDK signature**')
   lines.push('')
-  if (method.parameters.length === 0) {
-    lines.push('```typescript')
-    lines.push(`sdk.forProject(projectId).${service.sdkAccessor}.${method.name}()`)
-    lines.push('```')
-  } else {
-    const fields = method.parameters
-      .map((p) => `  ${p.name}${p.required ? '' : '?'}: ${p.type}`)
-      .join(';\n')
-    lines.push('```typescript')
-    lines.push(`sdk.forProject(projectId).${service.sdkAccessor}.${method.name}({`)
-    lines.push(fields + (fields ? ';' : ''))
-    lines.push('})')
-    lines.push('```')
+  lines.push('```typescript')
+  for (let i = 0; i < prefixes.length; i++) {
+    if (i > 0) lines.push('')
+    if (method.parameters.length === 0) {
+      lines.push(`${prefixes[i]}.${method.name}()`)
+    } else {
+      const fields = method.parameters
+        .map((p) => `  ${p.name}${p.required ? '' : '?'}: ${p.type}`)
+        .join(';\n')
+      lines.push(`${prefixes[i]}.${method.name}({`)
+      lines.push(fields + (fields ? ';' : ''))
+      lines.push('})')
+    }
   }
+  lines.push('```')
   lines.push('')
 
   return lines.join('\n')
@@ -328,9 +379,7 @@ function renderServiceFile(
     `Reference extracted from \`@appwrite.io/console\` v${consoleVersion} and \`@appwrite.io/specs\` (latest console OpenAPI).`,
   )
   lines.push('')
-  lines.push(
-    'All paths are relative to the project API endpoint (`{projectEndpoint}/v1/...`). Authenticated project requests require `X-Appwrite-Project` and a session or API key.',
-  )
+  lines.push(renderAuthNote(service))
   lines.push('')
   lines.push(
     'Parameter descriptions come from the Console SDK type definitions. Path placeholders such as `{databaseId}` are substituted in the URL, not passed in the JSON body unless listed below.',
@@ -338,7 +387,7 @@ function renderServiceFile(
   lines.push('')
   lines.push(`<a id="${anchor}"></a>`)
   lines.push('')
-  lines.push(`SDK accessor: \`sdk.forProject(projectId).${service.sdkAccessor}\``)
+  lines.push(renderSdkAccessorLine(service))
   lines.push('')
   lines.push(`Base path prefix: \`${service.basePath}\``)
   lines.push('')
@@ -375,7 +424,7 @@ function renderServiceFile(
     const resourceAnchor = `${service.id}-${slugify(resourceKey)}-resource`
     lines.push(`<a id="${resourceAnchor}"></a>`)
     lines.push('')
-    lines.push(`### ${resourceTitle(resourceKey)}`)
+    lines.push(`### ${resourceTitle(resourceKey, service)}`)
     lines.push('')
     const samplePath = resourceEndpoints[0]?.path ?? service.basePath
     lines.push(`REST resource: \`${samplePath.split('/').slice(0, 4).join('/')}${resourceKey === 'root' ? '' : '/…'}\``)

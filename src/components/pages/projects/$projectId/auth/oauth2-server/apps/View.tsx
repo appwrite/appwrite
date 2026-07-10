@@ -1,18 +1,42 @@
-import { useMemo, useState } from 'react'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { useCallback, useMemo, useState } from 'react'
 import {
-  useCreateProjectOAuth2App,
+  Copy,
+  ExternalLink,
+  FileJson,
+  KeyRound,
+  Link2,
+  Loader2,
+  Pencil,
+  Plus,
+  Square,
+  Trash2,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import type { Models } from '@appwrite.io/console'
+import {
+  fetchProjectOAuth2App,
   useDeleteProjectOAuth2App,
   useProject,
   useProjectOAuth2Apps,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  buildConsoleUrl,
+  copyResourceAsJson,
+  copyToClipboard,
+  openInNewTab,
+  openInNewWindow,
+} from '@/lib/utils/context-menu'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
+import {
+  MenuItemContent,
+  MenuItemIcon,
+} from '@/components/global/shared/ContextMenuIcon'
 import {
   Table,
   TableBody,
@@ -28,8 +52,58 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { CreateProjectOAuth2App } from './_components/CreateProjectOAuth2App'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ProjectOAuth2AppDrawer } from './_components/ProjectOAuth2AppDrawer'
+import { ProjectOAuth2AppContextMenu } from './_components/ProjectOAuth2AppContextMenu'
+import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
+
+function AppLogoThumb({
+  logoUri,
+  region,
+  name,
+}: {
+  logoUri?: string | null
+  region?: string | null
+  name: string
+}) {
+  const t = useT()
+  const src = resolveAppLogoDisplayUrl(logoUri, {
+    width: 64,
+    height: 64,
+    region,
+  })
+
+  return (
+    <div
+      className={cn(
+        'flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40',
+      )}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={t('App logo preview')}
+          className="h-full w-full object-contain"
+        />
+      ) : (
+        <span className="text-[11px] font-semibold uppercase text-muted-foreground">
+          {name.trim().charAt(0) || '?'}
+        </span>
+      )}
+    </div>
+  )
+}
 
 interface OAuth2ServerAppsViewProps {
   projectId: string
@@ -42,14 +116,11 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     projectId,
     project?.region,
   )
-  const createMutation = useCreateProjectOAuth2App(projectId, project?.region)
   const deleteMutation = useDeleteProjectOAuth2App(projectId, project?.region)
 
-  const [createOpen, setCreateOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{
-    id: string
-    name: string
-  } | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedApp, setSelectedApp] = useState<Models.App | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Models.App | null>(null)
 
   const sortedApps = useMemo(
     () =>
@@ -60,77 +131,101 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
     [apps],
   )
 
-  const handleCreate = async (
-    input: Parameters<typeof createMutation.mutateAsync>[0],
-  ) => {
-    try {
-      await createMutation.mutateAsync(input)
-      setCreateOpen(false)
-      toast.success(t('OAuth2 app created'))
-    } catch (error) {
-      toast.error(getErrorMessage(error, t('Failed to create OAuth2 app')))
+  const blurActiveElement = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
     }
+  }, [])
+
+  const openCreate = () => {
+    blurActiveElement()
+    window.setTimeout(() => {
+      setSelectedApp(null)
+      setDrawerOpen(true)
+    }, 0)
   }
+
+  const openUpdate = (app: Models.App) => {
+    blurActiveElement()
+    window.setTimeout(() => {
+      setSelectedApp(app)
+      setDrawerOpen(true)
+    }, 0)
+  }
+
+  const requestDelete = (app: Models.App) => {
+    blurActiveElement()
+    setDeleteTarget(app)
+  }
+
+  const getAppHref = (app: Models.App) =>
+    buildConsoleUrl(
+      `/projects/${projectId}/auth/oauth2-server/apps?appId=${app.$id}`,
+    )
 
   const handleDelete = async () => {
     if (!deleteTarget) return
     try {
-      await deleteMutation.mutateAsync(deleteTarget.id)
+      await deleteMutation.mutateAsync(deleteTarget.$id)
       toast.success(t('OAuth2 app deleted'))
       setDeleteTarget(null)
+      setSelectedApp(null)
     } catch (error) {
       toast.error(getErrorMessage(error, t('Failed to delete OAuth2 app')))
     }
   }
 
-  if (isLoading && apps.length === 0) {
-    return (
-      <div className="flex min-h-48 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div className="max-w-xl">
-          <h2 className="text-[15px] font-semibold text-foreground">
-            {t('Apps')}
-          </h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            {t(
-              "OAuth2 clients registered against this project. These apps authenticate users through your project's authorization server.",
-            )}
-          </p>
+    <>
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="flex items-start justify-between gap-4 px-6 py-4">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Apps')}
+            </h3>
+            <p className="mt-2 text-[13px] text-muted-foreground">
+              {t(
+                "OAuth2 clients registered against this project. These apps authenticate users through your project's authorization server.",
+              )}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="h-9 shrink-0 text-[13px]"
+            onClick={openCreate}
+          >
+            <Plus className="me-1.5 h-3.5 w-3.5" />
+            {t('Create app')}
+          </Button>
         </div>
-        <Button size="sm" className="h-9 shrink-0" onClick={() => setCreateOpen(true)}>
-          <Plus className="me-1.5 h-3.5 w-3.5" />
-          {t('Create app')}
-        </Button>
-      </div>
-
-      {sortedApps.length === 0 ? (
-        <EmptyState
-          title={t('No OAuth2 apps')}
-          description={t(
-            'Create an app to register redirect URIs and issue client credentials for this project.',
-          )}
-          action={
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              {t('Create app')}
-            </Button>
-          }
-          variant="card"
-        />
-      ) : (
-        <div className="relative rounded-lg border border-border bg-card overflow-hidden">
-          {isFetching ? (
-            <div className="absolute end-3 top-3 z-10">
+        <div className="border-t border-border" />
+        <div className="relative px-6 py-4">
+          {isFetching && !isLoading ? (
+            <div className="absolute end-6 top-4 z-10">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : null}
-          <Table>
+          {isLoading && apps.length === 0 ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : sortedApps.length === 0 ? (
+            <EmptyState
+              icon={KeyRound}
+              title={t('No OAuth2 apps')}
+              description={t(
+                'Create an app to register redirect URIs and issue client credentials for this project.',
+              )}
+              action={
+                <Button size="sm" onClick={openCreate}>
+                  {t('Create app')}
+                </Button>
+              }
+              variant="card"
+            />
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-border">
+              <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -145,80 +240,202 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
                 <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('Redirect URIs')}
                 </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground text-end">
                   {t('Created')}
                 </TableHead>
-                <TableHead className="w-[100px] px-4 py-3 text-end" />
+                <TableHead className="w-[80px] px-4 py-3 text-end" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedApps.map((app) => (
-                <TableRow key={app.$id}>
-                  <TableCell className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-medium">{app.name}</span>
+                <ProjectOAuth2AppContextMenu
+                  key={app.$id}
+                  projectId={projectId}
+                  region={project?.region}
+                  app={app}
+                  onUpdate={openUpdate}
+                  onDelete={requestDelete}
+                >
+                  <TableRow
+                    className="cursor-pointer"
+                    onClick={() => openUpdate(app)}
+                  >
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <AppLogoThumb
+                          logoUri={app.logoUri}
+                          region={project?.region}
+                          name={app.name}
+                        />
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="text-[13px] font-medium truncate">
+                            {app.name}
+                          </span>
+                          <Badge
+                            variant={app.enabled ? 'success' : 'inactive'}
+                            className="text-[10px] shrink-0"
+                          >
+                            {app.enabled ? t('Enabled') : t('Disabled')}
+                          </Badge>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <CopyableId id={app.$id} size="xs" />
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <Badge
-                        variant={app.enabled ? 'success' : 'secondary'}
-                        className="text-[10px] shrink-0"
+                        variant="info"
+                        className="text-[10px] capitalize shrink-0"
                       >
-                        {app.enabled ? t('Enabled') : t('Disabled')}
+                        {app.type || 'confidential'}
                       </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <CopyableId id={app.$id} />
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <Badge variant="info" className="text-[10px] capitalize">
-                      {app.type || 'confidential'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                    {app.redirectUris?.length ?? 0}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-end">
-                    <DateTooltip date={app.$createdAt} />
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() =>
-                        setDeleteTarget({ id: app.$id, name: app.name })
-                      }
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                      {app.redirectUris?.length ?? 0}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-end">
+                      <DateTooltip date={app.$createdAt} />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-end">
+                      <div
+                        className="flex justify-end"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <RowActionsMenuTrigger
+                              aria-label={`${t('Actions for')} ${app.name}`}
+                            />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => openUpdate(app)}>
+                              <MenuItemContent icon={Pencil}>
+                                {t('Update')}
+                              </MenuItemContent>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger>
+                                <MenuItemIcon icon={Copy} />
+                                {t('Copy')}
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    copyToClipboard('ID', app.$id)
+                                  }
+                                >
+                                  <MenuItemContent icon={Copy}>
+                                    {t('Copy ID')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    copyToClipboard('Name', app.name)
+                                  }
+                                >
+                                  <MenuItemContent icon={Copy}>
+                                    {t('Copy name')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    copyToClipboard('Link', getAppHref(app))
+                                  }
+                                >
+                                  <MenuItemContent icon={Link2}>
+                                    {t('Copy link')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    void copyResourceAsJson(() =>
+                                      fetchProjectOAuth2App(
+                                        projectId,
+                                        app.$id,
+                                        project?.region,
+                                      ),
+                                    )
+                                  }
+                                >
+                                  <MenuItemContent icon={FileJson}>
+                                    {t('Copy as JSON')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => openInNewTab(getAppHref(app))}
+                            >
+                              <MenuItemContent icon={ExternalLink}>
+                                {t('Open in new tab')}
+                              </MenuItemContent>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openInNewWindow(getAppHref(app))}
+                            >
+                              <MenuItemContent icon={Square}>
+                                {t('Open in new window')}
+                              </MenuItemContent>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => requestDelete(app)}
+                            >
+                              <MenuItemContent icon={Trash2}>
+                                {t('Delete')}
+                              </MenuItemContent>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </ProjectOAuth2AppContextMenu>
               ))}
             </TableBody>
-          </Table>
+              </Table>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      <CreateProjectOAuth2App
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreate={handleCreate}
-        isSubmitting={createMutation.isPending}
+      <ProjectOAuth2AppDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        projectId={projectId}
+        region={project?.region}
+        app={selectedApp}
+        onSuccess={() => setSelectedApp(null)}
+        onDelete={requestDelete}
       />
 
       <Dialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setDeleteTarget(null)
+        }}
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete OAuth2 app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t('Delete')} {deleteTarget?.name}?{' '}
-              {t('Active tokens for this client will stop working.')}
+              {t('Delete')}{' '}
+              <span className="font-medium text-foreground">
+                {deleteTarget?.name}
+              </span>
+              ? {t('Active tokens for this client will stop working.')}{' '}
+              {t('This action cannot be undone.')}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border px-6 py-4 bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleteMutation.isPending}
+            >
               {t('Cancel')}
             </Button>
             <Button
@@ -231,6 +448,6 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

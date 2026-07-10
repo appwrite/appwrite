@@ -393,6 +393,17 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Payment failed - your organization is in read-only mode due to an unresolved billing issue. Changes to projects and services are restricted until payment succeeds. Update billing to restore full access.':
     'התשלום נכשל - הארגון שלכם במצב קריאה בלבד עקב בעיית חיוב שלא נפתרה. שינויים בפרויקטים ובשירותים מוגבלים עד להשלמת התשלום. עדכנו את פרטי החיוב כדי לשחזר גישה מלאה.',
   Preview: 'תצוגה מקדימה',
+  Bold: 'מודגש',
+  Italic: 'נטוי',
+  Link: 'קישור',
+  'Bullet list': 'רשימת תבליטים',
+  'Numbered list': 'רשימה ממוספרת',
+  'bold text': 'טקסט מודגש',
+  'italic text': 'טקסט נטוי',
+  code: 'קוד',
+  'link text': 'טקסט קישור',
+  'list item': 'פריט ברשימה',
+  'Nothing to preview': 'אין מה להציג בתצוגה מקדימה',
   'Previous image': 'התמונה הקודמת',
   'Privacy-friendly usage analytics and error reporting to help us improve Appwrite.': // pragma: allowlist secret
     'אנליטיקת שימוש ודיווח שגיאות ששומרים על פרטיות ועוזרים לנו לשפר את Appwrite.', // pragma: allowlist secret

@@ -55,7 +55,7 @@ Base path prefix: `/v1/postgresql`
 
 <a id="postgresql-root-resource"></a>
 
-### Databases
+### PostgreSQL
 
 REST resource: `/v1/postgresql`
 
@@ -279,9 +279,9 @@ sdk.forProject(projectId).postgresql.update({
 })
 ```
 
-<a id="postgresql-databaseid-resource"></a>
+<a id="postgresql-backups-resource"></a>
 
-### {Database Id}
+### Backups
 
 REST resource: `/v1/postgresql/{databaseId}/…`
 
@@ -347,200 +347,6 @@ sdk.forProject(projectId).postgresql.createBackupPolicy({
 })
 ```
 
-<a id="postgresql-createbranch"></a>
-
-#### `createBranch`
-
-Create an ephemeral database branch from the primary via PVC snapshot. The branch is a full copy of the database at the current point in time, useful for testing schema migrations or running experiments without affecting production data. Branches expire after the configured TTL (default 24 hours). The branch is created asynchronously.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/branches`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `branchId` | `string` | No | Branch ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. |
-| `ttl` | `number` | No | Time-to-live in seconds before the branch expires. Min 300 (5 min), max 604800 (7 days). Default: 86400 (24h). |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createBranch({
-  databaseId: string;
-  branchId?: string;
-  ttl?: number;
-})
-```
-
-<a id="postgresql-createexecution"></a>
-
-#### `createExecution`
-
-Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/executions`
-- **Returns:** `Promise<Models.DedicatedDatabaseExecution>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `sql` | `string` | Yes | SQL statement to execute. Exactly one statement per request. |
-| `bindings` | `object` | No | Optional bound parameters. Pass either a positional list or a name => value map matching the placeholder style used in the SQL. |
-| `timeoutSeconds` | `number` | No | Per-call execution timeout override. Must be less than or equal to the database's configured sqlApiTimeoutSeconds. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createExecution({
-  databaseId: string;
-  sql: string;
-  bindings?: object;
-  timeoutSeconds?: number;
-})
-```
-
-<a id="postgresql-createextension"></a>
-
-#### `createExtension`
-
-Install a database extension. Only available for PostgreSQL databases. The install runs asynchronously; poll the extensions list endpoint for status.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/extensions`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `name` | `string` | Yes | Extension name (e.g., pgvector, postgis, uuid-ossp). |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createExtension({
-  databaseId: string;
-  name: string;
-})
-```
-
-<a id="postgresql-createfailover"></a>
-
-#### `createFailover`
-
-Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/failovers`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createFailover({
-  databaseId: string;
-  targetReplicaId?: string;
-})
-```
-
-<a id="postgresql-createmigration"></a>
-
-#### `createMigration`
-
-Migrate a database between shared and dedicated types. Shared to dedicated provisions an always-on dedicated instance; dedicated to shared converts to a serverless instance that scales to zero when idle. Data is copied to the target with a brief read-only window during cutover.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/migrations`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetType` | `string` | Yes | Target database type to migrate to. Allowed values: shared (serverless, scales to zero when idle), dedicated (always-on with persistent resources). |
-| `specification` | `string` | No | Target specification to provision when migrating to dedicated. Ignored for shared. Defaults to the database's current specification. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createMigration({
-  databaseId: string;
-  targetType: string;
-  specification?: string;
-})
-```
-
-<a id="postgresql-createrestoration"></a>
-
-#### `createRestoration`
-
-Restore a database from a backup or to a specific point in time (PITR). For backup restoration, provide a backupId. For PITR, provide a targetTime. PITR requires the database to have PITR enabled and is only available for enterprise databases.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/restorations`
-- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `type` | `string` | No | Restoration type. Allowed values: backup, pitr. Use "backup" to restore from a specific backup, or "pitr" for point-in-time recovery. |
-| `backupId` | `string` | No | Backup ID to restore from (required for backup type). |
-| `targetTime` | `number` | No | Target time for PITR as Unix timestamp (required for pitr type). |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createRestoration({
-  databaseId: string;
-  type?: string;
-  backupId?: string;
-  targetTime?: number;
-})
-```
-
-<a id="postgresql-createupgrade"></a>
-
-#### `createUpgrade`
-
-Upgrade a dedicated database to a new engine version. Uses blue-green deployment for zero-downtime cutover.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/postgresql/{databaseId}/upgrades`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetVersion` | `string` | Yes | Target engine version to upgrade to. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.createUpgrade({
-  databaseId: string;
-  targetVersion: string;
-})
-```
-
 <a id="postgresql-deletebackup"></a>
 
 #### `deleteBackup`
@@ -590,58 +396,6 @@ Delete a scheduled backup policy for a dedicated database. Backups already taken
 sdk.forProject(projectId).postgresql.deleteBackupPolicy({
   databaseId: string;
   policyId: string;
-})
-```
-
-<a id="postgresql-deletebranch"></a>
-
-#### `deleteBranch`
-
-Delete an ephemeral database branch. This removes the branch namespace, its PVC, and the associated VolumeSnapshot. The deletion runs asynchronously and is irreversible.
-
-- **HTTP:** `DELETE`
-- **Path:** `/v1/postgresql/{databaseId}/branches/{branchId}`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `branchId` | `string` | Yes | Branch ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.deleteBranch({
-  databaseId: string;
-  branchId: string;
-})
-```
-
-<a id="postgresql-deleteextension"></a>
-
-#### `deleteExtension`
-
-Uninstall a database extension from a PostgreSQL database. The uninstall runs asynchronously; poll the extensions list endpoint for status.
-
-- **HTTP:** `DELETE`
-- **Path:** `/v1/postgresql/{databaseId}/extensions/{extensionName}`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `extensionName` | `string` | Yes | Extension name to uninstall. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.deleteExtension({
-  databaseId: string;
-  extensionName: string;
 })
 ```
 
@@ -697,128 +451,6 @@ sdk.forProject(projectId).postgresql.getBackupPolicy({
 })
 ```
 
-<a id="postgresql-getpitr"></a>
-
-#### `getPitr`
-
-Get available point-in-time recovery windows for a dedicated database. Returns the earliest and latest recovery points.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/pitr`
-- **Returns:** `Promise<Models.DedicatedDatabasePITRWindows>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.getPitr({
-  databaseId: string;
-})
-```
-
-<a id="postgresql-getpooler"></a>
-
-#### `getPooler`
-
-Get the connection pooler configuration for a dedicated database. Returns pooler mode, max connections, and pool size settings.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/pooler`
-- **Returns:** `Promise<Models.DedicatedDatabasePooler>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.getPooler({
-  databaseId: string;
-})
-```
-
-<a id="postgresql-getreplicas"></a>
-
-#### `getReplicas`
-
-Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/replicas`
-- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.getReplicas({
-  databaseId: string;
-})
-```
-
-<a id="postgresql-getrestoration"></a>
-
-#### `getRestoration`
-
-Get details of a specific database restoration including its status, type, and timestamps.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/restorations/{restorationId}`
-- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `restorationId` | `string` | Yes | Restoration ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.getRestoration({
-  databaseId: string;
-  restorationId: string;
-})
-```
-
-<a id="postgresql-getstatus"></a>
-
-#### `getStatus`
-
-Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/status`
-- **Returns:** `Promise<Models.DatabaseStatus>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.getStatus({
-  databaseId: string;
-})
-```
-
 <a id="postgresql-listbackuppolicies"></a>
 
 #### `listBackupPolicies`
@@ -868,86 +500,6 @@ List all backups for a dedicated database. Results can be filtered by status and
 sdk.forProject(projectId).postgresql.listBackups({
   databaseId: string;
   queries?: string[];
-})
-```
-
-<a id="postgresql-listbranches"></a>
-
-#### `listBranches`
-
-List all ephemeral branches for a dedicated database. Returns branch metadata including ID, name, namespace, and expiration time.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/branches`
-- **Returns:** `Promise<Models.DedicatedDatabaseBranchList>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.listBranches({
-  databaseId: string;
-})
-```
-
-<a id="postgresql-listextensions"></a>
-
-#### `listExtensions`
-
-List installed and available extensions for a PostgreSQL database.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/extensions`
-- **Returns:** `Promise<Models.DedicatedDatabaseExtensions>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.listExtensions({
-  databaseId: string;
-})
-```
-
-<a id="postgresql-listrestorations"></a>
-
-#### `listRestorations`
-
-List all restorations for a dedicated database. Results can be filtered by status and type.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/postgresql/{databaseId}/restorations`
-- **Returns:** `Promise<Models.DedicatedDatabaseRestorationList>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `status` | `string` | No | Filter by restoration status. |
-| `type` | `string` | No | Filter by restoration type. |
-| `limit` | `number` | No | Maximum number of restorations to return. |
-| `offset` | `number` | No | Number of restorations to skip. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).postgresql.listRestorations({
-  databaseId: string;
-  status?: string;
-  type?: string;
-  limit?: number;
-  offset?: number;
 })
 ```
 
@@ -1023,6 +575,96 @@ sdk.forProject(projectId).postgresql.updateBackupStorage({
 })
 ```
 
+<a id="postgresql-branches-resource"></a>
+
+### Branches
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createbranch"></a>
+
+#### `createBranch`
+
+Create an ephemeral database branch from the primary via PVC snapshot. The branch is a full copy of the database at the current point in time, useful for testing schema migrations or running experiments without affecting production data. Branches expire after the configured TTL (default 24 hours). The branch is created asynchronously.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/branches`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `branchId` | `string` | No | Branch ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. |
+| `ttl` | `number` | No | Time-to-live in seconds before the branch expires. Min 300 (5 min), max 604800 (7 days). Default: 86400 (24h). |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createBranch({
+  databaseId: string;
+  branchId?: string;
+  ttl?: number;
+})
+```
+
+<a id="postgresql-deletebranch"></a>
+
+#### `deleteBranch`
+
+Delete an ephemeral database branch. This removes the branch namespace, its PVC, and the associated VolumeSnapshot. The deletion runs asynchronously and is irreversible.
+
+- **HTTP:** `DELETE`
+- **Path:** `/v1/postgresql/{databaseId}/branches/{branchId}`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `branchId` | `string` | Yes | Branch ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.deleteBranch({
+  databaseId: string;
+  branchId: string;
+})
+```
+
+<a id="postgresql-listbranches"></a>
+
+#### `listBranches`
+
+List all ephemeral branches for a dedicated database. Returns branch metadata including ID, name, namespace, and expiration time.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/branches`
+- **Returns:** `Promise<Models.DedicatedDatabaseBranchList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.listBranches({
+  databaseId: string;
+})
+```
+
+<a id="postgresql-credentials-resource"></a>
+
+### Credentials
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
 <a id="postgresql-updatecredentials"></a>
 
 #### `updateCredentials`
@@ -1046,6 +688,162 @@ sdk.forProject(projectId).postgresql.updateCredentials({
   databaseId: string;
 })
 ```
+
+<a id="postgresql-executions-resource"></a>
+
+### Executions
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createexecution"></a>
+
+#### `createExecution`
+
+Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/executions`
+- **Returns:** `Promise<Models.DedicatedDatabaseExecution>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `sql` | `string` | Yes | SQL statement to execute. Exactly one statement per request. |
+| `bindings` | `object` | No | Optional bound parameters. Pass either a positional list or a name => value map matching the placeholder style used in the SQL. |
+| `timeoutSeconds` | `number` | No | Per-call execution timeout override. Must be less than or equal to the database's configured sqlApiTimeoutSeconds. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createExecution({
+  databaseId: string;
+  sql: string;
+  bindings?: object;
+  timeoutSeconds?: number;
+})
+```
+
+<a id="postgresql-extensions-resource"></a>
+
+### Extensions
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createextension"></a>
+
+#### `createExtension`
+
+Install a database extension. Only available for PostgreSQL databases. The install runs asynchronously; poll the extensions list endpoint for status.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/extensions`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `name` | `string` | Yes | Extension name (e.g., pgvector, postgis, uuid-ossp). |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createExtension({
+  databaseId: string;
+  name: string;
+})
+```
+
+<a id="postgresql-deleteextension"></a>
+
+#### `deleteExtension`
+
+Uninstall a database extension from a PostgreSQL database. The uninstall runs asynchronously; poll the extensions list endpoint for status.
+
+- **HTTP:** `DELETE`
+- **Path:** `/v1/postgresql/{databaseId}/extensions/{extensionName}`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `extensionName` | `string` | Yes | Extension name to uninstall. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.deleteExtension({
+  databaseId: string;
+  extensionName: string;
+})
+```
+
+<a id="postgresql-listextensions"></a>
+
+#### `listExtensions`
+
+List installed and available extensions for a PostgreSQL database.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/extensions`
+- **Returns:** `Promise<Models.DedicatedDatabaseExtensions>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.listExtensions({
+  databaseId: string;
+})
+```
+
+<a id="postgresql-failovers-resource"></a>
+
+### Failovers
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createfailover"></a>
+
+#### `createFailover`
+
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/failovers`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createFailover({
+  databaseId: string;
+  targetReplicaId?: string;
+})
+```
+
+<a id="postgresql-maintenance-resource"></a>
+
+### Maintenance
+
+REST resource: `/v1/postgresql/{databaseId}/…`
 
 <a id="postgresql-updatemaintenance"></a>
 
@@ -1072,6 +870,100 @@ sdk.forProject(projectId).postgresql.updateMaintenance({
   databaseId: string;
   day: string;
   hourUtc: number;
+})
+```
+
+<a id="postgresql-migrations-resource"></a>
+
+### Migrations
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createmigration"></a>
+
+#### `createMigration`
+
+Migrate a database between shared and dedicated types. Shared to dedicated provisions an always-on dedicated instance; dedicated to shared converts to a serverless instance that scales to zero when idle. Data is copied to the target with a brief read-only window during cutover.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/migrations`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetType` | `string` | Yes | Target database type to migrate to. Allowed values: shared (serverless, scales to zero when idle), dedicated (always-on with persistent resources). |
+| `specification` | `string` | No | Target specification to provision when migrating to dedicated. Ignored for shared. Defaults to the database's current specification. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createMigration({
+  databaseId: string;
+  targetType: string;
+  specification?: string;
+})
+```
+
+<a id="postgresql-pitr-resource"></a>
+
+### Pitr
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-getpitr"></a>
+
+#### `getPitr`
+
+Get available point-in-time recovery windows for a dedicated database. Returns the earliest and latest recovery points.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/pitr`
+- **Returns:** `Promise<Models.DedicatedDatabasePITRWindows>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.getPitr({
+  databaseId: string;
+})
+```
+
+<a id="postgresql-pooler-resource"></a>
+
+### Pooler
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-getpooler"></a>
+
+#### `getPooler`
+
+Get the connection pooler configuration for a dedicated database. Returns pooler mode, max connections, and pool size settings.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/pooler`
+- **Returns:** `Promise<Models.DedicatedDatabasePooler>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.getPooler({
+  databaseId: string;
 })
 ```
 
@@ -1112,5 +1004,191 @@ sdk.forProject(projectId).postgresql.updatePooler({
   poolerCpuLimit?: string;
   poolerMemoryRequest?: string;
   poolerMemoryLimit?: string;
+})
+```
+
+<a id="postgresql-replicas-resource"></a>
+
+### Replicas
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-getreplicas"></a>
+
+#### `getReplicas`
+
+Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/replicas`
+- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.getReplicas({
+  databaseId: string;
+})
+```
+
+<a id="postgresql-restorations-resource"></a>
+
+### Restorations
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createrestoration"></a>
+
+#### `createRestoration`
+
+Restore a database from a backup or to a specific point in time (PITR). For backup restoration, provide a backupId. For PITR, provide a targetTime as an ISO 8601 datetime. PITR requires the database to have PITR enabled and is only available for enterprise databases.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/restorations`
+- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `type` | `string` | No | Restoration type. Allowed values: backup, pitr. Use "backup" to restore from a specific backup, or "pitr" for point-in-time recovery. |
+| `backupId` | `string` | No | Backup ID to restore from (required for backup type). |
+| `targetTime` | `string` | No | Target time for PITR (required for pitr type) as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createRestoration({
+  databaseId: string;
+  type?: string;
+  backupId?: string;
+  targetTime?: string;
+})
+```
+
+<a id="postgresql-getrestoration"></a>
+
+#### `getRestoration`
+
+Get details of a specific database restoration including its status, type, and timestamps.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/restorations/{restorationId}`
+- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `restorationId` | `string` | Yes | Restoration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.getRestoration({
+  databaseId: string;
+  restorationId: string;
+})
+```
+
+<a id="postgresql-listrestorations"></a>
+
+#### `listRestorations`
+
+List all restorations for a dedicated database. Results can be filtered by status and type.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/restorations`
+- **Returns:** `Promise<Models.DedicatedDatabaseRestorationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `status` | `string` | No | Filter by restoration status. |
+| `type` | `string` | No | Filter by restoration type. |
+| `limit` | `number` | No | Maximum number of restorations to return. |
+| `offset` | `number` | No | Number of restorations to skip. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.listRestorations({
+  databaseId: string;
+  status?: string;
+  type?: string;
+  limit?: number;
+  offset?: number;
+})
+```
+
+<a id="postgresql-status-resource"></a>
+
+### Status
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-getstatus"></a>
+
+#### `getStatus`
+
+Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/postgresql/{databaseId}/status`
+- **Returns:** `Promise<Models.DatabaseStatus>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.getStatus({
+  databaseId: string;
+})
+```
+
+<a id="postgresql-upgrades-resource"></a>
+
+### Upgrades
+
+REST resource: `/v1/postgresql/{databaseId}/…`
+
+<a id="postgresql-createupgrade"></a>
+
+#### `createUpgrade`
+
+Upgrade a dedicated database to a new engine version. Uses blue-green deployment for zero-downtime cutover.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/postgresql/{databaseId}/upgrades`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetVersion` | `string` | Yes | Target engine version to upgrade to. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).postgresql.createUpgrade({
+  databaseId: string;
+  targetVersion: string;
 })
 ```

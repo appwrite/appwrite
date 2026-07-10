@@ -3,14 +3,11 @@ import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { InputTags } from '@/components/ui/input-tags'
+import {
+  OAUTH2_DEVICE_FLOW_DESCRIPTION,
+  OAuth2ClientTypePicker,
+} from '@/components/global/shared/OAuth2ClientTypePicker'
 import { useOrganizationApp } from '@/lib/react-query/hooks'
 import {
   nonEmptyList,
@@ -51,74 +48,63 @@ export function View() {
   }
 
   return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('OAuth client')}
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            {t('Redirect URIs and client type for OAuth2 and OpenID Connect.')}
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          <div className="space-y-2">
-            <Label>{t('Client type')}</Label>
-            <Select value={clientType} onValueChange={setClientType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="confidential">{t('Confidential')}</SelectItem>
-                <SelectItem value="public">{t('Public')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-[12px] text-muted-foreground">
-              {t(
-                'Public clients require PKCE. Confidential clients use a client secret.',
-              )}
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('OAuth client')}
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          {t('Redirect URIs and client type for OAuth2 and OpenID Connect.')}
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4 space-y-4">
+        <OAuth2ClientTypePicker
+          value={clientType}
+          onChange={setClientType}
+          disabled={isUpdating}
+        />
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <Label htmlFor="app-oauth-device-flow">{t('Device flow')}</Label>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {t(OAUTH2_DEVICE_FLOW_DESCRIPTION)}
             </p>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label htmlFor="app-oauth-device-flow">{t('Device flow')}</Label>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                {t('Allow OAuth2 Device Authorization Grant (RFC 8628).')}
-              </p>
-            </div>
-            <Switch
-              id="app-oauth-device-flow"
-              checked={deviceFlow}
-              onCheckedChange={setDeviceFlow}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('Redirect URIs')}</Label>
-            <InputTags
-              value={redirectUris}
-              onChange={setRedirectUris}
-              placeholder={t('Add redirect URI and press Enter')}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('Post-logout redirect URIs')}</Label>
-            <InputTags
-              value={postLogoutRedirectUris}
-              onChange={setPostLogoutRedirectUris}
-              placeholder={t('Add post-logout URI and press Enter')}
-            />
-          </div>
+          <Switch
+            id="app-oauth-device-flow"
+            checked={deviceFlow}
+            disabled={isUpdating}
+            onCheckedChange={setDeviceFlow}
+          />
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={isUpdating || nonEmptyList(redirectUris).length === 0}
-            onClick={handleUpdate}
-          >
-            {t('Update')}
-          </Button>
+        <div className="space-y-2">
+          <Label>{t('Redirect URIs')}</Label>
+          <InputTags
+            value={redirectUris}
+            onChange={setRedirectUris}
+            placeholder={t('Add redirect URI and press Enter')}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>{t('Post-logout redirect URIs')}</Label>
+          <InputTags
+            value={postLogoutRedirectUris}
+            onChange={setPostLogoutRedirectUris}
+            placeholder={t('Add post-logout URI and press Enter')}
+          />
         </div>
       </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={isUpdating || nonEmptyList(redirectUris).length === 0}
+          onClick={handleUpdate}
+        >
+          {t('Update')}
+        </Button>
+      </div>
+    </div>
   )
 }

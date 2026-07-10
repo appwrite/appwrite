@@ -203,8 +203,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'שינויים בפרויקטים ובשירותים מוגבלים עד לתשלום החשבונית הפתוחה. השלימו את התשלום כדי להחזיר גישה מלאה.',
   Check: 'בדקו את',
   'Choose File': 'בחירת קובץ',
-  'Choose a PNG from the Apps bucket or upload a new one.':
-    'בחרו קובץ PNG מהבאקט Apps או העלו קובץ חדש.',
+  'Choose a PNG from the app assets bucket or upload a new one.':
+    'בחרו קובץ PNG מבאקט נכסי האפליקציה או העלו קובץ חדש.',
   'Choose a paid plan for the new organization instead.':
     'בחרו תוכנית בתשלום עבור הארגון החדש במקום זאת.',
   'Choose domains to keep': 'בחרו דומיינים לשמירה',
@@ -525,6 +525,23 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'How users can get help with your app during OAuth2 consent.':
     'כיצד משתמשים יכולים לקבל עזרה בנוגע לאפליקציה שלכם במהלך תהליך ההסכמה של OAuth2.',
   'Image URLs': 'כתובות תמונות',
+  'Image uploaded': 'התמונה הועלתה',
+  'Images': 'תמונות',
+  'Images uploaded': 'התמונות הועלו',
+  'Add image': 'הוספת תמונה',
+  'Remove image': 'הסרת תמונה',
+  'Consent screen image': 'תמונת מסך הסכמה',
+  'Optional screenshots shown on the OAuth2 consent screen.':
+    'צילומי מסך אופציונליים שמוצגים במסך ההסכמה של OAuth2.',
+  'You can add up to 12 images.': 'אפשר להוסיף עד 12 תמונות.',
+  'Failed to upload image': 'העלאת התמונה נכשלה',
+  'Add tag and press Enter': 'הוסיפו תגית ולחצו Enter',
+  'Optional labels shown on the OAuth2 consent screen.':
+    'תוויות אופציונליות שמוצגות במסך ההסכמה של OAuth2.',
+  'Only PNG, JPEG, or WebP images are supported':
+    'נתמכות רק תמונות PNG, JPEG או WebP',
+  'Upload image': 'העלאת תמונה',
+  Tags: 'תגיות',
   Import: 'ייבוא',
   'Import Zone File': 'ייבוא קובץ Zone',
   'Import zone file': 'ייבוא קובץ Zone',
@@ -1089,8 +1106,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Upload PNG': 'העלאת PNG',
   'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.':
     'העלו קובץ DNS zone (בפורמט txt.) לייבוא רשומות DNS. גודל הקובץ המרבי הוא 5MB.',
-  'Upload a PNG logo or pick an existing file from the Apps bucket. Logos are publicly readable and writable by your team.':
-    'העלו לוגו PNG או בחרו קובץ קיים מהבאקט Apps. הלוגואים פתוחים לקריאה ציבורית ולכתיבה על ידי הצוות שלכם.',
+  'Upload a PNG logo for the OAuth2 consent screen.':
+    'העלו לוגו PNG למסך ההסכמה של OAuth2.',
   'Upload a PNG logo to get started.': 'העלו לוגו PNG כדי להתחיל.',
   Usage: 'שימוש',
   'Usage details': 'פרטי שימוש',

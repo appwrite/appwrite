@@ -27,6 +27,7 @@ Base path prefix: `/v1/tablesdb`
 | [`createLineColumn`](#tablesdb-createlinecolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/line` | `Promise<Models.ColumnLine>` |
 | [`createLongtextColumn`](#tablesdb-createlongtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/longtext` | `Promise<Models.ColumnLongtext>` |
 | [`createMediumtextColumn`](#tablesdb-createmediumtextcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/mediumtext` | `Promise<Models.ColumnMediumtext>` |
+| [`createMigration`](#tablesdb-createmigration) | — | — | `Promise<Models.DatabaseMigration>` |
 | [`createOperations`](#tablesdb-createoperations) | POST | `/v1/tablesdb/transactions/{transactionId}/operations` | `Promise<Models.Transaction>` |
 | [`createPointColumn`](#tablesdb-createpointcolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/point` | `Promise<Models.ColumnPoint>` |
 | [`createPolygonColumn`](#tablesdb-createpolygoncolumn) | POST | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/polygon` | `Promise<Models.ColumnPolygon>` |
@@ -39,12 +40,14 @@ Base path prefix: `/v1/tablesdb`
 | [`delete`](#tablesdb-delete) | DELETE | `/v1/tablesdb/{databaseId}` | `Promise<{}>` |
 | [`deleteColumn`](#tablesdb-deletecolumn) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<{}>` |
 | [`deleteIndex`](#tablesdb-deleteindex) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<{}>` |
+| [`deleteMigration`](#tablesdb-deletemigration) | — | — | `Promise<{}>` |
 | [`deleteRow`](#tablesdb-deleterow) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}` | `Promise<{}>` |
 | [`deleteTable`](#tablesdb-deletetable) | DELETE | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<{}>` |
 | [`deleteTransaction`](#tablesdb-deletetransaction) | DELETE | `/v1/tablesdb/transactions/{transactionId}` | `Promise<{}>` |
 | [`get`](#tablesdb-get) | GET | `/v1/tablesdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getColumn`](#tablesdb-getcolumn) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns/{key}` | `Promise<Models.ColumnBoolean | Models.ColumnInteger | Models.ColumnFloat | Models.ColumnEmail | Models.ColumnEnum | Models.ColumnUrl | Models.ColumnIp | Models.ColumnDatetime | Models.ColumnRelationship | Models.ColumnString>` |
 | [`getIndex`](#tablesdb-getindex) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes/{key}` | `Promise<Models.ColumnIndex>` |
+| [`getMigration`](#tablesdb-getmigration) | — | — | `Promise<Models.DatabaseMigration>` |
 | [`getTable`](#tablesdb-gettable) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}` | `Promise<Models.Table>` |
 | [`getTableUsage`](#tablesdb-gettableusage) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/usage` | `Promise<Models.UsageTable>` |
 | [`getTransaction`](#tablesdb-gettransaction) | GET | `/v1/tablesdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
@@ -52,6 +55,7 @@ Base path prefix: `/v1/tablesdb`
 | [`list`](#tablesdb-list) | GET | `/v1/tablesdb` | `Promise<Models.DatabaseList>` |
 | [`listColumns`](#tablesdb-listcolumns) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/columns` | `Promise<Models.ColumnList>` |
 | [`listIndexes`](#tablesdb-listindexes) | GET | `/v1/tablesdb/{databaseId}/tables/{tableId}/indexes` | `Promise<Models.ColumnIndexList>` |
+| [`listMigrations`](#tablesdb-listmigrations) | — | — | `Promise<Models.DatabaseMigrationList>` |
 | [`listTables`](#tablesdb-listtables) | GET | `/v1/tablesdb/{databaseId}/tables` | `Promise<Models.TableList>` |
 | [`listTransactions`](#tablesdb-listtransactions) | GET | `/v1/tablesdb/transactions` | `Promise<Models.TransactionList>` |
 | [`listUsage`](#tablesdb-listusage) | GET | `/v1/tablesdb/usage` | `Promise<Models.UsageDatabases>` |
@@ -80,7 +84,7 @@ Base path prefix: `/v1/tablesdb`
 
 <a id="tablesdb-root-resource"></a>
 
-### Databases
+### TablesDB
 
 REST resource: `/v1/tablesdb`
 
@@ -304,6 +308,32 @@ sdk.forProject(projectId).tablesDB.updateTransaction({
 
 REST resource: `/v1/tablesdb/usage/…`
 
+<a id="tablesdb-getusage"></a>
+
+#### `getUsage`
+
+Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/tablesdb/{databaseId}/usage`
+- **Returns:** `Promise<Models.UsageDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `range` | `UsageRange` | No | Date range. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getUsage({
+  databaseId: string;
+  range?: UsageRange;
+})
+```
+
 <a id="tablesdb-listusage"></a>
 
 #### `listUsage`
@@ -410,9 +440,9 @@ sdk.forProject(projectId).tablesDB.update({
 })
 ```
 
-<a id="tablesdb-databaseid-resource"></a>
+<a id="tablesdb-tables-resource"></a>
 
-### {Database Id}
+### Tables
 
 REST resource: `/v1/tablesdb/{databaseId}/…`
 
@@ -1312,32 +1342,6 @@ sdk.forProject(projectId).tablesDB.getTableUsage({
 })
 ```
 
-<a id="tablesdb-getusage"></a>
-
-#### `getUsage`
-
-Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/tablesdb/{databaseId}/usage`
-- **Returns:** `Promise<Models.UsageDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).tablesDB.getUsage({
-  databaseId: string;
-  range?: UsageRange;
-})
-```
-
 <a id="tablesdb-listcolumns"></a>
 
 #### `listColumns`
@@ -2053,5 +2057,99 @@ sdk.forProject(projectId).tablesDB.updateVarcharColumn({
   xdefault?: string;
   size?: number;
   newKey?: string;
+})
+```
+
+<a id="tablesdb-listmigrations"></a>
+
+#### `listMigrations`
+
+List the dedicated migrations for a TablesDB database. A database has at most one in-flight migration.
+
+- **Returns:** `Promise<Models.DatabaseMigrationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.listMigrations({
+  databaseId: string;
+})
+```
+
+<a id="tablesdb-createmigration"></a>
+
+#### `createMigration`
+
+Start migrating a serverless TablesDB database onto a dedicated MySQL compute. Data is copied to the target while the source stays live, with a brief read-only window during cutover.
+
+- **Returns:** `Promise<Models.DatabaseMigration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `specification` | `string` | Yes | Dedicated compute specification to provision as the migration target (e.g. s-2vcpu-4gb). The migration always targets a dedicated compute, so `serverless` is not accepted. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.createMigration({
+  databaseId: string;
+  specification: string;
+})
+```
+
+<a id="tablesdb-getmigration"></a>
+
+#### `getMigration`
+
+Get a single dedicated migration for a TablesDB database by its ID.
+
+- **Returns:** `Promise<Models.DatabaseMigration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `migrationId` | `string` | Yes | Migration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.getMigration({
+  databaseId: string;
+  migrationId: string;
+})
+```
+
+<a id="tablesdb-deletemigration"></a>
+
+#### `deleteMigration`
+
+Abort an in-flight TablesDB dedicated migration. Only allowed before cutover; once the migration has cut over it cannot be aborted.
+
+- **Returns:** `Promise<{}>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `migrationId` | `string` | Yes | Migration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).tablesDB.deleteMigration({
+  databaseId: string;
+  migrationId: string;
 })
 ```

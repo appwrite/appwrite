@@ -1,8 +1,11 @@
 import { ImageFormat, Permission, Role } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
-export const APPS_LOGO_BUCKET_ID = 'apps'
+export const APPS_LOGO_BUCKET_ID = 'appAssets'
 export const APPS_LOGO_DEFAULT_CONSOLE_REGION = 'fra'
+
+/** Legacy bucket id still present in older logoUri values. */
+const APPS_LOGO_LEGACY_BUCKET_ID = 'apps'
 
 export function resolveAppsLogoConsoleRegion(
   region?: string | null,
@@ -24,10 +27,7 @@ export function getAppsLogoConsoleStorageSdk(region?: string | null) {
 export function buildAppLogoFilePermissions(teamId: string): string[] {
   return [
     Permission.read(Role.any()),
-    Permission.update(Role.team(teamId, 'owner')),
-    Permission.update(Role.team(teamId, 'developer')),
-    Permission.delete(Role.team(teamId, 'owner')),
-    Permission.delete(Role.team(teamId, 'developer')),
+    Permission.write(Role.team(teamId)),
   ]
 }
 
@@ -51,7 +51,7 @@ export function getAppLogoFilePreviewUrl(
 }
 
 const APPS_LOGO_FILE_ID_PATTERN =
-  /\/storage\/buckets\/apps\/files\/([^/?#]+)\/(?:preview|view|download)/i
+  /\/storage\/buckets\/(?:appAssets|apps)\/files\/([^/?#]+)\/(?:preview|view|download)/i
 
 export function parseAppLogoFileId(logoUri: string): string | null {
   const trimmed = logoUri.trim()
@@ -63,4 +63,28 @@ export function parseAppLogoFileId(logoUri: string): string | null {
 
 export function isAppLogoStorageUrl(logoUri: string): boolean {
   return parseAppLogoFileId(logoUri) !== null
+}
+
+export function resolveAppLogoDisplayUrl(
+  logoUri: string | null | undefined,
+  options?: {
+    width?: number
+    height?: number
+    region?: string | null
+  },
+): string | null {
+  const trimmed = logoUri?.trim()
+  if (!trimmed) return null
+
+  const fileId = parseAppLogoFileId(trimmed)
+  if (fileId) {
+    return getAppLogoFilePreviewUrl(fileId, options)
+  }
+
+  // Keep external URLs and any non-storage values as-is.
+  if (trimmed.includes(`/${APPS_LOGO_LEGACY_BUCKET_ID}/`)) {
+    return trimmed
+  }
+
+  return trimmed
 }

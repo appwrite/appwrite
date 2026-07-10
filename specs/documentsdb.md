@@ -25,15 +25,12 @@ Base path prefix: `/v1/documentsdb`
 | [`deleteTransaction`](#documentsdb-deletetransaction) | DELETE | `/v1/documentsdb/transactions/{transactionId}` | `Promise<{}>` |
 | [`get`](#documentsdb-get) | GET | `/v1/documentsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#documentsdb-getcollection) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.Collection>` |
-| [`getCollectionUsage`](#documentsdb-getcollectionusage) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/usage` | `Promise<Models.UsageCollection>` |
 | [`getIndex`](#documentsdb-getindex) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
 | [`getTransaction`](#documentsdb-gettransaction) | GET | `/v1/documentsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
-| [`getUsage`](#documentsdb-getusage) | GET | `/v1/documentsdb/{databaseId}/usage` | `Promise<Models.UsageDocumentsDB>` |
 | [`list`](#documentsdb-list) | GET | `/v1/documentsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#documentsdb-listcollections) | GET | `/v1/documentsdb/{databaseId}/collections` | `Promise<Models.CollectionList>` |
 | [`listIndexes`](#documentsdb-listindexes) | GET | `/v1/documentsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
 | [`listTransactions`](#documentsdb-listtransactions) | GET | `/v1/documentsdb/transactions` | `Promise<Models.TransactionList>` |
-| [`listUsage`](#documentsdb-listusage) | GET | `/v1/documentsdb/usage` | `Promise<Models.UsageDocumentsDBs>` |
 | [`update`](#documentsdb-update) | PUT | `/v1/documentsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#documentsdb-updatecollection) | PUT | `/v1/documentsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.Collection>` |
 | [`updateTransaction`](#documentsdb-updatetransaction) | PATCH | `/v1/documentsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
@@ -42,7 +39,7 @@ Base path prefix: `/v1/documentsdb`
 
 <a id="documentsdb-root-resource"></a>
 
-### Databases
+### DocumentsDB
 
 REST resource: `/v1/documentsdb`
 
@@ -232,36 +229,6 @@ sdk.forProject(projectId).documentsDB.updateTransaction({
 })
 ```
 
-<a id="documentsdb-usage-resource"></a>
-
-### Usage
-
-REST resource: `/v1/documentsdb/usage/…`
-
-<a id="documentsdb-listusage"></a>
-
-#### `listUsage`
-
-List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/documentsdb/usage`
-- **Returns:** `Promise<Models.UsageDocumentsDBs>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).documentsDB.listUsage({
-  range?: UsageRange;
-})
-```
-
 <a id="documentsdb-databaseid-resource"></a>
 
 ### Database Id
@@ -344,9 +311,9 @@ sdk.forProject(projectId).documentsDB.update({
 })
 ```
 
-<a id="documentsdb-databaseid-resource"></a>
+<a id="documentsdb-collections-resource"></a>
 
-### {Database Id}
+### Collections
 
 REST resource: `/v1/documentsdb/{databaseId}/…`
 
@@ -534,34 +501,6 @@ sdk.forProject(projectId).documentsDB.getCollection({
 })
 ```
 
-<a id="documentsdb-getcollectionusage"></a>
-
-#### `getCollectionUsage`
-
-Get usage metrics and statistics for a collection. Returning the total number of documents. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/documentsdb/{databaseId}/collections/{collectionId}/usage`
-- **Returns:** `Promise<Models.UsageCollection>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `collectionId` | `string` | Yes | Collection ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).documentsDB.getCollectionUsage({
-  databaseId: string;
-  collectionId: string;
-  range?: UsageRange;
-})
-```
-
 <a id="documentsdb-getindex"></a>
 
 #### `getIndex`
@@ -587,32 +526,6 @@ sdk.forProject(projectId).documentsDB.getIndex({
   databaseId: string;
   collectionId: string;
   key: string;
-})
-```
-
-<a id="documentsdb-getusage"></a>
-
-#### `getUsage`
-
-Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/documentsdb/{databaseId}/usage`
-- **Returns:** `Promise<Models.UsageDocumentsDB>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).documentsDB.getUsage({
-  databaseId: string;
-  range?: UsageRange;
 })
 ```
 

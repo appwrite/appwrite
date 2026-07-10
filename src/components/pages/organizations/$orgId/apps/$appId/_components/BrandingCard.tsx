@@ -3,13 +3,13 @@ import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { InputTags } from '@/components/ui/input-tags'
 import {
   nonEmptyList,
   trimOrEmpty,
   useOrgAppUpdate,
 } from './useOrgAppUpdate'
 import { AppLogoFilePicker } from '../../_components/AppLogoFilePicker'
+import { AppImagesPicker } from '../../_components/AppImagesPicker'
 import { useT } from '@/lib/i18n/translate'
 
 type BrandingCardProps = {
@@ -33,7 +33,9 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">{t('Branding')}</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          {t('Branding')}
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t('URLs shown on the OAuth2 consent screen.')}
         </p>
@@ -59,11 +61,12 @@ export function BrandingCard({ orgId, app }: BrandingCardProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('Image URLs')}</Label>
-          <InputTags
+          <Label>{t('Images')}</Label>
+          <AppImagesPicker
+            teamId={orgId}
             value={images}
             onChange={setImages}
-            placeholder={t('Add image URL and press Enter')}
+            disabled={isUpdating}
           />
         </div>
       </div>

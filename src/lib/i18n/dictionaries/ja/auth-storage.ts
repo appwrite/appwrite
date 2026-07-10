@@ -27,7 +27,32 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Accessed': '最終アクセス',
   'Active': 'アクティブ',
   'Active tokens for this client will stop working.': 'このクライアントのアクティブなトークンは動作しなくなります。',
+  'All active tokens for this client will stop working immediately. This cannot be undone.':
+    'このクライアントのすべてのアクティブなトークンは直ちに無効になります。この操作は元に戻せません。',
+  'App disabled': 'アプリを無効にしました',
+  'App enabled': 'アプリを有効にしました',
+  'App updated': 'アプリを更新しました',
   'Activity': 'アクティビティ',
+  'Back to apps': 'アプリ一覧に戻る',
+  'Disabled apps cannot start new authorization flows. Existing tokens remain until revoked.':
+    '無効なアプリは新しい認可フローを開始できません。既存のトークンは取り消されるまで有効です。',
+  'Failed to revoke tokens': 'トークンの取り消しに失敗しました',
+  'Invalidate all access and refresh tokens issued to this client. Users will need to authorize the app again.':
+    'このクライアントに発行されたすべてのアクセストークンとリフレッシュトークンを無効にします。ユーザーはアプリを再度認可する必要があります。',
+  'Logo URL': 'ロゴ URL',
+  'Name and descriptions shown on the OAuth2 consent screen.':
+    'OAuth2 同意画面に表示される名前と説明。',
+  'Optional description for the consent screen': '同意画面用の任意の説明',
+  'Revoke all tokens': 'すべてのトークンを取り消す',
+  'Revoke tokens': 'トークンを取り消す',
+  'Short summary for the consent screen': '同意画面用の短い概要',
+  'This client can request authorization.': 'このクライアントは認可をリクエストできます。',
+  'This client is disabled.': 'このクライアントは無効です。',
+  'Tokens revoked': 'トークンを取り消しました',
+  'Consent screen': '同意画面',
+  'OAuth2 client settings and consent screen details.':
+    'OAuth2 クライアント設定と同意画面の詳細。',
+  'Update app': 'アプリを更新',
   'Add': '追加',
   'Add Label': 'ラベルを追加',
   'Add a new messaging target for this user.': 'このユーザーに新しいメッセージングターゲットを追加します。',
@@ -144,6 +169,12 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Client ID': 'クライアント ID',
   'Client name': 'クライアント名',
   'Client type': 'クライアントタイプ',
+  'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).':
+    'クライアントシークレットを保持できるバックエンドまたは SSR アプリ (Node、Next.js、Nuxt)。',
+  'Native or static web apps that cannot store a client secret (iOS, Android, SPA).':
+    'クライアントシークレットを保存できないネイティブまたは静的 Web アプリ (iOS、Android、SPA)。',
+  'For TVs, CLIs on a remote server, and other devices where typing a password is difficult.':
+    'テレビ、リモートサーバー上の CLI、パスワード入力が難しいその他のデバイス向けです。',
   'Close': '閉じる',
   'Close file preview': 'ファイルプレビューを閉じる',
   'Code': 'コード',
@@ -597,7 +628,20 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'OAuth2 server section': 'OAuth2 サーバーセクション',
   'OAuth2 settings': 'OAuth2 設定',
   'OIDC': 'OIDC',
+  'OIDC discovery': 'OIDC ディスカバリー',
   'OIDC discovery URL': 'OIDC ディスカバリー URL',
+  'Authorization endpoint': '認可エンドポイント',
+  'Token endpoint': 'トークンエンドポイント',
+  'Introspection endpoint': 'イントロスペクションエンドポイント',
+  'JWKS URI': 'JWKS URI',
+  'UserInfo endpoint': 'UserInfo エンドポイント',
+  'Revocation endpoint': '取り消しエンドポイント',
+  'Common endpoints from the discovery document. Most OAuth libraries only need the discovery URL.':
+    'ディスカバリードキュメントに含まれる主なエンドポイントです。多くの OAuth ライブラリはディスカバリー URL だけで十分です。',
+  'Share this URL with integrators. OAuth libraries fetch it once to learn authorize, token, and JWKS endpoints.':
+    'この URL を連携先に共有してください。OAuth ライブラリは認可・トークン・JWKS の各エンドポイントを一度取得します。',
+  'Point your consent screen at the authorization URL and choose which scopes clients can request.':
+    '同意画面を認可 URL に向け、クライアントがリクエストできるスコープを選択します。',
   'OTP Session': 'OTP セッション',
   'Okta': 'Okta',
   'One-time password code': 'ワンタイムパスワードコード',
@@ -1065,7 +1109,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'of': 'の',
   'of original': 'オリジナルの',
   'only if they have bucket permissions': 'バケット権限がある場合のみ',
-  'openid, profile, and email are always included. Add up to': 'openid、profile、email は常に含まれます。追加できるのは最大',
+  'openid, profile, email, and phone are always included. Add up to':
+    'openid、profile、email、phone は常に含まれます。追加できるのは最大',
   'or': 'または',
   'passwords': 'パスワード',
   'permissions': '権限',

@@ -52,7 +52,7 @@ Base path prefix: `/v1/mysql`
 
 <a id="mysql-root-resource"></a>
 
-### Databases
+### MySQL
 
 REST resource: `/v1/mysql`
 
@@ -276,9 +276,9 @@ sdk.forProject(projectId).mysql.update({
 })
 ```
 
-<a id="mysql-databaseid-resource"></a>
+<a id="mysql-backups-resource"></a>
 
-### {Database Id}
+### Backups
 
 REST resource: `/v1/mysql/{databaseId}/…`
 
@@ -344,174 +344,6 @@ sdk.forProject(projectId).mysql.createBackupPolicy({
 })
 ```
 
-<a id="mysql-createbranch"></a>
-
-#### `createBranch`
-
-Create an ephemeral database branch from the primary via PVC snapshot. The branch is a full copy of the database at the current point in time, useful for testing schema migrations or running experiments without affecting production data. Branches expire after the configured TTL (default 24 hours). The branch is created asynchronously.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/mysql/{databaseId}/branches`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `branchId` | `string` | No | Branch ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. |
-| `ttl` | `number` | No | Time-to-live in seconds before the branch expires. Min 300 (5 min), max 604800 (7 days). Default: 86400 (24h). |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.createBranch({
-  databaseId: string;
-  branchId?: string;
-  ttl?: number;
-})
-```
-
-<a id="mysql-createexecution"></a>
-
-#### `createExecution`
-
-Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/mysql/{databaseId}/executions`
-- **Returns:** `Promise<Models.DedicatedDatabaseExecution>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `sql` | `string` | Yes | SQL statement to execute. Exactly one statement per request. |
-| `bindings` | `object` | No | Optional bound parameters. Pass either a positional list or a name => value map matching the placeholder style used in the SQL. |
-| `timeoutSeconds` | `number` | No | Per-call execution timeout override. Must be less than or equal to the database's configured sqlApiTimeoutSeconds. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.createExecution({
-  databaseId: string;
-  sql: string;
-  bindings?: object;
-  timeoutSeconds?: number;
-})
-```
-
-<a id="mysql-createfailover"></a>
-
-#### `createFailover`
-
-Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/mysql/{databaseId}/failovers`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.createFailover({
-  databaseId: string;
-  targetReplicaId?: string;
-})
-```
-
-<a id="mysql-createmigration"></a>
-
-#### `createMigration`
-
-Migrate a database between shared and dedicated types. Shared to dedicated provisions an always-on dedicated instance; dedicated to shared converts to a serverless instance that scales to zero when idle. Data is copied to the target with a brief read-only window during cutover.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/mysql/{databaseId}/migrations`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetType` | `string` | Yes | Target database type to migrate to. Allowed values: shared (serverless, scales to zero when idle), dedicated (always-on with persistent resources). |
-| `specification` | `string` | No | Target specification to provision when migrating to dedicated. Ignored for shared. Defaults to the database's current specification. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.createMigration({
-  databaseId: string;
-  targetType: string;
-  specification?: string;
-})
-```
-
-<a id="mysql-createrestoration"></a>
-
-#### `createRestoration`
-
-Restore a database from a backup or to a specific point in time (PITR). For backup restoration, provide a backupId. For PITR, provide a targetTime. PITR requires the database to have PITR enabled and is only available for enterprise databases.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/mysql/{databaseId}/restorations`
-- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `type` | `string` | No | Restoration type. Allowed values: backup, pitr. Use "backup" to restore from a specific backup, or "pitr" for point-in-time recovery. |
-| `backupId` | `string` | No | Backup ID to restore from (required for backup type). |
-| `targetTime` | `number` | No | Target time for PITR as Unix timestamp (required for pitr type). |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.createRestoration({
-  databaseId: string;
-  type?: string;
-  backupId?: string;
-  targetTime?: number;
-})
-```
-
-<a id="mysql-createupgrade"></a>
-
-#### `createUpgrade`
-
-Upgrade a dedicated database to a new engine version. Uses blue-green deployment for zero-downtime cutover.
-
-- **HTTP:** `POST`
-- **Path:** `/v1/mysql/{databaseId}/upgrades`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `targetVersion` | `string` | Yes | Target engine version to upgrade to. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.createUpgrade({
-  databaseId: string;
-  targetVersion: string;
-})
-```
-
 <a id="mysql-deletebackup"></a>
 
 #### `deleteBackup`
@@ -561,32 +393,6 @@ Delete a scheduled backup policy for a dedicated database. Backups already taken
 sdk.forProject(projectId).mysql.deleteBackupPolicy({
   databaseId: string;
   policyId: string;
-})
-```
-
-<a id="mysql-deletebranch"></a>
-
-#### `deleteBranch`
-
-Delete an ephemeral database branch. This removes the branch namespace, its PVC, and the associated VolumeSnapshot. The deletion runs asynchronously and is irreversible.
-
-- **HTTP:** `DELETE`
-- **Path:** `/v1/mysql/{databaseId}/branches/{branchId}`
-- **Returns:** `Promise<Models.DedicatedDatabase>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `branchId` | `string` | Yes | Branch ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.deleteBranch({
-  databaseId: string;
-  branchId: string;
 })
 ```
 
@@ -642,128 +448,6 @@ sdk.forProject(projectId).mysql.getBackupPolicy({
 })
 ```
 
-<a id="mysql-getpitr"></a>
-
-#### `getPitr`
-
-Get available point-in-time recovery windows for a dedicated database. Returns the earliest and latest recovery points.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/pitr`
-- **Returns:** `Promise<Models.DedicatedDatabasePITRWindows>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.getPitr({
-  databaseId: string;
-})
-```
-
-<a id="mysql-getpooler"></a>
-
-#### `getPooler`
-
-Get the connection pooler configuration for a dedicated database. Returns pooler mode, max connections, and pool size settings.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/pooler`
-- **Returns:** `Promise<Models.DedicatedDatabasePooler>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.getPooler({
-  databaseId: string;
-})
-```
-
-<a id="mysql-getreplicas"></a>
-
-#### `getReplicas`
-
-Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/replicas`
-- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.getReplicas({
-  databaseId: string;
-})
-```
-
-<a id="mysql-getrestoration"></a>
-
-#### `getRestoration`
-
-Get details of a specific database restoration including its status, type, and timestamps.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/restorations/{restorationId}`
-- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `restorationId` | `string` | Yes | Restoration ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.getRestoration({
-  databaseId: string;
-  restorationId: string;
-})
-```
-
-<a id="mysql-getstatus"></a>
-
-#### `getStatus`
-
-Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/status`
-- **Returns:** `Promise<Models.DatabaseStatus>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.getStatus({
-  databaseId: string;
-})
-```
-
 <a id="mysql-listbackuppolicies"></a>
 
 #### `listBackupPolicies`
@@ -813,62 +497,6 @@ List all backups for a dedicated database. Results can be filtered by status and
 sdk.forProject(projectId).mysql.listBackups({
   databaseId: string;
   queries?: string[];
-})
-```
-
-<a id="mysql-listbranches"></a>
-
-#### `listBranches`
-
-List all ephemeral branches for a dedicated database. Returns branch metadata including ID, name, namespace, and expiration time.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/branches`
-- **Returns:** `Promise<Models.DedicatedDatabaseBranchList>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.listBranches({
-  databaseId: string;
-})
-```
-
-<a id="mysql-listrestorations"></a>
-
-#### `listRestorations`
-
-List all restorations for a dedicated database. Results can be filtered by status and type.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/mysql/{databaseId}/restorations`
-- **Returns:** `Promise<Models.DedicatedDatabaseRestorationList>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `status` | `string` | No | Filter by restoration status. |
-| `type` | `string` | No | Filter by restoration type. |
-| `limit` | `number` | No | Maximum number of restorations to return. |
-| `offset` | `number` | No | Number of restorations to skip. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).mysql.listRestorations({
-  databaseId: string;
-  status?: string;
-  type?: string;
-  limit?: number;
-  offset?: number;
 })
 ```
 
@@ -944,6 +572,96 @@ sdk.forProject(projectId).mysql.updateBackupStorage({
 })
 ```
 
+<a id="mysql-branches-resource"></a>
+
+### Branches
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-createbranch"></a>
+
+#### `createBranch`
+
+Create an ephemeral database branch from the primary via PVC snapshot. The branch is a full copy of the database at the current point in time, useful for testing schema migrations or running experiments without affecting production data. Branches expire after the configured TTL (default 24 hours). The branch is created asynchronously.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/mysql/{databaseId}/branches`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `branchId` | `string` | No | Branch ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. |
+| `ttl` | `number` | No | Time-to-live in seconds before the branch expires. Min 300 (5 min), max 604800 (7 days). Default: 86400 (24h). |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.createBranch({
+  databaseId: string;
+  branchId?: string;
+  ttl?: number;
+})
+```
+
+<a id="mysql-deletebranch"></a>
+
+#### `deleteBranch`
+
+Delete an ephemeral database branch. This removes the branch namespace, its PVC, and the associated VolumeSnapshot. The deletion runs asynchronously and is irreversible.
+
+- **HTTP:** `DELETE`
+- **Path:** `/v1/mysql/{databaseId}/branches/{branchId}`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `branchId` | `string` | Yes | Branch ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.deleteBranch({
+  databaseId: string;
+  branchId: string;
+})
+```
+
+<a id="mysql-listbranches"></a>
+
+#### `listBranches`
+
+List all ephemeral branches for a dedicated database. Returns branch metadata including ID, name, namespace, and expiration time.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/branches`
+- **Returns:** `Promise<Models.DedicatedDatabaseBranchList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.listBranches({
+  databaseId: string;
+})
+```
+
+<a id="mysql-credentials-resource"></a>
+
+### Credentials
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
 <a id="mysql-updatecredentials"></a>
 
 #### `updateCredentials`
@@ -967,6 +685,80 @@ sdk.forProject(projectId).mysql.updateCredentials({
   databaseId: string;
 })
 ```
+
+<a id="mysql-executions-resource"></a>
+
+### Executions
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-createexecution"></a>
+
+#### `createExecution`
+
+Execute SQL through the console-facing Cloud endpoint. Cloud proxies through the edge platform to the per-database SQL API sidecar. Application traffic should bypass cloud entirely and POST directly to the per-database hostname: `https://db-{project}-{db}.{region}.appwrite.center/v1/sql/executions` with an `X-Appwrite-Key` header — that path scales to the whole DB fleet without a per-query cloud round-trip. The statement type must be on the database's configured allow-list. Use bound parameters for any user-supplied values — the API does not interpolate raw strings.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/mysql/{databaseId}/executions`
+- **Returns:** `Promise<Models.DedicatedDatabaseExecution>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `sql` | `string` | Yes | SQL statement to execute. Exactly one statement per request. |
+| `bindings` | `object` | No | Optional bound parameters. Pass either a positional list or a name => value map matching the placeholder style used in the SQL. |
+| `timeoutSeconds` | `number` | No | Per-call execution timeout override. Must be less than or equal to the database's configured sqlApiTimeoutSeconds. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.createExecution({
+  databaseId: string;
+  sql: string;
+  bindings?: object;
+  timeoutSeconds?: number;
+})
+```
+
+<a id="mysql-failovers-resource"></a>
+
+### Failovers
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-createfailover"></a>
+
+#### `createFailover`
+
+Trigger a manual failover for a dedicated database with high availability enabled. Promotes a replica to primary. The failover runs asynchronously; poll the database document for status updates.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/mysql/{databaseId}/failovers`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetReplicaId` | `string` | No | Target replica ID to promote. If not specified, the healthiest replica is selected. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.createFailover({
+  databaseId: string;
+  targetReplicaId?: string;
+})
+```
+
+<a id="mysql-maintenance-resource"></a>
+
+### Maintenance
+
+REST resource: `/v1/mysql/{databaseId}/…`
 
 <a id="mysql-updatemaintenance"></a>
 
@@ -993,6 +785,100 @@ sdk.forProject(projectId).mysql.updateMaintenance({
   databaseId: string;
   day: string;
   hourUtc: number;
+})
+```
+
+<a id="mysql-migrations-resource"></a>
+
+### Migrations
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-createmigration"></a>
+
+#### `createMigration`
+
+Migrate a database between shared and dedicated types. Shared to dedicated provisions an always-on dedicated instance; dedicated to shared converts to a serverless instance that scales to zero when idle. Data is copied to the target with a brief read-only window during cutover.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/mysql/{databaseId}/migrations`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetType` | `string` | Yes | Target database type to migrate to. Allowed values: shared (serverless, scales to zero when idle), dedicated (always-on with persistent resources). |
+| `specification` | `string` | No | Target specification to provision when migrating to dedicated. Ignored for shared. Defaults to the database's current specification. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.createMigration({
+  databaseId: string;
+  targetType: string;
+  specification?: string;
+})
+```
+
+<a id="mysql-pitr-resource"></a>
+
+### Pitr
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-getpitr"></a>
+
+#### `getPitr`
+
+Get available point-in-time recovery windows for a dedicated database. Returns the earliest and latest recovery points.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/pitr`
+- **Returns:** `Promise<Models.DedicatedDatabasePITRWindows>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.getPitr({
+  databaseId: string;
+})
+```
+
+<a id="mysql-pooler-resource"></a>
+
+### Pooler
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-getpooler"></a>
+
+#### `getPooler`
+
+Get the connection pooler configuration for a dedicated database. Returns pooler mode, max connections, and pool size settings.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/pooler`
+- **Returns:** `Promise<Models.DedicatedDatabasePooler>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.getPooler({
+  databaseId: string;
 })
 ```
 
@@ -1033,5 +919,191 @@ sdk.forProject(projectId).mysql.updatePooler({
   poolerCpuLimit?: string;
   poolerMemoryRequest?: string;
   poolerMemoryLimit?: string;
+})
+```
+
+<a id="mysql-replicas-resource"></a>
+
+### Replicas
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-getreplicas"></a>
+
+#### `getReplicas`
+
+Get high availability status for a dedicated database. Returns replica statuses, replication lag, and sync mode.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/replicas`
+- **Returns:** `Promise<Models.DedicatedDatabaseReplicas>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.getReplicas({
+  databaseId: string;
+})
+```
+
+<a id="mysql-restorations-resource"></a>
+
+### Restorations
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-createrestoration"></a>
+
+#### `createRestoration`
+
+Restore a database from a backup or to a specific point in time (PITR). For backup restoration, provide a backupId. For PITR, provide a targetTime as an ISO 8601 datetime. PITR requires the database to have PITR enabled and is only available for enterprise databases.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/mysql/{databaseId}/restorations`
+- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `type` | `string` | No | Restoration type. Allowed values: backup, pitr. Use "backup" to restore from a specific backup, or "pitr" for point-in-time recovery. |
+| `backupId` | `string` | No | Backup ID to restore from (required for backup type). |
+| `targetTime` | `string` | No | Target time for PITR (required for pitr type) as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.createRestoration({
+  databaseId: string;
+  type?: string;
+  backupId?: string;
+  targetTime?: string;
+})
+```
+
+<a id="mysql-getrestoration"></a>
+
+#### `getRestoration`
+
+Get details of a specific database restoration including its status, type, and timestamps.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/restorations/{restorationId}`
+- **Returns:** `Promise<Models.DedicatedDatabaseRestoration>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `restorationId` | `string` | Yes | Restoration ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.getRestoration({
+  databaseId: string;
+  restorationId: string;
+})
+```
+
+<a id="mysql-listrestorations"></a>
+
+#### `listRestorations`
+
+List all restorations for a dedicated database. Results can be filtered by status and type.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/restorations`
+- **Returns:** `Promise<Models.DedicatedDatabaseRestorationList>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `status` | `string` | No | Filter by restoration status. |
+| `type` | `string` | No | Filter by restoration type. |
+| `limit` | `number` | No | Maximum number of restorations to return. |
+| `offset` | `number` | No | Number of restorations to skip. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.listRestorations({
+  databaseId: string;
+  status?: string;
+  type?: string;
+  limit?: number;
+  offset?: number;
+})
+```
+
+<a id="mysql-status-resource"></a>
+
+### Status
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-getstatus"></a>
+
+#### `getStatus`
+
+Get real-time health and status information for a dedicated database. Returns health status, readiness, uptime, connection info, replica status, and volume information.
+
+- **HTTP:** `GET`
+- **Path:** `/v1/mysql/{databaseId}/status`
+- **Returns:** `Promise<Models.DatabaseStatus>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.getStatus({
+  databaseId: string;
+})
+```
+
+<a id="mysql-upgrades-resource"></a>
+
+### Upgrades
+
+REST resource: `/v1/mysql/{databaseId}/…`
+
+<a id="mysql-createupgrade"></a>
+
+#### `createUpgrade`
+
+Upgrade a dedicated database to a new engine version. Uses blue-green deployment for zero-downtime cutover.
+
+- **HTTP:** `POST`
+- **Path:** `/v1/mysql/{databaseId}/upgrades`
+- **Returns:** `Promise<Models.DedicatedDatabase>`
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `databaseId` | `string` | Yes | Database ID. |
+| `targetVersion` | `string` | Yes | Target engine version to upgrade to. |
+
+**SDK signature**
+
+```typescript
+sdk.forProject(projectId).mysql.createUpgrade({
+  databaseId: string;
+  targetVersion: string;
 })
 ```

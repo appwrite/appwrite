@@ -1,4 +1,9 @@
-export const REQUIRED_OAUTH2_SCOPES = ['openid', 'profile', 'email'] as const
+export const REQUIRED_OAUTH2_SCOPES = [
+  'openid',
+  'profile',
+  'email',
+  'phone',
+] as const
 
 export type RequiredOAuth2Scope = (typeof REQUIRED_OAUTH2_SCOPES)[number]
 

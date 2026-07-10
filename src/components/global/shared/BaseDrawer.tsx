@@ -88,7 +88,7 @@ export function BaseDrawer({
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
       <SheetContent
         className={cn(
-          'flex w-full flex-col p-0 overflow-hidden',
+          'flex h-[100dvh] max-h-[100dvh] w-full flex-col gap-0 overflow-hidden p-0',
           maxWidth,
           contentClassName,
         )}
@@ -144,7 +144,7 @@ export function BaseDrawer({
             </div>
           </div>
         </SheetHeader>
-        <div ref={contentRef} className="flex flex-col flex-1 min-h-0 pt-0">
+        <div ref={contentRef} className="flex min-h-0 flex-1 flex-col overflow-hidden pt-0">
           {children}
         </div>
       </SheetContent>

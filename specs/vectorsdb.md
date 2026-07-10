@@ -27,15 +27,12 @@ Base path prefix: `/v1/vectorsdb`
 | [`deleteTransaction`](#vectorsdb-deletetransaction) | DELETE | `/v1/vectorsdb/transactions/{transactionId}` | `Promise<{}>` |
 | [`get`](#vectorsdb-get) | GET | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`getCollection`](#vectorsdb-getcollection) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
-| [`getCollectionUsage`](#vectorsdb-getcollectionusage) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/usage` | `Promise<Models.UsageCollection>` |
 | [`getIndex`](#vectorsdb-getindex) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes/{key}` | `Promise<Models.Index>` |
 | [`getTransaction`](#vectorsdb-gettransaction) | GET | `/v1/vectorsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
-| [`getUsage`](#vectorsdb-getusage) | GET | `/v1/vectorsdb/{databaseId}/usage` | `Promise<Models.UsageVectorsDB>` |
 | [`list`](#vectorsdb-list) | GET | `/v1/vectorsdb` | `Promise<Models.DatabaseList>` |
 | [`listCollections`](#vectorsdb-listcollections) | GET | `/v1/vectorsdb/{databaseId}/collections` | `Promise<Models.VectorsdbCollectionList>` |
 | [`listIndexes`](#vectorsdb-listindexes) | GET | `/v1/vectorsdb/{databaseId}/collections/{collectionId}/indexes` | `Promise<Models.IndexList>` |
 | [`listTransactions`](#vectorsdb-listtransactions) | GET | `/v1/vectorsdb/transactions` | `Promise<Models.TransactionList>` |
-| [`listUsage`](#vectorsdb-listusage) | GET | `/v1/vectorsdb/usage` | `Promise<Models.UsageVectorsDBs>` |
 | [`update`](#vectorsdb-update) | PUT | `/v1/vectorsdb/{databaseId}` | `Promise<Models.Database>` |
 | [`updateCollection`](#vectorsdb-updatecollection) | PUT | `/v1/vectorsdb/{databaseId}/collections/{collectionId}` | `Promise<Models.VectorsdbCollection>` |
 | [`updateTransaction`](#vectorsdb-updatetransaction) | PATCH | `/v1/vectorsdb/transactions/{transactionId}` | `Promise<Models.Transaction>` |
@@ -44,7 +41,7 @@ Base path prefix: `/v1/vectorsdb`
 
 <a id="vectorsdb-root-resource"></a>
 
-### Databases
+### VectorsDB
 
 REST resource: `/v1/vectorsdb`
 
@@ -292,36 +289,6 @@ sdk.forProject(projectId).vectorsDB.updateTransaction({
 })
 ```
 
-<a id="vectorsdb-usage-resource"></a>
-
-### Usage
-
-REST resource: `/v1/vectorsdb/usage/…`
-
-<a id="vectorsdb-listusage"></a>
-
-#### `listUsage`
-
-List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/vectorsdb/usage`
-- **Returns:** `Promise<Models.UsageVectorsDBs>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).vectorsDB.listUsage({
-  range?: UsageRange;
-})
-```
-
 <a id="vectorsdb-databaseid-resource"></a>
 
 ### Database Id
@@ -404,9 +371,9 @@ sdk.forProject(projectId).vectorsDB.update({
 })
 ```
 
-<a id="vectorsdb-databaseid-resource"></a>
+<a id="vectorsdb-collections-resource"></a>
 
-### {Database Id}
+### Collections
 
 REST resource: `/v1/vectorsdb/{databaseId}/…`
 
@@ -592,34 +559,6 @@ sdk.forProject(projectId).vectorsDB.getCollection({
 })
 ```
 
-<a id="vectorsdb-getcollectionusage"></a>
-
-#### `getCollectionUsage`
-
-Get usage metrics and statistics for a collection. Returning the total number of documents. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/vectorsdb/{databaseId}/collections/{collectionId}/usage`
-- **Returns:** `Promise<Models.UsageCollection>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `collectionId` | `string` | Yes | Collection ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).vectorsDB.getCollectionUsage({
-  databaseId: string;
-  collectionId: string;
-  range?: UsageRange;
-})
-```
-
 <a id="vectorsdb-getindex"></a>
 
 #### `getIndex`
@@ -645,32 +584,6 @@ sdk.forProject(projectId).vectorsDB.getIndex({
   databaseId: string;
   collectionId: string;
   key: string;
-})
-```
-
-<a id="vectorsdb-getusage"></a>
-
-#### `getUsage`
-
-Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.
-
-- **HTTP:** `GET`
-- **Path:** `/v1/vectorsdb/{databaseId}/usage`
-- **Returns:** `Promise<Models.UsageVectorsDB>`
-
-**Parameters**
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `databaseId` | `string` | Yes | Database ID. |
-| `range` | `UsageRange` | No | Date range. |
-
-**SDK signature**
-
-```typescript
-sdk.forProject(projectId).vectorsDB.getUsage({
-  databaseId: string;
-  range?: UsageRange;
 })
 ```
 

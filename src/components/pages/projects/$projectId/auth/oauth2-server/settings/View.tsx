@@ -10,7 +10,11 @@ import {
   oauth2DurationToSeconds,
   type OAuth2ServerTimeUnit,
 } from '@/lib/oauth2-server/duration'
-import { getOAuth2ServerDiscoveryUrl } from '@/lib/oauth2-server/discovery'
+import {
+  getOAuth2ServerDiscoveryUrl,
+  getOAuth2ServerEndpointUrl,
+  OAUTH2_SERVER_COMMON_ENDPOINTS,
+} from '@/lib/oauth2-server/discovery'
 import {
   mergeOAuth2Scopes,
   oauth2ScopesEqual,
@@ -262,7 +266,13 @@ function DurationField({
   )
 }
 
-function CopyableUrl({ value }: { value: string }) {
+function CopyableUrl({
+  value,
+  label,
+}: {
+  value: string
+  label?: string
+}) {
   const t = useT()
   const [copied, setCopied] = useState(false)
 
@@ -273,30 +283,86 @@ function CopyableUrl({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
-      <code className="min-w-0 flex-1 break-all font-mono text-[12px] leading-relaxed text-foreground">
-        {value}
-      </code>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="h-8 shrink-0 text-[12px]"
-        onClick={handleCopy}
-      >
-        {copied ? (
-          <>
-            <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
-            {t('Copied')}
-          </>
-        ) : (
-          <>
-            <Copy className="me-1.5 h-3.5 w-3.5" />
-            {t('Copy')}
-          </>
-        )}
-      </Button>
+    <div className="space-y-1.5">
+      {label ? (
+        <Label className="text-[12px] font-medium text-muted-foreground">
+          {label}
+        </Label>
+      ) : null}
+      <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+        <code className="min-w-0 flex-1 break-all font-mono text-[12px] leading-5 text-foreground">
+          {value}
+        </code>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 shrink-0 px-2 text-[12px]"
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <>
+              <Check className="me-1.5 h-3.5 w-3.5 text-emerald-500" />
+              {t('Copied')}
+            </>
+          ) : (
+            <>
+              <Copy className="me-1.5 h-3.5 w-3.5" />
+              {t('Copy')}
+            </>
+          )}
+        </Button>
+      </div>
     </div>
+  )
+}
+
+function DiscoveryEndpoints({
+  projectId,
+  region,
+}: {
+  projectId: string
+  region?: string
+}) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 -ms-2 px-2 text-[12px] text-muted-foreground hover:text-foreground"
+        >
+          {open ? t('Show less') : t('Show more')}
+          <ChevronDown
+            className={`ms-1.5 h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3">
+        <div className="space-y-3">
+          <p className="text-[12px] text-muted-foreground">
+            {t(
+              'Common endpoints from the discovery document. Most OAuth libraries only need the discovery URL.',
+            )}
+          </p>
+          {OAUTH2_SERVER_COMMON_ENDPOINTS.map((endpoint) => (
+            <CopyableUrl
+              key={endpoint.id}
+              label={t(endpoint.label)}
+              value={getOAuth2ServerEndpointUrl(
+                projectId,
+                endpoint.path,
+                region,
+              )}
+            />
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -594,7 +660,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
           <SettingsSection
             title={t('Integration')}
             description={t(
-              'Share the discovery URL with integrators. Point your consent screen at the authorization URL.',
+              'Point your consent screen at the authorization URL and choose which scopes clients can request.',
             )}
             footer={
               <SectionUpdateButton
@@ -608,18 +674,6 @@ export function View({ projectId }: OAuth2ServerViewProps) {
               />
             }
           >
-            <div className="space-y-2">
-              <Label className="text-[12px] font-medium uppercase tracking-wide text-muted-foreground">
-                {t('OIDC discovery URL')}
-              </Label>
-              <CopyableUrl value={discoveryUrl} />
-              <p className="text-[12px] text-muted-foreground">
-                {t(
-                  'OAuth libraries fetch this once to learn authorize, token, and JWKS endpoints. It should return JSON when opened in a browser.',
-                )}
-              </p>
-            </div>
-
             <div className="space-y-2">
               <FieldHint
                 label={t('Authorization URL')}
@@ -640,7 +694,7 @@ export function View({ projectId }: OAuth2ServerViewProps) {
             <div className="space-y-2">
               <FieldHint
                 label={t('Scopes')}
-                hint={`${t('openid, profile, and email are always included. Add up to')} ${MAX_SCOPES} ${t('scopes total, each up to')} ${MAX_SCOPE_LENGTH} ${t('characters.')}`}
+                hint={`${t('openid, profile, email, and phone are always included. Add up to')} ${MAX_SCOPES} ${t('scopes total, each up to')} ${MAX_SCOPE_LENGTH} ${t('characters.')}`}
               />
               <InputTags
                 id="oauth2-scopes"
@@ -652,6 +706,22 @@ export function View({ projectId }: OAuth2ServerViewProps) {
                 onChange={(next) => setScopes(mergeOAuth2Scopes(next))}
               />
             </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title={t('OIDC discovery')}
+            description={t(
+              'Share this URL with integrators. OAuth libraries fetch it once to learn authorize, token, and JWKS endpoints.',
+            )}
+          >
+            <CopyableUrl
+              label={t('OIDC discovery URL')}
+              value={discoveryUrl}
+            />
+            <DiscoveryEndpoints
+              projectId={projectId}
+              region={project?.region}
+            />
           </SettingsSection>
 
           <SettingsSection
