@@ -23,8 +23,6 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
 
-use function Swoole\Coroutine\batch;
-
 class Screenshots extends Action
 {
     public static function getName(): string
@@ -156,29 +154,16 @@ class Screenshots extends Action
             $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
             $sleep = $framework['screenshotSleep'] ?? 3000;
 
-            $tasks = [];
-            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
-                // batch() doesn't propagate exceptions out of coroutines; return them instead.
-                $tasks[] = function () use ($key, $theme, $screenshots, $routerHost, $headers, $sleep) {
-                    try {
-                        return ['key' => $key, 'screenshot' => $screenshots->create(
-                            url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
-                            theme: $theme,
-                            headers: $headers,
-                            sleep: $sleep,
-                        )];
-                    } catch (\Throwable $th) {
-                        return $th;
-                    }
-                };
-            }
-
+            // Concurrency comes from the worker's coroutines (_APP_WORKER_MAX_COROUTINES),
+            // so the two themes are captured sequentially within a message.
             $captures = [];
-            foreach (batch($tasks) as $capture) {
-                if ($capture instanceof \Throwable) {
-                    throw $capture;
-                }
-                $captures[] = $capture;
+            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
+                $captures[$key] = $screenshots->create(
+                    url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
+                    theme: $theme,
+                    headers: $headers,
+                    sleep: $sleep,
+                );
             }
 
             Span::add('screenshot.count', \count($captures));
@@ -186,10 +171,7 @@ class Screenshots extends Action
             $mimeType = "image/png";
             $updates = new Document([]);
 
-            foreach ($captures as $data) {
-                $key = $data['key'];
-                $screenshot = $data['screenshot'];
-
+            foreach ($captures as $key => $screenshot) {
                 $fileId = ID::unique();
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
