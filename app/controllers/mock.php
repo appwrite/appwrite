@@ -238,11 +238,11 @@ Http::get('/v1/mock/github/callback')
     ->label('docs', false)
     ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
     ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
-    ->inject('vcsForProvider')
+    ->inject('vcsForInstallation')
     ->inject('project')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $projectId, callable $vcsForProvider, Document $project, Response $response, Database $dbForPlatform) {
+    ->action(function (string $providerInstallationId, string $projectId, callable $vcsForInstallation, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -260,8 +260,10 @@ Http::get('/v1/mock/github/callback')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
 
-        $vcs = $vcsForProvider('github');
-        $vcs->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'), System::getEnv('_APP_VCS_GITHUB_APP_ID'));
+        $vcs = $vcsForInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
+        ]));
         $owner = $vcs->getOwnerName($providerInstallationId);
 
         $projectInternalId = $project->getSequence();

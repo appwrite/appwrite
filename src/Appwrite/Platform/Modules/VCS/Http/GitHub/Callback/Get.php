@@ -39,7 +39,7 @@ class Get extends Action
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
             ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-            ->inject('vcsForProvider')
+            ->inject('vcsForInstallation')
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -52,7 +52,7 @@ class Get extends Action
         string $setupAction,
         string $state,
         string $code,
-        callable $vcsForProvider,
+        callable $vcsForInstallation,
         Document $project,
         Response $response,
         Database $dbForPlatform,
@@ -100,8 +100,10 @@ class Get extends Action
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $vcs = $vcsForProvider('github');
-            $vcs->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'), System::getEnv('_APP_VCS_GITHUB_APP_ID'));
+            $vcs = $vcsForInstallation(new Document([
+                'provider' => 'github',
+                'providerInstallationId' => $providerInstallationId,
+            ]));
             $owner = $vcs->getOwnerName($providerInstallationId);
 
             $projectInternalId = $project->getSequence();
