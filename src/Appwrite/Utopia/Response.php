@@ -325,6 +325,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_TRADESHIFT = 'oAuth2Tradeshift';
     public const MODEL_OAUTH2_PAYPAL = 'oAuth2Paypal';
     public const MODEL_OAUTH2_GITLAB = 'oAuth2Gitlab';
+    public const MODEL_OAUTH2_APPWRITE = 'oAuth2Appwrite';
     public const MODEL_OAUTH2_AUTHENTIK = 'oAuth2Authentik';
     public const MODEL_OAUTH2_AUTH0 = 'oAuth2Auth0';
     public const MODEL_OAUTH2_FUSIONAUTH = 'oAuth2FusionAuth';

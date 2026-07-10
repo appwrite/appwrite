@@ -49,6 +49,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_TRADESHIFT,
                     Response::MODEL_OAUTH2_PAYPAL,
                     Response::MODEL_OAUTH2_GITLAB,
+                    Response::MODEL_OAUTH2_APPWRITE,
                     Response::MODEL_OAUTH2_AUTHENTIK,
                     Response::MODEL_OAUTH2_AUTH0,
                     Response::MODEL_OAUTH2_FUSIONAUTH,
