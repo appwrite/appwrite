@@ -22,14 +22,7 @@ class Base extends Queries
      * @param string[] $allowedAttributes
      * @throws \Exception
      */
-    /**
-     * @param string $collection
-     * @param string[] $allowedAttributes
-     * @param array<string, string> $fallbackTypes attribute => Database::VAR_* map used when
-     *        the collection is not part of this platform's schema (e.g. executions on Server CE)
-     * @throws \Exception
-     */
-    public function __construct(string $collection, array $allowedAttributes, array $fallbackTypes = [])
+    public function __construct(string $collection, array $allowedAttributes)
     {
         $config = Config::getParam('collections', []);
 
@@ -41,7 +34,7 @@ class Base extends Queries
             $config['logs']
         );
 
-        $collection = $collections[$collection] ?? null;
+        $collection = $collections[$collection];
 
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {
@@ -50,7 +43,7 @@ class Base extends Queries
 
         $allAttributes = [];
         $attributes = [];
-        foreach ($collection['attributes'] ?? [] as $attribute) {
+        foreach ($collection['attributes'] as $attribute) {
             $key = $attribute['$id'];
 
             $attributeDocument = new Document([
@@ -62,19 +55,6 @@ class Base extends Queries
             $allAttributes[] = $attributeDocument;
 
             if (isset($allowedAttributesLookup[$key])) {
-                $attributes[] = $attributeDocument;
-            }
-        }
-
-        if ($collection === null) {
-            foreach ($allowedAttributes as $key) {
-                $attributeDocument = new Document([
-                    'key' => $key,
-                    'type' => $fallbackTypes[$key] ?? Database::VAR_STRING,
-                    'array' => false,
-                ]);
-
-                $allAttributes[] = $attributeDocument;
                 $attributes[] = $attributeDocument;
             }
         }

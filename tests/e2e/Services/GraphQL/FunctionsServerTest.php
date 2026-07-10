@@ -6,7 +6,6 @@ namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
-use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -371,67 +370,6 @@ final class FunctionsServerTest extends Scope
         $this->assertIsArray($deployment);
 
         return $deployment;
-    }
-
-    /**
-     * @return array
-     * @throws \Exception
-     */
-    public function testGetExecutions(): array
-    {
-        $function = $this->setupFunction();
-
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_EXECUTIONS);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'functionId' => $function['_id'],
-            ]
-        ];
-
-        $executions = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsArray($executions['body']['data']);
-        $this->assertArrayNotHasKey('errors', $executions['body']);
-        $executions = $executions['body']['data']['functionsListExecutions'];
-        $this->assertIsArray($executions);
-
-        return $executions;
-    }
-
-    /**
-     * @return array
-     * @throws \Exception
-     */
-    #[Group('ceOnly')]
-    public function testGetExecution(): array
-    {
-        $execution = $this->setupExecution();
-
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::GET_EXECUTION);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'functionId' => $execution['functionId'],
-                'executionId' => $execution['_id'],
-            ]
-        ];
-
-        $execution = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        // Executions are not persisted, so gets return not found
-        $this->assertArrayHasKey('errors', $execution['body']);
-        $this->assertStringContainsString('could not be found', (string) $execution['body']['errors'][0]['message']);
-
-        return [];
     }
 
     /**

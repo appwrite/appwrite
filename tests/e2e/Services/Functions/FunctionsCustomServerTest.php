@@ -7,7 +7,6 @@ namespace Tests\E2E\Services\Functions;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -27,7 +26,6 @@ final class FunctionsCustomServerTest extends Scope
 
     protected static array $testFunctionCache = [];
     protected static array $testDeploymentCache = [];
-    protected static array $testExecutionCache = [];
 
     /**
      * Setup a test function with variables for independent tests (with static caching)
@@ -173,32 +171,6 @@ final class FunctionsCustomServerTest extends Scope
     /**
      * Setup a test execution for independent tests (with static caching)
      */
-    protected function setupTestExecution(): array
-    {
-        $cacheKey = $this->getProject()['$id'] ?? 'default';
-        if (!empty(static::$testExecutionCache[$cacheKey])) {
-            return static::$testExecutionCache[$cacheKey];
-        }
-
-        $data = $this->setupTestDeployment();
-        $functionId = $data['functionId'];
-
-        $execution = $this->createExecution($functionId, [
-            'async' => 'false',
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        static::$testExecutionCache[$cacheKey] = array_merge($data, [
-            'executionId' => $executionId,
-        ]);
-
-        return static::$testExecutionCache[$cacheKey];
-    }
-
     public function testListSpecs(): void
     {
         $specifications = $this->listSpecifications(['type' => 'runtimes']);
@@ -1632,47 +1604,6 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertContains($execution['headers']['status-code'], [204, 404]);
     }
 
-    #[Group('ceOnly')]
-    public function testListExecutions(): void
-    {
-        $data = $this->setupTestExecution();
-
-        /**
-         * Executions are not persisted, so lists are always empty
-         */
-        $executions = $this->listExecutions($data['functionId']);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals(0, $executions['body']['total']);
-        $this->assertIsArray($executions['body']['executions']);
-        $this->assertCount(0, $executions['body']['executions']);
-
-        $executionsWithIncludeTotalFalse = $this->listExecutions($data['functionId'], ['total' => false]);
-
-        $this->assertEquals(200, $executionsWithIncludeTotalFalse['headers']['status-code']);
-        $this->assertIsArray($executionsWithIncludeTotalFalse['body']['executions']);
-        $this->assertSame(0, $executionsWithIncludeTotalFalse['body']['total']);
-        $this->assertCount(0, $executionsWithIncludeTotalFalse['body']['executions']);
-
-        $executions = $this->listExecutions($data['functionId'], [
-            'queries' => [
-                Query::equal('deploymentId', [$data['deploymentId']])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals(0, $executions['body']['total']);
-        $this->assertCount(0, $executions['body']['executions']);
-
-        $executions = $this->listExecutions($data['functionId'], [
-            'search' => $data['executionId'],
-        ]);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals(0, $executions['body']['total']);
-        $this->assertCount(0, $executions['body']['executions']);
-    }
-
     public function testSyncCreateExecution(): void
     {
         $data = $this->setupTestDeployment();
@@ -1694,69 +1625,6 @@ final class FunctionsCustomServerTest extends Scope
         // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
     }
-
-    #[Group('ceOnly')]
-    public function testGetExecution(): void
-    {
-        $data = $this->setupTestExecution();
-
-        /**
-         * Executions are not persisted, so gets return 404
-         */
-        $execution = $this->getExecution($data['functionId'], $data['executionId']);
-
-        $this->assertEquals(404, $execution['headers']['status-code']);
-
-        $function = $this->getExecution($data['functionId'], 'x');
-
-        $this->assertEquals(404, $function['headers']['status-code']);
-    }
-
-
-    #[Group('ceOnly')]
-    public function testDeleteExecution(): void
-    {
-        // Create fresh execution for this test since we delete it
-        $data = $this->setupTestDeployment();
-
-        $execution = $this->createExecution($data['functionId'], [
-            'async' => 'false',
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $executionId = $execution['body']['$id'] ?? '';
-
-        /**
-         * Executions are not persisted, so deletes return 404
-         */
-        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(404, $execution['headers']['status-code']);
-        $this->assertStringContainsString('Execution with the requested ID could not be found', (string) $execution['body']['message']);
-
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'async' => true,
-        ]);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(404, $execution['headers']['status-code']);
-    }
-
-
 
     public function testUpdateSpecs(): void
     {
