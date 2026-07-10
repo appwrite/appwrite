@@ -583,9 +583,11 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Search methods': 'חיפוש מתודות',
   'Search methods...': 'חיפוש מתודות…',
   Select: 'בחירה',
+  'Select a method': 'בחרו מתודה',
   'Select a method to inspect and send a request.':
     'בחרו מתודה כדי לבדוק ולשלוח בקשה.',
   'Select a project user': 'בחרו משתמש בפרויקט',
+  'Select a service': 'בחרו שירות',
   'Select a user to act as, or choose Guest.':
     'בחרו משתמש לפעול בשמו, או בחרו אורח.',
   'Select at least one scope for the ephemeral key.':
@@ -593,6 +595,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'selected for the next key': 'נבחרו למפתח הבא',
   'Send a request to see the response here.':
     'שלחו בקשה כדי לראות כאן את התגובה.',
+  'Request and response': 'בקשה ותגובה',
   'Send delete request': 'שליחת בקשת מחיקה',
   'Send request': 'שליחת בקשה',
   'Send update request': 'שליחת בקשת עדכון',
@@ -605,6 +608,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Show password': 'הצגת הסיסמה',
   scope: 'הרשאת גישה',
   scopes: 'הרשאות גישה',
+  Methods: 'מתודות',
+  Request: 'בקשה',
   User: 'משתמש',
   Value: 'ערך',
   'Remove item': 'הסרת פריט',

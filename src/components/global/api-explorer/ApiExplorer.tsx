@@ -55,6 +55,12 @@ import {
   ExplorerColumnsResizableLayout,
   ExplorerResponseSplitResizableLayout,
 } from './ApiExplorerResizableLayout'
+import { ApiExplorerMobileNav } from './ApiExplorerMobileNav'
+import {
+  API_EXPLORER_CONTAINER,
+  API_EXPLORER_DESKTOP_ONLY_CLASS,
+  API_EXPLORER_MOBILE_ONLY_CLASS,
+} from './explorer-styles'
 import { MethodDescriptionMarkdown } from './MethodDescriptionMarkdown'
 import { ApiExplorerAuthSection } from './ApiExplorerAuthSection'
 import { ExplorerMethodActions } from './ExplorerMethodActions'
@@ -92,9 +98,9 @@ import {
   getMethodRequiredScopes,
   methodRequiresSendConfirmation,
   getSendRequestConfirmationCopy,
-  methodRequiresSessionAuthChoice,
   methodRequiresApiKey,
   methodSupportsServerApiKey,
+  methodUsesSessionAuthChoice,
   resolveServerAuthApiKey,
   useApiExplorerAuthPersistence,
   type ApiExplorerConfig,
@@ -142,7 +148,7 @@ const COLUMN_HEADER_CLASS =
   'flex h-[62px] shrink-0 border-b border-border px-4'
 
 const COLUMN_REQUEST_FOOTER_CLASS =
-  'flex h-[62px] shrink-0 items-center justify-end border-t border-border bg-muted/30 px-4'
+  'flex min-h-[62px] shrink-0 items-center justify-end border-t border-border bg-muted/30 px-4 py-2'
 
 /** Scrollable methods list body (flex child must shrink below content height). */
 const EXPLORER_METHODS_LIST_SCROLL_CLASS =
@@ -371,6 +377,7 @@ export function ApiExplorer({
   const [bodyInputMode, setBodyInputMode] = useState<'form' | 'json'>('form')
   const [response, setResponse] = useState<ExecuteApiRequestResult | null>(null)
   const [showResponsePanel, setShowResponsePanel] = useState(false)
+  const [mobilePane, setMobilePane] = useState<'request' | 'response'>('request')
   const [isExecuting, setIsExecuting] = useState(false)
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false)
   const {
@@ -485,6 +492,8 @@ export function ApiExplorer({
       })
       if (options?.clearResponse) {
         setResponse(null)
+        setShowResponsePanel(false)
+        setMobilePane('request')
       }
       if (options?.syncUrl) {
         onSelectionChange?.({
@@ -552,6 +561,8 @@ export function ApiExplorer({
       setSelectedServiceId(service.id)
       expandProductGroupForService(service.id)
       setResponse(null)
+      setShowResponsePanel(false)
+      setMobilePane('request')
       return
     }
 
@@ -655,6 +666,7 @@ export function ApiExplorer({
 
     setIsExecuting(true)
     setShowResponsePanel(true)
+    setMobilePane('response')
 
     try {
       let requestAuth:
@@ -662,22 +674,20 @@ export function ApiExplorer({
         | undefined
       let apiKey: string | undefined
 
-      if (activePlatform === 'client') {
-        if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
-          if (clientAuth.mode === 'user') {
-            if (!clientAuth.userId.trim()) {
-              toast.error(t('Select a user to act as, or choose Guest.'))
-              setIsExecuting(false)
-              return
-            }
-            const jwt = await createUserJwtForExplorer(
-              config.projectId,
-              clientAuth.userId.trim(),
-            )
-            requestAuth = { mode: 'user', jwt }
-          } else {
-            requestAuth = { mode: 'guest' }
+      if (methodUsesSessionAuthChoice(selectedMethod, activePlatform)) {
+        if (clientAuth.mode === 'user') {
+          if (!clientAuth.userId.trim()) {
+            toast.error(t('Select a user to act as, or choose Guest.'))
+            setIsExecuting(false)
+            return
           }
+          const jwt = await createUserJwtForExplorer(
+            config.projectId,
+            clientAuth.userId.trim(),
+          )
+          requestAuth = { mode: 'user', jwt }
+        } else {
+          requestAuth = { mode: 'guest' }
         }
       } else if (methodSupportsServerApiKey(selectedMethod, activePlatform)) {
         apiKey = resolveServerAuthApiKey(serverAuth)
@@ -822,21 +832,19 @@ export function ApiExplorer({
         | undefined
       let apiKey: string | undefined
 
-      if (activePlatform === 'client') {
-        if (methodRequiresSessionAuthChoice(selectedMethod, activePlatform)) {
-          if (clientAuth.mode === 'user') {
-            if (!clientAuth.userId.trim()) {
-              toast.error(t('Select a user to act as, or choose Guest.'))
-              return
-            }
-            const jwt = await createUserJwtForExplorer(
-              config.projectId,
-              clientAuth.userId.trim(),
-            )
-            requestAuth = { mode: 'user', jwt }
-          } else {
-            requestAuth = { mode: 'guest' }
+      if (methodUsesSessionAuthChoice(selectedMethod, activePlatform)) {
+        if (clientAuth.mode === 'user') {
+          if (!clientAuth.userId.trim()) {
+            toast.error(t('Select a user to act as, or choose Guest.'))
+            return
           }
+          const jwt = await createUserJwtForExplorer(
+            config.projectId,
+            clientAuth.userId.trim(),
+          )
+          requestAuth = { mode: 'user', jwt }
+        } else {
+          requestAuth = { mode: 'guest' }
         }
       } else if (methodSupportsServerApiKey(selectedMethod, activePlatform)) {
         apiKey = resolveServerAuthApiKey(serverAuth)
@@ -890,6 +898,8 @@ export function ApiExplorer({
     if (previousPlatformRef.current === activePlatform) return
     previousPlatformRef.current = activePlatform
     setResponse(null)
+    setShowResponsePanel(false)
+    setMobilePane('request')
   }, [activePlatform])
 
   const pathParameters = selectedMethod?.parameters.filter(
@@ -943,12 +953,88 @@ export function ApiExplorer({
     )
   }
 
+  const renderRequestPanel = () => (
+    <RequestPanel
+      endpoint={config.endpoint}
+      projectId={config.projectId}
+      platform={activePlatform}
+      method={selectedMethod}
+      clientAuth={clientAuth}
+      serverAuth={serverAuth}
+      pathFormValues={pathFormValues}
+      queryFormValues={queryFormValues}
+      bodyFormFields={bodyFormFields}
+      bodyFormValues={bodyFormValues}
+      bodyJsonValue={bodyJsonValue}
+      bodyInputMode={bodyInputMode}
+      pathParameters={pathParameters}
+      queryParameters={queryParameters}
+      hasRequestBody={hasRequestBody}
+      hasJsonBodySchema={hasJsonBodySchema}
+      isExecuting={isExecuting}
+      showResponsePanel={showResponsePanel}
+      mobilePane={mobilePane}
+      onMobilePaneChange={setMobilePane}
+      response={response}
+      onPathFormValuesChange={setPathFormValues}
+      onQueryFormValuesChange={setQueryFormValues}
+      onBodyFormValuesChange={setBodyFormValues}
+      onBodyJsonValueChange={setBodyJsonValue}
+      onBodyInputModeChange={setBodyInputMode}
+      onClientAuthChange={setClientAuth}
+      onServerAuthChange={setServerAuth}
+      onExecute={handleExecute}
+      onCopyCurl={handleCopyCurl}
+      onResetRequestForm={handleResetRequestForm}
+    />
+  )
+
   return (
     <div
       data-api-explorer
-      className={cn('flex h-full min-h-0 flex-1 flex-col', className)}
+      className={cn(
+        API_EXPLORER_CONTAINER,
+        'flex h-full min-h-0 flex-1 flex-col',
+        className,
+      )}
     >
-      <div className="min-h-0 flex-1">
+      <ApiExplorerMobileNav
+        className={API_EXPLORER_MOBILE_ONLY_CLASS}
+        selectedService={selectedService}
+        selectedMethod={selectedMethod}
+        servicesContent={(close) => (
+          <ServiceListPanel
+            platform={activePlatform}
+            onPlatformChange={handlePlatformChange}
+            productGroups={serviceProductGroups}
+            selectedServiceId={selectedService?.id}
+            onSelectService={(service) => {
+              handleSelectService(service)
+              close()
+            }}
+            expandedProductGroupId={openProductGroupId}
+            onExpandedProductGroupChange={setExpandedProductGroup}
+            embedded
+          />
+        )}
+        methodsContent={(close) => (
+          <MethodListPanel
+            service={selectedService}
+            selectedMethodId={selectedMethod?.id}
+            onSelectMethod={(method) => {
+              handleSelectMethod(method)
+              close()
+            }}
+            embedded
+          />
+        )}
+      />
+
+      <div className={cn('min-h-0 flex-1', API_EXPLORER_MOBILE_ONLY_CLASS)}>
+        {renderRequestPanel()}
+      </div>
+
+      <div className={cn('min-h-0 flex-1', API_EXPLORER_DESKTOP_ONLY_CLASS)}>
         <ExplorerColumnsResizableLayout
           layout={columnsLayout}
           persistLayout={persistColumnsLayout}
@@ -972,39 +1058,7 @@ export function ApiExplorer({
               onSelectMethod={handleSelectMethod}
             />
           }
-          request={
-            <RequestPanel
-              endpoint={config.endpoint}
-              projectId={config.projectId}
-              platform={activePlatform}
-              method={selectedMethod}
-              clientAuth={clientAuth}
-              serverAuth={serverAuth}
-              pathFormValues={pathFormValues}
-              queryFormValues={queryFormValues}
-              bodyFormFields={bodyFormFields}
-              bodyFormValues={bodyFormValues}
-              bodyJsonValue={bodyJsonValue}
-              bodyInputMode={bodyInputMode}
-              pathParameters={pathParameters}
-              queryParameters={queryParameters}
-              hasRequestBody={hasRequestBody}
-              hasJsonBodySchema={hasJsonBodySchema}
-              isExecuting={isExecuting}
-              showResponsePanel={showResponsePanel}
-              response={response}
-              onPathFormValuesChange={setPathFormValues}
-              onQueryFormValuesChange={setQueryFormValues}
-              onBodyFormValuesChange={setBodyFormValues}
-              onBodyJsonValueChange={setBodyJsonValue}
-              onBodyInputModeChange={setBodyInputMode}
-              onClientAuthChange={setClientAuth}
-              onServerAuthChange={setServerAuth}
-              onExecute={handleExecute}
-              onCopyCurl={handleCopyCurl}
-              onResetRequestForm={handleResetRequestForm}
-            />
-          }
+          request={renderRequestPanel()}
         />
       </div>
       {sendRequestConfirmation ? (
@@ -1031,6 +1085,8 @@ type ServiceListPanelProps = {
   onSelectService: (service: ApiExplorerService) => void
   expandedProductGroupId: string
   onExpandedProductGroupChange: (groupId: string | undefined) => void
+  /** Omit side border when rendered inside a mobile sheet. */
+  embedded?: boolean
 }
 
 function ServiceListPanel({
@@ -1041,12 +1097,18 @@ function ServiceListPanel({
   onSelectService,
   expandedProductGroupId,
   onExpandedProductGroupChange,
+  embedded = false,
 }: ServiceListPanelProps) {
   const t = useT()
   const hasServices = productGroups.some((group) => group.services.length > 0)
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-e border-border bg-background">
+    <div
+      className={cn(
+        'flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-background',
+        !embedded && 'border-e border-border',
+      )}
+    >
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-4">
           <div className="px-1">
@@ -1123,6 +1185,8 @@ type MethodListPanelProps = {
   service?: ApiExplorerService
   selectedMethodId?: string
   onSelectMethod: (method: ApiExplorerMethod) => void
+  /** Omit side border / column header chrome when rendered inside a mobile sheet. */
+  embedded?: boolean
 }
 
 function methodMatchesSearch(method: ApiExplorerMethod, query: string): boolean {
@@ -1141,6 +1205,7 @@ function MethodListPanel({
   service,
   selectedMethodId,
   onSelectMethod,
+  embedded = false,
 }: MethodListPanelProps) {
   const t = useT()
   const selectedMethodRef = useRef<HTMLButtonElement | null>(null)
@@ -1235,21 +1300,28 @@ function MethodListPanel({
   )
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-e border-border bg-muted/20">
-      <div
-        className={cn(
-          COLUMN_HEADER_CLASS,
-          'min-w-0 items-center overflow-hidden',
-        )}
-      >
-        {service ? (
-          <p className="truncate text-[13px] font-medium text-foreground">
-            {t(service.label)}
-          </p>
-        ) : (
-          <span className="block h-[13px]" aria-hidden />
-        )}
-      </div>
+    <div
+      className={cn(
+        'flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-muted/20',
+        !embedded && 'border-e border-border',
+      )}
+    >
+      {!embedded ? (
+        <div
+          className={cn(
+            COLUMN_HEADER_CLASS,
+            'min-w-0 items-center overflow-hidden',
+          )}
+        >
+          {service ? (
+            <p className="truncate text-[13px] font-medium text-foreground">
+              {t(service.label)}
+            </p>
+          ) : (
+            <span className="block h-[13px]" aria-hidden />
+          )}
+        </div>
+      ) : null}
 
       <div className="shrink-0 border-b border-border bg-muted/20 px-2 py-2">
         <div className="relative">
@@ -1354,6 +1426,8 @@ type RequestPanelProps = {
   hasJsonBodySchema: boolean
   isExecuting: boolean
   showResponsePanel: boolean
+  mobilePane: 'request' | 'response'
+  onMobilePaneChange: (pane: 'request' | 'response') => void
   response: ExecuteApiRequestResult | null
   onPathFormValuesChange: (values: Record<string, FormValue>) => void
   onQueryFormValuesChange: (values: Record<string, FormValue>) => void
@@ -1422,24 +1496,77 @@ function MethodRequestHeader({
   platform,
   projectId,
   serviceId,
+  mobilePane,
+  onMobilePaneChange,
 }: {
   method: ApiExplorerMethod
   endpoint: string
   platform: ApiExplorerProjectPlatform
   projectId: string
   serviceId: string
+  mobilePane?: 'request' | 'response'
+  onMobilePaneChange?: (pane: 'request' | 'response') => void
 }) {
+  const t = useT()
+  const showMobilePaneTabs = Boolean(mobilePane && onMobilePaneChange)
+
   return (
     <div className={cn(COLUMN_HEADER_CLASS, 'items-center gap-2.5')}>
-      <Badge
-        variant={getHttpMethodVariant(method.httpMethod)}
-        className={cn('text-[10px] uppercase', API_EXPLORER_PILL_CLASS)}
-      >
-        {method.httpMethod}
-      </Badge>
-      <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
-        {method.summary}
-      </p>
+      <div className="hidden min-w-0 flex-1 items-center gap-2.5 @[900px]/api-explorer:flex">
+        <Badge
+          variant={getHttpMethodVariant(method.httpMethod)}
+          className={cn('text-[10px] uppercase', API_EXPLORER_PILL_CLASS)}
+        >
+          {method.httpMethod}
+        </Badge>
+        <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
+          {method.summary}
+        </p>
+      </div>
+
+      {showMobilePaneTabs ? (
+        <div
+          className={cn(
+            'flex h-full min-w-0 flex-1 items-stretch gap-0',
+            API_EXPLORER_MOBILE_ONLY_CLASS,
+          )}
+          role="tablist"
+          aria-label={t('Request and response')}
+        >
+          {(
+            [
+              { id: 'request', label: 'Request' },
+              { id: 'response', label: 'Response' },
+            ] as const
+          ).map((pane) => {
+            const isActive = mobilePane === pane.id
+            return (
+              <button
+                key={pane.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => onMobilePaneChange?.(pane.id)}
+                className={cn(
+                  'relative flex h-full items-center px-3 text-[13px] font-medium transition-colors first:ps-0',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {t(pane.label)}
+                {isActive ? (
+                  <span className="absolute inset-x-0 bottom-0 h-[2px] bg-foreground" />
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        <div className={cn('min-w-0 flex-1', API_EXPLORER_MOBILE_ONLY_CLASS)} />
+      )}
+
       <ExplorerMethodActions
         method={method}
         endpoint={endpoint}
@@ -1475,7 +1602,7 @@ function MethodRequestFooter({
 
   return (
     <div className={COLUMN_REQUEST_FOOTER_CLASS}>
-      <div className="flex w-full items-center justify-between gap-2">
+      <div className="flex w-full flex-wrap items-center justify-between gap-2">
         <Button
           type="button"
           variant="outline"
@@ -1486,7 +1613,7 @@ function MethodRequestFooter({
         >
           {t('Reset')}
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             type="button"
             variant="outline"
@@ -1548,7 +1675,7 @@ function MethodDetailsCard({
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="space-y-4 px-6 py-4">
+      <div className="space-y-4 px-4 py-4 sm:px-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1557,7 +1684,7 @@ function MethodDetailsCard({
             <button
               type="button"
               onClick={handleCopyEndpoint}
-              className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
               {copied ? (
                 <Check className="h-3.5 w-3.5" />
@@ -1573,18 +1700,24 @@ function MethodDetailsCard({
               methodAccent.endpointBox,
             )}
           >
-            <p className="flex min-w-0 items-center gap-2.5 font-mono text-[12px] leading-relaxed text-foreground">
+            <p className="flex min-w-0 items-start gap-2.5 font-mono text-[12px] leading-relaxed text-foreground sm:items-center">
               <Badge
                 variant={getHttpMethodVariant(method.httpMethod)}
                 className={cn(
-                  'shrink-0 font-mono text-[10px] uppercase',
+                  'mt-0.5 shrink-0 font-mono text-[10px] uppercase sm:mt-0',
                   API_EXPLORER_PILL_CLASS,
                 )}
               >
                 {method.httpMethod}
               </Badge>
-              <span className="min-w-0 flex-1 truncate" title={fullUrl}>
-                {truncateMiddle(fullUrl, ENDPOINT_URL_DISPLAY_MAX)}
+              <span
+                className="min-w-0 flex-1 break-all sm:truncate sm:break-normal"
+                title={fullUrl}
+              >
+                <span className="sm:hidden">{fullUrl}</span>
+                <span className="hidden sm:inline">
+                  {truncateMiddle(fullUrl, ENDPOINT_URL_DISPLAY_MAX)}
+                </span>
               </span>
             </p>
           </div>
@@ -1603,7 +1736,7 @@ function MethodDetailsCard({
       {hasMetadata && (
         <>
           <div className="border-t border-border" />
-          <div className="grid gap-4 px-6 py-4 sm:grid-cols-2">
+          <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-6">
             {rateLimit !== undefined && rateLimit > 0 && (
               <div className="space-y-2">
                 <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1643,6 +1776,8 @@ function RequestPanel({
   hasJsonBodySchema,
   isExecuting,
   showResponsePanel,
+  mobilePane,
+  onMobilePaneChange,
   response,
   onPathFormValuesChange,
   onQueryFormValuesChange,
@@ -1664,15 +1799,18 @@ function RequestPanel({
   if (!method) {
     return (
       <div className="flex h-full min-h-0 flex-col">
-        <div className={COLUMN_HEADER_CLASS} aria-hidden />
-        <div className="flex flex-1 items-center justify-center text-[13px] text-muted-foreground">
+        <div
+          className={cn(COLUMN_HEADER_CLASS, API_EXPLORER_DESKTOP_ONLY_CLASS)}
+          aria-hidden
+        />
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-[13px] text-muted-foreground">
           {t('Select a method to inspect and send a request.')}
         </div>
       </div>
     )
   }
 
-  const requestPanelContent = (
+  const renderRequestPanelContent = () => (
     <RequestPanelContent
       endpoint={endpoint}
       projectId={projectId}
@@ -1700,6 +1838,19 @@ function RequestPanel({
     />
   )
 
+  const renderResponseContent = (options?: { hideTitle?: boolean }) =>
+    response ? (
+      <ResponseSection
+        response={response}
+        isRefreshing={isExecuting}
+        hideTitle={options?.hideTitle}
+      />
+    ) : (
+      <div className="flex h-full min-h-0 items-center justify-center px-4 text-center text-[13px] text-muted-foreground/70">
+        {t('Send a request to see the response here.')}
+      </div>
+    )
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <MethodRequestHeader
@@ -1708,35 +1859,53 @@ function RequestPanel({
         platform={platform}
         projectId={projectId}
         serviceId={method.service}
+        mobilePane={showResponsePanel ? mobilePane : undefined}
+        onMobilePaneChange={
+          showResponsePanel ? onMobilePaneChange : undefined
+        }
       />
       <MethodDeprecatedWarning method={method} />
       <div className="min-h-0 flex-1 overflow-hidden">
         {showResponsePanel ? (
-          <ExplorerResponseSplitResizableLayout
-            layout={responseSplitLayout}
-            persistLayout={persistResponseSplitLayout}
-            handleClassName={VERTICAL_HANDLE_CLASS}
-            className="h-full min-h-0 overflow-hidden"
-            request={
-              <ScrollArea className="h-full min-h-0">
-                {requestPanelContent}
-              </ScrollArea>
-            }
-            response={
-              response ? (
-                <ResponseSection
-                  response={response}
-                  isRefreshing={isExecuting}
-                />
+          <>
+            <div
+              className={cn(
+                'h-full min-h-0',
+                API_EXPLORER_MOBILE_ONLY_CLASS,
+              )}
+            >
+              {mobilePane === 'request' ? (
+                <ScrollArea className="h-full min-h-0">
+                  {renderRequestPanelContent()}
+                </ScrollArea>
               ) : (
-                <div className="flex h-full min-h-0 items-center justify-center px-4 text-center text-[13px] text-muted-foreground/70">
-                  {t('Send a request to see the response here.')}
-                </div>
-              )
-            }
-          />
+                renderResponseContent({ hideTitle: true })
+              )}
+            </div>
+            <div
+              className={cn(
+                'h-full min-h-0',
+                API_EXPLORER_DESKTOP_ONLY_CLASS,
+              )}
+            >
+              <ExplorerResponseSplitResizableLayout
+                layout={responseSplitLayout}
+                persistLayout={persistResponseSplitLayout}
+                handleClassName={VERTICAL_HANDLE_CLASS}
+                className="h-full min-h-0 overflow-hidden"
+                request={
+                  <ScrollArea className="h-full min-h-0">
+                    {renderRequestPanelContent()}
+                  </ScrollArea>
+                }
+                response={renderResponseContent()}
+              />
+            </div>
+          </>
         ) : (
-          <ScrollArea className="h-full min-h-0">{requestPanelContent}</ScrollArea>
+          <ScrollArea className="h-full min-h-0">
+            {renderRequestPanelContent()}
+          </ScrollArea>
         )}
       </div>
       <MethodRequestFooter
@@ -1827,7 +1996,7 @@ function RequestPanelContent({
   const hasRequestSections = hasPathParams || hasQueryParams || hasRequestBody
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6 p-4 sm:p-6 @container/request-panel">
       <MethodDetailsCard endpoint={endpoint} method={method} />
 
       <ApiExplorerAuthSection
@@ -1904,6 +2073,8 @@ function RequestPanelContent({
 type ResponseSectionProps = {
   response: ExecuteApiRequestResult
   isRefreshing?: boolean
+  /** Hide the "Response" label when a parent already shows Request/Response tabs. */
+  hideTitle?: boolean
 }
 
 function formatResponseDisplay(body: string): {
@@ -2005,7 +2176,11 @@ function ResponseSizeFooter({ byteSize }: { byteSize: number }) {
   )
 }
 
-function ResponseSection({ response, isRefreshing = false }: ResponseSectionProps) {
+function ResponseSection({
+  response,
+  isRefreshing = false,
+  hideTitle = false,
+}: ResponseSectionProps) {
   const t = useT()
   const imagePreviewUrl = response.imagePreviewUrl
   const bodyTabLabel = imagePreviewUrl ? t('Preview') : t('Body')
@@ -2023,20 +2198,38 @@ function ResponseSection({ response, isRefreshing = false }: ResponseSectionProp
       defaultValue="body"
       className="flex h-full min-h-0 flex-col gap-0"
     >
-      <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="text-[12px] font-semibold text-foreground">{t('Response')}</span>
+      <div className="flex min-h-10 shrink-0 items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-1.5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 overflow-hidden">
+          {hideTitle ? null : (
+            <span className="shrink-0 text-[12px] font-semibold text-foreground">
+              {t('Response')}
+            </span>
+          )}
           <Badge
             variant={statusVariant}
-            className={FORM_FIELD_TYPE_PILL_CLASS}
+            className={cn(
+              FORM_FIELD_TYPE_PILL_CLASS,
+              'min-w-0 max-w-full shrink truncate',
+            )}
+            title={`${response.status} ${response.statusText}`.trim()}
           >
             {response.status} {response.statusText}
           </Badge>
-          <Badge variant="inactive" className={FORM_FIELD_TYPE_PILL_CLASS}>
+          <Badge
+            variant="inactive"
+            className={cn(FORM_FIELD_TYPE_PILL_CLASS, 'shrink-0')}
+          >
             {response.durationMs} ms
           </Badge>
           {response.responseContentType ? (
-            <Badge variant="inactive" className={FORM_FIELD_TYPE_PILL_CLASS}>
+            <Badge
+              variant="inactive"
+              className={cn(
+                FORM_FIELD_TYPE_PILL_CLASS,
+                'min-w-0 max-w-[min(100%,14rem)] shrink truncate',
+              )}
+              title={response.responseContentType}
+            >
               {response.responseContentType}
             </Badge>
           ) : null}

@@ -156,6 +156,18 @@ export function RequestFormFieldInput({
   const useCombinedHelperArrayLayout =
     isHelperArrayField && helperArrayItemCount > 0
 
+  const helperControl = renderHelperControl(
+    field,
+    value,
+    onChange,
+    inputId,
+    projectId,
+    formValues,
+    method,
+    t,
+  )
+  const hasHelperControl = helperControl != null
+
   return (
     <div
       className={cn(
@@ -181,11 +193,22 @@ export function RequestFormFieldInput({
         </Badge>
       </div>
 
+      <div
+        className={cn(
+          REQUEST_BUILDER_REQUIRED_CELL,
+          isComplex && '@[680px]/request-builder:items-start',
+        )}
+      >
+        {field.required ? (
+          <span className={REQUEST_BUILDER_REQUIRED}>{t('Required')}</span>
+        ) : null}
+      </div>
+
       {useCombinedHelperArrayLayout ? (
         <div
           className={cn(
             REQUEST_BUILDER_VALUE_CELL,
-            'sm:col-span-2 sm:items-start',
+            'col-span-3 @[680px]/request-builder:col-span-2 @[680px]/request-builder:items-start',
           )}
         >
           <ValueCell complex={isComplex}>
@@ -223,35 +246,14 @@ export function RequestFormFieldInput({
           <div
             className={cn(
               REQUEST_BUILDER_HELPER_CELL,
-              isComplex && 'sm:items-start',
+              !hasHelperControl && 'hidden @[680px]/request-builder:flex',
+              isComplex && '@[680px]/request-builder:items-start',
             )}
           >
-            <div className={REQUEST_BUILDER_HELPER_SLOT}>
-              {renderHelperControl(
-                field,
-                value,
-                onChange,
-                inputId,
-                projectId,
-                formValues,
-                method,
-                t,
-              )}
-            </div>
+            <div className={REQUEST_BUILDER_HELPER_SLOT}>{helperControl}</div>
           </div>
         </>
       )}
-
-      <div
-        className={cn(
-          REQUEST_BUILDER_REQUIRED_CELL,
-          isComplex && 'sm:items-start',
-        )}
-      >
-        {field.required ? (
-          <span className={REQUEST_BUILDER_REQUIRED}>{t('Required')}</span>
-        ) : null}
-      </div>
     </div>
   )
 }

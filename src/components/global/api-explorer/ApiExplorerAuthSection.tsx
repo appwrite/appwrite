@@ -31,8 +31,8 @@ import {
   getScopesMissingFromKey,
   mergeUniqueScopes,
   methodRequiresApiKey,
-  methodRequiresSessionAuthChoice,
   methodSupportsServerApiKey,
+  methodUsesSessionAuthChoice,
   scopesIncludeRequired,
   type ApiExplorerClientAuthState,
   type ApiExplorerMethod,
@@ -93,7 +93,7 @@ function ScopeRow({
   children: ReactNode
 }) {
   return (
-    <div className="grid gap-1.5 sm:grid-cols-[88px_minmax(0,1fr)] sm:items-start sm:gap-3">
+    <div className="grid gap-1.5 @[480px]/request-panel:grid-cols-[88px_minmax(0,1fr)] @[480px]/request-panel:items-start @[480px]/request-panel:gap-3">
       <span className="text-[12px] text-muted-foreground">{label}</span>
       <div className="min-w-0">{children}</div>
     </div>
@@ -162,7 +162,7 @@ export function ApiExplorerAuthSection({
   onServerAuthChange,
 }: ApiExplorerAuthSectionProps) {
   const t = useT()
-  const requiresSessionAuth = methodRequiresSessionAuthChoice(method, platform)
+  const usesSessionAuth = methodUsesSessionAuthChoice(method, platform)
   const supportsServerApiKey = methodSupportsServerApiKey(method, platform)
   const requiresApiKey = methodRequiresApiKey(method, platform)
   const endpointScopes = useMemo(() => getMethodRequiredScopes(method), [method])
@@ -188,7 +188,7 @@ export function ApiExplorerAuthSection({
   const [scopesOpen, setScopesOpen] = useState(!draftMatchesEndpoint)
 
   const { users, isLoading: usersLoading } = useProjectUsers(
-    requiresSessionAuth ? projectId : null,
+    usesSessionAuth ? projectId : null,
     0,
     100,
     userSearch,
@@ -262,16 +262,15 @@ export function ApiExplorerAuthSection({
     }
   }, [onServerAuthChange, projectId, serverAuth, t])
 
-  const showClientAuth = platform === 'client' && requiresSessionAuth
-  const showServerAuth = platform === 'server' && supportsServerApiKey
+  const showServerAuth = supportsServerApiKey
   const hasActiveEphemeralKey = Boolean(serverAuth.ephemeralApiKey)
   const matchEndpointTooltip = draftMatchesEndpoint
     ? t('Draft scopes already match this endpoint.')
     : t('Reset draft scopes to the scopes required by this endpoint.')
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="space-y-4 px-6 py-4">
+    <div className="@container/request-panel rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="space-y-4 px-4 py-4 sm:px-6">
         <div className="space-y-1">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
             {t('Authentication')}
@@ -305,7 +304,7 @@ export function ApiExplorerAuthSection({
           <CopyableId id={projectId} size="sm" maxWidth={280} />
         </ScopeRow>
 
-        {showClientAuth && (
+        {usesSessionAuth ? (
           <div className="space-y-3 border-t border-border pt-4">
             <Label className="text-[12px] text-muted-foreground">{t('Act as')}</Label>
             <ToggleGroup
@@ -361,7 +360,7 @@ export function ApiExplorerAuthSection({
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {showServerAuth && (
           <div className="space-y-4 border-t border-border pt-4">
@@ -449,7 +448,7 @@ export function ApiExplorerAuthSection({
 
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <Collapsible open={scopesOpen} onOpenChange={setScopesOpen}>
-                    <div className="flex items-center gap-3 px-6 py-4">
+                    <div className="flex items-center gap-3 px-4 py-4 sm:px-6">
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-medium text-foreground">
                           {t('Key scopes')}
@@ -509,7 +508,7 @@ export function ApiExplorerAuthSection({
 
                     <CollapsibleContent>
                       <div className="border-t border-border" />
-                      <div className="px-6 py-4">
+                      <div className="px-4 py-4 sm:px-6">
                         <ScopeEditor
                           value={serverAuth.ephemeralDraftScopes}
                           onChange={(ephemeralDraftScopes) =>
@@ -524,7 +523,7 @@ export function ApiExplorerAuthSection({
                     </CollapsibleContent>
                   </Collapsible>
 
-                  <div className="border-t border-border bg-muted/30 px-6 py-4">
+                  <div className="border-t border-border bg-muted/30 px-4 py-4 sm:px-6">
                     <Button
                       type="button"
                       size="sm"

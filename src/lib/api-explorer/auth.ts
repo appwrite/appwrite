@@ -52,6 +52,29 @@ export function methodSupportsServerApiKey(
   return allowsApiKeyInSecurity(method) && !getMethodAuthKeys(method).includes('Key')
 }
 
+/**
+ * Server endpoints that do not accept an API key use Guest/User JWT auth
+ * (same controls as the client explorer).
+ */
+export function methodSupportsServerSessionAuth(
+  method: ApiExplorerMethod,
+  platform: ApiExplorerProjectPlatform,
+): boolean {
+  if (platform !== 'server') return false
+  return !methodSupportsServerApiKey(method, platform)
+}
+
+/** Whether the explorer should show Guest/User JWT controls for this method. */
+export function methodUsesSessionAuthChoice(
+  method: ApiExplorerMethod,
+  platform: ApiExplorerProjectPlatform,
+): boolean {
+  if (platform === 'client') {
+    return methodRequiresSessionAuthChoice(method, platform)
+  }
+  return methodSupportsServerSessionAuth(method, platform)
+}
+
 export function getMethodRequiredScopes(method: ApiExplorerMethod): string[] {
   if (!method.scope?.trim()) return []
   return method.scope

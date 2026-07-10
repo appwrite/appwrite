@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import type { FormValue, RequestFormField } from '@/lib/api-explorer/request-form'
 import type { ApiExplorerMethod } from '@/lib/api-explorer/types'
+import { REQUEST_BUILDER_CONTAINER } from './request-form-table'
 import { RequestFormFieldInput } from './RequestFormFieldInput'
 
 type RequestFormFieldsProps = {
@@ -55,7 +56,13 @@ export function RequestBuilderPanel({
   className,
 }: RequestBuilderPanelProps) {
   return (
-    <div className={cn('overflow-hidden rounded-lg border border-border bg-background', className)}>
+    <div
+      className={cn(
+        REQUEST_BUILDER_CONTAINER,
+        'overflow-hidden rounded-lg border border-border bg-background',
+        className,
+      )}
+    >
       {children}
     </div>
   )
@@ -76,7 +83,7 @@ export function RequestBuilderSection({
 }: RequestBuilderSectionProps) {
   return (
     <div className={cn(showTopBorder && 'border-t border-border')}>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2.5 @[680px]/request-builder:px-4">
         <h4 className="text-[13px] font-semibold tracking-tight text-foreground">
           {title}
         </h4>
