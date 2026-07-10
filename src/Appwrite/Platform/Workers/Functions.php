@@ -263,7 +263,6 @@ class Functions extends Action
 
     /**
      * @param string $message
-     * @param Database $dbForProject
      * @param Document $function
      * @param string $trigger
      * @param string $path
@@ -275,7 +274,6 @@ class Functions extends Action
      */
     private function fail(
         string $message,
-        Database $dbForProject,
         Document $project,
         Bus $bus,
         Document $function,
@@ -328,8 +326,6 @@ class Functions extends Action
         Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
         Span::add('execution.trigger', $trigger);
         Span::add('execution.status', $execution->getAttribute('status', ''));
-
-        $dbForProject->upsertDocument('executions', $execution);
 
         $bus->dispatch(new ExecutionCompleted(
             execution: $executionForEvent->getArrayCopy(),
@@ -398,19 +394,19 @@ class Functions extends Action
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $dbForProject, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $dbForProject, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
-            $this->fail($errorMessage, $dbForProject, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $bus, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
@@ -478,8 +474,6 @@ class Functions extends Action
             'logs' => '',
             'duration' => 0.0,
         ]);
-
-        $dbForProject->upsertDocument('executions', $execution);
 
         $durationStart = \microtime(true);
 
@@ -635,13 +629,6 @@ class Functions extends Action
         } finally {
             /** Persist final execution status and record usage */
             Span::add('execution.status', $execution->getAttribute('status', ''));
-
-            $dbForProject->updateDocument('executions', $execution->getId(), new Document([
-                'status' => $execution->getAttribute('status'),
-                'responseStatusCode' => $execution->getAttribute('responseStatusCode'),
-                'responseHeaders' => $execution->getAttribute('responseHeaders'),
-                'duration' => $execution->getAttribute('duration'),
-            ]));
 
             $bus->dispatch(new ExecutionCompleted(
                 execution: $execution->getArrayCopy(),

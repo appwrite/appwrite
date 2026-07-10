@@ -289,7 +289,6 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,
                     user: $user,
@@ -329,8 +328,6 @@ class Create extends Base
                     ->setAttribute('scheduleId', $schedule->getId())
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
-
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
 
                 $bus->dispatch(new ExecutionScheduled(
                     execution: $execution->getArrayCopy(),
@@ -493,8 +490,6 @@ class Create extends Base
                 throw $th;
             }
         } finally {
-            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
-
             $bus->dispatch(new ExecutionCompleted(
                 execution: $execution->getArrayCopy(),
                 project: $project->getArrayCopy(),
