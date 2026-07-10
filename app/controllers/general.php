@@ -125,7 +125,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
-                $exception->addCTA('Start with this domain', $url . '/console');
+                $exception->addCTA('Start with this domain', $url);
                 throw $exception;
             }
         }
@@ -200,7 +200,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
+            $exception->addCTA('View deployments', $url . '/projects/' . $projectId . '/' . $type . '/' . $resourceId);
             throw $exception;
         }
 
@@ -289,7 +289,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
-                    ->redirect($url . '/console/auth/preview?'
+                    ->redirect($url . '/auth/preview?'
                         . \http_build_query([
                             'projectId' => $projectId,
                             'origin' => $protocol . '://' . $host,
@@ -346,22 +346,21 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             $status = $deployment->getAttribute('status');
-            $region = $project->getAttribute('region', 'default');
 
             switch ($status) {
                 case 'failed':
                     $exception = new AppwriteException(AppwriteException::BUILD_FAILED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments/' . $deployment->getId();
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments';
+                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments';
                     $exception->addCTA('View deployments', $url . $ctaUrl);
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
-                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments/' . $deployment->getId();
                     $exception->addCTA('Reload', '/');
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
@@ -373,7 +372,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $exception->addCTA('View settings', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
+                $exception->addCTA('View settings', $url . '/projects/' . $project->getId() . '/functions/' . $resource->getId() . '/settings');
                 throw $exception;
             }
         }
@@ -722,10 +721,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 spec: $spec,
                 resource: $resource->getArrayCopy(),
             ));
-
-            $execution->setAttribute('logs', '');
-            $execution->setAttribute('errors', '');
         }
+
+        $execution->setAttribute('logs', '');
+        $execution->setAttribute('errors', '');
 
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
