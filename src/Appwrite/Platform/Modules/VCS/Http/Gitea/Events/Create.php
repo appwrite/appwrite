@@ -17,7 +17,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
-use Utopia\VCS\Exception\SignatureVerificationException;
 
 class Create extends Action
 {
@@ -73,14 +72,7 @@ class Create extends Action
         // signed JWT Appwrite always validates, so an empty webhook secret
         // there still leaves a real check in place. Gitea has no such
         // fallback -- an empty secret here would mean no verification at all.
-        $valid = false;
-        if (!empty($secretKey)) {
-            try {
-                $vcs->verifySignature($payload, $signature, $secretKey);
-                $valid = true;
-            } catch (SignatureVerificationException) {
-            }
-        }
+        $valid = !empty($secretKey) && $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.gitea.event.signature.valid', $valid);
 
         if (!$valid) {
