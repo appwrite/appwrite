@@ -355,7 +355,7 @@ Http::init()
             && $apiKey->getType() === API_KEY_OAUTH2
             && $apiKey->getRole() === User::ROLE_OWNER;
 
-        if ($isAdminProjectRequest && $isOAuthAdminKey) {
+        if ($isOAuthAdminKey && $project->getId() !== 'console') {
             $authorization->setDefaultStatus(false);
         }
 
