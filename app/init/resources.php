@@ -70,12 +70,21 @@ $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'
 
 $container->set('executor', fn () => new Executor(), []);
 
-$container->set('jobs', fn () => new Jobs(
-    (new Client(new CurlAdapter()))
-        ->withBaseUri(System::getEnv('_APP_JOBS_HOST', ''))
+$container->set('jobs', function () {
+    $client = (new Client(new CurlAdapter()))
         ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
-        ->withTimeout(30)
-), []);
+        ->withTimeout(30);
+
+    // No host on executor-only installs: keep the injection resolvable and
+    // fail at call time instead (the client is only used when
+    // _APP_BUILDS_BACKEND=orchestrator, which requires _APP_JOBS_HOST).
+    $host = System::getEnv('_APP_JOBS_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new Jobs($client);
+}, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
