@@ -7,6 +7,7 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 
 /**
  * ScheduleExecutions
@@ -34,9 +35,20 @@ class ScheduleExecutions extends ScheduleBase
         return RESOURCE_TYPE_EXECUTIONS;
     }
 
-    public static function loadResource(): bool
+    protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
     {
-        return false;
+        // Executions are not persisted; the schedule carries what the worker
+        // needs. Schedules from before the executions collection was dropped
+        // can still resolve their document for the functionId their data lacks.
+        try {
+            $resource = parent::loadResource($project, $getProjectDB, $schedule);
+        } catch (\Throwable) {
+            $resource = new Document();
+        }
+
+        return $resource->isEmpty()
+            ? new Document(['$id' => $schedule['resourceId']])
+            : $resource;
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void

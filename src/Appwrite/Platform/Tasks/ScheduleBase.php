@@ -36,9 +36,9 @@ abstract class ScheduleBase extends Action
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
 
-    public static function loadResource(): bool
+    protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
     {
-        return true;
+        return $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
     }
     abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
@@ -273,29 +273,9 @@ abstract class ScheduleBase extends Action
 
             $this->schedules[$sequence]['project'] = $project;
 
-            if (!static::loadResource()) {
-                // Best-effort load: schedules from before the executions
-                // collection was dropped can still resolve their document;
-                // newer ones carry what they need in the schedule data.
-                try {
-                    $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
-                } catch (\Throwable) {
-                    $resource = new Document();
-                }
-
-                if ($resource->isEmpty()) {
-                    $resource = new Document([
-                        '$id' => $schedule['resourceId'],
-                    ]);
-                }
-
-                $this->schedules[$sequence]['resource'] = $resource;
-                continue;
-            }
-
             // In case the resource is not found (project deleted).
             try {
-                $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+                $resource = $this->loadResource($project, $getProjectDB, $schedule);
             } catch (\Throwable $th) {
                 Console::error("Failed to load resource: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 Console::error($th->getMessage());
