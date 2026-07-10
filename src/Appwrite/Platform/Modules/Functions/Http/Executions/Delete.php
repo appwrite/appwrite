@@ -112,11 +112,24 @@ class Delete extends Base
 
             $execution = new Document([
                 '$id' => $executionId,
+                '$createdAt' => DateTime::now(),
+                '$updatedAt' => DateTime::now(),
+                '$permissions' => [],
                 'functionId' => $function->getId(),
                 'resourceId' => $function->getId(),
                 'resourceType' => 'functions',
+                'deploymentId' => '',
                 'trigger' => 'schedule',
                 'status' => 'scheduled',
+                'requestMethod' => '',
+                'requestPath' => '',
+                'requestHeaders' => [],
+                'responseStatusCode' => 0,
+                'responseBody' => '',
+                'responseHeaders' => [],
+                'logs' => '',
+                'errors' => '',
+                'duration' => 0.0,
             ]);
 
             $queueForEvents
