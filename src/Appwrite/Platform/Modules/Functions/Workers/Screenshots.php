@@ -154,8 +154,6 @@ class Screenshots extends Action
             $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
             $sleep = $framework['screenshotSleep'] ?? 3000;
 
-            // Concurrency comes from the worker's coroutines (_APP_WORKER_MAX_COROUTINES),
-            // so the two themes are captured sequentially within a message.
             $captures = [];
             foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
                 $captures[$key] = $screenshots->create(

@@ -22,9 +22,6 @@ class Client
     /**
      * Capture a screenshot of a page and return the PNG bytes.
      *
-     * The browser service responds with raw image bytes on success and
-     * `{"error": message}` with a 4xx status on failure.
-     *
      * @param array<string, string> $headers
      * @throws Exception on an error response
      * @throws ClientExceptionInterface on transport failure
