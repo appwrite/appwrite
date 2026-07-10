@@ -8,14 +8,17 @@ use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Exception;
+use Utopia\Client;
+use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClient;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -111,7 +114,7 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $timeout = \intval($site->getAttribute('timeout', '15')) * 1000;
+            $timeout = \intval($site->getAttribute('timeout', '15'));
 
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
@@ -179,21 +182,20 @@ class Screenshots extends Action
                         }
 
                         $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-                        $client = new FetchClient();
-                        $client->setTimeout($timeout);
-                        $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
-
-                        $fetchResponse = $client->fetch(
-                            url: $browserEndpoint . '/screenshots',
-                            method: 'POST',
-                            body: $config
+                        $client = (new Client(new SwooleClient()))
+                            ->withTimeout($timeout);
+                        $request = (new Request\Factory())->json(
+                            Method::POST,
+                            $browserEndpoint . '/screenshots',
+                            $config
                         );
+                        $response = $client->sendRequest($request);
 
-                        if ($fetchResponse->getStatusCode() >= 400) {
-                            throw new \Exception($fetchResponse->getBody());
+                        if ($response->getStatusCode() >= 400) {
+                            throw new \Exception((string) $response->getBody());
                         }
 
-                        $screenshot = $fetchResponse->getBody();
+                        $screenshot = (string) $response->getBody();
 
                         return ['key' => $key, 'screenshot' => $screenshot];
                     } catch (\Throwable $th) {
