@@ -5137,12 +5137,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "27fc470e16e379ac6904e06f48f3a2cbebea9c54"
+                "reference": "f785974cb61238675a1269f9f262f77245c6d634"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/27fc470e16e379ac6904e06f48f3a2cbebea9c54",
-                "reference": "27fc470e16e379ac6904e06f48f3a2cbebea9c54",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/f785974cb61238675a1269f9f262f77245c6d634",
+                "reference": "f785974cb61238675a1269f9f262f77245c6d634",
                 "shasum": ""
             },
             "require": {
@@ -5178,7 +5178,7 @@
                 "issues": "https://github.com/utopia-php/vcs/issues",
                 "source": "https://github.com/utopia-php/vcs/tree/feat/appwrite-provider-parity"
             },
-            "time": "2026-07-10T09:32:00+00:00"
+            "time": "2026-07-10T12:16:02+00:00"
         },
         {
             "name": "utopia-php/websocket",
