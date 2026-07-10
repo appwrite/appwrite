@@ -35,6 +35,8 @@ class Gitea extends OAuth2
         'read:repository',
         'write:repository',
         'read:organization',
+        'read:issue',
+        'write:issue',
     ];
 
     /**
