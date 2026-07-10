@@ -320,15 +320,15 @@ function HomePage() {
           </div>
 
           <div className="relative z-[1] mt-8 w-full sm:mt-10">
-            <div className="mx-auto w-full max-w-[min(100vw-2rem,80rem)] px-4 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
-              <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[28px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-4 pb-0 pt-1 dark:border-muted/30 dark:bg-muted/10">
-                <div className="relative z-10 flex h-10 shrink-0 items-center gap-2 text-start">
-                  <div className="ms-2 flex items-center gap-1.5" aria-hidden>
-                    <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-                    <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-                    <span className="size-2.5 rounded-full bg-muted-foreground/30" />
+            <div className="mx-auto w-full max-w-full px-3 sm:max-w-[min(100vw-3rem,84rem)] sm:px-6 lg:max-w-[min(100vw-4rem,88rem)]">
+              <div className="relative isolate z-[1] flex w-full flex-col overflow-hidden rounded-t-[20px] border-x-2 border-t-2 border-b-0 border-muted-foreground/8 bg-muted-foreground/[0.035] px-1.5 pb-0 pt-1 sm:rounded-t-[28px] sm:px-4 dark:border-muted/30 dark:bg-muted/10">
+                <div className="relative z-10 flex h-8 shrink-0 items-center gap-2 text-start sm:h-10">
+                  <div className="ms-1.5 flex items-center gap-1.5 sm:ms-2" aria-hidden>
+                    <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
+                    <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
+                    <span className="size-2 rounded-full bg-muted-foreground/30 sm:size-2.5" />
                   </div>
-                  <div className="ms-2 flex min-w-0 items-center gap-1.5 pe-4 text-[12px] text-muted-foreground">
+                  <div className="ms-1.5 flex min-w-0 items-center gap-1.5 pe-2 text-[11px] text-muted-foreground sm:ms-2 sm:pe-4 sm:text-[12px]">
                     <span className="font-medium text-foreground">
                       {homeCopy.heroPreviewWorkspace}
                     </span>
@@ -348,7 +348,7 @@ function HomePage() {
                     height={960}
                     fetchPriority="high"
                     decoding="async"
-                    className="block h-full w-full rounded-t-lg object-cover object-top opacity-95 dark:hidden"
+                    className="block h-full w-full rounded-t-md object-cover object-top opacity-95 dark:hidden sm:rounded-t-lg"
                   />
                   <img
                     src="/images/heroes/console-app-dark.avif"
@@ -357,7 +357,7 @@ function HomePage() {
                     height={960}
                     fetchPriority="high"
                     decoding="async"
-                    className="hidden h-full w-full rounded-t-lg object-cover object-top opacity-95 dark:block"
+                    className="hidden h-full w-full rounded-t-md object-cover object-top opacity-95 dark:block sm:rounded-t-lg"
                   />
                 </div>
               </div>

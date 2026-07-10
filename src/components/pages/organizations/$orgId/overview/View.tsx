@@ -1812,110 +1812,120 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
           <div className="mx-auto flex h-16 min-h-16 w-full max-w-7xl shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
             {/* Left: Org Switcher - h-8 control; h1 uses m-0 so UA margins do not shift layout */}
-            <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-2">
+            <div className="flex h-8 min-h-8 max-h-8 min-w-0 items-center gap-2">
               {selectedOrg ? (
                 supportsMultiTenancy ? (
-                  <Popover
-                    open={orgSwitcherOpen}
-                    onOpenChange={setOrgSwitcherOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
-                      >
-                        <InitialsAvatar name={selectedOrg.name} size="sm" />
-                        <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
-                          {selectedOrg.name}
-                        </h1>
-                        {isCloud && (
-                          <Badge
-                            className={cn(
-                              'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
-                              selectedOrg.billingPlanDowngrade
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                : getPlanBadgeColor(selectedOrg.plan),
-                            )}
-                          >
-                            {selectedOrg.billingPlanDowngrade
-                              ? t('Downgraded')
-                              : getPlanDisplayName(selectedOrg.plan)}
-                          </Badge>
-                        )}
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      align="start"
-                      className="w-72 border-border bg-popover p-0"
+                  <div className="min-w-0">
+                    <Popover
+                      open={orgSwitcherOpen}
+                      onOpenChange={setOrgSwitcherOpen}
                     >
-                      <div className="border-b border-border px-3 py-2">
-                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          {t('Switch organization')}
-                        </p>
-                      </div>
-                      <div className="max-h-64 overflow-y-auto py-1">
-                        {organizations.map((org) => (
-                          <button
-                            key={org.$id}
-                            onClick={() => handleSelectOrg(org)}
-                            className={cn(
-                              'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-accent',
-                              selectedOrg.$id === org.$id && 'bg-accent',
-                            )}
-                          >
-                            <InitialsAvatar name={org.name} size="md" />
-                            <div className="flex-1 min-w-0">
-                              <p className="truncate text-[13px] font-medium text-foreground">
-                                {org.name}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                {isCloud && (
-                                  <span
-                                    className={cn(
-                                      'rounded px-1.5 py-0.5 text-[10px] font-medium',
-                                      org.billingPlanDowngrade
-                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                        : getPlanBadgeColor(org.plan),
-                                    )}
-                                  >
-                                    {org.billingPlanDowngrade
-                                      ? t('Downgraded')
-                                      : getPlanDisplayName(org.plan)}
-                                  </span>
-                                )}
-                                <span className="text-[11px] text-muted-foreground">
-                                  {org.members}{' '}
-                                  {org.members !== 1
-                                    ? t('members')
-                                    : t('member')}
-                                </span>
-                              </div>
-                            </div>
-                            {selectedOrg.$id === org.$id && (
-                              <Check className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="border-t border-border p-2">
+                      <PopoverTrigger asChild>
                         <button
-                          onClick={() => {
-                            setOrgSwitcherOpen(false)
-                            handleOpenCreateOrganization()
-                          }}
-                          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          type="button"
+                          className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                         >
-                          <Plus className="h-4 w-4" />
-                          {t('Create organization')}
+                          <InitialsAvatar
+                            name={selectedOrg.name}
+                            size="sm"
+                            className="shrink-0"
+                          />
+                          <h1 className="m-0 min-w-0 truncate text-[13px] font-semibold leading-tight text-foreground">
+                            {selectedOrg.name}
+                          </h1>
+                          {isCloud && (
+                            <Badge
+                              className={cn(
+                                'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
+                                selectedOrg.billingPlanDowngrade
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                  : getPlanBadgeColor(selectedOrg.plan),
+                              )}
+                            >
+                              {selectedOrg.billingPlanDowngrade
+                                ? t('Downgraded')
+                                : getPlanDisplayName(selectedOrg.plan)}
+                            </Badge>
+                          )}
+                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                         </button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="start"
+                        className="w-72 border-border bg-popover p-0"
+                      >
+                        <div className="border-b border-border px-3 py-2">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            {t('Switch organization')}
+                          </p>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto py-1">
+                          {organizations.map((org) => (
+                            <button
+                              key={org.$id}
+                              onClick={() => handleSelectOrg(org)}
+                              className={cn(
+                                'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-accent',
+                                selectedOrg.$id === org.$id && 'bg-accent',
+                              )}
+                            >
+                              <InitialsAvatar name={org.name} size="md" />
+                              <div className="flex-1 min-w-0">
+                                <p className="truncate text-[13px] font-medium text-foreground">
+                                  {org.name}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  {isCloud && (
+                                    <span
+                                      className={cn(
+                                        'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                                        org.billingPlanDowngrade
+                                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                          : getPlanBadgeColor(org.plan),
+                                      )}
+                                    >
+                                      {org.billingPlanDowngrade
+                                        ? t('Downgraded')
+                                        : getPlanDisplayName(org.plan)}
+                                    </span>
+                                  )}
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {org.members}{' '}
+                                    {org.members !== 1
+                                      ? t('members')
+                                      : t('member')}
+                                  </span>
+                                </div>
+                              </div>
+                              {selectedOrg.$id === org.$id && (
+                                <Check className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="border-t border-border p-2">
+                          <button
+                            onClick={() => {
+                              setOrgSwitcherOpen(false)
+                              handleOpenCreateOrganization()
+                            }}
+                            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            <Plus className="h-4 w-4" />
+                            {t('Create organization')}
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 ) : (
-                  <div className="flex h-8 max-h-8 min-h-8 min-w-0 items-center gap-2 px-2 -ms-2">
-                    <InitialsAvatar name={selectedOrg.name} size="sm" />
-                    <h1 className="m-0 truncate text-[13px] font-semibold leading-tight text-foreground">
+                  <div className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 px-2 -ms-2">
+                    <InitialsAvatar
+                      name={selectedOrg.name}
+                      size="sm"
+                      className="shrink-0"
+                    />
+                    <h1 className="m-0 min-w-0 truncate text-[13px] font-semibold leading-tight text-foreground">
                       {selectedOrg.name}
                     </h1>
                   </div>
@@ -1941,7 +1951,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
+                      className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
                       aria-label={t('Create organization')}
                       onClick={handleOpenCreateOrganization}
                     >
