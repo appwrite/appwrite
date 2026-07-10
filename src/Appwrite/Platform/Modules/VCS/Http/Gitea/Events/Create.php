@@ -103,24 +103,24 @@ class Create extends Action
      * and a Gitea repository can collide on the same ID. Filter by the
      * matched installation's own provider instead of the query.
      */
-    private function isGiteaRepository(Document $repository, Database $dbForPlatform, Authorization $authorization): bool
+    private function resolveGiteaInstallation(Document $repository, Database $dbForPlatform, Authorization $authorization): ?Document
     {
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
-        if ($installation->isEmpty()) {
-            return false;
+        if ($installation->isEmpty() || $installation->getAttribute('provider', 'github') !== 'gitea') {
+            return null;
         }
 
-        return $installation->getAttribute('provider', 'github') === 'gitea';
+        return $installation;
     }
 
     private function resolveAdapterForRepository(Document $repository, callable $vcsForInstallation, Database $dbForPlatform, Authorization $authorization): ?Git
     {
-        if (!$this->isGiteaRepository($repository, $dbForPlatform, $authorization)) {
+        $installation = $this->resolveGiteaInstallation($repository, $dbForPlatform, $authorization);
+
+        if ($installation === null) {
             return null;
         }
-
-        $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
 
         try {
             return $vcsForInstallation($installation);
@@ -262,7 +262,7 @@ class Create extends Action
             ]));
 
             foreach ($repositories as $repository) {
-                if (!$this->isGiteaRepository($repository, $dbForPlatform, $authorization)) {
+                if ($this->resolveGiteaInstallation($repository, $dbForPlatform, $authorization) === null) {
                     continue;
                 }
 

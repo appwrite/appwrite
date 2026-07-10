@@ -245,16 +245,16 @@ class Update extends Base
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
 
-            $providerAdapter = $vcsForInstallation($installation);
-            if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                try {
+            try {
+                $providerAdapter = $vcsForInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
                     $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                } catch (\Throwable $error) {
-                    $dbForPlatform->deleteDocument('repositories', $repository->getId());
-                    throw $error;
                 }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
             }
         }
 
