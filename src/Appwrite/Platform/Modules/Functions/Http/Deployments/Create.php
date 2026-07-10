@@ -381,6 +381,8 @@ class Create extends Action
                     $queueForEvents
                         ->setParam('functionId', $function->getId())
                         ->setParam('deploymentId', $deployment->getId());
+                } else {
+                    $queueForEvents->setEvent('');
                 }
 
                 $response
