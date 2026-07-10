@@ -4,7 +4,9 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Compute\Job;
 use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Message\Jobs as JobsMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
@@ -69,7 +71,7 @@ class Base extends Action
         return $allowedSpecifications[0];
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = '', ?Jobs $jobs = null): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = '', ?Jobs $jobs = null, ?JobsPublisher $publisherForJobs = null): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -120,14 +122,13 @@ class Base extends Action
 
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
 
-        // Build a plain (non-template) VCS function deployment on the jobs-service
-        // when the caller opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator.
-        // Sites and the template-into-repo push stay on the executor. When on
-        // jobs the deployment is pre-declared 'waiting' with its buildPath so
-        // build.sh writes output onto the mounted volume.
+        // Build a VCS function deployment on the jobs-service when the caller
+        // opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator. Sites stay on
+        // the executor. When on jobs the deployment is pre-declared 'waiting'
+        // with its buildPath so build.sh writes output onto the mounted volume.
         $useJobs = $jobs !== null
             && $function->getCollection() === 'functions'
-            && $template->isEmpty()
+            && ($template->isEmpty() || $publisherForJobs !== null)
             && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
         $buildFields = $useJobs
             ? ['status' => 'waiting', 'buildPath' => Job::buildPath($project->getId(), $deploymentId)]
@@ -167,7 +168,22 @@ class Base extends Action
             ...$buildFields,
         ]));
 
-        if ($useJobs) {
+        if ($useJobs && ! $template->isEmpty()) {
+            // The template must be merged into the repo and pushed as a commit
+            // before the build — a git *write* the jobs-service artifact system
+            // has no primitive for. Hand off to the jobs worker, which pushes
+            // the template and then submits the build for the resulting commit.
+            $publisherForJobs->enqueue(new JobsMessage(
+                project: $project,
+                id: 'template-push-' . $deployment->getId(),
+                event: 'appwrite.template.push',
+                data: [
+                    'meta' => ['projectId' => $project->getId(), 'deploymentId' => $deployment->getId()],
+                    'template' => $template->getArrayCopy(),
+                    'platform' => $platform,
+                ],
+            ));
+        } elseif ($useJobs) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $source = [
                 'url' => $github->getRepositoryPresignedUrl($owner, $repositoryName, $ref),

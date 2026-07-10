@@ -6,6 +6,7 @@ use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -14,7 +15,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use OpenRuntimes\Orchestrator\Jobs;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -84,6 +84,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
+            ->inject('publisherForJobs')
             ->inject('jobs')
             ->inject('gitHub')
             ->inject('authorization')
@@ -106,6 +107,7 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
+        JobsPublisher $publisherForJobs,
         Jobs $jobs,
         GitHub $github,
         Authorization $authorization,
@@ -131,49 +133,27 @@ class Create extends Base
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
             // VCS-connected function: the template is merged into the user's repo
-            // and pushed as a commit, then that commit is built.
+            // and pushed as a commit, then that commit is built. The executor does
+            // the push inside the build job; the jobs backend does it in the jobs
+            // worker (which then submits the build for the resulting commit).
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
-            if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
-                // The jobs-service artifact system only reads source (download /
-                // unarchive), so it cannot do the git *write*. Perform the merge +
-                // commit + push here (mirroring the executor Builds worker), then
-                // build the resulting commit on the jobs-service like any other VCS
-                // commit — no template merge needed in the build.
-                $commitHash = $this->pushTemplateToRepository($github, $function, $installation, $owner, $repository, $reference, $type, $rootDirectory);
-                $deployment = $this->redeployVcsFunction(
-                    request: $request,
-                    function: $function,
-                    project: $project,
-                    installation: $installation,
-                    dbForProject: $dbForProject,
-                    publisherForBuilds: $publisherForBuilds,
-                    template: new Document(),
-                    github: $github,
-                    activate: $activate,
-                    platform: $platform,
-                    referenceType: 'commit',
-                    reference: $commitHash,
-                    jobs: $jobs
-                );
-            } else {
-                // Executor: the Builds worker clones the repo, merges the template,
-                // pushes the commit and builds it, all in the build job.
-                $deployment = $this->redeployVcsFunction(
-                    request: $request,
-                    function: $function,
-                    project: $project,
-                    installation: $installation,
-                    dbForProject: $dbForProject,
-                    publisherForBuilds: $publisherForBuilds,
-                    template: $template,
-                    github: $github,
-                    activate: $activate,
-                    platform: $platform,
-                    referenceType: $type,
-                    reference: $reference
-                );
-            }
+            $deployment = $this->redeployVcsFunction(
+                request: $request,
+                function: $function,
+                project: $project,
+                installation: $installation,
+                dbForProject: $dbForProject,
+                publisherForBuilds: $publisherForBuilds,
+                template: $template,
+                github: $github,
+                activate: $activate,
+                platform: $platform,
+                referenceType: $type,
+                reference: $reference,
+                jobs: $jobs,
+                publisherForJobs: $publisherForJobs
+            );
 
             $queueForEvents
                 ->setParam('functionId', $function->getId())
@@ -257,70 +237,5 @@ class Create extends Base
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
-    }
-
-    /**
-     * Merge a template into a VCS-connected function's repository and push it as a
-     * commit, returning the new commit hash. Replicates the executor Builds
-     * worker's clone + rsync + commit + push for the jobs backend, which has no
-     * git-write primitive; the resulting commit is then built like any other VCS
-     * commit. Runs the git binary in the request flow.
-     */
-    private function pushTemplateToRepository(
-        GitHub $github,
-        Document $function,
-        Document $installation,
-        string $templateOwner,
-        string $templateRepository,
-        string $templateReference,
-        string $templateType,
-        string $templateRootDirectory,
-    ): string {
-        $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-        if (empty($providerInstallationId)) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-        $github->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''), System::getEnv('_APP_VCS_GITHUB_APP_ID', ''));
-
-        $owner = $github->getOwnerName($providerInstallationId);
-        $repository = $github->getRepositoryName($function->getAttribute('providerRepositoryId', ''));
-        $branch = $function->getAttribute('providerBranch', 'main');
-
-        $rootDirectory = \ltrim(\ltrim(\rtrim($function->getAttribute('providerRootDirectory', ''), '/'), '.'), '/');
-        $templateRootDirectory = \ltrim(\ltrim(\rtrim($templateRootDirectory, '/'), '.'), '/');
-
-        $id = ID::unique();
-        $repoDirectory = '/tmp/templates/' . $id . '/code';
-        $templateDirectory = '/tmp/templates/' . $id . '/template';
-        $stdout = '';
-        $stderr = '';
-
-        try {
-            if (Console::execute($github->generateCloneCommand($owner, $repository, $branch, GitHub::CLONE_TYPE_BRANCH, $repoDirectory, $rootDirectory), '', $stdout, $stderr) !== 0) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to clone repository: ' . $stderr);
-            }
-            if (Console::execute($github->generateCloneCommand($templateOwner, $templateRepository, $templateReference, $templateType, $templateDirectory, $templateRootDirectory), '', $stdout, $stderr) !== 0) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to clone template repository: ' . $stderr);
-            }
-
-            Console::execute('mkdir -p ' . \escapeshellarg($repoDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
-            Console::execute('mkdir -p ' . \escapeshellarg($templateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-
-            // Merge the template into the repo, then commit + push the branch.
-            Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($templateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($repoDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
-
-            $message = \escapeshellarg("Create '" . $function->getAttribute('name', '') . "' function");
-            if (Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($repoDirectory) . ' && git checkout -b ' . \escapeshellarg($branch) . ' && git add . && git commit -m ' . $message . ' && git push origin ' . \escapeshellarg($branch), '', $stdout, $stderr) !== 0) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to push to repository: ' . $stderr);
-            }
-
-            if (Console::execute('cd ' . \escapeshellarg($repoDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr) !== 0) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to resolve commit hash: ' . $stderr);
-            }
-
-            return \trim($stdout);
-        } finally {
-            Console::execute('rm -rf ' . \escapeshellarg('/tmp/templates/' . $id), '', $stdout, $stderr);
-        }
     }
 }
