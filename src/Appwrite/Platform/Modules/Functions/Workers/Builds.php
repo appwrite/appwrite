@@ -94,7 +94,7 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
             ->inject('executor')
@@ -120,7 +120,7 @@ class Builds extends Action
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForSites,
-        callable $isResourceBlocked,
+        callable $getIsResourceBlocked,
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
@@ -165,7 +165,7 @@ class Builds extends Action
                     $resource,
                     $deployment,
                     $template,
-                    $isResourceBlocked,
+                    $getIsResourceBlocked,
                     $log,
                     $executor,
                     $plan,
@@ -201,7 +201,7 @@ class Builds extends Action
         Document $resource,
         Document $deployment,
         Document $template,
-        callable $isResourceBlocked,
+        callable $getIsResourceBlocked,
         Log $log,
         Executor $executor,
         array $plan,
@@ -236,7 +236,7 @@ class Builds extends Action
             throw new \Exception('Resource not found');
         }
 
-        if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
+        if ($getIsResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
             throw new BuildException('Resource is blocked');
         }
 
