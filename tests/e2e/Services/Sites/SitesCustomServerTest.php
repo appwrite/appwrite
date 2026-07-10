@@ -148,7 +148,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(400, $site['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $site['body']['type']);
-        $this->assertStringContainsString('Runtime "node-24" is not supported', $site['body']['message']);
+        $this->assertStringContainsString('Runtime "node-24" is not supported', (string) $site['body']['message']);
 
         $this->cleanupSite($siteId);
     }
