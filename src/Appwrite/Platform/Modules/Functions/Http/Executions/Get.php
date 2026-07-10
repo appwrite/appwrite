@@ -10,6 +10,8 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -75,7 +77,11 @@ class Get extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $dbForProject->getDocument('executions', $executionId);
+        try {
+            $execution = $dbForProject->getDocument('executions', $executionId);
+        } catch (NotFoundException) {
+            $execution = new Document();
+        }
 
         if ($execution->getAttribute('resourceType') !== 'functions' || $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);

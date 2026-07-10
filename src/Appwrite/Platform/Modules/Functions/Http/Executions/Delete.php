@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -60,6 +61,7 @@ class Delete extends Base
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
@@ -71,6 +73,7 @@ class Delete extends Base
         string $functionId,
         string $executionId,
         Response $response,
+        Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
@@ -82,9 +85,37 @@ class Delete extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $execution = $dbForProject->getDocument('executions', $executionId);
+        try {
+            $execution = $dbForProject->getDocument('executions', $executionId);
+        } catch (NotFoundException) {
+            $execution = new Document();
+        }
+
         if ($execution->isEmpty()) {
-            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            // Executions are not persisted, but a pending scheduled execution
+            // can still be cancelled through its schedule.
+            $schedule = $authorization->skip(fn () => $dbForPlatform->findOne('schedules', [
+                Query::equal('resourceId', [$executionId]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::equal('active', [true]),
+            ]));
+
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                'resourceUpdatedAt' => DateTime::now(),
+                'active' => false,
+            ])));
+
+            $queueForEvents
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $executionId);
+
+            $response->noContent();
+            return;
         }
 
         if ($execution->getAttribute('resourceType') !== 'functions' && $execution->getAttribute('resourceInternalId') !== $function->getSequence()) {

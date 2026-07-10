@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
@@ -105,7 +106,11 @@ class XList extends Base
             }
 
             $executionId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('executions', $executionId);
+            try {
+                $cursorDocument = $dbForProject->getDocument('executions', $executionId);
+            } catch (NotFoundException) {
+                $cursorDocument = new Document();
+            }
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Execution '{$executionId}' for the 'cursor' value not found.");
@@ -148,6 +153,9 @@ class XList extends Base
         try {
             $results = $dbForProject->find('executions', $queries);
             $total = $includeTotal ? $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT) : 0;
+        } catch (NotFoundException) {
+            $results = [];
+            $total = 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }

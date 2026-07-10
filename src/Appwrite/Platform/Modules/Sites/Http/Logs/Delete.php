@@ -10,6 +10,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -67,7 +69,11 @@ class Delete extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        $log = $dbForProject->getDocument('executions', $logId);
+        try {
+            $log = $dbForProject->getDocument('executions', $logId);
+        } catch (NotFoundException) {
+            $log = new Document();
+        }
         if ($log->isEmpty()) {
             throw new Exception(Exception::LOG_NOT_FOUND);
         }

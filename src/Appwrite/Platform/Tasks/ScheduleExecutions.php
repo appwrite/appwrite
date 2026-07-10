@@ -33,6 +33,11 @@ class ScheduleExecutions extends ScheduleBase
         return RESOURCE_TYPE_EXECUTIONS;
     }
 
+    public static function loadResource(): bool
+    {
+        return false;
+    }
+
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
@@ -75,7 +80,7 @@ class ScheduleExecutions extends ScheduleBase
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     userId: $data['userId'] ?? '',
-                    functionId: $schedule['resource']['resourceId'],
+                    functionId: $data['functionId'] ?? '',
                     execution: $schedule['resource'],
                     type: 'schedule',
                     body: $data['body'] ?? '',

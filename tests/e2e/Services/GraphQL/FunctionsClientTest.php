@@ -263,11 +263,10 @@ final class FunctionsClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsArray($execution['body']['data']);
-        $this->assertArrayNotHasKey('errors', $execution['body']);
-        $execution = $execution['body']['data']['functionsGetExecution'];
-        $this->assertIsArray($execution);
+        // Executions are not persisted, so gets return not found
+        $this->assertArrayHasKey('errors', $execution['body']);
+        $this->assertStringContainsString('could not be found', (string) $execution['body']['errors'][0]['message']);
 
-        return $execution;
+        return [];
     }
 }

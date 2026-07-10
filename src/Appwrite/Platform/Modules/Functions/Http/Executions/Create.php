@@ -265,6 +265,8 @@ class Create extends Base
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            '$createdAt' => DateTime::now(),
+            '$updatedAt' => DateTime::now(),
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -308,7 +310,8 @@ class Create extends Base
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
-                    'userId' => $user->getId()
+                    'userId' => $user->getId(),
+                    'functionId' => $function->getId(),
                 ];
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([

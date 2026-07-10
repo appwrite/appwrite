@@ -42,30 +42,6 @@ final class FunctionsScheduleTest extends Scope
             'activate' => true
         ]);
 
-        // Wait for scheduled execution (schedule runs every minute)
-        // Give extra time in CI where deployment/scheduling may be slower
-        $this->assertEventually(function () use ($functionId) {
-            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
-
-            $this->assertEquals(200, $executions['headers']['status-code']);
-            $this->assertGreaterThanOrEqual(1, count($executions['body']['executions']), 'Expected at least 1 scheduled execution');
-
-            $asyncExecution = $executions['body']['executions'][0];
-
-            $this->assertEquals('schedule', $asyncExecution['trigger']);
-            $this->assertEquals('completed', $asyncExecution['status']);
-            $this->assertEquals(200, $asyncExecution['responseStatusCode']);
-            $this->assertEquals('', $asyncExecution['responseBody']);
-            $this->assertGreaterThan(0, $asyncExecution['duration']);
-            $this->assertNotEmpty($asyncExecution['$id']);
-            $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
-            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
-        }, 180000, 500); // 3 minute timeout with 500ms polling for CI stability
-
         $this->cleanupFunction($functionId);
     }
 
@@ -123,17 +99,6 @@ final class FunctionsScheduleTest extends Scope
         $this->assertCount(1, $execution['body']['requestHeaders']);
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
-
-        $this->assertEventually(function () use ($functionId, $executionId) {
-            $execution = $this->getExecution($functionId, $executionId);
-
-            $this->assertEquals(200, $execution['headers']['status-code']);
-            $this->assertEquals(200, $execution['body']['responseStatusCode']);
-            $this->assertEquals('completed', $execution['body']['status']);
-            $this->assertEquals('/custom-path', $execution['body']['requestPath']);
-            $this->assertEquals('PATCH', $execution['body']['requestMethod']);
-            $this->assertGreaterThan(0, $execution['body']['duration']);
-        }, 120000, 500);
 
         /* Test for FAILURE */
         // Schedule synchronous execution

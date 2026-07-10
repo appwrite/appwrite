@@ -219,14 +219,8 @@ final class FunctionsCustomClientTest extends Scope
             'body' => 'foobar',
             'async' => true
         ]);
-        $executionId = $execution['body']['$id'];
         $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $this->assertEventually(function () use ($functionId, $executionId) {
-            $execution = $this->getExecution($functionId, $executionId);
-            $this->assertEquals('completed', $execution['body']['status']);
-            $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        }, 10000, 500);
+        $this->assertNotEmpty($execution['body']['$id']);
 
         return [
             'functionId' => $functionId
@@ -592,20 +586,6 @@ final class FunctionsCustomClientTest extends Scope
             'data' => ['name' => 'Test Document'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
-        $this->assertEventually(function () use ($functionId) {
-            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
-
-            $this->assertEquals(200, $executions['headers']['status-code']);
-            $this->assertGreaterThan(0, count($executions['body']['executions']), 'Function should have been triggered by document creation');
-
-            $lastExecution = $executions['body']['executions'][0];
-            $this->assertEquals('completed', $lastExecution['status']);
-            $this->assertEquals(204, $lastExecution['responseStatusCode']);
-        }, 20000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',

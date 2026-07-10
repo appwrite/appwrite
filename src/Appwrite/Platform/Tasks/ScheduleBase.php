@@ -35,6 +35,11 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
+
+    public static function loadResource(): bool
+    {
+        return true;
+    }
     abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
@@ -267,6 +272,13 @@ abstract class ScheduleBase extends Action
             }
 
             $this->schedules[$sequence]['project'] = $project;
+
+            if (!static::loadResource()) {
+                $this->schedules[$sequence]['resource'] = new Document([
+                    '$id' => $schedule['resourceId'],
+                ]);
+                continue;
+            }
 
             // In case the resource is not found (project deleted).
             try {
