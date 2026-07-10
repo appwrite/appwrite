@@ -16,7 +16,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
@@ -82,8 +81,8 @@ class Create extends Action
 
         match ($event) {
             GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsForInstallation, $vcs, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
-            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsForInstallation, $vcs, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
         };
 
@@ -183,7 +182,6 @@ class Create extends Action
     private function handlePushEvent(
         array $parsedPayload,
         callable $vcsForInstallation,
-        Git $vcs,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -231,7 +229,6 @@ class Create extends Action
     private function handlePullRequestEvent(
         array $parsedPayload,
         callable $vcsForInstallation,
-        Git $vcs,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
