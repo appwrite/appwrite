@@ -1914,6 +1914,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                     && $oauth2->isEmailVerified($accessToken);
                 $email = $canonicalize ? $canonical : $providerEmail;
+                $emails = array_values(array_unique([$email, $providerEmail]));
                 $emailMetadata = [
                     'emailCanonical' => $canonical,
                     'emailIsCanonical' => $canonicalize || $parsedEmail->get() === $canonical,
@@ -1923,6 +1924,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ];
             } catch (\Throwable) {
                 $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
+            }
+
+            $userWithMatchingEmail = $dbForProject->find('users', [
+                Query::equal('email', $emails),
+                Query::notEqual('$id', $user->getId()),
+            ]);
+            if (!empty($userWithMatchingEmail)) {
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
 
             if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
