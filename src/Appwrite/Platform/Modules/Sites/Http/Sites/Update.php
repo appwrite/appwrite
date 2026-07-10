@@ -245,7 +245,7 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             $providerAdapter = $vcsForInstallation($installation);
-            if ($providerAdapter->requiresRepositoryWebhook()) {
+            if ($providerAdapter->hasPerRepositoryWebhooks()) {
                 try {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
