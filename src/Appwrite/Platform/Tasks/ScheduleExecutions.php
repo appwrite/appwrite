@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
+use Utopia\Console;
 use Utopia\Database\Database;
 
 /**
@@ -68,11 +69,25 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             )->getAttribute('data', []);
 
+            $functionId = $data['functionId'] ?? $schedule['resource']->getAttribute('resourceId', '');
+
+            if (empty($functionId)) {
+                Console::error("Missing functionId for scheduled execution {$schedule['resourceId']}, skipping");
+
+                $dbForPlatform->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+
+                unset($this->schedules[$schedule['$sequence']]);
+                continue;
+            }
+
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
+            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $functionId, $dbForPlatform) {
                 if ($delay > 0) {
                     Co::sleep($delay);
                 }
@@ -80,7 +95,7 @@ class ScheduleExecutions extends ScheduleBase
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     userId: $data['userId'] ?? '',
-                    functionId: $data['functionId'] ?? '',
+                    functionId: $functionId,
                     execution: $schedule['resource'],
                     type: 'schedule',
                     body: $data['body'] ?? '',

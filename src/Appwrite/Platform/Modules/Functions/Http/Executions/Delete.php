@@ -110,9 +110,19 @@ class Delete extends Base
                 'active' => false,
             ])));
 
+            $execution = new Document([
+                '$id' => $executionId,
+                'functionId' => $function->getId(),
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
+                'trigger' => 'schedule',
+                'status' => 'scheduled',
+            ]);
+
             $queueForEvents
                 ->setParam('functionId', $function->getId())
-                ->setParam('executionId', $executionId);
+                ->setParam('executionId', $executionId)
+                ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
 
             $response->noContent();
             return;

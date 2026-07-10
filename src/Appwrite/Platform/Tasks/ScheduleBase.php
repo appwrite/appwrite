@@ -274,9 +274,22 @@ abstract class ScheduleBase extends Action
             $this->schedules[$sequence]['project'] = $project;
 
             if (!static::loadResource()) {
-                $this->schedules[$sequence]['resource'] = new Document([
-                    '$id' => $schedule['resourceId'],
-                ]);
+                // Best-effort load: schedules from before the executions
+                // collection was dropped can still resolve their document;
+                // newer ones carry what they need in the schedule data.
+                try {
+                    $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+                } catch (\Throwable) {
+                    $resource = new Document();
+                }
+
+                if ($resource->isEmpty()) {
+                    $resource = new Document([
+                        '$id' => $schedule['resourceId'],
+                    ]);
+                }
+
+                $this->schedules[$sequence]['resource'] = $resource;
                 continue;
             }
 
