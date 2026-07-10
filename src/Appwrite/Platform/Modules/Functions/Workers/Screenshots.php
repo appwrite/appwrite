@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Exception;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
@@ -17,8 +18,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Psr7\Method;
-use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -128,19 +127,6 @@ class Screenshots extends Action
                 $routerHost = "$protocol://{$rule->getAttribute('domain')}";
             }
 
-            $configs = [
-                'screenshotLight' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=light',
-                    'theme' => 'light'
-                ],
-                'screenshotDark' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=dark',
-                    'theme' => 'dark'
-                ],
-            ];
-
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
                 'hostnameOverride' => true,
@@ -165,33 +151,33 @@ class Screenshots extends Action
             ]);
 
             $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-            $client = (new Client(new CurlAdapter()))->withTimeout($timeout);
-            $factory = new RequestFactory();
+            $client = new ScreenshotsClient(
+                (new Client(new CurlAdapter()))
+                    ->withBaseUri($browserEndpoint)
+                    ->withTimeout($timeout)
+            );
+
+            $headers = [
+                'x-appwrite-hostname' => $rule->getAttribute('domain'),
+                'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            ];
+
+            $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
+            $sleep = $framework['screenshotSleep'] ?? 3000;
+
+            $themes = ['screenshotLight' => 'light', 'screenshotDark' => 'dark'];
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $browserEndpoint, $client, $factory, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $browserEndpoint, $client, $factory, &$screenshotError) {
+            $screenshots = batch(\array_map(function ($key) use ($themes, $client, $routerHost, $headers, $sleep, &$screenshotError) {
+                return function () use ($key, $themes, $client, $routerHost, $headers, $sleep, &$screenshotError) {
                     try {
-                        $config = $configs[$key];
-
-                        $config['headers'] = \array_merge($config['headers'], [
-                            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey
-                        ]);
-                        $config['sleep'] = 3000;
-
-                        $frameworks = Config::getParam('frameworks', []);
-                        $framework = $frameworks[$site->getAttribute('framework', '')] ?? null;
-                        if (!is_null($framework)) {
-                            $config['sleep'] = $framework['screenshotSleep'];
-                        }
-
-                        $response = $client->sendRequest($factory->json(Method::POST, $browserEndpoint . '/screenshots', $config));
-
-                        if ($response->getStatusCode() >= 400) {
-                            throw new \Exception((string)$response->getBody());
-                        }
-
-                        $screenshot = (string)$response->getBody();
+                        $theme = $themes[$key];
+                        $screenshot = $client->create(
+                            url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
+                            theme: $theme,
+                            headers: $headers,
+                            sleep: $sleep,
+                        );
 
                         return ['key' => $key, 'screenshot' => $screenshot];
                     } catch (\Throwable $th) {
@@ -199,7 +185,7 @@ class Screenshots extends Action
                         return;
                     }
                 };
-            }, \array_keys($configs)));
+            }, \array_keys($themes)));
 
             if (!\is_null($screenshotError)) {
                 throw new \Exception($screenshotError);
