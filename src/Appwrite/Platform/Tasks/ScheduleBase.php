@@ -47,7 +47,7 @@ abstract class ScheduleBase extends Action
             ->inject('publisherMigrations')
             ->inject('publisherFunctions')
             ->inject('publisherMessaging')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
@@ -73,7 +73,7 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $isResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): never
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
@@ -90,16 +90,16 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $isResourceBlocked);
+        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $isResourceBlocked) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $getIsResourceBlocked) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $isResourceBlocked);
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $getIsResourceBlocked);
         });
 
         while (true) {
@@ -114,7 +114,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate, callable $isResourceBlocked): void
+    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate, callable $getIsResourceBlocked): void
     {
         $initialLoad = $lastSyncUpdate === "0";
         $loadStart = microtime(true);
@@ -260,7 +260,7 @@ abstract class ScheduleBase extends Action
             }
 
             // In case the resource is blocked.
-            if ($isResourceBlocked($project, $collectionId, $schedule['resourceId'])) {
+            if ($getIsResourceBlocked($project, $collectionId, $schedule['resourceId'])) {
                 Console::error("Resource blocked: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 unset($this->schedules[$sequence]);
                 continue;
