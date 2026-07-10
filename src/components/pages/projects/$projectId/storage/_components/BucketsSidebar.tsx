@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ID } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
+import { SecondarySidebarHeader } from '@/lib/layout/secondary-sidebar-header'
 import {
   SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
   SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
@@ -63,7 +64,11 @@ const SIDEBAR_PAGE_SIZE = 100
 
 type SortBy = 'name' | '$createdAt' | '$updatedAt'
 
-export function BucketsSidebar() {
+type BucketsSidebarProps = {
+  showBackButton?: boolean
+}
+
+export function BucketsSidebar({ showBackButton = false }: BucketsSidebarProps) {
   const t = useT()
   const { projectId, bucketId: activeBucketId } = useParams({ strict: false })
   const navigate = useNavigate()
@@ -161,26 +166,17 @@ export function BucketsSidebar() {
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      <div className="flex shrink-0 flex-col border-b border-border bg-background">
-        <div className="flex items-center gap-2 px-3 py-2.5">
-          <button
-            type="button"
-            onClick={() =>
-              navigate({
-                to: '/projects/$projectId',
-                params: { projectId: projectId! },
-              })
-            }
-            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label={t('Back to project')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="text-[13px] font-medium text-foreground">
-            {t('Storage')}
-          </span>
-        </div>
-      </div>
+      <SecondarySidebarHeader
+        title={t('Storage')}
+        showBackButton={showBackButton}
+        backLabel={t('Back to project')}
+        onBack={() =>
+          navigate({
+            to: '/projects/$projectId',
+            params: { projectId: projectId! },
+          })
+        }
+      />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
