@@ -1820,6 +1820,8 @@ export type ProjectListRequestsUsageEntry = {
   isLoading: boolean
   isError: boolean
   data: ProjectRequestsChartOverview | undefined
+  /** Skip fetch / show unavailable UI (e.g. org budget-locked projects). */
+  unavailable?: boolean
 }
 
 /**

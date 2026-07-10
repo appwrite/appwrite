@@ -1615,9 +1615,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       : filteredProjectsByTeam
 
   const showProjectUsageCharts = features.usageStats
+  // Budget-locked projects cannot load platform/usage APIs (402). Skip those
+  // fetches and show N/A on the cards instead.
+  const skipProjectCardExtras = showBudgetLimitAlert
 
   const visibleProjectIds = useMemo(() => {
-    if (!showProjectUsageCharts) return []
+    if (!showProjectUsageCharts || skipProjectCardExtras) return []
     return [
       ...new Set([
         ...pinnedProjects.map((project) => project.$id),
@@ -1626,29 +1629,82 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         ),
       ]),
     ]
-  }, [showProjectUsageCharts, pinnedProjects, displayedProjectsByTeam])
-
-  const projectRequestsUsageById = useProjectListRequestsUsage(
-    visibleProjectIds,
+  }, [
     showProjectUsageCharts,
+    skipProjectCardExtras,
+    pinnedProjects,
+    displayedProjectsByTeam,
+  ])
+
+  const fetchedProjectRequestsUsageById = useProjectListRequestsUsage(
+    visibleProjectIds,
+    showProjectUsageCharts && !skipProjectCardExtras,
   )
 
-  const projectListPlatformIds = useMemo(
-    () => [
+  const projectListPlatformIds = useMemo(() => {
+    if (skipProjectCardExtras) return []
+    return [
       ...new Set([
         ...pinnedProjects.map((project) => project.$id),
         ...displayedProjectsByTeam.flatMap(({ projects }) =>
           projects.map((project) => project.$id),
         ),
       ]),
-    ],
-    [pinnedProjects, displayedProjectsByTeam],
-  )
+    ]
+  }, [skipProjectCardExtras, pinnedProjects, displayedProjectsByTeam])
 
-  const projectPlatformsById = useProjectListPlatforms(
+  const fetchedProjectPlatformsById = useProjectListPlatforms(
     projectListPlatformIds,
     projectListPlatformIds.length > 0,
   )
+
+  const lockedProjectCardIds = useMemo(() => {
+    if (!skipProjectCardExtras) return [] as string[]
+    return [
+      ...new Set([
+        ...pinnedProjects.map((project) => project.$id),
+        ...displayedProjectsByTeam.flatMap(({ projects }) =>
+          projects.map((project) => project.$id),
+        ),
+      ]),
+    ]
+  }, [skipProjectCardExtras, pinnedProjects, displayedProjectsByTeam])
+
+  const projectRequestsUsageById = useMemo(() => {
+    if (!skipProjectCardExtras) return fetchedProjectRequestsUsageById
+    const map = new Map(fetchedProjectRequestsUsageById)
+    for (const projectId of lockedProjectCardIds) {
+      map.set(projectId, {
+        isLoading: false,
+        isError: false,
+        data: undefined,
+        unavailable: true,
+      })
+    }
+    return map
+  }, [
+    skipProjectCardExtras,
+    fetchedProjectRequestsUsageById,
+    lockedProjectCardIds,
+  ])
+
+  const projectPlatformsById = useMemo(() => {
+    if (!skipProjectCardExtras) return fetchedProjectPlatformsById
+    const map = new Map(fetchedProjectPlatformsById)
+    for (const projectId of lockedProjectCardIds) {
+      map.set(projectId, {
+        isLoading: false,
+        isError: false,
+        platforms: [],
+        unavailable: true,
+      })
+    }
+    return map
+  }, [
+    skipProjectCardExtras,
+    fetchedProjectPlatformsById,
+    lockedProjectCardIds,
+  ])
 
   const prefetchOrganizationSwitchData = useCallback(
     async (nextOrgId: string) => {

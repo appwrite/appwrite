@@ -98,6 +98,8 @@ type ProjectListRequestsChartProps = {
   chartPoints?: UsageChartPoint[]
   isLoading: boolean
   isError?: boolean
+  /** Locked / blocked: no chart, show unavailable copy instead of a zero series. */
+  unavailable?: boolean
   className?: string
   variant?: 'card' | 'table'
 }
@@ -387,23 +389,27 @@ export function ProjectListRequestsChart({
   chartPoints = [],
   isLoading,
   isError = false,
+  unavailable = false,
   className,
   variant = 'card',
 }: ProjectListRequestsChartProps) {
   const t = useT()
   const gradientId = useId().replace(/:/g, '')
+  const showUnavailable = unavailable || isError
   const hasPoints = chartPoints.length > 0
   const totalRequests = useMemo(
     () => sumUsageChartPoints(chartPoints),
     [chartPoints],
   )
-  const isZeroUsage = !isLoading && !isError && totalRequests === 0
+  const isZeroUsage =
+    !isLoading && !showUnavailable && totalRequests === 0
   const isTable = variant === 'table'
   const chartHeight = isTable
     ? PROJECT_LIST_REQUESTS_TABLE_CHART_HEIGHT
     : PROJECT_LIST_REQUESTS_CHART_HEIGHT
 
-  const showChange = !isLoading && !isError && hasPoints && !isZeroUsage
+  const showChange =
+    !isLoading && !showUnavailable && hasPoints && !isZeroUsage
   const isPositive = changePercent > 0
   const isNegative = changePercent < 0
 
@@ -425,34 +431,42 @@ export function ProjectListRequestsChart({
     ? 'block max-w-full truncate'
     : 'shrink-0'
 
+  const unavailableMessage = (
+    <div className="flex h-full w-full items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 px-3 text-center">
+      <span className="text-[12px] leading-snug text-muted-foreground">
+        {t('Usage unavailable')}
+      </span>
+    </div>
+  )
+
   const valueContent = isLoading ? (
     <span
       className="block h-3.5 w-8 max-w-full shrink-0 rounded-sm bg-border/70"
       aria-hidden
     />
+  ) : showUnavailable || isZeroUsage ? (
+    <div className="min-w-0">
+      <span
+        className={cn(
+          valueTextLayoutClass,
+          'font-medium leading-none text-muted-foreground',
+          valueTextSizeClass,
+        )}
+      >
+        {t('N/A')}
+      </span>
+    </div>
   ) : (
     <div className="min-w-0">
-      {isZeroUsage ? (
-        <span
-          className={cn(
-            valueTextLayoutClass,
-            'font-medium leading-none text-muted-foreground',
-            valueTextSizeClass,
-          )}
-        >
-          N/A
-        </span>
-      ) : (
-        <span
-          className={cn(
-            valueTextLayoutClass,
-            'font-medium leading-none tabular-nums text-foreground',
-            valueTextSizeClass,
-          )}
-        >
-          {formatRequestsTotal(totalRequests)}
-        </span>
-      )}
+      <span
+        className={cn(
+          valueTextLayoutClass,
+          'font-medium leading-none tabular-nums text-foreground',
+          valueTextSizeClass,
+        )}
+      >
+        {formatRequestsTotal(totalRequests)}
+      </span>
     </div>
   )
 
@@ -484,6 +498,23 @@ export function ProjectListRequestsChart({
   ) : null
 
   if (isTable) {
+    if (showUnavailable && !isLoading) {
+      return (
+        <div
+          className={cn('flex h-full min-w-0 items-center', className)}
+          style={{
+            height: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT,
+            minHeight: PROJECT_LIST_REQUESTS_TABLE_ROW_MIN_HEIGHT,
+          }}
+          aria-label={t('Usage unavailable')}
+        >
+          <span className="text-[12px] font-medium text-muted-foreground">
+            {t('N/A')}
+          </span>
+        </div>
+      )
+    }
+
     return (
       <div
         className={cn('flex h-full min-w-0 items-center gap-2', className)}
@@ -524,7 +555,13 @@ export function ProjectListRequestsChart({
       className={cn('min-w-0', className)}
       style={{ minHeight: PROJECT_LIST_REQUESTS_CONTENT_MIN_HEIGHT }}
       aria-busy={isLoading}
-      aria-label={isLoading ? t('Loading request usage') : undefined}
+      aria-label={
+        isLoading
+          ? t('Loading request usage')
+          : showUnavailable
+            ? t('Usage unavailable')
+            : undefined
+      }
     >
       <div className="mb-1.5 flex h-5 min-w-0 items-center gap-2">
         <span className="shrink-0 text-[12px] font-medium leading-none text-muted-foreground">
@@ -536,7 +573,7 @@ export function ProjectListRequestsChart({
             {valueContent}
             <span className="ms-auto inline-flex h-3.5 w-9 shrink-0" aria-hidden />
           </>
-        ) : (
+        ) : showUnavailable ? null : (
           <div className="flex min-w-0 flex-1 items-center gap-2">
             {isZeroUsage ? (
               <>
@@ -560,12 +597,8 @@ export function ProjectListRequestsChart({
         className="relative w-full min-w-0 overflow-hidden"
         style={{ height: chartHeight }}
       >
-        {isError ? (
-          <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/10 px-3 text-center">
-            <span className="text-[12px] text-muted-foreground">
-              {t('Usage unavailable')}
-            </span>
-          </div>
+        {showUnavailable ? (
+          unavailableMessage
         ) : (
           <RequestsChartBlock
             chartData={chartData}
@@ -606,6 +639,7 @@ function ProjectListRequestsChartFromUsage({
       variant={variant}
       isLoading={usage?.isLoading ?? true}
       isError={usage?.isError ?? false}
+      unavailable={usage?.unavailable === true}
       changePercent={usage?.data?.changePercent}
       chartPoints={usage?.data?.chartPoints}
     />

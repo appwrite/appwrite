@@ -71,6 +71,8 @@ type ProjectListPlatformAvatarsProps = {
   projectId: string
   platforms: Models.PlatformList['platforms']
   isLoading?: boolean
+  /** When true, skip empty-state CTA and show N/A (locked / blocked projects). */
+  unavailable?: boolean
   className?: string
   variant?: 'card' | 'table'
 }
@@ -119,12 +121,28 @@ export function ProjectListPlatformAvatars({
   projectId,
   platforms,
   isLoading = false,
+  unavailable = false,
   className,
   variant = 'card',
 }: ProjectListPlatformAvatarsProps) {
   const t = useT()
   if (isLoading) {
     return <PlatformAvatarsLoading className={className} variant={variant} />
+  }
+
+  if (unavailable) {
+    return (
+      <div
+        className={cn(
+          'inline-flex items-center text-[12px] font-medium text-muted-foreground',
+          variant === 'table' && PROJECT_LIST_PLATFORM_AVATAR_SIZE_CLASS,
+          className,
+        )}
+        aria-label={t('N/A')}
+      >
+        {t('N/A')}
+      </div>
+    )
   }
 
   const stackItems = groupPlatformsForStack(platforms)

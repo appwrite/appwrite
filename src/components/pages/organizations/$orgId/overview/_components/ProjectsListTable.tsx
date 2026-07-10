@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Lock, PauseCircle, Pin, PinOff } from '@/lib/icons'
+import { PauseCircle, Pin, PinOff } from '@/lib/icons'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -201,9 +201,8 @@ export function ProjectsListTable({
                         {budgetLimitReached ? (
                           <Badge
                             variant="error"
-                            className="gap-1 text-[10px] font-medium shrink-0"
+                            className="text-[10px] font-medium shrink-0"
                           >
-                            <Lock className="h-3 w-3" />
                             {t('Locked')}
                           </Badge>
                         ) : project.paused ? (
@@ -243,6 +242,7 @@ export function ProjectsListTable({
                         projectId={project.$id}
                         platforms={platformsEntry?.platforms ?? []}
                         isLoading={platformsEntry?.isLoading ?? true}
+                        unavailable={platformsEntry?.unavailable === true}
                         variant="table"
                       />
                     </div>

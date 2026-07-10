@@ -1174,6 +1174,8 @@ export type ProjectListPlatformsEntry = {
   isLoading: boolean
   isError: boolean
   platforms: Models.PlatformList['platforms']
+  /** Skip fetch / show N/A (e.g. org budget-locked projects). */
+  unavailable?: boolean
 }
 
 /**

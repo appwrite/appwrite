@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { Lock, PauseCircle } from '@/lib/icons'
+import { PauseCircle } from '@/lib/icons'
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
@@ -41,9 +41,8 @@ export function ProjectListCardMain({
         {showLockedBadge ? (
           <Badge
             variant="error"
-            className="gap-1.5 text-[10px] font-medium shrink-0"
+            className="text-[10px] font-medium shrink-0"
           >
-            <Lock className="h-3 w-3" />
             {t('Locked')}
           </Badge>
         ) : null}
@@ -94,6 +93,7 @@ export function ProjectListCardFooter({
           projectId={project.$id}
           platforms={platformsEntry?.platforms ?? []}
           isLoading={platformsEntry?.isLoading ?? true}
+          unavailable={platformsEntry?.unavailable === true}
           className="min-w-0 flex-1 pointer-events-auto"
         />
         <div className="relative z-10 shrink-0 pointer-events-auto">
