@@ -531,13 +531,18 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Add image': 'הוספת תמונה',
   'Remove image': 'הסרת תמונה',
   'Consent screen image': 'תמונת מסך הסכמה',
+  'Marketplace image': 'תמונת Marketplace',
   'Optional screenshots shown on the OAuth2 consent screen.':
     'צילומי מסך אופציונליים שמוצגים במסך ההסכמה של OAuth2.',
+  'Optional screenshots shown on the marketplace listing.':
+    'צילומי מסך אופציונליים שמוצגים ברישום בשוק האפליקציות.',
   'You can add up to 12 images.': 'אפשר להוסיף עד 12 תמונות.',
   'Failed to upload image': 'העלאת התמונה נכשלה',
   'Add tag and press Enter': 'הוסיפו תגית ולחצו Enter',
   'Optional labels shown on the OAuth2 consent screen.':
     'תוויות אופציונליות שמוצגות במסך ההסכמה של OAuth2.',
+  'Optional labels for marketplace discovery.':
+    'תוויות אופציונליות לגילוי בשוק האפליקציות.',
   'Only PNG, JPEG, or WebP images are supported':
     'נתמכות רק תמונות PNG, JPEG או WebP',
   'Upload image': 'העלאת תמונה',
@@ -1108,6 +1113,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'העלו קובץ DNS zone (בפורמט txt.) לייבוא רשומות DNS. גודל הקובץ המרבי הוא 5MB.',
   'Upload a PNG logo for the OAuth2 consent screen.':
     'העלו לוגו PNG למסך ההסכמה של OAuth2.',
+  'Upload a PNG logo for the consent screen and marketplace.':
+    'העלו לוגו PNG למסך ההסכמה ולשוק האפליקציות.',
   'Upload a PNG logo to get started.': 'העלו לוגו PNG כדי להתחיל.',
   Usage: 'שימוש',
   'Usage details': 'פרטי שימוש',

@@ -127,7 +127,7 @@ export function AppImagesPicker({
   return (
     <div className="space-y-2">
       <p className="text-[12px] text-muted-foreground">
-        {t('Optional screenshots shown on the OAuth2 consent screen.')}
+        {t('Optional screenshots shown on the marketplace listing.')}
       </p>
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -145,7 +145,7 @@ export function AppImagesPicker({
             >
               <img
                 src={src}
-                alt={t('Consent screen image')}
+                alt={t('Marketplace image')}
                 className="h-full w-full object-cover"
               />
               <Button

@@ -43,15 +43,35 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Name and descriptions shown on the OAuth2 consent screen.':
     'OAuth2 同意画面に表示される名前と説明。',
   'Optional description for the consent screen': '同意画面用の任意の説明',
+  'Optional description for the marketplace listing':
+    'マーケットプレイス掲載用の任意の説明',
   'Revoke all tokens': 'すべてのトークンを取り消す',
   'Revoke tokens': 'トークンを取り消す',
   'Short summary for the consent screen': '同意画面用の短い概要',
   'This client can request authorization.': 'このクライアントは認可をリクエストできます。',
   'This client is disabled.': 'このクライアントは無効です。',
   'Tokens revoked': 'トークンを取り消しました',
+  'Client settings': 'クライアント設定',
+  'Core OAuth2 client configuration used by your integration.':
+    '連携で使う OAuth2 クライアントの基本設定。',
+  Branding: 'ブランディング',
+  'May appear on the OAuth2 consent screen.':
+    'OAuth2 の同意画面に表示される場合があります。',
+  'Additional listing details for the marketplace.':
+    'マーケットプレイス掲載用の追加詳細。',
+  'Optional labels for marketplace discovery.':
+    'マーケットプレイスでの発見用の任意ラベル。',
+  'Optional screenshots shown on the marketplace listing.':
+    'マーケットプレイス掲載に表示される任意のスクリーンショット。',
+  'Marketplace image': 'Marketplace 画像',
+  'Privacy and support': 'プライバシーとサポート',
+  'Links and contacts for marketplace, compliance, and support.':
+    'マーケットプレイス、コンプライアンス、サポート用のリンクと連絡先。',
   'Consent screen': '同意画面',
   'OAuth2 client settings and consent screen details.':
     'OAuth2 クライアント設定と同意画面の詳細。',
+  'OAuth2 client settings, consent screen, and marketplace details.':
+    'OAuth2 クライアント設定、同意画面、Marketplace の詳細。',
   'Update app': 'アプリを更新',
   'Add': '追加',
   'Add Label': 'ラベルを追加',

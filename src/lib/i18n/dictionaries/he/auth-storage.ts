@@ -43,15 +43,35 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Name and descriptions shown on the OAuth2 consent screen.':
     'שם ותיאורים שמוצגים במסך ההסכמה של OAuth2.',
   'Optional description for the consent screen': 'תיאור אופציונלי למסך ההסכמה',
+  'Optional description for the marketplace listing':
+    'תיאור אופציונלי לרישום בשוק האפליקציות',
   'Revoke all tokens': 'שלילת כל הטוקנים',
   'Revoke tokens': 'שלילת טוקנים',
   'Short summary for the consent screen': 'סיכום קצר למסך ההסכמה',
   'This client can request authorization.': 'לקוח זה יכול לבקש הרשאה.',
   'This client is disabled.': 'לקוח זה מושבת.',
   'Tokens revoked': 'הטוקנים נשללו',
+  'Client settings': 'הגדרות לקוח',
+  'Core OAuth2 client configuration used by your integration.':
+    'הגדרות ליבה של לקוח OAuth2 לשימוש באינטגרציה שלכם.',
+  Branding: 'מיתוג',
+  'May appear on the OAuth2 consent screen.':
+    'עשוי להופיע במסך ההסכמה של OAuth2.',
+  'Additional listing details for the marketplace.':
+    'פרטי רישום נוספים לשוק האפליקציות.',
+  'Optional labels for marketplace discovery.':
+    'תוויות אופציונליות לגילוי בשוק האפליקציות.',
+  'Optional screenshots shown on the marketplace listing.':
+    'צילומי מסך אופציונליים שמוצגים ברישום בשוק האפליקציות.',
+  'Marketplace image': 'תמונת Marketplace',
+  'Privacy and support': 'פרטיות ותמיכה',
+  'Links and contacts for marketplace, compliance, and support.':
+    'קישורים ואנשי קשר לשוק האפליקציות, תאימות ותמיכה.',
   'Consent screen': 'מסך הסכמה',
   'OAuth2 client settings and consent screen details.':
     'הגדרות לקוח OAuth2 ופרטי מסך ההסכמה.',
+  'OAuth2 client settings, consent screen, and marketplace details.':
+    'הגדרות לקוח OAuth2, מסך הסכמה ופרטי Marketplace.',
   'Update app': 'עדכון אפליקציה',
   'Add': 'הוספה',
   'Add Label': 'הוספת תווית',

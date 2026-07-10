@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Models } from '@appwrite.io/console'
 import {
   AlertTriangle,
@@ -67,6 +67,29 @@ function nonEmptyList(values: string[]): string[] {
 
 function maskClientSecret(hint: string) {
   return `client_secret_${'•'.repeat(18)}${hint}`
+}
+
+function DrawerSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children: ReactNode
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-4 py-3">
+        <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
+        {description ? (
+          <p className="mt-1 text-[12px] text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      <div className="border-t border-border" />
+      <div className="space-y-4 px-4 py-3">{children}</div>
+    </div>
+  )
 }
 
 interface ProjectOAuth2AppDrawerProps {
@@ -332,7 +355,7 @@ export function ProjectOAuth2AppDrawer({
         title={isEditing ? t('Update app') : t('Create OAuth2 app')}
         description={
           isEditing
-            ? t('OAuth2 client settings and consent screen details.')
+            ? t('OAuth2 client settings, consent screen, and marketplace details.')
             : t(
                 "Register a client that can authenticate users through this project's OAuth2 server.",
               )
@@ -347,423 +370,446 @@ export function ProjectOAuth2AppDrawer({
           >
             <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="space-y-5 px-6 py-6">
-                <div className="space-y-2">
-                  <Label htmlFor="oauth2-app-name" className="text-[12px] font-medium">
-                    {t('Name')} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="oauth2-app-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t('My application')}
-                    className="h-9 text-[13px]"
+                <div className="space-y-4">
+                  {isEditing && source ? (
+                    <div className="space-y-2">
+                      <Label className="text-[12px] font-medium">
+                        {t('Client ID')}
+                      </Label>
+                      <CopyableId id={source.$id} />
+                    </div>
+                  ) : null}
+
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <Label
+                        htmlFor="oauth2-app-enabled"
+                        className="text-[13px]"
+                      >
+                        {t('Enabled')}
+                      </Label>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">
+                        {enabled
+                          ? t('This client can request authorization.')
+                          : t('This client is disabled.')}
+                      </p>
+                    </div>
+                    <Switch
+                      id="oauth2-app-enabled"
+                      checked={enabled}
+                      disabled={isPending}
+                      onCheckedChange={setEnabled}
+                    />
+                  </div>
+
+                  <OAuth2ClientTypePicker
+                    value={clientType}
+                    onChange={setClientType}
                     disabled={isPending}
                   />
-                </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="oauth2-app-tagline"
-                    className="text-[12px] font-medium"
-                  >
-                    {t('Tagline')}
-                  </Label>
-                  <Input
-                    id="oauth2-app-tagline"
-                    value={tagline}
-                    onChange={(e) => setTagline(e.target.value)}
-                    placeholder={t('Short summary for the consent screen')}
-                    className="h-9 text-[13px]"
-                    disabled={isPending}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="oauth2-app-description"
-                    className="text-[12px] font-medium"
-                  >
-                    {t('Description')}
-                  </Label>
-                  <MarkdownEditor
-                    id="oauth2-app-description"
-                    value={description}
-                    onChange={setDescription}
-                    placeholder={t('Optional description for the consent screen')}
-                    disabled={isPending}
-                    rows={5}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[12px] font-medium">{t('Tags')}</Label>
-                  <InputTags
-                    value={tags}
-                    onChange={setTags}
-                    splitOnComma
-                    placeholder={t('Add tag and press Enter')}
-                    disabled={isPending}
-                  />
-                  <p className="text-[12px] text-muted-foreground">
-                    {t('Optional labels shown on the OAuth2 consent screen.')}
-                  </p>
-                </div>
-
-                {isEditing && source ? (
                   <div className="space-y-2">
                     <Label className="text-[12px] font-medium">
-                      {t('Client ID')}
+                      {t('Redirect URIs')}{' '}
+                      <span className="text-destructive">*</span>
                     </Label>
-                    <CopyableId id={source.$id} />
+                    <InputTags
+                      value={redirectUris}
+                      onChange={setRedirectUris}
+                      splitOnComma
+                      placeholder={t('Add redirect URI and press Enter')}
+                      disabled={isPending}
+                    />
                   </div>
-                ) : null}
 
-                <div className="space-y-2">
-                  <Label className="text-[12px] font-medium">
-                    {t('Redirect URIs')}{' '}
-                    <span className="text-destructive">*</span>
-                  </Label>
-                  <InputTags
-                    value={redirectUris}
-                    onChange={setRedirectUris}
-                    splitOnComma
-                    placeholder={t('Add redirect URI and press Enter')}
-                    disabled={isPending}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[12px] font-medium">
-                    {t('Post-logout redirect URIs')}
-                  </Label>
-                  <InputTags
-                    value={postLogoutRedirectUris}
-                    onChange={setPostLogoutRedirectUris}
-                    splitOnComma
-                    placeholder={t('Add post-logout URI and press Enter')}
-                    disabled={isPending}
-                  />
-                </div>
-
-                <OAuth2ClientTypePicker
-                  value={clientType}
-                  onChange={setClientType}
-                  disabled={isPending}
-                />
-
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <Label
-                      htmlFor="oauth2-app-device-flow"
-                      className="text-[13px]"
-                    >
-                      {t('Device flow')}
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Post-logout redirect URIs')}
                     </Label>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      {t(OAUTH2_DEVICE_FLOW_DESCRIPTION)}
-                    </p>
+                    <InputTags
+                      value={postLogoutRedirectUris}
+                      onChange={setPostLogoutRedirectUris}
+                      splitOnComma
+                      placeholder={t('Add post-logout URI and press Enter')}
+                      disabled={isPending}
+                    />
                   </div>
-                  <Switch
-                    id="oauth2-app-device-flow"
-                    checked={deviceFlow}
-                    disabled={isPending}
-                    onCheckedChange={setDeviceFlow}
-                  />
-                </div>
 
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <Label
-                      htmlFor="oauth2-app-enabled"
-                      className="text-[13px]"
-                    >
-                      {t('Enabled')}
-                    </Label>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      {enabled
-                        ? t('This client can request authorization.')
-                        : t('This client is disabled.')}
-                    </p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <Label
+                        htmlFor="oauth2-app-device-flow"
+                        className="text-[13px]"
+                      >
+                        {t('Device flow')}
+                      </Label>
+                      <p className="mt-0.5 text-[12px] text-muted-foreground">
+                        {t(OAUTH2_DEVICE_FLOW_DESCRIPTION)}
+                      </p>
+                    </div>
+                    <Switch
+                      id="oauth2-app-device-flow"
+                      checked={deviceFlow}
+                      disabled={isPending}
+                      onCheckedChange={setDeviceFlow}
+                    />
                   </div>
-                  <Switch
-                    id="oauth2-app-enabled"
-                    checked={enabled}
-                    disabled={isPending}
-                    onCheckedChange={setEnabled}
-                  />
-                </div>
 
-                {isEditing && clientType !== 'public' ? (
-                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                    <div className="px-4 py-3 flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-[13px] font-semibold text-foreground">
-                            {t('OAuth secrets')}
-                          </h3>
-                          {!secretsLoading && secrets.length > 0 ? (
-                            <Badge
-                              variant="info"
-                              className="text-[10px] shrink-0"
-                            >
-                              {secrets.length} {t('active')}
-                            </Badge>
-                          ) : null}
+                  {isEditing && clientType !== 'public' ? (
+                    <div className="space-y-3 rounded-lg border border-border overflow-hidden">
+                      <div className="flex items-start justify-between gap-3 px-3 py-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-[13px] font-semibold text-foreground">
+                              {t('OAuth secrets')}
+                            </h4>
+                            {!secretsLoading && secrets.length > 0 ? (
+                              <Badge
+                                variant="info"
+                                className="text-[10px] shrink-0"
+                              >
+                                {secrets.length} {t('active')}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-[12px] text-muted-foreground">
+                            {t(
+                              'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.',
+                            )}
+                          </p>
                         </div>
-                        <p className="mt-1 text-[12px] text-muted-foreground">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 shrink-0 text-[12px]"
+                          disabled={isPending}
+                          onClick={handleCreateSecret}
+                        >
+                          {createSecretMutation.isPending ? (
+                            <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Plus className="me-1.5 h-3.5 w-3.5" />
+                          )}
+                          {t('Create secret')}
+                        </Button>
+                      </div>
+                      <div className="border-t border-border" />
+                      <div className="space-y-3 px-3 py-3">
+                        <Alert className="border-border bg-muted/30">
+                          <Lock className="h-4 w-4 text-muted-foreground" />
+                          <AlertTitle className="text-[12px] font-medium">
+                            {t('Server-side only')}
+                          </AlertTitle>
+                          <AlertDescription className="text-[12px] text-muted-foreground">
+                            {t(
+                              'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as',
+                            )}{' '}
+                            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+                              OAUTH_CLIENT_SECRET
+                            </code>
+                            .
+                          </AlertDescription>
+                        </Alert>
+
+                        {secretsLoading ? (
+                          <div className="flex justify-center py-6">
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : secrets.length === 0 ? (
+                          <EmptyState
+                            icon={Key}
+                            title={t('No OAuth secrets')}
+                            description={t(
+                              'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.',
+                            )}
+                            variant="card"
+                          />
+                        ) : (
+                          <div className="overflow-hidden rounded-lg border border-border divide-y divide-border">
+                            {secrets.map((secret) => (
+                              <div
+                                key={secret.$id}
+                                className="flex items-center justify-between gap-3 p-3"
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-mono text-[12px] font-medium truncate">
+                                    secret_{secret.hint}
+                                  </p>
+                                  <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {t('Created')}{' '}
+                                    <DateTooltip
+                                      date={secret.$createdAt}
+                                      className="text-[11px] text-muted-foreground"
+                                    />
+                                  </p>
+                                  <code className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">
+                                    {maskClientSecret(secret.hint)}
+                                  </code>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <RowActionsMenuTrigger />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        setDeleteSecretId(secret.$id)
+                                      }
+                                    >
+                                      <MenuItemContent icon={Trash2}>
+                                        {t('Delete')}
+                                      </MenuItemContent>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {isEditing ? (
+                    <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+                      <div className="px-4 py-3">
+                        <h3 className="text-[13px] font-semibold text-foreground">
+                          {t('Revoke tokens')}
+                        </h3>
+                      </div>
+                      <div className="border-t border-destructive/20" />
+                      <div className="px-4 py-3">
+                        <p className="text-[12px] text-muted-foreground">
                           {t(
-                            'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.',
+                            'Invalidate all access and refresh tokens issued to this client. Users will need to authorize the app again.',
                           )}
                         </p>
                       </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-8 shrink-0 text-[12px]"
-                        disabled={isPending}
-                        onClick={handleCreateSecret}
-                      >
-                        {createSecretMutation.isPending ? (
-                          <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Plus className="me-1.5 h-3.5 w-3.5" />
-                        )}
-                        {t('Create secret')}
-                      </Button>
+                      <div className="px-4 py-3 border-t border-destructive/20 bg-destructive/5">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="h-8 text-[12px]"
+                          disabled={isPending}
+                          onClick={() => setRevokeDialogOpen(true)}
+                        >
+                          {t('Revoke all tokens')}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="border-t border-border" />
-                    <div className="px-4 py-3 space-y-3">
-                      <Alert className="border-border bg-muted/30">
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                        <AlertTitle className="text-[12px] font-medium">
-                          {t('Server-side only')}
-                        </AlertTitle>
-                        <AlertDescription className="text-[12px] text-muted-foreground">
-                          {t(
-                            'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as',
-                          )}{' '}
-                          <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
-                            OAUTH_CLIENT_SECRET
-                          </code>
-                          .
-                        </AlertDescription>
-                      </Alert>
+                  ) : null}
+                </div>
 
-                      {secretsLoading ? (
-                        <div className="flex justify-center py-6">
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        </div>
-                      ) : secrets.length === 0 ? (
-                        <EmptyState
-                          icon={Key}
-                          title={t('No OAuth secrets')}
-                          description={t(
-                            'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.',
-                          )}
-                          variant="card"
-                        />
-                      ) : (
-                        <div className="overflow-hidden rounded-lg border border-border divide-y divide-border">
-                          {secrets.map((secret) => (
-                            <div
-                              key={secret.$id}
-                              className="flex items-center justify-between gap-3 p-3"
-                            >
-                              <div className="min-w-0">
-                                <p className="font-mono text-[12px] font-medium truncate">
-                                  secret_{secret.hint}
-                                </p>
-                                <p className="mt-1 text-[11px] text-muted-foreground">
-                                  {t('Created')}{' '}
-                                  <DateTooltip
-                                    date={secret.$createdAt}
-                                    className="text-[11px] text-muted-foreground"
-                                  />
-                                </p>
-                                <code className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">
-                                  {maskClientSecret(secret.hint)}
-                                </code>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <RowActionsMenuTrigger />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setDeleteSecretId(secret.$id)
-                                    }
-                                  >
-                                    <MenuItemContent icon={Trash2}>
-                                      {t('Delete')}
-                                    </MenuItemContent>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          ))}
-                        </div>
+                <DrawerSection
+                  title={t('Branding')}
+                  description={t(
+                    'May appear on the OAuth2 consent screen.',
+                  )}
+                >
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="oauth2-app-name"
+                      className="text-[12px] font-medium"
+                    >
+                      {t('Name')} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="oauth2-app-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t('My application')}
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Logo')}
+                    </Label>
+                    {teamId ? (
+                      <AppLogoFilePicker
+                        teamId={teamId}
+                        region={region ?? project?.region}
+                        value={logoUri}
+                        onChange={setLogoUri}
+                        disabled={isPending}
+                      />
+                    ) : (
+                      <Input
+                        value={logoUri}
+                        onChange={(e) => setLogoUri(e.target.value)}
+                        placeholder="https://example.com/logo.png"
+                        className="h-9 text-[13px]"
+                        disabled={isPending}
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="oauth2-app-tagline"
+                      className="text-[12px] font-medium"
+                    >
+                      {t('Tagline')}
+                    </Label>
+                    <Input
+                      id="oauth2-app-tagline"
+                      value={tagline}
+                      onChange={(e) => setTagline(e.target.value)}
+                      placeholder={t('Short summary for the consent screen')}
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+                </DrawerSection>
+
+                <DrawerSection
+                  title={t('Marketplace')}
+                  description={t(
+                    'Additional listing details for the marketplace.',
+                  )}
+                >
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="oauth2-app-description"
+                      className="text-[12px] font-medium"
+                    >
+                      {t('Description')}
+                    </Label>
+                    <MarkdownEditor
+                      id="oauth2-app-description"
+                      value={description}
+                      onChange={setDescription}
+                      placeholder={t(
+                        'Optional description for the marketplace listing',
                       )}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                    <div className="px-4 py-3">
-                      <h3 className="text-[13px] font-semibold text-foreground">
-                        {t('Consent screen')}
-                      </h3>
-                      <p className="mt-1 text-[12px] text-muted-foreground">
-                        {t('URLs shown on the OAuth2 consent screen.')}
-                      </p>
-                    </div>
-                    <div className="border-t border-border" />
-                    <div className="px-4 py-3 space-y-3">
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Homepage URL')}
-                        </Label>
-                        <Input
-                          value={clientUri}
-                          onChange={(e) => setClientUri(e.target.value)}
-                          placeholder="https://example.com"
-                          className="h-9 text-[13px]"
-                          disabled={isPending}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Logo')}
-                        </Label>
-                        {teamId ? (
-                          <AppLogoFilePicker
-                            teamId={teamId}
-                            region={region ?? project?.region}
-                            value={logoUri}
-                            onChange={setLogoUri}
-                            disabled={isPending}
-                          />
-                        ) : (
-                          <Input
-                            value={logoUri}
-                            onChange={(e) => setLogoUri(e.target.value)}
-                            placeholder="https://example.com/logo.png"
-                            className="h-9 text-[13px]"
-                            disabled={isPending}
-                          />
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Images')}
-                        </Label>
-                        {teamId ? (
-                          <AppImagesPicker
-                            teamId={teamId}
-                            region={region ?? project?.region}
-                            value={images}
-                            onChange={setImages}
-                            disabled={isPending}
-                          />
-                        ) : (
-                          <p className="text-[12px] text-muted-foreground">
-                            {t(
-                              'Optional screenshots shown on the OAuth2 consent screen.',
-                            )}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Privacy policy')}
-                        </Label>
-                        <Input
-                          value={privacyPolicyUrl}
-                          onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
-                          placeholder="https://example.com/privacy"
-                          className="h-9 text-[13px]"
-                          disabled={isPending}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Terms of service')}
-                        </Label>
-                        <Input
-                          value={termsUrl}
-                          onChange={(e) => setTermsUrl(e.target.value)}
-                          placeholder="https://example.com/terms"
-                          className="h-9 text-[13px]"
-                          disabled={isPending}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Data deletion')}
-                        </Label>
-                        <Input
-                          value={dataDeletionUrl}
-                          onChange={(e) => setDataDeletionUrl(e.target.value)}
-                          placeholder="https://example.com/delete-data"
-                          className="h-9 text-[13px]"
-                          disabled={isPending}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Support page')}
-                        </Label>
-                        <Input
-                          value={supportUrl}
-                          onChange={(e) => setSupportUrl(e.target.value)}
-                          placeholder="https://example.com/support"
-                          className="h-9 text-[13px]"
-                          disabled={isPending}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[12px] font-medium">
-                          {t('Contact emails')}
-                        </Label>
-                        <InputTags
-                          value={contacts}
-                          onChange={setContacts}
-                          validateEmail
-                          splitOnComma
-                          placeholder={t('Add email and press Enter')}
-                          disabled={isPending}
-                        />
-                      </div>
-                    </div>
+                      disabled={isPending}
+                      rows={5}
+                    />
                   </div>
 
-                {isEditing ? (
-                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                    <div className="px-4 py-3">
-                      <h3 className="text-[13px] font-semibold text-foreground">
-                        {t('Revoke tokens')}
-                      </h3>
-                      <p className="mt-1 text-[12px] text-muted-foreground">
-                        {t(
-                          'Invalidate all access and refresh tokens issued to this client. Users will need to authorize the app again.',
-                        )}
-                      </p>
-                    </div>
-                    <div className="border-t border-border px-4 py-3 bg-muted/30">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-[12px]"
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Homepage URL')}
+                    </Label>
+                    <Input
+                      value={clientUri}
+                      onChange={(e) => setClientUri(e.target.value)}
+                      placeholder="https://example.com"
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Tags')}
+                    </Label>
+                    <InputTags
+                      value={tags}
+                      onChange={setTags}
+                      splitOnComma
+                      placeholder={t('Add tag and press Enter')}
+                      disabled={isPending}
+                    />
+                    <p className="text-[12px] text-muted-foreground">
+                      {t('Optional labels for marketplace discovery.')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Images')}
+                    </Label>
+                    {teamId ? (
+                      <AppImagesPicker
+                        teamId={teamId}
+                        region={region ?? project?.region}
+                        value={images}
+                        onChange={setImages}
                         disabled={isPending}
-                        onClick={() => setRevokeDialogOpen(true)}
-                      >
-                        {t('Revoke all tokens')}
-                      </Button>
-                    </div>
+                      />
+                    ) : (
+                      <p className="text-[12px] text-muted-foreground">
+                        {t(
+                          'Optional screenshots shown on the marketplace listing.',
+                        )}
+                      </p>
+                    )}
                   </div>
-                ) : null}
+                </DrawerSection>
+
+                <DrawerSection
+                  title={t('Privacy and support')}
+                  description={t(
+                    'Links and contacts for marketplace, compliance, and support.',
+                  )}
+                >
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Privacy policy')}
+                    </Label>
+                    <Input
+                      value={privacyPolicyUrl}
+                      onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
+                      placeholder="https://example.com/privacy"
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Terms of service')}
+                    </Label>
+                    <Input
+                      value={termsUrl}
+                      onChange={(e) => setTermsUrl(e.target.value)}
+                      placeholder="https://example.com/terms"
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Data deletion')}
+                    </Label>
+                    <Input
+                      value={dataDeletionUrl}
+                      onChange={(e) => setDataDeletionUrl(e.target.value)}
+                      placeholder="https://example.com/delete-data"
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Support page')}
+                    </Label>
+                    <Input
+                      value={supportUrl}
+                      onChange={(e) => setSupportUrl(e.target.value)}
+                      placeholder="https://example.com/support"
+                      className="h-9 text-[13px]"
+                      disabled={isPending}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">
+                      {t('Contact emails')}
+                    </Label>
+                    <InputTags
+                      value={contacts}
+                      onChange={setContacts}
+                      validateEmail
+                      splitOnComma
+                      placeholder={t('Add email and press Enter')}
+                      disabled={isPending}
+                    />
+                  </div>
+                </DrawerSection>
               </div>
             </div>
 

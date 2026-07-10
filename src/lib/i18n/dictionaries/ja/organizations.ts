@@ -289,13 +289,18 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Add image': '画像を追加',
   'Remove image': '画像を削除',
   'Consent screen image': '同意画面の画像',
+  'Marketplace image': 'Marketplace 画像',
   'Optional screenshots shown on the OAuth2 consent screen.':
     'OAuth2 同意画面に表示される任意のスクリーンショットです。',
+  'Optional screenshots shown on the marketplace listing.':
+    'マーケットプレイス掲載に表示される任意のスクリーンショット。',
   'You can add up to 12 images.': '画像は最大12枚まで追加できます。',
   'Failed to upload image': '画像のアップロードに失敗しました',
   'Add tag and press Enter': 'タグを追加して Enter',
   'Optional labels shown on the OAuth2 consent screen.':
     'OAuth2 同意画面に表示される任意のラベルです。',
+  'Optional labels for marketplace discovery.':
+    'マーケットプレイスでの発見用の任意ラベル。',
   'Only PNG, JPEG, or WebP images are supported':
     'PNG、JPEG、または WebP 画像のみサポートしています',
   'Upload image': '画像をアップロード',
@@ -847,6 +852,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.': 'DNS レコードをインポートするには DNS ゾーンファイル (.txt 形式) をアップロードしてください。最大ファイルサイズは 5MB です。',
   'Upload a PNG logo for the OAuth2 consent screen.':
     'OAuth2 同意画面用に PNG ロゴをアップロードしてください。',
+  'Upload a PNG logo for the consent screen and marketplace.':
+    '同意画面とマーケットプレイス用に PNG ロゴをアップロードしてください。',
   'Use @ for the root domain, or enter a subdomain (e.g., www, mail)': 'ルートドメインには @ を使用するか、サブドメインを入力してください (例: www、mail)',
   'Use an existing card or add a new one for this organization.': 'この組織に既存のカードを使用するか、新しいカードを追加してください。',
   'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.': 'Appwrite API、webhook、SDK と連携する際にこの ID を使用してください。問題対応の際にサポートからこの ID を求められることもあります。',

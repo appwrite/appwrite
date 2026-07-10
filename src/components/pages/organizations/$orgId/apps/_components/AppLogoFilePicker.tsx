@@ -113,7 +113,7 @@ export function AppLogoFilePicker({
 
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-[13px] text-muted-foreground">
-            {t('Upload a PNG logo for the OAuth2 consent screen.')}
+            {t('Upload a PNG logo for the consent screen and marketplace.')}
           </p>
           <div className="flex flex-wrap gap-2">
             <input
