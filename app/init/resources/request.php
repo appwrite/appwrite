@@ -530,9 +530,11 @@ return function (Container $context): void {
                     $user = $dbForProject->getDocument('users', $jwtUserId);
                 }
             }
+
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId)) {
-                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+
+            if (! empty($jwtSessionId) && ! $user->isEmpty()) {
+                if (empty($user->find('$id', $jwtSessionId, 'sessions'))) {
                     $user = new User([]);
                 }
             }
