@@ -17,7 +17,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testSkipsWhenAdapterDoesNotRequireWebhook(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('hasPerRepositoryWebhooks')->willReturn(false);
+        $adapter->method('supportsRepositoryWebhooks')->willReturn(false);
         $adapter->expects($this->never())->method('createWebhook');
 
         $db = $this->createMock(Database::class);
@@ -31,7 +31,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testCreatesWebhookWhenNoExistingConnection(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('hasPerRepositoryWebhooks')->willReturn(true);
+        $adapter->method('supportsRepositoryWebhooks')->willReturn(true);
         $adapter->expects($this->once())
             ->method('createWebhook')
             ->with('owner', 'repo', 'https://example.com/v1/vcs/gitea/events', 'secret')
@@ -48,7 +48,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testSkipsWhenRepositoryAlreadyConnected(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('hasPerRepositoryWebhooks')->willReturn(true);
+        $adapter->method('supportsRepositoryWebhooks')->willReturn(true);
         $adapter->expects($this->never())->method('createWebhook');
 
         $db = $this->createMock(Database::class);
@@ -62,7 +62,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testAdapterFailureIsWrapped(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('hasPerRepositoryWebhooks')->willReturn(true);
+        $adapter->method('supportsRepositoryWebhooks')->willReturn(true);
         $adapter->method('createWebhook')->willThrowException(new \RuntimeException('provider unreachable'));
 
         $db = $this->createMock(Database::class);
