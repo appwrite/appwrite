@@ -40,7 +40,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'projectId' => $this->getProject()['$id'],
             'giteaUserId' => (string) $user['id'],
-            'organization' => 'appwrite',
+            'organization' => $this->adminUser(),
             'accessToken' => $token,
         ]);
         $this->assertEquals(200, $installation['headers']['status-code']);
@@ -89,7 +89,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
     private function createGiteaToken(): string
     {
-        $response = $this->gitea(Client::METHOD_POST, '/api/v1/users/appwrite/tokens', [
+        $response = $this->gitea(Client::METHOD_POST, '/api/v1/users/' . $this->adminUser() . '/tokens', [
             'name' => 'appwrite-e2e-' . ID::unique(),
             'scopes' => [
                 'read:user',
@@ -123,7 +123,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
     private function writeFunction(string $token, string $repository, string $output, string $message): void
     {
-        $path = '/api/v1/repos/appwrite/' . $repository . '/contents/index.js';
+        $path = '/api/v1/repos/' . $this->adminUser() . '/' . $repository . '/contents/index.js';
         $existing = $this->gitea(Client::METHOD_GET, $path . '?ref=main', token: $token);
 
         $body = [
@@ -144,7 +144,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
     private function assertRepositoryWebhookCreated(string $token, string $repository): void
     {
-        $response = $this->gitea(Client::METHOD_GET, '/api/v1/repos/appwrite/' . $repository . '/hooks', token: $token);
+        $response = $this->gitea(Client::METHOD_GET, '/api/v1/repos/' . $this->adminUser() . '/' . $repository . '/hooks', token: $token);
 
         $this->assertEquals(200, $response['status'], \json_encode($response['body'], JSON_PRETTY_PRINT));
         $this->assertNotEmpty($response['body']);
@@ -248,9 +248,8 @@ final class VCSGiteaConsoleClientTest extends Scope
         }
 
         if ($basic) {
-            $adminUser = System::getEnv('_TESTS_GITEA_ADMIN_USER', 'appwrite');
             $adminPassword = System::getEnv('_TESTS_GITEA_ADMIN_PASSWORD', 'password');
-            \curl_setopt($ch, CURLOPT_USERPWD, $adminUser . ':' . $adminPassword);
+            \curl_setopt($ch, CURLOPT_USERPWD, $this->adminUser() . ':' . $adminPassword);
         }
 
         if (!empty($body)) {
@@ -271,5 +270,10 @@ final class VCSGiteaConsoleClientTest extends Scope
             'status' => $status,
             'body' => \is_array($decoded) ? $decoded : ['error' => $error, 'raw' => $response],
         ];
+    }
+
+    private function adminUser(): string
+    {
+        return System::getEnv('_TESTS_GITEA_ADMIN_USER', 'appwrite');
     }
 }

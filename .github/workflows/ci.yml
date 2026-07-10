@@ -453,6 +453,8 @@ jobs:
         run: |
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
+          COMPOSE_PROFILES_VALUE=""
+
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
             COMPOSE_PROFILES_VALUE="mariadb"
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
@@ -471,7 +473,11 @@ jobs:
           fi
 
           if [ "${{ matrix.service.name }}" = "VCS" ]; then
-            COMPOSE_PROFILES_VALUE="${COMPOSE_PROFILES_VALUE},vcs"
+            if [ -z "$COMPOSE_PROFILES_VALUE" ]; then
+              COMPOSE_PROFILES_VALUE="vcs"
+            else
+              COMPOSE_PROFILES_VALUE="${COMPOSE_PROFILES_VALUE},vcs"
+            fi
           fi
 
           echo "COMPOSE_PROFILES=${COMPOSE_PROFILES_VALUE}" >> $GITHUB_ENV
