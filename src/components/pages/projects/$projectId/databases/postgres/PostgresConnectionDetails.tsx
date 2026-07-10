@@ -12,7 +12,7 @@ import {
   useTerminatePostgresBackend,
   useTerminatePostgresIdleInTransaction,
 } from '@/lib/react-query/hooks'
-import { usePostgresAdminWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseAdminOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import {
   backendTypeBadgeVariant,
   connectionStateBadgeVariant,
@@ -235,7 +235,7 @@ export function PostgresConnectionDetails({
   const {
     canWrite: canManageConnections,
     writeTooltip: manageDisabledTooltip,
-  } = usePostgresAdminWriteAccess({
+  } = useDatabaseAdminOperationsAccess({
     permissionDeniedTooltip: t(
       "You don't have permission to manage connections.",
     ),

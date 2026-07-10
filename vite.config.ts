@@ -51,6 +51,35 @@ const decimalJsShim = path.resolve(
 )
 const almostnodeSrc = path.resolve(projectRoot, 'node_modules/almostnode/src')
 
+/**
+ * Fail the client build when Rolldown emits empty hashed JS/CSS assets.
+ * Empty re-export wrappers produce 0-byte chunks that other routes still import;
+ * if the server skips them, the SPA fallback returns HTML and browsers throw MIME errors.
+ */
+function rejectEmptyBuildAssetsPlugin() {
+  return {
+    name: 'reject-empty-build-assets',
+    apply: 'build' as const,
+    generateBundle(
+      _options: unknown,
+      bundle: Record<string, { type: string; fileName: string; code?: string; source?: string | Uint8Array }>,
+    ) {
+      const empty = Object.values(bundle).filter((item) => {
+        if (item.type !== 'chunk' && item.type !== 'asset') return false
+        if (!/\.(?:m?js|cjs|css)$/i.test(item.fileName)) return false
+        if (item.type === 'chunk') return (item.code?.length ?? 0) === 0
+        const source = item.source
+        if (typeof source === 'string') return source.length === 0
+        return source != null && source.byteLength === 0
+      })
+      if (empty.length === 0) return
+      const names = empty.map((item) => item.fileName).join(', ')
+      throw new Error(
+        `Build emitted empty asset(s): ${names}. Remove empty re-export wrappers (import the real module directly).`,
+      )
+    },
+  }
+}
 function getTanstackStartSitesOptions() {
   const prerenderConcurrency = getSitesPrerenderConcurrency()
   console.log(
@@ -103,6 +132,7 @@ export default defineConfig(async () => {
         justBashBrowserEntry,
       }),
       viteReact(),
+      rejectEmptyBuildAssetsPlugin(),
       ...sentryPlugins,
     ],
     server: {

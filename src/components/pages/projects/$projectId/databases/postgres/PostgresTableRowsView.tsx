@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useLocation, useSearch } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import {
   useDeletePostgresTableRows,
   usePostgresTableRows,
@@ -60,7 +60,7 @@ export function PostgresTableRowsView({
   const location = useLocation()
   const routeSearch = useSearch({ strict: false }) as Record<string, unknown> | undefined
 
-  const { canWrite, writeTooltip } = usePostgresTableWriteAccess({
+  const { canWrite, writeTooltip } = useDatabaseTableOperationsAccess({
     permissionDeniedTooltip: t("You don't have permission to modify rows."),
   })
 

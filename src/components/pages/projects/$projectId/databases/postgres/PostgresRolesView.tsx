@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { usePostgresRoles } from '@/lib/react-query/hooks'
 import { usePostgresDatabaseHeaderSlot } from './_components/PostgresDatabaseHeaderSlotContext'
 import { PostgresRolesPanel } from './_components/PostgresRolesPanel'
@@ -13,7 +13,7 @@ type PostgresRolesViewProps = {
 export function PostgresRolesView({ databaseId }: PostgresRolesViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { canWrite, writeTooltip } = usePostgresTableWriteAccess()
+  const { canWrite, writeTooltip } = useDatabaseTableOperationsAccess()
 
   const [searchValue, setSearchValue] = useState('')
   const [createOpen, setCreateOpen] = useState(false)

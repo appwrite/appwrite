@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { postgresNav } from '@/lib/postgres-database-routes'
 import { usePostgresTableHeaderSlot } from './_components/PostgresTableHeaderSlotContext'
 import { PostgresTableSecurityPanel } from './_components/PostgresTableSecurityPanel'
@@ -16,7 +16,7 @@ export function PostgresTableSecurityView({
 }: PostgresTableSecurityViewProps) {
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const navigate = useNavigate()
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
 
   usePostgresTableHeaderSlot({})
 

@@ -63,7 +63,7 @@ import {
 import type { DedicatedDatabaseCredentials } from '@/lib/databases/dedicated-engine'
 import { PostgresCopyableField } from './PostgresCopyableField'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { usePostgresAdminWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseAdminOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import { useT } from '@/lib/i18n/translate'
 
 const POSTGRES_DOCS_URL = '/docs/products/databases'
@@ -464,7 +464,7 @@ export function PostgresConnectDialog({
   const {
     canWrite: canResetPassword,
     writeTooltip: resetPasswordDisabledTooltip,
-  } = usePostgresAdminWriteAccess({
+  } = useDatabaseAdminOperationsAccess({
     permissionDeniedTooltip: t(
       "You don't have permission to reset the database password.",
     ),

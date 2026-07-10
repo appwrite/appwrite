@@ -11,7 +11,7 @@ import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
-import { DOCS_LINK as EVENTS_DOCS_LINK } from '@/lib/events-editor'
+import { DOCS_LINK as EVENTS_DOCS_LINK } from '@/lib/events-editor/events-model'
 import { CronScheduleEditor } from '../CronScheduleEditor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {

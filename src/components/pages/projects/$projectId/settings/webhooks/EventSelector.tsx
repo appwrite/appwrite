@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { X, Plus } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
-import { DOCS_LINK } from '@/lib/events-editor'
+import { DOCS_LINK } from '@/lib/events-editor/events-model'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 

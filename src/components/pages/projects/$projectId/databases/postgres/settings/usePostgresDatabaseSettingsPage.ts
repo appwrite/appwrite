@@ -6,7 +6,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
-import { usePostgresAdminWriteAccess } from '../_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseAdminOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 
 export function usePostgresDatabaseSettingsPage() {
   const { projectId, databaseId } = useParams({ strict: false }) as {
@@ -17,7 +17,7 @@ export function usePostgresDatabaseSettingsPage() {
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const { database, isLoading } = usePostgresDatabase(projectId, databaseId)
-  const { canWrite } = usePostgresAdminWriteAccess()
+  const { canWrite } = useDatabaseAdminOperationsAccess()
 
   return {
     projectId,

@@ -22,7 +22,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
   usePostgresTableColumns} from '@/lib/react-query/hooks'
@@ -68,7 +68,7 @@ export function PostgresTableColumnsPanel({
   onCreateDialogOpenChange}: PostgresTableColumnsPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
 
   const { columns, isLoading, refetch } = usePostgresTableColumns(
     projectId,

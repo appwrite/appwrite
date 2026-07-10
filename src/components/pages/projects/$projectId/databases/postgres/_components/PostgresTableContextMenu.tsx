@@ -41,7 +41,7 @@ import {
 import { useExecutePostgresSql } from '@/lib/react-query/hooks'
 import { buildPostgresDropTableSql } from '@/lib/postgres-table-ddl'
 import { canShowTableSecuritySettings } from '@/lib/console-access-checks'
-import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
@@ -84,7 +84,7 @@ export function PostgresTableContextMenu({
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId ?? undefined)
   const showSecurityTab = canShowTableSecuritySettings(access, features)
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
   const { openTableInSqlEditor } = usePostgresSidebar()
   const executeSql = useExecutePostgresSql(projectId, databaseId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)

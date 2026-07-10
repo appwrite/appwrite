@@ -406,9 +406,23 @@ async function initializeStaticRoutes(
         // Get file metadata
         const file = Bun.file(filepath)
 
-        // Skip if file doesn't exist or is empty
-        if (!(await file.exists()) || file.size === 0) {
+        // Skip missing files. Empty JS/CSS chunks can still be valid ES module
+        // side-effect imports after tree-shaking (Rolldown sometimes emits a
+        // 0-byte hashed file that other chunks import). Skipping them makes the
+        // SPA fallback return HTML for /assets/*.js → MIME type errors in prod.
+        if (!(await file.exists())) {
           continue
+        }
+        const isEmptyModuleAsset =
+          file.size === 0 &&
+          /\.(?:m?js|cjs|css|wasm)$/i.test(relativePath)
+        if (file.size === 0 && !isEmptyModuleAsset) {
+          continue
+        }
+        if (isEmptyModuleAsset) {
+          log.warn(
+            `Serving empty build asset ${route} (${file.size} bytes). Prefer fixing the empty chunk in the bundle.`,
+          )
         }
 
         const metadata: AssetMetadata = {

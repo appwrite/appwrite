@@ -33,7 +33,7 @@ import {
   RESOURCE_CARD_BASE_CLASSNAME,
   RESOURCE_CARD_GRID_CLASSNAME,
 } from '@/components/pages/projects/$projectId/shared/ResourceCard'
-import { usePostgresAdminWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseAdminOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useInstallPostgresDatabaseExtension,
   useOrganizationPlan,
@@ -210,7 +210,7 @@ export function PostgresExtensionsPanel({
   const { project } = useProject(projectId)
   const { plan } = useOrganizationPlan(project?.teamId)
   const { canWrite: canManage, writeTooltip: manageWriteTooltip } =
-    usePostgresAdminWriteAccess()
+    useDatabaseAdminOperationsAccess()
 
   const [searchValue, setSearchValue] = useState('')
   const [filter, setFilter] = useState<ExtensionStatusFilter>('all')

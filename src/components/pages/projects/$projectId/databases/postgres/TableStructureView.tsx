@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import {
   usePostgresTableColumns,
   usePostgresTableIndexes,
@@ -38,7 +38,7 @@ export function TableStructureContent({
 }: TableStructureViewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { canWrite, writeTooltip } = usePostgresTableWriteAccess()
+  const { canWrite, writeTooltip } = useDatabaseTableOperationsAccess()
 
   const {
     refetch: refetchColumns,

@@ -20,7 +20,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { cn } from '@/lib/utils'
-import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
   usePostgresSchemaEnums,
@@ -63,7 +63,7 @@ export function PostgresSchemaEnumsPanel({
 }: PostgresSchemaEnumsPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
 
   const { enums, isLoading, refetch } = usePostgresSchemaEnums(
     projectId,

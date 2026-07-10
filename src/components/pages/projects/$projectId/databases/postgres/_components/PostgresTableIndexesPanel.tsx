@@ -21,7 +21,7 @@ import {
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { cn } from '@/lib/utils'
-import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
   usePostgresTableIndexes} from '@/lib/react-query/hooks'
@@ -77,7 +77,7 @@ export function PostgresTableIndexesPanel({
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
   const { schema } = parsePostgresTableId(tableId)
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
 
   const { indexes, isLoading, refetch } = usePostgresTableIndexes(
     projectId,

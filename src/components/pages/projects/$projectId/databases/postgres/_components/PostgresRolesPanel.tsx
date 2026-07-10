@@ -29,7 +29,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
-import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
   usePostgresRoles,
@@ -191,7 +191,7 @@ export function PostgresRolesPanel({
 }: PostgresRolesPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
 
   const { roles, isLoading, refetch } = usePostgresRoles(projectId, databaseId)
   const executeSql = useExecutePostgresSql(projectId, databaseId)

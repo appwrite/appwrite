@@ -49,7 +49,7 @@ import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBa
 import { PostgresTableContextMenu } from './_components/PostgresTableContextMenu'
 import { POSTGRES_TOP_HEADER_BAR_CLASS } from './_components/postgres-chrome'
 import { useT } from '@/lib/i18n/translate'
-import { usePostgresTableWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import { CreateTable } from './_components/CreateTable'
 import { CreateSchema } from './_components/CreateSchema'
 import { PostgresSchemaToolsNav } from './_components/PostgresSchemaToolsNav'
@@ -74,7 +74,7 @@ export function SchemaTablesSidebar({
   const navigate = useNavigate()
   const { account } = useAuth()
   const { canWrite: canModifyTableStructure, writeTooltip: tableWriteTooltip } =
-    usePostgresTableWriteAccess({
+    useDatabaseTableOperationsAccess({
       permissionDeniedTooltip: t("You don't have permission to create schemas."),
     })
   const { panel, setPanel, selectedSchema, setSelectedSchema } = usePostgresSidebar()

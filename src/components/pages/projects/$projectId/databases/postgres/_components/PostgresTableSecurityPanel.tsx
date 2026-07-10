@@ -31,7 +31,7 @@ import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenu
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
-import { usePostgresTableWriteAccess } from './PostgresDatabaseWriteLockContext'
+import { useDatabaseTableOperationsAccess } from '../../_components/DatabaseOperationsLockContext'
 import {
   useExecutePostgresSql,
   usePostgresTableInfo,
@@ -72,7 +72,7 @@ export function PostgresTableSecurityPanel({
 }: PostgresTableSecurityPanelProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
-  const { canWrite } = usePostgresTableWriteAccess()
+  const { canWrite } = useDatabaseTableOperationsAccess()
 
   const { tableInfo, isLoading: tableInfoLoading } = usePostgresTableInfo(
     projectId,

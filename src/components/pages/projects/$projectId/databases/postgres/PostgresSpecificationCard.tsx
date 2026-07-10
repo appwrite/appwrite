@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { usePostgresAdminWriteAccess } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseAdminOperationsAccess } from '../_components/DatabaseOperationsLockContext'
 import {
   formatDedicatedSpecCpu,
   formatDedicatedSpecMemory,
@@ -113,7 +113,7 @@ export function PostgresSpecificationCard({
   const t = useT()
   const { project } = useProject(projectId)
   const { canWrite: canUpgrade, writeTooltip: upgradeDisabledTooltip } =
-    usePostgresAdminWriteAccess()
+    useDatabaseAdminOperationsAccess()
   const { database, isLoading: databaseLoading } = usePostgresDatabase(
     projectId,
     databaseId,

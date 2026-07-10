@@ -16,7 +16,7 @@ import { canSaveTeamFilters } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
-import { usePostgresDatabaseWriteLock } from './_components/PostgresDatabaseWriteLockContext'
+import { useDatabaseOperationsLock } from '../_components/DatabaseOperationsLockContext'
 import { ReadOnlyDataSpreadsheet } from '@/components/global/shared/ReadOnlyDataSpreadsheet'
 import { PostgresQueryResultsMeta } from './_components/PostgresQueryResultsMeta'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -77,7 +77,7 @@ export function PostgresSqlWorkbenchContent({
   const { access } = useOrganizationScopes(teamId ?? undefined)
   const canSaveTeam = canSaveTeamFilters(access, features)
   const { isOperationsLocked, operationsLockTooltip } =
-    usePostgresDatabaseWriteLock()
+    useDatabaseOperationsLock()
 
   const {
     tabs,
