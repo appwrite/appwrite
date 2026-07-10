@@ -17,9 +17,6 @@ final readonly class Client
     ) {
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
     public function capture(array $config): string
     {
         $request = $this->requests->json(Method::POST, $this->uri, $config);
