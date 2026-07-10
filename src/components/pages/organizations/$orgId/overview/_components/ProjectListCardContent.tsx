@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { PauseCircle } from '@/lib/icons'
+import { Lock, PauseCircle } from '@/lib/icons'
 import { Badge } from '@/components/ui/badge'
 import { RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { cn } from '@/lib/utils'
@@ -16,11 +16,14 @@ import { ProjectListPlatformAvatars } from './ProjectListPlatformAvatars'
 type ProjectListCardMainProps = {
   project: ProjectListItem
   failedInvoiceWarning?: ReactNode
+  /** Org hit its budget cap; show Locked badge like paused projects */
+  budgetLimitReached?: boolean
 }
 
 export function ProjectListCardMain({
   project,
   failedInvoiceWarning,
+  budgetLimitReached = false,
 }: ProjectListCardMainProps) {
   const t = useT()
   const { features } = useConsoleProfile()
@@ -28,12 +31,23 @@ export function ProjectListCardMain({
     features.multiRegion &&
     !!project.region &&
     project.region !== 'unknown'
+  const showLockedBadge = budgetLimitReached
+  const showPausedBadge = !showLockedBadge && !!project.paused
 
   return (
     <div className="min-w-0 overflow-hidden">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <ProjectListName name={project.name} as="h3" className="min-w-0" />
-        {project.paused ? (
+        {showLockedBadge ? (
+          <Badge
+            variant="error"
+            className="gap-1.5 text-[10px] font-medium shrink-0"
+          >
+            <Lock className="h-3 w-3" />
+            {t('Locked')}
+          </Badge>
+        ) : null}
+        {showPausedBadge ? (
           <Badge
             variant="error"
             className="gap-1.5 text-[10px] font-medium shrink-0"
@@ -101,6 +115,7 @@ type ProjectListCardContentProps = ProjectListCardMainProps & {
 export function ProjectListCardContent({
   project,
   failedInvoiceWarning,
+  budgetLimitReached,
   showSettingsTab,
   platformsByProjectId,
 }: ProjectListCardContentProps) {
@@ -109,6 +124,7 @@ export function ProjectListCardContent({
       <ProjectListCardMain
         project={project}
         failedInvoiceWarning={failedInvoiceWarning}
+        budgetLimitReached={budgetLimitReached}
       />
       <ProjectListCardFooter
         project={project}

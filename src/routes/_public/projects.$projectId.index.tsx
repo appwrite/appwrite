@@ -98,14 +98,25 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
     const { queryClient } = context
     if (!projectId) return undefined
 
+    // Budget-locked orgs block billable project APIs; skip prefetch so the curtain can render.
+    if (context.budgetLimitReached) {
+      return undefined
+    }
+
     try {
       // Parent layout loader may still be resolving region; register before project-scoped prefetch.
       await ensureProjectRegion(queryClient, projectId)
 
-      // Only block on API keys — project is prefetched by the parent layout.
-      const apiKeysRaw = await queryClient
-        .ensureQueryData(apiKeysQueryOptions(projectId))
-        .catch(() => null)
+      // API keys can hang when billable services are blocked. Bound the wait so the
+      // project layout (and budget curtain) can still mount.
+      const apiKeysRaw = await Promise.race([
+        queryClient
+          .ensureQueryData(apiKeysQueryOptions(projectId))
+          .catch(() => null),
+        new Promise<null>((resolve) => {
+          window.setTimeout(() => resolve(null), 4000)
+        }),
+      ])
 
       const account = await queryClient
         .ensureQueryData(consoleAccountQueryOptions())

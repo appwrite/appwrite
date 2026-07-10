@@ -109,6 +109,7 @@ import {
   useOrganizations,
   useUpdateDomainAutoRenewal} from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import {
   getQueryParam,
   getSort,
@@ -902,6 +903,9 @@ export function View({ initialData }: ViewProps = {}) {
         header={{
           onCommandCenterOpen: () => {},
           onCreateOrganization: () => {}}}
+        headerBanner={
+          <OrganizationBillingHeaderBanners organizationId={orgId} />
+        }
         showFooter
         containerClassName="domain-detail-layout-container"
       >

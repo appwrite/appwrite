@@ -741,6 +741,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   Owner: 'בעלים',
   Page: 'דף',
   Paused: 'מושהה',
+  Locked: 'נעול',
   'Pay and register': 'תשלום ורישום',
   Payment: 'תשלום',
   'Payment authorized': 'התשלום אושר',

@@ -56,6 +56,72 @@ export function isOrganizationBillingReadonlyStatus(
   return (status ?? '').toLowerCase() === 'readonly'
 }
 
+/**
+ * True when a resource has hit its budget cap.
+ * `billingLimits.budgetLimit` is a percentage of the configured budget (e.g. 139 = 139%).
+ */
+export function isBudgetLimitReached(
+  resource:
+    | {
+        billingLimits?: {
+          budgetLimit?: number | string | null
+        } | null
+      }
+    | null
+    | undefined,
+): boolean {
+  const raw = resource?.billingLimits?.budgetLimit
+  if (raw == null || raw === '') return false
+  const budgetLimit = typeof raw === 'number' ? raw : Number(raw)
+  return Number.isFinite(budgetLimit) && budgetLimit >= 100
+}
+
+/**
+ * @deprecated Prefer {@link isBudgetLimitReached}. Same check for organization documents.
+ */
+export function isOrganizationBudgetLimitReached(
+  organization:
+    | {
+        billingLimits?: {
+          budgetLimit?: number | string | null
+        } | null
+      }
+    | null
+    | undefined,
+): boolean {
+  return isBudgetLimitReached(organization)
+}
+
+/**
+ * Resolve a project's team/org id via the console projects API.
+ * Used when project-scoped `project.get` returns 402 (budget limit) and the
+ * full project payload is unavailable.
+ */
+export async function resolveProjectTeamIdFromConsole(
+  projectId: string,
+): Promise<string | null> {
+  if (!projectId) return null
+  try {
+    const { getConsoleProject } = await import('@/lib/appwrite/console-projects')
+    const project = await getConsoleProject({ projectId })
+    return project?.teamId ?? null
+  } catch {
+    try {
+      const { listConsoleProjects } = await import(
+        '@/lib/appwrite/console-projects'
+      )
+      const { Query } = await import('@appwrite.io/console')
+      const list = await listConsoleProjects({
+        queries: [Query.equal('$id', projectId), Query.limit(1)],
+        total: false,
+      })
+      return list.projects?.[0]?.teamId ?? null
+    } catch {
+      return null
+    }
+  }
+}
+
 function isBillingEnabled(): boolean {
   return getActiveProfileFeatures().billing
 }
@@ -2084,17 +2150,21 @@ export function useUpdateOrganizationBudget() {
 
   return useMutation({
     mutationFn: updateOrganizationBudget,
-    onSuccess: (_, variables) => {
-      // Invalidate organization and aggregation queries
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      // Refetch so billingLimits (and budget curtain) update immediately
+      await queryClient.refetchQueries({
         queryKey: ['organization', variables.organizationId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [
           'billing-aggregation',
           'organization',
           variables.organizationId,
         ],
+      })
+      // Projects also carry billingLimits; refresh so project curtains clear
+      await queryClient.refetchQueries({
+        queryKey: ['project'],
       })
     },
   })

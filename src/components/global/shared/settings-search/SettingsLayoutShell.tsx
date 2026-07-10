@@ -34,6 +34,8 @@ export type SettingsLayoutNavItem = {
   /** Route `to` — typed loosely so org/project layouts can share this shell. */
   to: string
   params?: Record<string, string>
+  /** Optional trailing content (e.g. warning icon) after the label. */
+  endAdornment?: ReactNode
 }
 
 type SettingsLayoutShellProps = {
@@ -184,6 +186,7 @@ function SettingsLayoutShellContent({
                 <span className="flex items-center gap-2">
                   <item.icon className="h-4 w-4 shrink-0" />
                   {t(item.label)}
+                  {item.endAdornment}
                 </span>
               </SelectItem>
             ))}
@@ -214,7 +217,8 @@ function SettingsLayoutShellContent({
               className={navLinkClassName(item.id, activeSectionId === item.id)}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {t(item.label)}
+              <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
+              {item.endAdornment}
             </Link>
           )
         })}

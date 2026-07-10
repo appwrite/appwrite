@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate, useParams } from '@tanstack/react-rou
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
@@ -62,6 +63,9 @@ export function Layout({ initialData }: LayoutProps = {}) {
           onCommandCenterOpen: () => {},
           onCreateOrganization: () => {},
         }}
+        headerBanner={
+          <OrganizationBillingHeaderBanners organizationId={orgId} />
+        }
         showFooter
         containerClassName="org-layout-container"
       >
@@ -85,6 +89,9 @@ export function Layout({ initialData }: LayoutProps = {}) {
           onCommandCenterOpen: () => {},
           onCreateOrganization: () => {},
         }}
+        headerBanner={
+          <OrganizationBillingHeaderBanners organizationId={orgId} />
+        }
         showFooter
         containerClassName="org-layout-container"
       >
@@ -101,6 +108,9 @@ export function Layout({ initialData }: LayoutProps = {}) {
         onCommandCenterOpen: () => {},
         onCreateOrganization: () => {},
       }}
+      headerBanner={
+        <OrganizationBillingHeaderBanners organizationId={orgId} />
+      }
       showFooter
       containerClassName="org-layout-container"
     >

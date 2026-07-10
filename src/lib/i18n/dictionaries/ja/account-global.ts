@@ -440,7 +440,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Project paused': 'プロジェクトは一時停止中です',
   'Resuming…': '再開中…',
   'Restore project': 'プロジェクトを復元',
+  'Budget limit reached': '予算上限に達しました',
   'Back to organization': '組織に戻る',
+  'Back to console': 'コンソールに戻る',
   // Global shell
   'Skip to content': 'コンテンツへスキップ',
   'Loading wizard...': 'ウィザードを読み込み中...',

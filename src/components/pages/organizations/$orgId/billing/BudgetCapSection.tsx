@@ -3,12 +3,13 @@ import { Gauge, Info, AlertCircle } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { formatCurrency } from './utils'
 import {
   useOrganizationById,
   useOrganizationPlan,
   useUpdateOrganizationBudget,
+  isBudgetLimitReached,
 } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
@@ -55,6 +56,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   }, [organization?.billingBudget])
 
   const enabled = (organization?.billingBudget || 0) > 0
+  const budgetLimitReached = isBudgetLimitReached(organization)
   const isLoading =
     (orgLoading && !organization) || (planLoading && !plan)
 
@@ -153,7 +155,10 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      id="update-budget"
+      className="scroll-mt-24 rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       {/* Header */}
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
@@ -163,6 +168,21 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
 
       {/* Content */}
       <div className="border-t border-border px-6 py-4">
+        {budgetLimitReached ? (
+          <Alert
+            className="mb-4 border-red-600/20 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-500/20 dark:text-red-400 [&>svg]:text-current"
+          >
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle className="text-[13px] font-medium text-current">
+              {t('Budget limit reached')}
+            </AlertTitle>
+            <AlertDescription className="text-[13px] text-current/90">
+              {t(
+                'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.',
+              )}
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted shrink-0">

@@ -26,6 +26,7 @@ import {
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
+import { isHttpPaymentRequiredError } from '@/lib/utils/error-formatting'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { ProjectSelectorPlanBadge } from '@/components/pages/projects/$projectId/shared/ProjectSelectorPlanBadge'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
@@ -174,8 +175,12 @@ export function ProjectSelector({
   const { teams, organizations, isLoading: orgsLoading } = useTeams()
 
   // Fetch current project separately by ID
-  const { project: currentProject, isLoading: currentProjectLoading } =
-    useProject(projectId)
+  const {
+    project: currentProject,
+    isLoading: currentProjectLoading,
+    error: currentProjectError,
+  } = useProject(projectId)
+  const projectPaymentRequired = isHttpPaymentRequiredError(currentProjectError)
 
   const { data: routeFailedInvoicePresence, isLoading: invoicePresenceLoading } =
     useOrganizationFailedInvoicePresence(
@@ -553,6 +558,9 @@ export function ProjectSelector({
 
   const isProjectSelectorShellReady = useMemo(() => {
     if (!projectId) return true
+    // Budget lock: project-scoped get returns 402 and never yields a project.
+    // Release the fullscreen loader gate so hard reloads are not stuck.
+    if (projectPaymentRequired) return true
     if (!resolvedProject || resolvedProject.$id !== projectId) return false
     if (currentProjectLoading) return false
     if (invoicePresenceLoading) return false
@@ -566,6 +574,7 @@ export function ProjectSelector({
     return true
   }, [
     projectId,
+    projectPaymentRequired,
     resolvedProject,
     currentProjectLoading,
     invoicePresenceLoading,

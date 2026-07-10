@@ -45,6 +45,19 @@ export function isHttpNotFoundError(error: unknown): boolean {
   )
 }
 
+/** True when the API responded with HTTP 402 (payment / budget limit required). */
+export function isHttpPaymentRequiredError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { code?: number; status?: number; message?: string }
+  if (e.code === 402 || e.status === 402) return true
+  const message = typeof e.message === 'string' ? e.message.toLowerCase() : ''
+  return (
+    message.includes('payment required') ||
+    message.includes('budget limit') ||
+    message.includes('budget_limit')
+  )
+}
+
 /** True when the API responded with HTTP 401 (no active console session). */
 export function isHttpUnauthorizedError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false

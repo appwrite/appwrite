@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import { mapAppToMarketplaceApp } from '@/lib/marketplace/map-app'
 import { startMarketplaceAppInstall } from '@/lib/marketplace/install-app'
 import {
@@ -68,7 +69,11 @@ export function View({ initialData }: ViewProps = {}) {
 
   if (!app && !initialData?.app && !isLoading) {
     return (
-      <ConsoleLayout>
+      <ConsoleLayout
+        headerBanner={
+          <OrganizationBillingHeaderBanners organizationId={orgId} />
+        }
+      >
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
           <EmptyState
             icon={Store}
@@ -85,7 +90,11 @@ export function View({ initialData }: ViewProps = {}) {
 
   if (!app || !mapped || !orgId) {
     return (
-      <ConsoleLayout>
+      <ConsoleLayout
+        headerBanner={
+          <OrganizationBillingHeaderBanners organizationId={orgId} />
+        }
+      >
         <div className="flex min-h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -96,7 +105,11 @@ export function View({ initialData }: ViewProps = {}) {
   const CategoryIcon = MARKETPLACE_CATEGORY_ICONS[mapped.category]
 
   return (
-    <ConsoleLayout>
+    <ConsoleLayout
+      headerBanner={
+        <OrganizationBillingHeaderBanners organizationId={orgId} />
+      }
+    >
       <div className="flex h-full flex-col">
         <div className="border-b border-border bg-background">
           <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">

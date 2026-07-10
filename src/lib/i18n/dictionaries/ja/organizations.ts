@@ -991,6 +991,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Owner: 'オーナー',
   Page: 'ページ',
   Paused: '一時停止',
+  Locked: 'ロック中',
   Payment: '支払い',
   Payments: '支払い',
   Pending: '保留中',

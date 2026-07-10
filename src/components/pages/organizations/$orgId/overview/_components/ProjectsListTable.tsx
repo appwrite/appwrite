@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { PauseCircle, Pin, PinOff } from '@/lib/icons'
+import { Lock, PauseCircle, Pin, PinOff } from '@/lib/icons'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,6 +49,8 @@ type ProjectsListTableProps = {
   onProjectDeleted: (projectId: string) => void | Promise<void>
   showFailedInvoiceOrgAlert: boolean
   orgBillingReadonlyForFailedInvoice: boolean
+  /** Org hit its budget cap; show Locked badge like paused projects */
+  budgetLimitReached?: boolean
   showUsageCharts?: boolean
   projectRequestsUsageById: Map<string, ProjectListRequestsUsageEntry>
   projectPlatformsById: Map<string, ProjectListPlatformsEntry>
@@ -103,6 +105,7 @@ export function ProjectsListTable({
   onProjectDeleted,
   showFailedInvoiceOrgAlert,
   orgBillingReadonlyForFailedInvoice,
+  budgetLimitReached = false,
   showUsageCharts = false,
   projectRequestsUsageById,
   projectPlatformsById,
@@ -195,7 +198,15 @@ export function ProjectsListTable({
                           }
                           className="shrink-0"
                         />
-                        {project.paused ? (
+                        {budgetLimitReached ? (
+                          <Badge
+                            variant="error"
+                            className="gap-1 text-[10px] font-medium shrink-0"
+                          >
+                            <Lock className="h-3 w-3" />
+                            {t('Locked')}
+                          </Badge>
+                        ) : project.paused ? (
                           <Badge
                             variant="error"
                             className="gap-1 text-[10px] font-medium shrink-0"

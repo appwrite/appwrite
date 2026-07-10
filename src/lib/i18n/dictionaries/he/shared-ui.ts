@@ -525,6 +525,10 @@ export const heSharedUiDictionary: Record<string, string> = {
     'סוג הפריסה מציין כיצד הפריסה הזו נוצרה.',
   'This deployment is already active.': 'הפריסה הזו כבר פעילה.',
   'This feature is coming soon': "הפיצ'ר הזה יגיע בקרוב",
+  'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
+    'הארגון הגיע למגבלת התקציב והוא חסום כעת. כדי להמשיך להשתמש בשירותי Appwrite, עדכנו את מגבלת התקציב.',
+  'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
+    'הארגון הגיע למגבלת התקציב והוא חסום כעת. העלו את תקרת התקציב למטה כדי לשחזר גישה לשירותים החייבים בחיוב.',
   'This section is under construction': 'החלק הזה נמצא בבנייה',
   'This user has no valid ID; pick another user.':
     'למשתמש הזה אין מזהה תקין; בחרו משתמש אחר.',
@@ -553,6 +557,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   Update: 'עדכון',
   'Update GitHub permissions': 'עדכון הרשאות GitHub',
   'Update filter': 'עדכון סינון',
+  'Update limit': 'עדכון המגבלה',
   'Update the value of this variable. The key cannot be changed.':
     'עדכון ערך המשתנה הזה. לא ניתן לשנות את המפתח.',
   'Update variable': 'עדכון משתנה',

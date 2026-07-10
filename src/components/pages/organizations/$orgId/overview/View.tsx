@@ -21,6 +21,7 @@ import {
   XCircle,
   Key,
   AlertCircle,
+  AlertTriangle,
   UserCog,
   Code,
   Edit,
@@ -59,6 +60,7 @@ import {
   useOrganizationPlan,
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
+  isBudgetLimitReached,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -164,7 +166,7 @@ import { View as OrgAppsView } from '../apps/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PlanLimitWarning } from '@/components/pages/projects/$projectId/shared/PlanLimitWarning'
-import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
+import { OrganizationBillingHeaderBanners } from '@/components/global/shared/OrganizationBillingHeaderBanners'
 import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoiceWarningIcon'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { InviteMembersDialog } from './InviteMembers'
@@ -890,6 +892,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgBillingReadonlyForFailedInvoice =
     showFailedInvoiceOrgAlert &&
     isOrganizationBillingReadonlyStatus(selectedOrg?.status)
+
+  const showBudgetLimitAlert =
+    features.billing && isBudgetLimitReached(organizationDetail)
 
   const [orgName, setOrgName] = useState('')
 
@@ -1796,11 +1801,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             ? handleOpenCreateOrganization
             : undefined}}
         headerBanner={
-          <OrganizationFailedInvoiceHeaderBanner
-            organizationId={orgId}
-            show={showFailedInvoiceOrgAlert}
-            orgBillingReadonly={orgBillingReadonlyForFailedInvoice}
-          />
+          <OrganizationBillingHeaderBanners organizationId={orgId} />
         }
         showFooter
         containerClassName="org-layout-container"
@@ -1812,131 +1813,121 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
           <div className="mx-auto flex h-16 min-h-16 w-full max-w-7xl shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
             {/* Left: Org Switcher - h-8 control; h1 uses m-0 so UA margins do not shift layout */}
-            <div className="flex h-8 min-h-8 max-h-8 min-w-0 items-center gap-2">
+            <div className="flex h-8 min-h-8 max-h-8 min-w-0 flex-1 items-center gap-2">
               {selectedOrg ? (
                 supportsMultiTenancy ? (
-                  <div className="min-w-0">
-                    <Popover
-                      open={orgSwitcherOpen}
-                      onOpenChange={setOrgSwitcherOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
-                        >
-                          <InitialsAvatar
-                            name={selectedOrg.name}
-                            size="sm"
-                            className="shrink-0"
-                          />
-                          <h1 className="m-0 min-w-0 truncate text-[13px] font-semibold leading-tight text-foreground">
-                            {selectedOrg.name}
-                          </h1>
-                          {isCloud && (
-                            <Badge
-                              className={cn(
-                                'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
-                                selectedOrg.billingPlanDowngrade
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                  : getPlanBadgeColor(selectedOrg.plan),
-                              )}
-                            >
-                              {selectedOrg.billingPlanDowngrade
-                                ? t('Downgraded')
-                                : getPlanDisplayName(selectedOrg.plan)}
-                            </Badge>
-                          )}
-                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        align="start"
-                        className="w-72 border-border bg-popover p-0"
+                  <Popover
+                    open={orgSwitcherOpen}
+                    onOpenChange={setOrgSwitcherOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="group flex h-8 max-h-8 min-h-8 min-w-0 max-w-full cursor-pointer items-center gap-2 rounded-lg px-2 -ms-2 transition-colors hover:bg-accent"
                       >
-                        <div className="border-b border-border px-3 py-2">
-                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                            {t('Switch organization')}
-                          </p>
-                        </div>
-                        <div className="max-h-64 overflow-y-auto py-1">
-                          {organizations.map((org) => (
-                            <button
-                              key={org.$id}
-                              onClick={() => handleSelectOrg(org)}
-                              className={cn(
-                                'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-accent',
-                                selectedOrg.$id === org.$id && 'bg-accent',
-                              )}
-                            >
-                              <InitialsAvatar name={org.name} size="md" />
-                              <div className="flex-1 min-w-0">
-                                <p className="truncate text-[13px] font-medium text-foreground">
-                                  {org.name}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  {isCloud && (
-                                    <span
-                                      className={cn(
-                                        'rounded px-1.5 py-0.5 text-[10px] font-medium',
-                                        org.billingPlanDowngrade
-                                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                          : getPlanBadgeColor(org.plan),
-                                      )}
-                                    >
-                                      {org.billingPlanDowngrade
-                                        ? t('Downgraded')
-                                        : getPlanDisplayName(org.plan)}
-                                    </span>
-                                  )}
-                                  <span className="text-[11px] text-muted-foreground">
-                                    {org.members}{' '}
-                                    {org.members !== 1
-                                      ? t('members')
-                                      : t('member')}
-                                  </span>
-                                </div>
-                              </div>
-                              {selectedOrg.$id === org.$id && (
-                                <Check className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="border-t border-border p-2">
-                          <button
-                            onClick={() => {
-                              setOrgSwitcherOpen(false)
-                              handleOpenCreateOrganization()
-                            }}
-                            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        <InitialsAvatar name={selectedOrg.name} size="sm" />
+                        <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
+                          {selectedOrg.name}
+                        </h1>
+                        {isCloud && (
+                          <Badge
+                            className={cn(
+                              'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
+                              selectedOrg.billingPlanDowngrade
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                : getPlanBadgeColor(selectedOrg.plan),
+                            )}
                           >
-                            <Plus className="h-4 w-4" />
-                            {t('Create organization')}
+                            {selectedOrg.billingPlanDowngrade
+                              ? t('Downgraded')
+                              : getPlanDisplayName(selectedOrg.plan)}
+                          </Badge>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      className="w-72 border-border bg-popover p-0"
+                    >
+                      <div className="border-b border-border px-3 py-2">
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                          {t('Switch organization')}
+                        </p>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto py-1">
+                        {organizations.map((org) => (
+                          <button
+                            key={org.$id}
+                            onClick={() => handleSelectOrg(org)}
+                            className={cn(
+                              'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-accent',
+                              selectedOrg.$id === org.$id && 'bg-accent',
+                            )}
+                          >
+                            <InitialsAvatar name={org.name} size="md" />
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-[13px] font-medium text-foreground">
+                                {org.name}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                {isCloud && (
+                                  <span
+                                    className={cn(
+                                      'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                                      org.billingPlanDowngrade
+                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                        : getPlanBadgeColor(org.plan),
+                                    )}
+                                  >
+                                    {org.billingPlanDowngrade
+                                      ? t('Downgraded')
+                                      : getPlanDisplayName(org.plan)}
+                                  </span>
+                                )}
+                                <span className="text-[11px] text-muted-foreground">
+                                  {org.members}{' '}
+                                  {org.members !== 1
+                                    ? t('members')
+                                    : t('member')}
+                                </span>
+                              </div>
+                            </div>
+                            {selectedOrg.$id === org.$id && (
+                              <Check className="h-4 w-4 text-muted-foreground" />
+                            )}
                           </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                        ))}
+                      </div>
+                      <div className="border-t border-border p-2">
+                        <button
+                          onClick={() => {
+                            setOrgSwitcherOpen(false)
+                            handleOpenCreateOrganization()
+                          }}
+                          className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <Plus className="h-4 w-4" />
+                          {t('Create organization')}
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 ) : (
                   <div className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 px-2 -ms-2">
-                    <InitialsAvatar
-                      name={selectedOrg.name}
-                      size="sm"
-                      className="shrink-0"
-                    />
-                    <h1 className="m-0 min-w-0 truncate text-[13px] font-semibold leading-tight text-foreground">
+                    <InitialsAvatar name={selectedOrg.name} size="sm" />
+                    <h1 className="m-0 min-w-0 max-w-[10rem] truncate text-[13px] font-semibold leading-tight text-foreground sm:max-w-[14rem] md:max-w-[20rem] lg:max-w-[28rem]">
                       {selectedOrg.name}
                     </h1>
                   </div>
                 )
               ) : orgId ? (
                 <div
-                  className="flex h-8 max-h-8 min-h-8 min-w-[200px] items-center gap-2 overflow-hidden px-2 -ms-2"
+                  className="flex h-8 max-h-8 min-h-8 min-w-0 max-w-full items-center gap-2 overflow-hidden px-2 -ms-2"
                   aria-hidden
                 >
                   <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-muted" />
-                  <div className="h-4 min-h-4 min-w-0 flex-1 max-w-[160px] animate-pulse rounded bg-muted" />
+                  <div className="h-4 min-h-4 min-w-0 flex-1 max-w-[10rem] animate-pulse rounded bg-muted sm:max-w-[14rem] md:max-w-[20rem]" />
                   {isCloud && (
                     <div className="h-5 max-h-5 min-h-5 w-14 shrink-0 animate-pulse rounded bg-muted" />
                   )}
@@ -1965,8 +1956,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               )}
             </div>
 
-            {/* Right: same fixed h-8 band as left */}
-            <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-3">
+            {/* Right: same fixed h-8 band as left; hide members + invite on small screens */}
+            <div className="hidden h-8 min-h-8 max-h-8 shrink-0 items-center gap-3 sm:flex">
               {orgId && (
                 <div className="flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center justify-start">
                   {!selectedOrg || membershipsLoading ? (
@@ -2472,6 +2463,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       orgBillingReadonlyForFailedInvoice={
                                         orgBillingReadonlyForFailedInvoice
                                       }
+                                      budgetLimitReached={showBudgetLimitAlert}
                                       showUsageCharts={showProjectUsageCharts}
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
@@ -2575,6 +2567,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                             >
                                               <ProjectListCardMain
                                                 project={project}
+                                                budgetLimitReached={
+                                                  showBudgetLimitAlert
+                                                }
                                                 failedInvoiceWarning={
                                                   <FailedInvoiceWarningIcon
                                                     show={
@@ -2735,6 +2730,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         orgBillingReadonlyForFailedInvoice={
                                           orgBillingReadonlyForFailedInvoice
                                         }
+                                        budgetLimitReached={showBudgetLimitAlert}
                                         showUsageCharts={showProjectUsageCharts}
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
@@ -2801,6 +2797,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               >
                                                 <ProjectListCardMain
                                                   project={project}
+                                                  budgetLimitReached={
+                                                    showBudgetLimitAlert
+                                                  }
                                                   failedInvoiceWarning={
                                                     <FailedInvoiceWarningIcon
                                                       show={
@@ -2950,7 +2949,24 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                 {activeTab === 'settings' && (
                   <SettingsLayoutShell
-                    navItems={orgSettingsNavItems}
+                    navItems={orgSettingsNavItems.map((item) =>
+                      item.id === 'billing' &&
+                      (showBudgetLimitAlert || showFailedInvoiceOrgAlert)
+                        ? {
+                            ...item,
+                            endAdornment: (
+                              <AlertTriangle
+                                className="h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400"
+                                aria-label={
+                                  showBudgetLimitAlert
+                                    ? t('Budget limit reached')
+                                    : t('Payment failed')
+                                }
+                              />
+                            ),
+                          }
+                        : item,
+                    )}
                     activeSectionId={settingsSubTab}
                     cardIndex={orgSettingsCardIndex}
                     searchQuery={settingsNavSearch}

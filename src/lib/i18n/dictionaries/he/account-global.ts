@@ -764,7 +764,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'שדרגו את התוכנית כדי להימנע מהשהיה, או שחזרו את הפרויקט כדי להמשיך להשתמש בו כעת.',
   'Resuming…': 'מפעיל מחדש…',
   'Restore project': 'שחזור הפרויקט',
+  'Budget limit reached': 'מגבלת התקציב הושגה',
   'Back to organization': 'חזרה לארגון',
+  'Back to console': 'חזרה לקונסול',
 
   // Global shell
   'Skip to content': 'דילוג לתוכן',

@@ -302,6 +302,10 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'The Appwriter mechanical keyboard': 'Appwriter メカニカルキーボード',
   'This deployment is already active.': 'このデプロイは既に有効です。',
   'This feature is coming soon': 'この機能は近日公開予定です',
+  'This organization has reached its budget limit and is now blocked. To continue using Appwrite services, update the budget limit.':
+    'この組織は予算上限に達したためブロックされています。Appwrite サービスを引き続き利用するには、予算上限を更新してください。',
+  'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
+    'この組織は予算上限に達したためブロックされています。請求対象サービスへのアクセスを復元するには、下の予算上限を引き上げてください。',
   'This section is under construction': 'このセクションは準備中です',
   'Try a different search or upload a file.': '別の検索を試すか、ファイルをアップロードしてください。',
   'Try a different search term or installation': '別の検索語またはインストールを試してください',
@@ -310,6 +314,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Unmark secret': 'シークレット設定を解除',
   'Update GitHub permissions': 'GitHub の権限を更新',
   'Update filter': 'フィルターを更新',
+  'Update limit': '上限を更新',
   'Update variable': '変数を更新',
   'Upgrade your plan to get email support.': 'メールサポートを利用するにはプランをアップグレードしてください。',
   'Value type': '値のタイプ',
