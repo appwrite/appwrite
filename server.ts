@@ -719,6 +719,20 @@ async function initializeServer() {
       // get the runtime config stamped in (the SSR shell emits a placeholder).
       '/*': async (req: Request) => {
         try {
+          const url = new URL(req.url)
+          // Missing hashed build assets must not fall through to the SPA HTML
+          // shell. Browsers reject HTML as a module script (MIME type error),
+          // and the client stale-chunk reload would otherwise loop forever.
+          if (url.pathname.startsWith('/assets/')) {
+            return new Response('Not Found', {
+              status: 404,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-store',
+              },
+            })
+          }
+
           const res = await handler.fetch(req)
           const contentType = res.headers.get('content-type') ?? ''
           if (!contentType.includes('text/html')) {

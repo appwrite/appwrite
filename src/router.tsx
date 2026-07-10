@@ -7,7 +7,7 @@ import { routeTree } from './routeTree.gen'
 import { ErrorComponent } from './components/error/Component'
 import { NotFound } from './components/error/NotFound'
 import {
-  clearStaleChunkReloadGuard,
+  scheduleClearStaleChunkReloadGuard,
   tryReloadForStaleChunk,
 } from '@/lib/stale-chunk-error'
 // No default pending component: the root FullscreenLoader (Appwrite logo) is the
@@ -39,7 +39,10 @@ export function getRouter() {
   setupQueryClientRouterIntegration(router, rqContext.queryClient)
 
   if (!router.isServer) {
-    clearStaleChunkReloadGuard()
+    // Clear only after a successful settle. Clearing on init defeated the
+    // one-reload guard and caused infinite reload loops when a route chunk
+    // was still missing after the first recovery attempt (MIME text/html).
+    scheduleClearStaleChunkReloadGuard()
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (tryReloadForStaleChunk(event.reason)) {

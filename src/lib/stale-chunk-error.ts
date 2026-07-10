@@ -1,9 +1,27 @@
 const STALE_CHUNK_RELOAD_KEY = 'console.staleChunkReloadAttempted'
 
-/** Clears the one-time auto-reload guard after a successful full page load. */
+/** Default delay before clearing the one-reload guard after a successful boot. */
+export const STALE_CHUNK_GUARD_CLEAR_DELAY_MS = 5_000
+
+/** Clears the one-time auto-reload guard (e.g. after a successful settle). */
 export function clearStaleChunkReloadGuard(): void {
   if (typeof sessionStorage === 'undefined') return
   sessionStorage.removeItem(STALE_CHUNK_RELOAD_KEY)
+}
+
+/**
+ * Clears the reload guard only after the app has stayed up long enough that
+ * chunk loads likely succeeded. Must not run on router init immediately —
+ * that defeats the one-reload limit and causes infinite reload loops when a
+ * chunk is still missing after the first recovery attempt.
+ */
+export function scheduleClearStaleChunkReloadGuard(
+  delayMs: number = STALE_CHUNK_GUARD_CLEAR_DELAY_MS,
+): void {
+  if (typeof window === 'undefined') return
+  window.setTimeout(() => {
+    clearStaleChunkReloadGuard()
+  }, delayMs)
 }
 
 /**
@@ -30,7 +48,7 @@ export function isStaleChunkLoadError(error: unknown): boolean {
 }
 
 /**
- * Reload once per session when a stale JS chunk is detected (e.g. after deploy).
+ * Reload once per recovery window when a stale JS chunk is detected (e.g. after deploy).
  * Returns true when a reload was triggered.
  */
 export function tryReloadForStaleChunk(error: unknown): boolean {
