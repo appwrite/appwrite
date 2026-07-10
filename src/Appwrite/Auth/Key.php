@@ -104,6 +104,15 @@ class Key
     }
 
     /**
+     * Console-issued OAuth2 token acting with owner privileges (CLI/MCP).
+     * These behave like console admin requests but never carry the admin mode header.
+     */
+    public function isOAuthOwner(): bool
+    {
+        return $this->type === API_KEY_OAUTH2 && $this->role === User::ROLE_OWNER;
+    }
+
+    /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or an ephemeral key (JWT).
      *

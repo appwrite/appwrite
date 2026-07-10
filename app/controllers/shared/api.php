@@ -352,12 +352,14 @@ Http::init()
             && $project->getId() !== 'console'
             && $mode === APP_MODE_ADMIN;
         $isOAuthAdminKey = ! empty($apiKey)
-            && $apiKey->getType() === API_KEY_OAUTH2
-            && $apiKey->getRole() === User::ROLE_OWNER
+            && $apiKey->isOAuthOwner()
             && $project->getId() !== 'console';
 
         if ($isOAuthAdminKey) {
             $authorization->setDefaultStatus(false);
+            // Match console admin mode, which doesn't carry the 'account' scope on user
+            // projects: account endpoints would operate on the platform user against the project DB.
+            $scopes = \array_diff($scopes, ['account']);
         }
 
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
@@ -404,7 +406,9 @@ Http::init()
             if ($impersonatorUser->isEmpty() && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
+                // OAuth owner tokens authenticate a platform user, so their activity
+                // must be written to the platform DB like admin mode requests.
+                if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN && ! $isOAuthAdminKey) {
                     $dbForProject->updateDocument('users', $user->getId(), new Document([
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
@@ -616,12 +620,14 @@ Http::init()
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
 
+        $isOAuthAdminKey = $apiKey !== null && $apiKey->isOAuthOwner() && $project->getId() !== 'console';
+
         /* If a session exists, use the target user (impersonated target or actor) for audit */
         if (! $targetUser->isEmpty()) {
             $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
             if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
+                $userClone->setAttribute('type', ($mode === APP_MODE_ADMIN || $isOAuthAdminKey) ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         }
@@ -928,7 +934,8 @@ Http::shutdown()
     ->inject('auditContext')
     ->inject('publisherForAudits')
     ->inject('mode')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode) {
+    ->inject('apiKey')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, User $targetUser, AuditContext $auditContext, Audit $publisherForAudits, string $mode, ?Key $apiKey) {
         $responsePayload = $response->getPayload();
 
         $pattern = $route->getLabel('audits.resource', null);
@@ -945,11 +952,13 @@ Http::shutdown()
             }
         }
 
+        $isOAuthAdminKey = $apiKey !== null && $apiKey->isOAuthOwner() && $project->getId() !== 'console';
+
         if (! $targetUser->isEmpty()) {
             $userClone = clone $targetUser;
             // $user doesn't support `type` and can cause unintended effects.
             if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
+                $userClone->setAttribute('type', ($mode === APP_MODE_ADMIN || $isOAuthAdminKey) ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
             }
             $auditContext->user = $userClone;
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
@@ -1183,6 +1192,7 @@ Http::shutdown()
             $byMethod = [];
         }
 
+        $isOAuthAdminKey = $apiKey !== null && $apiKey->isOAuthOwner() && $project->getId() !== 'console';
         $actorType = ($apiKey !== null && $apiKey->getRole() === User::ROLE_KEYS)
             ? match ($apiKey->getType()) {
                 API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
@@ -1191,7 +1201,7 @@ Http::shutdown()
                 default => ACTOR_TYPE_KEY_PROJECT,
             }
         : (! $user->isEmpty()
-            ? ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
+            ? (($mode === APP_MODE_ADMIN || $isOAuthAdminKey) ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER)
             : ACTOR_TYPE_GUEST);
         $byMethod[$method] = [
             'status' => ONBOARDING_STATUS_COMPLETED,
