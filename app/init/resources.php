@@ -347,6 +347,6 @@ $container->set('plan', fn () => []);
 $container->set('smsRates', fn () => []);
 
 $container->set(
-    'isResourceBlocked',
+    'getIsResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
