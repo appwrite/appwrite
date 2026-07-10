@@ -22,8 +22,11 @@ class Client
     /**
      * Capture a screenshot of a page and return the PNG bytes.
      *
+     * The browser service responds with raw image bytes on success and
+     * `{"error": message}` with a 4xx status on failure.
+     *
      * @param array<string, string> $headers
-     * @throws \Exception on an error response
+     * @throws Exception on an error response
      * @throws ClientExceptionInterface on transport failure
      */
     public function create(string $url, string $theme, array $headers = [], int $sleep = 3000): string
@@ -35,10 +38,19 @@ class Client
             'sleep' => $sleep,
         ]));
 
-        if ($response->getStatusCode() >= 400) {
-            throw new \Exception((string)$response->getBody());
+        $status = $response->getStatusCode();
+        $body = (string)$response->getBody();
+
+        if ($status >= 400) {
+            $error = \json_decode($body, true)['error'] ?? null;
+            throw new Exception(\is_string($error) ? $error : 'Screenshot failed with status ' . $status, $status);
         }
 
-        return (string)$response->getBody();
+        $contentType = $response->getHeaderLine('Content-Type');
+        if (!\str_starts_with($contentType, 'image/')) {
+            throw new Exception('Expected an image response, got ' . ($contentType === '' ? 'no content type' : $contentType), $status);
+        }
+
+        return $body;
     }
 }
