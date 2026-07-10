@@ -618,6 +618,18 @@ async function initializeStaticRoutes(
 }
 
 /** Minimal HTML for fatal errors so the tab keeps Appwrite branding (browsers request /favicon.ico when there is no document head). */
+function redirectLegacyConsolePath(req: Request): Response {
+  const url = new URL(req.url)
+  const suffix = url.pathname.slice('/console'.length).replace(/^\/+/, '')
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: '/' + suffix + url.search,
+      'Cache-Control': 'no-store',
+    },
+  })
+}
+
 function internalServerErrorResponse(): Response {
   const body = `<!DOCTYPE html>
 <html lang="en">
@@ -676,6 +688,10 @@ async function initializeServer() {
             'Cache-Control': 'no-store',
           },
         }),
+
+      // Legacy console URLs (pre-2.0 served the console under /console)
+      '/console': redirectLegacyConsolePath,
+      '/console/*': redirectLegacyConsolePath,
 
       // Serve static assets (preloaded or on-demand)
       ...staticRoutes,

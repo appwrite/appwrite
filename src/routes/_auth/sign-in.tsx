@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import {
   createFileRoute,
+  redirect,
   useNavigate,
   useRouter,
   useSearch,
@@ -18,6 +19,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
+  ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
   navigateToConsoleMfaAfterSession,
   isConsoleMfaRequiredError,
@@ -51,6 +53,13 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-in')({
   component: SignInPage,
   validateSearch: searchSchema,
+  loader: async ({ context }) => {
+    if (typeof window === 'undefined') return
+    const account = await ensureConsoleAccountQueryData(context.queryClient)
+    if (account) {
+      throw redirect({ to: '/', replace: true })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Sign in') }] }),
 })
 

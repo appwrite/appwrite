@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import {
   createFileRoute,
+  redirect,
   useNavigate,
   useRouter,
   useSearch,
@@ -20,6 +21,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import {
+  ensureConsoleAccountQueryData,
   refreshConsoleAccountAfterAuth,
   navigateToConsoleMfaAfterSession,
   isConsoleMfaRequiredError,
@@ -53,6 +55,13 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-up')({
   component: SignUpPage,
   validateSearch: searchSchema,
+  loader: async ({ context }) => {
+    if (typeof window === 'undefined') return
+    const account = await ensureConsoleAccountQueryData(context.queryClient)
+    if (account) {
+      throw redirect({ to: '/', replace: true })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Sign up') }] }),
 })
 
