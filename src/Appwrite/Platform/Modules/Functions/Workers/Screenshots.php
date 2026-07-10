@@ -91,11 +91,10 @@ class Screenshots extends Action
         Span::add('site.framework', $site->getAttribute('framework', ''));
 
         // Realtime preparation
-        $event = "sites.[siteId].deployments.[deploymentId].update";
         $queueForRealtime
             ->setSubscribers(['console'])
             ->setProject($project)
-            ->setEvent($event)
+            ->setEvent('sites.[siteId].deployments.[deploymentId].update')
             ->setParam('siteId', $site->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -125,21 +124,7 @@ class Screenshots extends Action
                 $routerHost = "$protocol://{$rule->getAttribute('domain')}";
             }
 
-            $configs = [
-                'screenshotLight' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=light',
-                    'theme' => 'light'
-                ],
-                'screenshotDark' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=dark',
-                    'theme' => 'dark'
-                ],
-            ];
-
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-            $apiKey = $jwtObj->encode([
+            $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0))->encode([
                 'hostnameOverride' => true,
                 'disabledMetrics' => [
                     METRIC_EXECUTIONS,
@@ -161,35 +146,33 @@ class Screenshots extends Action
                 'deploymentStatusIgnored' => true
             ]);
 
-            $screenshotError = null;
-            $captures = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $screenshots, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $screenshots, &$screenshotError) {
+            $sleep = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')]['screenshotSleep'] ?? 3000;
+            $tasks = [];
+            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
+                $config = [
+                    'headers' => [
+                        'x-appwrite-hostname' => $rule->getAttribute('domain'),
+                        'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+                    ],
+                    'url' => $routerHost . "/?appwrite-preview=1&appwrite-theme={$theme}",
+                    'theme' => $theme,
+                    'sleep' => $sleep,
+                ];
+                $tasks[] = function () use ($key, $config, $screenshots) {
                     try {
-                        $config = $configs[$key];
-
-                        $config['headers'] = \array_merge($config['headers'], [
-                            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey
-                        ]);
-                        $config['sleep'] = 3000;
-
-                        $frameworks = Config::getParam('frameworks', []);
-                        $framework = $frameworks[$site->getAttribute('framework', '')] ?? null;
-                        if (!is_null($framework)) {
-                            $config['sleep'] = $framework['screenshotSleep'];
-                        }
-
-                        $screenshot = $screenshots->capture($config);
-
-                        return ['key' => $key, 'screenshot' => $screenshot];
+                        return ['key' => $key, 'screenshot' => $screenshots->capture($config)];
                     } catch (\Throwable $th) {
-                        $screenshotError = $th;
-                        return;
+                        return $th;
                     }
                 };
-            }, \array_keys($configs)));
+            }
 
-            if ($screenshotError instanceof \Throwable) {
-                throw $screenshotError;
+            $captures = batch($tasks);
+
+            foreach ($captures as $capture) {
+                if ($capture instanceof \Throwable) {
+                    throw $capture;
+                }
             }
 
             Span::add('screenshot.count', \count($captures));
@@ -252,7 +235,7 @@ class Screenshots extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            $dbForProject->updateDocument('sites', $site->getId(), new Document([
                 'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
                 'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
             ]));
