@@ -156,30 +156,29 @@ class Screenshots extends Action
             $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
             $sleep = $framework['screenshotSleep'] ?? 3000;
 
-            $themes = ['screenshotLight' => 'light', 'screenshotDark' => 'dark'];
-
-            $screenshotError = null;
-            $captures = batch(\array_map(function ($key) use ($themes, $screenshots, $routerHost, $headers, $sleep, &$screenshotError) {
-                return function () use ($key, $themes, $screenshots, $routerHost, $headers, $sleep, &$screenshotError) {
+            $tasks = [];
+            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
+                // batch() doesn't propagate exceptions out of coroutines; return them instead.
+                $tasks[] = function () use ($key, $theme, $screenshots, $routerHost, $headers, $sleep) {
                     try {
-                        $theme = $themes[$key];
-                        $screenshot = $screenshots->create(
+                        return ['key' => $key, 'screenshot' => $screenshots->create(
                             url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
                             theme: $theme,
                             headers: $headers,
                             sleep: $sleep,
-                        );
-
-                        return ['key' => $key, 'screenshot' => $screenshot];
+                        )];
                     } catch (\Throwable $th) {
-                        $screenshotError = $th->getMessage();
-                        return;
+                        return $th;
                     }
                 };
-            }, \array_keys($themes)));
+            }
 
-            if (!\is_null($screenshotError)) {
-                throw new \Exception($screenshotError);
+            $captures = [];
+            foreach (batch($tasks) as $capture) {
+                if ($capture instanceof \Throwable) {
+                    throw $capture;
+                }
+                $captures[] = $capture;
             }
 
             Span::add('screenshot.count', \count($captures));
