@@ -53,7 +53,7 @@ class Functions extends Action
             ->inject('bus')
             ->inject('log')
             ->inject('executor')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->callback($this->action(...));
     }
 
@@ -68,7 +68,7 @@ class Functions extends Action
         Bus $bus,
         Log $log,
         Executor $executor,
-        callable $isResourceBlocked
+        callable $getIsResourceBlocked
     ): void {
         $payload = $message->getPayload();
 
@@ -152,7 +152,7 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
@@ -196,7 +196,7 @@ class Functions extends Action
             return;
         }
 
-        if ($isResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+        if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
             Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
             return;
         }
