@@ -108,6 +108,13 @@ export const REQUESTS_BREAKDOWN_SECTIONS: readonly RequestsBreakdownSection[] = 
     metricId: 'breakdown-resources',
     labelVariant: 'default',
   },
+  {
+    dimension: 'resourceType',
+    title: 'Resource types',
+    description: 'Request volume grouped by resource type.',
+    metricId: 'breakdown-resource-type',
+    labelVariant: 'default',
+  },
 ] as const
 
 export async function fetchProjectRequestsBreakdown(

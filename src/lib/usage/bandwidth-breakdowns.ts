@@ -109,6 +109,13 @@ export const BANDWIDTH_BREAKDOWN_SECTIONS: readonly BandwidthBreakdownSection[] 
     metricId: 'breakdown-resources',
     labelVariant: 'default',
   },
+  {
+    dimension: 'resourceType',
+    title: 'Resource types',
+    description: 'Bandwidth grouped by resource type.',
+    metricId: 'breakdown-resource-type',
+    labelVariant: 'default',
+  },
 ] as const
 
 export async function fetchProjectBandwidthBreakdown(

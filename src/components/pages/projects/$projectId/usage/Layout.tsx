@@ -269,7 +269,7 @@ function MobileCategoryDrawer({
 function UsageLoadingState() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-border px-4 py-6 sm:px-6">
+      <div className="shrink-0 border-b border-border px-4 py-4 sm:px-6">
         <Skeleton className="h-9 w-full max-w-xl" />
       </div>
       <div className={SECONDARY_SIDEBAR_LAYOUT_CLASS}>
@@ -611,12 +611,12 @@ function UsageLayoutContent({
       dir={pageDirection}
       className={cn('flex h-full flex-col overflow-hidden', className)}
     >
-      <div className="shrink-0 bg-background">
+      <div className="sticky top-0 z-20 shrink-0 bg-background">
         <div className="border-b border-border">
-          <div className="w-full px-4 py-6 sm:px-6">
+          <div className="w-full px-4 py-4 sm:px-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-                <h1 className="text-[17px] font-semibold text-foreground">
+                <h1 className="text-[17px] font-semibold leading-tight text-foreground">
                   {t('Usage')}
                 </h1>
                 <UsageHistoricDataNote className="min-w-0" />

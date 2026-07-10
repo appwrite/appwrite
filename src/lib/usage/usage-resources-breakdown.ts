@@ -38,13 +38,19 @@ export function splitUsageBreakdownEntries<
 ): {
   standardEntries: T[]
   resourceEntry?: T
+  resourceTypeEntry?: T
 } {
   return {
     standardEntries: entries.filter(
-      (entry) => entry.section.dimension !== 'resource',
+      (entry) =>
+        entry.section.dimension !== 'resource' &&
+        entry.section.dimension !== 'resourceType',
     ),
     resourceEntry: entries.find(
       (entry) => entry.section.dimension === 'resource',
+    ),
+    resourceTypeEntry: entries.find(
+      (entry) => entry.section.dimension === 'resourceType',
     ),
   }
 }

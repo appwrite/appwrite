@@ -344,7 +344,7 @@ export function RequestsSection({
     showBreakdown,
   )
 
-  const { standardEntries, resourceEntry } = useMemo(
+  const { standardEntries, resourceEntry, resourceTypeEntry } = useMemo(
     () => splitUsageBreakdownEntries(breakdowns),
     [breakdowns],
   )
@@ -453,6 +453,33 @@ export function RequestsSection({
                     description: resourceEntry.section.description,
                     dimension: 'resource',
                     labelVariant: 'default',
+                  })
+                }
+              />
+            </div>
+          ) : null}
+
+          {resourceTypeEntry ? (
+            <div className="flex h-full min-h-0 flex-col">
+              <UsageBreakdownCard
+                title={resourceTypeEntry.section.title}
+                description={resourceTypeEntry.section.description}
+                dimension={resourceTypeEntry.section.dimension}
+                items={resourceTypeEntry.items}
+                labelVariant={resourceTypeEntry.section.labelVariant}
+                countryLookups={countryLookups}
+                isLoading={resourceTypeEntry.isLoading}
+                isError={resourceTypeEntry.isError}
+                errorTitle={OVERVIEW_REQUESTS_ERROR.title}
+                errorMessage={OVERVIEW_REQUESTS_ERROR.message}
+                formatValue={formatRequestsValue}
+                onRetry={handleRetryAll}
+                onShowMore={() =>
+                  setBreakdownDrawer({
+                    title: resourceTypeEntry.section.title,
+                    description: resourceTypeEntry.section.description,
+                    dimension: resourceTypeEntry.section.dimension,
+                    labelVariant: resourceTypeEntry.section.labelVariant,
                   })
                 }
               />
