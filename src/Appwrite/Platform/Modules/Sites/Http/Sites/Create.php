@@ -222,7 +222,7 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             $providerAdapter = $vcsForInstallation($installation);
-            if ($providerAdapter->hasPerRepositoryWebhooks()) {
+            if ($providerAdapter->supportsRepositoryWebhooks()) {
                 try {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
