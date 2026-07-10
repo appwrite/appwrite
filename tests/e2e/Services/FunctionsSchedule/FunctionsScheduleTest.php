@@ -132,4 +132,53 @@ final class FunctionsScheduleTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+
+    public function testDeleteScheduledExecution()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+            'logging' => true,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true
+        ]);
+
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT10H'));
+        $futureTime->setTime((int) $futureTime->format('H'), (int) $futureTime->format('i'), 0, 0);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => true,
+            'scheduledAt' => $futureTime->format('Y-m-d H:i:s'),
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+
+        $executionId = $execution['body']['$id'] ?? '';
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+
+        /* Cancelling again eventually finds nothing to cancel */
+        $this->assertEventually(function () use ($functionId, $executionId) {
+            $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(404, $execution['headers']['status-code']);
+        }, 15000, 500);
+
+        $this->cleanupFunction($functionId);
+    }
 }

@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\Functions\Http\Deployments\Template\Create as Crea
 use Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs\Create as CreateVcsDeployment;
 use Appwrite\Platform\Modules\Functions\Http\Deployments\XList as ListDeployments;
 use Appwrite\Platform\Modules\Functions\Http\Executions\Create as CreateExecution;
+use Appwrite\Platform\Modules\Functions\Http\Executions\Delete as DeleteExecution;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Create as CreateFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Delete as DeleteFunction;
 use Appwrite\Platform\Modules\Functions\Http\Functions\Deployment\Update as UpdateFunctionDeployment;
@@ -62,6 +63,7 @@ class Http extends Service
 
         // Executions
         $this->addAction(CreateExecution::getName(), new CreateExecution());
+        $this->addAction(DeleteExecution::getName(), new DeleteExecution());
 
         // Variables
         $this->addAction(CreateVariable::getName(), new CreateVariable());
