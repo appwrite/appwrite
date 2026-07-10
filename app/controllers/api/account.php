@@ -1849,52 +1849,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $identity = $dbForProject->findOne('identities', [
-            Query::equal('userInternalId', [$user->getSequence()]),
-            Query::equal('provider', [$provider]),
-            Query::equal('providerUid', [$oauth2ID]),
-        ]);
-        if ($identity->isEmpty()) {
-            // Before creating the identity, check if the email is already associated with another user
-            $userId = $user->getId();
-
-            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                Query::equal('providerEmail', [$providerEmail]),
-                Query::notEqual('userInternalId', $user->getSequence()),
-            ]);
-            if (!empty($identitiesWithMatchingEmail)) {
-                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
-            }
-
-            $dbForProject->createDocument('identities', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'userInternalId' => $user->getSequence(),
-                'userId' => $userId,
-                'provider' => $provider,
-                'providerUid' => $oauth2ID,
-                'providerEmail' => $providerEmail,
-                'providerAccessToken' => $accessToken,
-                'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-            ]));
-        } else {
-            $identity
-                ->setAttribute('providerAccessToken', $accessToken)
-                ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
-            $dbForProject->updateDocument('identities', $identity->getId(), new Document([
-                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
-                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
-                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
-            ]));
-        }
-
         if (empty($user->getAttribute('email'))) {
             $emailMetadata = [
                 'emailCanonical' => null,
@@ -1956,6 +1910,52 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
             $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
             $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
+        }
+
+        $identity = $dbForProject->findOne('identities', [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::equal('provider', [$provider]),
+            Query::equal('providerUid', [$oauth2ID]),
+        ]);
+        if ($identity->isEmpty()) {
+            // Before creating the identity, check if the email is already associated with another user
+            $userId = $user->getId();
+
+            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+                Query::equal('providerEmail', [$providerEmail]),
+                Query::notEqual('userInternalId', $user->getSequence()),
+            ]);
+            if (!empty($identitiesWithMatchingEmail)) {
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
+            }
+
+            $dbForProject->createDocument('identities', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'userInternalId' => $user->getSequence(),
+                'userId' => $userId,
+                'provider' => $provider,
+                'providerUid' => $oauth2ID,
+                'providerEmail' => $providerEmail,
+                'providerAccessToken' => $accessToken,
+                'providerRefreshToken' => $refreshToken,
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+            ]));
+        } else {
+            $identity
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
+            $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
+                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
+                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
+            ]));
         }
 
         if (empty($user->getAttribute('name'))) {
