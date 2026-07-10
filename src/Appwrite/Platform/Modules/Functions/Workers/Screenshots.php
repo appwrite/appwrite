@@ -7,7 +7,7 @@ use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
-use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Screenshots\Client;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
@@ -59,7 +59,7 @@ class Screenshots extends Action
         Document $project,
         Device $deviceForFiles,
         Telemetry $telemetry,
-        ScreenshotsClient $screenshots
+        Client $screenshots
     ): void {
         Span::add('project.id', $project->getId());
 
