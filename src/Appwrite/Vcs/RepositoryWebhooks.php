@@ -13,9 +13,9 @@ use Utopia\VCS\Adapter\Git;
  * Creates per-repository webhooks for self-hosted providers.
  *
  * Callers invoke this unconditionally on every repository connection; it
- * no-ops for providers whose adapter reports no per-repository webhook is
- * needed (e.g. GitHub App, which delivers events platform-wide), so no
- * endpoint needs to know which providers require one.
+ * no-ops for providers whose adapter doesn't support per-repository webhooks
+ * (e.g. GitHub App, which delivers events platform-wide instead), so no
+ * endpoint needs its own per-provider branching.
  */
 class RepositoryWebhooks
 {
@@ -26,7 +26,7 @@ class RepositoryWebhooks
 
     /**
      * Creates a webhook for $owner/$repositoryName unless the adapter's
-     * provider doesn't need one, or a `repositories` document already
+     * provider doesn't support one, or a `repositories` document already
      * exists for this installation + provider repository (an earlier
      * connection already went through this path).
      *
@@ -44,7 +44,7 @@ class RepositoryWebhooks
         string $owner,
         string $repositoryName,
     ): void {
-        if (!$adapter->hasPerRepositoryWebhooks()) {
+        if (!$adapter->supportsRepositoryWebhooks()) {
             return;
         }
 
