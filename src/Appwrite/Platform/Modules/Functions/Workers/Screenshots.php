@@ -6,6 +6,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
+use Appwrite\Platform\Modules\Functions\Workers\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Role;
 use Exception;
 use Utopia\Client;
@@ -17,8 +18,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Psr7\Method;
-use Utopia\Psr7\Request;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
@@ -182,20 +181,11 @@ class Screenshots extends Action
                         }
 
                         $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-                        $client = (new Client(new SwooleClient()))
-                            ->withTimeout($timeout);
-                        $request = (new Request\Factory())->json(
-                            Method::POST,
-                            $browserEndpoint . '/screenshots',
-                            $config
+                        $client = new ScreenshotsClient(
+                            (new Client(new SwooleClient()))
+                                ->withTimeout($timeout)
                         );
-                        $response = $client->sendRequest($request);
-
-                        if ($response->getStatusCode() >= 400) {
-                            throw new \Exception((string) $response->getBody());
-                        }
-
-                        $screenshot = (string) $response->getBody();
+                        $screenshot = $client->capture($browserEndpoint . '/screenshots', $config);
 
                         return ['key' => $key, 'screenshot' => $screenshot];
                     } catch (\Throwable $th) {
