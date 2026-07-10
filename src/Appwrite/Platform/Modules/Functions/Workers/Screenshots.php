@@ -23,8 +23,6 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
 
-use function Swoole\Coroutine\batch;
-
 class Screenshots extends Action
 {
     public static function getName(): string
@@ -147,7 +145,7 @@ class Screenshots extends Action
             ]);
 
             $sleep = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')]['screenshotSleep'] ?? 3000;
-            $tasks = [];
+            $captures = [];
             foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
                 $config = [
                     'headers' => [
@@ -158,21 +156,7 @@ class Screenshots extends Action
                     'theme' => $theme,
                     'sleep' => $sleep,
                 ];
-                $tasks[] = function () use ($key, $config, $screenshots) {
-                    try {
-                        return ['key' => $key, 'screenshot' => $screenshots->capture($config)];
-                    } catch (\Throwable $th) {
-                        return $th;
-                    }
-                };
-            }
-
-            $captures = batch($tasks);
-
-            foreach ($captures as $capture) {
-                if ($capture instanceof \Throwable) {
-                    throw $capture;
-                }
+                $captures[] = ['key' => $key, 'screenshot' => $screenshots->capture($config)];
             }
 
             Span::add('screenshot.count', \count($captures));
