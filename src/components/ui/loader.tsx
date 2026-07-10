@@ -49,13 +49,13 @@ export function FullscreenLoader({
   const [shouldRender, setShouldRender] = useState(isVisible)
   const [showSpinner, setShowSpinner] = useState(false)
 
-  // Show spinner only after 3 seconds of loading, and only when status is not indicating an issue
+  // Show spinner only after 1.5 seconds of loading, and only when status is not indicating an issue
   useEffect(() => {
     if (isVisible && !statusBanner) {
       setShowSpinner(false)
       const timer = setTimeout(() => {
         setShowSpinner(true)
-      }, 3000)
+      }, 1500)
       return () => clearTimeout(timer)
     } else {
       setShowSpinner(false)
