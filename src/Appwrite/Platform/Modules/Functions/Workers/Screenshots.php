@@ -9,8 +9,6 @@ use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Exception;
-use Utopia\Client;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -49,6 +47,7 @@ class Screenshots extends Action
             ->inject('project')
             ->inject('deviceForFiles')
             ->inject('telemetry')
+            ->inject('screenshots')
             ->callback($this->action(...));
     }
 
@@ -59,7 +58,8 @@ class Screenshots extends Action
         Database $dbForProject,
         Document $project,
         Device $deviceForFiles,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        ScreenshotsClient $screenshots
     ): void {
         Span::add('project.id', $project->getId());
 
@@ -113,8 +113,6 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $timeout = \intval($site->getAttribute('timeout', '15'));
-
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
@@ -150,13 +148,6 @@ class Screenshots extends Action
                 'deploymentStatusIgnored' => true
             ]);
 
-            $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-            $client = new ScreenshotsClient(
-                (new Client(new CurlAdapter()))
-                    ->withBaseUri($browserEndpoint)
-                    ->withTimeout($timeout)
-            );
-
             $headers = [
                 'x-appwrite-hostname' => $rule->getAttribute('domain'),
                 'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
@@ -168,11 +159,11 @@ class Screenshots extends Action
             $themes = ['screenshotLight' => 'light', 'screenshotDark' => 'dark'];
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($themes, $client, $routerHost, $headers, $sleep, &$screenshotError) {
-                return function () use ($key, $themes, $client, $routerHost, $headers, $sleep, &$screenshotError) {
+            $captures = batch(\array_map(function ($key) use ($themes, $screenshots, $routerHost, $headers, $sleep, &$screenshotError) {
+                return function () use ($key, $themes, $screenshots, $routerHost, $headers, $sleep, &$screenshotError) {
                     try {
                         $theme = $themes[$key];
-                        $screenshot = $client->create(
+                        $screenshot = $screenshots->create(
                             url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
                             theme: $theme,
                             headers: $headers,
@@ -191,12 +182,12 @@ class Screenshots extends Action
                 throw new \Exception($screenshotError);
             }
 
-            Span::add('screenshot.count', \count($screenshots));
+            Span::add('screenshot.count', \count($captures));
 
             $mimeType = "image/png";
             $updates = new Document([]);
 
-            foreach ($screenshots as $data) {
+            foreach ($captures as $data) {
                 $key = $data['key'];
                 $screenshot = $data['screenshot'];
 

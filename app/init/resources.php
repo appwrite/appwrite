@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -84,6 +85,14 @@ $container->set('jobs', function () {
     }
 
     return new Jobs($client);
+}, []);
+
+$container->set('screenshots', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
+        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+
+    return new ScreenshotsClient($client);
 }, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
