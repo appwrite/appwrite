@@ -101,6 +101,10 @@ class Delete extends Base
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
+        if (($schedule->getAttribute('data')['functionId'] ?? null) !== $function->getId()) {
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => DateTime::now(),
             'active' => false,
