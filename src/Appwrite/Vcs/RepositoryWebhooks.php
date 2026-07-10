@@ -44,7 +44,7 @@ class RepositoryWebhooks
         string $owner,
         string $repositoryName,
     ): void {
-        if (!$adapter->requiresRepositoryWebhook()) {
+        if (!$adapter->hasPerRepositoryWebhooks()) {
             return;
         }
 
