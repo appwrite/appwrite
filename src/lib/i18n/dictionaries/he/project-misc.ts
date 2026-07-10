@@ -1035,9 +1035,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': 'המשך ל-נסו',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'פתחו את סוכן הפיתוח שלכם ובקשו אחת מהבקשות האלה כדי לוודא ש-Appwrite MCP פועל.',
-  'List my databases': 'הציגו את מסדי הנתונים שלי',
-  'List my storage buckets': 'הציגו את הבאקטים שלי באחסון',
-  'Show my project users': 'הציגו את המשתמשים בפרויקט',
+  'Use Appwrite MCP to list the databases in project {projectName}':
+    'השתמשו ב-Appwrite MCP כדי להציג את מסדי הנתונים בפרויקט {projectName}',
+  'Use Appwrite MCP to list the storage buckets in project {projectName}':
+    'השתמשו ב-Appwrite MCP כדי להציג את באקטי האחסון בפרויקט {projectName}',
+  'Use Appwrite MCP to list the users in project {projectName}':
+    'השתמשו ב-Appwrite MCP כדי להציג את המשתמשים בפרויקט {projectName}',
   'I tried it': 'ניסיתי',
   'Marked as tried': 'סומן כנוסה',
   'Nice. Your agent is connected.': 'מעולה. הסוכן שלכם מחובר.',

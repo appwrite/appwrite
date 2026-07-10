@@ -535,9 +535,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Continue to Try it': '試すに進む',
   'Open your coding agent and ask one of these prompts to confirm Appwrite MCP is working.':
     'コーディングエージェントを開き、次のプロンプトのいずれかを試して Appwrite MCP が動作していることを確認してください。',
-  'List my databases': 'データベースを一覧表示',
-  'List my storage buckets': 'ストレージバケットを一覧表示',
-  'Show my project users': 'プロジェクトのユーザーを表示',
+  'Use Appwrite MCP to list the databases in project {projectName}':
+    'Appwrite MCP でプロジェクト {projectName} のデータベースを一覧表示して',
+  'Use Appwrite MCP to list the storage buckets in project {projectName}':
+    'Appwrite MCP でプロジェクト {projectName} のストレージバケットを一覧表示して',
+  'Use Appwrite MCP to list the users in project {projectName}':
+    'Appwrite MCP でプロジェクト {projectName} のユーザーを一覧表示して',
   'I tried it': '試しました',
   'Marked as tried': '試行済みとしてマーク',
   'Nice. Your agent is connected.': 'エージェントが接続されました。',

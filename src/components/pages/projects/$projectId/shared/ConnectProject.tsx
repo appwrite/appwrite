@@ -1915,7 +1915,7 @@ export function ConnectProject({
             value="mcp"
             className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden"
           >
-            <MCPSection compact />
+            <MCPSection compact projectName={project?.name ?? projectId} />
           </TabsContent>
           <TabsContent
             value="skills"

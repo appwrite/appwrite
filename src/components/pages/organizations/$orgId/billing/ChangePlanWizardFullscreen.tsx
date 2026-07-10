@@ -30,7 +30,11 @@ import {
   useOrganizations,
   deleteOrganization,
   fetchOrganizationProjects,
+  organizationsQueryOptions,
+  organizationQueryOptions,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
 import { deleteProject } from '@/lib/react-query/hooks/projects'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
@@ -140,21 +144,20 @@ export function ChangePlanWizardFullscreen() {
   const queryClient = useQueryClient()
   const refreshOrganizationBillingResources = useCallback(
     async (organizationId: string) => {
+      // Critical path: always populate/refresh these so the destination org page
+      // never mounts without the new org (avoids a bounce back to /upgrade).
+      // fetchQuery is required for organization detail after create: refetchQueries
+      // is a no-op when that query has never been observed.
       await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: ['organizations', 'console'],
-          type: 'all',
-        }),
-        queryClient.refetchQueries({
-          queryKey: ['organization', organizationId],
-          exact: true,
-          type: 'all',
-        }),
-        queryClient.refetchQueries({
-          queryKey: ['organization', 'plan', organizationId],
-          exact: true,
-          type: 'all',
-        }),
+        queryClient.fetchQuery(organizationsQueryOptions()),
+        queryClient.fetchQuery(organizationQueryOptions(organizationId)),
+        queryClient
+          .fetchQuery(organizationPlanQueryOptions(organizationId))
+          .catch(() => {}),
+      ])
+
+      // Supporting billing data: never fail the setup flow if these error.
+      await Promise.allSettled([
         queryClient.refetchQueries({
           queryKey: ['organization-usage', organizationId],
           type: 'all',
@@ -200,6 +203,31 @@ export function ChangePlanWizardFullscreen() {
           type: 'all',
         }),
       ])
+    },
+    [queryClient],
+  )
+
+  const seedCreatedOrganizationCache = useCallback(
+    (createdOrg: { $id: string; name?: string; [key: string]: unknown }) => {
+      queryClient.setQueryData(['organization', createdOrg.$id], createdOrg)
+      queryClient.setQueryData(
+        ['organizations', 'console'],
+        (
+          previous:
+            | { teams?: Array<{ $id: string }>; total?: number }
+            | undefined,
+        ) => {
+          const teams = previous?.teams ?? []
+          if (teams.some((team) => team.$id === createdOrg.$id)) {
+            return previous
+          }
+          return {
+            ...previous,
+            teams: [...teams, createdOrg],
+            total: (previous?.total ?? teams.length) + 1,
+          }
+        },
+      )
     },
     [queryClient],
   )
@@ -935,9 +963,10 @@ export function ChangePlanWizardFullscreen() {
       )
 
       toast.success(t('Plan updated successfully'))
-      navigate({
+      await navigate({
         to: '/organizations/$orgId/settings/billing',
         params: { orgId },
+        replace: true,
       })
     } catch (error) {
       setSetupProgress(null)
@@ -1111,6 +1140,7 @@ export function ChangePlanWizardFullscreen() {
 
     const planLabel = getPlanNameFromTier(selectedPlan)
     const showActivationStep = !selectedPlanIsFree
+    let createdOrgId: string | null = null
 
     setSetupProgress({
       mode: 'create',
@@ -1138,8 +1168,21 @@ export function ChangePlanWizardFullscreen() {
         clientSecret?: string
         status?: string | number
         $id?: string
+        name?: string
+        [key: string]: unknown
       }
-      const createdOrgId = resultObj?.$id || organizationId
+      createdOrgId = resultObj?.$id || organizationId
+      if (resultObj?.$id) {
+        seedCreatedOrganizationCache(
+          resultObj as { $id: string; name?: string; [key: string]: unknown },
+        )
+      } else {
+        seedCreatedOrganizationCache({
+          $id: createdOrgId,
+          name: organizationName.trim(),
+        })
+      }
+
       const statusRequiresAction =
         typeof resultObj?.status === 'string' &&
         (resultObj.status === 'requires_action' ||
@@ -1182,23 +1225,43 @@ export function ChangePlanWizardFullscreen() {
         })
       }
       await refreshOrganizationBillingResources(createdOrgId)
+      // Warm the org overview cache before leaving /upgrade so the destination
+      // loader is a cache hit and the progress UI is not replaced by a remount
+      // of the create form (or a bounce back to /upgrade).
+      await prefetchOrganizationOverviewData(queryClient, createdOrgId)
 
       setSetupProgress((prev) =>
         prev ? { ...prev, phase: 'complete' } : prev,
       )
 
       toast.success(t('Organization created successfully'))
-      navigate({
+      await navigate({
         to: '/organizations/$orgId',
         params: { orgId: createdOrgId },
+        replace: true,
       })
     } catch (error) {
-      setSetupProgress(null)
       toast.error(
         error instanceof Error
           ? error.message
           : t('Failed to create organization'),
       )
+      // Org may already exist (payment/activation/refresh failed after create).
+      // Navigate there instead of clearing progress back to the create form.
+      if (createdOrgId) {
+        try {
+          await prefetchOrganizationOverviewData(queryClient, createdOrgId)
+          await navigate({
+            to: '/organizations/$orgId',
+            params: { orgId: createdOrgId },
+            replace: true,
+          })
+          return
+        } catch {
+          // Fall through to showing the form again.
+        }
+      }
+      setSetupProgress(null)
     }
   }
 

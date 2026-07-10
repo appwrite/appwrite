@@ -3,11 +3,18 @@
  * Completions are local (not backend onboarding stages).
  */
 
-export const MCP_TRY_IT_PROMPTS = [
-  'List my databases',
-  'List my storage buckets',
-  'Show my project users',
+/** Templates use `{projectName}` so try-it prompts target the open project. */
+export const MCP_TRY_IT_PROMPT_TEMPLATES = [
+  'Use Appwrite MCP to list the databases in project {projectName}',
+  'Use Appwrite MCP to list the storage buckets in project {projectName}',
+  'Use Appwrite MCP to list the users in project {projectName}',
 ] as const
+
+export function getMcpTryItPrompts(projectName: string): string[] {
+  return MCP_TRY_IT_PROMPT_TEMPLATES.map((template) =>
+    template.replaceAll('{projectName}', projectName),
+  )
+}
 
 const AGENT_ONBOARDING_PREFIX = 'console.mcp.agentOnboardingDone.'
 

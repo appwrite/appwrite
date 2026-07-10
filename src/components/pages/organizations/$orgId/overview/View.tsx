@@ -814,9 +814,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       placeholderData: keepPreviousData},
   )
 
-  const { data: organizationDetail } = useQuery({
+  const {
+    data: organizationDetail,
+    isLoading: organizationDetailLoading,
+    isFetching: organizationDetailFetching,
+    isFetched: organizationDetailFetched,
+    isError: organizationDetailError,
+  } = useQuery({
     ...organizationQueryOptions(orgId),
-    placeholderData: keepPreviousData})
+    placeholderData: keepPreviousData,
+  })
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
@@ -987,6 +994,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     // If the selected org is not found
     if (!selectedOrg) {
+      // After create/upgrade navigation the list can lag behind the URL. Wait for
+      // the org detail query to settle before treating the org as missing, or we
+      // briefly bounce back to /upgrade (create form flash).
+      const detailMatchesCurrentOrg = organizationDetail?.$id === orgId
+      const waitingForDetail =
+        !detailMatchesCurrentOrg &&
+        (organizationDetailLoading ||
+          organizationDetailFetching ||
+          (!organizationDetailFetched && !organizationDetailError))
+      if (waitingForDetail) return
+
       // If there are other organizations, redirect to the first one
       if (organizations.length > 0) {
         navigate({
@@ -1006,6 +1024,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     selectedOrg,
     organizations,
     organizationsLoading,
+    organizationDetail,
+    organizationDetailLoading,
+    organizationDetailFetching,
+    organizationDetailFetched,
+    organizationDetailError,
     orgId,
     navigate,
     createOrgDialogOpen,

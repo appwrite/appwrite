@@ -9,7 +9,10 @@ import {
   getVscodeMcpInstallUrl,
   openMcpInstallUrl,
 } from '@/lib/config/mcp'
-import { MCP_TRY_IT_PROMPTS } from '@/lib/mcp-adoption'
+import {
+  MCP_TRY_IT_PROMPT_TEMPLATES,
+  getMcpTryItPrompts,
+} from '@/lib/mcp-adoption'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +25,8 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
 export interface MCPSectionProps {
+  /** Current project name, embedded in try-it prompts so the agent targets the right project */
+  projectName: string
   /** When true, render without the outer card (e.g. inside a modal tab) */
   compact?: boolean
 }
@@ -75,11 +80,16 @@ const MCP_TOOLS: McpToolConfig[] = [
  * instructions, then a Try it checklist. Cursor and VS Code include a one-click
  * Install action. Reused in project settings Overview and Connect project modal.
  */
-export function MCPSection({ compact = false }: MCPSectionProps) {
+export function MCPSection({ projectName, compact = false }: MCPSectionProps) {
   const t = useT()
   const [selectedToolId, setSelectedToolId] = useState<McpToolId>('claude-code')
   const [copied, setCopied] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null)
+
+  const tryItPrompts = useMemo(
+    () => getMcpTryItPrompts(projectName),
+    [projectName],
+  )
 
   const selectedTool = useMemo(
     () =>
@@ -197,29 +207,32 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
         )}
       </p>
       <ul className="space-y-2">
-        {MCP_TRY_IT_PROMPTS.map((prompt) => (
-          <li
-            key={prompt}
-            className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2"
-          >
-            <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
-              {t(prompt)}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-              onClick={() => handleCopyPrompt(prompt)}
+        {MCP_TRY_IT_PROMPT_TEMPLATES.map((template, index) => {
+          const prompt = tryItPrompts[index]!
+          return (
+            <li
+              key={template}
+              className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2"
             >
-              {copiedPrompt === prompt ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-              {t('Copy')}
-            </Button>
-          </li>
-        ))}
+              <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
+                {t(template).replaceAll('{projectName}', projectName)}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
+                onClick={() => handleCopyPrompt(prompt)}
+              >
+                {copiedPrompt === prompt ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {t('Copy')}
+              </Button>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )

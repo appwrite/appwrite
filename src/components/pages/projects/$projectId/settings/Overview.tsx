@@ -1067,7 +1067,7 @@ export function ProjectSettingsOverview({
           />
 
           {/* MCP Server Section */}
-          <MCPSection />
+          <MCPSection projectName={project.name} />
 
           {/* Change Organization Section */}
           <ChangeOrganizationSection
