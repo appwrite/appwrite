@@ -30,6 +30,7 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 
 class Update extends Base
 {
@@ -245,7 +246,7 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             $providerAdapter = $vcsForInstallation($installation);
-            if ($providerAdapter->supportsRepositoryWebhooks()) {
+            if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                 try {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);

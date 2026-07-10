@@ -26,6 +26,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -222,7 +223,7 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             $providerAdapter = $vcsForInstallation($installation);
-            if ($providerAdapter->supportsRepositoryWebhooks()) {
+            if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                 try {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
