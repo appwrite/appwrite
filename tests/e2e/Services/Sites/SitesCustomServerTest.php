@@ -135,6 +135,21 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
 
+        /**
+         * Test for FAILURE
+         * Reject buildRuntime values outside _APP_SITES_RUNTIMES (static-1,node-22 in test env).
+         */
+        $site = $this->createSite([
+            'buildRuntime' => 'node-24',
+            'framework' => 'other',
+            'name' => 'Unsupported Runtime Site',
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $site['body']['type']);
+        $this->assertStringContainsString('Runtime "node-24" is not supported', $site['body']['message']);
+
         $this->cleanupSite($siteId);
     }
 
