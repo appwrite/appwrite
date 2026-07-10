@@ -62,6 +62,7 @@ export function isUsageDateRangeBeyondRetention(
 const SHORTER_USAGE_DATE_RANGE_PRESET_CANDIDATES = [
   '14d',
   '7d',
+  'yesterday',
   'today',
   '24h',
   '6h',

@@ -123,14 +123,16 @@ export function resolveUsageChartFetchBounds(
     if (preset) return preset.getRange()
   }
 
-  const rollingPreset = inferRollingPresetByDuration(dateRange)
-  if (rollingPreset) return rollingPreset.getRange()
+  // Prefer exact / calendar matches before duration-based rolling inference
+  // so Today (midnight–midnight) is not treated as Last 24 hours.
+  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
+  if (matchedPreset) return matchedPreset.getRange()
 
   const inferredPreset = inferUsageDateRangePresetFromStoredRange(dateRange)
   if (inferredPreset) return inferredPreset.getRange()
 
-  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
-  if (matchedPreset) return matchedPreset.getRange()
+  const rollingPreset = inferRollingPresetByDuration(dateRange)
+  if (rollingPreset) return rollingPreset.getRange()
 
   return resolveUsageDateBounds(dateRange) as { from: Date; to: Date }
 }
@@ -142,14 +144,14 @@ export function getUsageChartQueryRangeKeyPart(
 ): string {
   if (presetId) return `preset:${presetId}`
 
-  const rollingPreset = inferRollingPresetByDuration(dateRange)
-  if (rollingPreset) return `preset:${rollingPreset.value}`
+  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
+  if (matchedPreset) return `preset:${matchedPreset.value}`
 
   const inferredPreset = inferUsageDateRangePresetFromStoredRange(dateRange)
   if (inferredPreset) return `preset:${inferredPreset.value}`
 
-  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
-  if (matchedPreset) return `preset:${matchedPreset.value}`
+  const rollingPreset = inferRollingPresetByDuration(dateRange)
+  if (rollingPreset) return `preset:${rollingPreset.value}`
 
   const { from, to } = resolveUsageDateBounds(dateRange)
   return `${from.toISOString()}|${to.toISOString()}`
@@ -161,6 +163,7 @@ export function shouldRefetchUsageChartOnMount(rangeKeyPart: string): boolean {
     rangeKeyPart.startsWith('preset:6h') ||
     rangeKeyPart.startsWith('preset:24h') ||
     rangeKeyPart.startsWith('preset:today') ||
+    rangeKeyPart.startsWith('preset:yesterday') ||
     rangeKeyPart.startsWith('preset:7d') ||
     rangeKeyPart.startsWith('preset:14d') ||
     rangeKeyPart.startsWith('preset:30d')

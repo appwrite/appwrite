@@ -68,6 +68,14 @@ export const USAGE_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
         },
       },
       {
+        label: 'Yesterday',
+        value: 'yesterday',
+        getRange: () => {
+          const day = subDays(new Date(), 1)
+          return { from: startOfDay(day), to: endOfDay(day) }
+        },
+      },
+      {
         label: 'Last 7 days',
         value: '7d',
         getRange: () => ({
@@ -130,6 +138,12 @@ export function inferRollingPresetByDuration(
 ): UsageDateRangePreset | null {
   if (!range?.from || !range?.to) return null
 
+  // Full calendar-day ranges (Today, Last 7 days, …) are not rolling windows.
+  // Today is ~24h long and would otherwise match the rolling 24h preset.
+  if (isFullCalendarDayRange(range.from, range.to)) {
+    return null
+  }
+
   const durationMs = range.to.getTime() - range.from.getTime()
   const hourMs = 60 * 60 * 1000
 
@@ -153,6 +167,7 @@ export function dateRangeMatchesUsagePreset(
 
   if (
     preset.value === 'today' ||
+    preset.value === 'yesterday' ||
     preset.value === '7d' ||
     preset.value === '14d' ||
     preset.value === '30d'
@@ -197,12 +212,33 @@ export function findMatchingUsageDateRangePreset(
 
 /**
  * Infer preset from stored absolute timestamps (legacy prefs without `preset`).
- * Rolling windows match by duration; calendar presets match by day span.
+ * Calendar day presets are checked before rolling windows so Today is not
+ * mistaken for Last 24 hours (both are ~24h long).
  */
 export function inferUsageDateRangePresetFromStoredRange(
   range: DateRange | undefined,
 ): UsageDateRangePreset | null {
   if (!range?.from || !range?.to) return null
+
+  if (isFullCalendarDayRange(range.from, range.to)) {
+    if (isSameDay(range.from, range.to)) {
+      const now = new Date()
+      if (isSameDay(range.from, now)) {
+        return getUsageDateRangePresetByValue('today') ?? null
+      }
+      if (isSameDay(range.from, subDays(now, 1))) {
+        return getUsageDateRangePresetByValue('yesterday') ?? null
+      }
+      return null
+    }
+
+    const daySpan = differenceInCalendarDays(range.to, range.from) + 1
+    if (daySpan === 7) return getUsageDateRangePresetByValue('7d') ?? null
+    if (daySpan === 14) return getUsageDateRangePresetByValue('14d') ?? null
+    if (daySpan === 30) return getUsageDateRangePresetByValue('30d') ?? null
+
+    return null
+  }
 
   const durationMs = range.to.getTime() - range.from.getTime()
   const hourMs = 60 * 60 * 1000
@@ -212,19 +248,6 @@ export function inferUsageDateRangePresetFromStoredRange(
       return getUsageDateRangePresetByValue(`${hours}h`) ?? null
     }
   }
-
-  if (!isFullCalendarDayRange(range.from, range.to)) {
-    return null
-  }
-
-  if (isSameDay(range.from, range.to)) {
-    return getUsageDateRangePresetByValue('today') ?? null
-  }
-
-  const daySpan = differenceInCalendarDays(range.to, range.from) + 1
-  if (daySpan === 7) return getUsageDateRangePresetByValue('7d') ?? null
-  if (daySpan === 14) return getUsageDateRangePresetByValue('14d') ?? null
-  if (daySpan === 30) return getUsageDateRangePresetByValue('30d') ?? null
 
   return null
 }
