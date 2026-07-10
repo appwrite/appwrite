@@ -18,6 +18,7 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\SignatureVerificationException;
 
 class Create extends Action
 {
@@ -69,7 +70,14 @@ class Create extends Action
         $signature = $request->getHeaderLine('x-hub-signature-256', '');
         $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
-        $valid = empty($secretKey) ? true : $vcs->validateWebhookEvent($payload, $signature, $secretKey);
+        $valid = true;
+        if (!empty($secretKey)) {
+            try {
+                $vcs->verifySignature($payload, $signature, $secretKey);
+            } catch (SignatureVerificationException) {
+                $valid = false;
+            }
+        }
         Span::add('vcs.github.event.signature.valid', $valid);
 
         if (!$valid) {
