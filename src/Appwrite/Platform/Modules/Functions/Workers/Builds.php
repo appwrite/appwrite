@@ -90,6 +90,7 @@ class Builds extends Action
             ->inject('usage')
             ->inject('publisherForUsage')
             ->inject('vcsForProvider')
+            ->inject('vcsForInstallation')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
@@ -116,6 +117,7 @@ class Builds extends Action
         Context $usage,
         UsagePublisher $publisherForUsage,
         callable $vcsForProvider,
+        callable $vcsForInstallation,
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForSites,
@@ -160,6 +162,7 @@ class Builds extends Action
                     $dbForPlatform,
                     $dbForProject,
                     $vcs,
+                    $vcsForInstallation,
                     $project,
                     $resource,
                     $deployment,
@@ -196,6 +199,7 @@ class Builds extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Git $vcs,
+        callable $vcsForInstallation,
         Document $project,
         Document $resource,
         Document $deployment,
@@ -312,11 +316,9 @@ class Builds extends Action
         if ($isVcsEnabled) {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
             try {
-                $vcs->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+                $vcs = $vcsForInstallation($installation);
             } catch (\Exception $e) {
                 if ($e->getCode() === 404
                     && $resource->getAttribute('installationId', '') === $installationId) {
