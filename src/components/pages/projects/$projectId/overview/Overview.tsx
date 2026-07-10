@@ -956,80 +956,82 @@ export function View({ projectId, initialData }: ViewProps) {
         {/* Charts card - usage stats (cloud only) */}
         {visibleOverviewChartTabs.length > 0 && (
           <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">
-            {/* Metric tabs + date range - same row */}
-            <div className="border-b border-border px-5">
-              <div className="flex min-w-0 items-center gap-3">
-                <HorizontalScrollFade
-                  className="min-w-0 flex-1"
-                  fadeFromClassName="from-card/50"
-                >
-                  <TooltipProvider delayDuration={0}>
-                  <div className="flex min-w-max" role="tablist">
-                    {overviewTabs.map((tab, index) => {
-                      const isActive = activeTab === tab.id
-
-                      return (
-                        <div key={tab.id} className="flex">
-                          {/* Separator */}
-                          {index > 0 && (
-                            <div className="my-2.5 w-px bg-border" />
-                          )}
-
-                          {/* Tab Button */}
-                          <button
-                            role="tab"
-                            aria-selected={isActive}
-                            onClick={() => handleOverviewTabChange(tab.id)}
-                            className={cn(
-                              'relative flex min-w-[168px] flex-col gap-0.5 px-4 py-3 text-start cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:ps-0 rounded-sm',
-                              'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                              isActive
-                                ? 'text-foreground'
-                                : 'text-muted-foreground hover:text-foreground/80',
-                            )}
-                          >
-                            <OverviewTabMetricContent
-                              tabId={tab.id}
-                              isLoading={tab.isLoading}
-                              value={tab.value}
-                              change={tab.change}
-                              isActive={isActive}
-                            />
-                            <span
-                              className={cn(
-                                'text-[12px]',
-                                isActive
-                                  ? 'text-muted-foreground'
-                                  : 'text-muted-foreground/70',
-                              )}
-                            >
-                              {t(tab.label)}
-                            </span>
-
-                            {/* Active indicator */}
-                            {isActive && (
-                              <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
-                            )}
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  </TooltipProvider>
-                </HorizontalScrollFade>
-                <div className="flex shrink-0 items-center gap-2 py-3">
+            {/* Filters first, then metric tabs — stacked below @[700px], side-by-side above */}
+            <div className="border-b border-border">
+              <div className="flex min-w-0 flex-col @[700px]:flex-row @[700px]:items-center @[700px]:gap-3 @[700px]:px-5">
+                <div className="order-1 flex w-full min-w-0 flex-col gap-2 px-4 py-2.5 @[520px]:flex-row @[520px]:flex-wrap @[520px]:items-center @[700px]:order-2 @[700px]:w-auto @[700px]:shrink-0 @[700px]:px-0 @[700px]:py-3">
                   <UsageChartIntervalToggle
                     value={chartInterval}
                     onValueChange={setChartInterval}
                     dateRange={dashboardChartDateRange}
-                    className="h-9"
+                    className="h-9 w-full @[520px]:w-fit"
                   />
                   <DateRangePicker
                     dateRange={dashboardChartDateRange}
                     onDateRangeChange={setDashboardChartDateRange}
-                    className="h-9"
+                    className="h-9 w-full min-w-0 @[520px]:min-w-0 @[520px]:flex-1 @[700px]:w-auto @[700px]:min-w-[180px] @[700px]:flex-none"
+                    popoverContentAlign="end"
                   />
                 </div>
+                <div
+                  className="order-1 h-px w-full bg-border @[700px]:hidden"
+                  aria-hidden
+                />
+                <HorizontalScrollFade
+                  className="order-2 min-w-0 flex-1 px-4 @[700px]:order-1 @[700px]:px-0"
+                  fadeFromClassName="from-card/50"
+                >
+                  <TooltipProvider delayDuration={0}>
+                    <div className="flex min-w-max" role="tablist">
+                      {overviewTabs.map((tab, index) => {
+                        const isActive = activeTab === tab.id
+
+                        return (
+                          <div key={tab.id} className="flex">
+                            {index > 0 && (
+                              <div className="my-2.5 w-px bg-border" />
+                            )}
+
+                            <button
+                              role="tab"
+                              aria-selected={isActive}
+                              onClick={() => handleOverviewTabChange(tab.id)}
+                              className={cn(
+                                'relative flex min-w-[132px] flex-col gap-0.5 px-3 py-3 text-start cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:ps-0 rounded-sm @[700px]:min-w-[168px] @[700px]:px-4',
+                                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                isActive
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground hover:text-foreground/80',
+                              )}
+                            >
+                              <OverviewTabMetricContent
+                                tabId={tab.id}
+                                isLoading={tab.isLoading}
+                                value={tab.value}
+                                change={tab.change}
+                                isActive={isActive}
+                              />
+                              <span
+                                className={cn(
+                                  'text-[12px]',
+                                  isActive
+                                    ? 'text-muted-foreground'
+                                    : 'text-muted-foreground/70',
+                                )}
+                              >
+                                {t(tab.label)}
+                              </span>
+
+                              {isActive && (
+                                <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
+                              )}
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </TooltipProvider>
+                </HorizontalScrollFade>
               </div>
             </div>
 
