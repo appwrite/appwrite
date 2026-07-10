@@ -1084,6 +1084,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'This database uses a serverless connection pool. There is no fixed per-instance limit.': 'מסד נתונים זה משתמש במאגר חיבורים Serverless. אין מגבלה קבועה לכל מופע.',
   'This database will not be backed up on your current plan.': 'מסד נתונים זה לא יגובה בתוכנית הנוכחית שלכם.',
   'This dedicated database could not be loaded.': 'לא ניתן היה לטעון את מסד הנתונים הייעודי הזה.',
+  'This feature is not available on the current console version.':
+    'התכונה הזו אינה זמינה בגרסת הקונסולה הנוכחית.',
   'This may take a few seconds...': 'זה עשוי לקחת מספר שניות...',
   'This relationship is missing its related table metadata.': 'לקשר זה חסרים המטא-נתונים של הטבלה המקושרת.',
   'This schema has no user tables or views to visualize yet.': 'לסכימה זו אין עדיין טבלאות משתמש או תצוגות להמחשה.',

@@ -1,8 +1,14 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
-import { isDatabaseRouteKind } from '@/lib/database-routes'
+import {
+  isDatabaseRouteKind,
+  isProductDatabaseRouteKindEnabled,
+  type DatabaseRouteKind,
+} from '@/lib/database-routes'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { throwRedirectPostgresDbKind } from '@/lib/database-route-redirects'
 import { DatabaseOperationsLockProvider } from '@/components/pages/projects/$projectId/databases/_components/DatabaseOperationsLockContext'
+import { DatabaseTypeUnavailable } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeUnavailable'
 import {
   productRouteKindQueryOptions,
   projectQueryOptions,
@@ -24,6 +30,16 @@ export const Route = createFileRoute(
         params: { projectId },
         replace: true,
       })
+    }
+
+    const features = getActiveProfileFeatures()
+    if (
+      !isProductDatabaseRouteKindEnabled(
+        dbKind as DatabaseRouteKind,
+        features,
+      )
+    ) {
+      return
     }
 
     // Pin product API routing before any get/probe so VectorsDB never hits DocumentsDB.
@@ -82,7 +98,16 @@ export const Route = createFileRoute(
 })
 
 function DatabaseKindLayout() {
-  const { projectId, databaseId } = Route.useParams()
+  const { projectId, dbKind, databaseId } = Route.useParams()
+  const features = getActiveProfileFeatures()
+
+  if (
+    isDatabaseRouteKind(dbKind) &&
+    !isProductDatabaseRouteKindEnabled(dbKind, features)
+  ) {
+    return <DatabaseTypeUnavailable projectId={projectId} />
+  }
+
   return (
     <DatabaseOperationsLockProvider
       projectId={projectId}

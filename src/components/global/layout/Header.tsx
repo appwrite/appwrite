@@ -1127,11 +1127,6 @@ export function ConsoleHeader({
                 </button>
               ) : null}
 
-              {/* Notifications */}
-              <div className="flex shrink-0">
-                <NotificationCenterPopover />
-              </div>
-
               {/* Feedback - hidden on small containers */}
               <div className="hidden @[800px]:flex shrink-0">
                 <FeedbackPopover
@@ -1140,6 +1135,11 @@ export function ConsoleHeader({
                   projectId={projectId ?? ''}
                   billingPlanId={organizationPlan?.$id}
                 />
+              </div>
+
+              {/* Notifications */}
+              <div className="flex shrink-0">
+                <NotificationCenterPopover />
               </div>
 
               {/* Support - hidden on small containers */}

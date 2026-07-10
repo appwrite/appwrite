@@ -1,4 +1,5 @@
 import { DatabaseType } from '@appwrite.io/console'
+import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
 
 /**
@@ -15,6 +16,26 @@ const KIND_SET: ReadonlySet<string> = new Set([
 
 export function isDatabaseRouteKind(value: string): value is DatabaseRouteKind {
   return KIND_SET.has(value)
+}
+
+/** Whether the console profile exposes this product database route tree. */
+export function isProductDatabaseRouteKindEnabled(
+  dbKind: DatabaseRouteKind,
+  features: ConsoleProfileFeatures,
+): boolean {
+  if (dbKind === 'documentsdb') return features.dedicatedDbsDocumentsDB
+  if (dbKind === 'vectorsdb') return features.dedicatedDbsVectorsDB
+  return true
+}
+
+/** Whether API calls for this product database type are allowed. */
+export function isProductDatabaseTypeEnabled(
+  type: DatabaseType,
+  features: ConsoleProfileFeatures,
+): boolean {
+  if (type === DatabaseType.Documentsdb) return features.dedicatedDbsDocumentsDB
+  if (type === DatabaseType.Vectorsdb) return features.dedicatedDbsVectorsDB
+  return true
 }
 
 export function databaseRouteKindFromApiType(

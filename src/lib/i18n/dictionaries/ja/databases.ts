@@ -1042,6 +1042,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'This database uses a serverless connection pool. There is no fixed per-instance limit.': 'このデータベースはサーバーレス接続プールを使用しています。インスタンスごとの固定上限はありません。',
   'This database will not be backed up on your current plan.': '現在のプランではこのデータベースはバックアップされません。',
   'This dedicated database could not be loaded.': 'この専用データベースを読み込めませんでした。',
+  'This feature is not available on the current console version.':
+    'この機能は現在のコンソールバージョンでは利用できません。',
   'This may take a few seconds...': '数秒かかる場合があります...',
   'This relationship is missing its related table metadata.': 'このリレーションには関連テーブルのメタデータがありません。',
   'This schema has no user tables or views to visualize yet.': 'このスキーマには可視化するユーザーテーブルまたはビューがまだありません。',

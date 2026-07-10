@@ -41,6 +41,8 @@ import {
 import { getCollectionAttributeKey } from '@/lib/databases/collection-indexable-attributes'
 import {
   databaseRouteKindFromApiType,
+  isProductDatabaseRouteKindEnabled,
+  isProductDatabaseTypeEnabled,
   type DatabaseRouteKind,
 } from '@/lib/database-routes'
 import {
@@ -371,6 +373,9 @@ export function seedDatabaseProductRouteKind(
   databaseId: string,
   dbKind: DatabaseRouteKind,
 ): void {
+  const features = getActiveProfileFeatures()
+  if (!isProductDatabaseRouteKindEnabled(dbKind, features)) return
+
   const backend = routeKindToDatabaseType(dbKind)
   const key = databaseModelCacheKey(projectId, databaseId)
   const expiresAt = Date.now() + DEFAULT_STALE_TIME
@@ -916,8 +921,9 @@ export async function resolveProductRouteKindForDatabase(
 ): Promise<DatabaseRouteKind | null> {
   if (!projectId || !databaseId) return null
 
+  const features = getActiveProfileFeatures()
   const cachedType = readCachedDatabaseType(projectId, databaseId)
-  if (cachedType) {
+  if (cachedType && isProductDatabaseTypeEnabled(cachedType, features)) {
     return databaseRouteKindFromApiType(cachedType)
   }
 
@@ -944,8 +950,9 @@ export function productRouteKindQueryOptions(
   return queryOptions({
     queryKey: ['database', 'product-route-kind', projectId, databaseId],
     queryFn: async () => {
+      const features = getActiveProfileFeatures()
       const cachedType = readCachedDatabaseType(projectId!, databaseId!)
-      if (cachedType) {
+      if (cachedType && isProductDatabaseTypeEnabled(cachedType, features)) {
         return databaseRouteKindFromApiType(cachedType)
       }
       return resolveProductRouteKindForDatabase(projectId!, databaseId!)
