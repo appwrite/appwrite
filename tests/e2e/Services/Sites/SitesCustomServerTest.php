@@ -1321,6 +1321,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $deploymentIdDefaultActive = $deployment['body']['$id'] ?? '';
+        $this->assertNotEmpty($deploymentIdDefaultActive);
 
         $this->assertEventually(function () use ($siteId, $deploymentIdDefaultActive) {
             $deployment = $this->getDeployment($siteId, $deploymentIdDefaultActive);
