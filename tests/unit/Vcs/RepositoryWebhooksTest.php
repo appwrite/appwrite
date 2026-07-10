@@ -14,10 +14,24 @@ use Utopia\VCS\Adapter\Git;
 
 final class RepositoryWebhooksTest extends TestCase
 {
-    public function testSkipsWhenAdapterDoesNotRequireWebhook(): void
+    public function testSkipsWhenAdapterHasNoWebhookScopes(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('supportsRepositoryWebhooks')->willReturn(false);
+        $adapter->method('getSupportedWebhookScopes')->willReturn([]);
+        $adapter->expects($this->never())->method('createWebhook');
+
+        $db = $this->createMock(Database::class);
+        $db->expects($this->never())->method('count');
+
+        $installation = new Document(['$sequence' => 1, 'provider' => 'github']);
+
+        $this->ensure($adapter, $installation, $db, $this->factory('secret'));
+    }
+
+    public function testPrefersInstallationScopeOverRepository(): void
+    {
+        $adapter = $this->createMock(Git::class);
+        $adapter->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_INSTALLATION, Git::WEBHOOK_SCOPE_REPOSITORY]);
         $adapter->expects($this->never())->method('createWebhook');
 
         $db = $this->createMock(Database::class);
@@ -31,7 +45,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testCreatesWebhookWhenNoExistingConnection(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('supportsRepositoryWebhooks')->willReturn(true);
+        $adapter->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_REPOSITORY]);
         $adapter->expects($this->once())
             ->method('createWebhook')
             ->with('owner', 'repo', 'https://example.com/v1/vcs/gitea/events', 'secret')
@@ -48,7 +62,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testSkipsWhenRepositoryAlreadyConnected(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('supportsRepositoryWebhooks')->willReturn(true);
+        $adapter->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_REPOSITORY]);
         $adapter->expects($this->never())->method('createWebhook');
 
         $db = $this->createMock(Database::class);
@@ -62,7 +76,7 @@ final class RepositoryWebhooksTest extends TestCase
     public function testAdapterFailureIsWrapped(): void
     {
         $adapter = $this->createMock(Git::class);
-        $adapter->method('supportsRepositoryWebhooks')->willReturn(true);
+        $adapter->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_REPOSITORY]);
         $adapter->method('createWebhook')->willThrowException(new \RuntimeException('provider unreachable'));
 
         $db = $this->createMock(Database::class);
