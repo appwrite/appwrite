@@ -147,7 +147,7 @@ class Builds extends Action
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                $vcs = $vcsForProvider('github');
+                $templateVcs = $vcsForProvider('github');
                 $this->buildDeployment(
                     $deviceForFunctions,
                     $deviceForSites,
@@ -161,7 +161,7 @@ class Builds extends Action
                     $publisherForUsage,
                     $dbForPlatform,
                     $dbForProject,
-                    $vcs,
+                    $templateVcs,
                     $vcsForInstallation,
                     $project,
                     $resource,
@@ -198,7 +198,7 @@ class Builds extends Action
         UsagePublisher $publisherForUsage,
         Database $dbForPlatform,
         Database $dbForProject,
-        Git $vcs,
+        Git $templateVcs,
         callable $vcsForInstallation,
         Document $project,
         Document $resource,
@@ -312,13 +312,14 @@ class Builds extends Action
         $isVcsEnabled = ! empty($providerRepositoryId);
         $owner = '';
         $repositoryName = '';
+        $providerAdapter = null;
 
         if ($isVcsEnabled) {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
 
             try {
-                $vcs = $vcsForInstallation($installation);
+                $providerAdapter = $vcsForInstallation($installation);
             } catch (\Exception $e) {
                 if ($e->getCode() === 404
                     && $resource->getAttribute('installationId', '') === $installationId) {
@@ -351,7 +352,7 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '-template';
 
-                    $gitCloneCommandForTemplate = $vcs->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $templateVcs->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
 
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
@@ -409,8 +410,8 @@ class Builds extends Action
                 $rootDirectory = \ltrim($rootDirectory, '.');
                 $rootDirectory = \ltrim($rootDirectory, '/');
 
-                $owner = $vcs->getOwnerName($providerInstallationId);
-                $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
+                $owner = $providerAdapter->getOwnerName($providerInstallationId);
+                $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
 
                 $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
                 $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
@@ -425,7 +426,7 @@ class Builds extends Action
                     $cloneType = Git::CLONE_TYPE_COMMIT;
                 }
 
-                $gitCloneCommand = $vcs->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
+                $gitCloneCommand = $providerAdapter->generateCloneCommand($cloneOwner, $cloneRepository, $cloneVersion, $cloneType, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
 
@@ -471,7 +472,7 @@ class Builds extends Action
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '/template';
 
-                    $gitCloneCommandForTemplate = $vcs->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $templateVcs->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -505,7 +506,7 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                     $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
-                    $deployment->setAttribute('providerCommitUrl', $vcs->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
+                    $deployment->setAttribute('providerCommitUrl', $providerAdapter->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                         'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
                         'providerCommitAuthorUrl' => $deployment->getAttribute('providerCommitAuthorUrl'),
@@ -570,7 +571,7 @@ class Builds extends Action
 
                 Span::add('build.source_size', $deployment->getAttribute('sourceSize'));
 
-                $this->runGitAction('processing', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('processing', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             Span::add('timings.source', \round(\microtime(true) - $phaseStart, 3));
@@ -599,7 +600,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('building', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             $deploymentModel = new Deployment();
@@ -987,7 +988,7 @@ class Builds extends Action
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+                $this->runGitAction('ready', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             /** Set auto deploy */
@@ -1236,7 +1237,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform, true);
+                $this->runGitAction('failed', $providerAdapter, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform, true);
             }
 
             // Let the worker harness record internal errors via the span and logger.
