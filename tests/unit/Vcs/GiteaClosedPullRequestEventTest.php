@@ -63,7 +63,7 @@ final class GiteaClosedPullRequestEventTest extends TestCase
                 return true;
             }));
 
-        $publisherForBuilds = $this->createMock(BuildPublisher::class);
+        $publisherForBuilds = $this->createStub(BuildPublisher::class);
 
         $this->callHandler('handlePullRequestEvent', [
             'action' => 'closed',
