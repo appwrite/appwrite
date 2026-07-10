@@ -13,9 +13,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
-use OpenRuntimes\Orchestrator\Jobs as JobsClient;
 use Utopia\Cache\Cache;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -66,7 +64,6 @@ class Jobs extends Action
             ->inject('publisherForUsage')
             ->inject('usage')
             ->inject('deviceForBuilds')
-            ->inject('jobs')
             ->inject('gitHub')
             ->inject('cache')
             ->inject('locks')
@@ -85,7 +82,6 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         UsageContext $usage,
         Device $deviceForBuilds,
-        JobsClient $jobs,
         GitHub $github,
         Cache $cache,
         callable $locks,
@@ -97,7 +93,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $jobs, $github, $cache, $deploymentId): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $github, $cache, $deploymentId): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -112,13 +108,10 @@ class Jobs extends Action
             }
 
             // The build writes its output onto the mounted volume before build.sh
-            // exits, so the exit callback is a truthful completion signal. A
-            // template push only finalizes when it fails (success just submits
-            // the build job, whose own exit finalizes later).
-            $finalizing = \in_array($event->event, ['orchestrator.job.exit', 'appwrite.template.push'], true);
+            // exits, so the exit callback is a truthful completion signal.
+            $finalizing = $event->event === 'orchestrator.job.exit';
 
             $deployment = match ($event->event) {
-                'appwrite.template.push' => $this->onTemplatePush($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $jobs, $github, $usage, $publisherForUsage),
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
                 'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
@@ -157,114 +150,14 @@ class Jobs extends Action
 
         // First build output means the build is running: promote the queued
         // deployment to 'building' and stamp its start (mirrors the executor).
-        if ($deployment->getAttribute('status') === 'waiting') {
+        // 'processing' occurs when the Builds worker prepared the source (the
+        // template-into-repo push) before handing the build to the jobs-service.
+        if (\in_array($deployment->getAttribute('status'), ['waiting', 'processing'], true)) {
             $update['status'] = 'building';
             $update['buildStartedAt'] = DateTime::now();
         }
 
         return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update));
-    }
-
-    /**
-     * Merge a template into a VCS-connected function's repository, push it as a
-     * commit, and submit the build job for that commit. This is the one VCS
-     * flow needing a git *write*, which the jobs-service artifact system has no
-     * primitive for — so it runs here (mirroring the executor Builds worker)
-     * before the build is handed to the jobs-service. A failed push finalizes
-     * the deployment as failed; the build's own exit callback finalizes success.
-     */
-    private function onTemplatePush(
-        Database $dbForProject,
-        Database $dbForPlatform,
-        Document $project,
-        Document $deployment,
-        array $data,
-        JobsClient $jobs,
-        GitHub $github,
-        UsageContext $usage,
-        UsagePublisher $publisherForUsage,
-    ): Document {
-        $function = $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId'));
-
-        try {
-            $installation = $dbForPlatform->getDocument('installations', $deployment->getAttribute('installationId', ''));
-            $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-            if ($function->isEmpty() || $providerInstallationId === '') {
-                throw new \Exception('Function or installation not found.');
-            }
-            $github->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''), System::getEnv('_APP_VCS_GITHUB_APP_ID', ''));
-
-            $commitHash = $this->pushTemplate($github, $function, $deployment, new Document($data['template'] ?? []));
-
-            $owner = $deployment->getAttribute('providerRepositoryOwner', '');
-            $repository = $deployment->getAttribute('providerRepositoryName', '');
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'providerCommitHash' => $commitHash,
-                'providerCommitAuthorUrl' => APP_VCS_GITHUB_URL,
-                'providerCommitAuthor' => APP_VCS_GITHUB_USERNAME,
-                'providerCommitMessage' => "Create '" . $function->getAttribute('name', '') . "' function",
-                'providerCommitUrl' => "https://github.com/{$owner}/{$repository}/commit/{$commitHash}",
-            ]));
-
-            $source = [
-                'url' => $github->getRepositoryPresignedUrl($owner, $repository, $commitHash),
-                'subdir' => $function->getAttribute('providerRootDirectory', ''),
-            ];
-            $jobs->create(...Job::build($project, $function, $deployment, $data['platform'] ?? [], $source));
-
-            return $deployment;
-        } catch (\Throwable $error) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, $error->getMessage(), $usage, $publisherForUsage, $github);
-        }
-    }
-
-    /**
-     * Clone the function's repository, merge the template into it and push the
-     * result, returning the new commit hash. Replicates the executor Builds
-     * worker's clone + rsync + commit + push.
-     */
-    private function pushTemplate(GitHub $github, Document $function, Document $deployment, Document $template): string
-    {
-        $owner = $deployment->getAttribute('providerRepositoryOwner', '');
-        $repository = $deployment->getAttribute('providerRepositoryName', '');
-        $branch = $deployment->getAttribute('providerBranch') ?: $function->getAttribute('providerBranch', 'main');
-
-        $rootDirectory = \ltrim(\ltrim(\rtrim($function->getAttribute('providerRootDirectory', ''), '/'), '.'), '/');
-        $templateRootDirectory = \ltrim(\ltrim(\rtrim($template->getAttribute('rootDirectory', ''), '/'), '.'), '/');
-
-        $tmpDirectory = '/tmp/builds/' . $deployment->getId();
-        $repoDirectory = $tmpDirectory . '/code';
-        $templateDirectory = $tmpDirectory . '/template';
-        $stdout = '';
-        $stderr = '';
-
-        try {
-            if (Console::execute($github->generateCloneCommand($owner, $repository, $branch, GitHub::CLONE_TYPE_BRANCH, $repoDirectory, $rootDirectory), '', $stdout, $stderr) !== 0) {
-                throw new \Exception('Unable to clone repository: ' . $stderr);
-            }
-            if (Console::execute($github->generateCloneCommand($template->getAttribute('ownerName', ''), $template->getAttribute('repositoryName', ''), $template->getAttribute('referenceValue', ''), $template->getAttribute('referenceType', ''), $templateDirectory, $templateRootDirectory), '', $stdout, $stderr) !== 0) {
-                throw new \Exception('Unable to clone template repository: ' . $stderr);
-            }
-
-            Console::execute('mkdir -p ' . \escapeshellarg($repoDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
-            Console::execute('mkdir -p ' . \escapeshellarg($templateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-
-            // Merge the template into the repo, then commit + push the branch.
-            Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($templateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($repoDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
-
-            $message = \escapeshellarg("Create '" . $function->getAttribute('name', '') . "' function");
-            if (Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($repoDirectory) . ' && git checkout -b ' . \escapeshellarg($branch) . ' && git add . && git commit -m ' . $message . ' && git push origin ' . \escapeshellarg($branch), '', $stdout, $stderr) !== 0) {
-                throw new \Exception('Unable to push to repository: ' . $stderr);
-            }
-
-            if (Console::execute('cd ' . \escapeshellarg($repoDirectory) . ' && git rev-parse HEAD', '', $stdout, $stderr) !== 0) {
-                throw new \Exception('Unable to resolve commit hash: ' . $stderr);
-            }
-
-            return \trim($stdout);
-        } finally {
-            Console::execute('rm -rf ' . \escapeshellarg($tmpDirectory), '', $stdout, $stderr);
-        }
     }
 
     /**

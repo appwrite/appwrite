@@ -6,7 +6,6 @@ use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
-use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -84,7 +83,6 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
-            ->inject('publisherForJobs')
             ->inject('jobs')
             ->inject('gitHub')
             ->inject('authorization')
@@ -107,7 +105,6 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
-        JobsPublisher $publisherForJobs,
         Jobs $jobs,
         GitHub $github,
         Authorization $authorization,
@@ -132,10 +129,10 @@ class Create extends Base
         ]);
 
         if (!empty($function->getAttribute('providerRepositoryId'))) {
-            // VCS-connected function: the template is merged into the user's repo
-            // and pushed as a commit, then that commit is built. The executor does
-            // the push inside the build job; the jobs backend does it in the jobs
-            // worker (which then submits the build for the resulting commit).
+            // VCS-connected function: the Builds worker merges the template into
+            // the user's repo, pushes it as a commit, then builds that commit —
+            // on the executor itself, or by submitting a job when
+            // _APP_BUILDS_BACKEND=orchestrator.
             $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
             $deployment = $this->redeployVcsFunction(
@@ -150,9 +147,7 @@ class Create extends Base
                 activate: $activate,
                 platform: $platform,
                 referenceType: $type,
-                reference: $reference,
-                jobs: $jobs,
-                publisherForJobs: $publisherForJobs
+                reference: $reference
             );
 
             $queueForEvents
