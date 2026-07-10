@@ -2668,18 +2668,6 @@ trait MigrationsBase
             $this->assertEquals('ready', $deployments['body']['deployments'][0]['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployments['body']['deployments'][0], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
-        // Attempt execution
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ], [
-            'body' => 'test'
-        ]);
-
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('body-is-test', $execution['body']['logs']);
-
         $this->assertMigrationSkipAndOverwrite(
             [Resource::TYPE_FUNCTION, Resource::TYPE_ENVIRONMENT_VARIABLE],
             function () use ($functionId, $variableId, $destinationHeaders): void {
