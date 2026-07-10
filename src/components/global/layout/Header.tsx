@@ -1137,14 +1137,14 @@ export function ConsoleHeader({
                 />
               </div>
 
-              {/* Notifications */}
-              <div className="flex shrink-0">
-                <NotificationCenterPopover />
-              </div>
-
               {/* Support - hidden on small containers */}
               <div className="hidden @[900px]:flex shrink-0">
                 <SupportPopover orgId={orgId} />
+              </div>
+
+              {/* Notifications */}
+              <div className="flex shrink-0">
+                <NotificationCenterPopover />
               </div>
 
               {/* Operator tools (render nothing when account is not an impersonator) */}
