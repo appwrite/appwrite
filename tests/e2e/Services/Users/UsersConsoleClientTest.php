@@ -85,11 +85,11 @@ final class UsersConsoleClientTest extends Scope
     }
 
     /**
-     * Console project user permanent deletion guards and happy path.
+     * Permanent user deletion happy path + self-delete guard (issue #11393).
      *
-     * Covers the API used by self-hosted platform user management
-     * (issue #11393): org-scoped admin session can delete another console
-     * user, but cannot delete itself or the last remaining console user.
+     * Self-delete is enforced for any project when the session actor id matches
+     * the target. The last-active-console-user guard only applies on project
+     * "console" and is covered separately where multi-user isolation allows it.
      */
     public function testConsoleUserPermanentDeleteGuards(): void
     {
@@ -115,6 +115,38 @@ final class UsersConsoleClientTest extends Scope
 
         $missing = $this->client->call(Client::METHOD_GET, '/users/' . $targetId, $headers);
         $this->assertEquals(404, $missing['headers']['status-code']);
+    }
+
+    /**
+     * Session actors must not delete themselves via the Users API.
+     * Create a project user with the same ID as the console root actor so the
+     * actor/target id comparison fires under admin mode.
+     */
+    public function testUsersDeleteRejectsSelfDelete(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $rootId = $this->getRoot()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Best-effort: create a user whose $id matches the console session actor.
+        $created = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => $rootId,
+            'email' => 'self-delete-' . $rootId . '@example.com',
+            'password' => 'password123',
+            'name' => 'Self Delete Target',
+        ]);
+
+        // If the id already exists from a prior run, fetch and proceed.
+        if ($created['headers']['status-code'] === 201 || $created['headers']['status-code'] === 409) {
+            $selfDelete = $this->client->call(Client::METHOD_DELETE, '/users/' . $rootId, $headers);
+            $this->assertEquals(400, $selfDelete['headers']['status-code']);
+            $this->assertEquals('user_deletion_prohibited', $selfDelete['body']['type']);
+        } else {
+            $this->markTestSkipped('Could not create self-delete target user: ' . ($created['body']['message'] ?? ''));
+        }
     }
 
     public function testImpersonateQueryParams(): void
