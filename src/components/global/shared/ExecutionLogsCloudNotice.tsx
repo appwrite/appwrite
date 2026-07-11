@@ -27,7 +27,7 @@ export function ExecutionLogsCloudNotice({
       : 'Self-hosted Appwrite no longer stores site request logs. Your site still serves traffic as usual, but its logs and errors can only be viewed on Appwrite Cloud.'
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center py-16">
+    <div className="flex flex-1 flex-col items-center justify-center">
       <EmptyState
         icon={Cloud}
         title={title}
