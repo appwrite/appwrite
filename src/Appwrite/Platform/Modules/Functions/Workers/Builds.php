@@ -622,10 +622,6 @@ class Builds extends Action
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
 
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
             if ($isVcsEnabled) {
                 $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }

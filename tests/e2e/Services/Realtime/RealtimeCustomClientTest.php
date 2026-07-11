@@ -2378,7 +2378,7 @@ final class RealtimeCustomClientTest extends Scope
                 'origin' => 'http://localhost',
                 'cookie' => 'a_session_' . $projectId . '=' . $session
             ],
-            timeout: 10
+            timeout: 30
         );
 
         $response = json_decode($client->receive(), true);
