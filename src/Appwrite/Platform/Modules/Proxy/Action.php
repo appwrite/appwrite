@@ -314,20 +314,24 @@ class Action extends PlatformAction
         $domainType = $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type', ''));
 
         if ($status === RULE_STATUS_CERTIFICATE_GENERATING) {
-            // DNS already verified for this custom domain.
+            // Custom domains reach this status after DNS verification. If an
+            // Appwrite-owned domain ever lands here, still require a public
+            // hostname so localhost/test TLDs do not hit Let's Encrypt.
+            $isAppwriteOwned = $owner === 'Appwrite';
             CertificateScheduler::enqueueGeneration(
                 $publisherForCertificates,
                 $project,
                 $domain,
                 $domainType,
-                skipRenewCheck: false,
-                requirePublicHostname: false,
+                skipRenewCheck: $isAppwriteOwned,
+                requirePublicHostname: $isAppwriteOwned,
             );
             return;
         }
 
         // Appwrite-owned auto domains are marked verified without a certificate.
         // Issue one when the hostname can receive a public certificate.
+        // Keep in sync with Functions\Http\Functions\Create (legacy pre-1.7 path).
         if ($owner === 'Appwrite' && $status === RULE_STATUS_VERIFIED) {
             CertificateScheduler::enqueueGeneration(
                 $publisherForCertificates,

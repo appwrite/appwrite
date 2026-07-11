@@ -442,7 +442,9 @@ class Create extends Base
                     ->from($ruleCreate)
                     ->trigger();
 
-                // Issue TLS cert for Appwrite-owned auto domain on public hostnames
+                // Keep in sync with Proxy\Action::scheduleCertificateForRule()
+                // (Appwrite-owned + verified branch). This class cannot reuse that
+                // helper because it does not extend Proxy\Action.
                 CertificateScheduler::enqueueGeneration(
                     $publisherForCertificates,
                     $project,

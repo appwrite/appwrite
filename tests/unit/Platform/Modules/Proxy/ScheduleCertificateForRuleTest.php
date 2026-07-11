@@ -103,6 +103,22 @@ final class ScheduleCertificateForRuleTest extends TestCase
         $this->assertSame('custom.customer.com', $events[0]['domain']['domain']);
     }
 
+    public function testCertificateGeneratingAppwriteOwnedLocalhostDoesNotEnqueue(): void
+    {
+        // Defensive: Appwrite-owned + generating must still honor public hostname guard.
+        $rule = new Document([
+            'domain' => 'fn123.functions.localhost',
+            'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+            'owner' => 'Appwrite',
+            'type' => 'deployment',
+            'deploymentResourceType' => 'function',
+        ]);
+
+        $this->action->schedule($this->certificatePublisher, $this->project, $rule);
+
+        $this->assertNull($this->publisher->getEvents(Event::CERTIFICATES_QUEUE_NAME));
+    }
+
     public function testUnverifiedNonAppwriteRuleDoesNotEnqueue(): void
     {
         $rule = new Document([
