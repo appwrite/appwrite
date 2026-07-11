@@ -28,6 +28,45 @@ final class FunctionsCustomServerTest extends Scope
     protected static array $testDeploymentCache = [];
     protected static array $testExecutionCache = [];
 
+    protected function getScheduledExecutionTimeLessThanOneMinute(): string
+    {
+        $timezone = new \DateTimeZone('UTC');
+        // Avoid the exact 60-second boundary to keep the test deterministic.
+        do {
+            $now = new \DateTimeImmutable('now', $timezone);
+            if ($now->format('s') !== '00') {
+                break;
+            }
+
+            \sleep(1);
+        } while (true);
+
+        $nextMinute = $now->modify('+1 minute');
+        $nextMinute = $nextMinute->setTime(
+            (int) $nextMinute->format('H'),
+            (int) $nextMinute->format('i'),
+            0,
+            0
+        );
+
+        return $nextMinute->format('Y-m-d\TH:i:s.vP');
+    }
+
+    protected function getScheduledExecutionTimeAfterOneMinute(int $minutes = 2): string
+    {
+        $timezone = new \DateTimeZone('UTC');
+        $scheduledAt = new \DateTimeImmutable('now', $timezone);
+        $scheduledAt = $scheduledAt->modify('+' . $minutes . ' minutes');
+        $scheduledAt = $scheduledAt->setTime(
+            (int) $scheduledAt->format('H'),
+            (int) $scheduledAt->format('i'),
+            0,
+            0
+        );
+
+        return $scheduledAt->format('Y-m-d\TH:i:s.vP');
+    }
+
     /**
      * Setup a test function with variables for independent tests (with static caching)
      */
@@ -1770,6 +1809,62 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
+    }
+
+    public function testCreateScheduledExecutionRequiresAsync(): void
+    {
+        $data = $this->setupTestDeployment();
+
+        $execution = $this->createExecution($data['functionId'], [
+            'async' => false,
+            'scheduledAt' => $this->getScheduledExecutionTimeAfterOneMinute(),
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertStringContainsString(
+            'Scheduled executions must run asynchronously',
+            $execution['body']['message']
+        );
+    }
+
+    public function testCreateScheduledExecutionRejectsLessThanOneMinute(): void
+    {
+        $data = $this->setupTestDeployment();
+
+        $execution = $this->createExecution($data['functionId'], [
+            'async' => true,
+            'scheduledAt' => $this->getScheduledExecutionTimeLessThanOneMinute(),
+        ]);
+
+        $this->assertEquals(400, $execution['headers']['status-code']);
+        $this->assertStringContainsString(
+            'Execution schedule must be a valid date, and at least 1 minute from now',
+            $execution['body']['message']
+        );
+    }
+
+    public function testCreateScheduledExecutionAcceptsAfterOneMinute(): void
+    {
+        $data = $this->setupTestDeployment();
+        $scheduledAt = $this->getScheduledExecutionTimeAfterOneMinute();
+
+        $execution = $this->createExecution($data['functionId'], [
+            'async' => true,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertEquals('schedule', $execution['body']['trigger']);
+        $this->assertEquals('scheduled', $execution['body']['status']);
+        $this->assertEquals($scheduledAt, $execution['body']['scheduledAt']);
+
+        $execution = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/executions/' . $execution['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $execution['headers']['status-code']);
+        $this->assertEmpty($execution['body']);
     }
 
     public function testGetExecution(): void
