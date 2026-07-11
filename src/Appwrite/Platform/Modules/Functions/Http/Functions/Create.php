@@ -2,10 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Certificates\Scheduler as CertificateScheduler;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
+use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
@@ -124,6 +126,7 @@ class Create extends Base
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
+            ->inject('publisherForCertificates')
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
@@ -168,6 +171,7 @@ class Create extends Base
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
+        CertificatePublisher $publisherForCertificates,
         Database $dbForPlatform,
         Request $request,
         GitHub $github,
@@ -437,6 +441,16 @@ class Create extends Base
                     ->setSubscribers(['console', $project->getId()])
                     ->from($ruleCreate)
                     ->trigger();
+
+                // Issue TLS cert for Appwrite-owned auto domain on public hostnames
+                CertificateScheduler::enqueueGeneration(
+                    $publisherForCertificates,
+                    $project,
+                    $domain,
+                    'function',
+                    skipRenewCheck: true,
+                    requirePublicHostname: true,
+                );
             }
         }
 
