@@ -1090,8 +1090,11 @@ final class RealtimeConsoleClientTest extends Scope
         // waiting → building → ready/failed (the jobs backend has no intermediate
         // "processing" phase and may interleave extra update events), so assert
         // the meaningful milestones tolerantly rather than a fixed positional
-        // sequence: the build reaches "building" with a growing log, then a
-        // terminal "ready" carrying the build metadata.
+        // sequence: the build reaches "building" with an accumulating log, then
+        // a terminal "ready" carrying the build metadata. Consecutive updates
+        // may carry unchanged (even still-empty) logs when triggered by a
+        // non-log attribute change, so logs are only required to never shrink;
+        // the terminal assertions below guarantee they eventually streamed.
         $sawBuilding = false;
         $previousBuildLogs = null;
         $payload = null;
@@ -1108,9 +1111,13 @@ final class RealtimeConsoleClientTest extends Scope
             if ($payload['status'] === 'building') {
                 $sawBuilding = true;
                 if ($previousBuildLogs !== null) {
-                    $this->assertNotEquals($previousBuildLogs, $payload['buildLogs']);
+                    $this->assertGreaterThanOrEqual(
+                        \strlen($previousBuildLogs),
+                        \strlen((string) $payload['buildLogs']),
+                        'Build logs must never shrink between deployment updates.'
+                    );
                 }
-                $previousBuildLogs = $payload['buildLogs'];
+                $previousBuildLogs = (string) $payload['buildLogs'];
             }
 
             if ($payload['status'] === 'ready' && !empty($payload['buildDuration']) && !empty($payload['buildEndedAt'])) {
