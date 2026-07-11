@@ -2661,7 +2661,7 @@ Http::delete('/v1/users/:userId')
                     'users',
                     [
                         Query::equal('status', [true]),
-                        Query::notEqual('$id', [$target->getId()]),
+                        Query::notEqual('$id', $target->getId()),
                     ],
                     1
                 );
