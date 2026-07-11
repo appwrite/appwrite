@@ -2639,20 +2639,45 @@ Http::delete('/v1/users/:userId')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('publisherForDeletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes) {
+    ->inject('user')
+    ->inject('project')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Document $user, Document $project) {
 
-        $user = $dbForProject->getDocument('users', $userId);
+        $target = $dbForProject->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
+        if ($target->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        // Session actors cannot delete themselves via the Users API.
+        // Self-service account removal must use DELETE /v1/account.
+        if (!$user->isEmpty() && $user->getId() === $target->getId()) {
+            throw new Exception(
+                Exception::USER_DELETION_PROHIBITED,
+                'You cannot delete your own account with the Users API. Use the account delete endpoint instead.'
+            );
+        }
+
+        // Extra safeguards when managing console (platform) accounts.
+        // Membership cleanup is handled asynchronously by the deletes worker
+        // (same model as DELETE /v1/account for console users).
+        if ($project->getId() === 'console') {
+            // Never delete the last remaining console user — that bricks the instance.
+            $consoleUsersCount = $dbForProject->count('users', [], 2);
+            if ($consoleUsersCount <= 1) {
+                throw new Exception(
+                    Exception::USER_DELETION_PROHIBITED,
+                    'Cannot delete the last remaining console user.'
+                );
+            }
+        }
+
         // clone user object to send to workers
-        $clone = clone $user;
+        $clone = clone $target;
 
         $dbForProject->deleteDocument('users', $userId);
-        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
-        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$target->getSequence()]));
+        DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$target->getSequence()]));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $queueForEvents->getProject(),
@@ -2661,7 +2686,7 @@ Http::delete('/v1/users/:userId')
         ));
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
+            ->setParam('userId', $target->getId())
             ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();
