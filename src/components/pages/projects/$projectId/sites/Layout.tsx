@@ -116,6 +116,8 @@ function SiteLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowSiteSettingsTab(access, features)
+  // Execution documents are only persisted on Appwrite Cloud; hide list toolbar controls on self-hosted
+  const executionLogsEnabled = features.executionLogs
 
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const cancelBuildMutation = useMutation({
@@ -317,9 +319,13 @@ function SiteLayoutContent() {
           fullWidthBorder
           fullWidth={activeTab === 'logs'}
           showToolbarBottomBorder={isLogsTabLayout}
-          showFilters={activeTab === 'logs' || activeTab === 'domains'}
+          showFilters={
+            (activeTab === 'logs' && executionLogsEnabled) ||
+            activeTab === 'domains'
+          }
           filterTrigger={
-            activeTab === 'logs' || activeTab === 'domains' ? (
+            (activeTab === 'logs' && executionLogsEnabled) ||
+            activeTab === 'domains' ? (
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}

@@ -49,6 +49,8 @@ export type ConsoleProfileFeatures = {
   orgApiKeys: boolean
   /** In-app AI assistant chat panel and header button */
   aiAssistant: boolean
+  /** Stored execution history: function execution logs and site request logs. Self-hosted no longer persists execution documents. */
+  executionLogs: boolean
   /** Database backup policies and archives */
   databaseBackups: boolean
   /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
@@ -98,6 +100,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   oauth2Server: 'OAuth2 server',
   orgApiKeys: 'Org API keys',
   aiAssistant: 'AI assistant',
+  executionLogs: 'Execution logs',
   databaseBackups: 'Database backups',
   dedicatedDbsSupport: 'Dedicated DBs (global)',
   dedicatedDbsDocumentsDB: 'Dedicated DBs: Documents',
@@ -141,6 +144,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauth2Server: true,
       orgApiKeys: false,
       aiAssistant: true,
+      executionLogs: true,
       databaseBackups: true,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,
@@ -176,6 +180,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       oauth2Server: false,
       orgApiKeys: false,
       aiAssistant: false,
+      executionLogs: false,
       databaseBackups: false,
       dedicatedDbsSupport: false,
       dedicatedDbsDocumentsDB: false,

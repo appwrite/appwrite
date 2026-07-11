@@ -5,9 +5,11 @@ import {
   useFunctionExecutions,
 } from '@/lib/react-query/hooks'
 import { LogsListView } from '@/components/global/shared/LogsListView'
+import { ExecutionLogsCloudNotice } from '@/components/global/shared/ExecutionLogsCloudNotice'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.executions'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
 import { queryParamToMap } from '@/lib/table-filters'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 
 const EXECUTIONS_PER_PAGE = 25
@@ -67,6 +69,10 @@ export function View() {
 
   const refreshContext = useRefreshOptional()
 
+  const { features } = useConsoleProfile()
+  // Execution documents are only persisted on Appwrite Cloud; self-hosted has nothing to list
+  const executionLogsEnabled = features.executionLogs
+
   const { data: func } = useProjectFunction(projectId, functionId)
 
   const {
@@ -76,7 +82,7 @@ export function View() {
     isFetching: executionsFetching,
     refetch,
   } = useFunctionExecutions(
-    projectId,
+    executionLogsEnabled ? projectId : null,
     functionId,
     urlPage - 1,
     pageSize,
@@ -88,6 +94,7 @@ export function View() {
 
   // Register refetch function with the context for the layout's refresh button
   useEffect(() => {
+    if (!executionLogsEnabled) return
     if (refreshContext) {
       refreshContext.registerRefreshHandler(async () => {
         await refetchRef.current()
@@ -96,7 +103,7 @@ export function View() {
         refreshContext.unregisterRefreshHandler()
       }
     }
-  }, [refreshContext])
+  }, [refreshContext, executionLogsEnabled])
 
   const handlePageChange = (page: number) => {
     navigate({
@@ -147,6 +154,14 @@ export function View() {
   }
 
   const hasFilters = filterMap.size > 0
+
+  if (!executionLogsEnabled) {
+    return (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <ExecutionLogsCloudNotice variant="function" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
