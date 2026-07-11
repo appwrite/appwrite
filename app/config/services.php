@@ -105,7 +105,7 @@ return [
         'subtitle' => 'The Health service allows you to both validate and monitor your Appwrite server\'s health.',
         'description' => '/docs/services/health.md',
         'controller' => '', // Uses modules
-        'sdk' => true,
+        'sdk' => false,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/health',
         'tests' => false,

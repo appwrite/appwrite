@@ -3,10 +3,6 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Certificate;
 
 use Appwrite\Extend\Exception;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
@@ -34,20 +30,6 @@ class Get extends Action
             ->desc('Get the SSL certificate for a domain')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'health',
-                name: 'getCertificate',
-                description: '/docs/references/health/get-certificate.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_CERTIFICATE,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->param('domain', null, new Multiple([new AnyOf([new URL(), new Domain()]), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
             ->inject('response')
             ->callback($this->action(...));

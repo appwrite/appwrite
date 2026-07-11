@@ -19,10 +19,6 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Enum;
@@ -45,20 +41,6 @@ class Get extends Base
             ->desc('Get number of failed queue jobs')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'queue',
-                name: 'getFailedJobs',
-                description: '/docs/references/health/get-failed-queue-jobs.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_QUEUE,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->param('name', '', new WhiteList([
                 System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME),
                 System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME),
