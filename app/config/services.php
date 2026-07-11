@@ -106,7 +106,7 @@ return [
         'description' => '/docs/services/health.md',
         'controller' => '', // Uses modules
         'sdk' => false,
-        'docs' => true,
+        'docs' => false,
         'docsUrl' => 'https://appwrite.io/docs/server/health',
         'tests' => false,
         'optional' => true,
