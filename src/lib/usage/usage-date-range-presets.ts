@@ -22,13 +22,13 @@ export type UsageDateRangePreset = {
 }
 
 export type UsageDateRangePresetGroup = {
-  title: string
+  /** Optional section heading; omit for an untitled block (e.g. hour presets). */
+  title?: string
   presets: UsageDateRangePreset[]
 }
 
 export const USAGE_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
   {
-    title: 'Recent',
     presets: [
       {
         label: 'Last hour',

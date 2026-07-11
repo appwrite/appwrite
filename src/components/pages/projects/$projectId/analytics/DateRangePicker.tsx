@@ -194,21 +194,20 @@ export function DateRangePicker({
                 <p className="text-[11px] font-semibold leading-none text-foreground">
                   {t('Quick select')}
                 </p>
-                <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
-                  {t('Common ranges or pick dates on the calendar')}
-                </p>
               </div>
               <div className="flex min-h-0 flex-1 flex-col justify-start px-2 py-2">
                 {PRESET_GROUPS.map((group, groupIndex) => (
                   <div
-                    key={group.title}
+                    key={group.title ?? `group-${groupIndex}`}
                     className={cn(
                       groupIndex > 0 && 'mt-2 border-t border-border/60 pt-2',
                     )}
                   >
-                    <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {t(group.title)}
-                    </p>
+                    {group.title ? (
+                      <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {t(group.title)}
+                      </p>
+                    ) : null}
                     <div className="grid grid-cols-1 gap-0.5">
                       {group.presets.map((preset) => {
                         const isSelected = selectedPreset === preset.value
@@ -301,11 +300,13 @@ export function DateRangePicker({
                   className="z-[10060]"
                   align="start"
                 >
-                  {PRESET_GROUPS.map((group) => (
-                    <SelectGroup key={group.title}>
-                      <SelectLabel className="text-[10px] font-semibold uppercase tracking-wider">
-                        {t(group.title)}
-                      </SelectLabel>
+                  {PRESET_GROUPS.map((group, groupIndex) => (
+                    <SelectGroup key={group.title ?? `group-${groupIndex}`}>
+                      {group.title ? (
+                        <SelectLabel className="text-[10px] font-semibold uppercase tracking-wider">
+                          {t(group.title)}
+                        </SelectLabel>
+                      ) : null}
                       {group.presets.map((preset) => (
                         <SelectItem
                           key={preset.value}

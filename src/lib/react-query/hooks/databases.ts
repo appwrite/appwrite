@@ -38,7 +38,10 @@ import {
   normalizePostgresExecutionResult,
   wrapPostgresSqlForDisplay,
 } from '@/lib/postgres-execution-values'
-import { getCollectionAttributeKey } from '@/lib/databases/collection-indexable-attributes'
+import {
+  buildCollectionIndexableAttributes,
+  getCollectionAttributeKey,
+} from '@/lib/databases/collection-indexable-attributes'
 import {
   databaseRouteKindFromApiType,
   isProductDatabaseRouteKindEnabled,
@@ -1782,6 +1785,83 @@ export async function fetchProjectTables(
   }
 }
 
+/** Documents sampled per collection when inferring visualizer attribute lists. */
+const VISUALIZER_DOCUMENT_SAMPLE_SIZE = 25
+/** Max concurrent document-sample fetches while building visualizer columns. */
+const VISUALIZER_SAMPLE_CONCURRENCY = 10
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return []
+  const results: R[] = new Array(items.length)
+  let nextIndex = 0
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex++
+      results[index] = await mapper(items[index]!, index)
+    }
+  }
+
+  const workerCount = Math.min(Math.max(concurrency, 1), items.length)
+  await Promise.all(Array.from({ length: workerCount }, () => worker()))
+  return results
+}
+
+/**
+ * Enrich Documents/Vectors collections with a `columns` list for the schema visualizer.
+ * Merges declared attributes with keys discovered on a small document sample (schemaless fields).
+ */
+async function enrichCollectionsForVisualizer(
+  projectId: string,
+  databaseId: string,
+  collections: Models.Collection[],
+  kind: DatabaseType.Documentsdb | DatabaseType.Vectorsdb,
+) {
+  const projectSdk = sdk.forProject(projectId)
+  const listDocuments =
+    kind === DatabaseType.Documentsdb
+      ? projectSdk.documentsDB.listDocuments.bind(projectSdk.documentsDB)
+      : projectSdk.vectorsDB.listDocuments.bind(projectSdk.vectorsDB)
+
+  return mapWithConcurrency(
+    collections,
+    VISUALIZER_SAMPLE_CONCURRENCY,
+    async (collection) => {
+      let sampleRows: Record<string, unknown>[] = []
+      try {
+        const docsResponse = await listDocuments({
+          databaseId,
+          collectionId: collection.$id,
+          queries: [Query.limit(VISUALIZER_DOCUMENT_SAMPLE_SIZE)],
+          total: false,
+        })
+        sampleRows = (
+          (docsResponse.documents ?? []) as Record<string, unknown>[]
+        ).map((doc) => flattenDocumentForTableRow(doc))
+      } catch {
+        sampleRows = []
+      }
+
+      const columns = buildCollectionIndexableAttributes(
+        collection.attributes as unknown[] | undefined,
+        sampleRows,
+      )
+
+      return {
+        ...collection,
+        columns,
+        indexes: normalizeIndexesForTableUi(
+          collection.indexes as Array<Record<string, unknown>> | undefined,
+        ),
+      }
+    },
+  )
+}
+
 /**
  * Query function to fetch all tables with full details (columns, indexes) for visualizer
  *
@@ -1813,7 +1893,13 @@ export async function fetchAllProjectTablesForVisualizer(
         databaseId,
         queries,
       })
-      return { tables: response.collections ?? [] }
+      const tables = await enrichCollectionsForVisualizer(
+        projectId,
+        databaseId,
+        response.collections ?? [],
+        DatabaseType.Documentsdb,
+      )
+      return { tables }
     } catch {
       return { tables: [] }
     }
@@ -1825,7 +1911,13 @@ export async function fetchAllProjectTablesForVisualizer(
         databaseId,
         queries,
       })
-      return { tables: response.collections ?? [] }
+      const tables = await enrichCollectionsForVisualizer(
+        projectId,
+        databaseId,
+        response.collections ?? [],
+        DatabaseType.Vectorsdb,
+      )
+      return { tables }
     } catch {
       return { tables: [] }
     }

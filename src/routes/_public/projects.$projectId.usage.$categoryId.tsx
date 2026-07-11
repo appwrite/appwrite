@@ -4,9 +4,7 @@ import { useUsageFilters } from '@/components/pages/projects/$projectId/usage/us
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
 import {
-  findUsageCategory,
   getDefaultUsageCategoryId,
-  getUsageCategories,
   isValidUsageCategory,
 } from '@/components/pages/projects/$projectId/usage/usage-nav'
 
@@ -27,15 +25,7 @@ export const Route = createFileRoute(
       })
     }
   },
-  head: ({ params }) => {
-    const category = findUsageCategory(
-      getUsageCategories('pro'),
-      params.categoryId,
-    )
-    const title = category?.label ?? 'Usage'
-
-    return { meta: [{ title: pageTitle(title) }] }
-  },
+  head: () => ({ meta: [{ title: pageTitle('Usage') }] }),
   component: UsageCategoryPage,
 })
 

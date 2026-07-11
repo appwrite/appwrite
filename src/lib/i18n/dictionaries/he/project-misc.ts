@@ -601,9 +601,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   more: 'נוספים',
   'Select date range': 'בחירת טווח תאריכים',
   'Quick select': 'בחירה מהירה',
-  'Common ranges or pick dates on the calendar':
-    'טווחים נפוצים או בחירת תאריכים בלוח השנה',
-  Recent: 'לאחרונה',
   Days: 'ימים',
   'Last hour': 'השעה האחרונה',
   'Last 6 hours': '6 השעות האחרונות',
