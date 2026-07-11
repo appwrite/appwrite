@@ -618,6 +618,15 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No executions yet': 'אין הרצות עדיין',
   'Executions will appear here when your function runs.':
     'הרצות יופיעו כאן כשהפונקציה שלכם תרוץ.',
+  'Execution logs are available on Appwrite Cloud':
+    'לוגים של הרצות זמינים ב-Appwrite Cloud',
+  'Self-hosted Appwrite no longer stores execution history. Your functions still run as usual, but their executions, logs, and errors can only be viewed on Appwrite Cloud.':
+    'Appwrite באירוח עצמי כבר לא שומר היסטוריית הרצות. הפונקציות שלכם ממשיכות לרוץ כרגיל, אבל את ההרצות, הלוגים והשגיאות שלהן ניתן לראות רק ב-Appwrite Cloud.',
+  'Site logs are available on Appwrite Cloud':
+    'לוגים של האתר זמינים ב-Appwrite Cloud',
+  'Self-hosted Appwrite no longer stores site request logs. Your site still serves traffic as usual, but its logs and errors can only be viewed on Appwrite Cloud.':
+    'Appwrite באירוח עצמי כבר לא שומר לוגים של בקשות לאתר. האתר שלכם ממשיך להגיש תעבורה כרגיל, אבל את הלוגים והשגיאות שלו ניתן לראות רק ב-Appwrite Cloud.',
+  'Explore Appwrite Cloud': 'גלו את Appwrite Cloud',
   'This scope is on the API key but was not returned in the server scope list.':
     'הרשאה זו נמצאת על מפתח ה-API אך לא הוחזרה ברשימת ההרשאות מהשרת.',
   'Loading rows…': 'טוען שורות…',
