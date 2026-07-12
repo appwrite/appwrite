@@ -468,6 +468,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Password must be at least 8 characters': 'パスワードは 8 文字以上で入力してください',
   "Save these recovery codes now. They won't be shown again.": '今すぐこれらのリカバリーコードを保存してください。二度と表示されません。',
   'This removes authenticator app codes from your account.': 'この操作により、アカウントから認証アプリのコードが削除されます。',
+  'To continue, verify your identity with a one-time code.': '続行するには、ワンタイムコードで本人確認を行ってください。',
+  'Verification is required to view your recovery codes.': 'リカバリーコードを表示するには本人確認が必要です。',
   'Update the expiration date for this payment method.': 'この支払い方法の有効期限を更新します。',
   'Update your account email address. Requires password verification when changing email.': 'アカウントのメールアドレスを更新します。メールアドレスの変更にはパスワードによる確認が必要です。',
   'Use an authentication app to generate two-factor authentication codes.': '認証アプリを使って二要素認証コードを生成します。',
