@@ -57,6 +57,9 @@ class V24 extends Migration
         if ($this->project->getSequence() != 'console') {
             Console::info('Migrating Databases');
             $this->migrateDatabases();
+
+            Console::info('Creating presence logs collection');
+            $this->createPresenceLogsCollection();
         }
 
         Console::info('Migrating Buckets');
@@ -89,6 +92,12 @@ class V24 extends Migration
         };
 
         $collections = $this->collections[$collectionType];
+        $notificationsCollectionExists = false;
+
+        if ($collectionType === 'console') {
+            $notificationsCollectionExists = !$this->dbForProject->getCollection('notifications')->isEmpty();
+            $this->createCollection('notifications');
+        }
 
         foreach ($collections as $collection) {
             $id = $collection['$id'];
@@ -113,6 +122,12 @@ class V24 extends Migration
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {
                             Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_teamInternalId');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_teamInternalId\" from {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -141,6 +156,42 @@ class V24 extends Migration
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_resource');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_resource\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'schedules':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $indexes = [
+                            '_key_region_resourceType_projectInternalId_resourceId',
+                            '_key_project_internal_id_region',
+                        ];
+                        foreach ($indexes as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'notifications':
+                    if ($collectionType === 'console' && $notificationsCollectionExists) {
+                        foreach (['firstSeen', 'lastSeen'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -212,6 +263,24 @@ class V24 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'memberships':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_team_confirm');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_team_confirm\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'tokens':
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_type_expire');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_type_expire\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         try {
@@ -229,6 +298,8 @@ class V24 extends Migration
                         'startCommand',
                         'buildSpecification',
                         'runtimeSpecification',
+                        'providerBranches',
+                        'providerPaths',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -244,6 +315,8 @@ class V24 extends Migration
                         'deploymentRetention',
                         'buildSpecification',
                         'runtimeSpecification',
+                        'providerBranches',
+                        'providerPaths',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -281,6 +354,32 @@ class V24 extends Migration
                         $this->dbForProject->deleteIndex($id, '_fulltext_name');
                     } catch (Throwable $th) {
                         Console::warning("Failed to delete index \"_fulltext_name\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'platforms':
+                case 'webhooks':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_project_id');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_project_id\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'reports':
+                case 'insights':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createCollection($id);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create collection \"{$id}\": {$th->getMessage()}");
+
+                            throw $th;
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
@@ -330,6 +429,30 @@ class V24 extends Migration
                 $this->dbForProject->purgeCachedCollection($collectionTable);
             });
         });
+    }
+
+    /**
+     * Ensure the presenceLogs collection exists for project databases.
+     *
+     * @return void
+     * @throws Throwable
+     */
+    private function createPresenceLogsCollection(): void
+    {
+        $collectionId = 'presenceLogs';
+
+        try {
+            Console::info("Ensuring collection \"{$collectionId}\" exists for project \"{$this->project->getId()}\".");
+            $this->dbForProject->purgeCachedCollection($collectionId);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $collectionId);
+
+            $this->createCollection($collectionId);
+        } catch (Throwable $th) {
+            Console::warning("Failed to create collection \"{$collectionId}\": {$th->getMessage()}");
+
+            // Re-throw so the migration fails fast and doesn't leave the system in a partially migrated state.
+            throw $th;
+        }
     }
 
     /**
@@ -399,6 +522,17 @@ class V24 extends Migration
                     $document->setAttribute('resourceType', 'projects');
                     $document->setAttribute('resourceId', $projectId);
                     $document->setAttribute('resourceInternalId', $projectInternalId);
+                }
+                break;
+            case 'schedules':
+                if (empty($document->getAttribute('projectInternalId'))) {
+                    $projectId = $document->getAttribute('projectId', '');
+                    if ($projectId !== '') {
+                        $project = $this->dbForProject->getDocument('projects', $projectId);
+                        if (!$project->isEmpty()) {
+                            $document->setAttribute('projectInternalId', $project->getSequence());
+                        }
+                    }
                 }
                 break;
             default:

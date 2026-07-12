@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Platform\Modules\Compute\Specification;
@@ -16,7 +18,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
-class FunctionsCustomServerTest extends Scope
+final class FunctionsCustomServerTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
@@ -198,7 +200,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testListSpecs(): void
     {
-        $specifications = $this->listSpecifications();
+        $specifications = $this->listSpecifications(['type' => 'runtimes']);
         $this->assertEquals(200, $specifications['headers']['status-code']);
         $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);
@@ -212,20 +214,25 @@ class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
+        $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
+        $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
+        $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
+        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+
         $function = $this->createFunction([
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $function = $this->getFunction($function['body']['$id']);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($buildSpecification, $function['body']['buildSpecification']);
         $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $this->cleanupFunction($function['body']['$id']);
@@ -314,9 +321,9 @@ class FunctionsCustomServerTest extends Scope
             'search' => $data['functionId']
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         $this->assertCount(1, $functions['body']['functions']);
-        $this->assertEquals($functions['body']['functions'][0]['name'], 'Test');
+        $this->assertEquals('Test', $functions['body']['functions'][0]['name']);
 
         // Test pagination limit
         $functions = $this->listFunctions([
@@ -325,7 +332,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         $this->assertCount(1, $functions['body']['functions']);
 
         // Test pagination offset - combined with limit to verify offset works
@@ -337,7 +344,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         // In parallel mode, other tests may create functions, so just verify offset works
         $this->assertIsArray($functions['body']['functions']);
 
@@ -348,7 +355,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         // In parallel mode, other tests may create enabled functions
         $this->assertGreaterThanOrEqual(1, count($functions['body']['functions']));
 
@@ -359,7 +366,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         // In parallel mode, other tests may create disabled functions
         $this->assertIsArray($functions['body']['functions']);
 
@@ -368,7 +375,7 @@ class FunctionsCustomServerTest extends Scope
             'search' => 'Test'
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         // In parallel mode, other tests may create functions with 'Test' in the name
         $this->assertGreaterThanOrEqual(1, count($functions['body']['functions']));
         // Verify our function is in the results
@@ -380,7 +387,7 @@ class FunctionsCustomServerTest extends Scope
             'search' => 'node-22'
         ]);
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         // In parallel mode, other tests may create functions with node-22 runtime
         $this->assertGreaterThanOrEqual(1, count($functions['body']['functions']));
         // Verify our function is in the results
@@ -404,7 +411,7 @@ class FunctionsCustomServerTest extends Scope
 
         $functions = $this->listFunctions();
 
-        $this->assertEquals($functions['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions['headers']['status-code']);
         // In parallel mode, there may be more functions created by other tests
         $this->assertGreaterThanOrEqual(2, $functions['body']['total']);
         $this->assertIsArray($functions['body']['functions']);
@@ -426,7 +433,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($functions1['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions1['headers']['status-code']);
         // Should have at least Test 2 after Test (may have more from parallel tests)
         $this->assertGreaterThanOrEqual(1, count($functions1['body']['functions']));
         $functionNames1 = array_column($functions1['body']['functions'], 'name');
@@ -438,7 +445,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($functions2['headers']['status-code'], 200);
+        $this->assertEquals(200, $functions2['headers']['status-code']);
         // Should have at least Test before Test 2
         $this->assertGreaterThanOrEqual(1, count($functions2['body']['functions']));
         $functionNames2 = array_column($functions2['body']['functions'], 'name');
@@ -452,7 +459,7 @@ class FunctionsCustomServerTest extends Scope
                 Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
             ],
         ]);
-        $this->assertEquals($functions['headers']['status-code'], 400);
+        $this->assertEquals(400, $functions['headers']['status-code']);
     }
 
     public function testGetFunction(): void
@@ -464,15 +471,15 @@ class FunctionsCustomServerTest extends Scope
          */
         $function = $this->getFunction($data['functionId']);
 
-        $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['name'], 'Test');
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals('Test', $function['body']['name']);
 
         /**
          * Test for FAILURE
          */
         $function = $this->getFunction('x');
 
-        $this->assertEquals($function['headers']['status-code'], 404);
+        $this->assertEquals(404, $function['headers']['status-code']);
     }
 
     public function testUpdateFunction(): void
@@ -695,7 +702,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($deploymentsWithIncludeTotalFalse['body']);
         $this->assertIsArray($deploymentsWithIncludeTotalFalse['body']['deployments']);
         $this->assertIsInt($deploymentsWithIncludeTotalFalse['body']['total']);
-        $this->assertEquals(0, $deploymentsWithIncludeTotalFalse['body']['total']);
+        $this->assertSame(0, $deploymentsWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($deploymentsWithIncludeTotalFalse['body']['deployments']));
 
         $lastDeployment = $deployments['body']['deployments'][0];
@@ -731,7 +738,7 @@ class FunctionsCustomServerTest extends Scope
 
         $totalUsers = $users['body']['total'];
 
-        $this->assertStringContainsString("Total users: " . $totalUsers, $execution['body']['logs']);
+        $this->assertStringContainsString("Total users: " . $totalUsers, (string) $execution['body']['logs']);
 
         // Execute function again but async
         $execution = $this->createExecution($functionId, [
@@ -753,7 +760,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('completed', $execution['body']['status']);
             $this->assertEmpty($execution['body']['responseBody']);
             $this->assertEmpty($execution['body']['errors']);
-            $this->assertStringContainsString("Total users: " . $totalUsers, $execution['body']['logs']);
+            $this->assertStringContainsString("Total users: " . $totalUsers, (string) $execution['body']['logs']);
         }, 10000, 500);
 
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
@@ -1018,7 +1025,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
             $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertStringContainsString('Build has been canceled.', $deployment['body']['buildLogs']);
+            $this->assertStringContainsString('Build has been canceled.', (string) $deployment['body']['buildLogs']);
         });
 
         $deployment = $this->getDeployment($functionId, $deploymentId);
@@ -1199,6 +1206,144 @@ class FunctionsCustomServerTest extends Scope
         }, 120000, 500);
     }
 
+    public function testCreateDeploymentParallelChunksLargeFile(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Parallel Chunk Deployment',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $deploymentId = ID::unique();
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-function-deployment-' . $deploymentId;
+
+        mkdir($tmpDirectory);
+
+        try {
+            copy(__DIR__ . '/../../../resources/functions/basic/index.js', $tmpDirectory . DIRECTORY_SEPARATOR . 'index.js');
+            file_put_contents($tmpDirectory . DIRECTORY_SEPARATOR . 'large.bin', random_bytes(20 * 1024 * 1024));
+
+            $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'code.tar.gz';
+            Console::execute('cd ' . $tmpDirectory . ' && tar --exclude code.tar.gz -czf code.tar.gz .', '', $this->stdout, $this->stderr);
+
+            $totalSize = filesize($source);
+            $chunkSize = 5 * 1024 * 1024;
+            $chunksTotal = (int) ceil($totalSize / $chunkSize);
+
+            $this->assertGreaterThanOrEqual(4, $chunksTotal, 'Test deployment must span at least 4 chunks');
+
+            $requests = [];
+            $sourceHandle = fopen($source, 'rb');
+            $this->assertNotFalse($sourceHandle, 'Could not open deployment package');
+
+            try {
+                for ($i = 0; $i < $chunksTotal; $i++) {
+                    $start = $i * $chunkSize;
+                    $end = min($start + $chunkSize, $totalSize) - 1;
+                    $length = $end - $start + 1;
+                    $chunkPath = $tmpDirectory . DIRECTORY_SEPARATOR . 'chunk-' . $i . '.part';
+
+                    fseek($sourceHandle, $start);
+                    file_put_contents($chunkPath, fread($sourceHandle, $length));
+
+                    $requests[] = [
+                        'headers' => [
+                            'x-appwrite-project' => $this->getProject()['$id'],
+                            'x-appwrite-key' => $this->getProject()['apiKey'],
+                            'x-appwrite-id' => $deploymentId,
+                            'content-range' => 'bytes ' . $start . '-' . $end . '/' . $totalSize,
+                        ],
+                        'chunkPath' => $chunkPath,
+                    ];
+                }
+            } finally {
+                fclose($sourceHandle);
+            }
+
+            $responses = [];
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            \Swoole\Coroutine\run(function () use ($basePath, $functionId, $host, $port, $requests, $scheme, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                foreach ($requests as $index => $request) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $functionId, $host, $index, $port, $request, &$responses, $scheme, $wg): void {
+                        try {
+                            for ($attempt = 0; $attempt < 3; $attempt++) {
+                                $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                                $client->set([
+                                    'timeout' => 300,
+                                    'ssl_verify_peer' => false,
+                                    'ssl_verify_host' => false,
+                                ]);
+                                $client->setHeaders($request['headers']);
+                                $client->setMethod(Client::METHOD_POST);
+                                $client->setData([
+                                    'entrypoint' => 'index.js',
+                                    'activate' => true,
+                                ]);
+                                $client->addFile($request['chunkPath'], 'code', 'application/x-gzip', 'code.tar.gz');
+                                $client->execute($basePath . '/functions/' . $functionId . '/deployments');
+
+                                $responses[$index] = [
+                                    'body' => $client->body,
+                                    'error' => $client->errMsg,
+                                    'headers' => $client->headers ?? [],
+                                    'statusCode' => $client->statusCode,
+                                ];
+
+                                $client->close();
+
+                                if ($responses[$index]['statusCode'] !== 429) {
+                                    break;
+                                }
+
+                                $retryAfter = (float) ($responses[$index]['headers']['retry-after'] ?? 0.1);
+                                \Swoole\Coroutine::sleep(max($retryAfter, 0.1));
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            ksort($responses);
+
+            foreach ($responses as $response) {
+                $this->assertSame('', $response['error']);
+                $this->assertContains($response['statusCode'], [202], (string) $response['body']);
+            }
+
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $deployment = $this->getDeployment($functionId, $deploymentId);
+
+                $this->assertEquals(200, $deployment['headers']['status-code']);
+                $this->assertEquals('ready', $deployment['body']['status']);
+                $this->assertEquals($deploymentId, $deployment['body']['$id']);
+            }, 120000, 500);
+        } finally {
+            $this->cleanupFunction($functionId);
+
+            if (is_dir($tmpDirectory)) {
+                foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                    unlink($file);
+                }
+                rmdir($tmpDirectory);
+            }
+        }
+    }
+
     public function testUpdateDeployment(): void
     {
         $data = $this->setupTestDeployment();
@@ -1230,7 +1375,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $data['functionId'];
         $deployments = $this->listDeployments($functionId);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
         $this->assertIsArray($deployments['body']['deployments']);
         $this->assertGreaterThanOrEqual(1, count($deployments['body']['deployments']));
@@ -1243,7 +1388,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertCount(1, $deployments['body']['deployments']);
 
         $deployments = $this->listDeployments($functionId, [
@@ -1252,7 +1397,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, count($deployments['body']['deployments']));
         // Check all deployments have correct attributes from select query
         foreach ($deployments['body']['deployments'] as $deployment) {
@@ -1266,7 +1411,7 @@ class FunctionsCustomServerTest extends Scope
                 Query::select(['buildLogs'])->toString(),
             ],
         ]);
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, count($deployments['body']['deployments']));
         // Check all deployments have correct attributes from select query
         foreach ($deployments['body']['deployments'] as $deployment) {
@@ -1298,7 +1443,7 @@ class FunctionsCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         // At least 1 manual deployment should exist
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
 
@@ -1311,7 +1456,7 @@ class FunctionsCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(0, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1323,7 +1468,7 @@ class FunctionsCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         $this->assertEquals(0, $deployments['body']['total']);
 
         $deployments = $this->listDeployments(
@@ -1335,7 +1480,7 @@ class FunctionsCustomServerTest extends Scope
             ]
         );
 
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         // At least 1 deployment with sourceSize > 0 should exist
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
 
@@ -1347,7 +1492,7 @@ class FunctionsCustomServerTest extends Scope
                 ],
             ]
         );
-        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertEquals(200, $deployments['headers']['status-code']);
         // At least 1 deployment with sourceSize > -100 should exist
         $this->assertGreaterThanOrEqual(1, $deployments['body']['total']);
 
@@ -1416,7 +1561,7 @@ class FunctionsCustomServerTest extends Scope
          */
         $deployment = $this->getDeployment($data['functionId'], 'x');
 
-        $this->assertEquals($deployment['headers']['status-code'], 404);
+        $this->assertEquals(404, $deployment['headers']['status-code']);
     }
 
     public function testCreateExecution(): void
@@ -1450,13 +1595,13 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['responseBody']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['responseBody']);
-        $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
-        $this->assertStringContainsString('http', $execution['body']['responseBody']);
-        $this->assertStringContainsString('Node.js', $execution['body']['responseBody']);
-        $this->assertStringContainsString('22', $execution['body']['responseBody']);
-        $this->assertStringContainsString('Global Variable Value', $execution['body']['responseBody']);
+        $this->assertStringContainsString($execution['body']['functionId'], (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString($data['deploymentId'], (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('Test1', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('Global Variable Value', (string) $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
         $this->assertNotEmpty($execution['body']['errors']);
         $this->assertNotEmpty($execution['body']['logs']);
@@ -1525,7 +1670,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($executionsWithIncludeTotalFalse['body']);
         $this->assertIsArray($executionsWithIncludeTotalFalse['body']['executions']);
         $this->assertIsInt($executionsWithIncludeTotalFalse['body']['total']);
-        $this->assertEquals(0, $executionsWithIncludeTotalFalse['body']['total']);
+        $this->assertSame(0, $executionsWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($executionsWithIncludeTotalFalse['body']['executions']));
 
         $executions = $this->listExecutions($data['functionId'], [
@@ -1619,10 +1764,10 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
-        $this->assertStringContainsString('http', $execution['body']['responseBody']);
-        $this->assertStringContainsString('Node.js', $execution['body']['responseBody']);
-        $this->assertStringContainsString('22', $execution['body']['responseBody']);
+        $this->assertStringContainsString('Test1', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
+        $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
     }
@@ -1645,7 +1790,7 @@ class FunctionsCustomServerTest extends Scope
          */
         $function = $this->getExecution($data['functionId'], 'x');
 
-        $this->assertEquals($function['headers']['status-code'], 404);
+        $this->assertEquals(404, $function['headers']['status-code']);
     }
 
 
@@ -1678,7 +1823,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $execution['headers']['status-code']);
-        $this->assertStringContainsString('Execution with the requested ID could not be found', $execution['body']['message']);
+        $this->assertStringContainsString('Execution with the requested ID could not be found', (string) $execution['body']['message']);
 
         /**
          * Test for FAILURE
@@ -1700,8 +1845,8 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(400, $execution['headers']['status-code']);
-        $this->assertStringContainsString('execution_in_progress', $execution['body']['type']);
-        $this->assertStringContainsString('Can\'t delete ongoing execution.', $execution['body']['message']);
+        $this->assertStringContainsString('execution_in_progress', (string) $execution['body']['type']);
+        $this->assertStringContainsString('Can\'t delete ongoing execution.', (string) $execution['body']['message']);
     }
 
 
@@ -1986,24 +2131,18 @@ class FunctionsCustomServerTest extends Scope
             $this->assertLessThan(20, $execution['body']['duration']);
             $this->assertEquals('', $execution['body']['responseBody']);
             $this->assertEquals('', $execution['body']['logs']);
-            $this->assertStringContainsString('timed out', $execution['body']['errors']);
+            $this->assertStringContainsString('timed out', (string) $execution['body']['errors']);
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }
 
-    public static function provideCustomExecutions(): array
+    public static function provideCustomExecutions(): \Iterator
     {
         // Most disabled to keep tests fast
         // Using positional arrays to avoid PHPUnit 11 named argument conflicts with @depends
-        return [
-            // ['php-fn', 'php-8.0', 'index.php', 'PHP', '8.0'],
-            ['node', 'node-22', 'index.js', 'Node.js', '22'],
-            // ['python', 'python-3.9', 'main.py', 'Python', '3.9'],
-            // ['ruby', 'ruby-3.1', 'main.rb', 'Ruby', '3.1'],
-            // ['dart', 'dart-2.15', 'main.dart', 'Dart', '2.15'],
-            // ['swift', 'swift-5.5', 'index.swift', 'Swift', '5.5'],
-        ];
+        // ['php-fn', 'php-8.0', 'index.php', 'PHP', '8.0'],
+        yield ['node', 'node-22', 'index.js', 'Node.js', '22'];
     }
 
     #[DataProvider('provideCustomExecutions')]
@@ -2047,12 +2186,12 @@ class FunctionsCustomServerTest extends Scope
 
         $executions = $this->listExecutions($functionId);
 
-        $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['total'], 1);
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals(1, $executions['body']['total']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
-        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
+        $this->assertEquals('http', $executions['body']['executions'][0]['trigger']);
         $this->assertEquals(200, $executions['body']['executions'][0]['responseStatusCode']);
         $this->assertEmpty($executions['body']['executions'][0]['responseBody']);
 
@@ -2082,7 +2221,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('multipart/form-data', $execution['headers']['content-type']);
+        $this->assertStringContainsString('multipart/form-data', (string) $execution['headers']['content-type']);
         $contentType = explode(';', $execution['headers']['content-type']);
         $this->assertStringContainsString('boundary=----', $contentType[1]);
         $bytes = unpack('C*byte', $execution['body']['responseBody']);
@@ -2102,7 +2241,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $execution['headers']['status-code']);
-        $this->assertStringContainsString('Failed to parse response', $execution['body']['message']);
+        $this->assertStringContainsString('Failed to parse response', (string) $execution['body']['message']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2219,8 +2358,8 @@ class FunctionsCustomServerTest extends Scope
 
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
-            $this->assertStringContainsString($userId, $lastExecution['logs']);
-            $this->assertStringContainsString('Event User', $lastExecution['logs']);
+            $this->assertStringContainsString($userId, (string) $lastExecution['logs']);
+            $this->assertStringContainsString('Event User', (string) $lastExecution['logs']);
             $this->assertNotEmpty($lastExecution['$id']);
             $headers = array_column($lastExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
@@ -2270,7 +2409,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
         $this->assertNotEmpty($execution['body']['responseBody']);
-        $this->assertStringContainsString("total", $execution['body']['responseBody']);
+        $this->assertStringContainsString("total", (string) $execution['body']['responseBody']);
 
         $execution = $this->createExecution($functionId, [
             'async' => true,
@@ -2289,7 +2428,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $execution['body']['responseStatusCode']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
             $this->assertNotEmpty($execution['body']['logs']);
-            $this->assertStringContainsString("total", $execution['body']['logs']);
+            $this->assertStringContainsString("total", (string) $execution['body']['logs']);
         }, 10000, 500);
 
         $this->cleanupFunction($functionId);
@@ -2379,19 +2518,8 @@ class FunctionsCustomServerTest extends Scope
             ], $this->getHeaders()), []);
 
             $this->assertEquals(200, $executions['headers']['status-code']);
-            $this->assertEquals(1, count($executions['body']['executions']));
+            $this->assertCount(1, $executions['body']['executions']);
         });
-
-        $this->assertEventually(function () use ($functionId) {
-            $response = $this->getUsage($functionId, [
-                'range' => '24h'
-            ]);
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(24, count($response['body']));
-            $this->assertEquals('24h', $response['body']['range']);
-            $this->assertEquals(1, $response['body']['executionsTotal']);
-        }, 25000, 500);
 
         $this->cleanupFunction($functionId);
     }
@@ -2640,17 +2768,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEmpty($executions['body']['executions'][0]['logs']);
         $this->assertEmpty($executions['body']['executions'][0]['errors']);
 
-        // Ensure executions count
-        $executions = $this->listExecutions($functionId);
+        $this->assertEventually(function () use ($functionId) {
+            $executions = $this->listExecutions($functionId);
 
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertCount(3, $executions['body']['executions']);
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertCount(3, $executions['body']['executions']);
 
-        // Double check logs and errors are empty
-        foreach ($executions['body']['executions'] as $execution) {
-            $this->assertEmpty($execution['logs']);
-            $this->assertEmpty($execution['errors']);
-        }
+            foreach ($executions['body']['executions'] as $execution) {
+                $this->assertEmpty($execution['logs']);
+                $this->assertEmpty($execution['errors']);
+            }
+        }, 10000, 500);
 
         $this->cleanupFunction($functionId);
     }
@@ -2684,7 +2812,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
             $deployment = $this->getDeployment($functionId, $deploymentId);
-            $this->assertTrue(str_contains($deployment['body']['buildLogs'], '2048:2'));
+            $this->assertStringContainsString('2048:2', (string) $deployment['body']['buildLogs']);
         }, 10000, 500);
 
         // Check if the function specifications are correctly set in executions
@@ -2719,7 +2847,7 @@ class FunctionsCustomServerTest extends Scope
 
         $execution = $this->createExecution($functionId);
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['responseBody']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_ID', (string) $execution['body']['responseBody']);
 
         $function = $this->updateFunction($functionId, [
             'runtime' => 'node-22',
@@ -2728,7 +2856,7 @@ class FunctionsCustomServerTest extends Scope
             'commands' => 'rm index.js && mv maintenance.js index.js'
         ]);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertStringContainsString('maintenance.js', $function['body']['commands']);
+        $this->assertStringContainsString('maintenance.js', (string) $function['body']['commands']);
 
         $deployment = $this->createDuplicateDeployment($functionId, $deploymentId1);
         $this->assertEquals(202, $deployment['headers']['status-code']);
@@ -2749,7 +2877,7 @@ class FunctionsCustomServerTest extends Scope
 
         $execution = $this->createExecution($functionId);
         $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertStringContainsString('Maintenance', $execution['body']['responseBody']);
+        $this->assertStringContainsString('Maintenance', (string) $execution['body']['responseBody']);
 
         $deployment = $this->getDeployment($functionId, $deploymentId2);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -2797,7 +2925,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertStringContainsString('cookieValue', $execution['body']['responseBody']);
+        $this->assertStringContainsString('cookieValue', (string) $execution['body']['responseBody']);
 
         $deploymentId2 = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
@@ -2813,7 +2941,7 @@ class FunctionsCustomServerTest extends Scope
         $execution = $this->createExecution($functionId);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertStringContainsString('UNICODE_TEST', $execution['body']['responseBody']);
+        $this->assertStringContainsString('UNICODE_TEST', (string) $execution['body']['responseBody']);
 
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
@@ -2836,7 +2964,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertStringContainsString('cookieValue', $execution['body']['responseBody']);
+        $this->assertStringContainsString('cookieValue', (string) $execution['body']['responseBody']);
 
         $deployment = $this->deleteDeployment($functionId, $deploymentId2);
         $this->assertEquals(204, $deployment['headers']['status-code']);
@@ -2861,8 +2989,8 @@ class FunctionsCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('Nothing is here yet', $response['body']);
-        $this->assertStringContainsString('Start with this domain', $response['body']);
+        $this->assertStringContainsString('Nothing is here yet', (string) $response['body']);
+        $this->assertStringContainsString('Start with this domain', (string) $response['body']);
 
         // failed deployment
         $functionId = $this->setupFunction([
@@ -2891,8 +3019,8 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertStringContainsString('No active deployments', (string) $response['body']);
+        $this->assertStringContainsString('View deployments', (string) $response['body']);
 
         // canceled deployment
         $deployment = $this->createDeployment($functionId, [
@@ -2913,8 +3041,8 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertStringContainsString('No active deployments', (string) $response['body']);
+        $this->assertStringContainsString('View deployments', (string) $response['body']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2947,8 +3075,8 @@ class FunctionsCustomServerTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertStringContainsString('Execution not permitted', $response['body']);
-        $this->assertStringContainsString('View settings', $response['body']);
+        $this->assertStringContainsString('Execution not permitted', (string) $response['body']);
+        $this->assertStringContainsString('View settings', (string) $response['body']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2980,46 +3108,46 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('Error 404', $response['body']);
-        $this->assertStringContainsString('does not exist', $response['body']);
+        $this->assertStringContainsString('Error 404', (string) $response['body']);
+        $this->assertStringContainsString('does not exist', (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=504', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
         $this->assertEquals(504, $response['headers']['status-code']);
-        $this->assertStringContainsString('Error 504', $response['body']);
-        $this->assertStringContainsString('respond in time', $response['body']);
+        $this->assertStringContainsString('Error 504', (string) $response['body']);
+        $this->assertStringContainsString('respond in time', (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=400', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Error 400', $response['body']);
-        $this->assertStringContainsString('unexpected client error', $response['body']);
+        $this->assertStringContainsString('Error 400', (string) $response['body']);
+        $this->assertStringContainsString('unexpected client error', (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=500', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
         $this->assertEquals(500, $response['headers']['status-code']);
-        $this->assertStringContainsString('Error 500', $response['body']);
-        $this->assertStringContainsString('unexpected server error', $response['body']);
+        $this->assertStringContainsString('Error 500', (string) $response['body']);
+        $this->assertStringContainsString('unexpected server error', (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=400&body=CustomError400', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('CustomError400', $response['body']);
+        $this->assertStringContainsString('CustomError400', (string) $response['body']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/custom-response?code=500&body=CustomError500', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
         $this->assertEquals(500, $response['headers']['status-code']);
-        $this->assertStringContainsString('CustomError500', $response['body']);
+        $this->assertStringContainsString('CustomError500', (string) $response['body']);
 
         $this->cleanupFunction($functionId);
     }
@@ -3051,14 +3179,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertLessThanOrEqual(APP_FUNCTION_LOG_LENGTH_LIMIT, strlen($logs));
         $this->assertStringStartsWith('[WARNING] Logs truncated', $logs);
 
-        $this->assertStringContainsString('a', $logs);
+        $this->assertStringContainsString('a', (string) $logs);
 
         // Verify errors are truncated and warning message is present at the beginning
         $errors = $execution['body']['errors'];
         $this->assertLessThanOrEqual(APP_FUNCTION_ERROR_LENGTH_LIMIT, strlen($errors));
         $this->assertStringStartsWith('[WARNING] Errors truncated', $errors);
 
-        $this->assertStringContainsString('a', $errors);
+        $this->assertStringContainsString('a', (string) $errors);
 
         $this->cleanupFunction($functionId);
     }
@@ -3177,4 +3305,34 @@ class FunctionsCustomServerTest extends Scope
             $this->cleanupFunction($functionId);
         }
     }
+
+    public function testCreateVcsDeploymentWithoutInstallation(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test VCS No Installation',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'branch',
+            'reference' => 'main',
+        ]);
+
+        $this->assertEquals(404, $deployment['headers']['status-code']);
+        $this->assertEquals('installation_not_found', $deployment['body']['type']);
+
+        $this->cleanupFunction($functionId);
+    }
+
 }

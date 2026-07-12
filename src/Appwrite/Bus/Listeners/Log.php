@@ -8,7 +8,6 @@ use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Utopia\Bus\Listener;
 use Utopia\Database\Document;
 use Utopia\Span\Span;
-use Utopia\System\System;
 
 class Log extends Listener
 {
@@ -34,20 +33,13 @@ class Log extends Listener
     {
         $project = new Document($event->project);
         $execution = new Document($event->execution);
+
         if ($execution->getAttribute('resourceType', '') === 'functions') {
-            $traceProjectId = System::getEnv('_APP_TRACE_PROJECT_ID', '');
-            $traceFunctionId = System::getEnv('_APP_TRACE_FUNCTION_ID', '');
-            $resourceId = $execution->getAttribute('resourceId', '');
-            if ($traceProjectId !== '' && $traceFunctionId !== '' && $project->getId() === $traceProjectId && $resourceId === $traceFunctionId) {
-                Span::init('execution.trace.v1_executions_enqueue');
-                Span::add('datetime', gmdate('c'));
-                Span::add('projectId', $project->getId());
-                Span::add('functionId', $resourceId);
-                Span::add('executionId', $execution->getId());
-                Span::add('deploymentId', $execution->getAttribute('deploymentId', ''));
-                Span::add('status', $execution->getAttribute('status', ''));
-                Span::current()?->finish();
-            }
+            Span::add('project.id', $project->getId());
+            Span::add('function.id', $execution->getAttribute('resourceId', ''));
+            Span::add('execution.id', $execution->getId());
+            Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
+            Span::add('execution.status', $execution->getAttribute('status', ''));
         }
 
         $publisherForExecutions->enqueue(new ExecutionMessage(

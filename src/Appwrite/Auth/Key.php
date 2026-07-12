@@ -122,9 +122,9 @@ class Key
             $secret = $key;
         }
 
-        $role = User::ROLE_APPS;
+        $role = User::ROLE_KEYS;
         $roles = Config::getParam('roles', []);
-        $scopes = $roles[User::ROLE_APPS]['scopes'] ?? [];
+        $scopes = $roles[User::ROLE_KEYS]['scopes'] ?? [];
         $expired = false;
 
         $guestKey = new Key(
@@ -270,7 +270,7 @@ class Key
 
                 $name = $key->getAttribute('name', 'UNKNOWN');
 
-                $role = User::ROLE_APPS;
+                $role = User::ROLE_KEYS;
 
                 $scopes = $key->getAttribute('scopes', []);
 

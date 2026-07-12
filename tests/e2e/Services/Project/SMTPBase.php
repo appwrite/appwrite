@@ -294,6 +294,7 @@ trait SMTPBase
 
     public function testUpdateSMTPEmptySenderName(): void
     {
+        // Empty sender name is valid — PHPMailer accepts '' as display name.
         $response = $this->updateSMTP(
             senderName: '',
             senderEmail: 'sender@example.com',
@@ -301,11 +302,17 @@ trait SMTPBase
             port: 1025,
         );
 
-        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['smtpSenderName']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
     }
 
     public function testUpdateSMTPEmptySenderEmail(): void
     {
+        // Empty senderEmail clears the stored value; connection test is skipped when
+        // there is no valid From address, so this is accepted even without enabled=false.
         $response = $this->updateSMTP(
             senderName: 'Test',
             senderEmail: '',
@@ -313,7 +320,11 @@ trait SMTPBase
             port: 1025,
         );
 
-        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['smtpSenderEmail']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
     }
 
     public function testUpdateSMTPEmptyHost(): void
@@ -351,6 +362,59 @@ trait SMTPBase
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateSMTPReplyToEmailCanBeCleared(): void
+    {
+        // Step 1: Set a custom replyToEmail.
+        $set = $this->updateSMTP(
+            senderName: 'Test Sender',
+            senderEmail: 'sender@example.com',
+            host: 'maildev',
+            port: 1025,
+            replyToEmail: 'reply@example.com',
+        );
+        $this->assertSame(200, $set['headers']['status-code']);
+        $this->assertSame('reply@example.com', $set['body']['smtpReplyToEmail']);
+
+        // Step 2: Clear it with an empty string.
+        $clear = $this->updateSMTP(replyToEmail: '');
+        $this->assertSame(200, $clear['headers']['status-code']);
+        $this->assertSame('', $clear['body']['smtpReplyToEmail']);
+
+        // Step 3: Verify the cleared value persists.
+        $verify = $this->updateSMTP();
+        $this->assertSame(200, $verify['headers']['status-code']);
+        $this->assertSame('', $verify['body']['smtpReplyToEmail']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
+    }
+
+    public function testUpdateSMTPSenderEmailCanBeClearedWhenDisabled(): void
+    {
+        // Step 1: Configure SMTP with a sender email, then disable it.
+        $this->updateSMTP(
+            senderName: 'Test Sender',
+            senderEmail: 'sender@example.com',
+            host: 'maildev',
+            port: 1025,
+            enabled: false,
+        );
+
+        // Step 2: Clear senderEmail while keeping SMTP disabled.
+        // enabled=false skips the PHPMailer connection check so empty senderEmail is valid.
+        $clear = $this->updateSMTP(
+            senderEmail: '',
+            enabled: false,
+        );
+        $this->assertSame(200, $clear['headers']['status-code']);
+        $this->assertSame('', $clear['body']['smtpSenderEmail']);
+
+        // Step 3: Verify the cleared value persists.
+        $verify = $this->updateSMTP(enabled: false);
+        $this->assertSame(200, $verify['headers']['status-code']);
+        $this->assertSame('', $verify['body']['smtpSenderEmail']);
     }
 
     public function testUpdateSMTPInvalidSecure(): void
@@ -461,6 +525,7 @@ trait SMTPBase
 
     public function testUpdateSMTPUsernameEmpty(): void
     {
+        // Empty string clears a previously-set username (no-auth SMTP).
         $response = $this->updateSMTP(
             senderName: 'Test',
             senderEmail: 'sender@example.com',
@@ -469,7 +534,11 @@ trait SMTPBase
             username: '',
         );
 
-        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['smtpUsername']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
     }
 
     public function testUpdateSMTPPasswordMinLength(): void
@@ -524,6 +593,7 @@ trait SMTPBase
 
     public function testUpdateSMTPPasswordEmpty(): void
     {
+        // Empty string clears a previously-set password (no-auth SMTP).
         $response = $this->updateSMTP(
             senderName: 'Test',
             senderEmail: 'sender@example.com',
@@ -532,7 +602,45 @@ trait SMTPBase
             password: '',
         );
 
-        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        // smtpPassword is write-only and never echoed back.
+        $this->assertSame('', $response['body']['smtpPassword']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
+    }
+
+    public function testUpdateSMTPCredentialsCanBeCleared(): void
+    {
+        // Step 1: Set username and password.
+        $set = $this->updateSMTP(
+            senderName: 'Test Sender',
+            senderEmail: 'sender@example.com',
+            host: 'maildev',
+            port: 1025,
+            username: 'myuser',
+            password: 'mypassword',
+        );
+        $this->assertSame(200, $set['headers']['status-code']);
+        $this->assertSame('myuser', $set['body']['smtpUsername']);
+
+        // Step 2: Clear both credentials by passing empty strings.
+        $clear = $this->updateSMTP(
+            username: '',
+            password: '',
+        );
+        $this->assertSame(200, $clear['headers']['status-code']);
+        $this->assertSame('', $clear['body']['smtpUsername']);
+        // smtpPassword is write-only and never echoed back regardless.
+        $this->assertSame('', $clear['body']['smtpPassword']);
+
+        // Step 3: Verify the cleared username persists (a no-params PATCH must not restore it).
+        $verify = $this->updateSMTP();
+        $this->assertSame(200, $verify['headers']['status-code']);
+        $this->assertSame('', $verify['body']['smtpUsername']);
+
+        // Cleanup
+        $this->updateSMTP(enabled: false);
     }
 
     public function testUpdateSMTPWithoutSecure(): void

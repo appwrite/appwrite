@@ -13,6 +13,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -45,7 +46,7 @@ Http::get('/v1/mock/tests/locale')
     ->inject('request')
     ->inject('response')
     ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
         if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
@@ -68,7 +69,9 @@ Http::get('/v1/mock/tests/general/oauth2/token')
     ->inject('response')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
-        if ($client_id != '1') {
+        $canonicalEmail = \str_starts_with($client_id, 'canonical-');
+
+        if ($client_id != '1' && !$canonicalEmail) {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
         }
 
@@ -77,7 +80,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
 
         $responseJson = [
-            'access_token' => '123456',
+            'access_token' => $canonicalEmail ? $client_id : '123456',
             'refresh_token' => 'tuvwxyz',
             'expires_in' => 14400
         ];
@@ -108,16 +111,26 @@ Http::get('/v1/mock/tests/general/oauth2/user')
     ->inject('response')
     ->action(function (string $token, Response $response) {
 
-        if ($token != '123456') {
+        if ($token === '123456') {
+            $user = [
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'useroauth@localhost.test',
+                'verified' => true,
+            ];
+        } elseif (\str_starts_with($token, 'canonical-')) {
+            $id = \substr($token, \strlen('canonical-'));
+            $user = [
+                'id' => $id,
+                'name' => 'Canonical Email User',
+                'email' => 'oauth.' . $id . '@gmail.com',
+                'verified' => true,
+            ];
+        } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
         }
 
-        $response->json([
-            'id' => 1,
-            'name' => 'User Name',
-            'email' => 'useroauth@localhost.test',
-            'verified' => true,
-        ]);
+        $response->json($user);
     });
 
 Http::get('/v1/mock/tests/general/oauth2/user-unverified')
@@ -283,13 +296,11 @@ Http::get('/v1/mock/github/callback')
 
 Http::shutdown()
     ->groups(['mock'])
-    ->inject('utopia')
     ->inject('response')
-    ->inject('request')
-    ->action(function (Http $utopia, Response $response, Request $request) {
+    ->inject('route')
+    ->action(function (Response $response, Route $route) {
 
         $result = [];
-        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

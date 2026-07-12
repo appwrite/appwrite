@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Delete;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use DateInterval;
 use DateTime;
 use Utopia\Console;
@@ -30,11 +31,11 @@ class Maintenance extends Action
             ->inject('dbForPlatform')
             ->inject('console')
             ->inject('publisherForCertificates')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
-    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Delete $queueForDeletes): void
+    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, DeletePublisher $publisherForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -59,7 +60,7 @@ class Maintenance extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $publisherForCertificates) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -70,12 +71,12 @@ class Maintenance extends Action
 
             $dbForPlatform->foreach(
                 'projects',
-                function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_MAINTENANCE)
-                        ->setProject($project)
-                        ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                        ->trigger();
+                function (Document $project) use ($publisherForDeletes, $usageStatsRetentionHourly) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $project,
+                        type: DELETE_TYPE_MAINTENANCE,
+                        hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+                    ));
                 },
                 [
                     Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
@@ -85,17 +86,17 @@ class Maintenance extends Action
                 ]
             );
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_MAINTENANCE)
-                ->setProject($console)
-                ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $console,
+                type: DELETE_TYPE_MAINTENANCE,
+                hourlyUsageRetentionDatetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly),
+            ));
 
-            $this->notifyDeleteConnections($queueForDeletes);
+            $this->notifyDeleteConnections($publisherForDeletes);
             $this->renewCertificates($dbForPlatform, $publisherForCertificates);
-            $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-            $this->notifyDeleteCSVExports($queueForDeletes);
+            $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
+            $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
+            $this->notifyDeleteCSVExports($publisherForDeletes);
         };
 
         if ($type === 'loop') {
@@ -109,19 +110,17 @@ class Maintenance extends Action
         }
     }
 
-    private function notifyDeleteConnections(Delete $queueForDeletes): void
+    private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_REALTIME)
-            ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -60))
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_REALTIME,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -60),
+        ));
     }
 
-    private function notifyDeleteCSVExports(Delete $queueForDeletes): void
+    private function notifyDeleteCSVExports(DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_CSV_EXPORTS)
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
     }
 
     private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate): void
@@ -172,19 +171,19 @@ class Maintenance extends Action
         }
     }
 
-    private function notifyDeleteCache($interval, Delete $queueForDeletes): void
+    private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
-            ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval))
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
     }
 
-    private function notifyDeleteSchedules($interval, Delete $queueForDeletes): void
+    private function notifyDeleteSchedules($interval, DeletePublisher $publisherForDeletes): void
     {
-        $queueForDeletes
-            ->setType(DELETE_TYPE_SCHEDULES)
-            ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval))
-            ->trigger();
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_SCHEDULES,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
     }
 }

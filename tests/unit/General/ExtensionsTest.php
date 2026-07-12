@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\General;
 
 use PHPUnit\Framework\TestCase;
 
-class ExtensionsTest extends TestCase
+final class ExtensionsTest extends TestCase
 {
     public function testPHPRedis(): void
     {

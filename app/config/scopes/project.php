@@ -65,6 +65,16 @@ return [
             "Access to update project\'s policies",
         "category" => "Project",
     ],
+    "project.oauth2.read" => [
+        "description" =>
+            "Access to read project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
+    "project.oauth2.write" => [
+        "description" =>
+            "Access to update project\'s OAuth2 configuration.",
+        "category" => "Project",
+    ],
     "templates.read" => [
         "description" =>
             "Access to read project\'s templates",
@@ -75,14 +85,14 @@ return [
             "Access to create, update, and delete project\'s templates",
         "category" => "Project",
     ],
-    "oauth2.read" => [
+    "stages.read" => [
         "description" =>
-            "Access to read project\'s OAuth2 configuration",
+            "Access to read project\'s stages",
         "category" => "Project",
     ],
-    "oauth2.write" => [
+    "stages.write" => [
         "description" =>
-            "Access to update project\'s OAuth2 configuration",
+            "Access to update project\'s stages",
         "category" => "Project",
     ],
 
@@ -360,5 +370,31 @@ return [
     'vcs.write' => [
         'description' => 'Access to create, update, and delete resources under VCS service.',
         'category' => 'Other',
+    ],
+
+    // Advisor
+    'insights.read' => [
+        'description' => 'Access to read insights under Advisor service.',
+        'category' => 'Advisor',
+    ],
+    'insights.write' => [
+        'description' => 'Reserved for Advisor insight ingestion outside CE.',
+        'category' => 'Advisor',
+    ],
+    'reports.read' => [
+        'description' => 'Access to read reports under Advisor service.',
+        'category' => 'Advisor',
+    ],
+    'reports.write' => [
+        'description' => 'Access to delete reports under Advisor service.',
+        'category' => 'Advisor',
+    ],
+    'presences.read' => [
+        'description' => 'Access to read your project\'s presences',
+        'category' => 'Presences',
+    ],
+    'presences.write' => [
+        'description' => 'Access to create, update, and delete your project\'s presences',
+        'category' => 'Presences',
     ],
 ];

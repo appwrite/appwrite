@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -57,7 +58,7 @@ class Delete extends Action
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -68,7 +69,7 @@ class Delete extends Action
         Response $response,
         Document $project,
         Database $dbForPlatform,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
         Authorization $authorization,
     ) {
@@ -80,9 +81,11 @@ class Delete extends Action
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $rule->getId()));
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($rule);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $rule,
+        ));
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 

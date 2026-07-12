@@ -2,9 +2,6 @@
 
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Extend\Exception;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -27,37 +24,6 @@ Http::init()
         }
     });
 
-Http::get('/v1/projects/:projectId')
-    ->desc('Get project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'get',
-        description: '/docs/references/projects/get.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
 // Backwards compatibility
 Http::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
@@ -72,27 +38,33 @@ Http::patch('/v1/projects/:projectId/oauth2')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForPlatform) {
 
-        $project = $dbForPlatform->getDocument('projects', $projectId);
+        $project = $dbForPlatform->withTransaction(function () use ($dbForPlatform, $projectId, $provider, $appId, $secret, $enabled) {
+            $project = $dbForPlatform->getDocument('projects', $projectId, forUpdate: true);
 
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
 
-        $providers = $project->getAttribute('oAuthProviders', []);
+            $providers = $project->getAttribute('oAuthProviders', []);
 
-        if ($appId !== null) {
-            $providers[$provider . 'Appid'] = $appId;
-        }
+            if ($appId !== null) {
+                $providers[$provider . 'Appid'] = $appId;
+            }
 
-        if ($secret !== null) {
-            $providers[$provider . 'Secret'] = $secret;
-        }
+            if ($secret !== null) {
+                $providers[$provider . 'Secret'] = $secret;
+            }
 
-        if ($enabled !== null) {
-            $providers[$provider . 'Enabled'] = $enabled;
-        }
+            if ($enabled !== null) {
+                $providers[$provider . 'Enabled'] = $enabled;
+            }
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
+            return $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'oAuthProviders' => $providers,
+            ]));
+        });
+
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

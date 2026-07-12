@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Database\Validator\Queries;
 
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Query;
 
-class UsersTest extends TestCase
+final class UsersTest extends TestCase
 {
     public function setUp(): void
     {

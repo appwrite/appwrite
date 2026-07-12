@@ -34,7 +34,7 @@ import { Client } from 'react-native-appwrite';
 const client = new Client();
 
 client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
+    .setEndpoint('http://localhost:9520/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj') // Your project ID
     .setPlatform('com.example.myappwriteapp') // Your application ID or bundle ID.
 ;
@@ -65,7 +65,7 @@ import { Client, Account } from 'react-native-appwrite';
 const client = new Client();
 
 client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
+    .setEndpoint('http://localhost:9520/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj')
     .setPlatform('com.example.myappwriteapp') // YOUR application ID
 ;

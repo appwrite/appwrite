@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Sites;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class SitesCustomClientTest extends Scope
+final class SitesCustomClientTest extends Scope
 {
     use SitesBase;
     use ProjectCustom;
@@ -129,8 +131,8 @@ class SitesCustomClientTest extends Scope
         $this->assertEquals('github', $template['body']['vcsProvider']);
         $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
-        $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
-        $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);
+        $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', (string) $template['body']['screenshotDark']);
+        $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', (string) $template['body']['screenshotLight']);
 
         /**
          * Test for FAILURE

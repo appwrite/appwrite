@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
@@ -7,7 +9,7 @@ use Appwrite\Utopia\Request\Filters\V19;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V19Test extends TestCase
+final class V19Test extends TestCase
 {
     /**
      * @var Filter
@@ -23,39 +25,35 @@ class V19Test extends TestCase
     {
     }
 
-    public static function functionsCreateProvider(): array
+    public static function functionsCreateProvider(): \Iterator
     {
-        return [
-            'remove template fields' => [
-                [
-                    'name' => 'test-function',
-                    'runtime' => 'node-18.0',
-                    'templateRepository' => 'github.com/appwrite/templates',
-                    'templateOwner' => 'appwrite',
-                    'templateRootDirectory' => 'functions/node',
-                    'templateVersion' => '1.0.0'
-                ],
-                [
-                    'name' => 'test-function',
-                    'runtime' => 'node-18.0'
-                ]
+        yield 'remove template fields' => [
+            [
+                'name' => 'test-function',
+                'runtime' => 'node-18.0',
+                'templateRepository' => 'github.com/appwrite/templates',
+                'templateOwner' => 'appwrite',
+                'templateRootDirectory' => 'functions/node',
+                'templateVersion' => '1.0.0'
+            ],
+            [
+                'name' => 'test-function',
+                'runtime' => 'node-18.0'
             ]
         ];
     }
 
-    public static function functionsListExecutionsProvider(): array
+    public static function functionsListExecutionsProvider(): \Iterator
     {
-        return [
-            'remove search field' => [
-                [
-                    'functionId' => 'test-function',
-                    'search' => 'test query',
-                    'limit' => 10
-                ],
-                [
-                    'functionId' => 'test-function',
-                    'limit' => 10
-                ]
+        yield 'remove search field' => [
+            [
+                'functionId' => 'test-function',
+                'search' => 'test query',
+                'limit' => 10
+            ],
+            [
+                'functionId' => 'test-function',
+                'limit' => 10
             ]
         ];
     }
