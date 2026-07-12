@@ -16,6 +16,7 @@ use Appwrite\Realtime\Message\Handlers\Ping as PingHandler;
 use Appwrite\Realtime\Message\Handlers\Presence as PresenceHandler;
 use Appwrite\Realtime\Message\Handlers\Subscribe as SubscribeHandler;
 use Appwrite\Realtime\Message\Handlers\Unsubscribe as UnsubscribeHandler;
+use Appwrite\Redis\Auth as RedisAuth;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -239,13 +240,12 @@ if (!function_exists('getRedis')) {
 
         $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
         $port = System::getEnv('_APP_REDIS_PORT', 6379);
+        $user = System::getEnv('_APP_REDIS_USER', '');
         $pass = System::getEnv('_APP_REDIS_PASS', '');
 
         $redis = new \Redis();
         @$redis->pconnect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($pass);
-        }
+        RedisAuth::authenticate($redis, $user, $pass);
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
         return $ctx['redis'] = $redis;

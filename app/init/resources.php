@@ -18,6 +18,7 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Redis\Auth as RedisAuth;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -240,13 +241,12 @@ $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $conf
 $container->set('redis', function () {
     $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
     $port = System::getEnv('_APP_REDIS_PORT', 6379);
+    $user = System::getEnv('_APP_REDIS_USER', '');
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
     @$redis->pconnect($host, (int) $port);
-    if ($pass) {
-        $redis->auth($pass);
-    }
+    RedisAuth::authenticate($redis, $user, $pass);
     $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
