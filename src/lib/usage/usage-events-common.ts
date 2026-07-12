@@ -28,6 +28,7 @@ import {
 } from '@/lib/usage/usage-date-range'
 import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
+import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'
 export {
@@ -130,6 +131,9 @@ function getUsageDataPointBreakdownLabel(
 }
 
 function getUsageBreakdownItemMergeKey(item: UsageBreakdownItem): string {
+  if (isUsageProjectResourceType(item.resourceType)) {
+    return 'project'
+  }
   if (item.resourceId && item.resourceType) {
     return `${item.resourceType}\0${item.resourceId}`
   }
@@ -141,8 +145,17 @@ function mapBreakdownGroupsForResourceDimensions(
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
 ): UsageBreakdownItem[] {
   const items = groups.map((group, index) => {
-    const resourceId = group.resourceId?.trim() || 'Unknown'
     const resourceType = group.resourceType?.trim() || 'Unknown'
+    if (isUsageProjectResourceType(resourceType)) {
+      return {
+        id: `resource-project-${index}`,
+        label: 'project',
+        count: group.value,
+        resourceType: 'project',
+      }
+    }
+
+    const resourceId = group.resourceId?.trim() || 'Unknown'
     return {
       id: `resource-${resourceType}-${resourceId}-${index}`,
       label: resourceId,
@@ -152,7 +165,7 @@ function mapBreakdownGroupsForResourceDimensions(
     }
   })
 
-  return items.sort((a, b) => b.count - a.count).slice(0, limit)
+  return mergeUsageBreakdownItems([items], limit)
 }
 
 function mapBreakdownGroupsForDimension(
@@ -493,8 +506,18 @@ function mapBreakdownGroupsToEndpoints(
     dimensions.includes('resourceId') &&
     dimensions.includes('resourceType')) {
     items = groups.map((group, index) => {
-      const resourceId = group.resourceId?.trim() || ''
       const resourceType = group.resourceType?.trim() || ''
+      if (isUsageProjectResourceType(resourceType)) {
+        return {
+          id: `project-${index}`,
+          method: '',
+          statusCode: 0,
+          path: 'project',
+          count: group.value,
+          resourceType: 'project',
+        }
+      }
+      const resourceId = group.resourceId?.trim() || ''
       return {
         id: resourceId || `resource-${index}`,
         method: '',

@@ -1,5 +1,6 @@
 import type { UsageTopEndpoint } from '@/lib/usage/usage-events-common'
 import type { UsageBreakdownItem } from '@/lib/usage/requests-breakdowns'
+import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 
 export const COMPUTE_EXECUTIONS_DESCRIPTION =
   'Function and site executions during the selected period. Each HTTP trigger, schedule run, event invocation, or site request counts as one execution.'
@@ -35,11 +36,22 @@ export const COMPUTE_SITE_GB_HOURS_BREAKDOWN_TITLE = 'Resource IDs'
 export function topConsumersToBreakdownItems(
   topConsumers: UsageTopEndpoint[],
 ): UsageBreakdownItem[] {
-  return topConsumers.map((item) => ({
-    id: item.id,
-    label: item.path,
-    count: item.count,
-    resourceId: item.path,
-    resourceType: item.resourceType,
-  }))
+  return topConsumers.map((item) => {
+    if (isUsageProjectResourceType(item.resourceType)) {
+      return {
+        id: item.id,
+        label: 'project',
+        count: item.count,
+        resourceType: 'project',
+      }
+    }
+
+    return {
+      id: item.id,
+      label: item.path,
+      count: item.count,
+      resourceId: item.path,
+      resourceType: item.resourceType,
+    }
+  })
 }

@@ -165,8 +165,9 @@ export function shouldRefetchUsageChartOnMount(rangeKeyPart: string): boolean {
     rangeKeyPart.startsWith('preset:today') ||
     rangeKeyPart.startsWith('preset:yesterday') ||
     rangeKeyPart.startsWith('preset:7d') ||
-    rangeKeyPart.startsWith('preset:14d') ||
-    rangeKeyPart.startsWith('preset:30d')
+    rangeKeyPart.startsWith('preset:30d') ||
+    rangeKeyPart.startsWith('preset:wtd') ||
+    rangeKeyPart.startsWith('preset:mtd')
   )
 }
 

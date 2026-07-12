@@ -20,6 +20,7 @@ import {
 } from '@/lib/locale/country-lookups'
 import {
   formatUsageServiceLabel,
+  getUsageResourceTypeIcon,
   getUsageServiceIcon,
 } from '@/lib/usage/appwrite-service-icons'
 import {
@@ -95,6 +96,9 @@ export function formatBreakdownLabel(
       storageLookup,
       tableLookup,
     })
+    if (!resolved.name) {
+      return resolved.typeLabel
+    }
     return `${resolved.typeLabel} / ${resolved.name}`
   }
   if (dimension === 'resourceId') {
@@ -190,9 +194,25 @@ function UsageServiceIcon({ service }: { service: string }) {
   )
 }
 
+function UsageResourceTypeIcon({ resourceType }: { resourceType: string }) {
+  const Icon = getUsageResourceTypeIcon(resourceType)
+
+  return (
+    <div
+      className={cn(
+        breakdownLeadingIconFrameClass,
+        'border-transparent bg-muted/30',
+      )}
+      aria-hidden
+    >
+      <Icon className="h-3 w-3 text-muted-foreground" />
+    </div>
+  )
+}
+
 type BreakdownResourceRowLabelProps = {
   typeLabel: string
-  name: string
+  name?: string
   fullTitle?: string
 }
 
@@ -202,7 +222,19 @@ function BreakdownResourceRowLabel({
   fullTitle,
 }: BreakdownResourceRowLabelProps) {
   const t = useT()
-  const title = fullTitle ?? `${typeLabel} / ${name}`
+  const hasName = !!name?.trim()
+  const title = fullTitle ?? (hasName ? `${typeLabel} / ${name}` : typeLabel)
+
+  if (!hasName) {
+    return (
+      <span
+        className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground/70"
+        title={title}
+      >
+        {t(typeLabel)}
+      </span>
+    )
+  }
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
@@ -253,6 +285,7 @@ export function UsageBreakdownRow({
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
   const showServiceIcons = dimension === 'service'
+  const showResourceTypeIcons = dimension === 'resourceType'
   const showStatusBadges = dimension === 'status'
   const showMethodBadges = dimension === 'method'
   const resolvedResource =
@@ -358,6 +391,8 @@ export function UsageBreakdownRow({
             <HostnameFaviconIcon hostname={item.label} />
           ) : showServiceIcons ? (
             <UsageServiceIcon service={item.label} />
+          ) : showResourceTypeIcons ? (
+            <UsageResourceTypeIcon resourceType={item.label} />
           ) : showDatabaseIcons ? (
             <div className={breakdownLeadingIconFrameClass} aria-hidden>
               <DatabaseTypeIcon
@@ -365,17 +400,33 @@ export function UsageBreakdownRow({
                 className="h-3 w-3"
               />
             </div>
+          ) : computeResource || storageResource || tableResource ? (
+            <UsageResourceTypeIcon
+              resourceType={
+                computeResource
+                  ? computeResource.type
+                  : storageResource
+                    ? 'bucket'
+                    : `database/${tableResource!.databaseId}/table`
+              }
+            />
+          ) : resolvedResource &&
+            !databaseResource &&
+            item.resourceType?.trim() ? (
+            <UsageResourceTypeIcon resourceType={item.resourceType} />
           ) : null}
           {showResourceBreakdownLabel && resolvedResource ? (
             <BreakdownResourceRowLabel
               typeLabel={resolvedResource.typeLabel}
               name={
-                (item.resourceId ?? item.label) === resolvedResource.name
-                  ? truncateMiddle(
-                      compactUsagePathIds(resolvedResource.name),
-                      PATH_DISPLAY_MAX,
-                    )
-                  : resolvedResource.name
+                resolvedResource.name
+                  ? (item.resourceId ?? item.label) === resolvedResource.name
+                    ? truncateMiddle(
+                        compactUsagePathIds(resolvedResource.name),
+                        PATH_DISPLAY_MAX,
+                      )
+                    : resolvedResource.name
+                  : undefined
               }
             />
           ) : computeResource ? (
@@ -428,6 +479,7 @@ export function UsageBreakdownRow({
                   dimension !== 'country' &&
                   dimension !== 'hostname' &&
                   dimension !== 'service' &&
+                  dimension !== 'resourceType' &&
                   'font-mono',
               )}
               title={displayLabel}

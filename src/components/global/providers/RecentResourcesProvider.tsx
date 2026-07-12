@@ -16,6 +16,7 @@ import {
   readRecentResourcesFromStorage,
   resolveRecentDatabaseIconHints,
   resolveRecentResourceName,
+  resolveRecentSiteFramework,
   upsertRecentResource,
   writeRecentResourcesToStorage,
   type RecentResource,
@@ -31,6 +32,7 @@ interface RecentResourcesContextType {
       'projectId' | 'kind' | 'resourceId'
     > | null
   }) => RecentResource[]
+  clearRecentResources: () => void
 }
 
 const RecentResourcesContext =
@@ -63,7 +65,8 @@ export function RecentResourcesProvider({
         existing.name === entry.name &&
         existing.href === entry.href &&
         existing.databaseApiType === entry.databaseApiType &&
-        existing.databaseEngine === entry.databaseEngine
+        existing.databaseEngine === entry.databaseEngine &&
+        existing.siteFramework === entry.siteFramework
       ) {
         return current
       }
@@ -89,12 +92,29 @@ export function RecentResourcesProvider({
       unsubscribe = undefined
     }
 
-    const tryRecord = () => {
+    const tryRecord = (options?: { forceFinish?: boolean }) => {
       if (done) return
       const name = resolveRecentResourceName(queryClient, ref)
-      if (!name) return
+      if (!name) {
+        if (options?.forceFinish) finish()
+        return
+      }
       const databaseIconHints = resolveRecentDatabaseIconHints(queryClient, ref)
-      recordResource(buildRecentResource(ref, name, Date.now(), databaseIconHints))
+      const siteFramework = resolveRecentSiteFramework(queryClient, ref)
+      recordResource(
+        buildRecentResource(
+          ref,
+          name,
+          Date.now(),
+          databaseIconHints,
+          siteFramework,
+        ),
+      )
+      // Sites need the framework for the correct icon; keep waiting until it
+      // lands in cache (or the final retry forces finish).
+      if (ref.kind === 'site' && !siteFramework && !options?.forceFinish) {
+        return
+      }
       finish()
     }
 
@@ -102,8 +122,17 @@ export function RecentResourcesProvider({
     if (done) return
 
     // Detail loaders often populate the cache just after navigation.
-    for (const ms of [50, 200, 500, 1500]) {
-      timeouts.push(window.setTimeout(tryRecord, ms))
+    const retryDelays = [50, 200, 500, 1500]
+    for (const ms of retryDelays) {
+      timeouts.push(
+        window.setTimeout(
+          () =>
+            tryRecord({
+              forceFinish: ms === retryDelays[retryDelays.length - 1],
+            }),
+          ms,
+        ),
+      )
     }
 
     unsubscribe = queryClient.getQueryCache().subscribe(() => {
@@ -121,9 +150,14 @@ export function RecentResourcesProvider({
     [resources],
   )
 
+  const clearRecentResources = useCallback(() => {
+    setResources([])
+    writeRecentResourcesToStorage([])
+  }, [])
+
   const value = useMemo(
-    () => ({ resources, getRecentResources }),
-    [resources, getRecentResources],
+    () => ({ resources, getRecentResources, clearRecentResources }),
+    [resources, getRecentResources, clearRecentResources],
   )
 
   return (

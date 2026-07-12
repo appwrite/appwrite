@@ -72,6 +72,7 @@ import {
   PROJECT_RESOURCE_KIND_LABELS,
   RECENT_RESOURCES_MAX_SHOWN,
   getRecentResourceDatabaseIconHints,
+  getRecentResourceSiteFramework,
   getRecentResourceBreadcrumbs,
   parseRecentResourceRef,
   searchCommands,
@@ -93,6 +94,7 @@ import { CommandCenterSupportView } from '@/components/global/shared/CommandCent
 import { useDocsPreview } from '@/components/global/providers/DocsPreview'
 import { useRecentResourcesSafe } from '@/components/global/providers/RecentResourcesProvider'
 import { DatabaseTypeIcon } from '@/components/pages/projects/$projectId/databases/_components/DatabaseTypeIcon'
+import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { isConsoleDocsPreviewPath } from '@/lib/docs/docs-preview-context'
 import { getDocsPageUrlFromSlug } from '@/lib/marketing/urls'
 import { openInNewWindow } from '@/lib/utils/context-menu'
@@ -594,20 +596,30 @@ export function CommandCenter({
         entry.kind === 'database'
           ? getRecentResourceDatabaseIconHints(entry)
           : null
+      const siteFramework =
+        entry.kind === 'site'
+          ? getRecentResourceSiteFramework(entry)
+          : undefined
 
       return {
         id: `recent.${entry.key}`,
         label: entry.name,
         breadcrumbs: getRecentResourceBreadcrumbs(entry),
         icon: RESOURCE_KIND_ICONS[entry.kind],
-        iconElement:
-          databaseIconHints && (databaseIconHints.apiType || databaseIconHints.engine) ? (
-            <DatabaseTypeIcon
-              apiType={databaseIconHints.apiType}
-              engine={databaseIconHints.engine}
-              className="h-3.5 w-3.5"
-            />
-          ) : undefined,
+        iconElement: siteFramework ? (
+          <FrameworkIcon
+            framework={siteFramework}
+            size="sm"
+            className="h-3.5 w-3.5"
+          />
+        ) : databaseIconHints &&
+          (databaseIconHints.apiType || databaseIconHints.engine) ? (
+          <DatabaseTypeIcon
+            apiType={databaseIconHints.apiType}
+            engine={databaseIconHints.engine}
+            className="h-3.5 w-3.5"
+          />
+        ) : undefined,
         kind: 'action' as CommandKind,
         group: 'Recent',
         // Prefer the stored resource path so postgres / product-kind URLs stay correct.

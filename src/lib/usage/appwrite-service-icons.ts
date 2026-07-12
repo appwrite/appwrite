@@ -5,6 +5,7 @@ import {
   Boxes,
   Building2,
   Code,
+  Database,
   Folder,
   GitBranch,
   Globe,
@@ -15,6 +16,7 @@ import {
   Network,
   Radio,
   ScanSearch,
+  Table as TableIcon,
   Upload,
   User,
   UserCircle,
@@ -96,4 +98,31 @@ export function formatUsageServiceLabel(service: string): string {
   if (databaseLabel) return databaseLabel
 
   return translate(USAGE_SERVICE_LABEL_MAP[key] ?? service.trim())
+}
+
+const USAGE_RESOURCE_TYPE_ICON_MAP: Record<string, LucideIcon> = {
+  project: Boxes,
+  function: Zap,
+  site: Globe,
+  bucket: Folder,
+  database: Database,
+}
+
+/** Leading icon for usage breakdown rows grouped by resource type. */
+export function getUsageResourceTypeIcon(resourceType: string): LucideIcon {
+  const key = normalizeUsageServiceKey(resourceType)
+  if (!key || key === 'unknown') return MoreHorizontal
+
+  if (USAGE_RESOURCE_TYPE_ICON_MAP[key]) {
+    return USAGE_RESOURCE_TYPE_ICON_MAP[key]
+  }
+
+  if (/^database\/[^/]+\/table$/.test(key)) {
+    return TableIcon
+  }
+
+  const databaseIcon = getDatabaseServiceLucideIcon(key)
+  if (databaseIcon) return databaseIcon
+
+  return getScopeCategoryIcon(key, key)
 }

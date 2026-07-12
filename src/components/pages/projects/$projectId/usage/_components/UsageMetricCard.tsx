@@ -148,6 +148,7 @@ export function UsageBreakdownCard({
   const showCountryFlags = dimension === 'country' && !!countryLookups
   const showHostnameFavicons = dimension === 'hostname'
   const showServiceIcons = dimension === 'service'
+  const showResourceTypeIcons = dimension === 'resourceType'
   const showResourceIcons =
     (dimension === 'resource' || dimension === 'resourceId') &&
     !!(databaseLookup || computeLookup || storageLookup || tableLookup) &&
@@ -156,6 +157,7 @@ export function UsageBreakdownCard({
     showCountryFlags ||
     showHostnameFavicons ||
     showServiceIcons ||
+    showResourceTypeIcons ||
     showResourceIcons
   const showEmptyOverlay = !isLoading && !isError && items.length === 0
   const showShowMore =

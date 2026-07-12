@@ -48,6 +48,8 @@ export interface RecentResource {
   databaseApiType?: string
   /** Native dedicated database engine (postgres, mysql, mongo). */
   databaseEngine?: string
+  /** Site build framework key (e.g. nextjs, react) for FrameworkIcon. */
+  siteFramework?: string
 }
 
 type ParsedResourceRef = {
@@ -219,6 +221,53 @@ export function getRecentResourceDatabaseIconHints(
     }
   }
   return parseDatabaseIconHintsFromHref(entry.href)
+}
+
+function getSiteFrameworkFromModel(site: unknown): string | undefined {
+  if (!site || typeof site !== 'object') return undefined
+  const record = site as {
+    framework?: unknown
+    buildFramework?: unknown
+    buildFrameworkId?: unknown
+  }
+  for (const key of [
+    'framework',
+    'buildFramework',
+    'buildFrameworkId',
+  ] as const) {
+    const value = record[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return undefined
+}
+
+/** Resolve site framework key for a recent resource from the React Query cache. */
+export function resolveRecentSiteFramework(
+  queryClient: QueryClient,
+  ref: Pick<ParsedResourceRef, 'projectId' | 'resourceId' | 'kind'>,
+): string | undefined {
+  if (ref.kind !== 'site') return undefined
+
+  const { projectId, resourceId } = ref
+
+  const fromDirect = getSiteFrameworkFromModel(
+    queryClient.getQueryData(['site', 'project', projectId, resourceId]),
+  )
+  if (fromDirect) return fromDirect
+
+  return findInListCache(
+    queryClient,
+    ['sites', 'project', projectId],
+    (item: { $id: string }) => item.$id === resourceId,
+    (item) => getSiteFrameworkFromModel(item),
+  )
+}
+
+export function getRecentResourceSiteFramework(
+  entry: Pick<RecentResource, 'kind' | 'siteFramework'>,
+): string | undefined {
+  if (entry.kind !== 'site') return undefined
+  return entry.siteFramework
 }
 
 /** Human-readable database product or engine label for recent-resource breadcrumbs. */
@@ -634,6 +683,7 @@ export function buildRecentResource(
   name: string,
   viewedAt: number = Date.now(),
   databaseIconHints: RecentDatabaseIconHints = {},
+  siteFramework?: string,
 ): RecentResource {
   const databaseTypeLabel =
     ref.kind === 'database'
@@ -659,6 +709,9 @@ export function buildRecentResource(
       : {}),
     ...(ref.kind === 'database' && databaseIconHints.engine
       ? { databaseEngine: databaseIconHints.engine }
+      : {}),
+    ...(ref.kind === 'site' && siteFramework
+      ? { siteFramework }
       : {}),
   }
 }

@@ -25,6 +25,7 @@ import {
   Boxes,
   Keyboard,
   Terminal,
+  History,
   Search,
   X,
   Languages,
@@ -94,6 +95,7 @@ import { DebugMenuInitDayPanel } from '@/components/global/providers/DebugMenuIn
 import { DebugMenuInitTicketPanel } from '@/components/global/providers/DebugMenuInitTicketPanel'
 import { DebugMenuSeedResourcesPanel } from '@/components/global/providers/DebugMenuSeedResourcesPanel'
 import { DebugMenuTerminalPanel } from '@/components/global/providers/DebugMenuTerminalPanel'
+import { DebugMenuRecentResourcesPanel } from '@/components/global/providers/DebugMenuRecentResourcesPanel'
 import {
   useInitLowPowerAnimationDecision,
   type InitLowPowerAnimationDecision,
@@ -168,6 +170,7 @@ interface MenuItem {
     | 'initTicketMock'
     | 'seedResources'
     | 'terminalSettings'
+    | 'recentResources'
   /** Extra classes on submenu row buttons (e.g. separator above reset actions). */
   rowClassName?: string
   /** Feature flags submenu: group label for categorized lists. */
@@ -432,7 +435,8 @@ function menuItemHasSubmenu(item: MenuItem): boolean {
     item.submenuVariant === 'initDayMock' ||
     item.submenuVariant === 'initTicketMock' ||
     item.submenuVariant === 'seedResources' ||
-    item.submenuVariant === 'terminalSettings'
+    item.submenuVariant === 'terminalSettings' ||
+    item.submenuVariant === 'recentResources'
   )
 }
 
@@ -1335,6 +1339,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenuVariant: 'terminalSettings',
           },
           {
+            label: 'Recent resources',
+            description:
+              'Command Center recent list: view stored entries and reset localStorage',
+            icon: <History className="h-3 w-3" />,
+            submenuVariant: 'recentResources',
+          },
+          {
             label: 'Seed resources',
             description:
               'Create projects, mock memberships, empty DBs, buckets, and domains in the current context.',
@@ -1849,7 +1860,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               currentSubmenu?.submenuVariant === 'seedResources' ||
               currentSubmenu?.submenuVariant === 'initDayMock' ||
               currentSubmenu?.submenuVariant === 'initTicketMock' ||
-              currentSubmenu?.submenuVariant === 'terminalSettings'
+              currentSubmenu?.submenuVariant === 'terminalSettings' ||
+              currentSubmenu?.submenuVariant === 'recentResources'
               ? 'w-[min(92vw,720px)]'
               : 'w-80',
           )}
@@ -1920,6 +1932,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 <DebugMenuInitTicketPanel />
               ) : currentSubmenu.submenuVariant === 'terminalSettings' ? (
                 <DebugMenuTerminalPanel />
+              ) : currentSubmenu.submenuVariant === 'recentResources' ? (
+                <DebugMenuRecentResourcesPanel />
               ) : (
                 <nav
                   className="space-y-0.5"

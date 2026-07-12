@@ -14,6 +14,7 @@ import {
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
+import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 
 export type { UsageTopEndpoint, UsageChartInterval } from '@/lib/usage/usage-events-common'
 
@@ -116,9 +117,11 @@ function mapGaugeBreakdownGroups(
     const resourceId = group.resourceId?.trim()
     const resourceType = group.resourceType?.trim()
     const key = useResourceDimensions
-      ? resourceId && resourceType
-        ? `${resourceType}\0${resourceId}`
-        : undefined
+      ? isUsageProjectResourceType(resourceType)
+        ? 'project'
+        : resourceId && resourceType
+          ? `${resourceType}\0${resourceId}`
+          : undefined
       : dimension === 'resourceType'
         ? resourceType
         : resourceId
@@ -139,6 +142,16 @@ function mapGaugeBreakdownGroups(
     .sort((a, b) => b[1].value - a[1].value)
     .slice(0, limit)
     .map(([key, { value, resourceType }]) => {
+      if (useResourceDimensions && isUsageProjectResourceType(resourceType)) {
+        return {
+          id: 'project',
+          method: '',
+          statusCode: 0,
+          path: 'project',
+          count: value,
+          resourceType: 'project',
+        }
+      }
       const resourceId = useResourceDimensions ? key.split('\0')[1] ?? key : key
       return {
         id: resourceId,

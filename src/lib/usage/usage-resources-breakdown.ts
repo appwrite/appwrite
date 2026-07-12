@@ -2,7 +2,10 @@ import type {
   UsageBreakdownItem,
   UsageEventBreakdownDimension,
 } from '@/lib/usage/usage-events-common'
-import { parseTableUsageResourceType } from '@/lib/usage/usage-resource-filters'
+import {
+  isUsageProjectResourceType,
+  parseTableUsageResourceType,
+} from '@/lib/usage/usage-resource-filters'
 
 export const USAGE_RESOURCES_BREAKDOWN_TITLE = 'Resources'
 
@@ -17,6 +20,8 @@ export function getUsageBreakdownResourceIds(
   const ids = new Set<string>()
 
   for (const item of items) {
+    if (isUsageProjectResourceType(item.resourceType)) continue
+
     const resourceId = (item.resourceId ?? item.label).trim()
     if (!resourceId) continue
 

@@ -55,6 +55,13 @@ export function formatUsageResourceTypeLabel(value: string): string {
   return trimmed
 }
 
+/** Project-scoped usage has a resource type but no meaningful resource ID. */
+export function isUsageProjectResourceType(
+  resourceType: string | null | undefined,
+): boolean {
+  return resourceType?.trim().toLowerCase() === 'project'
+}
+
 type UsageResourceBreakdownLookups = {
   computeLookup?: ComputeBreakdownResourceMap | null
   storageLookup?: StorageBreakdownResourceMap | null
@@ -68,6 +75,13 @@ export function resolveUsageResourceBreakdownItem(
 ): ResolvedUsageResourceBreakdown {
   const resourceId = (item.resourceId ?? item.label).trim()
   const resourceType = item.resourceType?.trim() ?? ''
+
+  if (isUsageProjectResourceType(resourceType)) {
+    return {
+      typeLabel: formatUsageResourceTypeLabel('project'),
+      name: '',
+    }
+  }
 
   if (resourceType === 'function' || resourceType === 'site') {
     const computeResource = resolveComputeBreakdownResource(
@@ -192,13 +206,18 @@ export function getUsageResourceFilterEntries(
   },
   resourceType?: string,
 ): UsageBreakdownFilterEntry[] {
+  const normalizedType = resourceType?.trim() ?? ''
+  if (isUsageProjectResourceType(normalizedType)) {
+    return [{ dimension: 'resourceType', value: 'project' }]
+  }
+
   const resourceId = resourceIdLabel.trim()
   if (!resourceId) return []
 
-  if (resourceType?.trim()) {
+  if (normalizedType) {
     return [
       { dimension: 'resourceId', value: resourceId },
-      { dimension: 'resourceType', value: resourceType.trim() },
+      { dimension: 'resourceType', value: normalizedType },
     ]
   }
 

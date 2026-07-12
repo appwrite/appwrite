@@ -3,10 +3,15 @@ import {
   endOfDay,
   isSameDay,
   startOfDay,
+  startOfMonth,
+  startOfWeek,
   subDays,
   subHours,
 } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
+
+/** Analytics weeks start on Monday. */
+const WEEK_STARTS_ON = 1 as const
 
 function isFullCalendarDayRange(from: Date, to: Date): boolean {
   return (
@@ -84,20 +89,36 @@ export const USAGE_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
         }),
       },
       {
-        label: 'Last 14 days',
-        value: '14d',
-        getRange: () => ({
-          from: startOfDay(subDays(new Date(), 13)),
-          to: endOfDay(new Date()),
-        }),
-      },
-      {
         label: 'Last 30 days',
         value: '30d',
         getRange: () => ({
           from: startOfDay(subDays(new Date(), 29)),
           to: endOfDay(new Date()),
         }),
+      },
+    ],
+  },
+  {
+    title: 'To date',
+    presets: [
+      {
+        label: 'Week to date',
+        value: 'wtd',
+        getRange: () => {
+          const n = new Date()
+          return {
+            from: startOfWeek(n, { weekStartsOn: WEEK_STARTS_ON }),
+            to: endOfDay(n),
+          }
+        },
+      },
+      {
+        label: 'Month to date',
+        value: 'mtd',
+        getRange: () => {
+          const n = new Date()
+          return { from: startOfMonth(n), to: endOfDay(n) }
+        },
       },
     ],
   },
@@ -119,6 +140,15 @@ export function isRollingUsageDateRangePresetId(
     value,
   )
 }
+
+const CALENDAR_USAGE_DATE_RANGE_PRESET_VALUES = [
+  'today',
+  'yesterday',
+  '7d',
+  '30d',
+  'wtd',
+  'mtd',
+] as const
 
 const MATCH_TOLERANCE_MS = 60_000
 
@@ -166,11 +196,9 @@ export function dateRangeMatchesUsagePreset(
   const presetRange = preset.getRange()
 
   if (
-    preset.value === 'today' ||
-    preset.value === 'yesterday' ||
-    preset.value === '7d' ||
-    preset.value === '14d' ||
-    preset.value === '30d'
+    (CALENDAR_USAGE_DATE_RANGE_PRESET_VALUES as readonly string[]).includes(
+      preset.value,
+    )
   ) {
     return (
       range.from.getTime() === presetRange.from.getTime() &&
@@ -221,8 +249,9 @@ export function inferUsageDateRangePresetFromStoredRange(
   if (!range?.from || !range?.to) return null
 
   if (isFullCalendarDayRange(range.from, range.to)) {
+    const now = new Date()
+
     if (isSameDay(range.from, range.to)) {
-      const now = new Date()
       if (isSameDay(range.from, now)) {
         return getUsageDateRangePresetByValue('today') ?? null
       }
@@ -232,9 +261,22 @@ export function inferUsageDateRangePresetFromStoredRange(
       return null
     }
 
+    // To-date presets: require the range to end today so we do not treat an
+    // older custom span that starts on a period boundary as WTD/MTD/YTD.
+    if (isSameDay(range.to, now)) {
+      if (
+        range.from.getTime() ===
+        startOfWeek(now, { weekStartsOn: WEEK_STARTS_ON }).getTime()
+      ) {
+        return getUsageDateRangePresetByValue('wtd') ?? null
+      }
+      if (range.from.getTime() === startOfMonth(now).getTime()) {
+        return getUsageDateRangePresetByValue('mtd') ?? null
+      }
+    }
+
     const daySpan = differenceInCalendarDays(range.to, range.from) + 1
     if (daySpan === 7) return getUsageDateRangePresetByValue('7d') ?? null
-    if (daySpan === 14) return getUsageDateRangePresetByValue('14d') ?? null
     if (daySpan === 30) return getUsageDateRangePresetByValue('30d') ?? null
 
     return null
