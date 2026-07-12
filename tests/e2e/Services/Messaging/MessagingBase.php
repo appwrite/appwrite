@@ -1787,6 +1787,31 @@ trait MessagingBase
         $this->assertEquals(200, $image['headers']['status-code']);
     }
 
+    public function testCreateDraftPushWithDataOnly(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'title' => null,
+            'body' => null,
+            'data' => [
+                'event' => 'cache.invalidate',
+                'resource' => 'articles',
+            ],
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        $this->assertArrayNotHasKey('title', $response['body']['data']);
+        $this->assertArrayNotHasKey('body', $response['body']['data']);
+        $this->assertEquals('cache.invalidate', $response['body']['data']['data']['event']);
+        $this->assertEquals('articles', $response['body']['data']['data']['resource']);
+    }
+
     public function testScheduledMessage(): void
     {
         // Create user
