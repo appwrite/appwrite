@@ -186,11 +186,7 @@ class Update extends Base
         // some of the fields leaves the rest untouched.
         $encodedSecret = null;
         if (!\is_null($keyId) || !\is_null($teamId) || !\is_null($p8File)) {
-            $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-            $existing = [];
-            if (!empty($storedRaw)) {
-                $existing = \json_decode($storedRaw, true) ?: [];
-            }
+            $existing = $this->decodeStoredSecret($project);
             $encodedSecret = \json_encode([
                 'p8' => $p8File ?? ($existing['p8'] ?? ''),
                 'keyID' => $keyId ?? ($existing['keyID'] ?? ''),

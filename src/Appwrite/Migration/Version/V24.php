@@ -2,9 +2,11 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Auth\OAuth2\Secret as OAuth2Secret;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -362,6 +364,33 @@ class V24 extends Migration
     private function migrateDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
+            case 'projects':
+                $oAuthProviders = $document->getAttribute('oAuthProviders', []);
+                $changed = false;
+
+                foreach (\array_keys(Config::getParam('oAuthProviders', [])) as $provider) {
+                    $secretKey = $provider . 'Secret';
+
+                    if (!isset($oAuthProviders[$secretKey]) || !\is_array($oAuthProviders[$secretKey])) {
+                        continue;
+                    }
+
+                    if (!isset($oAuthProviders[$secretKey]['version'])) {
+                        continue;
+                    }
+
+                    try {
+                        $oAuthProviders[$secretKey] = OAuth2Secret::normalize($oAuthProviders[$secretKey]);
+                        $changed = true;
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to migrate legacy OAuth2 secret for provider \"{$provider}\": {$th->getMessage()}");
+                    }
+                }
+
+                if ($changed) {
+                    $document->setAttribute('oAuthProviders', $oAuthProviders);
+                }
+                break;
             case 'keys':
                 $projectInternalId = $document->getAttribute('projectInternalId');
                 $projectId = $document->getAttribute('projectId');

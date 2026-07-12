@@ -191,11 +191,7 @@ class Update extends Base
         // so that the OIDC OAuth2 adapter can extract each endpoint individually.
         // Merge new values with what's already stored so that submitting only a
         // subset of fields leaves the others untouched.
-        $storedRaw = $project->getAttribute('oAuthProviders', [])[$providerId . 'Secret'] ?? '';
-        $existing = [];
-        if (!empty($storedRaw)) {
-            $existing = \json_decode($storedRaw, true) ?: [];
-        }
+        $existing = $this->decodeStoredSecret($project);
 
         $merged = [
             'clientSecret' => $clientSecret ?? ($existing['clientSecret'] ?? ''),
