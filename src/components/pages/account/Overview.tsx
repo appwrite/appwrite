@@ -739,6 +739,9 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
   const queryClient = useQueryClient()
   const [setupDialogOpen, setSetupDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const deleteReauth = useMfaReauth({ factors, open: deleteDialogOpen })
   const [, setVerifyDialogOpen] = useState(false)
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [secret, setSecret] = useState<string | null>(null)
@@ -812,21 +815,32 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
     },
   })
 
-  const deleteAuthenticatorMutation = useMutation({
-    mutationFn: async () => {
-      return await sdk.forConsole.account.deleteMFAAuthenticator({
+  const handleDeleteSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setDeleteError(null)
+    setIsDeleting(true)
+
+    try {
+      const otp = readOtpFromForm(event.currentTarget, deleteReauth.code)
+      await deleteReauth.verify(otp)
+      await sdk.forConsole.account.deleteMFAAuthenticator({
         type: AuthenticatorType.Totp,
       })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
       setDeleteDialogOpen(false)
+      deleteReauth.reset()
       toast.success(t('Authenticator app has been deleted'))
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to delete authenticator'))
-    },
-  })
+      await queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('Failed to delete authenticator')
+      setDeleteError(message)
+      deleteReauth.setCode('')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const handleStartSetup = () => {
     resetSetupState()
@@ -852,7 +866,15 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
   }
 
   const handleDelete = () => {
+    setDeleteError(null)
     setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteDialogOpenChange = (open: boolean) => {
+    setDeleteDialogOpen(open)
+    if (!open) {
+      setDeleteError(null)
+    }
   }
 
   return (
@@ -886,7 +908,7 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleDelete}
-              disabled={deleteAuthenticatorMutation.isPending}
+              disabled={isDeleting}
             >
               {t('Delete')}
             </Button>
@@ -1019,34 +1041,54 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={handleDeleteDialogOpenChange}
+      >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Delete authenticator app')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t('This removes authenticator app codes from your account.')}
+              {t('This removes authenticator app codes from your account.')}{' '}
+              {t('To continue, verify your identity with a one-time code.')}
             </DialogDescription>
           </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleteAuthenticatorMutation.isPending}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => deleteAuthenticatorMutation.mutate()}
-              disabled={deleteAuthenticatorMutation.isPending}
-            >
-              {t('Delete')}
-            </Button>
-          </div>
+          <div className="border-t border-border" />
+          <form onSubmit={handleDeleteSubmit}>
+            <div className="px-6 py-4">
+              <MfaReauthForm reauth={deleteReauth} />
+              {deleteError && (
+                <p className="mt-3 text-[13px] text-destructive">
+                  {deleteError}
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => handleDeleteDialogOpenChange(false)}
+                disabled={isDeleting}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={
+                  !deleteReauth.isCodeValid ||
+                  !deleteReauth.isChallengeReady ||
+                  isDeleting
+                }
+              >
+                {t('Delete')}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </>
@@ -1181,10 +1223,17 @@ function RecoveryCodesMethod({
   const [regenerateError, setRegenerateError] = useState<string | null>(null)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
+  const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [viewError, setViewError] = useState<string | null>(null)
+  const [isViewVerifying, setIsViewVerifying] = useState(false)
   const reauth = useMfaReauth({
     factors,
     excludeRecoveryCode: true,
     open: regenerateDialogOpen,
+  })
+  const viewReauth = useMfaReauth({
+    factors,
+    open: viewDialogOpen,
   })
 
   const createRecoveryCodesMutation = useMutation({
@@ -1233,12 +1282,60 @@ function RecoveryCodesMethod({
       setRecoveryCodes(parseRecoveryCodes(data))
       setCodesDialogOpen(true)
     } catch (error: unknown) {
-      const err = error as { code?: number; message?: string }
+      const err = error as { code?: number; type?: string; message?: string }
       if (err.code === 404 || err.message?.includes('not found')) {
         createRecoveryCodesMutation.mutate()
+      } else if (err.type === 'user_challenge_required') {
+        setViewError(null)
+        setViewDialogOpen(true)
       } else {
         toast.error(err.message || t('Failed to get recovery codes'))
       }
+    }
+  }
+
+  const handleViewDialogOpenChange = (open: boolean) => {
+    setViewDialogOpen(open)
+    if (!open) {
+      setViewError(null)
+    }
+  }
+
+  const handleViewSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setViewError(null)
+    setIsViewVerifying(true)
+
+    try {
+      const otp = readOtpFromForm(event.currentTarget, viewReauth.code)
+      await viewReauth.verify(otp)
+      let data: Models.MfaRecoveryCodes
+      try {
+        data = await sdk.forConsole.account.getMFARecoveryCodes()
+      } catch (error: unknown) {
+        const err = error as { code?: number; message?: string }
+        if (err.code === 404 || err.message?.includes('not found')) {
+          data = await sdk.forConsole.account.createMFARecoveryCodes()
+          await queryClient.invalidateQueries({
+            queryKey: Dependencies.FACTORS,
+          })
+        } else {
+          throw error
+        }
+      }
+      setRecoveryCodes(parseRecoveryCodes(data))
+      setViewDialogOpen(false)
+      viewReauth.reset()
+      setCodesDialogOpen(true)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('Failed to get recovery codes')
+      setViewError(message)
+      viewReauth.setCode('')
+    } finally {
+      setIsViewVerifying(false)
     }
   }
 
@@ -1351,6 +1448,50 @@ function RecoveryCodesMethod({
                 }
               >
                 {t('Regenerate')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={viewDialogOpen} onOpenChange={handleViewDialogOpenChange}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
+            <DialogTitle>{t('Verify your identity')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t('Verification is required to view your recovery codes.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <form onSubmit={handleViewSubmit}>
+            <div className="px-6 py-4">
+              <MfaReauthForm reauth={viewReauth} />
+              {viewError && (
+                <p className="mt-3 text-[13px] text-destructive">{viewError}</p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => handleViewDialogOpenChange(false)}
+                disabled={isViewVerifying}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={
+                  !viewReauth.isCodeValid ||
+                  !viewReauth.isChallengeReady ||
+                  isViewVerifying
+                }
+              >
+                {t('Verify')}
               </Button>
             </div>
           </form>

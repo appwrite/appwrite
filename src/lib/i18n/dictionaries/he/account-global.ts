@@ -198,6 +198,10 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'This payment method is linked to': 'אמצעי התשלום הזה מקושר אל',
   'This removes authenticator app codes from your account.':
     'פעולה זו מסירה את קודי אפליקציית האימות מהחשבון שלכם.',
+  'To continue, verify your identity with a one-time code.':
+    'כדי להמשיך, אמתו את זהותכם באמצעות קוד חד-פעמי.',
+  'Verification is required to view your recovery codes.':
+    'נדרש אימות כדי להציג את קודי השחזור שלכם.',
   'Two-factor authentication': 'אימות דו-שלבי',
   Unknown: 'לא ידוע',
   'Unknown device': 'מכשיר לא ידוע',
