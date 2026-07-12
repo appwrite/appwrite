@@ -1309,9 +1309,24 @@ function RecoveryCodesMethod({
     try {
       const otp = readOtpFromForm(event.currentTarget, viewReauth.code)
       await viewReauth.verify(otp)
+      let data: Models.MfaRecoveryCodes
+      try {
+        data = await sdk.forConsole.account.getMFARecoveryCodes()
+      } catch (error: unknown) {
+        const err = error as { code?: number; message?: string }
+        if (err.code === 404 || err.message?.includes('not found')) {
+          data = await sdk.forConsole.account.createMFARecoveryCodes()
+          await queryClient.invalidateQueries({
+            queryKey: Dependencies.FACTORS,
+          })
+        } else {
+          throw error
+        }
+      }
+      setRecoveryCodes(parseRecoveryCodes(data))
       setViewDialogOpen(false)
       viewReauth.reset()
-      await handleView()
+      setCodesDialogOpen(true)
     } catch (error: unknown) {
       const message =
         error instanceof Error
