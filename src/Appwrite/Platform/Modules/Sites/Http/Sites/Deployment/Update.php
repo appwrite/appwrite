@@ -103,7 +103,6 @@ class Update extends Base
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
-            Query::equal('deploymentVcsProviderBranch', ['']),
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
