@@ -1965,8 +1965,8 @@ trait UsersBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertSame($data['identifier'], $response['body']['identifier']);
-        $this->assertSame($data['providerId'], $response['body']['providerId']);
+        $this->assertSame($data['identifier'] ?? null, $response['body']['identifier']);
+        $this->assertSame($data['providerId'] ?? null, $response['body']['providerId']);
         $this->assertSame($data['name'] ?? null, $response['body']['name']);
     }
 
