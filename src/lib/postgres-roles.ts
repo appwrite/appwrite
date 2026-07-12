@@ -141,11 +141,7 @@ function formatValidUntilForInput(value: string | null | undefined): {
     return { noExpiry: true, validUntil: '' }
   }
 
-  const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16)
-
-  return { noExpiry: false, validUntil: local }
+  return { noExpiry: false, validUntil: parsed.toISOString() }
 }
 
 export function mapPostgresRoleRowToFormState(
@@ -236,10 +232,11 @@ function buildPostgresRoleAttributeClauses(
   if (formState.noExpiry) {
     clauses.push("VALID UNTIL 'infinity'")
   } else {
-    const localValue = formState.validUntil.trim()
-    const normalized = localValue.includes('T')
-      ? localValue.replace('T', ' ')
-      : localValue
+    const parsed = new Date(formState.validUntil.trim())
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const normalized = Number.isNaN(parsed.getTime())
+      ? formState.validUntil.trim().replace('T', ' ')
+      : `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}`
     clauses.push(`VALID UNTIL ${quotePostgresStringLiteral(normalized)}`)
   }
 

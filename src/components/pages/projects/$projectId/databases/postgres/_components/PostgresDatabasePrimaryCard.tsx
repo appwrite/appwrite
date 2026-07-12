@@ -49,6 +49,11 @@ function getMemberStatusVariant(
 ): 'success' | 'warning' | 'error' | 'info' {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'active') return 'success'
+  if (normalized === 'provisioning' || normalized === 'starting') {
+    return 'warning'
+  }
+  if (normalized === 'failed') return 'error'
+  // Legacy API values (pre-15.3)
   if (normalized === 'pending') return 'warning'
   if (normalized === 'notfound') return 'error'
   return 'info'
@@ -57,6 +62,10 @@ function getMemberStatusVariant(
 function formatMemberStatus(status: string, t: ReturnType<typeof useT>) {
   const normalized = status.trim().toLowerCase()
   if (normalized === 'active') return t('Active')
+  if (normalized === 'provisioning') return t('Provisioning')
+  if (normalized === 'starting') return t('Starting')
+  if (normalized === 'failed') return t('Failed')
+  // Legacy API values (pre-15.3)
   if (normalized === 'pending') return t('Pending')
   if (normalized === 'notfound') return t('Not found')
   return status

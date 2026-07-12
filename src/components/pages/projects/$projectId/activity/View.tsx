@@ -26,7 +26,6 @@ import {
 } from '@/lib/icons'
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
-import { startOfDay, endOfDay, subDays, max } from 'date-fns'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -50,6 +49,7 @@ import {
   useProjectActivities,
   useProjectActivity,
   useProject,
+  useOrganizationPlan,
 } from '@/lib/react-query/hooks'
 import {
   inferActivityUiResourceTypeFromPath,
@@ -65,10 +65,15 @@ import {
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { translate, useT } from '@/lib/i18n/translate'
-import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { useDebugOverrides } from '@/lib/debug-overrides'
-
-import type { PlanType } from '@/server/functions/activities'
+import {
+  formatActivityLogRetentionLabel,
+  getActivityLogRetentionDaysFromPlan,
+  getActivityLogRetentionHoursFromPlan,
+  getDefaultActivityDateRangeFromRetentionDays,
+} from '@/lib/activity/activity-log-retention'
+import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
 import { ActivityLogRowContextMenu } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogRowContextMenu'
@@ -453,19 +458,11 @@ function toDisplayActivity(
   }
 }
 
-// Plan time limits
-const PLAN_TIME_LIMITS: Record<PlanType, { label: string; hours: number }> = {
-  free: { label: '1 hour', hours: 1 },
-  pro: { label: '30 days', hours: 30 * 24 },
-  custom: { label: '30 days', hours: 30 * 24 },
-}
-
 interface ViewProps {
   projectId: string
-  plan?: PlanType
 }
 
-export function View({ projectId, plan = 'pro' }: ViewProps) {
+export function View({ projectId }: ViewProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const navigate = activityRouteApi.useNavigate()
@@ -473,6 +470,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     activityRouteApi.useSearch()
 
   const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { showActivityChart } = useDebugOverrides()
   const { data: countriesData } = useCountries()
   const countryLookups = useMemo(
@@ -498,19 +496,29 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     setListCursor({ cursorAfter: null, cursorBefore: null })
   }, [])
 
-  const planLimit = PLAN_TIME_LIMITS[plan]
-  const planSinceIso = useMemo(
-    () => new Date(Date.now() - planLimit.hours * 60 * 60 * 1000).toISOString(),
-    [planLimit.hours],
+  const activityLogRetentionDays = useMemo(
+    () => getActivityLogRetentionDaysFromPlan(organizationPlan),
+    [organizationPlan],
   )
+  const activityLogRetentionHours = useMemo(
+    () => getActivityLogRetentionHoursFromPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const activityLogRetentionLabel = useMemo(
+    () => formatActivityLogRetentionLabel(activityLogRetentionDays),
+    [activityLogRetentionDays],
+  )
+  const planCanonical = useMemo(
+    () => getPlanNameFromTier(organizationPlan?.$id),
+    [organizationPlan?.$id],
+  )
+  const isFreePlan = planCanonical === 'free'
 
-  /** Default window when no URL `time` filter: last 30 days, floored by plan retention. */
-  const defaultActivityDateRange = useMemo(() => {
-    const thirtyDaysStart = startOfDay(subDays(new Date(), 29))
-    const planFloor = new Date(planSinceIso)
-    const from = max([thirtyDaysStart, startOfDay(planFloor)])
-    return { from, to: endOfDay(new Date()) }
-  }, [planSinceIso])
+  /** Default window when no URL `time` filter: plan retention, aligned to picker presets. */
+  const defaultActivityDateRange = useMemo(
+    () => getDefaultActivityDateRangeFromRetentionDays(activityLogRetentionDays),
+    [activityLogRetentionDays],
+  )
 
   const filterMap = useMemo(
     () => queryParamToMap(queryFromSearch ?? null),
@@ -532,7 +540,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
     limit: pageSize,
     cursorAfter: listCursor.cursorAfter,
     cursorBefore: listCursor.cursorBefore,
-    planRetentionHours: planLimit.hours,
+    planRetentionHours: activityLogRetentionHours,
     filterQueryKey: queryFromSearch ?? null,
   })
 
@@ -900,7 +908,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                       {t('Retention')}{' '}
                     </span>
                     <span className="font-medium text-foreground">
-                      {t(planLimit.label)}
+                      {t(activityLogRetentionLabel)}
                     </span>
                   </span>
                 </button>
@@ -914,16 +922,12 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                   {t('Activity retention')}
                 </p>
                 <p className="mt-1.5 text-background/85">
-                  Your{' '}
-                  <span className="font-medium capitalize text-background">
-                    {plan}
-                  </span>{' '}
-                  plan supports{' '}
+                  {t('Your plan includes')}{' '}
                   <span className="font-medium text-background">
-                    {planLimit.label}
+                    {t(activityLogRetentionLabel)}
                   </span>{' '}
-                  of activity history.
-                  {plan === 'free' && (
+                  {t('of activity history.')}
+                  {isFreePlan && (
                     <>
                       {' '}
                       {t('Upgrade or contact sales for longer retention.')}
@@ -949,7 +953,7 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
           not a parent that also wraps the pagination bar). */}
       <div className="flex flex-1 min-h-0 flex-col">
         {/* Plan upgrade notice for free tier */}
-        {plan === 'free' && (
+        {isFreePlan && (
           <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <div className="flex-1">
@@ -957,9 +961,11 @@ export function View({ projectId, plan = 'pro' }: ViewProps) {
                 {t('Limited activity history')}
               </p>
               <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-300">
-                {t(
-                  'Free plans only show the last hour of activity. Upgrade to Pro for 30 days of history, or Scale/Enterprise for longer retention.',
-                )}
+                {t('Your plan includes')}{' '}
+                <span className="font-medium">
+                  {t(activityLogRetentionLabel)}
+                </span>{' '}
+                {t('of activity history. Upgrade for longer retention.')}
               </p>
             </div>
             <Button

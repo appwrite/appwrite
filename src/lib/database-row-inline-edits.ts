@@ -27,7 +27,7 @@ export type ColumnMeta = {
 }
 
 export type InlineInputConfig = {
-  htmlType: 'text' | 'number' | 'email' | 'url' | 'datetime-local'
+  htmlType: 'text' | 'number' | 'email' | 'url'
   inputMode?: 'numeric' | 'email' | 'url' | 'text'
   min?: number
   max?: number
@@ -163,7 +163,7 @@ export function getInlineInputConfig(
   }
   if (isDateTimeInlineFieldType(type)) {
     return {
-      htmlType: 'datetime-local',
+      htmlType: 'text',
       placeholder: isRequired ? 'Select date & time' : 'NULL',
     }
   }

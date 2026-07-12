@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { cn } from '@/lib/utils'
@@ -192,24 +193,6 @@ export function ApiKeyDrawer({
       scopes: scopes.length > 0 ? scopes : undefined,
       expire: expire.trim() || undefined,
     })
-  }
-
-  // Format date for input (YYYY-MM-DDTHH:mm)
-  const formatDateForInput = (dateString?: string) => {
-    if (!dateString) return ''
-    try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) return ''
-      // Format as YYYY-MM-DDTHH:mm
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      return `${year}-${month}-${day}T${hours}:${minutes}`
-    } catch {
-      return ''
-    }
   }
 
   return (
@@ -422,24 +405,17 @@ export function ApiKeyDrawer({
                     </RadioGroup>
                     {expiryOption === 'custom' && (
                       <div className="pt-2">
-                        <Input
+                        <DateTimePicker
                           id="expire"
-                          type="datetime-local"
-                          value={formatDateForInput(expire)}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            if (value) {
-                              // Convert from datetime-local format to ISO string
-                              const date = new Date(value)
-                              setExpire(date.toISOString())
-                            } else {
-                              setExpire('')
-                            }
+                          value={expire || null}
+                          onChange={(value) => {
+                            setExpire(value ?? '')
                             if (errors.expire) {
                               setErrors((prev) => ({ ...prev, expire: '' }))
                             }
                           }}
                           disabled={isLoading}
+                          clearable
                           className={errors.expire ? 'border-destructive' : ''}
                         />
                         {errors.expire && (

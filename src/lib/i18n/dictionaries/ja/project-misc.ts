@@ -185,6 +185,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '30 days': '30 日',
   'Activity retention': 'アクティビティ保持',
   'Limited activity history': '制限されたアクティビティ履歴',
+  'of activity history.': 'のアクティビティ履歴。',
+  'of activity history. Upgrade for longer retention.':
+    'のアクティビティ履歴。より長い保持期間にアップグレードしてください。',
+  '1 day': '1 日',
   'Open activity details': 'アクティビティの詳細を開く',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
@@ -1508,7 +1512,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Trigger a build to create an artifact for the stores.': 'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
   'Submit a ready build to a store to track its review status here.': '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
   'Upgrade or contact sales for longer retention.': 'より長い保持期間が必要な場合は、アップグレードするか営業にお問い合わせください。',
-  'Free plans only show the last hour of activity. Upgrade to Pro for 30 days of history, or Scale/Enterprise for longer retention.': 'Free プランでは直近 1 時間のアクティビティのみ表示されます。30 日間の履歴には Pro へ、さらに長い保持期間には Scale または Enterprise へアップグレードしてください。',
   'Activity will appear here as you use your project': 'プロジェクトを使用すると、ここにアクティビティが表示されます',
   'Human vs AI traffic (last 30 days)': '人間と AI のトラフィック (過去 30 日)',
   'Add your first website to start tracking analytics': '分析の追跡を始めるには、最初の Web サイトを追加してください',

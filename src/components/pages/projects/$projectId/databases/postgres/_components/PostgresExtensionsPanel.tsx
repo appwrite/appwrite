@@ -236,6 +236,7 @@ export function PostgresExtensionsPanel({
   const {
     installed,
     available,
+    metadata,
     isLoading,
     isFetching,
     error,
@@ -264,8 +265,9 @@ export function PostgresExtensionsPanel({
         available,
         pendingInstalls,
         pendingUninstalls,
+        metadata,
       }),
-    [installed, available, pendingInstalls, pendingUninstalls],
+    [installed, available, pendingInstalls, pendingUninstalls, metadata],
   )
 
   const filterCounts = useMemo(() => {

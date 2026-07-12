@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import {
   createSubscriptionQueryEntry,
   REALTIME_QUERY_VALUE_TYPES,
@@ -17,14 +18,6 @@ import { useT } from '@/lib/i18n/translate'
 
 const LABEL_CLASS = 'mb-1 block text-[12px] font-medium text-muted-foreground'
 const INPUT_CLASS = 'h-9 w-full text-[13px]'
-
-function toDatetimeLocal(iso: string): string {
-  if (!iso.trim()) return ''
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return ''
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
 
 type QueryFilterFormProps = {
   disabled?: boolean
@@ -140,16 +133,13 @@ export function QueryFilterForm({
           <label className={LABEL_CLASS} htmlFor="query-value">
             {t('Value')}
           </label>
-          <Input
+          <DateTimePicker
             id="query-value"
-            type="datetime-local"
-            value={toDatetimeLocal(valueInput)}
-            onChange={(event) => {
-              const next = event.target.value
-              setValueInput(next ? new Date(next).toISOString() : '')
-            }}
+            value={valueInput || null}
+            onChange={(next) => setValueInput(next ?? '')}
             className={INPUT_CLASS}
             disabled={disabled}
+            clearable
           />
         </div>
       )

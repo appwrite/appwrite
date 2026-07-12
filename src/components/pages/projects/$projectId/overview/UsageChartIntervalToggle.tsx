@@ -37,6 +37,8 @@ type UsageChartIntervalToggleProps = {
   value: UsageChartInterval
   onValueChange: (value: UsageChartInterval) => void
   dateRange: DateRange | undefined
+  /** When set, only plan-allowed intervals are shown (`usageLogsIntervals`). */
+  allowedIntervals?: readonly UsageChartInterval[]
   className?: string
 }
 
@@ -44,10 +46,16 @@ export function UsageChartIntervalToggle({
   value,
   onValueChange,
   dateRange,
+  allowedIntervals,
   className,
 }: UsageChartIntervalToggleProps) {
   const t = useT()
-  const optionCount = USAGE_CHART_INTERVAL_OPTIONS.length
+  const options = allowedIntervals?.length
+    ? USAGE_CHART_INTERVAL_OPTIONS.filter((option) =>
+        allowedIntervals.includes(option.value),
+      )
+    : USAGE_CHART_INTERVAL_OPTIONS
+  const optionCount = options.length
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -58,16 +66,14 @@ export function UsageChartIntervalToggle({
         value={value}
         onValueChange={(next) => {
           if (!next) return
-          if (
-            USAGE_CHART_INTERVAL_OPTIONS.some((option) => option.value === next)
-          ) {
+          if (options.some((option) => option.value === next)) {
             onValueChange(next as UsageChartInterval)
           }
         }}
         className={cn('h-9 w-fit shrink-0 gap-0', className)}
         aria-label={t('Chart interval')}
       >
-        {USAGE_CHART_INTERVAL_OPTIONS.map((option, index) => {
+        {options.map((option, index) => {
           const isFirst = index === 0
           const isLast = index === optionCount - 1
           const disabledReason = formatUsageChartIntervalDisabledReason(

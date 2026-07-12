@@ -40,7 +40,7 @@ import {
   getUsagePercentage,
   getUsageStatus,
 } from './data'
-import { DateRangePicker } from '../analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageHistoricDataNote } from '../shared/UsageHistoricDataNote'
 import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import { categorySupportsChartInterval } from './category-filter-state'
@@ -53,6 +53,10 @@ import {
   hasFiniteUsageLogRetention,
   resolveShorterUsageDateRangePreset,
 } from '@/lib/usage/usage-log-retention'
+import {
+  getUsageChartIntervalOptionsForPlan,
+  resolveUsageChartIntervalForPlan,
+} from '@/lib/usage/chart-interval'
 import { UsageLogRetentionAlert } from './_components/UsageLogRetentionAlert'
 import {
   findUsageCategory,
@@ -488,6 +492,24 @@ function UsageLayoutContent({
     () => getUsageLogRetentionDaysFromPlan(organizationPlan),
     [organizationPlan],
   )
+  const planChartIntervals = useMemo(
+    () =>
+      getUsageChartIntervalOptionsForPlan(organizationPlan).map(
+        (option) => option.value,
+      ),
+    [organizationPlan],
+  )
+
+  useEffect(() => {
+    const resolved = resolveUsageChartIntervalForPlan(
+      chartInterval,
+      organizationPlan,
+    )
+    if (resolved !== chartInterval) {
+      setChartInterval(resolved)
+    }
+  }, [chartInterval, organizationPlan, setChartInterval])
+
   const { showAlert: showUsageHistoryLimitAlert } = useUsageHistoryLimitAlertState({
     projectId,
     dateRange: usageDateRange,
@@ -642,6 +664,7 @@ function UsageLayoutContent({
                     value={chartInterval}
                     onValueChange={setChartInterval}
                     dateRange={usageDateRange}
+                    allowedIntervals={planChartIntervals}
                     className="h-9"
                   />
                 ) : null}

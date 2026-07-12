@@ -47,6 +47,7 @@ export function usePostgresDatabaseExtensions(
   return {
     installed: data?.installed ?? [],
     available: data?.available ?? [],
+    metadata: data?.metadata ?? [],
     isLoading,
     isFetching,
     error,

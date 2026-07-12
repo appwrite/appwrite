@@ -165,7 +165,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     topics: Number.MAX_SAFE_INTEGER,
     authPhone: Number.MAX_SAFE_INTEGER,
     domains: 0,
-    logs: Number.MAX_SAFE_INTEGER,
+    activityLogs: Number.MAX_SAFE_INTEGER,
     usageLogs: Number.MAX_SAFE_INTEGER,
     projectInactivityDays: 0,
     alertLimit: 0,

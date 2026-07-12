@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -1456,23 +1457,21 @@ export function ColumnDrawer({
                     </SelectContent>
                   </Select>
                 ) : formData.type === 'datetime' ? (
-                  <Input
+                  <DateTimePicker
                     id="column-default"
-                    type="datetime-local"
                     value={
                       formData.xdefault
-                        ? new Date(formData.xdefault as string)
-                          .toISOString()
-                          .slice(0, 16)
-                        : ''
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value
-                        ? new Date(e.target.value).toISOString()
+                        ? String(formData.xdefault)
                         : null
-                      setFormData((prev) => ({ ...prev, xdefault: value }))
+                    }
+                    onChange={(value) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        xdefault: value,
+                      }))
                     }}
                     disabled={isLoading}
+                    clearable
                   />
                 ) : formData.type === 'enum' ? (
                   <Select

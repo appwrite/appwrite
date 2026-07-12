@@ -1440,6 +1440,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Failed': 'נכשל',
   'Ready': 'מוכן',
   'Provisioning': 'בהקמה',
+  'Starting': 'מתחיל',
   'Restoring': 'משחזר',
   'Scaling': 'משנה קנה מידה',
   'Inactive': 'לא פעיל',

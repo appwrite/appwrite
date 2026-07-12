@@ -107,7 +107,7 @@ import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
-import { DateRangePicker } from '../analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageChartIntervalToggle } from './UsageChartIntervalToggle'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import {
@@ -115,6 +115,10 @@ import {
   shouldShowUsageTabMetricSkeleton,
 } from '@/lib/usage/usage-chart-loading'
 import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
+import {
+  getUsageChartIntervalOptionsForPlan,
+  resolveUsageChartIntervalForPlan,
+} from '@/lib/usage/chart-interval'
 import { resolveUsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
 import { UsageChartErrorMessage } from '../shared/UsageChartErrorMessage'
 import {
@@ -228,6 +232,23 @@ export function View({ projectId, initialData }: ViewProps) {
         : 30,
     [organizationPlan?.usageLogs],
   )
+  const planChartIntervals = useMemo(
+    () =>
+      getUsageChartIntervalOptionsForPlan(organizationPlan).map(
+        (option) => option.value,
+      ),
+    [organizationPlan],
+  )
+
+  useEffect(() => {
+    const resolved = resolveUsageChartIntervalForPlan(
+      chartInterval,
+      organizationPlan,
+    )
+    if (resolved !== chartInterval) {
+      setChartInterval(resolved)
+    }
+  }, [chartInterval, organizationPlan, setChartInterval])
 
   const handleOverviewTabChange = (tabId: string) => {
     setActiveTab(tabId)
@@ -964,6 +985,7 @@ export function View({ projectId, initialData }: ViewProps) {
                     value={chartInterval}
                     onValueChange={setChartInterval}
                     dateRange={dashboardChartDateRange}
+                    allowedIntervals={planChartIntervals}
                     className="h-9 w-full @[520px]:w-fit"
                   />
                   <DateRangePicker

@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger} from '@/components/ui/tooltip'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { PermissionsEditor } from '../../auth/PermissionsEditor'
 import {
@@ -78,18 +79,9 @@ const FILE_TOKEN_EXPIRY_OPTIONS: {
   { value: 'custom', label: 'Custom' },
 ]
 
-function formatDatetimeLocalForInput(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${year}-${month}-${day}T${hours}:${minutes}`
-}
-
 function getFileTokenCreateExpirationIso(
   option: FileTokenExpiryOption,
-  customLocal: string,
+  customIso: string,
 ): string | undefined {
   switch (option) {
     case 'never':
@@ -103,7 +95,7 @@ function getFileTokenCreateExpirationIso(
     case '30d':
       return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     case 'custom': {
-      const trimmed = customLocal.trim()
+      const trimmed = customIso.trim()
       if (!trimmed) return undefined
       const d = new Date(trimmed)
       if (Number.isNaN(d.getTime())) return undefined
@@ -802,9 +794,7 @@ export function FileSecurity({
                     setTokenExpiryOption(next)
                     if (next === 'custom' && !tokenExpiration.trim()) {
                       setTokenExpiration(
-                        formatDatetimeLocalForInput(
-                          new Date(Date.now() + 24 * 60 * 60 * 1000),
-                        ),
+                        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                       )
                     }
                   }}
@@ -844,12 +834,12 @@ export function FileSecurity({
                     >
                       {t('Date and time')}
                     </Label>
-                    <Input
+                    <DateTimePicker
                       id="file-token-expiration-custom"
-                      type="datetime-local"
-                      value={tokenExpiration}
-                      onChange={(e) => setTokenExpiration(e.target.value)}
+                      value={tokenExpiration || null}
+                      onChange={(value) => setTokenExpiration(value ?? '')}
                       disabled={createTokenMutation.isPending}
+                      clearable
                       className={cn(
                         'mt-1.5',
                         createTokenExpiryInvalid && 'border-destructive',

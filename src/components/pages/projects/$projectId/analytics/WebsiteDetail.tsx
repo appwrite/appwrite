@@ -29,7 +29,7 @@ import { USAGE_CHART_Y_AXIS_WIDTH } from '../overview/chart-panel'
 import { USAGE_CHART_MARGIN } from '@/lib/usage/chart-layout'
 import { SeriesChartXAxis } from '@/components/global/shared/ChartXAxis'
 import { Button } from '@/components/ui/button'
-import { DateRangePicker } from './DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { ComparisonSelector, type ComparisonType } from './ComparisonSelector'
 import {
   Area,

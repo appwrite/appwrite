@@ -1314,6 +1314,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Failed': '失敗',
   'Ready': '準備完了',
   'Provisioning': 'プロビジョニング中',
+  'Starting': '起動中',
   'Restoring': '復元中',
   'Scaling': 'スケーリング中',
   'Inactive': '非アクティブ',

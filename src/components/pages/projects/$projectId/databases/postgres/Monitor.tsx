@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'

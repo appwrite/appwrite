@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { DateRangePicker } from '../analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { DateRange } from 'react-day-picker'
 import { useRealtimeMessages } from '@/lib/react-query/hooks/realtime'
 import { EmptyState } from '@/components/global/shared/EmptyState'

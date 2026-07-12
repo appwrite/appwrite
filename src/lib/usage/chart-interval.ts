@@ -15,6 +15,32 @@ export const USAGE_CHART_INTERVAL_OPTIONS: {
   { value: '1d', label: '1d' },
 ]
 
+/**
+ * Intervals allowed by the org plan (`usageLogsIntervals`), falling back to the
+ * full console set when the plan omits the field.
+ */
+export function getUsageChartIntervalOptionsForPlan(
+  plan: { usageLogsIntervals?: string[] | null } | null | undefined,
+): typeof USAGE_CHART_INTERVAL_OPTIONS {
+  const allowed = plan?.usageLogsIntervals
+  if (!allowed?.length) return USAGE_CHART_INTERVAL_OPTIONS
+
+  const allowedSet = new Set(allowed)
+  const filtered = USAGE_CHART_INTERVAL_OPTIONS.filter((option) =>
+    allowedSet.has(option.value),
+  )
+  return filtered.length > 0 ? filtered : USAGE_CHART_INTERVAL_OPTIONS
+}
+
+export function resolveUsageChartIntervalForPlan(
+  interval: UsageChartInterval,
+  plan: { usageLogsIntervals?: string[] | null } | null | undefined,
+): UsageChartInterval {
+  const options = getUsageChartIntervalOptionsForPlan(plan)
+  if (options.some((option) => option.value === interval)) return interval
+  return options[0]?.value ?? DEFAULT_USAGE_CHART_INTERVAL
+}
+
 /** Finest to coarsest — used when coarsening interval for wider date ranges. */
 export const USAGE_CHART_INTERVAL_COARSEN_ORDER: UsageChartInterval[] = [
   '15m',

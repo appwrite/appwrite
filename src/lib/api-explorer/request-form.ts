@@ -142,17 +142,19 @@ export function getFormFieldPlaceholder(
   }
 }
 
-/** Format API datetime values for `datetime-local` inputs. */
+/** Normalize API datetime values to ISO for DateTimePicker. */
 export function formatDatetimeInputValue(value: string): string {
   const trimmed = value.trim()
   if (!trimmed) return ''
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(trimmed) && !/[zZ]|[+-]\d{2}:\d{2}$/.test(trimmed)) {
-    return trimmed.slice(0, 16)
+  if (/[zZ]|[+-]\d{2}:\d{2}$/.test(trimmed)) return trimmed
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(trimmed)) {
+    const date = new Date(trimmed)
+    if (!Number.isNaN(date.getTime())) return date.toISOString()
+    return trimmed
   }
   const date = new Date(trimmed)
   if (Number.isNaN(date.getTime())) return trimmed
-  const pad = (part: number) => String(part).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return date.toISOString()
 }
 
 /** Serialize a datetime form value to an ISO 8601 string for the API. */

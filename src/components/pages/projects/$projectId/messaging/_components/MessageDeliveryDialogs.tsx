@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import {
   Dialog,
   DialogContent,
@@ -157,27 +157,25 @@ export function MessageScheduleDialog({
     [message, topics],
   )
 
-  const buildDefaultLocal = (iso?: string) => {
+  const buildDefaultIso = (iso?: string) => {
     if (iso) {
       const d = new Date(iso)
       if (!Number.isNaN(d.getTime())) {
-        const pad = (n: number) => String(n).padStart(2, '0')
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+        return d.toISOString()
       }
     }
     const now = new Date()
     now.setMinutes(now.getMinutes() + 5)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
+    return now.toISOString()
   }
 
   const [localValue, setLocalValue] = useState(() =>
-    buildDefaultLocal(message.scheduledAt),
+    buildDefaultIso(message.scheduledAt),
   )
 
   useEffect(() => {
     if (open) {
-      setLocalValue(buildDefaultLocal(message.scheduledAt))
+      setLocalValue(buildDefaultIso(message.scheduledAt))
     }
   }, [open, message.scheduledAt])
 
@@ -252,11 +250,11 @@ export function MessageScheduleDialog({
             <Label htmlFor="schedule-local" className="text-[13px]">
               {t('Send at')}
             </Label>
-            <Input
+            <DateTimePicker
               id="schedule-local"
-              type="datetime-local"
-              value={localValue}
-              onChange={(e) => setLocalValue(e.target.value)}
+              value={localValue || null}
+              onChange={(value) => setLocalValue(value ?? '')}
+              clearable={false}
               className="h-9"
             />
           </div>

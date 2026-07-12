@@ -429,8 +429,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Upgrade or contact sales for longer retention.':
     'שדרגו או פנו למכירות לשמירת נתונים ממושכת יותר.',
   'Limited activity history': 'היסטוריית פעילות מוגבלת',
-  'Free plans only show the last hour of activity. Upgrade to Pro for 30 days of history, or Scale/Enterprise for longer retention.':
-    'תוכניות חינמיות מציגות רק את שעת הפעילות האחרונה. שדרגו ל-Pro ל-30 ימי היסטוריה, או ל-Scale/Enterprise לשמירת נתונים ממושכת יותר.',
+  'of activity history.': 'של היסטוריית פעילות.',
+  'of activity history. Upgrade for longer retention.':
+    'של היסטוריית פעילות. שדרגו לשמירת נתונים ממושכת יותר.',
+  '1 day': 'יום אחד',
   Upgrade: 'שדרוג',
   'Open activity details': 'פתיחת פרטי פעילות',
   Deleted: 'נמחק',

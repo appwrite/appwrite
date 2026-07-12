@@ -4,7 +4,7 @@ import type { DateRange } from 'react-day-picker'
 import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DateRangePicker } from '@/components/pages/projects/$projectId/analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import {
   Tooltip,
   TooltipContent,

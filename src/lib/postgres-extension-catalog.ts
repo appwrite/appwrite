@@ -105,8 +105,22 @@ const catalogByKey = new Map(
 
 export function resolvePostgresExtensionInfo(
   key: string,
+  apiMetadata?: Models.PostgresExtension[] | null,
 ): PostgresExtensionCatalogEntry {
   const normalized = key.trim().toLowerCase()
+
+  const fromApi = apiMetadata?.find(
+    (entry) => entry.key.trim().toLowerCase() === normalized,
+  )
+  if (fromApi) {
+    return {
+      key: fromApi.key,
+      name: fromApi.name || fromApi.key,
+      description: fromApi.description || '',
+      category: fromApi.category || 'Extension',
+    }
+  }
+
   const catalog = catalogByKey.get(normalized)
   if (catalog) return catalog
 
@@ -219,8 +233,15 @@ export function buildPostgresExtensionRows(args: {
   available: string[]
   pendingInstalls: ReadonlySet<string>
   pendingUninstalls: ReadonlySet<string>
+  metadata?: Models.PostgresExtension[] | null
 }): PostgresExtensionRow[] {
-  const { installed, available, pendingInstalls, pendingUninstalls } = args
+  const {
+    installed,
+    available,
+    pendingInstalls,
+    pendingUninstalls,
+    metadata,
+  } = args
   const installedSet = new Set(installed)
   const availableSet = new Set(available)
   const keys = new Set<string>()
@@ -233,7 +254,7 @@ export function buildPostgresExtensionRows(args: {
   const rows: PostgresExtensionRow[] = []
 
   for (const key of keys) {
-    const info = resolvePostgresExtensionInfo(key)
+    const info = resolvePostgresExtensionInfo(key, metadata)
     let status: PostgresExtensionRowStatus = 'available'
 
     if (pendingInstalls.has(key)) {

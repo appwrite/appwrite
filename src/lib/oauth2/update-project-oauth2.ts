@@ -4,8 +4,6 @@ import type { ProjectSdk } from '@/lib/appwrite/sdk'
 
 /** Providers listed in the catalog enum but without a project update endpoint in this SDK. */
 const OAUTH2_PROVIDER_IDS_WITHOUT_UPDATE = new Set<string>([
-  ProjectOAuthProviderId.GithubImagine,
-  ProjectOAuthProviderId.GoogleImagine,
   ProjectOAuthProviderId.Yammer,
 ])
 
@@ -24,6 +22,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
 > = {
   [ProjectOAuthProviderId.Amazon]: (p, b) => p.updateOAuth2Amazon(b),
   [ProjectOAuthProviderId.Apple]: (p, b) => p.updateOAuth2Apple(b),
+  [ProjectOAuthProviderId.Appwrite]: (p, b) => p.updateOAuth2Appwrite(b),
   [ProjectOAuthProviderId.Auth0]: (p, b) => p.updateOAuth2Auth0(b),
   [ProjectOAuthProviderId.Authentik]: (p, b) => p.updateOAuth2Authentik(b),
   [ProjectOAuthProviderId.Autodesk]: (p, b) => p.updateOAuth2Autodesk(b),

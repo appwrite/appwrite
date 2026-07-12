@@ -30,7 +30,7 @@ import {
   mockFirewallAnalytics,
   type FirewallAnalytics,
 } from '@/lib/utils/mock-data'
-import { DateRangePicker } from '../analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { useT } from '@/lib/i18n/translate'
 
 interface AnalyticsTabProps {

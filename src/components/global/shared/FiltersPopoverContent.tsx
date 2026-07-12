@@ -50,13 +50,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { SavedFilterPresetRow } from '@/components/global/shared/SavedFilterPresetRow'
-function toDatetimeLocal(iso: string): string {
-  if (!iso?.trim()) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 
 function reorderList<T>(list: T[], fromIndex: number, toIndex: number): T[] {
   const copy = [...list]
@@ -580,26 +574,20 @@ export function FiltersPopoverContent({
           <div key="value-between-datetime" className="space-y-2">
             <div>
               <span className={subLabelClass}>{t('Start')}</span>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
+                value={filterValue || null}
+                onChange={(v) => setFilterValue(v ?? '')}
                 className={inputClass}
-                value={toDatetimeLocal(filterValue)}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setFilterValue(v ? new Date(v).toISOString() : '')
-                }}
+                clearable
               />
             </div>
             <div>
               <span className={subLabelClass}>{t('End')}</span>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
+                value={filterValueEnd || null}
+                onChange={(v) => setFilterValueEnd(v ?? '')}
                 className={inputClass}
-                value={toDatetimeLocal(filterValueEnd)}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setFilterValueEnd(v ? new Date(v).toISOString() : '')
-                }}
+                clearable
               />
             </div>
           </div>
@@ -668,14 +656,11 @@ export function FiltersPopoverContent({
       return (
         <div key="value-datetime">
           {label}
-          <Input
-            type="datetime-local"
+          <DateTimePicker
+            value={filterValue || null}
+            onChange={(v) => setFilterValue(v ?? '')}
             className={inputClass}
-            value={toDatetimeLocal(filterValue)}
-            onChange={(e) => {
-              const v = e.target.value
-              setFilterValue(v ? new Date(v).toISOString() : '')
-            }}
+            clearable
           />
         </div>
       )

@@ -41,7 +41,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
 
 function ActivityPage() {
   const { projectId } = Route.useParams()
-  // In a real app, you'd get the plan from the organization context.
-  // For now, we'll use 'pro' as the default.
-  return <View projectId={projectId} plan="pro" />
+  return <View projectId={projectId} />
 }

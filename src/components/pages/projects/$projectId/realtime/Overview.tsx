@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { StatsCard } from '../overview/StatsCard'
-import { DateRangePicker } from '../analytics/DateRangePicker'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { DateRange } from 'react-day-picker'
 import {
   RefreshControls,

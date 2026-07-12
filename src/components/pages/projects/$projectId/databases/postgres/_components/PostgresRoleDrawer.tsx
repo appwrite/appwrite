@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { X } from 'lucide-react'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -247,13 +248,13 @@ export function PostgresRoleDrawer({
                   <Label htmlFor="role-valid-until" className="text-[12px] font-medium">
                     {t('Valid until')} <span className="text-destructive">*</span>
                   </Label>
-                  <Input
+                  <DateTimePicker
                     id="role-valid-until"
-                    type="datetime-local"
-                    value={formState.validUntil}
-                    onChange={(event) =>
-                      updateForm({ validUntil: event.target.value })
+                    value={formState.validUntil || null}
+                    onChange={(value) =>
+                      updateForm({ validUntil: value ?? '' })
                     }
+                    clearable={false}
                   />
                 </div>
               ) : null}
