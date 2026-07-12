@@ -27,6 +27,8 @@ final class Auth
             return;
         }
 
-        $redis->auth($credentials);
+        if ($redis->auth($credentials) === false) {
+            throw new \RedisException('Redis authentication failed.');
+        }
     }
 }

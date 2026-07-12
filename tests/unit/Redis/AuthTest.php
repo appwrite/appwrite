@@ -50,6 +50,16 @@ final class AuthTest extends TestCase
 
         $this->assertSame([['appwrite', 'secret']], $redis->authCalls);
     }
+
+    public function testAuthenticateThrowsWhenRedisAuthReturnsFalse(): void
+    {
+        $redis = new RedisSpy(false);
+
+        $this->expectException(\RedisException::class);
+        $this->expectExceptionMessage('Redis authentication failed.');
+
+        Auth::authenticate($redis, 'appwrite', 'wrong-password');
+    }
 }
 
 final class RedisSpy extends \Redis
@@ -59,10 +69,14 @@ final class RedisSpy extends \Redis
      */
     public array $authCalls = [];
 
-    public function auth(mixed $credentials): \Redis|bool
+    public function __construct(private readonly bool $authResult = true)
+    {
+    }
+
+    public function auth(mixed $credentials): bool
     {
         $this->authCalls[] = $credentials;
 
-        return true;
+        return $this->authResult;
     }
 }
