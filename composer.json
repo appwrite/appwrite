@@ -41,6 +41,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration"
         }
     ],
     "require": {
@@ -83,7 +87,7 @@
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^1.2",
-        "utopia-php/migration": "1.17.*",
+        "utopia-php/migration": "dev-skip-override-migration as 1.17.2",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",

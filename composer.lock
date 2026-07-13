@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0719318e907ceeb432a49b5c421b6261",
+    "content-hash": "b45be17705e67a7bb05a09413dafb0cc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4509,16 +4509,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.17.2",
+            "version": "dev-skip-override-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "80f7f49e79ad57a0b5200b043e2b1bfeade8a190"
+                "reference": "91abadd68b1760f006a6040cadbca25c9d18aaa7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/80f7f49e79ad57a0b5200b043e2b1bfeade8a190",
-                "reference": "80f7f49e79ad57a0b5200b043e2b1bfeade8a190",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/91abadd68b1760f006a6040cadbca25c9d18aaa7",
+                "reference": "91abadd68b1760f006a6040cadbca25c9d18aaa7",
                 "shasum": ""
             },
             "require": {
@@ -4544,7 +4544,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4557,10 +4575,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.17.2"
+                "source": "https://github.com/utopia-php/migration/tree/skip-override-migration",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-07-09T19:53:43+00:00"
+            "time": "2026-07-13T08:33:22+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8509,10 +8527,18 @@
             "time": "2026-05-30T17:09:26+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-skip-override-migration",
+            "alias": "1.17.2",
+            "alias_normalized": "1.17.2.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
+        "utopia-php/migration": 20,
         "utopia-php/platform": 5
     },
     "prefer-stable": true,
