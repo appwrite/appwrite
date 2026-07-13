@@ -1285,24 +1285,20 @@ services:
       - /bin/bash
       - /mongo-entrypoint.sh
     healthcheck:
+      # Pure readiness probe: report healthy only once this node is the writable
+      # PRIMARY. Replica-set initiation is handled out-of-band by
+      # mongo-entrypoint.sh, so this check has a single responsibility.
       test: |
         bash -c "
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
             try {
-              const hello = db.adminCommand({hello: 1});
-              if (hello.isWritablePrimary) {
-                quit(0);
-              }
-            } catch (e) {}
-
-            try {
-              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]});
-            } catch (e) {}
-
-            quit(1);
+              quit(db.adminCommand({hello: 1}).isWritablePrimary ? 0 : 1);
+            } catch (e) {
+              quit(1);
+            }
           \" 2>/dev/null
         "
-      interval: 10s
+      interval: 5s
       timeout: 10s
       retries: 10
       start_period: 60s
