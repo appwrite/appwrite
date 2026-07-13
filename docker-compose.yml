@@ -571,6 +571,15 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_CONFIG
+      - _APP_VCS_GITHUB_APP_NAME
+      - _APP_VCS_GITHUB_PRIVATE_KEY
+      - _APP_VCS_GITHUB_APP_ID
+      - _APP_VCS_GITEA_ENDPOINT
+      - _APP_VCS_GITEA_BROWSER_ENDPOINT
+      - _APP_VCS_GITEA_CLIENT_ID
+      - _APP_VCS_GITEA_CLIENT_SECRET
+      - _APP_VCS_GITEA_WEBHOOK_SECRET
+      - _APP_VCS_WEBHOOK_URL
       - _APP_DATABASE_SHARED_TABLES
     extra_hosts:
       - host.docker.internal:host-gateway
