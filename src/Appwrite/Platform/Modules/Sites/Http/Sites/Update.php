@@ -156,6 +156,12 @@ class Update extends Base
             }
         }
 
+        $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
+
+        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
+        }
+
         // TODO: If only branch changes, re-deploy
         $site = $dbForProject->getDocument('sites', $siteId);
 
