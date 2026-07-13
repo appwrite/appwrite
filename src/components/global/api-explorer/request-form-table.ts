@@ -43,7 +43,7 @@ export const REQUEST_BUILDER_HELPER_SLOT =
   'flex w-full min-w-0 items-center justify-start'
 
 export const REQUEST_BUILDER_REQUIRED_CELL =
-  'col-start-3 row-start-1 flex min-h-10 shrink-0 items-center justify-end pe-3 ps-1 py-2.5 empty:hidden @[680px]/request-builder:empty:flex @[680px]/request-builder:min-h-[44px] @[680px]/request-builder:w-[88px] @[680px]/request-builder:border-s @[680px]/request-builder:border-border/50 @[680px]/request-builder:px-0 @[680px]/request-builder:pe-4 @[680px]/request-builder:ps-3 @[680px]/request-builder:py-0'
+  'col-start-3 row-start-1 flex min-h-10 shrink-0 items-center justify-end pe-3 ps-1 py-2.5 empty:hidden @[680px]/request-builder:col-start-5 @[680px]/request-builder:empty:flex @[680px]/request-builder:min-h-[44px] @[680px]/request-builder:w-[88px] @[680px]/request-builder:border-s @[680px]/request-builder:border-border/50 @[680px]/request-builder:px-0 @[680px]/request-builder:pe-4 @[680px]/request-builder:ps-3 @[680px]/request-builder:py-0'
 
 /** Left-aligned helper actions sized to the helper column. */
 export const REQUEST_BUILDER_HELPER_LINK =

@@ -8,7 +8,8 @@ type StartTruncatedTextProps = {
 
 /**
  * Truncates overflowing text with an ellipsis on the left, keeping the end visible.
- * Uses direction: rtl on the container so text-overflow applies at the start only.
+ * Uses direction: rtl so text-overflow applies at the start, with text-left so
+ * short strings stay beside a leading sibling (e.g. an HTTP method badge).
  */
 export function StartTruncatedText({
   text,
@@ -19,7 +20,7 @@ export function StartTruncatedText({
     <span
       dir="rtl"
       className={cn(
-        'block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-start',
+        'block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-left',
         className,
       )}
       title={title ?? text}
