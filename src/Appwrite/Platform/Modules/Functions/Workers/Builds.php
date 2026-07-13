@@ -541,7 +541,7 @@ class Builds extends Action
                     $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
                     $jobs->create(...Job::build($project, $resource, $deployment, $platform, [
                         'url' => $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
-                        'subdir' => $resource->getAttribute('providerRootDirectory', ''),
+                        'subdir' => Job::sourceSubdirectory($providerAdapter, $cloneRepository, $resource->getAttribute('providerRootDirectory', '')),
                     ]));
 
                     Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);

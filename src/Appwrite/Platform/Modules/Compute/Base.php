@@ -170,7 +170,7 @@ class Base extends Action
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $source = [
                 'url' => $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
-                'subdir' => $function->getAttribute('providerRootDirectory', ''),
+                'subdir' => Job::sourceSubdirectory($vcs, $repositoryName, $function->getAttribute('providerRootDirectory', '')),
             ];
             $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
         } else {

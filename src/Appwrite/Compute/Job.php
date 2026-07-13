@@ -13,6 +13,7 @@ use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Builds an open-runtimes jobs-service job payload for a function deployment.
@@ -160,6 +161,17 @@ final class Job
     public static function buildPath(string $projectId, string $deploymentId): string
     {
         return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}/code.tar.gz";
+    }
+
+    public static function sourceSubdirectory(Git $vcs, string $repositoryName, string $rootDirectory): string
+    {
+        $rootDirectory = \trim($rootDirectory, '/');
+
+        if ($vcs->getName() === 'gitea') {
+            return \trim($repositoryName . '/' . $rootDirectory, '/');
+        }
+
+        return $rootDirectory;
     }
 
     /**

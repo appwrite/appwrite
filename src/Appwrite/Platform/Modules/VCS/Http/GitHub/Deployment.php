@@ -575,7 +575,7 @@ trait Deployment
                 if ($useJobs) {
                     $source = [
                         'url' => $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
-                        'subdir' => $resource->getAttribute('providerRootDirectory', ''),
+                        'subdir' => Job::sourceSubdirectory($vcs, $providerRepositoryName, $resource->getAttribute('providerRootDirectory', '')),
                     ];
                     $jobs->create(...Job::build($project, $resource, $deployment, $platform, $source));
                 } else {
