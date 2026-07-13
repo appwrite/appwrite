@@ -6,8 +6,8 @@ $defaultHttpPort ??= '80';
 $defaultHttpsPort ??= '443';
 $defaultEmailCertificates ??= '';
 $defaultAssistantOpenAIKey ??= '';
-$defaultDatabase ??= 'mongodb';
-$enabledDatabases ??= ['mongodb', 'mariadb'];
+$defaultDatabase ??= 'postgresql';
+$enabledDatabases ??= ['postgresql', 'mariadb', 'mongodb'];
 $selectedDatabase = $lockedDatabase ?: $defaultDatabase;
 $isDatabaseLocked = !empty($lockedDatabase);
 $mongoEnabled = in_array('mongodb', $enabledDatabases, true);
@@ -47,15 +47,15 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
             <div class="input-group stack-xs">
                 <label class="label-text typography-text-m-500 text-neutral-secondary">Database</label>
                 <div class="selector-group<?php echo $isDatabaseLocked ? ' is-locked' : ''; ?>">
-                    <?php if ($mongoEnabled) { ?>
-                    <label class="selector-card <?php echo ($selectedDatabase === 'mongodb') ? 'selected' : ''; ?><?php echo $mongoDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $mongoDisabled ? ' aria-disabled="true"' : ''; ?>>
-                        <input type="radio" name="database" value="mongodb" <?php echo ($selectedDatabase === 'mongodb') ? 'checked' : ''; ?> class="sr-only" <?php echo $mongoDisabled ? 'disabled' : ''; ?>>
+                    <?php if ($postgresEnabled) { ?>
+                    <label class="selector-card <?php echo ($selectedDatabase === 'postgresql') ? 'selected' : ''; ?><?php echo $postgresDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $postgresDisabled ? ' aria-disabled="true"' : ''; ?>>
+                        <input type="radio" name="database" value="postgresql" <?php echo ($selectedDatabase === 'postgresql') ? 'checked' : ''; ?> class="sr-only" <?php echo $postgresDisabled ? 'disabled' : ''; ?>>
                         <div class="selector-content">
-                            <div class="typography-text-m-500 text-neutral-primary">MongoDB</div>
-                            <div class="typography-text-xs-400 text-neutral-secondary">Document based database</div>
+                            <div class="typography-text-m-500 text-neutral-primary">PostgreSQL</div>
+                            <div class="typography-text-xs-400 text-neutral-secondary">Relational SQL database</div>
                         </div>
-                        <img src="installer/icons/mongodb.svg" alt="MongoDB" class="selector-icon">
-                        <?php if ($mongoDisabled) { ?>
+                        <img src="installer/icons/postgresql.svg" alt="PostgreSQL" class="selector-icon">
+                        <?php if ($postgresDisabled) { ?>
                             <span class="tooltip tooltip-db-locked typography-text-m-400 text-on-invert" role="tooltip" data-tooltip-portal="true">Database cannot be changed after initial setup.</span>
                         <?php } ?>
                     </label>
@@ -75,15 +75,15 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                     </label>
                     <?php } ?>
 
-                    <?php if ($postgresEnabled) { ?>
-                    <label class="selector-card <?php echo ($selectedDatabase === 'postgresql') ? 'selected' : ''; ?><?php echo $postgresDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $postgresDisabled ? ' aria-disabled="true"' : ''; ?>>
-                        <input type="radio" name="database" value="postgresql" <?php echo ($selectedDatabase === 'postgresql') ? 'checked' : ''; ?> class="sr-only" <?php echo $postgresDisabled ? 'disabled' : ''; ?>>
+                    <?php if ($mongoEnabled) { ?>
+                    <label class="selector-card <?php echo ($selectedDatabase === 'mongodb') ? 'selected' : ''; ?><?php echo $mongoDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $mongoDisabled ? ' aria-disabled="true"' : ''; ?>>
+                        <input type="radio" name="database" value="mongodb" <?php echo ($selectedDatabase === 'mongodb') ? 'checked' : ''; ?> class="sr-only" <?php echo $mongoDisabled ? 'disabled' : ''; ?>>
                         <div class="selector-content">
-                            <div class="typography-text-m-500 text-neutral-primary">PostgreSQL</div>
-                            <div class="typography-text-xs-400 text-neutral-secondary">Relational SQL database</div>
+                            <div class="typography-text-m-500 text-neutral-primary">MongoDB</div>
+                            <div class="typography-text-xs-400 text-neutral-secondary">Document based database</div>
                         </div>
-                        <img src="installer/icons/postgresql.svg" alt="PostgreSQL" class="selector-icon">
-                        <?php if ($postgresDisabled) { ?>
+                        <img src="installer/icons/mongodb.svg" alt="MongoDB" class="selector-icon">
+                        <?php if ($mongoDisabled) { ?>
                             <span class="tooltip tooltip-db-locked typography-text-m-400 text-on-invert" role="tooltip" data-tooltip-portal="true">Database cannot be changed after initial setup.</span>
                         <?php } ?>
                     </label>

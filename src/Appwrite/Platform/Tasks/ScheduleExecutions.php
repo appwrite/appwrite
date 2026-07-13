@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Swoole\Coroutine as Co;
+use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 
 /**
  * ScheduleExecutions
@@ -31,6 +33,22 @@ class ScheduleExecutions extends ScheduleBase
     public static function getCollectionId(): string
     {
         return RESOURCE_TYPE_EXECUTIONS;
+    }
+
+    protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
+    {
+        // Executions are not persisted; the schedule carries what the worker
+        // needs. Schedules from before the executions collection was dropped
+        // can still resolve their document for the functionId their data lacks.
+        try {
+            $resource = parent::loadResource($project, $getProjectDB, $schedule);
+        } catch (\Throwable) {
+            $resource = new Document();
+        }
+
+        return $resource->isEmpty()
+            ? new Document(['$id' => $schedule['resourceId']])
+            : $resource;
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
@@ -63,11 +81,25 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             )->getAttribute('data', []);
 
+            $functionId = $data['functionId'] ?? $schedule['resource']->getAttribute('resourceId', '');
+
+            if (empty($functionId)) {
+                Console::error("Missing functionId for scheduled execution {$schedule['resourceId']}, skipping");
+
+                $dbForPlatform->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+
+                unset($this->schedules[$schedule['$sequence']]);
+                continue;
+            }
+
             $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
+            \go(function () use ($publisherForFunctions, $schedule, $scheduledAt, $delay, $data, $functionId, $dbForPlatform) {
                 if ($delay > 0) {
                     Co::sleep($delay);
                 }
@@ -75,7 +107,7 @@ class ScheduleExecutions extends ScheduleBase
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],
                     userId: $data['userId'] ?? '',
-                    functionId: $schedule['resource']['resourceId'],
+                    functionId: $functionId,
                     execution: $schedule['resource'],
                     type: 'schedule',
                     body: $data['body'] ?? '',
