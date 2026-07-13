@@ -68,7 +68,11 @@ class RepositoryWebhooks
             return;
         }
 
-        $provider = $installation->getAttribute('provider', 'github');
+        $provider = $installation->getAttribute('provider', '');
+        if (empty($provider)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing VCS provider for installation: ' . $installation->getId());
+        }
+
         $url = $this->buildWebhookUrl($provider);
         $secret = $this->vcsFactory->getWebhookSecret($provider);
 

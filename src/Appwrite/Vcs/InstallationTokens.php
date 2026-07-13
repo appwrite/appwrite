@@ -28,12 +28,7 @@ class InstallationTokens
 
         $installation = $installation->setAttribute('personalAccessToken', $accessToken);
 
-        // A missing expiry means the provider issued a non-expiring token
-        // (or none was recorded yet) -- treat it as not expired rather than
-        // forcing a refresh on every call.
-        $isExpired = !empty($accessTokenExpiry) && new \DateTime($accessTokenExpiry) < new \DateTime('now');
-
-        if (!$isExpired) {
+        if (!$this->isExpired($accessTokenExpiry)) {
             return $installation;
         }
 
@@ -48,7 +43,12 @@ class InstallationTokens
         $verificationId = $oauth2->getUserID($accessToken);
 
         if (empty($verificationId)) {
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
+            $current = $this->getCurrentInstallation($dbForPlatform, $installation);
+            if (!$current->isEmpty() && !empty($current->getAttribute('personalAccessToken')) && !$this->isExpired($current->getAttribute('personalAccessTokenExpiry'))) {
+                return $current;
+            }
+
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
         $installation = $installation
@@ -63,5 +63,30 @@ class InstallationTokens
         ]));
 
         return $installation;
+    }
+
+    protected function isExpired(?string $expiry): bool
+    {
+        // A missing expiry means the provider issued a non-expiring token
+        // (or none was recorded yet) -- treat it as not expired rather than
+        // forcing a refresh on every call.
+        if (empty($expiry)) {
+            return false;
+        }
+
+        try {
+            return new \DateTime($expiry) < new \DateTime('now');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function getCurrentInstallation(Database $dbForPlatform, Document $installation): Document
+    {
+        try {
+            return $dbForPlatform->getDocument('installations', $installation->getId());
+        } catch (\Throwable) {
+            return new Document();
+        }
     }
 }
