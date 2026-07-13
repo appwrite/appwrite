@@ -2745,6 +2745,8 @@ trait MigrationsBase
         $deploymentAfterSkip = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $destinationHeaders);
         $this->assertEquals(200, $deploymentAfterSkip['headers']['status-code']);
 
+        // Ready deployments cannot be mutated through the public API. The
+        // destination duplicate is newer, so overwrite must preserve it.
         $overwriteDeployment = $this->performMigrationSync([
             'resources' => [Resource::TYPE_FUNCTION, Resource::TYPE_DEPLOYMENT],
             'endpoint' => $this->webEndpoint,
@@ -2754,7 +2756,7 @@ trait MigrationsBase
         ]);
         $this->assertSame('completed', $overwriteDeployment['status']);
         $this->assertNoMigrationCounterErrors($overwriteDeployment);
-        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_DEPLOYMENT]['success']);
+        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_DEPLOYMENT]['skip']);
 
         $this->assertEventually(function () use ($functionId, $deploymentId, $destinationHeaders): void {
             $deploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $destinationHeaders);
@@ -3009,6 +3011,8 @@ trait MigrationsBase
         $deploymentAfterSkip = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, $destinationHeaders);
         $this->assertEquals(200, $deploymentAfterSkip['headers']['status-code']);
 
+        // Ready deployments cannot be mutated through the public API. The
+        // destination duplicate is newer, so overwrite must preserve it.
         $overwriteDeployment = $this->performMigrationSync([
             'resources' => [Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT],
             'endpoint' => $this->webEndpoint,
@@ -3018,7 +3022,7 @@ trait MigrationsBase
         ]);
         $this->assertSame('completed', $overwriteDeployment['status']);
         $this->assertNoMigrationCounterErrors($overwriteDeployment);
-        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_SITE_DEPLOYMENT]['success']);
+        $this->assertGreaterThanOrEqual(1, $overwriteDeployment['statusCounters'][Resource::TYPE_SITE_DEPLOYMENT]['skip']);
 
         $this->assertEventually(function () use ($siteId, $deploymentId, $destinationHeaders): void {
             $deploymentAfterOverwrite = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, $destinationHeaders);
