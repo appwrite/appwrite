@@ -4205,21 +4205,20 @@
         },
         {
             "name": "utopia-php/http",
-            "version": "2.0.0-rc17",
+            "version": "2.0.0-rc18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "0dcc44de19d0f7f2ffef2423169b48b85ebdcce1"
+                "reference": "3bfc500c6a53ffb87d4dcb95b4712b6a91b24439"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/0dcc44de19d0f7f2ffef2423169b48b85ebdcce1",
-                "reference": "0dcc44de19d0f7f2ffef2423169b48b85ebdcce1",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/3bfc500c6a53ffb87d4dcb95b4712b6a91b24439",
+                "reference": "3bfc500c6a53ffb87d4dcb95b4712b6a91b24439",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.5",
-                "psr/http-message": "^1.1 || ^2.0",
                 "utopia-php/compression": "^0.1",
                 "utopia-php/di": "^0.3",
                 "utopia-php/psr7": "^0.2.0",
@@ -4253,9 +4252,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc17"
+                "source": "https://github.com/utopia-php/http/tree/2.0.0-rc18"
             },
-            "time": "2026-07-13T11:15:40+00:00"
+            "time": "2026-07-13T16:18:22+00:00"
         },
         {
             "name": "utopia-php/image",
