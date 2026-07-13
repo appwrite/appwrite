@@ -313,10 +313,13 @@ class Functions extends Action
             'requestPath' => $path,
             'requestMethod' => $method,
             'requestHeaders' => $headersFiltered,
-            'errors' => $message,
+            'errors' => '',
             'logs' => '',
             'duration' => 0.0,
         ]);
+
+        $executionForEvent = (new Document($execution->getArrayCopy()))
+            ->setAttribute('errors', $message);
 
         Span::add('function.id', $function->getId());
         Span::add('execution.id', $execution->getId());
@@ -325,7 +328,7 @@ class Functions extends Action
         Span::add('execution.status', $execution->getAttribute('status', ''));
 
         $bus->dispatch(new ExecutionCompleted(
-            execution: $execution->getArrayCopy(),
+            execution: $executionForEvent->getArrayCopy(),
             project: $project->getArrayCopy(),
             resource: $function->getArrayCopy(),
         ));

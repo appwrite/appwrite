@@ -380,31 +380,31 @@ return [
     ],
     [
         'category' => 'Database',
-        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between MariaDB, MongoDB or PostgreSQL.',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between PostgreSQL, MariaDB or MongoDB.',
         'variables' => [
             [
                 'name' => '_APP_DB_ADAPTER',
-                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
+                'description' => 'Which database to use. Must be one of: PostgreSQL, MariaDB, or MongoDB',
                 'introduction' => '1.9.0',
-                'default' => 'mongodb',
+                'default' => 'postgresql',
                 'required' => true,
-                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
+                'question' => 'Choose your database (postgresql|mariadb|mongodb)',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_DB_HOST',
-                'description' => 'Database server host name address. Default value is: \'mongodb\'.',
+                'description' => 'Database server host name address. Default value is: \'postgresql\'.',
                 'introduction' => '',
-                'default' => 'mongodb',
+                'default' => 'postgresql',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_DB_PORT',
-                'description' => 'Database server TCP port. Default value is: \'27017\'.',
+                'description' => 'Database server TCP port. Default value is: \'5432\'.',
                 'introduction' => '',
-                'default' => '27017',
+                'default' => '5432',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
