@@ -336,7 +336,7 @@ services:
     networks:
       - appwrite
     command:
-      ["/bin/sh", "-c", "/setup.sh && touch /tmp/ready && tail -f /dev/null"]
+      ["/bin/sh", "-c", "/setup.sh && touch /tmp/ready && exec tail -f /dev/null"]
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/ready"]
       interval: 2s
