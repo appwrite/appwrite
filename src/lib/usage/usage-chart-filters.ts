@@ -1,8 +1,9 @@
 import type { DateRange } from 'react-day-picker'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
-  resolveUsageChartIntervalForRange,
+  resolveUsageChartInterval,
   type UsageChartInterval,
+  type UsageChartIntervalPlan,
 } from '@/lib/usage/chart-interval'
 import {
   getStableUsageChartDateRange,
@@ -22,6 +23,7 @@ export type UsageChartFilters = {
 
 export function resolveUsageChartFiltersFromPrefs(
   prefs: UserPrefs | null | undefined,
+  plan?: UsageChartIntervalPlan,
 ): UsageChartFilters {
   const serialized = parseUsageChartDateRangeFromPrefs(prefs)
   const dateRange = serialized
@@ -29,9 +31,10 @@ export function resolveUsageChartFiltersFromPrefs(
     : getStableUsageChartDateRange()
 
   const intervalFromPrefs = parseUsageChartIntervalFromPrefs(prefs)
-  const chartInterval = resolveUsageChartIntervalForRange(
+  const chartInterval = resolveUsageChartInterval(
     intervalFromPrefs ?? DEFAULT_USAGE_CHART_INTERVAL,
     dateRange,
+    plan,
   )
 
   return { dateRange, chartInterval }

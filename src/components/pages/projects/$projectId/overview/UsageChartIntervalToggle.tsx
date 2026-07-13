@@ -57,6 +57,10 @@ export function UsageChartIntervalToggle({
     : USAGE_CHART_INTERVAL_OPTIONS
   const optionCount = options.length
 
+  if (optionCount <= 1) {
+    return null
+  }
+
   return (
     <TooltipProvider delayDuration={300}>
       <ToggleGroup

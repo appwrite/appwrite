@@ -4,8 +4,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
-  resolveUsageChartIntervalForRange,
+  resolveUsageChartInterval,
   type UsageChartInterval,
+  type UsageChartIntervalPlan,
 } from '@/lib/usage/chart-interval'
 import {
   resolveUsageChartFiltersFromPrefs,
@@ -28,7 +29,7 @@ import {
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 
-export function useUsageChartFilters() {
+export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const accountId = (account as Models.User | undefined)?.$id
@@ -52,26 +53,40 @@ export function useUsageChartFilters() {
     return `default:${accountId ?? 'anonymous'}`
   }, [accountPrefs, accountId])
 
+  const planIntervalsKey = plan?.usageLogsIntervals?.join(',') ?? ''
+
   const dateRangePresetId = useMemo(() => {
     const serialized = parseUsageChartDateRangeFromPrefs(accountPrefs)
     return serialized?.preset ?? null
   }, [usageFiltersPrefsKey, accountPrefs])
 
   const { dateRange, chartInterval } = useMemo(() => {
-    const filters = resolveUsageChartFiltersFromPrefs(accountPrefs)
+    const filters = resolveUsageChartFiltersFromPrefs(accountPrefs, plan)
 
     if (dateRangePresetId) {
       const preset = getUsageDateRangePresetByValue(dateRangePresetId)
       if (preset) {
+        const range = preset.getRange()
         return {
-          dateRange: preset.getRange(),
-          chartInterval: filters.chartInterval,
+          dateRange: range,
+          chartInterval: resolveUsageChartInterval(
+            filters.chartInterval,
+            range,
+            plan,
+          ),
         }
       }
     }
 
     return filters
-  }, [usageFiltersPrefsKey, dateRangePresetId, rollingRangeNonce, accountPrefs])
+  }, [
+    usageFiltersPrefsKey,
+    dateRangePresetId,
+    rollingRangeNonce,
+    accountPrefs,
+    plan,
+    planIntervalsKey,
+  ])
 
   const refreshRollingDateRange = useCallback(() => {
     if (dateRangePresetId && isRollingUsageDateRangePresetId(dateRangePresetId)) {
@@ -140,9 +155,10 @@ export function useUsageChartFilters() {
           }
         : getStableUsageChartDateRange()
 
-      const nextInterval = resolveUsageChartIntervalForRange(
+      const nextInterval = resolveUsageChartInterval(
         chartInterval,
         resolvedDateRange,
+        plan,
       )
 
       if (
@@ -158,15 +174,17 @@ export function useUsageChartFilters() {
         chartInterval: nextInterval,
       })
     },
-    [account, chartInterval, dateRange, updateMutation],
+    [account, chartInterval, dateRange, plan, updateMutation],
   )
 
   const setChartInterval = useCallback(
     (interval: UsageChartInterval) => {
       if (!account || interval === chartInterval) return
-      updateMutation.mutate({ dateRange, chartInterval: interval })
+      const resolved = resolveUsageChartInterval(interval, dateRange, plan)
+      if (resolved === chartInterval) return
+      updateMutation.mutate({ dateRange, chartInterval: resolved })
     },
-    [account, chartInterval, dateRange, updateMutation],
+    [account, chartInterval, dateRange, plan, updateMutation],
   )
 
   return {

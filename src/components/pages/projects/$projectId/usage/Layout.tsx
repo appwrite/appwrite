@@ -53,10 +53,7 @@ import {
   hasFiniteUsageLogRetention,
   resolveShorterUsageDateRangePreset,
 } from '@/lib/usage/usage-log-retention'
-import {
-  getUsageChartIntervalOptionsForPlan,
-  resolveUsageChartIntervalForPlan,
-} from '@/lib/usage/chart-interval'
+import { getUsageChartIntervalsForPlan } from '@/lib/usage/chart-interval'
 import { UsageLogRetentionAlert } from './_components/UsageLogRetentionAlert'
 import {
   findUsageCategory,
@@ -473,6 +470,8 @@ function UsageLayoutContent({
     [usageFilterMap, navigateUsageFilters, categoryId],
   )
 
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const {
     dateRange: usageDateRange,
     chartInterval,
@@ -480,10 +479,7 @@ function UsageLayoutContent({
     setDateRange: setUsageDateRange,
     setChartInterval,
     refreshRollingDateRange,
-  } = useUsageChartFilters()
-
-  const { project } = useProject(projectId)
-  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  } = useUsageChartFilters(organizationPlan)
   const usageLogRetentionHours = useMemo(
     () => getUsageLogRetentionHoursFromPlan(organizationPlan),
     [organizationPlan],
@@ -493,22 +489,9 @@ function UsageLayoutContent({
     [organizationPlan],
   )
   const planChartIntervals = useMemo(
-    () =>
-      getUsageChartIntervalOptionsForPlan(organizationPlan).map(
-        (option) => option.value,
-      ),
+    () => getUsageChartIntervalsForPlan(organizationPlan),
     [organizationPlan],
   )
-
-  useEffect(() => {
-    const resolved = resolveUsageChartIntervalForPlan(
-      chartInterval,
-      organizationPlan,
-    )
-    if (resolved !== chartInterval) {
-      setChartInterval(resolved)
-    }
-  }, [chartInterval, organizationPlan, setChartInterval])
 
   const { showAlert: showUsageHistoryLimitAlert } = useUsageHistoryLimitAlertState({
     projectId,

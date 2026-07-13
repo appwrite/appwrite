@@ -121,9 +121,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
       const account = await queryClient
         .ensureQueryData(consoleAccountQueryOptions())
         .catch(() => null)
-      const usageChartFilters = resolveUsageChartFiltersFromPrefs(
-        account?.prefs as UserPrefs | undefined,
-      )
       const usageStatsEnabled = getActiveProfileFeatures().usageStats
 
       // Non-critical data: prefetch in the background so the page can render immediately.
@@ -132,13 +129,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
         .catch(() => undefined)
 
       if (usageStatsEnabled) {
-        const parsedRange = {
-          from: usageChartFilters.dateRange.from!,
-          to: usageChartFilters.dateRange.to!,
-        }
-        const chartInterval = usageChartFilters.chartInterval
-        const debugOverrides = loadDebugOverrides()
-
         const project = await queryClient
           .ensureQueryData({
             queryKey: ['project', projectId],
@@ -155,6 +145,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
         const logRetentionHours = getUsageLogRetentionHoursFromPlan(
           organizationPlan,
         )
+        const usageChartFilters = resolveUsageChartFiltersFromPrefs(
+          account?.prefs as UserPrefs | undefined,
+          organizationPlan,
+        )
+        const parsedRange = {
+          from: usageChartFilters.dateRange.from!,
+          to: usageChartFilters.dateRange.to!,
+        }
+        const chartInterval = usageChartFilters.chartInterval
+        const debugOverrides = loadDebugOverrides()
 
         // Usage is non-critical: prefetch in background; page renders with chart skeletons.
         const usagePrefetchTasks = OVERVIEW_CHART_TAB_ORDER.filter((tabId) =>

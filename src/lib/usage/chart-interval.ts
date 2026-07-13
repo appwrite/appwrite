@@ -1,8 +1,14 @@
 import { differenceInCalendarDays } from 'date-fns'
+import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
 import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
 
 export type UsageChartInterval = '15m' | '1h' | '1d'
+
+export type UsageChartIntervalPlan = Pick<
+  Models.BillingPlan,
+  'usageLogsIntervals'
+> | null | undefined
 
 export const DEFAULT_USAGE_CHART_INTERVAL: UsageChartInterval = '1h'
 
@@ -20,7 +26,7 @@ export const USAGE_CHART_INTERVAL_OPTIONS: {
  * full console set when the plan omits the field.
  */
 export function getUsageChartIntervalOptionsForPlan(
-  plan: { usageLogsIntervals?: string[] | null } | null | undefined,
+  plan: UsageChartIntervalPlan,
 ): typeof USAGE_CHART_INTERVAL_OPTIONS {
   const allowed = plan?.usageLogsIntervals
   if (!allowed?.length) return USAGE_CHART_INTERVAL_OPTIONS
@@ -32,9 +38,15 @@ export function getUsageChartIntervalOptionsForPlan(
   return filtered.length > 0 ? filtered : USAGE_CHART_INTERVAL_OPTIONS
 }
 
+export function getUsageChartIntervalsForPlan(
+  plan: UsageChartIntervalPlan,
+): UsageChartInterval[] {
+  return getUsageChartIntervalOptionsForPlan(plan).map((option) => option.value)
+}
+
 export function resolveUsageChartIntervalForPlan(
   interval: UsageChartInterval,
-  plan: { usageLogsIntervals?: string[] | null } | null | undefined,
+  plan: UsageChartIntervalPlan,
 ): UsageChartInterval {
   const options = getUsageChartIntervalOptionsForPlan(plan)
   if (options.some((option) => option.value === interval)) return interval
@@ -142,28 +154,58 @@ export function getUsageChartIntervalDisabledReasonDetails(
   return undefined
 }
 
-/** Pick the finest interval still valid for the current range (fallback when range widens). */
+/**
+ * Pick the finest plan-allowed interval still valid for the current range
+ * (fallback when range widens).
+ */
 export function resolveUsageChartIntervalForRange(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
+  plan?: UsageChartIntervalPlan,
 ): UsageChartInterval {
-  if (isUsageChartIntervalValidForRange(interval, dateRange)) {
-    return interval
+  const allowed = getUsageChartIntervalsForPlan(plan)
+  const allowedSet = new Set(allowed)
+  const planInterval = resolveUsageChartIntervalForPlan(interval, plan)
+
+  if (
+    allowedSet.has(planInterval) &&
+    isUsageChartIntervalValidForRange(planInterval, dateRange)
+  ) {
+    return planInterval
   }
 
-  const startIndex = USAGE_CHART_INTERVAL_COARSEN_ORDER.indexOf(interval)
+  const startIndex = USAGE_CHART_INTERVAL_COARSEN_ORDER.indexOf(planInterval)
   const candidates =
     startIndex >= 0
       ? USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(startIndex + 1)
       : USAGE_CHART_INTERVAL_COARSEN_ORDER.slice(1)
 
   for (const candidate of candidates) {
+    if (!allowedSet.has(candidate)) continue
     if (isUsageChartIntervalValidForRange(candidate, dateRange)) {
       return candidate
     }
   }
 
-  return '1d'
+  for (const candidate of USAGE_CHART_INTERVAL_COARSEN_ORDER) {
+    if (!allowedSet.has(candidate)) continue
+    if (isUsageChartIntervalValidForRange(candidate, dateRange)) {
+      return candidate
+    }
+  }
+
+  return allowed[allowed.length - 1] ?? '1d'
+}
+
+/**
+ * Resolve interval against both plan `usageLogsIntervals` and date-range limits.
+ */
+export function resolveUsageChartInterval(
+  interval: UsageChartInterval,
+  dateRange: DateRange | undefined,
+  plan?: UsageChartIntervalPlan,
+): UsageChartInterval {
+  return resolveUsageChartIntervalForRange(interval, dateRange, plan)
 }
 
 /** Map legacy saved interval prefs to the current value. */

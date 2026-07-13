@@ -115,10 +115,7 @@ import {
   shouldShowUsageTabMetricSkeleton,
 } from '@/lib/usage/usage-chart-loading'
 import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
-import {
-  getUsageChartIntervalOptionsForPlan,
-  resolveUsageChartIntervalForPlan,
-} from '@/lib/usage/chart-interval'
+import { getUsageChartIntervalsForPlan } from '@/lib/usage/chart-interval'
 import { resolveUsageChartErrorCopy } from '@/lib/usage/usage-history-errors'
 import { UsageChartErrorMessage } from '../shared/UsageChartErrorMessage'
 import {
@@ -203,12 +200,6 @@ export function View({ projectId, initialData }: ViewProps) {
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [storageBreakdownType, setStorageBreakdownType] =
     useState<OverviewStorageBreakdownType>('files')
-  const {
-    dateRange: dashboardChartDateRange,
-    chartInterval,
-    setDateRange: setDashboardChartDateRange,
-    setChartInterval,
-  } = useUsageChartFilters()
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -220,6 +211,12 @@ export function View({ projectId, initialData }: ViewProps) {
   const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const {
+    dateRange: dashboardChartDateRange,
+    chartInterval,
+    setDateRange: setDashboardChartDateRange,
+    setChartInterval,
+  } = useUsageChartFilters(organizationPlan)
   const usageLogRetentionHours = useMemo(
     () => getUsageLogRetentionHoursFromPlan(organizationPlan),
     [organizationPlan],
@@ -233,22 +230,9 @@ export function View({ projectId, initialData }: ViewProps) {
     [organizationPlan?.usageLogs],
   )
   const planChartIntervals = useMemo(
-    () =>
-      getUsageChartIntervalOptionsForPlan(organizationPlan).map(
-        (option) => option.value,
-      ),
+    () => getUsageChartIntervalsForPlan(organizationPlan),
     [organizationPlan],
   )
-
-  useEffect(() => {
-    const resolved = resolveUsageChartIntervalForPlan(
-      chartInterval,
-      organizationPlan,
-    )
-    if (resolved !== chartInterval) {
-      setChartInterval(resolved)
-    }
-  }, [chartInterval, organizationPlan, setChartInterval])
 
   const handleOverviewTabChange = (tabId: string) => {
     setActiveTab(tabId)
