@@ -72,6 +72,18 @@ final class FactoryTest extends TestCase
         $factory->fromInstallation(new Document());
     }
 
+    public function testFromInstallationMissingProviderThrows(): void
+    {
+        $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Missing VCS provider');
+
+        $factory->fromInstallation(new Document([
+            '$id' => 'installation',
+        ]));
+    }
+
     public function testIsConfigured(): void
     {
         $entry = [
