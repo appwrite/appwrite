@@ -22,7 +22,6 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
  * Applies open-runtimes jobs-service callbacks to a deployment. The API
@@ -64,7 +63,7 @@ class Jobs extends Action
             ->inject('publisherForUsage')
             ->inject('usage')
             ->inject('deviceForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsForInstallation')
             ->inject('cache')
             ->inject('locks')
             ->callback($this->action(...));
@@ -82,7 +81,7 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         UsageContext $usage,
         Device $deviceForBuilds,
-        GitHub $github,
+        callable $vcsForInstallation,
         Cache $cache,
         callable $locks,
     ): void {
@@ -93,7 +92,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $github, $cache, $deploymentId): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $vcsForInstallation, $cache, $deploymentId): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -114,7 +113,7 @@ class Jobs extends Action
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $vcsForInstallation),
                 default => $deployment,
             };
 
@@ -203,10 +202,10 @@ class Jobs extends Action
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         Device $deviceForBuilds,
-        GitHub $github,
+        callable $vcsForInstallation,
     ): Document {
         if ($exitCode !== 0) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $github);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $vcsForInstallation);
         }
 
         $path = Job::buildPath($project->getId(), $deployment->getId());
@@ -215,10 +214,10 @@ class Jobs extends Action
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $github);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $vcsForInstallation);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $github, $size);
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $vcsForInstallation, $size);
     }
 
     /**
@@ -235,7 +234,7 @@ class Jobs extends Action
         string $message,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
-        GitHub $github,
+        callable $vcsForInstallation,
         int $buildSize = 0,
     ): Document {
         $function = $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId'));
@@ -288,17 +287,17 @@ class Jobs extends Action
         // deployments only; best-effort). "pending" at build start is a follow-up.
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $function->isEmpty()) {
-            $this->gitStatus($github, $dbForPlatform, $project, $function, $deployment, $status === 'ready' ? 'success' : 'failure');
+            $this->gitStatus($vcsForInstallation, $dbForPlatform, $project, $function, $deployment, $status === 'ready' ? 'success' : 'failure');
         }
 
         return $deployment;
     }
 
     /**
-     * Post a GitHub commit status for a VCS deployment (no-op for non-VCS builds
+     * Post a VCS commit status for a VCS deployment (no-op for non-VCS builds
      * or silent mode). Best-effort — a failed status update never fails the build.
      */
-    private function gitStatus(GitHub $github, Database $dbForPlatform, Document $project, Document $function, Document $deployment, string $state): void
+    private function gitStatus(callable $vcsForInstallation, Database $dbForPlatform, Document $project, Document $function, Document $deployment, string $state): void
     {
         $commitHash = $deployment->getAttribute('providerCommitHash', '');
         if ($commitHash === '' || $function->getAttribute('providerSilentMode', false) === true) {
@@ -311,7 +310,7 @@ class Jobs extends Action
             if ($providerInstallationId === '') {
                 return;
             }
-            $github->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''), System::getEnv('_APP_VCS_GITHUB_APP_ID', ''));
+            $vcs = $vcsForInstallation($installation);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
@@ -320,7 +319,7 @@ class Jobs extends Action
             $message = $state === 'success' ? 'Build succeeded.' : 'Build failed.';
             $name = $function->getAttribute('name', '') . ' (' . $project->getAttribute('name', '') . ')';
 
-            $github->updateCommitStatus(
+            $vcs->updateCommitStatus(
                 $deployment->getAttribute('providerRepositoryName', ''),
                 $commitHash,
                 $deployment->getAttribute('providerRepositoryOwner', ''),

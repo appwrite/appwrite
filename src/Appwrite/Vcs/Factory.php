@@ -12,8 +12,8 @@ use Utopia\VCS\Adapter\Git;
 /**
  * Builds VCS adapters from the `vcs` config registry.
  *
- * Endpoints inject this service (DI name `vcsFactory`) and resolve the
- * adapter from an installation document instead of hardcoding a provider.
+ * DI resources use this service to resolve adapters from installation
+ * documents or provider keys instead of hardcoding one provider.
  * The factory only constructs adapters — it never touches the database.
  */
 class Factory
