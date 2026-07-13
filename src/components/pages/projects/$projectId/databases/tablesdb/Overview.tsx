@@ -929,15 +929,11 @@ export function Overview({
           titleRightContent={
             activeTab === 'monitor' ? (
               <DatabaseMonitorHeaderActions
-                projectId={projectId}
-                databaseId={databaseId}
-                dbKind={DB_KIND}
                 dateRange={localMonitorDateRange}
                 onDateRangeChange={(r) =>
                   setLocalMonitorDateRange(r ?? getDefaultMonitorDateRange())
                 }
                 onRefresh={() => setLocalMonitorChartTick((n) => n + 1)}
-                showSpecActions={showDbSecuritySettings}
               />
             ) : undefined
           }

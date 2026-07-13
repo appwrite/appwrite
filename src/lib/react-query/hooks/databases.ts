@@ -2912,22 +2912,34 @@ export async function updateProjectTableColumn(
   const size = typeof data.size === 'number' ? data.size : undefined
   const min = typeof data.min === 'number' ? data.min : undefined
   const max = typeof data.max === 'number' ? data.max : undefined
+  // Update column APIs require `xdefault` to be present. Pass `null` when there is
+  // no default (SDK treats undefined as missing and throws).
   const stringDefault =
-    data.xdefault === undefined || data.xdefault === null
-      ? undefined
+    data.xdefault === undefined || data.xdefault === null || data.xdefault === ''
+      ? null
       : String(data.xdefault)
   const numberDefault =
     typeof data.xdefault === 'number' || typeof data.xdefault === 'bigint'
       ? data.xdefault
-      : undefined
+      : null
   const floatDefault =
-    typeof data.xdefault === 'number' ? data.xdefault : undefined
+    typeof data.xdefault === 'number' ? data.xdefault : null
   const boolDefault =
-    typeof data.xdefault === 'boolean' ? data.xdefault : undefined
+    typeof data.xdefault === 'boolean' ? data.xdefault : null
+  const spatialDefault =
+    data.xdefault === undefined || data.xdefault === null
+      ? null
+      : data.xdefault
   const elements = Array.isArray(data.elements)
     ? data.elements.map(String)
     : []
-  const newKey = typeof data.newKey === 'string' ? data.newKey : undefined
+  const formKey = typeof data.key === 'string' ? data.key.trim() : ''
+  const explicitNewKey =
+    typeof data.newKey === 'string' ? data.newKey.trim() : ''
+  const newKey =
+    explicitNewKey ||
+    (formKey && formKey !== columnKey ? formKey : undefined) ||
+    undefined
 
   // Call the appropriate update method based on column type
   switch (type) {
@@ -3081,7 +3093,7 @@ export async function updateProjectTableColumn(
         tableId,
         key: columnKey,
         required,
-        xdefault: data.xdefault as number[] | undefined,
+        xdefault: spatialDefault as number[] | null,
         newKey,
       })
     case 'linestring':
@@ -3090,7 +3102,7 @@ export async function updateProjectTableColumn(
         tableId,
         key: columnKey,
         required,
-        xdefault: data.xdefault as number[][] | undefined,
+        xdefault: spatialDefault as number[][] | null,
         newKey,
       })
     case 'polygon':
@@ -3099,7 +3111,7 @@ export async function updateProjectTableColumn(
         tableId,
         key: columnKey,
         required,
-        xdefault: data.xdefault as number[][] | undefined,
+        xdefault: spatialDefault as number[][] | null,
         newKey,
       })
     default:

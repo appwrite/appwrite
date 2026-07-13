@@ -1476,15 +1476,11 @@ export function Workspace({
           databaseTab === 'monitor' ? (
             <>
               <DatabaseMonitorHeaderActions
-                projectId={projectId}
-                databaseId={databaseId}
-                dbKind={DB_KIND}
                 dateRange={monitorDateRange}
                 onDateRangeChange={(r) =>
                   setMonitorDateRange(r ?? getDefaultMonitorDateRange())
                 }
                 onRefresh={() => setMonitorChartTick((n) => n + 1)}
-                showSpecActions={showDbSecuritySettings}
               />
               {isDatabaseLevelView &&
               isDebugModeOpen &&
