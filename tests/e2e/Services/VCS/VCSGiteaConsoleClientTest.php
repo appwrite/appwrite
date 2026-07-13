@@ -111,7 +111,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $response = $this->gitea(Client::METHOD_POST, '/api/v1/user/repos', [
             'name' => 'function-' . ID::unique(),
             'private' => false,
-            'auto_init' => false,
+            'auto_init' => true,
             'default_branch' => 'main',
         ], token: $token);
 
@@ -126,8 +126,9 @@ final class VCSGiteaConsoleClientTest extends Scope
         $path = '/api/v1/repos/' . $this->adminUser() . '/' . $repository . '/contents/index.js';
         $existing = $this->gitea(Client::METHOD_GET, $path . '?ref=main', token: $token);
 
+        $source = "module.exports = async (context) => context.res.send('{$output}');\n";
         $body = [
-            'content' => \base64_encode("module.exports = async (context) => context.res.send('{$output}');\n"),
+            'content' => \base64_encode($source),
             'message' => $message,
             'branch' => 'main',
         ];
@@ -140,6 +141,11 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $response = $this->gitea($method, $path, $body, token: $token);
         $this->assertContains($response['status'], [200, 201], \json_encode($response['body'], JSON_PRETTY_PRINT));
+
+        $written = $this->gitea(Client::METHOD_GET, $path . '?ref=main', token: $token);
+        $this->assertEquals(200, $written['status'], \json_encode($written['body'], JSON_PRETTY_PRINT));
+        $content = \preg_replace('/\s+/', '', $written['body']['content'] ?? '') ?? '';
+        $this->assertEquals($source, \base64_decode($content, true), \json_encode($written['body'], JSON_PRETTY_PRINT));
     }
 
     private function assertRepositoryWebhookCreated(string $token, string $repository): void
