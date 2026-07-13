@@ -270,7 +270,7 @@ readonly class Jobs extends Deployments
         ];
     }
 
-    private static function runtime(Document $function, string $version): array
+    protected static function runtime(Document $function, string $version): array
     {
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
