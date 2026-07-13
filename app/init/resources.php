@@ -378,9 +378,13 @@ $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapt
 
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
 
+$container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFactory->getProviders(), ['vcsFactory']);
+
 $container->set('vcsForInstallation', fn (VcsFactory $vcsFactory) => fn (Document $installation) => $vcsFactory->fromInstallation($installation), ['vcsFactory']);
 
 $container->set('vcsForProvider', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->fromProvider($provider), ['vcsFactory']);
+
+$container->set('vcsWebhookSecret', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->getWebhookSecret($provider), ['vcsFactory']);
 
 $container->set('plan', fn () => []);
 
