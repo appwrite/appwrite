@@ -44,7 +44,7 @@
         }
     ],
     "require": {
-        "php": ">=8.4.0",
+        "php": ">=8.5.0",
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
@@ -77,7 +77,7 @@
         "utopia-php/dsn": "0.2.1",
         "utopia-php/http": "^2.0@RC",
         "utopia-php/fetch": "^1.1",
-        "utopia-php/validators": "0.2.*",
+        "utopia-php/validators": "0.3.*",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
         "utopia-php/lock": "0.2.*",
@@ -88,7 +88,7 @@
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",
         "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "^0.21",
+        "utopia-php/queue": "^0.22",
         "utopia-php/servers": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "2.*",
