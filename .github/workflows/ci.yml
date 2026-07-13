@@ -453,34 +453,34 @@ jobs:
         run: |
           echo "_APP_OPTIONS_ROUTER_PROTECTION=enabled" >> $GITHUB_ENV
 
-          COMPOSE_PROFILES_VALUE=""
+          COMPOSE_PROFILES=""
 
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
-            COMPOSE_PROFILES_VALUE="mariadb"
+            COMPOSE_PROFILES="mariadb"
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "MongoDB" ]; then
-            COMPOSE_PROFILES_VALUE="mongodb"
+            COMPOSE_PROFILES="mongodb"
             echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
-            COMPOSE_PROFILES_VALUE="postgresql"
+            COMPOSE_PROFILES="postgresql"
             echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
 
           if [ "${{ matrix.service.name }}" = "VCS" ]; then
-            if [ -z "$COMPOSE_PROFILES_VALUE" ]; then
-              COMPOSE_PROFILES_VALUE="vcs"
+            if [ -z "$COMPOSE_PROFILES" ]; then
+              COMPOSE_PROFILES="vcs"
             else
-              COMPOSE_PROFILES_VALUE="${COMPOSE_PROFILES_VALUE},vcs"
+              COMPOSE_PROFILES="${COMPOSE_PROFILES},vcs"
             fi
           fi
 
-          echo "COMPOSE_PROFILES=${COMPOSE_PROFILES_VALUE}" >> $GITHUB_ENV
+          echo "COMPOSE_PROFILES=${COMPOSE_PROFILES}" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
         if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
