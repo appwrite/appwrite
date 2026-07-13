@@ -123,7 +123,7 @@ class Create extends Action
             try {
                 $repository = $oauth2->createRepository($accessToken, $name, $private);
             } catch (Exception $exception) {
-                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "GitHub failed to process the request: " . $exception->getMessage());
+                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "VCS provider failed to process the request: " . $exception->getMessage());
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
@@ -133,7 +133,7 @@ class Create extends Action
             try {
                 $repository = $vcs->createRepository($owner, $name, $private);
             } catch (Exception $exception) {
-                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "GitHub failed to process the request: " . $exception->getMessage());
+                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "VCS provider failed to process the request: " . $exception->getMessage());
             }
         }
 
