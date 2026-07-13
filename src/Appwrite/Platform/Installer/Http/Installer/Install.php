@@ -40,7 +40,7 @@ class Install extends Action
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
-            ->param('database', '', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database adapter', true)
+            ->param('database', '', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database adapter', true)
             ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->param('retryStep', null, new Nullable(new WhiteList([
                 Server::STEP_CONFIG_FILES,

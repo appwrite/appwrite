@@ -59,7 +59,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'postgresql', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->callback($this->action(...));
     }
 
@@ -202,7 +202,7 @@ class Install extends Action
         }
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb', 'postgresql'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['postgresql', 'mariadb', 'mongodb'];
         $isExistingDatabase = $isUpgrade && $existingDatabase !== null && $database === $existingDatabase;
         if (!in_array($database, $enabledDatabases, true) && !$isExistingDatabase) {
             Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
@@ -335,7 +335,7 @@ class Install extends Action
         $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
-        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb', 'postgresql'];
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['postgresql', 'mariadb', 'mongodb'];
         if ($isUpgrade && $lockedDatabase !== null && !in_array($lockedDatabase, $enabledDatabases, true)) {
             $enabledDatabases[] = $lockedDatabase;
         }

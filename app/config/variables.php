@@ -380,15 +380,15 @@ return [
     ],
     [
         'category' => 'Database',
-        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between MariaDB, MongoDB or PostgreSQL.',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between PostgreSQL, MariaDB or MongoDB.',
         'variables' => [
             [
                 'name' => '_APP_DB_ADAPTER',
-                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
+                'description' => 'Which database to use. Must be one of: PostgreSQL, MariaDB, or MongoDB',
                 'introduction' => '1.9.0',
                 'default' => 'postgresql',
                 'required' => true,
-                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
+                'question' => 'Choose your database (postgresql|mariadb|mongodb)',
                 'filter' => ''
             ],
             [
