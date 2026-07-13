@@ -235,7 +235,7 @@ export function SignIn({
                           <button
                             type="button"
                             onClick={() => setShowPassword((current) => !current)}
-                            className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                            className="absolute end-2 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             aria-label={
                               showPassword ? t('Hide password') : t('Show password')
                             }
