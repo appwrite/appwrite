@@ -12,7 +12,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Get extends Action
@@ -89,7 +88,7 @@ class Get extends Action
         $vcsContents = [];
         foreach ($contents as $content) {
             $isDirectory = false;
-            if ($content['type'] === GitHub::CONTENTS_DIRECTORY) {
+            if ($content['type'] === 'dir') {
                 $isDirectory = true;
             }
 

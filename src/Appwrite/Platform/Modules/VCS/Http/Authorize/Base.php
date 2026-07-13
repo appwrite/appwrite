@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -72,7 +71,7 @@ abstract class Base extends Action
             ))
             ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a successful installation attempt.', true, ['redirectValidator'])
             ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a failed installation attempt.', true, ['redirectValidator'])
-            ->inject('vcsFactory')
+            ->inject('vcsConfigured')
             ->inject('response')
             ->inject('project')
             ->inject('platform')
@@ -82,14 +81,14 @@ abstract class Base extends Action
     public function action(
         string $success,
         string $failure,
-        Factory $vcsFactory,
+        callable $vcsConfigured,
         Response $response,
         Document $project,
         array $platform
     ) {
         $key = static::getProvider();
 
-        if (!$vcsFactory->isConfigured($key)) {
+        if (!$vcsConfigured($key)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, static::getProviderName() . ' provider is not configured. Please configure VCS (Version Control System) variables in .env file.');
         }
 

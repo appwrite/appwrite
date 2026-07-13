@@ -8,12 +8,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
-// Owns the one database write OAuth2 token refresh needs, so Factory stays
-// free of persistence.
 class InstallationTokens
 {
-    // Falls back to $identity's tokens when the installation has none yet --
-    // the first repository action after connecting a personal installation.
     public function refresh(Document $installation, Database $dbForPlatform, OAuth2 $oauth2, ?Document $identity = null): Document
     {
         $accessToken = $installation->getAttribute('personalAccessToken');
@@ -26,14 +22,12 @@ class InstallationTokens
             $accessTokenExpiry = $accessTokenExpiry ?? $identity->getAttribute('providerAccessTokenExpiry');
         }
 
-        $installation = $installation->setAttribute('personalAccessToken', $accessToken);
+        $installation = $installation
+            ->setAttribute('personalAccessToken', $accessToken)
+            ->setAttribute('personalRefreshToken', $refreshToken)
+            ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
 
-        // A missing expiry means the provider issued a non-expiring token
-        // (or none was recorded yet) -- treat it as not expired rather than
-        // forcing a refresh on every call.
-        $isExpired = !empty($accessTokenExpiry) && new \DateTime($accessTokenExpiry) < new \DateTime('now');
-
-        if (!$isExpired) {
+        if (!$this->isExpired($accessTokenExpiry)) {
             return $installation;
         }
 
@@ -41,14 +35,28 @@ class InstallationTokens
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'This installation has no refresh token on file. Please reconnect it.');
         }
 
-        $oauth2->refreshTokens($refreshToken);
+        try {
+            $oauth2->refreshTokens($refreshToken);
+        } catch (\Throwable) {
+            $current = $this->getCurrentInstallation($dbForPlatform, $installation);
+            if (!$current->isEmpty() && !empty($current->getAttribute('personalAccessToken')) && !$this->isExpired($current->getAttribute('personalAccessTokenExpiry'))) {
+                return $current;
+            }
+
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
+        }
 
         $accessToken = $oauth2->getAccessToken('');
         $refreshToken = $oauth2->getRefreshToken('');
         $verificationId = $oauth2->getUserID($accessToken);
 
         if (empty($verificationId)) {
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
+            $current = $this->getCurrentInstallation($dbForPlatform, $installation);
+            if (!$current->isEmpty() && !empty($current->getAttribute('personalAccessToken')) && !$this->isExpired($current->getAttribute('personalAccessTokenExpiry'))) {
+                return $current;
+            }
+
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
         }
 
         $installation = $installation
@@ -63,5 +71,27 @@ class InstallationTokens
         ]));
 
         return $installation;
+    }
+
+    protected function isExpired(?string $expiry): bool
+    {
+        if (empty($expiry)) {
+            return false;
+        }
+
+        try {
+            return new \DateTime($expiry) < new \DateTime('now');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function getCurrentInstallation(Database $dbForPlatform, Document $installation): Document
+    {
+        try {
+            return $dbForPlatform->getDocument('installations', $installation->getId());
+        } catch (\Throwable) {
+            return new Document();
+        }
     }
 }

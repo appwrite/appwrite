@@ -9,7 +9,6 @@ use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\Config\Adapters\PHP as ConfigPHP;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
@@ -24,8 +23,6 @@ final class FactoryTest extends TestCase
 
     public function testRegistryEntries(): void
     {
-        Config::load('vcs', __DIR__ . '/../../../app/config/vcs.php', new ConfigPHP());
-
         $registry = Config::getParam('vcs', []);
         $this->assertNotEmpty($registry);
 

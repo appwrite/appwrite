@@ -77,10 +77,12 @@ final class RepositoryWebhooksTest extends TestCase
     {
         $adapter = $this->createMock(Git::class);
         $adapter->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_REPOSITORY]);
-        $adapter->method('createWebhook')->willThrowException(new \RuntimeException('provider unreachable'));
+        $adapter->expects($this->once())
+            ->method('createWebhook')
+            ->willThrowException(new \RuntimeException('provider unreachable'));
 
         $db = $this->createMock(Database::class);
-        $db->method('count')->willReturn(1);
+        $db->expects($this->once())->method('count')->willReturn(1);
 
         $installation = new Document(['$sequence' => 1, 'provider' => 'gitea']);
 
@@ -88,18 +90,37 @@ final class RepositoryWebhooksTest extends TestCase
         $this->ensure($adapter, $installation, $db, $this->factory('secret'));
     }
 
+    public function testMissingProviderThrows(): void
+    {
+        $adapter = $this->createMock(Git::class);
+        $adapter->method('getSupportedWebhookScopes')->willReturn([Git::WEBHOOK_SCOPE_REPOSITORY]);
+        $adapter->expects($this->never())->method('createWebhook');
+
+        $db = $this->createMock(Database::class);
+        $db->expects($this->once())->method('count')->willReturn(1);
+
+        $installation = new Document(['$id' => 'installation1', '$sequence' => 1]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Missing VCS provider');
+
+        $this->ensure($adapter, $installation, $db, $this->factory('secret'));
+    }
+
     protected function ensure(Git $adapter, Document $installation, Database $db, Factory $vcsFactory): void
     {
         \putenv('_APP_VCS_WEBHOOK_URL=https://example.com');
 
-        (new RepositoryWebhooks($vcsFactory))->ensure($adapter, $installation, $db, 'repo-1', 'owner', 'repo');
-
-        \putenv('_APP_VCS_WEBHOOK_URL');
+        try {
+            (new RepositoryWebhooks($vcsFactory))->ensure($adapter, $installation, $db, 'repo-1', 'owner', 'repo');
+        } finally {
+            \putenv('_APP_VCS_WEBHOOK_URL');
+        }
     }
 
     protected function factory(string $secret): Factory
     {
-        $factory = $this->createMock(Factory::class);
+        $factory = $this->createStub(Factory::class);
         $factory->method('getWebhookSecret')->willReturn($secret);
 
         return $factory;

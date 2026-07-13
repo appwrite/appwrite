@@ -7,7 +7,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Vcs\Factory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
@@ -47,7 +46,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->inject('vcsFactory')
+            ->inject('vcsProviders')
             ->inject('response')
             ->inject('platform')
             ->inject('dbForProject')
@@ -55,7 +54,7 @@ class Get extends Action
     }
 
     public function action(
-        Factory $vcsFactory,
+        callable $vcsProviders,
         Response $response,
         array $platform,
         Database $dbForProject
@@ -72,7 +71,7 @@ class Get extends Action
 
         $isDomainEnabled = $isAAAAValid || $isAValid || $isCNAMEValid;
 
-        $isVcsEnabled = !empty($vcsFactory->getProviders());
+        $isVcsEnabled = !empty($vcsProviders());
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
@@ -88,7 +87,7 @@ class Get extends Action
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
-            '_APP_VCS_PROVIDERS' => $vcsFactory->getProviders(),
+            '_APP_VCS_PROVIDERS' => $vcsProviders(),
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],

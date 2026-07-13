@@ -15,7 +15,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
-use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
 class Create extends Action
@@ -38,6 +37,7 @@ class Create extends Action
             ->label('scope', 'public')
             ->inject('vcsForProvider')
             ->inject('vcsForInstallation')
+            ->inject('vcsWebhookSecret')
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -51,6 +51,7 @@ class Create extends Action
     public function action(
         callable $vcsForProvider,
         callable $vcsForInstallation,
+        callable $vcsWebhookSecret,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -66,12 +67,8 @@ class Create extends Action
 
         $payload = $request->getRawPayload();
         $signature = $request->getHeaderLine($vcs->getSignatureHeaderName(), '');
-        $secretKey = System::getEnv('_APP_VCS_GITEA_WEBHOOK_SECRET', '');
+        $secretKey = $vcsWebhookSecret('gitea');
 
-        // Fail closed, unlike GitHub App deliveries: those also carry a
-        // signed JWT Appwrite always validates, so an empty webhook secret
-        // there still leaves a real check in place. Gitea has no such
-        // fallback -- an empty secret here would mean no verification at all.
         $valid = !empty($secretKey) && $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.gitea.event.signature.valid', $valid);
 
@@ -90,19 +87,6 @@ class Create extends Action
         $response->json($parsedPayload);
     }
 
-    /**
-     * Resolves an authenticated adapter for a repository connection's own
-     * installation. Unlike GitHub App, where one adapter serves every
-     * repository under an installation, Gitea's OAuth2 installations each
-     * carry their own personal token — repositories matching the same
-     * providerRepositoryId can belong to different Appwrite installations.
-     */
-    /**
-     * `repositories` has no provider attribute -- providerRepositoryId is
-     * provider-scoped numeric IDs from independent servers, so a GitHub
-     * and a Gitea repository can collide on the same ID. Filter by the
-     * matched installation's own provider instead of the query.
-     */
     private function resolveGiteaInstallation(Document $repository, Database $dbForPlatform, Authorization $authorization): ?Document
     {
         $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
@@ -157,7 +141,7 @@ class Create extends Action
         Span::add('vcs.gitea.event.repo.name', $providerRepositoryName);
         Span::add('vcs.gitea.event.branch', $providerBranch);
 
-        if ($providerCommitAuthorEmail === APP_VCS_GITHUB_EMAIL || $providerBranchDeleted) {
+        if ($providerCommitAuthorEmail === APP_VCS_COMMIT_EMAIL || $providerBranchDeleted) {
             return;
         }
 
