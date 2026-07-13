@@ -2,12 +2,14 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
+use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -50,6 +52,7 @@ trait Deployment
         BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
+        ?Jobs $jobs = null,
     ) {
         $errors = [];
         foreach ($repositories as $repository) {
@@ -360,6 +363,17 @@ trait Deployment
                     $commands[] = $resource->getAttribute('commands', '');
                 }
 
+                // Build function deployments on the jobs-service when the caller
+                // opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator. Sites stay
+                // on the executor. On jobs the deployment is pre-declared 'waiting'
+                // with its buildPath so build.sh writes onto the mounted volume.
+                $useJobs = $jobs !== null
+                    && $resourceCollection === 'functions'
+                    && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
+                $buildFields = $useJobs
+                    ? ['status' => 'waiting', 'buildPath' => Job::buildPath($projectId, $deploymentId)]
+                    : [];
+
                 $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
                     '$permissions' => [
@@ -367,6 +381,7 @@ trait Deployment
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
+                    ...$buildFields,
                     'resourceId' => $resourceId,
                     'resourceInternalId' => $resourceInternalId,
                     'resourceType' => $resourceCollection,
@@ -557,18 +572,26 @@ trait Deployment
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
-                $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
+                if ($useJobs) {
+                    $source = [
+                        'url' => $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        'subdir' => $resource->getAttribute('providerRootDirectory', ''),
+                    ];
+                    $jobs->create(...Job::build($project, $resource, $deployment, $platform, $source));
+                } else {
+                    $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
 
-                $publisherForBuilds->enqueue(
-                    new BuildMessage(
-                        project: $project,
-                        resource: $resource,
-                        deployment: $deployment,
-                        type: BUILD_TYPE_DEPLOYMENT,
-                        platform: $platform,
-                    ),
-                    new \Utopia\Queue\Queue($queueName)
-                );
+                    $publisherForBuilds->enqueue(
+                        new BuildMessage(
+                            project: $project,
+                            resource: $resource,
+                            deployment: $deployment,
+                            type: BUILD_TYPE_DEPLOYMENT,
+                            platform: $platform,
+                        ),
+                        new \Utopia\Queue\Queue($queueName)
+                    );
+                }
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
