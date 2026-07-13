@@ -16,11 +16,11 @@ use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Service\Deployments;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -124,7 +124,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -169,7 +169,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Deployments $deployments,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -346,7 +346,7 @@ class Create extends Base
                     installation: $installation,
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
-                    jobs: $jobs,
+                    deployments: $deployments,
                     template: $template,
                     github: $github,
                     activate: true,

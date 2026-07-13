@@ -3,21 +3,17 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -88,7 +84,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('deviceForSites')
             ->inject('deviceForLocal')
-            ->inject('publisherForBuilds')
+            ->inject('deployments')
             ->inject('plan')
             ->inject('authorization')
             ->inject('platform')
@@ -111,7 +107,7 @@ class Create extends Action
         Event $queueForEvents,
         Device $deviceForSites,
         Device $deviceForLocal,
-        BuildPublisher $publisherForBuilds,
+        Deployments $deployments,
         array $plan,
         Authorization $authorization,
         array $platform,
@@ -231,7 +227,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, $authorization, &$chunks, $commands, $contentRange, $dbForPlatform, $dbForProject, $deploymentId, $deviceForSites, $fileSize, &$metadata, $outputDirectory, $path, $platform, $project, &$site, $type, &$completed, $response): void {
+            $locks($lockKey, 600, function () use ($activate, $authorization, &$chunks, $commands, $contentRange, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $outputDirectory, $path, $platform, $project, &$site, $type, &$completed, $response): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
                 if (!$deployment->isEmpty()) {
@@ -253,16 +249,8 @@ class Create extends Action
                     $deviceForSites->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
-                        $deployment = $dbForProject->createDocument('deployments', new Document([
+                        $deployment = $deployments->upload($site, $deployment->setAttributes([
                             '$id' => $deploymentId,
-                            '$permissions' => [
-                                Permission::read(Role::any()),
-                                Permission::update(Role::any()),
-                                Permission::delete(Role::any()),
-                            ],
-                            'resourceInternalId' => $site->getSequence(),
-                            'resourceId' => $site->getId(),
-                            'resourceType' => 'sites',
                             'buildCommands' => \implode(' && ', $commands),
                             'startCommand' => $site->getAttribute('startCommand', ''),
                             'buildOutput' => $outputDirectory,
@@ -325,7 +313,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, $authorization, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $publisherForBuilds, $queueForEvents, $response, &$site, $siteId, $type): void {
+            $locks($lockKey, 600, function () use ($activate, $authorization, $commands, &$chunks, $chunksUploaded, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForSites, $fileSize, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -349,47 +337,28 @@ class Create extends Action
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                     $deviceForSites->finalizeUpload($path, $chunks, $metadata);
 
-                    if ($activate) {
-                        // Remove deploy for all other deployments.
-                        $activeDeployments = $dbForProject->find('deployments', [
-                            Query::equal('activate', [true]),
-                            Query::equal('resourceId', [$siteId]),
-                            Query::equal('resourceType', ['sites'])
-                        ]);
-
-                        foreach ($activeDeployments as $activeDeployment) {
-                            $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document(['activate' => false]));
-                        }
-                    }
-
                     $fileSize = $deviceForSites->getFileSize($path);
+                    $isNewDeployment = $deployment->isEmpty();
 
-                    if ($deployment->isEmpty()) {
-                        $deployment = $dbForProject->createDocument('deployments', new Document([
-                            '$id' => $deploymentId,
-                            '$permissions' => [
-                                Permission::read(Role::any()),
-                                Permission::update(Role::any()),
-                                Permission::delete(Role::any()),
-                            ],
-                            'resourceInternalId' => $site->getSequence(),
-                            'resourceId' => $site->getId(),
-                            'resourceType' => 'sites',
-                            'buildCommands' => \implode(' && ', $commands),
-                            'startCommand' => $site->getAttribute('startCommand', ''),
-                            'buildOutput' => $outputDirectory,
-                            'adapter' => $site->getAttribute('adapter', ''),
-                            'fallbackFile' => $site->getAttribute('fallbackFile', ''),
-                            'sourcePath' => $path,
-                            'sourceSize' => $fileSize,
-                            'totalSize' => $fileSize,
-                            'sourceChunksTotal' => $chunks,
-                            'sourceChunksUploaded' => $chunksUploaded,
-                            'activate' => $activate,
-                            'sourceMetadata' => $metadata,
-                            'type' => $type,
-                        ]));
+                    // Start the build
+                    $deployment = $deployments->createFromUpload($site, $deployment->setAttributes([
+                        '$id' => $deploymentId,
+                        'buildCommands' => \implode(' && ', $commands),
+                        'startCommand' => $site->getAttribute('startCommand', ''),
+                        'buildOutput' => $outputDirectory,
+                        'adapter' => $site->getAttribute('adapter', ''),
+                        'fallbackFile' => $site->getAttribute('fallbackFile', ''),
+                        'sourcePath' => $path,
+                        'sourceSize' => $fileSize,
+                        'totalSize' => $fileSize,
+                        'sourceChunksTotal' => $chunks,
+                        'sourceChunksUploaded' => $chunksUploaded,
+                        'activate' => $activate,
+                        'sourceMetadata' => $metadata,
+                        'type' => $type,
+                    ]));
 
+                    if ($isNewDeployment) {
                         $sitesDomain = $platform['sitesDomain'];
                         $domain = ID::unique() . "." . $sitesDomain;
 
@@ -405,8 +374,8 @@ class Create extends Action
                                 'domain' => $domain,
                                 'type' => 'deployment',
                                 'trigger' => 'deployment',
-                                'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-                                'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+                                'deploymentId' => $deployment->getId(),
+                                'deploymentInternalId' => $deployment->getSequence(),
                                 'deploymentResourceType' => 'site',
                                 'deploymentResourceId' => $site->getId(),
                                 'deploymentResourceInternalId' => $site->getSequence(),
@@ -417,22 +386,7 @@ class Create extends Action
                                 'region' => $project->getAttribute('region')
                             ]))
                         );
-                    } else {
-                        $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                            'sourceSize' => $fileSize,
-                            'sourceChunksUploaded' => $chunksUploaded,
-                            'sourceMetadata' => $metadata,
-                        ]));
                     }
-
-                    // Start the build
-                    $publisherForBuilds->enqueue(new BuildMessage(
-                        project: $project,
-                        resource: $site,
-                        deployment: $deployment,
-                        type: BUILD_TYPE_DEPLOYMENT,
-                        platform: $platform,
-                    ));
                 } else {
                     $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
                         'sourceChunksUploaded' => $chunksUploaded,

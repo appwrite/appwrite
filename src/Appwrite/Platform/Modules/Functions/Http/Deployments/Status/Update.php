@@ -2,15 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
-use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
-use Executor\Executor;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -60,10 +58,8 @@ class Update extends Action
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('queueForEvents')
-            ->inject('executor')
-            ->inject('jobs')
+            ->inject('deployments')
             ->callback($this->action(...));
     }
 
@@ -72,10 +68,8 @@ class Update extends Action
         string $deploymentId,
         Response $response,
         Database $dbForProject,
-        Document $project,
         Event $queueForEvents,
-        Executor $executor,
-        Jobs $jobs,
+        Deployments $deployments,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -115,15 +109,9 @@ class Update extends Action
             }
         }
 
-        // Best-effort cleanup on both backends — the deployment is already
-        // marked 'canceled', and only one backend actually holds the build.
+        // Best-effort cleanup — the deployment is already marked 'canceled'.
         try {
-            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
-        } catch (\Throwable) {
-        }
-
-        try {
-            $jobs->delete(Job::id($project->getId(), $deploymentId));
+            $deployments->delete($deploymentId);
         } catch (\Throwable) {
         }
 

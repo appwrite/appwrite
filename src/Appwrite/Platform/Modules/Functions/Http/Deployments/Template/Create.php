@@ -2,9 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Template;
 
-use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -12,19 +10,16 @@ use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -83,7 +78,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
@@ -105,7 +100,7 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Deployments $deployments,
         GitHub $github,
         Authorization $authorization,
         array $platform
@@ -145,6 +140,7 @@ class Create extends Base
                 template: $template,
                 github: $github,
                 activate: $activate,
+                deployments: $deployments,
                 platform: $platform,
                 referenceType: $type,
                 reference: $reference
@@ -161,69 +157,47 @@ class Create extends Base
             return;
         }
 
-        // Backend for the template build: 'orchestrator' (jobs-service, which
-        // pulls the public GitHub tarball via artifacts) or 'executor' (default;
-        // the Builds worker clones the repo). The jobs path pre-declares buildPath.
-        $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-
         $deploymentId = ID::unique();
-        $deployment = $dbForProject->createDocument('deployments', new Document([
-            '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'resourceId' => $function->getId(),
-            'resourceInternalId' => $function->getSequence(),
-            'resourceType' => 'functions',
-            'entrypoint' => $function->getAttribute('entrypoint', ''),
-            'buildCommands' => $function->getAttribute('commands', ''),
-            'startCommand' => $function->getAttribute('startCommand', ''),
-            'providerRepositoryName' => $repository,
-            'providerRepositoryOwner' => $owner,
-            'providerRepositoryUrl' => $repositoryUrl,
-            'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
-            'type' => 'vcs',
-            'activate' => $activate,
-            'status' => 'waiting',
-            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
-        ]));
+
+        // Templates can pin a version range (e.g. "0.3.*"); codeload only
+        // takes a concrete ref, so resolve the range to the highest matching
+        // tag (mirrors the executor's `git ls-remote --tags | tail -1`).
+        $ref = $reference;
+        if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
+            try {
+                $tags = $github->listTags($owner, $repository, $reference);
+                $ref = \end($tags) ?: $reference;
+            } catch (\Throwable) {
+                // Fall back to the raw reference; the build surfaces a bad ref.
+            }
+        }
+
+        // Public template: pull the source straight from GitHub's public repo
+        // (codeload tarball on the jobs backend, a plain git clone on the
+        // executor); unarchive/checkout strips down to the rootDirectory.
+        $deployment = $deployments->createFromRef(
+            $function,
+            new Document([
+                '$id' => $deploymentId,
+                'entrypoint' => $function->getAttribute('entrypoint', ''),
+                'buildCommands' => $function->getAttribute('commands', ''),
+                'startCommand' => $function->getAttribute('startCommand', ''),
+                'providerRepositoryName' => $repository,
+                'providerRepositoryOwner' => $owner,
+                'providerRepositoryUrl' => $repositoryUrl,
+                'providerBranchUrl' => $branchUrl,
+                'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
+                'type' => 'vcs',
+                'activate' => $activate,
+            ]),
+            $owner,
+            $repository,
+            $type,
+            $ref,
+            $rootDirectory,
+        );
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
-
-        if ($useJobs) {
-            // Templates can pin a version range (e.g. "0.3.*"); codeload only
-            // takes a concrete ref, so resolve the range to the highest matching
-            // tag (mirrors the executor's `git ls-remote --tags | tail -1`).
-            $ref = $reference;
-            if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
-                try {
-                    $tags = $github->listTags($owner, $repository, $reference);
-                    $ref = \end($tags) ?: $reference;
-                } catch (\Throwable) {
-                    // Fall back to the raw reference; the build surfaces a bad ref.
-                }
-            }
-
-            // Public template: pull the source straight from GitHub's codeload
-            // tarball; unarchive strips the "{repo}-{ref}/" wrapper + the rootDirectory.
-            $source = [
-                'url' => "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$ref}",
-                'subdir' => $rootDirectory,
-            ];
-            $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
-        } else {
-            $publisherForBuilds->enqueue(new BuildMessage(
-                project: $project,
-                resource: $function,
-                deployment: $deployment,
-                type: BUILD_TYPE_DEPLOYMENT,
-                template: $template,
-                platform: $platform,
-            ));
-        }
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

@@ -11,10 +11,10 @@ use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Service\Deployments;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -112,7 +112,7 @@ class Update extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
@@ -150,7 +150,7 @@ class Update extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Deployments $deployments,
         Database $dbForPlatform,
         GitHub $github,
         Executor $executor,
@@ -312,7 +312,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform, jobs: $jobs);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform, deployments: $deployments);
         }
 
         // Inform scheduler if function is still active

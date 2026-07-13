@@ -2,24 +2,19 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 
 class Create extends Action
 {
@@ -66,11 +61,8 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('deviceForFunctions')
-            ->inject('project')
-            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -81,11 +73,8 @@ class Create extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Deployments $deployments,
         Device $deviceForFunctions,
-        Document $project,
-        array $platform
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -105,17 +94,14 @@ class Create extends Action
 
         $deploymentId = ID::unique();
 
-        // Build backend for the rebuild: 'orchestrator' (jobs-service, submitted
-        // here) or 'executor' (default; Builds worker). The jobs path pre-declares
-        // buildPath so build.sh writes output straight onto the mounted volume.
-        $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-
         $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
+        // Cloning the source deployment's attributes onto the new one, with
+        // its own $id and no $sequence, tells the service to create it fresh
+        // rather than update the deployment being duplicated.
         $deployment->removeAttribute('$sequence');
-
-        $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
+        $deployment->setAttributes([
             '$id' => $deploymentId,
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
@@ -126,22 +112,11 @@ class Create extends Action
             'buildEndedAt' => null,
             'buildDuration' => null,
             'buildSize' => null,
-            'status' => 'waiting',
-            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
+            'buildPath' => '',
             'buildLogs' => '',
-        ]));
+        ]);
 
-        if ($useJobs) {
-            $jobs->create(...Job::build($project, $function, $deployment, $platform));
-        } else {
-            $publisherForBuilds->enqueue(new BuildMessage(
-                project: $project,
-                resource: $function,
-                deployment: $deployment,
-                type: BUILD_TYPE_DEPLOYMENT,
-                platform: $platform,
-            ));
-        }
+        $deployment = $deployments->createFromUpload($function, $deployment);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

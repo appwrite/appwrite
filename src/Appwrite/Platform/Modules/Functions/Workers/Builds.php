@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -13,6 +12,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Service\Deployments\Jobs as DeploymentsJobs;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -533,11 +533,11 @@ class Builds extends Action
                 if ($resource->getCollection() === 'functions'
                     && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                        'buildPath' => Job::buildPath($project->getId(), $deploymentId),
+                        'buildPath' => DeploymentsJobs::buildPath($project->getId(), $deploymentId),
                     ]));
 
                     $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
-                    $jobs->create(...Job::build($project, $resource, $deployment, $platform, [
+                    $jobs->create(...DeploymentsJobs::payload($project, $resource, $deployment, $platform, [
                         'url' => $github->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
                         'subdir' => $resource->getAttribute('providerRootDirectory', ''),
                     ]));

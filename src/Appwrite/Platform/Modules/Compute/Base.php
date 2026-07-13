@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Compute;
 
-use Appwrite\Compute\Job;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -10,7 +9,7 @@ use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
 use Appwrite\Platform\Permission as AppwritePermission;
-use OpenRuntimes\Orchestrator\Jobs;
+use Appwrite\Service\Deployments;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -69,7 +68,7 @@ class Base extends Action
         return $allowedSpecifications[0];
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = '', ?Jobs $jobs = null): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, GitHub $github, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = '', ?Deployments $deployments = null): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -120,28 +119,8 @@ class Base extends Action
 
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
 
-        // Build a plain (non-template) VCS function deployment on the jobs-service
-        // when the caller opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator.
-        // Sites stay on the executor; template-into-repo pushes go through the
-        // Builds worker (which does the git write, then hands the build to the
-        // jobs-service itself when on orchestrator). When on jobs the deployment
-        // is pre-declared 'waiting' with its buildPath so build.sh writes output
-        // onto the mounted volume.
-        $useJobs = $jobs !== null
-            && $function->getCollection() === 'functions'
-            && $template->isEmpty()
-            && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-        $buildFields = $useJobs
-            ? ['status' => 'waiting', 'buildPath' => Job::buildPath($project->getId(), $deploymentId)]
-            : [];
-
-        $deployment = $dbForProject->createDocument('deployments', new Document([
+        $deployment = new Document([
             '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
             'resourceId' => $function->getId(),
             'resourceInternalId' => $function->getSequence(),
             'resourceType' => 'functions',
@@ -166,17 +145,33 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $function->getAttribute('providerRootDirectory', ''),
             'activate' => $activate,
-            ...$buildFields,
-        ]));
+        ]);
 
-        if ($useJobs) {
+        // Build a plain (non-template) VCS function deployment through
+        // $deployments (executor or jobs-service, decided by
+        // _APP_BUILDS_BACKEND) when the caller opts in. Sites stay on the
+        // executor; template-into-repo pushes go through the Builds worker
+        // (which does the git write, then hands the build to the
+        // jobs-service itself when on orchestrator).
+        if ($deployments !== null && $function->getCollection() === 'functions' && $template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $source = [
-                'url' => $github->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
-                'subdir' => $function->getAttribute('providerRootDirectory', ''),
-            ];
-            $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
+            $deployment = $deployments->createFromUrl(
+                $function,
+                $deployment,
+                $github->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
+                $function->getAttribute('providerRootDirectory', ''),
+            );
         } else {
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                ...$deployment->getArrayCopy(),
+                'status' => 'waiting',
+            ]));
+
             $publisherForBuilds->enqueue(new BuildMessage(
                 project: $project,
                 resource: $function,
