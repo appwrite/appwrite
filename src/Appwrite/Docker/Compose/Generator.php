@@ -8,7 +8,7 @@ class Generator
 {
     private const array SELECTABLE_SERVICE_GROUPS = [
         'database' => [
-            'default' => 'mongodb',
+            'default' => 'postgresql',
             'services' => [
                 'mariadb',
                 'mongodb',
@@ -43,7 +43,7 @@ class Generator
 
     private const array PARAM_DEFAULTS = [
         'version' => 'latest',
-        'database' => 'mongodb',
+        'database' => 'postgresql',
         'hostPath' => '',
         'enableAssistant' => false,
     ];

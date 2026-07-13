@@ -225,7 +225,7 @@ class Install extends Action
                 '_APP_DOMAIN' => $appDomain ?: 'localhost',
                 '_APP_DOMAIN_TARGET' => $appDomain ?: 'localhost',
                 '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
-                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'postgresql'),
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
             ];
 
@@ -294,7 +294,7 @@ class Install extends Action
                 'payload' => [
                     'httpPort' => $httpPort ?: $config->getDefaultHttpPort(),
                     'httpsPort' => $httpsPort ?: $config->getDefaultHttpsPort(),
-                    'database' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                    'database' => $lockedDatabase ?? ($database ?: 'postgresql'),
                     'appDomain' => $appDomain ?: 'localhost',
                     'emailCertificates' => $emailCertificates,
                     'opensslKeyHash' => $state->hashSensitiveValue($opensslKey),

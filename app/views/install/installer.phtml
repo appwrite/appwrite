@@ -7,9 +7,9 @@ $defaultHttpsPort ??= '443';
 $defaultAppDomain = $vars['_APP_DOMAIN']['default'] ?? 'localhost';
 $defaultAppDomain = ($defaultAppDomain === 'traefik') ? 'localhost' : $defaultAppDomain;
 $defaultEmailCertificates ??= '';
-$defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
+$defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'postgresql';
 $lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
-$enabledDatabases ??= ['mongodb', 'mariadb'];
+$enabledDatabases ??= ['mongodb', 'mariadb', 'postgresql'];
 $isLocalInstall ??= false;
 
 
@@ -122,7 +122,9 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
         </div>
         <div class="install-screen" aria-live="polite">
             <div class="install-screen-content">
-                <?php if ($step === 5) { include __DIR__ . '/installer/templates/steps/step-5.phtml'; } ?>
+                <?php if ($step === 5) {
+                    include __DIR__ . '/installer/templates/steps/step-5.phtml';
+                } ?>
             </div>
         </div>
     </main>

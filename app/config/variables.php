@@ -386,25 +386,25 @@ return [
                 'name' => '_APP_DB_ADAPTER',
                 'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
                 'introduction' => '1.9.0',
-                'default' => 'mongodb',
+                'default' => 'postgresql',
                 'required' => true,
                 'question' => 'Choose your database (mariadb|mongodb|postgresql)',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_DB_HOST',
-                'description' => 'Database server host name address. Default value is: \'mongodb\'.',
+                'description' => 'Database server host name address. Default value is: \'postgresql\'.',
                 'introduction' => '',
-                'default' => 'mongodb',
+                'default' => 'postgresql',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
                 'name' => '_APP_DB_PORT',
-                'description' => 'Database server TCP port. Default value is: \'27017\'.',
+                'description' => 'Database server TCP port. Default value is: \'5432\'.',
                 'introduction' => '',
-                'default' => '27017',
+                'default' => '5432',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
