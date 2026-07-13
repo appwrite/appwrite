@@ -194,13 +194,11 @@ readonly class Orchestrator extends Backend
                 // command exit, before post-job artifacts), complete confirms
                 // artifact delivery (carries only jobId + meta) — the worker
                 // joins them, so readiness holds on any storage strategy.
-                // Complete is a raw string until the SDK ships its
-                // CallbackEvent case. Artifact callbacks only carry the
-                // source-size stat, which exists only for remote-source
-                // builds (templates / VCS).
+                // Artifact callbacks only carry the source-size stat, which
+                // exists only for remote-source builds (templates / VCS).
                 events: $source !== null
-                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit, 'orchestrator.job.complete']
-                    : [CallbackEvent::Log, CallbackEvent::Exit, 'orchestrator.job.complete'],
+                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit, CallbackEvent::Complete]
+                    : [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete],
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
