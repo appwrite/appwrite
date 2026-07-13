@@ -107,12 +107,14 @@ class Jobs extends Action
                 return;
             }
 
-            $statusBefore = $deployment->getAttribute('status');
+            // The build writes its output onto the mounted volume before build.sh
+            // exits, so the exit callback is a truthful completion signal.
+            $finalizing = $event->event === 'orchestrator.job.exit';
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $deviceForBuilds, $github, $cache),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), ($event->data['meta']['outputArtifact'] ?? '') === '1', $usage, $publisherForUsage, $deviceForBuilds, $github, $cache),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
                 default => $deployment,
             };
 
@@ -128,10 +130,8 @@ class Jobs extends Action
 
             // On a real terminal outcome (not a concurrently-canceled build),
             // notify webhooks + event-triggered functions of the deployment
-            // update (mirrors the executor Builds worker). With artifact-backed
-            // output the terminal transition can land on either the exit or the
-            // 'output' artifact callback — whichever arrives last.
-            if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            // update (mirrors the executor Builds worker).
+            if ($finalizing && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
         }, self::LOCK_TIMEOUT);
@@ -161,77 +161,38 @@ class Jobs extends Action
     }
 
     /**
-     * Record reported artifact sizes and, for artifact-backed output, apply
-     * the completion signal:
-     *
-     * - 'sourceSize' (remote-source builds): the sidecar fetches the source,
-     *   so Appwrite can't size it the way the uploaded-tarball path does —
-     *   the stat's byte size becomes the deployment's sourceSize.
-     * - 'buildSize' (artifact-backed output): the job stats the build output
-     *   before uploading it; the size lands here instead of the exit-time
-     *   device check the volume strategy uses.
-     * - 'output' (artifact-backed output): the upload that actually puts the
-     *   build where executions read it. Its success is half of the terminal
-     *   condition (see onExit) — whichever of {exit(0), output success}
-     *   arrives last finalizes. Its failure fails the build outright.
+     * Record a reported artifact size. Remote-source builds (templates / VCS)
+     * fetch the source in the sidecar, so Appwrite can't size it the way the
+     * uploaded-tarball path does — the job stats the downloaded archive and the
+     * orchestrator reports its size here, which becomes the deployment's
+     * sourceSize. This arrives before the exit callback, so finalize folds it
+     * into totalSize.
      */
-    private function onArtifact(
-        Database $dbForProject,
-        Database $dbForPlatform,
-        Document $project,
-        Document $deployment,
-        array $data,
-        UsageContext $usage,
-        UsagePublisher $publisherForUsage,
-        Device $deviceForBuilds,
-        GitHub $github,
-        Cache $cache,
-    ): Document {
-        $artifactId = $data['artifactId'] ?? '';
-        $status = $data['status'] ?? '';
+    private function onArtifact(Database $dbForProject, Document $deployment, array $data): Document
+    {
+        if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
+            return $deployment;
+        }
 
         // A stat artifact reports the file's byte size as its 'content'.
-        // Recompute totalSize on every size update: these callbacks land in
-        // any order relative to exit, and finalize derives totalSize the same
-        // way — so whichever runs last, the numbers agree.
-        if ($artifactId === 'sourceSize' && $status === 'success' && (int) ($data['content'] ?? 0) > 0) {
-            return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'sourceSize' => (int) $data['content'],
-                'totalSize' => (int) $data['content'] + (int) $deployment->getAttribute('buildSize', 0),
-            ]));
+        $size = (int) ($data['content'] ?? 0);
+        if ($size <= 0) {
+            return $deployment;
         }
 
-        if ($artifactId === 'buildSize' && $status === 'success' && (int) ($data['content'] ?? 0) > 0) {
-            return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildSize' => (int) $data['content'],
-                'totalSize' => (int) $data['content'] + (int) $deployment->getAttribute('sourceSize', 0),
-            ]));
-        }
-
-        if ($artifactId === 'output') {
-            if ($status === 'failed') {
-                return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Failed to store the build output.', $usage, $publisherForUsage, $github);
-            }
-            if ($status === 'success') {
-                $cache->save('jobs-output-' . $deployment->getId(), true);
-                if ($cache->load('jobs-exit-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
-                    return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $github);
-                }
-            }
-        }
-
-        return $deployment;
+        // Recompute totalSize too: this callback can land either side of exit
+        // (they arrive out of order), and finalize likewise derives totalSize
+        // from the current sourceSize — so whichever runs last, the two agree.
+        return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'sourceSize' => $size,
+            'totalSize' => $size + (int) $deployment->getAttribute('buildSize', 0),
+        ]));
     }
 
     /**
-     * Resolve the build-command exit into a terminal outcome. A non-zero exit
-     * fails immediately. On success, completion depends on the storage
-     * strategy: on the volume backend the output is already on the mounted
-     * volume when the command exits, so exit alone finalizes; with
-     * artifact-backed output (meta outputArtifact) the post-job 'output'
-     * upload still has to land, so exit only finalizes if the upload callback
-     * was already applied — otherwise it leaves its marker and the upload
-     * callback finalizes (see onArtifact).
+     * Resolve the build-command exit into a terminal outcome. The output is
+     * already on the mounted builds volume, so a zero exit enforces the size
+     * limit against the on-disk artifact before readying; a non-zero exit fails.
      */
     private function onExit(
         Database $dbForProject,
@@ -239,55 +200,21 @@ class Jobs extends Action
         Document $project,
         Document $deployment,
         int $exitCode,
-        bool $outputByArtifact,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         Device $deviceForBuilds,
         GitHub $github,
-        Cache $cache,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $github);
         }
 
-        if ($outputByArtifact) {
-            if ($cache->load('jobs-output-' . $deployment->getId(), self::DEDUPE_TTL) === false) {
-                $cache->save('jobs-exit-' . $deployment->getId(), true);
-
-                return $deployment; // stays 'building' until the output upload lands
-            }
-
-            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $github);
-        }
-
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $github);
-    }
-
-    /**
-     * Finalize a successful build: enforce the size limit against the stored
-     * output, then mark ready. The size comes from the 'buildSize' artifact
-     * when the strategy reported one, else from the build on the device.
-     */
-    private function ready(
-        Database $dbForProject,
-        Database $dbForPlatform,
-        Document $project,
-        Document $deployment,
-        UsageContext $usage,
-        UsagePublisher $publisherForUsage,
-        Device $deviceForBuilds,
-        GitHub $github,
-    ): Document {
         $path = Orchestrator::buildPath($project->getId(), $deployment->getId());
-        $size = (int) $deployment->getAttribute('buildSize', 0);
-        if ($size === 0) {
-            $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
-        }
+        $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
 
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
-
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $github);
         }
 
