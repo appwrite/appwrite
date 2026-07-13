@@ -262,8 +262,6 @@ final class VCSGiteaConsoleClientTest extends Scope
         $status = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = \curl_error($ch);
 
-        \curl_close($ch);
-
         $decoded = \json_decode($response ?: '', true);
 
         return [
