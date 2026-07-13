@@ -6,7 +6,9 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
+use Appwrite\Service\Deployments\Jobs as DeploymentsJobs;
 use Appwrite\Usage\Context;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
@@ -185,6 +187,14 @@ return function (Container $container): void {
     $container->set('deviceForCache', function (Document $project, Telemetry $telemetry) {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
+
+    // Workers only ever build functions on the jobs-service backend (sites
+    // always build on the executor via the Builds worker directly), so
+    // unlike the HTTP-side 'deployments' resource this doesn't need to pick
+    // a backend per-request.
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
+        return new DeploymentsJobs($jobs, $dbForProject, $project, $platform);
+    }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('logError', function (Registry $register, Document $project) {
         return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
