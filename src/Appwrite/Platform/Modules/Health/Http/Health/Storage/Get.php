@@ -2,10 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Storage;
 
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -29,20 +25,6 @@ class Get extends Action
             ->desc('Get storage')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'storage',
-                name: 'getStorage',
-                description: '/docs/references/health/get-storage.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_STATUS,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->inject('response')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')

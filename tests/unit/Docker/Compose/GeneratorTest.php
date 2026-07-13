@@ -35,6 +35,18 @@ final class GeneratorTest extends TestCase
         $this->assertArrayNotHasKey('appwrite-postgresql', $compose['volumes']);
     }
 
+    public function testDefaultsToPostgreSQL(): void
+    {
+        $compose = $this->render();
+
+        $this->assertArrayHasKey('postgresql', $compose['services']);
+        $this->assertArrayNotHasKey('mongodb', $compose['services']);
+        $this->assertArrayNotHasKey('mariadb', $compose['services']);
+        $this->assertArrayHasKey('appwrite-postgresql', $compose['volumes']);
+        $this->assertArrayNotHasKey('appwrite-mongodb', $compose['volumes']);
+        $this->assertArrayNotHasKey('appwrite-mariadb', $compose['volumes']);
+    }
+
     public function testTogglesAssistantService(): void
     {
         $disabled = $this->render([

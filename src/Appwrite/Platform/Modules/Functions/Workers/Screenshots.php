@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Screenshots\Client;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
@@ -14,7 +15,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -22,8 +22,6 @@ use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
-
-use function Swoole\Coroutine\batch;
 
 class Screenshots extends Action
 {
@@ -47,6 +45,7 @@ class Screenshots extends Action
             ->inject('project')
             ->inject('deviceForFiles')
             ->inject('telemetry')
+            ->inject('screenshots')
             ->callback($this->action(...));
     }
 
@@ -57,7 +56,8 @@ class Screenshots extends Action
         Database $dbForProject,
         Document $project,
         Device $deviceForFiles,
-        Telemetry $telemetry
+        Telemetry $telemetry,
+        Client $screenshots
     ): void {
         Span::add('project.id', $project->getId());
 
@@ -111,8 +111,6 @@ class Screenshots extends Action
                 throw new \Exception("Rule for deployment not found");
             }
 
-            $timeout = \intval($site->getAttribute('timeout', '15')) * 1000;
-
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
@@ -124,19 +122,6 @@ class Screenshots extends Action
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $routerHost = "$protocol://{$rule->getAttribute('domain')}";
             }
-
-            $configs = [
-                'screenshotLight' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=light',
-                    'theme' => 'light'
-                ],
-                'screenshotDark' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=dark',
-                    'theme' => 'dark'
-                ],
-            ];
 
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
             $apiKey = $jwtObj->encode([
@@ -161,61 +146,30 @@ class Screenshots extends Action
                 'deploymentStatusIgnored' => true
             ]);
 
-            $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $timeout, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $timeout, &$screenshotError) {
-                    try {
-                        $config = $configs[$key];
+            $headers = [
+                'x-appwrite-hostname' => $rule->getAttribute('domain'),
+                'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            ];
 
-                        $config['headers'] = \array_merge($config['headers'], [
-                            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey
-                        ]);
-                        $config['sleep'] = 3000;
+            $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
+            $sleep = $framework['screenshotSleep'] ?? 3000;
 
-                        $frameworks = Config::getParam('frameworks', []);
-                        $framework = $frameworks[$site->getAttribute('framework', '')] ?? null;
-                        if (!is_null($framework)) {
-                            $config['sleep'] = $framework['screenshotSleep'];
-                        }
-
-                        $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-                        $client = new FetchClient();
-                        $client->setTimeout($timeout);
-                        $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
-
-                        $fetchResponse = $client->fetch(
-                            url: $browserEndpoint . '/screenshots',
-                            method: 'POST',
-                            body: $config
-                        );
-
-                        if ($fetchResponse->getStatusCode() >= 400) {
-                            throw new \Exception($fetchResponse->getBody());
-                        }
-
-                        $screenshot = $fetchResponse->getBody();
-
-                        return ['key' => $key, 'screenshot' => $screenshot];
-                    } catch (\Throwable $th) {
-                        $screenshotError = $th->getMessage();
-                        return;
-                    }
-                };
-            }, \array_keys($configs)));
-
-            if (!\is_null($screenshotError)) {
-                throw new \Exception($screenshotError);
+            $captures = [];
+            foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
+                $captures[$key] = $screenshots->create(
+                    url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
+                    theme: $theme,
+                    headers: $headers,
+                    sleep: $sleep,
+                );
             }
 
-            Span::add('screenshot.count', \count($screenshots));
+            Span::add('screenshot.count', \count($captures));
 
             $mimeType = "image/png";
             $updates = new Document([]);
 
-            foreach ($screenshots as $data) {
-                $key = $data['key'];
-                $screenshot = $data['screenshot'];
-
+            foreach ($captures as $key => $screenshot) {
                 $fileId = ID::unique();
                 $fileName = $fileId . '.png';
                 $path = $deviceForFiles->getPath($fileName);
