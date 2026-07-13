@@ -32,6 +32,22 @@ export function headerAlertOutlineButtonClass(variant: HeaderAlertVariant) {
   )
 }
 
+/** Text-style secondary CTA beside an outline header-alert button. */
+const VARIANT_TEXT_ACTION: Record<HeaderAlertVariant, string> = {
+  warning:
+    'text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300',
+  danger:
+    'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300',
+  info: 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300',
+}
+
+export function headerAlertTextButtonClass(variant: HeaderAlertVariant) {
+  return cn(
+    'inline-flex h-8 w-fit cursor-pointer items-center justify-center px-1 text-[13px] font-medium underline-offset-4 hover:underline transition-colors',
+    VARIANT_TEXT_ACTION[variant],
+  )
+}
+
 export type HeaderAlertBarProps = {
   variant: HeaderAlertVariant
   icon: LucideIcon

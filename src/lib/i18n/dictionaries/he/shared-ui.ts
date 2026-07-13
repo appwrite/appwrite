@@ -529,6 +529,19 @@ export const heSharedUiDictionary: Record<string, string> = {
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. כדי להמשיך להשתמש בשירותי Appwrite, עדכנו את מגבלת התקציב.',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'הארגון הגיע למגבלת התקציב והוא חסום כעת. העלו את תקרת התקציב למטה כדי לשחזר גישה לשירותים החייבים בחיוב.',
+  'This organization has reached its plan limit for':
+    'הארגון הגיע למגבלת התוכנית עבור',
+  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
+    '. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
+  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
+    'הארגון הגיע למגבלת השימוש של התוכנית והוא חסום כעת. שדרגו את התוכנית או המתינו עד סוף מחזור החיוב כדי לשחזר גישה.',
+  'Plan limit reached': 'מגבלת התוכנית הושגה',
+  'Phone auth': 'אימות טלפון',
+  'View current cycle usage': 'צפייה בשימוש במחזור הנוכחי',
+  'Organization usage': 'שימוש בארגון',
+  Screenshots: 'צילומי מסך',
+  'Realtime connections': 'חיבורי Realtime',
+  'Realtime messages': 'הודעות Realtime',
   'This section is under construction': 'החלק הזה נמצא בבנייה',
   'This user has no valid ID; pick another user.':
     'למשתמש הזה אין מזהה תקין; בחרו משתמש אחר.',

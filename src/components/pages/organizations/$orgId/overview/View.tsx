@@ -61,6 +61,7 @@ import {
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
+  isPlanUsageLimitReached,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -895,6 +896,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const showBudgetLimitAlert =
     features.billing && isBudgetLimitReached(organizationDetail)
+  const showPlanUsageLimitAlert =
+    features.billing &&
+    !showBudgetLimitAlert &&
+    isPlanUsageLimitReached(organizationDetail)
+  const showProjectsLockedAlert =
+    showBudgetLimitAlert || showPlanUsageLimitAlert
 
   const [orgName, setOrgName] = useState('')
 
@@ -1617,7 +1624,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const showProjectUsageCharts = features.usageStats
   // Budget-locked projects cannot load platform/usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
-  const skipProjectCardExtras = showBudgetLimitAlert
+  const skipProjectCardExtras = showProjectsLockedAlert
 
   const visibleProjectIds = useMemo(() => {
     if (!showProjectUsageCharts || skipProjectCardExtras) return []
@@ -2519,7 +2526,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       orgBillingReadonlyForFailedInvoice={
                                         orgBillingReadonlyForFailedInvoice
                                       }
-                                      budgetLimitReached={showBudgetLimitAlert}
+                                      budgetLimitReached={showProjectsLockedAlert}
                                       showUsageCharts={showProjectUsageCharts}
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
@@ -2624,7 +2631,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <ProjectListCardMain
                                                 project={project}
                                                 budgetLimitReached={
-                                                  showBudgetLimitAlert
+                                                  showProjectsLockedAlert
                                                 }
                                                 failedInvoiceWarning={
                                                   <FailedInvoiceWarningIcon
@@ -2786,7 +2793,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         orgBillingReadonlyForFailedInvoice={
                                           orgBillingReadonlyForFailedInvoice
                                         }
-                                        budgetLimitReached={showBudgetLimitAlert}
+                                        budgetLimitReached={showProjectsLockedAlert}
                                         showUsageCharts={showProjectUsageCharts}
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
@@ -2854,7 +2861,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 <ProjectListCardMain
                                                   project={project}
                                                   budgetLimitReached={
-                                                    showBudgetLimitAlert
+                                                    showProjectsLockedAlert
                                                   }
                                                   failedInvoiceWarning={
                                                     <FailedInvoiceWarningIcon
@@ -3007,7 +3014,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <SettingsLayoutShell
                     navItems={orgSettingsNavItems.map((item) =>
                       item.id === 'billing' &&
-                      (showBudgetLimitAlert || showFailedInvoiceOrgAlert)
+                      (showProjectsLockedAlert || showFailedInvoiceOrgAlert)
                         ? {
                             ...item,
                             endAdornment: (
@@ -3016,7 +3023,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 aria-label={
                                   showBudgetLimitAlert
                                     ? t('Budget limit reached')
-                                    : t('Payment failed')
+                                    : showPlanUsageLimitAlert
+                                      ? t('Plan limit reached')
+                                      : t('Payment failed')
                                 }
                               />
                             ),

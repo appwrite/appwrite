@@ -306,6 +306,19 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'この組織は予算上限に達したためブロックされています。Appwrite サービスを引き続き利用するには、予算上限を更新してください。',
   'This organization has reached its budget limit and is now blocked. Increase the budget cap below to restore access to billable services.':
     'この組織は予算上限に達したためブロックされています。請求対象サービスへのアクセスを復元するには、下の予算上限を引き上げてください。',
+  'This organization has reached its plan limit for':
+    'この組織はプラン上限に達しました:',
+  '. Upgrade your plan or wait until the end of the billing cycle to restore access.':
+    '。プランをアップグレードするか、請求サイクルの終了まで待ってアクセスを復元してください。',
+  'This organization has reached its plan usage limit and is now blocked. Upgrade your plan or wait until the end of the billing cycle to restore access.':
+    'この組織はプランの使用上限に達したためブロックされています。プランをアップグレードするか、請求サイクルの終了まで待ってアクセスを復元してください。',
+  'Plan limit reached': 'プラン上限に達しました',
+  'Phone auth': '電話認証',
+  'View current cycle usage': '現在のサイクル使用量を表示',
+  'Organization usage': '組織の使用量',
+  Screenshots: 'スクリーンショット',
+  'Realtime connections': 'Realtime 接続',
+  'Realtime messages': 'Realtime メッセージ',
   'This section is under construction': 'このセクションは準備中です',
   'Try a different search or upload a file.': '別の検索を試すか、ファイルをアップロードしてください。',
   'Try a different search term or installation': '別の検索語またはインストールを試してください',

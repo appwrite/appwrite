@@ -3,11 +3,13 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   isBudgetLimitReached,
   isOrganizationBillingReadonlyStatus,
+  isPlanUsageLimitReached,
   organizationQueryOptions,
   useOrganizationFailedInvoicePresence,
 } from '@/lib/react-query/hooks/organizations'
 import { OrganizationBudgetLimitHeaderBanner } from '@/components/global/shared/OrganizationBudgetLimitHeaderBanner'
 import { OrganizationFailedInvoiceHeaderBanner } from '@/components/global/shared/OrganizationFailedInvoiceHeaderBanner'
+import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 
 type OrganizationBillingHeaderBannersProps = {
   organizationId: string | null | undefined
@@ -31,11 +33,19 @@ export function OrganizationBillingHeaderBanners({
     features.billing && failedInvoicePresence?.hasFailedInvoice === true
   const showBudgetLimit =
     features.billing && isBudgetLimitReached(organization)
+  // Budget cap takes precedence; plan overage is the free/starter path
+  const showPlanUsageLimit =
+    features.billing &&
+    !showBudgetLimit &&
+    isPlanUsageLimitReached(organization)
   const orgBillingReadonly =
     showFailedInvoice &&
     isOrganizationBillingReadonlyStatus(organization?.status)
 
-  if (!organizationId || (!showFailedInvoice && !showBudgetLimit)) {
+  if (
+    !organizationId ||
+    (!showFailedInvoice && !showBudgetLimit && !showPlanUsageLimit)
+  ) {
     return null
   }
 
@@ -49,6 +59,11 @@ export function OrganizationBillingHeaderBanners({
       <OrganizationBudgetLimitHeaderBanner
         organizationId={organizationId}
         show={showBudgetLimit}
+      />
+      <OrganizationPlanLimitHeaderBanner
+        organizationId={organizationId}
+        show={showPlanUsageLimit}
+        billingLimits={organization?.billingLimits}
       />
     </>
   )

@@ -36,6 +36,8 @@ export type BillingProjectResourceItem = {
   formatType: BillingProjectResourceFormat
   showLimit?: boolean
   category: BillingProjectResourceCategory
+  /** Plan limit is -1 (disabled). Show upgrade CTA instead of usage. */
+  requiresUpgrade?: boolean
   /** Override default usage formatting (e.g. dedicated DB units). */
   usageLabel?: string
   usageDescription?: string
@@ -687,3 +689,229 @@ export function groupBillingProjectResources(
       ),
   }))
 }
+
+export type BillingProjectBreakdown = {
+  projectId: string
+  projectName: string
+  categories: BillingProjectResourceCategoryGroup[]
+  total: number
+}
+
+export type AggregationResourceLike = {
+  resourceId?: string
+  value?: number | string | null
+  amount?: number | string | null
+  name?: string
+}
+
+const BILLING_PLAN_RESOURCE_PROPERTY_MAP: Record<string, string> = {
+  bandwidth: 'bandwidth',
+  storage: 'storage',
+  users: 'users',
+  executions: 'executions',
+  gbHours: 'GBHours',
+  databaseReads: 'databasesReads',
+  databaseWrites: 'databasesWrites',
+  imageTransformations: 'imageTransformations',
+  screenshotsGenerated: 'screenshotsGenerated',
+  authPhone: 'authPhone',
+  realtime: 'realtime',
+  realtimeMessages: 'realtimeMessages',
+  realtimeBandwidth: 'realtimeBandwidth',
+}
+
+function getBillingPlanRawResourceLimit(
+  plan: Models.BillingPlan | null | undefined,
+  planKey: string,
+): number | null {
+  if (!plan) return null
+
+  const planProperty = BILLING_PLAN_RESOURCE_PROPERTY_MAP[planKey] || planKey
+  const limitValue = (plan as unknown as Record<string, unknown>)[planProperty]
+  if (limitValue === null || limitValue === undefined) return null
+
+  const numValue = Number(limitValue)
+  if (!Number.isFinite(numValue)) return null
+  return numValue
+}
+
+/**
+ * True when the plan sets this resource to -1 (disabled / not available).
+ */
+export function isBillingPlanResourceUnavailable(
+  plan: Models.BillingPlan | null | undefined,
+  planKey: string,
+): boolean {
+  const raw = getBillingPlanRawResourceLimit(plan, planKey)
+  return raw !== null && raw < 0
+}
+
+/**
+ * Plan resource limit in the same units as usage (bytes for bandwidth/storage).
+ * Returns null when unlimited / unset / disabled (-1).
+ */
+export function getBillingPlanResourceLimit(
+  plan: Models.BillingPlan | null | undefined,
+  planKey: string,
+): number | null {
+  const numValue = getBillingPlanRawResourceLimit(plan, planKey)
+  if (numValue === null) return null
+  // -1 typically means disabled/unavailable on Cloud plans
+  if (numValue < 0) return null
+
+  if (planKey === 'bandwidth' || planKey === 'storage') {
+    return numValue * 1_000_000_000
+  }
+  return numValue
+}
+
+function aggregationResourceValue(
+  resources: AggregationResourceLike[],
+  ...resourceIds: string[]
+): number {
+  for (const resourceId of resourceIds) {
+    const match = resources.find((r) => r.resourceId === resourceId)
+    if (!match) continue
+    const n = Number(match.value)
+    if (Number.isFinite(n)) return Math.max(0, n)
+  }
+  return 0
+}
+
+function aggregationResourceAmount(
+  resources: AggregationResourceLike[],
+  ...resourceIds: string[]
+): number {
+  for (const resourceId of resourceIds) {
+    const match = resources.find((r) => r.resourceId === resourceId)
+    if (!match) continue
+    const n = Number(match.amount)
+    if (Number.isFinite(n)) return Math.max(0, n)
+  }
+  return 0
+}
+
+/**
+ * Org-scoped usage vs plan limits from billing aggregation `resources`.
+ * Used when `usagePerProject` is false (e.g. Free): `breakdown` is empty but
+ * team aggregation still carries full org resource totals.
+ *
+ * Always includes the same base resource list as paid plan project breakdowns.
+ * Resources disabled on the plan (limit -1) are included with `requiresUpgrade`.
+ */
+export function buildOrganizationUsageCategoriesFromAggregation(
+  resources: AggregationResourceLike[] | null | undefined,
+  plan: Models.BillingPlan | null | undefined,
+): BillingProjectResourceCategoryGroup[] {
+  const aggregationResources = Array.isArray(resources) ? resources : []
+  if (!plan && aggregationResources.length === 0) return []
+
+  const resourceIdMap = getBillingProjectResourceIdMap(plan)
+  const usageByResourceId: Record<string, { usage: number; cost: number }> = {
+    bandwidth: {
+      usage: aggregationResourceValue(aggregationResources, 'bandwidth'),
+      cost: aggregationResourceAmount(aggregationResources, 'bandwidth'),
+    },
+    // Prefer metered `storage`; fall back to `totalStorage` when storage is unset
+    storage: {
+      usage: (() => {
+        const storage = aggregationResourceValue(aggregationResources, 'storage')
+        if (storage > 0) return storage
+        return aggregationResourceValue(aggregationResources, 'totalStorage')
+      })(),
+      cost: aggregationResourceAmount(
+        aggregationResources,
+        'storage',
+        'totalStorage',
+      ),
+    },
+    mau: {
+      usage: aggregationResourceValue(aggregationResources, 'mau', 'users'),
+      cost: aggregationResourceAmount(aggregationResources, 'mau', 'users'),
+    },
+    executions: {
+      usage: aggregationResourceValue(aggregationResources, 'executions'),
+      cost: aggregationResourceAmount(aggregationResources, 'executions'),
+    },
+    databasesReads: {
+      usage: aggregationResourceValue(aggregationResources, 'databasesReads'),
+      cost: aggregationResourceAmount(aggregationResources, 'databasesReads'),
+    },
+    databasesWrites: {
+      usage: aggregationResourceValue(aggregationResources, 'databasesWrites'),
+      cost: aggregationResourceAmount(aggregationResources, 'databasesWrites'),
+    },
+    imageTransformations: {
+      usage: aggregationResourceValue(
+        aggregationResources,
+        'imageTransformations',
+      ),
+      cost: aggregationResourceAmount(
+        aggregationResources,
+        'imageTransformations',
+      ),
+    },
+    screenshotsGenerated: {
+      usage: aggregationResourceValue(
+        aggregationResources,
+        'screenshotsGenerated',
+      ),
+      cost: aggregationResourceAmount(
+        aggregationResources,
+        'screenshotsGenerated',
+      ),
+    },
+    authPhone: {
+      usage: aggregationResourceValue(aggregationResources, 'authPhone'),
+      cost: aggregationResourceAmount(aggregationResources, 'authPhone'),
+    },
+    // Aggregation already stores GBHours; do not recompute from MBSeconds
+    GBHours: {
+      usage: aggregationResourceValue(aggregationResources, 'GBHours'),
+      cost: aggregationResourceAmount(aggregationResources, 'GBHours'),
+    },
+    realtime: {
+      usage: aggregationResourceValue(aggregationResources, 'realtime'),
+      cost: aggregationResourceAmount(aggregationResources, 'realtime'),
+    },
+    realtimeMessages: {
+      usage: aggregationResourceValue(aggregationResources, 'realtimeMessages'),
+      cost: aggregationResourceAmount(aggregationResources, 'realtimeMessages'),
+    },
+    realtimeBandwidth: {
+      usage: aggregationResourceValue(aggregationResources, 'realtimeBandwidth'),
+      cost: aggregationResourceAmount(aggregationResources, 'realtimeBandwidth'),
+    },
+  }
+
+  const items: BillingProjectResourceItem[] = []
+  for (const resourceId of BILLING_PROJECT_RESOURCE_ID_ORDER) {
+    const mapping = resourceIdMap[resourceId]
+    if (!mapping || mapping.showOnlyWhenUsed) continue
+
+    const values = usageByResourceId[resourceId] ?? { usage: 0, cost: 0 }
+    const requiresUpgrade = isBillingPlanResourceUnavailable(
+      plan,
+      mapping.planKey,
+    )
+    const limit = requiresUpgrade
+      ? null
+      : getBillingPlanResourceLimit(plan, mapping.planKey)
+
+    items.push({
+      resourceId,
+      name: mapping.name,
+      usage: values.usage,
+      limit,
+      cost: values.cost,
+      formatType: mapping.format,
+      showLimit: requiresUpgrade ? false : mapping.showLimit !== false,
+      requiresUpgrade,
+      category: mapping.category,
+    })
+  }
+
+  return groupBillingProjectResources(items)
+}
+
+

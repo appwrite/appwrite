@@ -39,6 +39,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import {
   buildDedicatedDbBillingSpecLookup,
+  buildOrganizationUsageCategoriesFromAggregation,
   DEDICATED_DB_BILLING_METRIC_IDS,
   formatDedicatedDbBillingUsageLabel,
   getBillingProjectResourceIdMap,
@@ -47,6 +48,7 @@ import {
   groupDedicatedDbBillingResources,
   parseDedicatedDbBillingResourceId,
   resolveBillingProjectResourceMapping,
+  type BillingProjectBreakdown,
   type BillingProjectResourceCategoryGroup,
   type BillingProjectResourceItem,
   type DedicatedDbBillingSpecGroup,
@@ -223,6 +225,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return null
   }, [organization])
 
+  // Free / non-usagePerProject plans: aggregation.breakdown is empty; org totals live in resources.
+  const usagePerProject = plan?.usagePerProject === true
+
   // Get next payment date (same as billing cycle end)
   const nextPaymentDate = useMemo(() => {
     if (billingCycle) {
@@ -308,8 +313,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     })
   }
 
-  // Process aggregation breakdown for display
-  const projectBreakdowns = useMemo(() => {
+  // Process aggregation breakdown for display (usagePerProject / Pro+ plans)
+  const projectBreakdowns = useMemo((): BillingProjectBreakdown[] => {
     if (!aggregation) return []
 
     const projects = aggregation.breakdown || []
@@ -436,6 +441,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
         // Get limit from plan
         const limit = getPlanLimit(planKey)
+        const requiresUpgrade = limit !== null && limit < 0
 
         // Get cost from resource.amount if available
         const cost =
@@ -444,7 +450,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         const hasUsageOrCost = usage > 0 || cost > 0
         const shouldShow = showOnlyWhenUsed
           ? resource != null && hasUsageOrCost
-          : resource != null || limit !== null
+          : resource != null || limit !== null || requiresUpgrade
 
         // Always show the resource if it exists in aggregation or if plan has a limit
         // This matches the old UI which shows all resources
@@ -453,10 +459,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             resourceId,
             name,
             usage,
-            limit,
+            limit: requiresUpgrade ? null : limit,
             cost,
             formatType: format,
-            showLimit,
+            showLimit: requiresUpgrade ? false : showLimit,
+            requiresUpgrade,
             category,
           })
           projectTotal += cost
@@ -472,6 +479,24 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     })
   }, [aggregation, plan, dedicatedDbBillingSpecLookup, t])
 
+  // Org-scoped plan caps (Free / non-usagePerProject): aggregation.resources.
+  // Always show the full base resource list; disabled plan resources (-1) render
+  // an Upgrade link instead of usage. Bump listVersion when the list shape changes
+  // so Fast Refresh does not keep a stale memoized result.
+  const organizationUsageListVersion = 2
+  const organizationUsageCategories = useMemo(() => {
+    if (usagePerProject) return []
+    return buildOrganizationUsageCategoriesFromAggregation(
+      aggregation?.resources,
+      plan,
+    )
+  }, [
+    usagePerProject,
+    aggregation?.resources,
+    plan,
+    organizationUsageListVersion,
+  ])
+
   // Total projects: from API resources when available (paginated response), else current page length
   const totalProjects = useMemo(() => {
     if (
@@ -483,7 +508,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return projectBreakdowns.length
   }, [projectsResource?.value, projectBreakdowns.length])
 
-  // API returns current page only; we show the displayed page's data (no layout shift until it's loaded)
+  // Aggregation API returns current page only
   const displayedBreakdowns = projectBreakdowns
 
   const isLoading =
@@ -493,7 +518,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        id="current-cycle-usage"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden scroll-mt-24"
+      >
         <div className="px-6 py-4">
           <div className="h-6 w-32 bg-muted animate-pulse rounded" />
         </div>
@@ -507,7 +535,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      id="current-cycle-usage"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden scroll-mt-24"
+    >
       {/* Header */}
       <div className="px-6 py-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -641,6 +672,28 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 <span className="font-medium text-foreground text-green-600 dark:text-green-400">
                   -{formatCurrency(creditsApplied)}
                 </span>
+              </div>
+            )}
+
+            {/* Org-level usage vs plan limits (Free / non-usagePerProject) */}
+            {organizationUsageCategories.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {t('Organization usage')}
+                </div>
+                <div className="divide-y divide-border">
+                  {organizationUsageCategories.map((category) => (
+                    <BillingProjectResourceCategorySection
+                      key={category.id}
+                      category={category}
+                      plan={plan}
+                      dedicatedDbBillingSpecLookup={
+                        dedicatedDbBillingSpecLookup
+                      }
+                      onUpgrade={onChangePlan}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -785,12 +838,14 @@ function BillingProjectResourceCategorySection({
   category,
   plan,
   dedicatedDbBillingSpecLookup,
+  onUpgrade,
 }: {
   category: BillingProjectResourceCategoryGroup
   plan: Models.BillingPlan | null | undefined
   dedicatedDbBillingSpecLookup: ReturnType<
     typeof buildDedicatedDbBillingSpecLookup
   >
+  onUpgrade?: () => void
 }) {
   const t = useT()
   if (category.id === 'dedicated-databases') {
@@ -816,6 +871,7 @@ function BillingProjectResourceCategorySection({
             <BillingProjectResourceRow
               key={resource.resourceId}
               resource={resource}
+              onUpgrade={onUpgrade}
             />
           ))}
         </div>
@@ -833,6 +889,7 @@ function BillingProjectResourceCategorySection({
           <BillingProjectResourceRow
             key={resource.resourceId}
             resource={resource}
+            onUpgrade={onUpgrade}
           />
         ))}
       </div>
@@ -954,8 +1011,10 @@ function BillingDedicatedDbMetricRow({
 
 function BillingProjectResourceRow({
   resource,
+  onUpgrade,
 }: {
   resource: BillingProjectResourceItem
+  onUpgrade?: () => void
 }) {
   const t = useT()
   const usagePercentage =
@@ -1032,11 +1091,25 @@ function BillingProjectResourceRow({
         </div>
 
         <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
-          {usageContent}
+          {resource.requiresUpgrade ? (
+            onUpgrade ? (
+              <button
+                type="button"
+                className="link-neutral text-[11px]"
+                onClick={onUpgrade}
+              >
+                {t('Upgrade')}
+              </button>
+            ) : (
+              t('Upgrade')
+            )
+          ) : (
+            usageContent
+          )}
         </span>
 
         <span className="text-[12px] font-medium text-foreground shrink-0 text-end min-w-[70px]">
-          {formatCurrency(resource.cost)}
+          {resource.cost > 0 ? formatCurrency(resource.cost) : null}
         </span>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
 import { BudgetLimitProjectCurtain } from '@/components/global/layout/BudgetLimitProjectCurtain'
+import { PlanUsageLimitProjectCurtain } from '@/components/global/layout/PlanUsageLimitProjectCurtain'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { BuildNotificationsProvider } from '@/components/global/providers/BuildNotificationsProvider'
@@ -27,6 +28,7 @@ import {
   useOrganizationFailedInvoicePresence,
   isOrganizationBillingReadonlyStatus,
   isBudgetLimitReached,
+  isPlanUsageLimitReached,
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
@@ -116,17 +118,25 @@ export type ProjectLayoutLoaderData =
   | {
       project: { $id: string; teamId: string; status?: string }
       budgetLimitReached?: boolean
+      planUsageLimitReached?: boolean
     }
   | undefined
 
 export type ProjectLayoutRouteContext = {
   budgetLimitReached: boolean
+  planUsageLimitReached: boolean
   budgetLimitTeamId: string | null
 }
 
+const EMPTY_PROJECT_LAYOUT_CONTEXT: ProjectLayoutRouteContext = {
+  budgetLimitReached: false,
+  planUsageLimitReached: false,
+  budgetLimitTeamId: null,
+}
+
 export const Route = createFileRoute('/_public/projects/$projectId')({
-  // Region + budget check must run before child loaders (loaders execute in parallel).
-  // When the budget cap is hit, nested project routes are redirected to the project root
+  // Region + budget/plan-limit check must run before child loaders (loaders execute in parallel).
+  // When the org is blocked, nested project routes are redirected to the project root
   // so heavy service loaders cannot hang the navigation.
   beforeLoad: async ({
     params,
@@ -134,11 +144,11 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     location,
   }): Promise<ProjectLayoutRouteContext> => {
     if (typeof window === 'undefined') {
-      return { budgetLimitReached: false, budgetLimitTeamId: null }
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
     const { projectId } = params
     if (!projectId) {
-      return { budgetLimitReached: false, budgetLimitTeamId: null }
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
 
     // Region lookup may fail with 402 when budget-locked; ignore and continue.
@@ -146,7 +156,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
     const features = getActiveProfileFeatures()
     if (!features.billing) {
-      return { budgetLimitReached: false, budgetLimitTeamId: null }
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
 
     const redirectIfNested = () => {
@@ -170,7 +180,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
       const teamId = projectData?.teamId
       if (!teamId) {
-        return { budgetLimitReached: false, budgetLimitTeamId: null }
+        return EMPTY_PROJECT_LAYOUT_CONTEXT
       }
 
       // Fresh fetch so we do not reuse a cached org payload that omitted billingLimits
@@ -184,13 +194,18 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
 
       const budgetLimitReached =
         isBudgetLimitReached(projectData) || isBudgetLimitReached(organization)
+      const planUsageLimitReached =
+        !budgetLimitReached &&
+        (isPlanUsageLimitReached(projectData) ||
+          isPlanUsageLimitReached(organization))
 
-      if (budgetLimitReached) {
+      if (budgetLimitReached || planUsageLimitReached) {
         redirectIfNested()
       }
 
       return {
         budgetLimitReached,
+        planUsageLimitReached,
         budgetLimitTeamId: teamId,
       }
     } catch (error) {
@@ -222,13 +237,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           redirectIfNested()
           return {
             budgetLimitReached: true,
+            planUsageLimitReached: false,
             budgetLimitTeamId: teamId,
           }
         }
       }
 
       console.warn('Failed to resolve budget limit in beforeLoad:', error)
-      return { budgetLimitReached: false, budgetLimitTeamId: null }
+      return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
   },
   loader: async ({
@@ -246,6 +262,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     if (!projectId) return undefined
 
     const budgetLimitReached = context.budgetLimitReached === true
+    const planUsageLimitReached = context.planUsageLimitReached === true
     let budgetLimitTeamId = context.budgetLimitTeamId
 
     // When budget-locked, project.get returns 402 — do not fetch the project.
@@ -259,6 +276,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           teamId: budgetLimitTeamId ?? '',
         },
         budgetLimitReached: true,
+        planUsageLimitReached: false,
       }
     }
 
@@ -287,6 +305,10 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           await queryClient
             .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
             .catch(() => {})
+          // Keep org billingLimits warm for plan-usage curtain first paint
+          await queryClient
+            .ensureQueryData(organizationQueryOptions(projectData.teamId))
+            .catch(() => {})
           await prefetchOrganizationInvoiceDataIfAllowed(
             queryClient,
             projectData.teamId,
@@ -300,19 +322,22 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       }
 
       // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
-      await queryClient
-        .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
-        .catch(() => {})
+      // Skip heavy background work when the project is plan-locked.
+      if (!planUsageLimitReached) {
+        await queryClient
+          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+          .catch(() => {})
 
-      // Warm API explorer specs in the background so Explorer opens without a loading state.
-      void queryClient
-        .prefetchQuery(apiExplorerSpecQueryOptions('server'))
-        .catch(() => {})
-      void queryClient
-        .prefetchQuery(apiExplorerSpecQueryOptions('client'))
-        .catch(() => {})
+        // Warm API explorer specs in the background so Explorer opens without a loading state.
+        void queryClient
+          .prefetchQuery(apiExplorerSpecQueryOptions('server'))
+          .catch(() => {})
+        void queryClient
+          .prefetchQuery(apiExplorerSpecQueryOptions('client'))
+          .catch(() => {})
+      }
 
-      // Return project for first paint so paused curtain can show immediately (no layout shift)
+      // Return project for first paint so paused/plan curtains can show immediately
       return projectData
         ? {
             project: {
@@ -321,6 +346,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
               status: (projectData as { status?: string }).status,
             },
             budgetLimitReached: false,
+            planUsageLimitReached,
           }
         : undefined
     } catch (error) {
@@ -335,6 +361,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
             teamId: teamId ?? '',
           },
           budgetLimitReached: true,
+          planUsageLimitReached: false,
         }
       }
       console.warn('Failed to fetch project in loader:', error)
@@ -421,18 +448,40 @@ function ProjectLayout() {
         isBudgetLimitReached(billingOrganization)),
   )
 
+  // Free/starter plan overage (e.g. GBHours). Prefer org limits; fall back to project
+  // for usagePerProject plans. Budget curtain takes precedence when both apply.
+  const planUsageLimitReached = Boolean(
+    features.billing &&
+      !budgetLimitReached &&
+      (routeContext.planUsageLimitReached === true ||
+        loaderData?.planUsageLimitReached === true ||
+        isPlanUsageLimitReached(billingOrganization) ||
+        isPlanUsageLimitReached(project)),
+  )
+  const planUsageBillingLimits =
+    billingOrganization?.billingLimits &&
+    isPlanUsageLimitReached(billingOrganization)
+      ? billingOrganization.billingLimits
+      : project?.billingLimits
+
   const { data: failedInvoicePresence } =
     useOrganizationFailedInvoicePresence(
-      budgetLimitReached ? undefined : teamIdForBilling,
+      budgetLimitReached || planUsageLimitReached
+        ? undefined
+        : teamIdForBilling,
     )
   const showFailedInvoiceBanner =
     !budgetLimitReached &&
+    !planUsageLimitReached &&
     features.billing &&
     failedInvoicePresence?.hasFailedInvoice === true
 
   const { data: organizationsListData } = useQuery({
     ...organizationsQueryOptions(),
-    enabled: !budgetLimitReached && features.multiTenancy,
+    enabled:
+      !budgetLimitReached &&
+      !planUsageLimitReached &&
+      features.multiTenancy,
   })
   const orgBillingReadonlyForFailedInvoice = useMemo(() => {
     if (
@@ -460,9 +509,10 @@ function ProjectLayout() {
   const isPausedFromProject = project?.status === 'paused'
   const isPausedFromLoader =
     !project && loaderData?.project?.status === 'paused'
-  // Prefer budget curtain when both apply (budget is the root cause).
+  // Prefer budget / plan-usage curtains when they apply (root cause of the block).
   const isPaused =
     !budgetLimitReached &&
+    !planUsageLimitReached &&
     (isPausedFromProject || isPausedFromLoader) &&
     !hidePausedCurtain
 
@@ -565,13 +615,20 @@ function ProjectLayout() {
       !projectId ||
       isPaused ||
       budgetLimitReached ||
+      planUsageLimitReached ||
       !features.billing
     )
       return
     if (reportedConsoleAccessForRef.current === projectId) return
     reportedConsoleAccessForRef.current = projectId
     reportConsoleAccess(projectId)
-  }, [projectId, isPaused, budgetLimitReached, features.billing])
+  }, [
+    projectId,
+    isPaused,
+    budgetLimitReached,
+    planUsageLimitReached,
+    features.billing,
+  ])
 
   // Check if this is a project not found or access denied error
   // Do this AFTER all hooks are called to avoid hooks order violation
@@ -606,6 +663,7 @@ function ProjectLayout() {
   // Skip when budget-locked (402) — the curtain handles that state.
   if (
     !budgetLimitReached &&
+    !planUsageLimitReached &&
     !isProjectLoading &&
     projectError &&
     (isNotFound || isAccessDenied)
@@ -639,6 +697,11 @@ function ProjectLayout() {
     <RequireAuth>
       {budgetLimitReached ? (
         <BudgetLimitProjectCurtain teamId={budgetCurtainTeamId} />
+      ) : planUsageLimitReached ? (
+        <PlanUsageLimitProjectCurtain
+          teamId={budgetCurtainTeamId}
+          billingLimits={planUsageBillingLimits}
+        />
       ) : null}
       {isPaused && projectForPaused && (
         <PausedProjectCurtain

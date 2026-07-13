@@ -98,8 +98,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
     const { queryClient } = context
     if (!projectId) return undefined
 
-    // Budget-locked orgs block billable project APIs; skip prefetch so the curtain can render.
-    if (context.budgetLimitReached) {
+    // Budget/plan-locked orgs block billable project APIs; skip prefetch so the curtain can render.
+    if (context.budgetLimitReached || context.planUsageLimitReached) {
       return undefined
     }
 

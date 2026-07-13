@@ -77,6 +77,12 @@ export function isBudgetLimitReached(
 }
 
 /**
+ * True when plan usage limits are at or above 100% (e.g. free-plan GBHours).
+ * See {@link isPlanUsageLimitReached} in `@/lib/billing/billing-limits`.
+ */
+export { isPlanUsageLimitReached } from '@/lib/billing/billing-limits'
+
+/**
  * @deprecated Prefer {@link isBudgetLimitReached}. Same check for organization documents.
  */
 export function isOrganizationBudgetLimitReached(
@@ -656,27 +662,25 @@ export async function fetchCouponAccount(couponCode: string) {
 }
 
 /**
- * Query function to fetch organization usage
+ * Query function to fetch organization usage for the current (or given) billing cycle.
  *
- * @param organizationId - The organization ID
- * @returns Organization usage data
+ * Free / non-usagePerProject plans do not get `aggregation.breakdown`; use this
+ * for per-project usage instead (`organizations.getUsage`).
  */
-export async function fetchOrganizationUsage(organizationId: string) {
+export async function fetchOrganizationUsage(
+  organizationId: string,
+  startDate?: string | null,
+  endDate?: string | null,
+) {
   if (!organizationId) {
     return null
   }
   try {
-    // Try billing service first (if it exists)
-    if ((sdk.forConsole as unknown).billing?.listUsage) {
-      return await (sdk.forConsole as unknown).billing.listUsage(organizationId)
-    }
-    // Fallback to organizations service
-    if ((sdk.forConsole.organizations as unknown).listUsage) {
-      return await (sdk.forConsole.organizations as unknown).listUsage(
-        organizationId,
-      )
-    }
-    return null
+    return await sdk.forConsole.organizations.getUsage({
+      organizationId,
+      ...(startDate ? { startDate } : {}),
+      ...(endDate ? { endDate } : {}),
+    })
   } catch {
     return null
   }
@@ -1488,13 +1492,22 @@ export function billingPlansQueryOptions() {
  * Query options for fetching organization usage
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ * Pass billing cycle dates when available so free-plan project breakdown matches the cycle.
  */
 export function organizationUsageQueryOptions(
   organizationId: string | null | undefined,
+  startDate?: string | null,
+  endDate?: string | null,
 ) {
   return queryOptions({
-    queryKey: ['organization-usage', organizationId],
-    queryFn: () => fetchOrganizationUsage(organizationId!),
+    queryKey: [
+      'organization-usage',
+      organizationId,
+      startDate ?? null,
+      endDate ?? null,
+    ],
+    queryFn: () =>
+      fetchOrganizationUsage(organizationId!, startDate, endDate),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -2630,13 +2643,17 @@ export function useCouponAccount(couponCode: string | null | undefined) {
  * Hook to fetch organization usage
  *
  * @param organizationId - The organization ID
+ * @param startDate - Optional billing cycle start (ISO)
+ * @param endDate - Optional billing cycle end (ISO)
  * @returns Organization usage data with loading state
  */
 export function useOrganizationUsage(
   organizationId: string | null | undefined,
+  startDate?: string | null,
+  endDate?: string | null,
 ) {
   const { data, isLoading, error, refetch } = useQuery(
-    organizationUsageQueryOptions(organizationId),
+    organizationUsageQueryOptions(organizationId, startDate, endDate),
   )
 
   return {
