@@ -186,7 +186,13 @@ class Create extends Base
                 'providerRepositoryOwner' => $owner,
                 'providerRepositoryUrl' => $repositoryUrl,
                 'providerBranchUrl' => $branchUrl,
-                'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
+                // The resolved concrete ref (branch, tag, or commit — codeload
+                // serves them all through the same URL form), so a duplicate
+                // can re-fetch the exact same source later; likewise the root
+                // directory. Remote-source builds never store a tarball, so
+                // these coordinates are all a redeploy has.
+                'providerBranch' => $ref,
+                'providerRootDirectory' => $rootDirectory,
                 'type' => 'vcs',
                 'activate' => $activate,
             ]),
