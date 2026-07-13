@@ -165,6 +165,19 @@ readonly class Orchestrator extends Backend
         // which strategy is active.
         $output = static::storage($project, $function, $deployment);
 
+        // Artifact-backed output (e.g. the S3 strategy): the build result only
+        // reaches storage via a post-job 'output' upload, after the exit
+        // callback fires — so the exit alone is not a completion signal. The
+        // meta flag tells the jobs worker to gate readiness on the 'output'
+        // artifact callback too.
+        $outputByArtifact = false;
+        foreach ($output['artifacts'] as $artifact) {
+            if ($artifact->id === 'output') {
+                $outputByArtifact = true;
+                break;
+            }
+        }
+
         $command = $deployment->getAttribute('buildCommands', '');
         $env = self::variables($project, $function, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
@@ -183,6 +196,7 @@ readonly class Orchestrator extends Backend
                 'deploymentId' => $deploymentId,
                 'resourceId' => $function->getId(),
                 'resourceType' => 'functions',
+                'outputArtifact' => $outputByArtifact ? '1' : '',
             ],
             // The orchestrator expects environment as a string->string map.
             'environment' => \array_map('strval', $env),
@@ -190,9 +204,10 @@ readonly class Orchestrator extends Backend
             'volumes' => $output['volumes'],
             'callback' => new Callback(
                 url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
-                // Artifact callbacks only carry the source-size stat, which exists
-                // only for remote-source builds (templates / VCS).
-                events: $source !== null
+                // Artifact callbacks matter when a stat reports the remote
+                // source's size, or when the output moves via artifacts (the
+                // 'buildSize' stat + 'output' upload that gates readiness).
+                events: $source !== null || $outputByArtifact
                     ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit]
                     : [CallbackEvent::Log, CallbackEvent::Exit],
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
