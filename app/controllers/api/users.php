@@ -2456,6 +2456,10 @@ Http::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
+        if ($user->getId() !== $session->getAttribute('userId')) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
