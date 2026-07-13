@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -12,7 +13,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
-use Appwrite\Service\Deployments;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -126,7 +126,7 @@ class Builds extends Action
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
-        Deployments $deployments,
+        Backend $deployments,
         array $plan
     ): void {
         $payload = $message->getPayload();
@@ -208,7 +208,7 @@ class Builds extends Action
         callable $getIsResourceBlocked,
         Log $log,
         Executor $executor,
-        Deployments $deployments,
+        Backend $deployments,
         array $plan,
         array $platform,
         int $timeout

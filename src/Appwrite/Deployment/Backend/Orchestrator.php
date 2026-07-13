@@ -1,12 +1,12 @@
 <?php
 
-namespace Appwrite\Service\Deployments;
+namespace Appwrite\Deployment\Backend;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Deployment\Backend;
 use Appwrite\Deployment\Token;
-use Appwrite\Service\Deployments;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
-use OpenRuntimes\Orchestrator\Jobs as JobsClient;
+use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
@@ -35,10 +35,10 @@ use Utopia\System\System;
  * duplicate/rebuild, and templates (public GitHub tarball resolved from a
  * git reference).
  */
-readonly class Jobs extends Deployments
+readonly class Orchestrator extends Backend
 {
     public function __construct(
-        private JobsClient $jobs,
+        private Jobs $jobs,
         Database $dbForProject,
         Document $project,
         private array $platform,
@@ -94,7 +94,7 @@ readonly class Jobs extends Deployments
         return $deployment;
     }
 
-    public function delete(string $deploymentId): void
+    public function cancel(string $deploymentId): void
     {
         $this->jobs->delete(static::id($this->project->getId(), $deploymentId));
     }
@@ -102,7 +102,7 @@ readonly class Jobs extends Deployments
     /**
      * @return array<string, mixed> Named arguments for OpenRuntimes\Orchestrator\Jobs::create().
      */
-    public static function payload(
+    protected static function payload(
         Document $project,
         Document $function,
         Document $deployment,

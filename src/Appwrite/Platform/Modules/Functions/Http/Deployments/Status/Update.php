@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -69,7 +69,7 @@ class Update extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Deployments $deployments,
+        Backend $deployments,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -111,7 +111,7 @@ class Update extends Action
 
         // Best-effort cleanup — the deployment is already marked 'canceled'.
         try {
-            $deployments->delete($deploymentId);
+            $deployments->cancel($deploymentId);
         } catch (\Throwable) {
         }
 

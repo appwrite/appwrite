@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Service;
+namespace Appwrite\Deployment;
 
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -15,7 +15,7 @@ use Utopia\Database\Query;
  * fixed for the request's lifetime by which implementation is wired up in
  * app/init/resources/request.php.
  */
-abstract readonly class Deployments
+abstract readonly class Backend
 {
     public function __construct(
         protected Database $dbForProject,
@@ -25,8 +25,8 @@ abstract readonly class Deployments
 
     /**
      * Saves chunked-upload progress onto the deployment — source path/size,
-     * chunk counters, metadata. Never triggers a build; call create() once
-     * the upload is complete. Pass a single `Document` carrying every field
+     * chunk counters, metadata. Never triggers a build; call createFromUpload()
+     * once the upload is complete. Pass a single `Document` carrying every field
      * the deployment should end up with: either a fresh, not-yet-persisted
      * one (a plain `new Document([...])`), or the existing one fetched from
      * the database with more attributes set via `setAttributes()`. A new
@@ -90,7 +90,7 @@ abstract readonly class Deployments
      * marked canceled by the caller; this only needs to stop the backend from
      * still writing to it.
      */
-    abstract public function delete(string $deploymentId): void;
+    abstract public function cancel(string $deploymentId): void;
 
     /**
      * Deactivates any other active deployment for $resource before this one

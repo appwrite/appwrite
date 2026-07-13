@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -9,7 +10,6 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -78,7 +78,7 @@ class Update extends Action
         Authorization $authorization,
         callable $getProjectDB,
         BuildPublisher $publisherForBuilds,
-        Deployments $deployments,
+        Backend $deployments,
         array $platform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);

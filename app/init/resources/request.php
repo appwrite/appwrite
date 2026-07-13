@@ -5,6 +5,8 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
+use Appwrite\Deployment\Backend\Executor as ExecutorBackend;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -21,8 +23,6 @@ use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
-use Appwrite\Service\Deployments\Executor as DeploymentsExecutor;
-use Appwrite\Service\Deployments\Jobs as DeploymentsJobs;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -199,12 +199,14 @@ return function (Container $context): void {
     $context->set('deployments', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Database $dbForProject, Document $project, Executor $executor, array $platform, Request $request) {
         // The jobs-service orchestrator backend only understands functions
         // (its payload builder reads function-shaped attributes like
-        // `runtime`); sites always build on the executor.
+        // `runtime`); sites always build on the executor. Transitional:
+        // once sites build on the jobs-service too, this URI check and the
+        // nullable Backend params in the VCS trait can both go.
         $isSite = \str_starts_with($request->getURI(), '/v1/sites');
 
         return !$isSite && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
-            ? new DeploymentsJobs($jobs, $dbForProject, $project, $platform)
-            : new DeploymentsExecutor($publisherForBuilds, $dbForProject, $project, $executor, $platform);
+            ? new Orchestrator($jobs, $dbForProject, $project, $platform)
+            : new ExecutorBackend($publisherForBuilds, $dbForProject, $project, $executor, $platform);
     }, ['publisherForBuilds', 'jobs', 'dbForProject', 'project', 'executor', 'platform', 'request']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(

@@ -1,15 +1,15 @@
 <?php
 
-namespace Appwrite\Service\Deployments;
+namespace Appwrite\Deployment\Backend;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
-use Appwrite\Service\Deployments;
 use Executor\Executor as ExecutorClient;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
-readonly class Executor extends Deployments
+readonly class Executor extends Backend
 {
     public function __construct(
         private BuildPublisher $publisherForBuilds,
@@ -79,7 +79,7 @@ readonly class Executor extends Deployments
         return $deployment;
     }
 
-    public function delete(string $deploymentId): void
+    public function cancel(string $deploymentId): void
     {
         $this->executor->deleteRuntime($this->project->getId(), $deploymentId . '-build');
     }

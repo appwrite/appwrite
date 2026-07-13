@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -9,7 +10,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -107,7 +107,7 @@ class Create extends Action
         Event $queueForEvents,
         Device $deviceForSites,
         Device $deviceForLocal,
-        Deployments $deployments,
+        Backend $deployments,
         array $plan,
         Authorization $authorization,
         array $platform,
@@ -339,8 +339,6 @@ class Create extends Action
 
                     $fileSize = $deviceForSites->getFileSize($path);
                     $isNewDeployment = $deployment->isEmpty();
-
-                    // Start the build
                     $deployment = $deployments->createFromUpload($site, $deployment->setAttributes([
                         '$id' => $deploymentId,
                         'buildCommands' => \implode(' && ', $commands),

@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
-use Appwrite\Service\Deployments;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Console;
@@ -57,7 +57,7 @@ class Create extends Action
         Authorization $authorization,
         callable $getProjectDB,
         BuildPublisher $publisherForBuilds,
-        Deployments $deployments,
+        Backend $deployments,
         array $platform
     ) {
         $this->preprocessEvent($request);
@@ -190,7 +190,7 @@ class Create extends Action
         BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Deployments $deployments = null,
+        ?Backend $deployments = null,
     ) {
         $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
         $providerBranch = $parsedPayload["branch"] ?? '';
@@ -237,7 +237,7 @@ class Create extends Action
         BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Deployments $deployments = null,
+        ?Backend $deployments = null,
     ) {
         $action = $parsedPayload["action"] ?? '';
 

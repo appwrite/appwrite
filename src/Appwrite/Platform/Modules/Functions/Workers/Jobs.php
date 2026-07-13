@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -9,7 +10,6 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
-use Appwrite\Service\Deployments\Jobs as DeploymentsJobs;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -209,7 +209,7 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $github);
         }
 
-        $path = DeploymentsJobs::buildPath($project->getId(), $deployment->getId());
+        $path = Orchestrator::buildPath($project->getId(), $deployment->getId());
         $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
 
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');

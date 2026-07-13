@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
-use Appwrite\Service\Deployments;
 use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -50,7 +50,7 @@ trait Deployment
         BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Deployments $deployments = null,
+        ?Backend $deployments = null,
     ) {
         $errors = [];
         foreach ($repositories as $repository) {

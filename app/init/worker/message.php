@@ -1,12 +1,12 @@
 <?php
 
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
-use Appwrite\Service\Deployments\Jobs as DeploymentsJobs;
 use Appwrite\Usage\Context;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
@@ -193,7 +193,7 @@ return function (Container $container): void {
     // unlike the HTTP-side 'deployments' resource this doesn't need to pick
     // a backend per-request.
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
-        return new DeploymentsJobs($jobs, $dbForProject, $project, $platform);
+        return new Orchestrator($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'dbForProject', 'project', 'platform']);
 
     $container->set('logError', function (Registry $register, Document $project) {
