@@ -107,17 +107,13 @@ class Jobs extends Action
                 return;
             }
 
-            // The complete callback fires once the build command has exited
-            // AND the job's post-job artifacts are delivered — so on every
-            // storage strategy the output is already where Appwrite reads it.
-            // (The exit callback fires on command exit, before post-job
-            // uploads land, so it can't finalize artifact-backed output.)
-            $finalizing = $event->event === 'orchestrator.job.complete';
+            $statusBefore = $deployment->getAttribute('status');
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github, $cache),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $github, $cache),
                 default => $deployment,
             };
 
@@ -133,8 +129,10 @@ class Jobs extends Action
 
             // On a real terminal outcome (not a concurrently-canceled build),
             // notify webhooks + event-triggered functions of the deployment
-            // update (mirrors the executor Builds worker).
-            if ($finalizing && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            // update (mirrors the executor Builds worker). The transition can
+            // land on either the exit (failures) or the complete callback
+            // (success), so key off the status change rather than the event.
+            if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
         }, self::LOCK_TIMEOUT);
@@ -193,12 +191,15 @@ class Jobs extends Action
     }
 
     /**
-     * Resolve the job's completion into a terminal outcome. Complete is
-     * emitted after the output is delivered (volume or post-job artifacts),
-     * so a zero exit code enforces the size limit against the stored
-     * artifact before readying; a non-zero exit code fails.
+     * A successful build needs both terminal callbacks before it can ready:
+     * exit carries the code but fires before post-job artifacts are
+     * delivered; complete confirms delivery but carries no code. Failures
+     * short-circuit at exit — no output is needed to fail. The success join
+     * is order-independent: each of exit(0)/complete leaves a marker, and
+     * whichever finds the other's marker finalizes (markers live in cache,
+     * applied under the per-deployment lock).
      */
-    private function onComplete(
+    private function onExit(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -208,17 +209,70 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         Device $deviceForBuilds,
         GitHub $github,
+        Cache $cache,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $github);
         }
 
+        $cache->save('jobs-exit-' . $deployment->getId(), true);
+        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $github);
+        }
+
+        return $deployment;
+    }
+
+    /**
+     * The delivery half of the success join — see onExit. Emitted by the
+     * jobs-service once the job's post-job artifacts have run, so on every
+     * storage strategy the output is already where Appwrite reads it.
+     */
+    private function onComplete(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        Device $deviceForBuilds,
+        GitHub $github,
+        Cache $cache,
+    ): Document {
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            return $deployment; // already finalized (a non-zero exit fails at the exit callback)
+        }
+
+        if ($cache->load('jobs-exit-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $github);
+        }
+
+        $cache->save('jobs-complete-' . $deployment->getId(), true);
+
+        return $deployment;
+    }
+
+    /**
+     * Finalize a successful build: enforce the size limit against the stored
+     * output, then mark ready.
+     */
+    private function ready(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        Device $deviceForBuilds,
+        GitHub $github,
+    ): Document {
         $path = Orchestrator::buildPath($project->getId(), $deployment->getId());
         $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
 
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
+
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $github);
         }
 
