@@ -258,17 +258,6 @@ trait Base
     public const string UPDATE_FILE = 'update_file';
     public const string DELETE_FILE = 'delete_file';
 
-    // Health
-    public const string GET_HTTP_HEALTH = 'get_http_health';
-    public const string GET_DB_HEALTH = 'get_db_health';
-    public const string GET_CACHE_HEALTH = 'get_cache_health';
-    public const string GET_TIME_HEALTH = 'get_time_health';
-    public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
-    public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
-    public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
-    public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
-    public const string GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
-
     // Localization
     public const string GET_LOCALE = 'get_locale';
     public const string LIST_COUNTRIES = 'list_countries';
@@ -2406,73 +2395,6 @@ trait Base
             case self::DELETE_FILE:
                 return 'mutation deleteFile($bucketId: String!, $fileId: String!) {
                     storageDeleteFile(bucketId: $bucketId, fileId: $fileId) {
-                        status
-                    }
-                }';
-            case self::GET_HTTP_HEALTH:
-                return 'query getHttpHealth {
-                    healthGet {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_DB_HEALTH:
-                return 'query getDbHealth {
-                    healthGetDB {
-                        statuses {
-                            ping
-                            status
-                        }
-                        total
-                    }
-                }';
-            case self::GET_CACHE_HEALTH:
-                return 'query getCacheHealth {
-                    healthGetCache {
-                        statuses {
-                            ping
-                            status
-                        }
-                        total
-                    }
-                }';
-            case self::GET_TIME_HEALTH:
-                return 'query getTimeHealth {
-                    healthGetTime {
-                        remoteTime
-                        localTime
-                        diff
-                    }
-                }';
-            case self::GET_WEBHOOKS_QUEUE_HEALTH:
-                return 'query getWebhooksQueueHealth {
-                    healthGetQueueWebhooks {
-                        size
-                    }
-                }';
-            case self::GET_CERTIFICATES_QUEUE_HEALTH:
-                return 'query getCertificatesQueueHealth {
-                    healthGetQueueCertificates {
-                        size
-                    }
-                }';
-            case self::GET_FUNCTION_QUEUE_HEALTH:
-                return 'query getFunctionQueueHealth {
-                    healthGetQueueFunctions {
-                        size
-                    }
-                }';
-            case self::GET_LOCAL_STORAGE_HEALTH:
-                return 'query getLocalStorageHealth {
-                    healthGetStorageLocal {
-                        ping
-                        status
-                    }
-                }';
-            case self::GET_ANITVIRUS_HEALTH:
-                return 'query getAntivirusHealth {
-                    healthGetAntivirus {
-                        version
                         status
                     }
                 }';
