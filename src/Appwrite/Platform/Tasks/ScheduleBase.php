@@ -35,6 +35,11 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
+
+    protected function loadResource(Document $project, callable $getProjectDB, array $schedule): Document
+    {
+        return $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+    }
     abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
@@ -270,7 +275,7 @@ abstract class ScheduleBase extends Action
 
             // In case the resource is not found (project deleted).
             try {
-                $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+                $resource = $this->loadResource($project, $getProjectDB, $schedule);
             } catch (\Throwable $th) {
                 Console::error("Failed to load resource: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 Console::error($th->getMessage());
