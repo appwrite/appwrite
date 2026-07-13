@@ -48,7 +48,7 @@
         }
     ],
     "require": {
-        "php": ">=8.3.0",
+        "php": ">=8.4.0",
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
@@ -66,7 +66,7 @@
         "utopia-php/abuse": "1.4.*",
         "utopia-php/agents": "2.*",
         "utopia-php/analytics": "0.15.*",
-        "utopia-php/audit": "2.6.*",
+        "utopia-php/audit": "2.8.*",
         "utopia-php/auth": "^0.9",
         "utopia-php/cache": "^3.0.0",
         "utopia-php/cli": "^0.24",
@@ -98,7 +98,7 @@
         "utopia-php/storage": "2.*",
         "utopia-php/system": "0.10.*",
         "utopia-php/telemetry": "^0.4",
-        "utopia-php/vcs": "4.*",
+        "utopia-php/vcs": "^4.4.1",
         "utopia-php/websocket": "1.0.*",
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
@@ -108,7 +108,9 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*"
+        "enshrined/svg-sanitize": "0.22.*",
+        "utopia-php/client": "^0.2.2",
+        "open-runtimes/sdk-for-php": "^0.2.0"
     },
     "require-dev": {
         "ext-fileinfo": "*",
