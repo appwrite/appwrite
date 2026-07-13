@@ -1,1 +1,1 @@
-Create a new push notification.
+Create a new push notification. For FCM data-only notifications, you can pass `null` for `title` and `body` and provide a custom `data` payload.
