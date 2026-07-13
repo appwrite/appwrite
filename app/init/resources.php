@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
@@ -16,11 +17,15 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\Client;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -64,6 +69,30 @@ $container->set('platform', fn () => Config::getParam('platform', []), []);
 $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
 $container->set('executor', fn () => new Executor(), []);
+
+$container->set('jobs', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBearerAuth(System::getEnv('_APP_JOBS_SECRET', ''))
+        ->withTimeout(30);
+
+    // No host on executor-only installs: keep the injection resolvable and
+    // fail at call time instead (the client is only used when
+    // _APP_BUILDS_BACKEND=orchestrator, which requires _APP_JOBS_HOST).
+    $host = System::getEnv('_APP_JOBS_HOST', '');
+    if ($host !== '') {
+        $client = $client->withBaseUri($host);
+    }
+
+    return new Jobs($client);
+}, []);
+
+$container->set('screenshots', function () {
+    $client = (new Client(new CurlAdapter()))
+        ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
+        ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 30));
+
+    return new ScreenshotsClient($client);
+}, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
@@ -123,6 +152,11 @@ $container->set('publisherForStatsResources', fn (Publisher $publisher) => new S
 $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForDatabase', fn (Publisher $publisherDatabases) => new DatabasePublisher(
@@ -326,6 +360,8 @@ function getDevice(string $root, string $connection = ''): Device
         }
     }
 }
+
+$container->set('geodb', fn ($register) => $register->get('geodb'), ['register']);
 
 $container->set('passwordsDictionary', fn ($register) => $register->get('passwordsDictionary'), ['register']);
 

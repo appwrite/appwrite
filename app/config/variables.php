@@ -980,6 +980,53 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_BUILDS_BACKEND',
+                'description' => 'Backend that builds manual-upload function deployments: "executor" (default; the open-runtimes executor, via the Builds worker) or "orchestrator" (the open-runtimes jobs-service, submitted in the request flow). Other build flows always use the executor.',
+                'introduction' => '1.9.0',
+                'default' => 'executor',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_BUILDS_VOLUME',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by. Only used when _APP_BUILDS_BACKEND is "orchestrator".',
+                'introduction' => '1.9.0',
+                'default' => 'appwrite-builds',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_HOST',
+                'description' => 'The host used by Appwrite to communicate with the open-runtimes jobs-service that builds manual-upload function deployments.',
+                'introduction' => '1.9.0',
+                'default' => 'http://orchestrator-jobs:8080',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_SECRET',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'introduction' => '1.9.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_JOBS_ENDPOINT',
+                'description' => 'Internal Appwrite endpoint the jobs-service (and the containers it spawns) use to reach the API over the Docker network for presigned artifact + callback URLs.',
+                'introduction' => '1.9.0',
+                'default' => 'http://appwrite',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BROWSER_HOST',
                 'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
                 'introduction' => '1.8.0',
