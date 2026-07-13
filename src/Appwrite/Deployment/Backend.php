@@ -7,6 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\VCS\Adapter\Git;
 
 /**
  * Owns a deployment's lifecycle: upload bookkeeping, creating it and
@@ -84,6 +85,23 @@ abstract readonly class Backend
         string $url,
         string $rootDirectory = '',
     ): Document;
+
+    /**
+     * Root directory to extract from a VCS tarball, for createFromUrl().
+     * GitHub archives wrap contents in a "{repo}-{ref}/" directory that the
+     * jobs-service auto-strips; Gitea wraps them in "{repo}/", which survives
+     * the strip, so the repository name must prefix the root directory.
+     */
+    public static function sourceSubdirectory(Git $vcs, string $repositoryName, string $rootDirectory): string
+    {
+        $rootDirectory = \trim($rootDirectory, '/');
+
+        if ($vcs->getName() === 'gitea') {
+            return \trim($repositoryName . '/' . $rootDirectory, '/');
+        }
+
+        return $rootDirectory;
+    }
 
     /**
      * Best-effort cancel of an in-flight build. The deployment is already

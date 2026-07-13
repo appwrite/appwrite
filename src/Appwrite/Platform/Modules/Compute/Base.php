@@ -156,7 +156,7 @@ class Base extends Action
                 $function,
                 $deployment,
                 $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
-                $function->getAttribute('providerRootDirectory', ''),
+                Backend::sourceSubdirectory($vcs, $repositoryName, $function->getAttribute('providerRootDirectory', '')),
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([

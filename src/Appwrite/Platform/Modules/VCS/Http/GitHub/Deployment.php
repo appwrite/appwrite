@@ -401,7 +401,7 @@ trait Deployment
                         $resource,
                         $deployment,
                         $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
-                        $resource->getAttribute('providerRootDirectory', ''),
+                        Backend::sourceSubdirectory($vcs, $providerRepositoryName, $resource->getAttribute('providerRootDirectory', '')),
                     ));
                 } else {
                     $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([

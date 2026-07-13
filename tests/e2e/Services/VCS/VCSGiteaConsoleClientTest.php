@@ -145,7 +145,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $written = $this->gitea(Client::METHOD_GET, $path . '?ref=main', token: $token);
         $this->assertEquals(200, $written['status'], \json_encode($written['body'], JSON_PRETTY_PRINT));
         $content = \preg_replace('/\s+/', '', $written['body']['content'] ?? '') ?? '';
-        $this->assertEquals($source, \base64_decode($content, true), \json_encode($written['body'], JSON_PRETTY_PRINT));
+        $this->assertSame($source, \base64_decode($content, true), \json_encode($written['body'], JSON_PRETTY_PRINT));
     }
 
     private function assertRepositoryWebhookCreated(string $token, string $repository): void
