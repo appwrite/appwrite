@@ -367,14 +367,6 @@ export function ConsoleHeader({
   const { plan: organizationPlan, isFetched: isPlanFetched } =
     useOrganizationPlan(orgId)
   const selfService = organizationPlan?.selfService !== false
-  // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan.
-  // Wait for plan fetch so we do not flash the button while price is still unknown.
-  const showUpgradeButton =
-    features.billing &&
-    orgId &&
-    isPlanFetched &&
-    selfService &&
-    (organizationPlan?.price ?? 0) === 0
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -428,6 +420,15 @@ export function ConsoleHeader({
     isOptionalAuth && optionalAuthResolved && !headerAuthenticated
   const authRedirect = resolvePostAuthRedirect(location.pathname)
   const showMarketingLinks = showMarketingNav && !centerSearch
+  // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan.
+  // Wait for plan fetch so we do not flash the button while price is still unknown.
+  // Marketing layout defers the control to @[1720px] so the centered nav stays clear.
+  const showUpgradeButton =
+    features.billing &&
+    orgId &&
+    isPlanFetched &&
+    selfService &&
+    (organizationPlan?.price ?? 0) === 0
   const showChangelogBadge = useChangelogNavBadge()
   const showOrgDomainsLink = Boolean(orgId && canShowOrgDomainsTab(access, features))
   const docsHref = getMarketingPageUrl('/docs', features.marketing)
@@ -443,14 +444,24 @@ export function ConsoleHeader({
     <div className="@container w-full overflow-visible">
       <header
         className={cn(
-          'relative flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 overflow-visible @[640px]:gap-2 border-b border-border bg-background',
+          'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
           'ps-3 pe-3 @[640px]:ps-4 @[640px]:pe-4 @[1000px]:pe-6',
+          // Equal side columns keep the marketing nav centered whether the right
+          // cluster is Sign in/up or search + account actions.
+          showMarketingLinks
+            ? 'grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'
+            : 'relative flex flex-wrap justify-between',
           !showMarketingNav && '@[1024px]:ps-0',
           className,
         )}
       >
         {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-visible @[640px]:gap-2">
+        <div
+          className={cn(
+            'flex min-w-0 items-center gap-1.5 overflow-visible @[640px]:gap-2',
+            showMarketingLinks ? 'justify-self-start' : 'flex-1',
+          )}
+        >
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {onMenuClick ? (
             <button
@@ -595,29 +606,6 @@ export function ConsoleHeader({
               </>
             )
           })()}
-
-          {showMarketingLinks ? (
-            <nav
-              className="ms-2 hidden min-w-0 items-center justify-start gap-1 @[1280px]:flex @[1536px]:absolute @[1536px]:left-1/2 @[1536px]:ms-0 @[1536px]:-translate-x-1/2"
-              aria-label={headerCopy.marketingNav.websiteNavigation}
-            >
-              {marketingNavItems.map((item) =>
-                isMarketingProductsNavItem(item) ? (
-                  <MarketingProductsNavPopover key={item.label} />
-                ) : (
-                  <MarketingNavLink
-                    key={item.label}
-                    item={item}
-                    showChangelogBadge={showChangelogBadge}
-                    changelogAriaLabel={
-                      headerCopy.marketingNav.changelogNewUpdatesAria
-                    }
-                  />
-                ),
-              )}
-              <MarketingGitHubStarsLink />
-            </nav>
-          ) : null}
 
           {/* Account scope quick return */}
           {isAccountScope && orgId && (
@@ -1006,6 +994,34 @@ export function ConsoleHeader({
           )}
         </div>
 
+        {showMarketingLinks ? (
+          // Always occupy the center grid track (even when the nav is visually
+          // hidden below 1280px). A `hidden` nav alone would leave the grid and
+          // drop the right actions into the middle column.
+          <div className="min-w-0 justify-self-center">
+            <nav
+              className="hidden items-center justify-center gap-1 @[1280px]:flex"
+              aria-label={headerCopy.marketingNav.websiteNavigation}
+            >
+              {marketingNavItems.map((item) =>
+                isMarketingProductsNavItem(item) ? (
+                  <MarketingProductsNavPopover key={item.label} />
+                ) : (
+                  <MarketingNavLink
+                    key={item.label}
+                    item={item}
+                    showChangelogBadge={showChangelogBadge}
+                    changelogAriaLabel={
+                      headerCopy.marketingNav.changelogNewUpdatesAria
+                    }
+                  />
+                ),
+              )}
+              <MarketingGitHubStarsLink />
+            </nav>
+          </div>
+        ) : null}
+
         {showCenterSearch ? (
           <div className="pointer-events-none absolute left-1/2 hidden w-full max-w-[25rem] -translate-x-1/2 px-4 @[900px]:block">
             <button
@@ -1034,7 +1050,12 @@ export function ConsoleHeader({
         ) : null}
 
         {/* Right: Actions */}
-        <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
+        <div
+          className={cn(
+            'flex min-w-0 shrink-0 items-center gap-1 @[640px]:gap-2',
+            showMarketingLinks && 'justify-self-end',
+          )}
+        >
           {optionalAuthPending ? (
             <div
               className="flex h-9 items-center gap-1 @[640px]:gap-2"
@@ -1084,38 +1105,69 @@ export function ConsoleHeader({
             </>
           ) : (
             <>
-              {/* Search - compact on the right, or icon-only when center search is enabled */}
+              {/* Search - full pill in console; compact Search+kbd on marketing so
+                  both auth states keep a true-centered nav without collisions. */}
               {showRightSearch ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={openCommandCenter}
-                    className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
-                  >
-                    <Search className="h-3.5 w-3.5 shrink-0" />
-                    <span className="hidden @[850px]:inline">
-                      {headerCopy.search.compactPlaceholder}
-                    </span>
-                    {searchModKey ? (
-                      <span className="ms-2 hidden shrink-0 @[850px]:inline">
+                showMarketingLinks ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={openCommandCenter}
+                      className="hidden h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-accent/50 px-2.5 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
+                      aria-label={headerCopy.search.compactPlaceholder}
+                    >
+                      <Search className="h-3.5 w-3.5 shrink-0" />
+                      {searchModKey ? (
                         <kbd
                           dir="ltr"
                           className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
                         >
                           {searchModKey}K
                         </kbd>
+                      ) : null}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openCommandCenter}
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                      aria-label={headerCopy.search.compactPlaceholder}
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={openCommandCenter}
+                      className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
+                    >
+                      <Search className="h-3.5 w-3.5 shrink-0" />
+                      <span className="hidden @[850px]:inline">
+                        {headerCopy.search.compactPlaceholder}
                       </span>
-                    ) : null}
-                  </button>
+                      {searchModKey ? (
+                        <span className="ms-2 hidden shrink-0 @[850px]:inline">
+                          <kbd
+                            dir="ltr"
+                            className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
+                          >
+                            {searchModKey}K
+                          </kbd>
+                        </span>
+                      ) : null}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={openCommandCenter}
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
-                  >
-                    <Search className="h-4 w-4" />
-                  </button>
-                </>
+                    <button
+                      type="button"
+                      onClick={openCommandCenter}
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                      aria-label={headerCopy.search.compactPlaceholder}
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </>
+                )
               ) : showCenterSearch ? (
                 <button
                   type="button"
@@ -1127,8 +1179,14 @@ export function ConsoleHeader({
                 </button>
               ) : null}
 
-              {/* Feedback - hidden on small containers */}
-              <div className="hidden @[800px]:flex shrink-0">
+              {/* Feedback / Support — console tools; on marketing only at very wide
+                  widths so they cannot crowd the centered Changelog / stars. */}
+              <div
+                className={cn(
+                  'hidden shrink-0',
+                  showMarketingLinks ? '@[1720px]:flex' : '@[800px]:flex',
+                )}
+              >
                 <FeedbackPopover
                   source="navbar"
                   orgId={orgId}
@@ -1137,8 +1195,12 @@ export function ConsoleHeader({
                 />
               </div>
 
-              {/* Support - hidden on small containers */}
-              <div className="hidden @[900px]:flex shrink-0">
+              <div
+                className={cn(
+                  'hidden shrink-0',
+                  showMarketingLinks ? '@[1720px]:flex' : '@[900px]:flex',
+                )}
+              >
                 <SupportPopover orgId={orgId} />
               </div>
 
@@ -1169,12 +1231,22 @@ export function ConsoleHeader({
 
               {/* Divider before Upgrade Button - hidden on small containers */}
               {showUpgradeButton && (
-                <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[850px]:block" />
+                <div
+                  className={cn(
+                    'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
+                    showMarketingLinks ? '@[1720px]:block' : '@[850px]:block',
+                  )}
+                />
               )}
 
               {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
               {showUpgradeButton && (
-                <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
+                <div
+                  className={cn(
+                    'hidden shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background',
+                    showMarketingLinks ? '@[1720px]:flex' : '@[850px]:flex',
+                  )}
+                >
                   <div className="upgrade-button-wrapper">
                     <Button
                       asChild
@@ -1192,7 +1264,12 @@ export function ConsoleHeader({
               )}
 
               {/* Divider - hidden on small containers */}
-              <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[700px]:block" />
+              <div
+                className={cn(
+                  'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
+                  showMarketingLinks ? '@[1280px]:block' : '@[700px]:block',
+                )}
+              />
 
               {/* User Menu */}
               <DropdownMenu>
@@ -1203,12 +1280,26 @@ export function ConsoleHeader({
                       size="sm"
                       className="shrink-0"
                     />
-                    <div className="hidden text-start @[800px]:block min-w-0">
+                    <div
+                      className={cn(
+                        'hidden min-w-0 text-start',
+                        showMarketingLinks
+                          ? '@[1600px]:block'
+                          : '@[800px]:block',
+                      )}
+                    >
                       <p className="text-[13px] font-medium text-foreground truncate">
                         {displayName}
                       </p>
                     </div>
-                    <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground @[800px]:block" />
+                    <ChevronDown
+                      className={cn(
+                        'hidden h-3.5 w-3.5 shrink-0 text-muted-foreground',
+                        showMarketingLinks
+                          ? '@[1600px]:block'
+                          : '@[800px]:block',
+                      )}
+                    />
                   </button>
                 </DropdownMenuTrigger>
 
