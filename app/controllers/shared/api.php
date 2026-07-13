@@ -611,6 +611,8 @@ Http::init()
         $auditContext->userAgent = $request->getUserAgent('');
         $auditContext->ip = $request->getIP();
         $auditContext->hostname = $request->getHostname();
+        $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
+        $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
