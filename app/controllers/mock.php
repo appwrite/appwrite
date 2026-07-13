@@ -69,7 +69,9 @@ Http::get('/v1/mock/tests/general/oauth2/token')
     ->inject('response')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
-        if ($client_id != '1') {
+        $canonicalEmail = \str_starts_with($client_id, 'canonical-');
+
+        if ($client_id != '1' && !$canonicalEmail) {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
         }
 
@@ -78,7 +80,7 @@ Http::get('/v1/mock/tests/general/oauth2/token')
         }
 
         $responseJson = [
-            'access_token' => '123456',
+            'access_token' => $canonicalEmail ? $client_id : '123456',
             'refresh_token' => 'tuvwxyz',
             'expires_in' => 14400
         ];
@@ -109,16 +111,26 @@ Http::get('/v1/mock/tests/general/oauth2/user')
     ->inject('response')
     ->action(function (string $token, Response $response) {
 
-        if ($token != '123456') {
+        if ($token === '123456') {
+            $user = [
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'useroauth@localhost.test',
+                'verified' => true,
+            ];
+        } elseif (\str_starts_with($token, 'canonical-')) {
+            $id = \substr($token, \strlen('canonical-'));
+            $user = [
+                'id' => $id,
+                'name' => 'Canonical Email User',
+                'email' => 'oauth.' . $id . '@gmail.com',
+                'verified' => true,
+            ];
+        } else {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
         }
 
-        $response->json([
-            'id' => 1,
-            'name' => 'User Name',
-            'email' => 'useroauth@localhost.test',
-            'verified' => true,
-        ]);
+        $response->json($user);
     });
 
 Http::get('/v1/mock/tests/general/oauth2/user-unverified')

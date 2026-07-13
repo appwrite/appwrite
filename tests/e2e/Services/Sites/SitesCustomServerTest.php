@@ -135,6 +135,21 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
 
+        /**
+         * Test for FAILURE
+         * Reject buildRuntime values outside _APP_SITES_RUNTIMES (static-1,node-22 in test env).
+         */
+        $site = $this->createSite([
+            'buildRuntime' => 'node-24',
+            'framework' => 'other',
+            'name' => 'Unsupported Runtime Site',
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $site['body']['type']);
+        $this->assertStringContainsString('Runtime "node-24" is not supported', (string) $site['body']['message']);
+
         $this->cleanupSite($siteId);
     }
 
@@ -2214,7 +2229,7 @@ final class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
@@ -2546,7 +2561,7 @@ final class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
         $this->assertStringContainsString('projectId=' . $this->getProject()['$id'], (string) $response['headers']['location']);
         $this->assertStringContainsString('origin=', (string) $response['headers']['location']);
         $this->assertStringContainsString('path=%2Fcontact', (string) $response['headers']['location']);
@@ -2609,7 +2624,7 @@ final class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
         // Failure: User missing
         $cookie = 'a_session_console=' .$this->getRoot()['session'];
@@ -2644,7 +2659,7 @@ final class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
         // Failure: Membership missing
         $email = \uniqid() . 'newuser@appwrite.io';
@@ -2684,7 +2699,7 @@ final class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
         $this->cleanupSite($siteId);
     }

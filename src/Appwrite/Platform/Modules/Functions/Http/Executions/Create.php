@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Bus\Events\ExecutionScheduled;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -16,13 +18,13 @@ use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -96,7 +98,6 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('user')
             ->inject('queueForEvents')
-            ->inject('usage')
             ->inject('publisherForFunctions')
             ->inject('geoRecord')
             ->inject('store')
@@ -106,6 +107,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('publisherForDeletes')
             ->inject('executionsRetentionCount')
+            ->inject('bus')
             ->callback($this->action(...));
     }
 
@@ -124,7 +126,6 @@ class Create extends Base
         Database $dbForPlatform,
         User $user,
         Event $queueForEvents,
-        Context $usage,
         FunctionPublisher $publisherForFunctions,
         GeoRecord $geoRecord,
         Store $store,
@@ -134,6 +135,7 @@ class Create extends Base
         Authorization $authorization,
         DeletePublisher $publisherForDeletes,
         int $executionsRetentionCount,
+        Bus $bus,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -263,6 +265,8 @@ class Create extends Base
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            '$createdAt' => DateTime::now(),
+            '$updatedAt' => DateTime::now(),
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -287,7 +291,6 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,
                     user: $user,
@@ -307,7 +310,8 @@ class Create extends Base
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
-                    'userId' => $user->getId()
+                    'userId' => $user->getId(),
+                    'functionId' => $function->getId(),
                 ];
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
@@ -328,7 +332,10 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $bus->dispatch(new ExecutionScheduled(
+                    execution: $execution->getArrayCopy(),
+                    project: $project->getArrayCopy(),
+                ));
             }
 
             if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
@@ -486,19 +493,12 @@ class Create extends Base
                 throw $th;
             }
         } finally {
-            $usage
-                ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-                ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-                ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ;
-
-            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $bus->dispatch(new ExecutionCompleted(
+                execution: $execution->getArrayCopy(),
+                project: $project->getArrayCopy(),
+                spec: $spec,
+                resource: $function->getArrayCopy(),
+            ));
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();

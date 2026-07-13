@@ -95,18 +95,6 @@ return [
             "Access to update project\'s stages",
         "category" => "Project",
     ],
-    "oauth2.read" => [
-        "description" =>
-            "Access to read project\'s OAuth2 configuration. Use 'project.oauth2.read' instead.",
-        "category" => "Project",
-        'deprecated' => true,
-    ],
-    "oauth2.write" => [
-        "description" =>
-            "Access to update project\'s OAuth2 configuration. Use 'project.oauth2.write' instead.",
-        "category" => "Project",
-        'deprecated' => true,
-    ],
 
     // Auth
     'users.read' => [

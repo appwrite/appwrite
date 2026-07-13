@@ -120,7 +120,7 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
 }, ['pools', 'cache', 'authorization']);
 
 $container->set(
-    'isResourceBlocked',
+    'getIsResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false,
     []
 );
