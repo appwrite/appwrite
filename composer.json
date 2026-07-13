@@ -19,8 +19,8 @@
         "test": "phpunit"
     },
     "require": {
-        "php": ">=8.1",
-        "utopia-php/validators": "^0.2"
+        "php": ">=8.5",
+        "utopia-php/validators": "0.3.*"
     },
     "suggest": {
         "ext-yaml": "Required only for the YAML parser"
