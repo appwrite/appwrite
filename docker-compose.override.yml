@@ -291,8 +291,6 @@ services:
   gitea:
     image: gitea/gitea:1.22.6
     container_name: appwrite-gitea
-    profiles:
-      - vcs
     environment:
       - USER_UID=1000
       - USER_GID=1000
@@ -320,8 +318,6 @@ services:
   gitea-setup:
     image: gitea/gitea:1.22.6
     container_name: appwrite-gitea-setup
-    profiles:
-      - vcs
     depends_on:
       gitea:
         condition: service_healthy
