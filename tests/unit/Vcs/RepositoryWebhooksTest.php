@@ -111,9 +111,11 @@ final class RepositoryWebhooksTest extends TestCase
     {
         \putenv('_APP_VCS_WEBHOOK_URL=https://example.com');
 
-        (new RepositoryWebhooks($vcsFactory))->ensure($adapter, $installation, $db, 'repo-1', 'owner', 'repo');
-
-        \putenv('_APP_VCS_WEBHOOK_URL');
+        try {
+            (new RepositoryWebhooks($vcsFactory))->ensure($adapter, $installation, $db, 'repo-1', 'owner', 'repo');
+        } finally {
+            \putenv('_APP_VCS_WEBHOOK_URL');
+        }
     }
 
     protected function factory(string $secret): Factory

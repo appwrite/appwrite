@@ -112,6 +112,8 @@ final class InstallationTokensTest extends TestCase
         $result = (new InstallationTokens())->refresh($installation, $this->db(), $oauth2, $identity);
 
         $this->assertSame('identity-token', $result->getAttribute('personalAccessToken'));
+        $this->assertSame('identity-refresh', $result->getAttribute('personalRefreshToken'));
+        $this->assertSame($identity->getAttribute('providerAccessTokenExpiry'), $result->getAttribute('personalAccessTokenExpiry'));
     }
 
     public function testMissingRefreshTokenThrowsClearError(): void
@@ -181,13 +183,43 @@ final class InstallationTokensTest extends TestCase
         $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
     }
 
-    protected function fakeOAuth2(bool $emptyUserId = false)
+    public function testRefreshExceptionReturnsCurrentInstallationWhenAnotherRequestRefreshed(): void
     {
-        return new class ($emptyUserId) extends OAuth2 {
+        $db = $this->createMock(Database::class);
+        $current = new Document([
+            '$id' => 'installation1',
+            'personalAccessToken' => 'already-refreshed-token',
+            'personalRefreshToken' => 'already-refreshed-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+
+        $db->expects($this->once())
+            ->method('getDocument')
+            ->with('installations', 'installation1')
+            ->willReturn($current);
+        $db->expects($this->never())->method('updateDocument');
+
+        $installation = new Document([
+            '$id' => 'installation1',
+            'personalAccessToken' => 'stale-token',
+            'personalRefreshToken' => 'stale-refresh',
+            'personalAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+
+        $oauth2 = $this->fakeOAuth2(throwOnRefresh: true);
+
+        $result = (new InstallationTokens())->refresh($installation, $db, $oauth2);
+
+        $this->assertSame('already-refreshed-token', $result->getAttribute('personalAccessToken'));
+    }
+
+    protected function fakeOAuth2(bool $emptyUserId = false, bool $throwOnRefresh = false)
+    {
+        return new class ($emptyUserId, $throwOnRefresh) extends OAuth2 {
             public int $refreshCalls = 0;
             protected array $tokens = [];
 
-            public function __construct(protected bool $emptyUserId)
+            public function __construct(protected bool $emptyUserId, protected bool $throwOnRefresh)
             {
                 parent::__construct('id', 'secret', '');
             }
@@ -210,6 +242,10 @@ final class InstallationTokensTest extends TestCase
             public function refreshTokens(string $refreshToken): array
             {
                 $this->refreshCalls++;
+                if ($this->throwOnRefresh) {
+                    throw new \RuntimeException('refresh token already used');
+                }
+
                 $this->tokens = [
                     'access_token' => 'fresh-token',
                     'refresh_token' => 'fresh-refresh',

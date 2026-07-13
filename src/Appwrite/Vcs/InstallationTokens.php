@@ -22,7 +22,10 @@ class InstallationTokens
             $accessTokenExpiry = $accessTokenExpiry ?? $identity->getAttribute('providerAccessTokenExpiry');
         }
 
-        $installation = $installation->setAttribute('personalAccessToken', $accessToken);
+        $installation = $installation
+            ->setAttribute('personalAccessToken', $accessToken)
+            ->setAttribute('personalRefreshToken', $refreshToken)
+            ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
 
         if (!$this->isExpired($accessTokenExpiry)) {
             return $installation;
@@ -32,7 +35,16 @@ class InstallationTokens
             throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'This installation has no refresh token on file. Please reconnect it.');
         }
 
-        $oauth2->refreshTokens($refreshToken);
+        try {
+            $oauth2->refreshTokens($refreshToken);
+        } catch (\Throwable) {
+            $current = $this->getCurrentInstallation($dbForPlatform, $installation);
+            if (!$current->isEmpty() && !empty($current->getAttribute('personalAccessToken')) && !$this->isExpired($current->getAttribute('personalAccessTokenExpiry'))) {
+                return $current;
+            }
+
+            throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, 'Failed to refresh OAuth2 access token. Please reconnect the installation.');
+        }
 
         $accessToken = $oauth2->getAccessToken('');
         $refreshToken = $oauth2->getRefreshToken('');
