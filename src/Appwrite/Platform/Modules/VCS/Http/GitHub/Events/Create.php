@@ -16,7 +16,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
-use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
@@ -37,6 +36,7 @@ class Create extends Action
             ->desc('Create event')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
+            ->inject('vcsWebhookSecret')
             ->inject('vcsForProvider')
             ->inject('vcsForInstallation')
             ->inject('request')
@@ -51,6 +51,7 @@ class Create extends Action
     }
 
     public function action(
+        callable $vcsWebhookSecret,
         callable $vcsForProvider,
         callable $vcsForInstallation,
         Request $request,
@@ -71,7 +72,7 @@ class Create extends Action
 
         $payload = $request->getRawPayload();
         $signature = $request->getHeaderLine('x-hub-signature-256', '');
-        $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+        $secretKey = $vcsWebhookSecret('github');
 
         $valid = empty($secretKey) ? true : $vcs->validateWebhookEvent($payload, $signature, $secretKey);
         Span::add('vcs.github.event.signature.valid', $valid);

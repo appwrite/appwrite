@@ -382,9 +382,13 @@ $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cac
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 
+$container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFactory->getProviders(), ['vcsFactory']);
+
 $container->set('vcsForInstallation', fn (VcsFactory $vcsFactory) => fn (Document $installation) => $vcsFactory->fromInstallation($installation), ['vcsFactory']);
 
 $container->set('vcsForProvider', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->fromProvider($provider), ['vcsFactory']);
+
+$container->set('vcsWebhookSecret', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->getWebhookSecret($provider), ['vcsFactory']);
 
 $container->set('plan', fn () => []);
 

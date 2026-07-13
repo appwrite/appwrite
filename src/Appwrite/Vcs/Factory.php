@@ -9,13 +9,6 @@ use Utopia\Database\Document;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
-/**
- * Builds VCS adapters from the `vcs` config registry.
- *
- * DI resources use this service to resolve adapters from installation
- * documents or provider keys instead of hardcoding one provider.
- * The factory only constructs adapters — it never touches the database.
- */
 class Factory
 {
     /**
@@ -41,11 +34,6 @@ class Factory
         }
     }
 
-    /**
-     * Keys of providers that are enabled and fully configured.
-     *
-     * @return array<string>
-     */
     public function getProviders(): array
     {
         return \array_values(\array_filter(
@@ -54,9 +42,6 @@ class Factory
         ));
     }
 
-    /**
-     * Whether all required environment variables are set for a provider.
-     */
     public function isConfigured(string $key): bool
     {
         if (!isset($this->registry[$key])) {
@@ -72,10 +57,6 @@ class Factory
         return true;
     }
 
-    /**
-     * Uninitialized adapter for provider-level operations that need no
-     * installation credentials (webhook signature validation, payload parsing).
-     */
     public function fromProvider(string $key): Git
     {
         if (!isset($this->registry[$key])) {
@@ -92,11 +73,6 @@ class Factory
         return $adapter;
     }
 
-    /**
-     * Initialized adapter for an installation. App credentials and personal
-     * tokens are both always passed; each adapter uses the set its
-     * authentication scheme needs and ignores the other.
-     */
     public function fromInstallation(Document $installation): Git
     {
         if ($installation->isEmpty()) {
@@ -121,9 +97,6 @@ class Factory
         return $adapter;
     }
 
-    /**
-     * Webhook secret configured for a provider, empty if none is set.
-     */
     public function getWebhookSecret(string $key): string
     {
         return $this->getEnv($key, 'WEBHOOK_SECRET');
