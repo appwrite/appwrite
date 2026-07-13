@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useEffect, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
+import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -75,6 +76,7 @@ export function SignIn({
   const [lastLoginMethod, setLastLoginMethod] = useState<
     'github' | 'email' | null
   >(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Function to update last login method from storage
   const updateLastLoginMethod = () => {
@@ -224,7 +226,27 @@ export function SignIn({
                     <FormItem>
                       <FormLabel>{t('Password')}</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? 'text' : 'password'}
+                            className="pe-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((current) => !current)}
+                            className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                            aria-label={
+                              showPassword ? t('Hide password') : t('Show password')
+                            }
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                       {mode === 'sign-in' && (
