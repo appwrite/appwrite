@@ -190,11 +190,16 @@ readonly class Orchestrator extends Backend
             'volumes' => $output['volumes'],
             'callback' => new Callback(
                 url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
-                // Artifact callbacks only carry the source-size stat, which exists
-                // only for remote-source builds (templates / VCS).
+                // The complete event — emitted after the exit AND the job's
+                // post-job artifacts are delivered — is the terminal signal
+                // the worker finalizes on; it works for any storage strategy,
+                // volume-mounted or artifact-backed. Raw string until the SDK
+                // ships the CallbackEvent case. Artifact callbacks only carry
+                // the source-size stat, which exists only for remote-source
+                // builds (templates / VCS).
                 events: $source !== null
-                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit]
-                    : [CallbackEvent::Log, CallbackEvent::Exit],
+                    ? [CallbackEvent::Log, CallbackEvent::Artifact, 'orchestrator.job.complete']
+                    : [CallbackEvent::Log, 'orchestrator.job.complete'],
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];

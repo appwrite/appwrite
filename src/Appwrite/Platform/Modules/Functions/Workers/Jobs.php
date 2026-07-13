@@ -107,14 +107,17 @@ class Jobs extends Action
                 return;
             }
 
-            // The build writes its output onto the mounted volume before build.sh
-            // exits, so the exit callback is a truthful completion signal.
-            $finalizing = $event->event === 'orchestrator.job.exit';
+            // The complete callback fires once the build command has exited
+            // AND the job's post-job artifacts are delivered — so on every
+            // storage strategy the output is already where Appwrite reads it.
+            // (The exit callback fires on command exit, before post-job
+            // uploads land, so it can't finalize artifact-backed output.)
+            $finalizing = $event->event === 'orchestrator.job.complete';
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
                 default => $deployment,
             };
 
@@ -190,11 +193,12 @@ class Jobs extends Action
     }
 
     /**
-     * Resolve the build-command exit into a terminal outcome. The output is
-     * already on the mounted builds volume, so a zero exit enforces the size
-     * limit against the on-disk artifact before readying; a non-zero exit fails.
+     * Resolve the job's completion into a terminal outcome. Complete is
+     * emitted after the output is delivered (volume or post-job artifacts),
+     * so a zero exit code enforces the size limit against the stored
+     * artifact before readying; a non-zero exit code fails.
      */
-    private function onExit(
+    private function onComplete(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
