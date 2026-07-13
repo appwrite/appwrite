@@ -43,7 +43,7 @@ final class GiteaClosedPullRequestEventTest extends TestCase
         $githubInstallation = new Document(['$id' => 'install-github', 'provider' => 'github']);
 
         $dbForPlatform = $this->createMock(Database::class);
-        $authorization = $this->createMock(Authorization::class);
+        $authorization = $this->createStub(Authorization::class);
 
         $dbForPlatform->method('find')->willReturn([$giteaRepository, $githubRepository]);
 

@@ -30,9 +30,8 @@ return [
             'CLIENT_SECRET' => '_APP_VCS_GITEA_CLIENT_SECRET',
             'WEBHOOK_SECRET' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
         ],
-        // WEBHOOK_SECRET is required (unlike GitHub's) because a Gitea webhook
-        // has no other verification layer -- GitHub App deliveries also carry
-        // a signed JWT Appwrite always validates independently of the secret.
+        // Unlike GitHub's legacy optional secret, Gitea webhooks must always
+        // have a shared secret because Appwrite creates them directly.
         'requiredEnvVariables' => ['ENDPOINT', 'CLIENT_ID', 'CLIENT_SECRET', 'WEBHOOK_SECRET'],
     ],
 ];

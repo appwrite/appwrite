@@ -4,32 +4,14 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-// Reference Material
-// https://docs.gitea.com/development/oauth2-provider
-
 class Gitea extends OAuth2
 {
-    /**
-     * @var string
-     */
     protected string $endpoint = '';
 
-    /**
-     * @var array
-     */
     protected array $user = [];
 
-    /**
-     * @var array
-     */
     protected array $tokens = [];
 
-    /**
-     * @var array
-     */
-    // The resulting personal token is reused for every VCS operation on the
-    // installation (list/create repos, read contents, create webhooks,
-    // comment on PRs) via Factory::fromInstallation(), not just login.
     protected array $scopes = [
         'read:user',
         'read:repository',
@@ -39,25 +21,16 @@ class Gitea extends OAuth2
         'write:issue',
     ];
 
-    /**
-     * Set the URL of the Gitea instance (self-hosted).
-     */
     public function setEndpoint(string $endpoint): void
     {
         $this->endpoint = \rtrim($endpoint, '/');
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return 'gitea';
     }
 
-    /**
-     * @return string
-     */
     public function getLoginURL(): string
     {
         return $this->endpoint . '/login/oauth/authorize?' . \http_build_query([
@@ -69,11 +42,6 @@ class Gitea extends OAuth2
         ]);
     }
 
-    /**
-     * @param string $code
-     *
-     * @return array
-     */
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
@@ -96,11 +64,6 @@ class Gitea extends OAuth2
         return $this->tokens;
     }
 
-    /**
-     * @param string $refreshToken
-     *
-     * @return array
-     */
     public function refreshTokens(string $refreshToken): array
     {
         $response = $this->request(
@@ -124,11 +87,6 @@ class Gitea extends OAuth2
         return $this->tokens;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -136,11 +94,6 @@ class Gitea extends OAuth2
         return \strval($user['id'] ?? '');
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -148,11 +101,6 @@ class Gitea extends OAuth2
         return $user['email'] ?? '';
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return bool
-     */
     public function isEmailVerified(string $accessToken): bool
     {
         $user = $this->getUser($accessToken);
@@ -160,11 +108,6 @@ class Gitea extends OAuth2
         return $user['verified'] ?? false;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -172,11 +115,6 @@ class Gitea extends OAuth2
         return $user['full_name'] ?? '';
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserSlug(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -184,11 +122,6 @@ class Gitea extends OAuth2
         return $user['login'] ?? '';
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return array
-     */
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
