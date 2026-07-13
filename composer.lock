@@ -4413,12 +4413,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "921490d3866fa7bc457d706d2a3993245f96eefc"
+                "reference": "91abadd68b1760f006a6040cadbca25c9d18aaa7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/921490d3866fa7bc457d706d2a3993245f96eefc",
-                "reference": "921490d3866fa7bc457d706d2a3993245f96eefc",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/91abadd68b1760f006a6040cadbca25c9d18aaa7",
+                "reference": "91abadd68b1760f006a6040cadbca25c9d18aaa7",
                 "shasum": ""
             },
             "require": {
@@ -4478,7 +4478,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/skip-override-migration",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-07-09T20:40:45+00:00"
+            "time": "2026-07-13T08:33:22+00:00"
         },
         {
             "name": "utopia-php/mongo",
