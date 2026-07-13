@@ -903,36 +903,10 @@ function BillingDedicatedDbSpecGroup({
   group: DedicatedDbBillingSpecGroup
 }) {
   const t = useT()
-  const hasMultipleItems = group.items.length > 1
 
-  if (!hasMultipleItems && group.items.length === 1) {
-    const item = group.items[0]!
-    const usageLabel = formatDedicatedDbBillingUsageLabel(
-      item.usage,
-      item.metricId,
-      item.formatType,
-    )
-    return (
-      <BillingProjectResourceRow
-        resource={{
-          resourceId: item.resourceId,
-          name: `${group.title} · ${item.metricLabel}`,
-          usage: item.usage,
-          limit: item.limit,
-          cost: item.cost,
-          formatType: item.formatType,
-          showLimit: item.showLimit,
-          category: 'dedicated-databases',
-          usageLabel,
-          usageDescription: getDedicatedDbBillingUsageDescription(
-            item.metricId,
-            item.formatType,
-          ),
-        }}
-      />
-    )
-  }
-
+  // Always use the nested group card, even when only compute remains after
+  // zero-usage siblings are filtered out (e.g. Standard with 0 storage/bandwidth).
+  // Flattening single-item groups made those tiers look inconsistent with Starter.
   return (
     <div className="rounded-lg border border-border/70 bg-muted/15 overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-3 py-2 border-b border-border/70">
