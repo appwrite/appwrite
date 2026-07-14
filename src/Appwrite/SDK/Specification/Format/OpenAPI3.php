@@ -419,18 +419,7 @@ class OpenAPI3 extends Format
                 $temp['security'][] = $securities;
             }
 
-            $body = [
-                'content' => [
-                    $consumes[0]  => [
-                        'schema'  => [
-                            'type' => 'object',
-                            'properties' => [],
-                        ],
-                    ],
-                ],
-            ];
-
-            $bodyRequired = [];
+            $parameterNodes = [];
 
             $parameters = \array_merge(
                 $route->getParams(),
@@ -826,55 +815,12 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if ($isPathParam) { // Param is in URL path (directly or through alias)
-                    $node['in'] = 'path';
-                    $temp['parameters'][] = $node;
-                } elseif (\in_array($route->getMethod(), ['GET', 'DELETE'], true)) { // Param is in query
-                    $node['in'] = 'query';
-                    $temp['parameters'][] = $node;
-                } else { // Param is in payload
-                    if ($node['required']) {
-                        $bodyRequired[] = $name;
-                    }
-
-                    $body['content'][$consumes[0]]['schema']['properties'][$name] = [
-                        'type' => $node['schema']['type'],
-                        'description' => $node['description'],
-                    ];
-
-                    if (\array_key_exists('default', $node['schema'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
-                    }
-
-                    $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
-
-                    if (isset($node['schema']['format'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
-                    }
-
-                    if (isset($node['schema']['enum'])) {
-                        /// If the enum flag is Set, add the enum values to the body
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
-                    }
-
-                    if ($node['schema']['x-upload-id'] ?? false) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
-                    }
-
-                    if (isset($node['schema']['x-appwrite'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['schema']['x-appwrite'];
-                    }
-
-                    if (\array_key_exists('items', $node['schema'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
-                    }
-
-                    if ($parameter['nullable']) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
-                    }
-                }
+                $parameterNodes[] = [
+                    'name' => $name,
+                    'config' => $parameter,
+                    'node' => $node,
+                    'path' => $isPathParam,
+                ];
 
                 $segments = \explode('/', $url);
                 foreach ($segments as &$segment) {
@@ -886,15 +832,90 @@ class OpenAPI3 extends Format
                 $url = \implode('/', $segments);
             }
 
-            if (!empty($bodyRequired)) {
-                $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
-            }
+            $methods = $route->getMethods();
+            foreach ($methods as $method) {
+                $methodTemp = $temp;
+                if (\count($methods) > 1) {
+                    $methodTemp['operationId'] .= \ucfirst(\strtolower($method));
+                }
+                $body = [
+                    'content' => [
+                        $consumes[0]  => [
+                            'schema'  => [
+                                'type' => 'object',
+                                'properties' => [],
+                            ],
+                        ],
+                    ],
+                ];
+                $bodyRequired = [];
 
-            if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
-                $temp['requestBody'] = $body;
-            }
+                foreach ($parameterNodes as $parameterNode) {
+                    $name = $parameterNode['name'];
+                    $parameter = $parameterNode['config'];
+                    $node = $parameterNode['node'];
 
-            $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
+                    if ($parameterNode['path']) { // Param is in URL path (directly or through alias)
+                        $node['in'] = 'path';
+                        $methodTemp['parameters'][] = $node;
+                    } elseif (\in_array($method, ['GET', 'DELETE'], true)) { // Param is in query
+                        $node['in'] = 'query';
+                        $methodTemp['parameters'][] = $node;
+                    } else { // Param is in payload
+                        if ($node['required']) {
+                            $bodyRequired[] = $name;
+                        }
+
+                        $body['content'][$consumes[0]]['schema']['properties'][$name] = [
+                            'type' => $node['schema']['type'],
+                            'description' => $node['description'],
+                        ];
+
+                        if (\array_key_exists('default', $node['schema'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['schema']['default'];
+                        }
+
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-example'] = $node['schema']['x-example'] ?? null;
+
+                        if (isset($node['schema']['format'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
+                        }
+
+                        if (isset($node['schema']['enum'])) {
+                            /// If the enum flag is Set, add the enum values to the body
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'];
+                        }
+
+                        if ($node['schema']['x-upload-id'] ?? false) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
+                        }
+
+                        if (isset($node['schema']['x-appwrite'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['schema']['x-appwrite'];
+                        }
+
+                        if (\array_key_exists('items', $node['schema'])) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
+                        }
+
+                        if ($parameter['nullable']) {
+                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
+                        }
+                    }
+                }
+
+                if (!empty($bodyRequired)) {
+                    $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
+                }
+
+                if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                    $methodTemp['requestBody'] = $body;
+                }
+
+                $output['paths'][$url][\strtolower($method)] = $methodTemp;
+            }
         }
 
         foreach ($this->models as $model) {

@@ -1313,7 +1313,7 @@ Http::error()
             $log->setMessage($error->getMessage());
 
             $log->addTag('database', $dsn->getHost());
-            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
+            $log->addTag('method', \implode(',', $route?->getMethods() ?? [$request->getMethod()]));
             $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
