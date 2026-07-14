@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Branches;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -53,7 +54,7 @@ class XList extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -64,7 +65,7 @@ class XList extends Action
         string $providerRepositoryId,
         string $search,
         array $queries,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -81,7 +82,7 @@ class XList extends Action
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $vcs = $vcsForInstallation($installation);
+        $vcs = $vcsFactory->fromInstallation($installation);
 
         $owner = $vcs->getOwnerName($providerInstallationId);
         try {

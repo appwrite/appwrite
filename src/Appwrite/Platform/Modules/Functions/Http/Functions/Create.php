@@ -20,6 +20,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Vcs\Factory as VcsFactory;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
@@ -129,7 +130,7 @@ class Create extends Base
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -174,7 +175,7 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Authorization $authorization,
         array $platform
     ) {
@@ -347,7 +348,7 @@ class Create extends Base
                     publisherForBuilds: $publisherForBuilds,
                     jobs: $jobs,
                     template: $template,
-                    vcs: $vcsForInstallation($installation),
+                    vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,
