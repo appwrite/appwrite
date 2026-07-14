@@ -66,19 +66,6 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
-                case 'installations':
-                    if ($collectionType === 'console') {
-                        foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
-                            try {
-                                $this->dbForProject->updateAttribute($id, $attribute, size: 2048);
-                            } catch (Throwable $th) {
-                                Console::warning("Failed to resize attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
-                            }
-                        }
-                    }
-                    $this->dbForProject->purgeCachedCollection($id);
-                    break;
-
                 case 'databases':
                     if ($collectionType === 'projects') {
                         try {
