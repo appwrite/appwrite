@@ -6,13 +6,13 @@
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/telemetry.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
-Utopia Telemetry is a powerful Telemtry library. This library is aiming to be as simple and easy to learn and use. This library is maintained by the [Appwrite team](https://appwrite.io).
+Utopia Telemetry is a powerful telemetry library. This library is aiming to be as simple and easy to learn and use. This library is maintained by the [Appwrite team](https://appwrite.io).
 
 Although this library is part of the [Utopia System](https://github.com/utopia-php) project it is dependency free and can be used as standalone with any other PHP project or framework.
 
-## Getting Started
+## Getting started
 
-Install using composer:
+Install using Composer:
 
 ```bash
 composer require utopia-php/telemetry
@@ -36,7 +36,7 @@ $telemetry->collect();
 \Swoole\Timer::tick(60_000, fn () => $telemetry->collect());
 ```
 
-## Metric Types
+## Metric types
 
 ### Counter
 
@@ -49,7 +49,7 @@ $counter->add(1);
 $counter->add(1, ['method' => 'GET', 'status' => '200']);
 ```
 
-### UpDownCounter
+### `UpDownCounter`
 
 A counter that can increase or decrease. Useful for tracking values like active connections.
 
@@ -82,7 +82,7 @@ $gauge->record(1_073_741_824);
 $gauge->record(536_870_912, ['host' => 'server-1']);
 ```
 
-### ObservableGauge
+### `ObservableGauge`
 
 An asynchronous gauge whose value is collected via a callback at export time. Useful for values that are expensive to compute or come from an external source (e.g. CPU usage, queue depth).
 
@@ -97,7 +97,7 @@ $observableGauge->observe(function (callable $observer): void {
 });
 ```
 
-## System Requirements
+## System requirements
 
 Utopia Framework requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.
 
