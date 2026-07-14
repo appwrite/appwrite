@@ -17,8 +17,6 @@ use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -35,6 +33,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -450,15 +449,9 @@ class Create extends Action
                     providerType: 'SMS',
                 ));
 
-                $helper = PhoneNumberUtil::getInstance();
-                try {
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (! empty($countryCode)) {
-                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
-                } catch (NumberParseException $e) {
-                    // Ignore invalid phone number for country code stats
+                $countryCode = CallingCode::fromPhoneNumber($phone);
+                if (! empty($countryCode)) {
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
                 $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
             }

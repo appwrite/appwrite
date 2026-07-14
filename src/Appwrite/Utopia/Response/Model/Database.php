@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Document;
 
 class Database extends Model
 {
@@ -57,21 +56,6 @@ class Database extends Model
                 'enumSDKName' => 'DatabaseStatus',
                 'required' => false
             ]);
-    }
-
-    /**
-     * A null status is treated as ready.
-     *
-     * @param Document $document
-     * @return Document
-     */
-    public function filter(Document $document): Document
-    {
-        if (empty($document->getAttribute('status'))) {
-            $document->setAttribute('status', 'ready');
-        }
-
-        return $document;
     }
 
     /**
