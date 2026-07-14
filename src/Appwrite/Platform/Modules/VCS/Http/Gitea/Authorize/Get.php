@@ -30,7 +30,16 @@ class Get extends Base
             System::getEnv('_APP_VCS_GITEA_CLIENT_ID', ''),
             System::getEnv('_APP_VCS_GITEA_CLIENT_SECRET', ''),
             $callback,
-            $state
+            $state,
+            // VCS-specific scopes -- the adapter's own default is just
+            // read:user, enough for a plain "sign in with Gitea".
+            [
+                'read:repository',
+                'write:repository',
+                'read:organization',
+                'read:issue',
+                'write:issue',
+            ]
         );
 
         // The login page is opened by the browser, which may reach Gitea on a

@@ -14,11 +14,6 @@ class Gitea extends OAuth2
 
     protected array $scopes = [
         'read:user',
-        'read:repository',
-        'write:repository',
-        'read:organization',
-        'read:issue',
-        'write:issue',
     ];
 
     public function setEndpoint(string $endpoint): void
