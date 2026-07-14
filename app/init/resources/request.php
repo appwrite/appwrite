@@ -538,7 +538,7 @@ return function (Container $context): void {
                 }
 
                 $expire = $session->getAttribute('expire');
-                if (!empty($expire) && DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($expire))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
                     throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. Session ID is expired.');
                 }
             }
