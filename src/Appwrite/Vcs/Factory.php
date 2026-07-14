@@ -40,8 +40,8 @@ class Factory
             return false;
         }
 
-        foreach ($this->registry[$key]['requiredEnvVariables'] ?? [] as $name) {
-            if (empty($this->getEnv($key, $name))) {
+        foreach ($this->registry[$key]['variables'] ?? [] as $name => $variable) {
+            if (($variable['required'] ?? false) && empty($this->getEnv($key, $name))) {
                 return false;
             }
         }
@@ -57,7 +57,7 @@ class Factory
 
         $adapter = new ($this->registry[$key]['adapter'])($this->cache);
 
-        $endpoint = $this->getEnv($key, 'ENDPOINT');
+        $endpoint = $this->getEnv($key, 'endpoint');
         if (!empty($endpoint) && \method_exists($adapter, 'setEndpoint')) {
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
         }
@@ -80,8 +80,8 @@ class Factory
 
         $adapter->initializeVariables(
             $installation->getAttribute('providerInstallationId', ''),
-            $this->getEnv($provider, 'PRIVATE_KEY'),
-            $this->getEnv($provider, 'APP_ID'),
+            $this->getEnv($provider, 'privateKey'),
+            $this->getEnv($provider, 'appId'),
             $installation->getAttribute('personalAccessToken', ''),
             $installation->getAttribute('personalRefreshToken', ''),
         );
@@ -91,12 +91,12 @@ class Factory
 
     public function getWebhookSecret(string $key): string
     {
-        return $this->getEnv($key, 'WEBHOOK_SECRET');
+        return $this->getEnv($key, 'webhookSecret');
     }
 
     protected function getEnv(string $key, string $name): string
     {
-        $variable = $this->registry[$key]['envVariables'][$name] ?? '';
+        $variable = $this->registry[$key]['variables'][$name]['envVariable'] ?? '';
 
         return empty($variable) ? '' : System::getEnv($variable, '');
     }

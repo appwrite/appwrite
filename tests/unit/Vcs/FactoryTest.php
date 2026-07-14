@@ -28,9 +28,9 @@ final class FactoryTest extends TestCase
 
         foreach ($registry as $key => $entry) {
             $this->assertTrue(\is_subclass_of($entry['adapter'], Git::class), "Adapter for '{$key}' must extend Git");
-            $this->assertNotEmpty($entry['requiredEnvVariables'], "Required env variables missing for '{$key}'");
-            foreach ($entry['requiredEnvVariables'] as $required) {
-                $this->assertStringStartsWith('_APP_VCS_', $entry['envVariables'][$required] ?? '', "Env variable for required key '{$required}' missing or invalid for '{$key}'");
+            $this->assertNotEmpty($entry['variables'], "Variables missing for '{$key}'");
+            foreach ($entry['variables'] as $name => $variable) {
+                $this->assertStringStartsWith('_APP_VCS_', $variable['envVariable'] ?? '', "Env variable for '{$name}' missing or invalid for '{$key}'");
             }
         }
     }
@@ -74,8 +74,9 @@ final class FactoryTest extends TestCase
     {
         $entry = [
             'adapter' => GitHub::class,
-            'envVariables' => ['TOKEN' => '_APP_VCS_TEST_TOKEN'],
-            'requiredEnvVariables' => ['TOKEN'],
+            'variables' => [
+                'token' => ['required' => true, 'envVariable' => '_APP_VCS_TEST_TOKEN'],
+            ],
         ];
         $factory = new Factory($this->cache(), ['test' => $entry]);
 
@@ -111,15 +112,14 @@ final class FactoryTest extends TestCase
     {
         return [
             'adapter' => GitHub::class,
-            'envVariables' => [
-                'APP_NAME' => '_APP_VCS_GITHUB_APP_NAME',
-                'PRIVATE_KEY' => '_APP_VCS_GITHUB_PRIVATE_KEY',
-                'APP_ID' => '_APP_VCS_GITHUB_APP_ID',
-                'CLIENT_ID' => '_APP_VCS_GITHUB_CLIENT_ID',
-                'CLIENT_SECRET' => '_APP_VCS_GITHUB_CLIENT_SECRET',
-                'WEBHOOK_SECRET' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
+            'variables' => [
+                'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
+                'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],
+                'appId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_ID'],
+                'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_ID'],
+                'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_CLIENT_SECRET'],
+                'webhookSecret' => ['required' => false, 'envVariable' => '_APP_VCS_GITHUB_WEBHOOK_SECRET'],
             ],
-            'requiredEnvVariables' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
         ];
     }
 }
