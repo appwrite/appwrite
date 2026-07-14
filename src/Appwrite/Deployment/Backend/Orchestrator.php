@@ -179,8 +179,13 @@ readonly class Orchestrator extends Backend
         // prints status/size (never the URL, which carries the access token)
         // into buildLogs. Remove once root-caused.
         $probeScript = "require('http').get(process.argv[1], r => { let s=0; r.on('data',c=>s+=c.length); r.on('end',()=>console.error('[vcs-source-probe-sidecar] status='+r.statusCode+' size='+s)); }).on('error', e => console.error('[vcs-source-probe-sidecar] error='+e.message));";
+        // Stop guessing about subdir/unarchive semantics -- just show what the
+        // artifact system actually placed at OPEN_RUNTIMES_BUILD_INPUT_DIR
+        // right before build.sh reads it. `find` over `ls` since we need to
+        // see into any unexpected nesting depth.
+        $listingProbe = 'echo "[vcs-source-probe-listing]"; find /mnt/code/source -maxdepth 4 2>&1 || echo "[vcs-source-probe-listing] /mnt/code/source missing"; ';
         $sourceProbe = $source !== null
-            ? 'node -e ' . \escapeshellarg($probeScript) . ' ' . \escapeshellarg($source['url']) . ' || echo "[vcs-source-probe-sidecar] node unavailable or failed"; '
+            ? 'node -e ' . \escapeshellarg($probeScript) . ' ' . \escapeshellarg($source['url']) . ' || echo "[vcs-source-probe-sidecar] node unavailable or failed"; ' . $listingProbe
             : '';
 
         return [
