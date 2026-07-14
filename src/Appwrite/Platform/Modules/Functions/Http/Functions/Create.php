@@ -21,6 +21,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
@@ -43,6 +44,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -131,6 +133,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -176,6 +179,7 @@ class Create extends Base
         Database $dbForPlatform,
         Request $request,
         VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         array $platform
     ) {
@@ -305,6 +309,18 @@ class Create extends Base
                 'resourceType' => 'function',
                 'providerPullRequestIds' => []
             ]));
+
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
 
             $function->setAttribute('repositoryId', $repository->getId());
             $function->setAttribute('repositoryInternalId', $repository->getSequence());

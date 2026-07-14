@@ -87,6 +87,7 @@ class Get extends Action
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
+            '_APP_VCS_PROVIDERS' => $vcsProviders(),
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],
