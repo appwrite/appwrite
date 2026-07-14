@@ -102,6 +102,8 @@ export function InlineTableCell({
     ) ?? originalValue
   const isEdited =
     editSession?.isCellEdited(tableId, rowId, columnKey) ?? false
+  // Encrypted values stay blurred until the cell is hovered.
+  const blurEncryptedValue = Boolean(resolvedColumnInfo.encrypt) && !isNull
 
   const startEditing = useCallback(
     (event?: MouseEvent) => {
@@ -273,7 +275,7 @@ export function InlineTableCell({
   if (!editable) {
     return (
       <div
-        className={cn(CELL_SURFACE_CLASS, className)}
+        className={cn(CELL_SURFACE_CLASS, blurEncryptedValue && 'group', className)}
         title={title}
         onClick={(event) => {
           event.stopPropagation()
@@ -288,6 +290,8 @@ export function InlineTableCell({
           className={cn(
             'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
             isNull ? 'text-foreground/60' : 'text-foreground',
+            blurEncryptedValue &&
+              'select-none blur-[5px] transition-[filter] duration-150 group-hover:blur-none group-focus-within:blur-none',
           )}
           dir={dir}
         >
@@ -432,6 +436,7 @@ export function InlineTableCell({
         CELL_SURFACE_CLASS,
         isEdited && 'bg-amber-500/20',
         !isEdited && 'hover:bg-muted/60',
+        blurEncryptedValue && 'group',
         className,
       )}
       title={
@@ -453,6 +458,8 @@ export function InlineTableCell({
           'block min-w-0 max-w-full truncate whitespace-nowrap text-[12px]',
           isNull ? 'text-foreground/60' : 'text-foreground',
           isEdited && 'font-medium text-amber-950 dark:text-amber-50',
+          blurEncryptedValue &&
+            'select-none blur-[5px] transition-[filter] duration-150 group-hover:blur-none group-focus-within:blur-none',
         )}
         dir={dir}
       >

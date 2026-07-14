@@ -6,6 +6,7 @@ import {
   useDeletePostgresTableRows,
   usePostgresTableRows,
 } from '@/lib/react-query/hooks'
+import { useProject } from '@/lib/react-query/hooks/projects'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   buildListSearchParams,
@@ -59,6 +60,7 @@ export function PostgresTableRowsView({
   const navigate = useNavigate()
   const location = useLocation()
   const routeSearch = useSearch({ strict: false }) as Record<string, unknown> | undefined
+  const { project } = useProject(projectId)
 
   const { canWrite, writeTooltip } = useDatabaseTableOperationsAccess({
     permissionDeniedTooltip: t("You don't have permission to modify rows."),
