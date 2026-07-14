@@ -9,6 +9,8 @@ type SchemaVisualizerRelationshipEdgesProps = {
   /** Layout extent (px) so lines are not clipped; should match node positions. */
   extent?: { width: number; height: number }
   className?: string
+  /** When false, connectors are plain lines with no arrowheads. Defaults to true. */
+  showArrowHeads?: boolean
 }
 
 function resolveEdgeCanvasExtent(
@@ -38,6 +40,7 @@ export function SchemaVisualizerRelationshipEdges({
   paths,
   extent,
   className,
+  showArrowHeads = true,
 }: SchemaVisualizerRelationshipEdgesProps) {
   const reactId = useId()
   const markerId = `schema-visualizer-arrow-${reactId.replace(/:/g, '')}`
@@ -61,23 +64,25 @@ export function SchemaVisualizerRelationshipEdges({
       }}
       aria-hidden
     >
-      <defs>
-        <marker
-          id={markerId}
-          markerWidth="10"
-          markerHeight="10"
-          refX="9"
-          refY="5"
-          orient="auto"
-          markerUnits="userSpaceOnUse"
-        >
-          <polygon
-            points="0 0, 10 5, 0 10"
-            className="fill-foreground"
-            opacity={RELATIONSHIP_EDGE_OPACITY}
-          />
-        </marker>
-      </defs>
+      {showArrowHeads ? (
+        <defs>
+          <marker
+            id={markerId}
+            markerWidth="10"
+            markerHeight="10"
+            refX="9"
+            refY="5"
+            orient="auto"
+            markerUnits="userSpaceOnUse"
+          >
+            <polygon
+              points="0 0, 10 5, 0 10"
+              className="fill-foreground"
+              opacity={RELATIONSHIP_EDGE_OPACITY}
+            />
+          </marker>
+        </defs>
+      ) : null}
       <g>
         {paths.map((path, index) => (
           <path
@@ -89,7 +94,7 @@ export function SchemaVisualizerRelationshipEdges({
             strokeLinejoin="round"
             strokeLinecap="round"
             strokeDasharray="3 5"
-            markerEnd={`url(#${markerId})`}
+            markerEnd={showArrowHeads ? `url(#${markerId})` : undefined}
             opacity={RELATIONSHIP_EDGE_OPACITY}
           />
         ))}

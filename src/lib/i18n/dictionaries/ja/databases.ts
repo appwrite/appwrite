@@ -617,6 +617,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'No active filters on the table.': 'テーブルにアクティブなフィルターはありません。',
   'No algorithms found': 'アルゴリズムが見つかりません',
   'No backup policies': 'バックアップポリシーがありません',
+  'No backup policies configured. Create a policy to automate backups.':
+    'バックアップポリシーが設定されていません。自動バックアップを行うポリシーを作成してください。',
   'No backups yet': 'バックアップがまだありません',
   'No buckets': 'バケットがありません',
   'No client connections': 'クライアント接続がありません',
@@ -1449,7 +1451,9 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'High availability': '高可用性',
   'Cluster topology': 'クラスタトポロジ',
   'Primary instance': 'プライマリインスタンス',
+  Primary: 'プライマリ',
   'Read replica': '読み取りレプリカ',
+  Replica: 'レプリカ',
   'A single primary handles reads and writes. Add replicas to scale read traffic and improve failover.':
     '単一のプライマリが読み書きを処理します。レプリカを追加すると読み取りトラフィックをスケールし、フェイルオーバーを改善できます。',
   'The primary accepts writes and replicates changes to read replicas for query scaling and faster recovery.':

@@ -652,6 +652,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'vs last week': '先週比',
   // Usage section
   'Reads': '読み取り',
+  'Read and write operations': '読み取りと書き込みのオペレーション',
   'Writes': '書き込み',
   'API Requests': 'API リクエスト',
   'Approaching limit': '上限に近づいています',

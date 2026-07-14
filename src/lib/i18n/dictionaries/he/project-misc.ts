@@ -1159,6 +1159,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'vs last week': 'לעומת שבוע שעבר',
   // Usage section
   'Reads': 'קריאות',
+  'Read and write operations': 'פעולות קריאה וכתיבה',
   'Writes': 'כתיבות',
   'API Requests': 'בקשות API',
   'Approaching limit': 'מתקרב למגבלה',

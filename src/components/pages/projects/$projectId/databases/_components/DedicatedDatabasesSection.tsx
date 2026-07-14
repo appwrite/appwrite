@@ -42,15 +42,19 @@ import {
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
-  ResourceCard,
   RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+  RESOURCE_CARD_PADDED_CLASSNAME,
 } from '../../shared/ResourceCard'
 import {
   DedicatedDatabaseRegionUnavailableBadge,
   DedicatedDatabaseRegionUnavailableCard,
 } from './DedicatedDatabaseRegionUnavailableCard'
+import { DatabaseClusterPreview, clusterNodeStatusesFromDatabaseStatus, mockDatabaseConnections } from './DatabaseClusterPreview'
 import { useT } from '@/lib/i18n/translate'
 import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
+import { getStatusColor } from '@/lib/utils/status-badge'
 
 type DedicatedDatabasesSectionProps = {
   projectId: string
@@ -227,45 +231,94 @@ function DedicatedDatabaseCard({
   showEngineMetadata?: boolean
 }) {
   const t = useT()
+  const Icon = (icon ?? Cpu) as LucideIcon
   const link = dedicatedDatabaseHomeLink(
     projectId,
     db,
     productRouteKindByDedicatedId.get(db.$id),
   )
+  const status = dedicatedStatusVariant(db.status)
+  const statusLabel = localizeResourceStatusLabel(db.status, t)
+
   const card = (
-    <ResourceCard
-      interactive={!!link}
-      title={db.name}
-      resourceId={db.$id}
-      icon={(icon ?? Cpu) as LucideIcon}
-      iconColor="bg-muted text-muted-foreground"
-      status={dedicatedStatusVariant(db.status)}
-      statusLabel={localizeResourceStatusLabel(db.status, t)}
-      metadata={[
-        ...(showEngineMetadata
-          ? [
-              {
-                label: 'Engine',
-                value: formatEngineLabel(db.engine),
-              },
-            ]
-          : []),
-        {
-          label: 'Tier',
-          value: db.specification || 'Not set',
-        },
-        {
-          label: 'Replicas',
-          value: db.replicas > 0 ? String(db.replicas) : 'None',
-        },
-      ]}
-    />
+    <div
+      className={cn(
+        RESOURCE_CARD_PADDED_CLASSNAME,
+        link && RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+        'pb-0',
+      )}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <h3 className="truncate text-[14px] font-medium text-foreground">
+              {db.name}
+            </h3>
+            <span
+              className={cn(
+                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                getStatusColor(status),
+              )}
+            >
+              {statusLabel}
+            </span>
+          </div>
+          <div className="mt-1.5">
+            <CopyableId id={db.$id} size="xs" maxWidth={120} />
+          </div>
+        </div>
+      </div>
+
+      <DatabaseClusterPreview
+        replicaCount={db.replicas ?? 0}
+        nodeStatuses={clusterNodeStatusesFromDatabaseStatus(
+          db.status,
+          db.replicas ?? 0,
+        )}
+      />
+
+      <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+          {showEngineMetadata ? (
+            <span className="truncate">
+              <span className="text-muted-foreground/80">{t('Engine')}</span>{' '}
+              <span className="font-medium text-foreground">
+                {formatEngineLabel(db.engine)}
+              </span>
+            </span>
+          ) : null}
+          <span className="truncate">
+            <span className="text-muted-foreground/80">{t('Tier')}</span>{' '}
+            <span className="font-medium text-foreground">
+              {db.specification || t('Not set')}
+            </span>
+          </span>
+          <span className="truncate">
+            <span className="text-muted-foreground/80">{t('Replicas')}</span>{' '}
+            <span className="font-medium text-foreground">
+              {db.replicas > 0 ? db.replicas : t('None')}
+            </span>
+          </span>
+          <span className="truncate">
+            <span className="text-muted-foreground/80">{t('Connections')}</span>{' '}
+            <span className="font-medium tabular-nums text-foreground">
+              {mockDatabaseConnections(
+                db.$id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0),
+              )}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
   )
 
   if (!link) return card
 
   return (
-    <Link {...link} className="block">
+    <Link {...link} className="block min-w-0">
       {card}
     </Link>
   )

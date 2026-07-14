@@ -722,6 +722,44 @@ export async function fetchProjectProductDatabases(
   }
 }
 
+/**
+ * Fetch paginated databases via the Console unified list API
+ * (`projectSdk.console.listDatabases`), which returns every database across
+ * product APIs in a single call.
+ */
+export async function fetchProjectConsoleDatabases(
+  projectId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  filterQueries?: string[],
+) {
+  if (!projectId) {
+    return { databases: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const searchArg = search?.trim() || undefined
+  const queries = [
+    ...(filterQueries ?? []),
+    ...(searchArg ? [Query.search('name', searchArg)] : []),
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+
+  const response = await projectSdk.console.listDatabases({ queries })
+
+  const databases = (response.databases ?? []).map((db) =>
+    normalizeProductDatabase(db, db.type ?? DatabaseType.Tablesdb),
+  )
+
+  return {
+    databases,
+    total: response.total ?? databases.length,
+  }
+}
+
 /** Fetch up to 7 databases by ID in three list calls (Documents, Vectors, Tables). */
 export async function fetchProjectDatabasesByIds(
   projectId: string,
@@ -3430,6 +3468,47 @@ export function productDatabasesQueryOptions(
   })
 }
 
+/**
+ * Query options for the Console unified database list
+ * (`projectSdk.console.listDatabases`).
+ */
+export function consoleDatabasesQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  filterQueries?: string[],
+) {
+  return queryOptions({
+    queryKey: [
+      'databases',
+      'project',
+      projectId,
+      'console',
+      page,
+      limit,
+      search,
+      filterQueries,
+    ],
+    queryFn: () =>
+      fetchProjectConsoleDatabases(
+        projectId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+      ),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 function mapProjectDatabaseListItems(
   databasesData:
     | { databases?: Models.Database[]; total?: number }
@@ -3916,6 +3995,50 @@ export function useProjectProductDatabases(
     productDatabasesQueryOptions(
       projectId,
       backend,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ),
+  )
+
+  const mapped = useMemo(
+    () => mapProjectDatabaseListItems(databasesData, limit),
+    [databasesData, limit],
+  )
+
+  return {
+    databases: mapped.databases,
+    total: mapped.total,
+    totalPages: mapped.totalPages,
+    isLoading,
+    isFetching,
+    isFetched,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch the Console unified database list for a project.
+ */
+export function useProjectConsoleDatabases(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  filterQueries?: string[],
+) {
+  const {
+    data: databasesData,
+    isLoading,
+    isFetching,
+    isFetched,
+    error,
+    refetch,
+  } = useQuery(
+    consoleDatabasesQueryOptions(
+      projectId,
       page,
       limit,
       search,

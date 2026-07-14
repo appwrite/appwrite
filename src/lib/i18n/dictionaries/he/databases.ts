@@ -617,6 +617,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'No active filters on the table.': 'אין מסננים פעילים על הטבלה.',
   'No algorithms found': 'לא נמצאו אלגוריתמים',
   'No backup policies': 'אין כללי מדיניות גיבוי',
+  'No backup policies configured. Create a policy to automate backups.':
+    'לא הוגדרו מדיניות גיבוי. צרו מדיניות כדי לבצע גיבויים אוטומטית.',
   'No backups yet': 'אין עדיין גיבויים',
   'No buckets': 'אין באקטים',
   'No client connections': 'אין חיבורי לקוח',
@@ -1509,7 +1511,9 @@ export const heDatabasesDictionary: Record<string, string> = {
   'High availability': 'זמינות גבוהה',
   'Cluster topology': 'טופולוגיית אשכול',
   'Primary instance': 'מופע primary',
+  Primary: 'Primary',
   'Read replica': 'Read replica',
+  Replica: 'Replica',
   'A single primary handles reads and writes. Add replicas to scale read traffic and improve failover.':
     'מופע primary יחיד מטפל בקריאות וכתיבות. הוסיפו replicas כדי להגדיל את תעבורת הקריאה ולשפר failover.',
   'The primary accepts writes and replicates changes to read replicas for query scaling and faster recovery.':

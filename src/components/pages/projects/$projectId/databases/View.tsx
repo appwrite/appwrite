@@ -48,6 +48,7 @@ import { CreateTable, createTableVariantForDbRoute } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
 import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
 import { DatabaseBackupsNavLink } from './_components/DatabaseBackupsNavLink'
+import { AllDatabasesSection } from './_components/AllDatabasesSection'
 import { DedicatedDatabasesSection } from './_components/DedicatedDatabasesSection'
 import { ProductDatabasesSection } from './_components/ProductDatabasesSection'
 
@@ -744,6 +745,10 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        {projectId ? (
+          <AllDatabasesSection projectId={projectId} viewMode={viewMode} />
+        ) : null}
+
         <div className="mb-4">
           <h2 className="text-[15px] font-semibold text-foreground">TablesDB</h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
