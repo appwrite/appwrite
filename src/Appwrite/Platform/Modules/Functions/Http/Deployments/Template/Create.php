@@ -13,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -83,8 +84,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
-            ->inject('vcsForInstallation')
-            ->inject('vcsForProvider')
+            ->inject('vcsFactory')
             ->inject('jobs')
             ->inject('authorization')
             ->inject('platform')
@@ -106,8 +106,7 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
-        callable $vcsForInstallation,
-        callable $vcsForProvider,
+        VcsFactory $vcsFactory,
         Jobs $jobs,
         Authorization $authorization,
         array $platform
@@ -145,7 +144,7 @@ class Create extends Base
                 dbForProject: $dbForProject,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                vcs: $vcsForInstallation($installation),
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
                 platform: $platform,
                 referenceType: $type,
@@ -204,7 +203,7 @@ class Create extends Base
                 try {
                     // Templates are public github.com repositories regardless of
                     // the function's own provider.
-                    $tags = $vcsForProvider('github')->listTags($owner, $repository, $reference);
+                    $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
                     $ref = \end($tags) ?: $reference;
                 } catch (\Throwable) {
                     // Fall back to the raw reference; the build surfaces a bad ref.

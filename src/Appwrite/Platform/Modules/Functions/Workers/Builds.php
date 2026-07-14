@@ -17,6 +17,7 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
@@ -91,8 +92,7 @@ class Builds extends Action
             ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('publisherForUsage')
-            ->inject('vcsForProvider')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
@@ -119,8 +119,7 @@ class Builds extends Action
         Realtime $queueForRealtime,
         Context $usage,
         UsagePublisher $publisherForUsage,
-        callable $vcsForProvider,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForSites,
@@ -151,7 +150,7 @@ class Builds extends Action
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                $templateVcs = $vcsForProvider('github');
+                $templateVcs = $vcsFactory->fromProvider('github');
                 $this->buildDeployment(
                     $deviceForFunctions,
                     $deviceForSites,
@@ -166,7 +165,7 @@ class Builds extends Action
                     $dbForPlatform,
                     $dbForProject,
                     $templateVcs,
-                    $vcsForInstallation,
+                    $vcsFactory,
                     $project,
                     $resource,
                     $deployment,
@@ -204,7 +203,7 @@ class Builds extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Git $templateVcs,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Document $project,
         Document $resource,
         Document $deployment,
@@ -325,7 +324,7 @@ class Builds extends Action
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
 
             try {
-                $providerAdapter = $vcsForInstallation($installation);
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
             } catch (\Exception $e) {
                 if ($e->getCode() === 404
                     && $resource->getAttribute('installationId', '') === $installationId) {

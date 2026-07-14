@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -73,7 +74,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('jobs')
             ->inject('platform')
             ->callback($this->action(...));
@@ -91,7 +92,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Jobs $jobs,
         array $platform,
     ) {
@@ -117,7 +118,7 @@ class Create extends Base
             dbForProject: $dbForProject,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            vcs: $vcsForInstallation($installation),
+            vcs: $vcsFactory->fromInstallation($installation),
             activate: $activate,
             platform: $platform,
             reference: $reference,

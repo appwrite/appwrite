@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,7 +54,7 @@ class Create extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('name', '', new Text(256), 'Repository name (slug)')
             ->param('private', '', new Boolean(false), 'Mark repository public or private')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('user')
             ->inject('response')
@@ -65,7 +66,7 @@ class Create extends Action
         string $installationId,
         string $name,
         bool $private,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Document $user,
         Response $response,
@@ -103,7 +104,7 @@ class Create extends Action
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $vcs = $vcsForInstallation($installation);
+            $vcs = $vcsFactory->fromInstallation($installation);
             $owner = $vcs->getOwnerName($providerInstallationId);
 
             try {

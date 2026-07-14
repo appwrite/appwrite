@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -104,7 +105,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->callback($this->action(...));
     }
@@ -138,7 +139,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Database $dbForPlatform,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks
     ) {
         if (!empty($adapter)) {
@@ -229,7 +230,7 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             try {
-                $providerAdapter = $vcsForInstallation($installation);
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
                 if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);

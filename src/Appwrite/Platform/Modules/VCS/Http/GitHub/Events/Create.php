@@ -8,6 +8,7 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -37,8 +38,7 @@ class Create extends Action
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
             ->inject('vcsWebhookSecret')
-            ->inject('vcsForProvider')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -52,8 +52,7 @@ class Create extends Action
 
     public function action(
         callable $vcsWebhookSecret,
-        callable $vcsForProvider,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Request $request,
         Response $response,
         Database $dbForPlatform,
@@ -65,7 +64,7 @@ class Create extends Action
     ) {
         $this->preprocessEvent($request);
 
-        $vcs = $vcsForProvider('github');
+        $vcs = $vcsFactory->fromProvider('github');
 
         $event = $request->getHeaderLine('x-github-event', '');
         Span::add('vcs.github.event.name', $event);
@@ -85,8 +84,8 @@ class Create extends Action
 
         match ($event) {
             GitHub::EVENT_INSTALLATION => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs),
-            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs),
+            GitHub::EVENT_PUSH => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs),
+            GitHub::EVENT_PULL_REQUEST => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs),
             default => null,
         };
 
@@ -185,7 +184,7 @@ class Create extends Action
 
     private function handlePushEvent(
         array $parsedPayload,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -213,7 +212,7 @@ class Create extends Action
         Span::add('vcs.github.event.branch', $providerBranch);
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
-        $vcs = $vcsForInstallation(new Document([
+        $vcs = $vcsFactory->fromInstallation(new Document([
             'provider' => 'github',
             'providerInstallationId' => $providerInstallationId,
         ]));
@@ -233,7 +232,7 @@ class Create extends Action
 
     private function handlePullRequestEvent(
         array $parsedPayload,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -267,7 +266,7 @@ class Create extends Action
                 return;
             }
 
-            $vcs = $vcsForInstallation(new Document([
+            $vcs = $vcsFactory->fromInstallation(new Document([
                 'provider' => 'github',
                 'providerInstallationId' => $providerInstallationId,
             ]));

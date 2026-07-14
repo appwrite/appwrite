@@ -386,10 +386,6 @@ $container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFact
 
 $container->set('vcsConfigured', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->isConfigured($provider), ['vcsFactory']);
 
-$container->set('vcsForInstallation', fn (VcsFactory $vcsFactory) => fn (Document $installation) => $vcsFactory->fromInstallation($installation), ['vcsFactory']);
-
-$container->set('vcsForProvider', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->fromProvider($provider), ['vcsFactory']);
-
 $container->set('vcsWebhookSecret', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->getWebhookSecret($provider), ['vcsFactory']);
 
 $container->set('plan', fn () => []);
