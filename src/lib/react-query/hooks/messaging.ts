@@ -21,6 +21,26 @@ import { bucketsQueryOptions } from './storage'
 /** Message detail: list targets page size (must match message detail View + route loader). */
 export const MESSAGE_DETAIL_TARGETS_LIMIT = 100
 
+/**
+ * Messaging log endpoints exist in the console API specs, but the installed
+ * `@appwrite.io/console` SDK omits `listMessageLogs` / related methods.
+ * Call the REST paths directly until the SDK is regenerated with them.
+ */
+function messagingUrl(projectId: string, path: string): URL {
+  const { client } = sdk.forProject(projectId)
+  return new URL(`${client.config.endpoint}/messaging${path}`)
+}
+
+async function listMessagingLogs(
+  projectId: string,
+  path: string,
+  queries: string[],
+): Promise<Models.LogList> {
+  return (await sdk
+    .forProject(projectId)
+    .client.call('get', messagingUrl(projectId, path), {}, { queries })) as Models.LogList
+}
+
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -468,11 +488,15 @@ export async function prefetchMessageDetailData(
         MESSAGE_DETAIL_TARGETS_LIMIT,
       ),
     ),
-    queryClient.ensureQueryData(
-      messageLogsQueryOptions(projectId, messageId, 0, DEFAULT_PAGE_SIZE),
-    ),
     queryClient.ensureQueryData(bucketsQueryOptions(projectId, 0, 100, '')),
   ])
+
+  // Logs power a dialog only; do not block navigation on them.
+  void queryClient
+    .prefetchQuery(
+      messageLogsQueryOptions(projectId, messageId, 0, DEFAULT_PAGE_SIZE),
+    )
+    .catch(() => {})
 
   const targetsOpts = messageTargetsQueryOptions(
     projectId,
@@ -857,10 +881,9 @@ export async function fetchMessageLogs(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.LogList> {
-  const projectSdk = sdk.forProject(projectId)
   // API only allows limit and offset for message logs (not orderAsc/orderDesc).
   const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return projectSdk.messaging.listMessageLogs({ messageId, queries })
+  return listMessagingLogs(projectId, `/messages/${messageId}/logs`, queries)
 }
 
 export function messageLogsQueryOptions(
@@ -889,10 +912,9 @@ export async function fetchTopicLogs(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.LogList> {
-  const projectSdk = sdk.forProject(projectId)
   // API only allows limit and offset for topic logs (not orderAsc/orderDesc).
   const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return projectSdk.messaging.listTopicLogs({ topicId, queries })
+  return listMessagingLogs(projectId, `/topics/${topicId}/logs`, queries)
 }
 
 export function topicLogsQueryOptions(
@@ -917,10 +939,9 @@ export async function fetchProviderLogs(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.LogList> {
-  const projectSdk = sdk.forProject(projectId)
   // API only allows limit and offset for provider logs (not orderAsc/orderDesc).
   const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return projectSdk.messaging.listProviderLogs({ providerId, queries })
+  return listMessagingLogs(projectId, `/providers/${providerId}/logs`, queries)
 }
 
 export function providerLogsQueryOptions(
@@ -945,13 +966,13 @@ export async function fetchSubscriberLogs(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.LogList> {
-  const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
-  return projectSdk.messaging.listSubscriberLogs({ subscriberId, queries })
+  // API only allows limit and offset for subscriber logs (not orderAsc/orderDesc).
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
+  return listMessagingLogs(
+    projectId,
+    `/subscribers/${subscriberId}/logs`,
+    queries,
+  )
 }
 
 export function subscriberLogsQueryOptions(
