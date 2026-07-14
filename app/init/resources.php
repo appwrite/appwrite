@@ -19,6 +19,8 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -377,6 +379,8 @@ $container->set('servers', function () {
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+$container->set('installationTokens', fn () => new InstallationTokens(), []);
+$container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 
 $container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFactory->getProviders(), ['vcsFactory']);
 
