@@ -295,8 +295,16 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && empty($user->find('$id', $jwtSessionId, 'sessions'))) {
-                $user = new User([]);
+            if (!empty($jwtSessionId)) {
+                $session = $user->find('$id', $jwtSessionId, 'sessions');
+                if (empty($session)) {
+                    throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. Session ID is invalid.');
+                }
+
+                $expire = $session->getAttribute('expire');
+                if (!empty($expire) && DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($expire))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                    throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. Session ID is expired.');
+                }
             }
         }
 
