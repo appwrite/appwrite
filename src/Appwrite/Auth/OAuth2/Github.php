@@ -112,7 +112,10 @@ class Github extends OAuth2
         }
 
         if (isset($tokens['error'])) {
-            throw new Exception(\json_encode($tokens) ?: $response, 400);
+            throw new Exception(\json_encode(
+                $tokens,
+                JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR,
+            ), 400);
         }
 
         if (empty($tokens['access_token'])) {

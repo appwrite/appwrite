@@ -40,6 +40,40 @@ final class GithubTest extends TestCase
         }
     }
 
+    public function testFormEncodedProviderError(): void
+    {
+        $github = $this->createGithub(
+            'error=bad_verification_code&error_description=The+code+passed+is+incorrect+or+expired.',
+            'expired-code',
+        );
+
+        try {
+            $github->getAccessToken('expired-code');
+            $this->fail('Expected the form-encoded GitHub OAuth2 provider error to be thrown.');
+        } catch (Exception $exception) {
+            $this->assertSame(AppwriteException::USER_OAUTH2_BAD_REQUEST, $exception->getType());
+            $this->assertSame('bad_verification_code', $exception->getError());
+            $this->assertSame('The code passed is incorrect or expired.', $exception->getErrorDescription());
+        }
+    }
+
+    public function testProviderErrorWithInvalidUtf8(): void
+    {
+        $github = $this->createGithub(
+            'error=bad_verification_code&error_description=Invalid+byte%3A+%FF',
+            'expired-code',
+        );
+
+        try {
+            $github->getAccessToken('expired-code');
+            $this->fail('Expected the GitHub OAuth2 provider error with invalid UTF-8 to be thrown.');
+        } catch (Exception $exception) {
+            $this->assertSame(AppwriteException::USER_OAUTH2_BAD_REQUEST, $exception->getType());
+            $this->assertSame('bad_verification_code', $exception->getError());
+            $this->assertSame('Invalid byte: �', $exception->getErrorDescription());
+        }
+    }
+
     public function testMissingAccessToken(): void
     {
         $github = $this->createGithub('{}');
