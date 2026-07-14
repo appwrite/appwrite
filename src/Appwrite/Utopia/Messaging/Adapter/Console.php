@@ -21,6 +21,7 @@ class Console extends Adapter
 
     public function __construct(protected Database $database)
     {
+        parent::__construct();
     }
 
     public function getName(): string
