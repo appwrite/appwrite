@@ -140,7 +140,7 @@ class Create extends Action
         Span::add('vcs.gitea.event.repo.name', $providerRepositoryName);
         Span::add('vcs.gitea.event.branch', $providerBranch);
 
-        if ($providerCommitAuthorEmail === APP_VCS_COMMIT_EMAIL || $providerBranchDeleted) {
+        if ($providerCommitAuthorEmail === APP_VCS_GITEA_EMAIL || $providerBranchDeleted) {
             return;
         }
 
