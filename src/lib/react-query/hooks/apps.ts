@@ -277,34 +277,50 @@ export function useOrganizationAppSecrets(appId: string | null | undefined) {
   }
 }
 
+export type CreateOrganizationAppInput = {
+  name: string
+  slug?: string
+  shortDescription?: string
+  description?: string
+  category?: string
+  redirectUri?: string
+  /** Defaults to false (marketplace draft). Pass true for Sign in with Appwrite setup. */
+  enabled?: boolean
+}
+
 export function useCreateOrganizationApp(
   organizationId: string | null | undefined,
 ) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: {
-      name: string
-      slug: string
-      shortDescription: string
-      description: string
-      category: string
-      redirectUri?: string
-    }) => {
+    mutationFn: async (input: CreateOrganizationAppInput) => {
       if (!organizationId) throw new Error('Organization ID is required')
 
-      const appId = sanitizeAppId(input.slug) || ID.unique()
-      const tags = [input.category]
+      // Custom slug (marketplace / explicit ID). Without a slug, always use a
+      // unique ID so quick-create flows never collide on sanitized names.
+      const appId = input.slug?.trim()
+        ? sanitizeAppId(input.slug) || ID.unique()
+        : ID.unique()
+      const description = (
+        input.description ||
+        input.shortDescription ||
+        input.name
+      ).trim()
+      const tagline = (input.shortDescription || input.name).trim()
+      const tags = input.category ? [input.category] : undefined
 
       return await sdk.forConsole.apps.create({
         appId,
         name: input.name.trim(),
-        redirectUris: [input.redirectUri?.trim() || defaultMarketplaceRedirectUri()],
-        description: input.description.trim() || input.shortDescription.trim(),
-        tagline: input.shortDescription.trim(),
+        redirectUris: [
+          input.redirectUri?.trim() || defaultMarketplaceRedirectUri(),
+        ],
+        description,
+        tagline,
         tags,
         teamId: organizationId,
-        enabled: false,
+        enabled: input.enabled ?? false,
         type: 'confidential',
       })
     },
@@ -362,13 +378,15 @@ export function useCreateOrganizationAppSecret(appId: string | null | undefined)
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async () => {
-      if (!appId) throw new Error('App ID is required')
-      return await sdk.forConsole.apps.createSecret({ appId })
+    mutationFn: async (options?: { appId?: string }) => {
+      const id = options?.appId || appId
+      if (!id) throw new Error('App ID is required')
+      return await sdk.forConsole.apps.createSecret({ appId: id })
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, options) => {
+      const id = options?.appId || appId
       await queryClient.refetchQueries({
-        queryKey: ['app', appId, 'secrets'],
+        queryKey: ['app', id, 'secrets'],
       })
     },
   })

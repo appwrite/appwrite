@@ -9,8 +9,10 @@ import {
 } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
+import { OAuthProvider, type Models } from '@appwrite.io/console'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { AppwriteProviderSetup } from './AppwriteProviderSetup'
+import { OAuth2ProviderHelpers } from './OAuth2ProviderHelpers'
 import {
   projectQueryOptions,
   useConsoleOAuth2Catalog,
@@ -533,9 +535,12 @@ function OidcProviderFormFields({
 function OAuth2RedirectUriCard({
   providerName,
   redirectUri,
+  autoRegistered = false,
 }: {
   providerName: string
   redirectUri: string
+  /** When true, the URI is already registered via quick setup (e.g. Appwrite provider). */
+  autoRegistered?: boolean
 }) {
   const t = useT()
   const [copied, setCopied] = useState(false)
@@ -557,28 +562,40 @@ function OAuth2RedirectUriCard({
           {t('Redirect URI')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          {t('Register this callback URL in the')} {providerName}{' '}
-          {t('developer console so OAuth sign-in can return to this project.')}
+          {autoRegistered
+            ? t(
+                'Quick setup registers this callback URL on your Appwrite app automatically. Verify it matches if you configure credentials manually.',
+              )
+            : (
+              <>
+                {t('Register this callback URL in the')} {providerName}{' '}
+                {t(
+                  'developer console so OAuth sign-in can return to this project.',
+                )}
+              </>
+            )}
         </p>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
-        <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal ps-4 [list-style-position:outside]">
-          <li>
-            {t('Open your')} {providerName}{' '}
-            {t("application in the provider's developer console.")}
-          </li>
-          <li>
-            {t(
-              'Find the allowed redirect URIs, callback URLs, or equivalent authorized redirect field.',
-            )}
-          </li>
-          <li>
-            {t(
-              'Paste the URI below exactly and save. Mismatched URLs will cause sign-in to fail.',
-            )}
-          </li>
-        </ol>
+        {!autoRegistered ? (
+          <ol className="text-[13px] text-muted-foreground space-y-2 list-decimal ps-4 [list-style-position:outside]">
+            <li>
+              {t('Open your')} {providerName}{' '}
+              {t("application in the provider's developer console.")}
+            </li>
+            <li>
+              {t(
+                'Find the allowed redirect URIs, callback URLs, or equivalent authorized redirect field.',
+              )}
+            </li>
+            <li>
+              {t(
+                'Paste the URI below exactly and save. Mismatched URLs will cause sign-in to fail.',
+              )}
+            </li>
+          </ol>
+        ) : null}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input
             id="oauth2-redirect-uri"
@@ -1031,9 +1048,13 @@ export function OAuth2ProvidersSection({
                     ? t(
                         'Enter the client ID and secret from your OpenID provider, then the well-known metadata URL. Manual endpoint URLs are only needed under Advanced configuration.',
                       )
-                    : t(
-                        'Use the field labels below as they appear in the provider dashboard when entering client credentials.',
-                      )}
+                    : selectedProviderId === OAuthProvider.Appwrite
+                      ? t(
+                          'Create or select an Appwrite app to fill credentials, or enter client ID and secret manually.',
+                        )
+                      : t(
+                          'Use the field labels below as they appear in the provider dashboard when entering client credentials.',
+                        )}
                 </p>
 
                 <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -1074,6 +1095,35 @@ export function OAuth2ProvidersSection({
                         advancedOpen={oidcAdvancedOpen}
                         onAdvancedOpenChange={setOidcAdvancedOpen}
                       />
+                    ) : selectedProviderId === OAuthProvider.Appwrite ? (
+                      <>
+                        <AppwriteProviderSetup
+                          organizationId={projectData?.teamId}
+                          redirectUri={redirectUri}
+                          disabled={updateMutation.isPending}
+                          onCredentials={(clientId, clientSecret) => {
+                            setFormFields((prev) => ({
+                              ...prev,
+                              clientId,
+                              clientSecret,
+                            }))
+                          }}
+                        />
+                        {selectedCatalog.parameters.map((param) => (
+                          <OAuth2ParameterField
+                            key={param.$id}
+                            param={param}
+                            providerId={selectedProviderId}
+                            formFields={formFields}
+                            setFormFields={setFormFields}
+                            initialEnabled={initialSnapshot?.enabled ?? false}
+                            formEnabled={formEnabled}
+                            validationTouched={validationTouched}
+                            formFieldErrors={formFieldErrors}
+                            fieldsDisabled={updateMutation.isPending}
+                          />
+                        ))}
+                      </>
                     ) : (
                       selectedCatalog.parameters.map((param) => (
                         <OAuth2ParameterField
@@ -1096,6 +1146,18 @@ export function OAuth2ProvidersSection({
                   <OAuth2RedirectUriCard
                     providerName={selectedName}
                     redirectUri={redirectUri}
+                    autoRegistered={
+                      selectedProviderId === OAuthProvider.Appwrite
+                    }
+                  />
+                ) : null}
+
+                {formEnabled && selectedProviderId && selectedName ? (
+                  <OAuth2ProviderHelpers
+                    projectId={projectId}
+                    endpoint={projectEndpoint}
+                    providerId={selectedProviderId}
+                    providerName={selectedName}
                   />
                 ) : null}
 

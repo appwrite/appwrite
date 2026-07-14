@@ -187,6 +187,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Clear when unused (e.g. transparent PNG).': '未使用時はクリア (例: 透過 PNG)。',
   'Click to upload or drag and drop': 'クリックしてアップロード、またはドラッグ&ドロップ',
   'Client ID': 'クライアント ID',
+  'Client ID and secret filled from your Appwrite app':
+    'Appwrite アプリからクライアント ID とシークレットを入力しました',
   'Client name': 'クライアント名',
   'Client type': 'クライアントタイプ',
   'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).':
@@ -1171,4 +1173,38 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'verified phone': '確認済み電話番号',
   'weeks': '週',
   'years': '年',
+  'A new client secret is created for this app so the value can be filled in securely.': 'このアプリ用に新しいクライアントシークレットを作成し、値を安全に入力できるようにします。',
+  'Create an Appwrite app or choose an existing one from your organization. We register the redirect URI and fill client ID and secret for you.': 'Appwrite アプリを作成するか、組織内の既存アプリを選択してください。リダイレクト URI を登録し、クライアント ID とシークレットを自動入力します。',
+  'Create and fill credentials': '作成して認証情報を入力',
+  'Create or select an Appwrite app to fill credentials, or enter client ID and secret manually.': 'Appwrite アプリを作成または選択して認証情報を入力するか、クライアント ID とシークレットを手動で入力してください。',
+  'Failed to create Appwrite app': 'Appwrite アプリの作成に失敗しました',
+  'Failed to use selected Appwrite app': '選択した Appwrite アプリの利用に失敗しました',
+  'My project sign-in': 'マイプロジェクトのサインイン',
+  'No Appwrite apps in this organization yet. Create one from the Create app tab.': 'この組織にはまだ Appwrite アプリがありません。作成タブからアプリを作成してください。',
+  'OAuth app for Sign in with Appwrite on this project.': 'このプロジェクトの Sign in with Appwrite 用 OAuth アプリ。',
+  'OAuth secret was created but the plaintext value was empty': 'OAuth シークレットは作成されましたが、平文の値が空でした',
+  'Organization app': '組織アプリ',
+  'Organization context is required to create or select an Appwrite app. Enter client ID and secret manually below.': 'Appwrite アプリを作成または選択するには組織コンテキストが必要です。下でクライアント ID とシークレットを手動入力してください。',
+  'Quick setup': 'クイックセットアップ',
+  'Quick setup registers this callback URL on your Appwrite app automatically. Verify it matches if you configure credentials manually.': 'クイックセットアップはこのコールバック URL を Appwrite アプリに自動登録します。手動で認証情報を設定する場合は一致を確認してください。',
+  'Select an app': 'アプリを選択',
+  'Select app': 'アプリを選択',
+  'Sign in with Appwrite': 'Appwrite でサインイン',
+  'Use app and fill credentials': 'アプリを使って認証情報を入力',
+
+  'AI prompt': 'AI プロンプト',
+  'AI sign-in prompt': 'AI サインインプロンプト',
+  'Copy SVG': 'SVG をコピー',
+  'Copy a ready-made prompt for your coding agent to add this provider sign-in button to your app.': 'このプロバイダーのサインインボタンをアプリに追加するための、コーディングエージェント向けの完成プロンプトをコピーします。',
+  'Failed to copy provider icon': 'プロバイダーアイコンのコピーに失敗しました',
+  'Includes project ID, endpoint, provider ID, and the icon SVG when available.': 'プロジェクト ID、エンドポイント、プロバイダー ID、および可能な場合はアイコン SVG を含みます。',
+  'Provider icon': 'プロバイダーアイコン',
+  'Provider icon SVG': 'プロバイダーアイコン SVG',
+
+  'Copy or download this provider SVG to use on your OAuth sign-in button.': 'OAuth サインインボタンで使うための、このプロバイダーの SVG をコピーまたはダウンロードします。',
+  'Failed to download provider icon': 'プロバイダーアイコンのダウンロードに失敗しました',
+  'Provider icon downloaded': 'プロバイダーアイコンをダウンロードしました',
+
+  'View prompt': 'プロンプトを表示',
+
 }

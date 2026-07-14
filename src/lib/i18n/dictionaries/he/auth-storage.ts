@@ -21,6 +21,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   '8 characters, no mandatory complexity': '8 תווים, ללא דרישת מורכבות',
   'A password must contain at least 8 characters.': 'סיסמה חייבת להכיל לפחות 8 תווים.',
   'A private key is configured. Upload a file or use Paste key to replace it.': 'מפתח פרטי מוגדר. העלו קובץ או השתמשו בהדבקת מפתח כדי להחליף אותו.',
+  'A new client secret is created for this app so the value can be filled in securely.':
+    'נוצר סוד לקוח חדש לאפליקציה זו כדי שניתן יהיה למלא את הערך בצורה מאובטחת.',
   'A third-party app registers as a client and keeps client_secret on their backend.': 'אפליקציית צד שלישי נרשמת כלקוח ושומרת את client_secret בצד השרת שלה.',
   'AVIF': 'AVIF',
   'Access token TTL': 'משך תוקף טוקן גישה (TTL)',
@@ -187,6 +189,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Clear when unused (e.g. transparent PNG).': 'נקו כשאינו בשימוש (למשל PNG שקוף).',
   'Click to upload or drag and drop': 'לחצו להעלאה או גררו ושחררו',
   'Client ID': 'מזהה לקוח',
+  'Client ID and secret filled from your Appwrite app':
+    'מזהה הלקוח והסוד מולאו מהאפליקציה של Appwrite שלכם',
   'Client name': 'שם לקוח',
   'Client type': 'סוג לקוח',
   'Backend or SSR apps that can keep a client secret (Node, Next.js, Nuxt).':
@@ -241,7 +245,12 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Create a token to share this file publicly. Choose when the token should expire.': 'צרו טוקן לשיתוף ציבורי של קובץ זה. בחרו מתי תוקף הטוקן יפוג.',
   'Create an account': 'יצירת חשבון',
   'Create an app to register redirect URIs and issue client credentials for this project.': 'צרו אפליקציה לרישום כתובות הפניה ולהנפקת פרטי לקוח עבור פרויקט זה.',
+  'Create an Appwrite app or choose an existing one from your organization. We register the redirect URI and fill client ID and secret for you.':
+    'צרו אפליקציית Appwrite או בחרו אחת קיימת בארגון. אנחנו נרשום את כתובת ההפניה ונמלא עבורכם את מזהה הלקוח והסוד.',
+  'Create and fill credentials': 'יצירה ומילוי פרטי גישה',
   'Create app': 'יצירת אפליקציה',
+  'Create or select an Appwrite app to fill credentials, or enter client ID and secret manually.':
+    'צרו או בחרו אפליקציית Appwrite למילוי פרטי הגישה, או הזינו מזהה לקוח וסוד ידנית.',
   'Create bucket': 'יצירת באקט',
   'Create file': 'יצירת קובץ',
   'Create file token': 'יצירת טוקן קובץ',
@@ -380,6 +389,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Failed to add member': 'הוספת החבר נכשלה',
   'Failed to copy variable': 'העתקת המשתנה נכשלה',
   'Failed to create OAuth2 app': 'יצירת אפליקציית OAuth2 נכשלה',
+  'Failed to create Appwrite app': 'יצירת אפליקציית Appwrite נכשלה',
   'Failed to create membership': 'יצירת החברות נכשלה',
   'Failed to create target': 'יצירת היעד נכשלה',
   'Failed to create team': 'יצירת הצוות נכשלה',
@@ -430,6 +440,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Failed to update status': 'עדכון הסטטוס נכשל',
   'Failed to update template': 'עדכון התבנית נכשל',
   'Failed to update users limit': 'עדכון מגבלת המשתמשים נכשל',
+  'Failed to use selected Appwrite app': 'שימוש באפליקציית Appwrite שנבחרה נכשל',
   'File': 'קובץ',
   'File ID': 'מזהה קובץ',
   'File IDs will be auto-generated for bulk uploads.': 'מזהי קבצים ייווצרו אוטומטית בהעלאות מרובות.',
@@ -586,6 +597,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Multi-factor authentication not enabled': 'אימות רב-שלבי אינו מופעל',
   'My Team': 'הצוות שלי',
   'My application': 'האפליקציה שלי',
+  'My project sign-in': 'התחברות לפרויקט שלי',
   'N/A': 'לא זמין',
   'NIST SP 800-63B': 'NIST SP 800-63B',
   'Name': 'שם',
@@ -600,6 +612,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Next page': 'עמוד הבא',
   'No OAuth identities linked to this user.': 'אין זהויות OAuth מקושרות למשתמש זה.',
   'No OAuth2 apps': 'אין אפליקציות OAuth2',
+  'No Appwrite apps in this organization yet. Create one from the Create app tab.':
+    'עדיין אין אפליקציות Appwrite בארגון זה. צרו אחת בלשונית יצירת אפליקציה.',
   'No active sessions': 'אין סשנים פעילים',
   'No activity on': 'אין פעילות בתאריך',
   'No authenticator app has been connected yet.': 'עדיין לא חוברה אפליקציית אימות.',
@@ -647,6 +661,10 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'OAuth2 server navigation': 'ניווט שרת OAuth2',
   'OAuth2 server section': 'אזור שרת OAuth2',
   'OAuth2 settings': 'הגדרות OAuth2',
+  'OAuth app for Sign in with Appwrite on this project.':
+    'אפליקציית OAuth עבור התחברות עם Appwrite בפרויקט זה.',
+  'OAuth secret was created but the plaintext value was empty':
+    'סוד OAuth נוצר אך ערך הטקסט הגלוי היה ריק',
   'OIDC': 'OIDC',
   'OIDC discovery': 'Discovery של OIDC',
   'OIDC discovery URL': 'כתובת discovery של OIDC',
@@ -664,6 +682,9 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'כוונו את מסך ההסכמה לכתובת ההרשאה ובחרו אילו היקפי הרשאה לקוחות יכולים לבקש.',
   'OTP Session': 'סשן OTP',
   'Okta': 'Okta',
+  'Organization app': 'אפליקציית ארגון',
+  'Organization context is required to create or select an Appwrite app. Enter client ID and secret manually below.':
+    'נדרש הקשר ארגון כדי ליצור או לבחור אפליקציית Appwrite. הזינו מזהה לקוח וסוד ידנית למטה.',
   'One-time password code': 'קוד חד-פעמי (OTP)',
   'Only': 'רק',
   'Only alphanumeric characters are allowed': 'מותרים רק תווים אלפאנומריים',
@@ -759,6 +780,9 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Public clients': 'לקוחות ציבוריים',
   'Push': 'Push',
   'Quality': 'איכות',
+  'Quick setup': 'הגדרה מהירה',
+  'Quick setup registers this callback URL on your Appwrite app automatically. Verify it matches if you configure credentials manually.':
+    'ההגדרה המהירה רושמת אוטומטית את כתובת ה-callback באפליקציית Appwrite שלכם. ודאו שהיא תואמת אם אתם מגדירים פרטי גישה ידנית.',
   'Quality & format': 'איכות ופורמט',
   'Quality & format reset': 'איכות ופורמט אופסו',
   'Read': 'קריאה',
@@ -841,7 +865,9 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Select a team and assign roles for this user.': 'בחרו צוות והקצו תפקידים למשתמש זה.',
   'Select a user': 'בחרו משתמש',
   'Select algorithm': 'בחרו אלגוריתם',
+  'Select an app': 'בחרו אפליקציה',
   'Select an existing user and assign team roles.': 'בחרו משתמש קיים והקצו תפקידי צוות.',
+  'Select app': 'בחירת אפליקציה',
   'Select bucket': 'בחירת באקט',
   'Select language...': 'בחירת שפה...',
   'Select teams': 'בחירת צוותים',
@@ -878,6 +904,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Settings': 'הגדרות',
   'Share the discovery URL with integrators. Point your consent screen at the authorization URL.': 'שתפו את כתובת ה-discovery עם אינטגרטורים. כוונו את מסך ההסכמה שלכם לכתובת ההרשאה.',
   'Show password': 'הצגת סיסמה',
+  'Sign in with Appwrite': 'התחברות עם Appwrite',
   'Single-page app': 'אפליקציית עמוד יחיד (SPA)',
   'Size': 'גודל',
   'Size & crop': 'גודל וחיתוך',
@@ -1019,6 +1046,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Upload your first file to this bucket': 'העלו את הקובץ הראשון שלכם לבאקט זה',
   'Uppercase letters (A-Z)': 'אותיות גדולות (A-Z)',
   'Use arrow keys to nudge; Alt for larger steps. Hold Shift with corner handles to keep aspect. Pointer drag with Shift locks aspect.': 'השתמשו בחיצים להזזה עדינה; Alt לצעדים גדולים יותר. החזיקו Shift עם ידיות הפינה לשמירת יחס. גרירה עם Shift נועלת את היחס.',
+  'Use app and fill credentials': 'שימוש באפליקציה ומילוי פרטי גישה',
   'Use custom target ID': 'שימוש במזהה יעד מותאם אישית',
   'Use format': 'השתמשו בפורמט',
   'Use the field labels below as they appear in the provider dashboard when entering client credentials.': 'השתמשו בתוויות השדות שלמטה כפי שהן מופיעות בלוח הבקרה של הספק בעת הזנת פרטי לקוח.',
@@ -1171,4 +1199,19 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'verified phone': 'טלפון מאומת',
   'weeks': 'שבועות',
   'years': 'שנים',
+  'AI prompt': 'פרומפט AI',
+  'AI sign-in prompt': 'פרומפט AI להתחברות',
+  'Copy SVG': 'העתקת SVG',
+  'Copy a ready-made prompt for your coding agent to add this provider sign-in button to your app.': 'העתיקו פרומפט מוכן לסוכן הקוד שלכם להוספת כפתור התחברות של ספק זה לאפליקציה.',
+  'Failed to copy provider icon': 'העתקת אייקון הספק נכשלה',
+  'Includes project ID, endpoint, provider ID, and the icon SVG when available.': 'כולל מזהה פרויקט, נקודת קצה, מזהה ספק, ואת ה-SVG של האייקון כשהוא זמין.',
+  'Provider icon': 'אייקון ספק',
+  'Provider icon SVG': 'SVG של אייקון הספק',
+
+  'Copy or download this provider SVG to use on your OAuth sign-in button.': 'העתיקו או הורידו את ה-SVG של ספק זה לשימוש בכפתור ההתחברות ב-OAuth.',
+  'Failed to download provider icon': 'הורדת אייקון הספק נכשלה',
+  'Provider icon downloaded': 'אייקון הספק הורד',
+
+  'View prompt': 'הצגת הפרומפט',
+
 }
