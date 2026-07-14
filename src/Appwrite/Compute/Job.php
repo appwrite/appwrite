@@ -176,15 +176,17 @@ final class Job
         return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}/code.tar.gz";
     }
 
+    /**
+     * The orchestrator's unarchive step strips the archive's single top-level
+     * wrapper folder regardless of its name (GitHub's `{repo}-{ref}/`, Gitea's
+     * `{repo}/`, etc.) before applying subdir, so this needs to be relative to
+     * the repository root -- never prefixed with the repository name, or it
+     * resolves to a folder that no longer exists post-strip and the build sees
+     * an empty source ("No source code found").
+     */
     public static function sourceSubdirectory(Git $vcs, string $repositoryName, string $rootDirectory): string
     {
-        $rootDirectory = \trim($rootDirectory, '/');
-
-        if ($vcs->getName() === 'gitea') {
-            return \trim($repositoryName . '/' . $rootDirectory, '/');
-        }
-
-        return $rootDirectory;
+        return \trim($rootDirectory, '/');
     }
 
     /**
