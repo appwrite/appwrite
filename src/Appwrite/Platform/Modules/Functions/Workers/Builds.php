@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Compute\Job;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
-use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Screenshot;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -13,6 +13,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -20,6 +21,7 @@ use Exception;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
+use OpenRuntimes\Orchestrator\Jobs as JobsClient;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -94,10 +96,11 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
-            ->inject('isResourceBlocked')
+            ->inject('getIsResourceBlocked')
             ->inject('deviceForFiles')
             ->inject('log')
             ->inject('executor')
+            ->inject('jobs')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -120,10 +123,11 @@ class Builds extends Action
         Database $dbForProject,
         Device $deviceForFunctions,
         Device $deviceForSites,
-        callable $isResourceBlocked,
+        callable $getIsResourceBlocked,
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
+        JobsClient $jobs,
         array $plan
     ): void {
         $payload = $message->getPayload();
@@ -165,9 +169,10 @@ class Builds extends Action
                     $resource,
                     $deployment,
                     $template,
-                    $isResourceBlocked,
+                    $getIsResourceBlocked,
                     $log,
                     $executor,
+                    $jobs,
                     $plan,
                     $platform,
                     (int) ($payload['timeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))
@@ -201,9 +206,10 @@ class Builds extends Action
         Document $resource,
         Document $deployment,
         Document $template,
-        callable $isResourceBlocked,
+        callable $getIsResourceBlocked,
         Log $log,
         Executor $executor,
+        JobsClient $jobs,
         array $plan,
         array $platform,
         int $timeout
@@ -236,7 +242,7 @@ class Builds extends Action
             throw new \Exception('Resource not found');
         }
 
-        if ($isResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
+        if ($getIsResourceBlocked($project, $resource->getCollection() === 'functions' ? RESOURCE_TYPE_FUNCTIONS : RESOURCE_TYPE_SITES, $resource->getId())) {
             throw new BuildException('Resource is blocked');
         }
 
@@ -518,6 +524,29 @@ class Builds extends Action
                         ->trigger();
                 }
 
+                // On the jobs backend the only build reaching this worker is the
+                // template-into-repo push above (a git *write* the jobs-service
+                // artifact system has no primitive for). With the commit pushed,
+                // hand the build to the jobs-service like any other VCS commit:
+                // source from the presigned tarball, output onto the mounted
+                // builds volume, progress via callbacks to the jobs worker.
+                if ($resource->getCollection() === 'functions'
+                    && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'buildPath' => Job::buildPath($project->getId(), $deploymentId),
+                    ]));
+
+                    $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
+                    $jobs->create(...Job::build($project, $resource, $deployment, $platform, [
+                        'url' => $github->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
+                        'subdir' => $resource->getAttribute('providerRootDirectory', ''),
+                    ]));
+
+                    Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+
+                    return;
+                }
+
                 $tmpPath = '/tmp/builds/' . $deploymentId;
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
                 $localDevice = new Local();
@@ -749,7 +778,7 @@ class Builds extends Action
                         } else {
                             $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
-                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '');
+                                $command = $this->prepareSiteBuildCommand($command, $outputDirectory ?? '', $resource->getAttribute('framework', ''));
                             }
 
                             $command = 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh ' . \trim(\escapeshellarg($command));
@@ -1259,54 +1288,7 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
     {
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-        $cpus = (int) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
-        $memory = (int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT);
-        $resourceType = $deployment->getAttribute('resourceType');
-        $buildDuration = (int) $deployment->getAttribute('buildDuration', 0) * 1000;
-        $mbSeconds = (int) ($memory * $deployment->getAttribute('buildDuration', 0) * $cpus);
-
-        $usage
-            ->setResource(rtrim($resourceType, 's'))
-            ->setResourceInternalId((string) $resource->getSequence());
-
-        switch ($deployment->getAttribute('status')) {
-            case 'ready':
-                $usage
-                    ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, $buildDuration)
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per resource type
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), $buildDuration);
-                break;
-            case 'failed':
-                $usage
-                    ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, $buildDuration)
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per resource type
-                    ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), $buildDuration);
-                break;
-        }
-
-        $usage
-            ->addMetric(METRIC_BUILDS, 1) // per project
-            ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, $buildDuration)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, $mbSeconds)
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS), 1) // per resource type
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), $buildDuration)
-            ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), $mbSeconds);
-
-        // Publish usage metrics
-        if (! $usage->isEmpty()) {
-            $message = new UsageMessage(
-                project: $project,
-                metrics: $usage->getMetrics(),
-                reduce: $usage->getReduce()
-            );
-            $publisherForUsage->enqueue($message);
-            $usage->reset();
-        }
+        BuildUsage::publish($usage, $resource, $deployment, $project, $publisherForUsage);
     }
 
     /**
@@ -1398,7 +1380,7 @@ class Builds extends Action
         return \substr(\hash('sha256', \json_encode($hashContext, JSON_THROW_ON_ERROR)), 0, 48);
     }
 
-    protected function prepareSiteBuildCommand(string $command, string $outputDirectory): string
+    protected function prepareSiteBuildCommand(string $command, string $outputDirectory, string $framework): string
     {
         $listFilesCommand = 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
 
@@ -1406,7 +1388,14 @@ class Builds extends Action
             $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
         }
 
-        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -print && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
+        foreach (SSR::FRAMEWORK_FILES[$framework] ?? [] as $file) {
+            $listFilesCommand .= ' && ( [ -e ' . \escapeshellarg($file) . ' ] && echo ' . \escapeshellarg($file) . ' || true )';
+        }
+
+        // Static fallback detection only needs to distinguish 0, 1, or 2+ HTML files, so cap the output
+        $listFilesCommand .= ' && find . -name \'node_modules\' -prune -o -type f -name \'*.html\' -print | head -n 2';
+
+        $listFilesCommand .= ' && echo "{APPWRITE_DETECTION_SEPARATOR_END}"';
 
         if (empty($command)) {
             return $listFilesCommand;

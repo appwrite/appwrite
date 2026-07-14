@@ -16,6 +16,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Locking\Lock;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\Reference\Renderer;
@@ -59,9 +60,10 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
+    ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -160,24 +162,28 @@ Http::init()
             // For standard keys, update last accessed time
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
+                $keyOwnerInternalId = '';
                 if (! empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',
                         find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
+                    $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
                     $dbKey = $user->find(
                         key: 'secret',
                         find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
+                    $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
                     $dbKey = $team->find(
                         key: 'secret',
                         find: $request->getHeaderLine('x-appwrite-key', ''),
                         subject: 'keys'
                     );
+                    $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 
                 if (!$dbKey) {
@@ -202,13 +208,19 @@ Http::init()
                         $sdks[] = $sdk;
 
                         $updates->setAttribute('sdks', $sdks);
-                        $updates->setAttribute('accessedAt', Datetime::now());
+                        $updates->setAttribute('accessedAt', DateTime::now());
                     }
                 }
 
-                if (! $updates->isEmpty()) {
-                    $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+                $updatedKey = $updates->isEmpty()
+                    ? null
+                    : $lock->tryWithKey(
+                        'lock:platform:'.$keyOwnerInternalId.':keys:'.$dbKey->getId(),
+                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates)),
+                        target: 'keys'
+                    );
 
+                if ($updatedKey instanceof Document) {
                     if (! empty($apiKey->getProjectId())) {
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
                     } elseif (! empty($apiKey->getUserId())) {
@@ -357,7 +369,7 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if ($isAdminProjectRequest && (empty($apiKey) || $isOAuthAdminKey)) {
+        if ($isAdminProjectRequest && empty($apiKey)) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
@@ -371,9 +383,16 @@ Http::init()
         if ($project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                    'accessedAt' => DateTime::now()
-                ])));
+                $projectInternalId = (string) ($project->getSequence() ?: $project->getId());
+                $lock->tryWithKey(
+                    'lock:platform:'.$projectInternalId.':projects:'.$project->getId().':accessedAt',
+                    fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                        'projects',
+                        $project->getId(),
+                        new Document(['accessedAt' => DateTime::now()])
+                    )),
+                    target: 'projects'
+                );
             }
         }
 
@@ -389,9 +408,16 @@ Http::init()
                         'accessedAt' => $user->getAttribute('accessedAt')
                     ]));
                 } else {
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
-                        'accessedAt' => $user->getAttribute('accessedAt')
-                    ])));
+                    $userInternalId = (string) ($user->getSequence() ?: $user->getId());
+                    $lock->tryWithKey(
+                        'lock:platform:'.$userInternalId.':users:'.$user->getId().':accessedAt',
+                        fn () => $authorization->skip(fn () => $dbForPlatform->updateDocument(
+                            'users',
+                            $user->getId(),
+                            new Document(['accessedAt' => $user->getAttribute('accessedAt')])
+                        )),
+                        target: 'users'
+                    );
                 }
             }
         }
@@ -585,6 +611,8 @@ Http::init()
         $auditContext->userAgent = $request->getUserAgent('');
         $auditContext->ip = $request->getIP();
         $auditContext->hostname = $request->getHostname();
+        $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
+        $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;

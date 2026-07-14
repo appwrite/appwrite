@@ -14,6 +14,8 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locale\GeoRecord;
+use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -34,6 +36,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
@@ -41,9 +44,12 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -64,6 +70,17 @@ return function (Container $context): void {
     $context->set('log', fn () => new Log(), []);
 
     $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
+
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+        return new Lock(
+            fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
+                fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
+            ),
+            $telemetry,
+            $logger,
+            $project
+        );
+    }, ['pools', 'telemetry', 'logger', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -562,6 +579,12 @@ return function (Container $context): void {
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
             $projectId = $request->getHeaderLine('x-appwrite-project', '');
+        }
+        // For non-GET requests getParam() reads the body, so a project passed
+        // as a query parameter (e.g. presigned artifact URLs) is only visible
+        // via getQuery().
+        if (empty($projectId)) {
+            $projectId = (string) $request->getQuery('project', '');
         }
 
         // Backwards compatibility for new services, originally project resources
@@ -1284,4 +1307,79 @@ return function (Container $context): void {
         $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
         return new Agent($adapter);
     }, ['register']);
+
+    $context->set('geoRecord', function ($request, Locale $locale, callable $getGeoForIp) {
+        $ip = $request->getIp();
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            Console::warning("Invalid IP address: {$ip}");
+            $ip = '0.0.0.0';
+        }
+
+        return $getGeoForIp($locale, $ip);
+    }, ['request', 'locale', 'getGeoForIp']);
+
+    $context->set('getGeoForIp', function () {
+        return function (Locale $locale, string $ip): GeoRecord {
+            $record = null;
+            $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+            $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
+
+            if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
+                try {
+                    $client = new Client();
+                    $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
+                    $client->setTimeout(3000);
+
+                    $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
+                    if ($response->getStatusCode() === 200) {
+                        $body = $response->json();
+                        if (\is_array($body)) {
+                            $record = $body;
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    Console::warning('Geo service unavailable: ' . $th->getMessage());
+                }
+            }
+
+            $countryCode = \strtoupper($record['countryCode'] ?? '--');
+            $continentCode = \strtoupper($record['continentCode'] ?? '--');
+
+            $eu = \array_map('strtoupper', Config::getParam('locale-eu'));
+            $currencies = Config::getParam('locale-currencies');
+            $currency = null;
+
+            if ($countryCode !== '--') {
+                foreach ($currencies as $element) {
+                    if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'], true)) {
+                        $currency = $element['code'];
+                        break;
+                    }
+                }
+            }
+
+            $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
+
+            return (new GeoRecord([
+                'ip' => $ip,
+                'countryCode' => $countryCode,
+                'continentCode' => $continentCode,
+                'eu' => $countryCode !== '--' && \in_array($countryCode, $eu, true),
+                'currency' => $currency,
+                'latitude' => $record['latitude'] ?? null,
+                'longitude' => $record['longitude'] ?? null,
+                'timeZone' => $record['timeZone'] ?? null,
+                'weatherCode' => $record['weatherCode'] ?? null,
+                'postalCode' => $record['postalCode'] ?? null,
+                'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
+                'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
+                'connectionType' => $record['connection'] ?? null,
+                'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
+                'connectionOrganization' => $record['organization'] ?? null,
+                'isp' => $record['isp'] ?? null,
+            ]))
+                ->setLocale($locale);
+        };
+    }, []);
 };

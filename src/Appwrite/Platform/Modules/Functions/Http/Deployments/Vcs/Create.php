@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -73,6 +74,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
+            ->inject('jobs')
             ->inject('gitHub')
             ->inject('platform')
             ->callback($this->action(...));
@@ -90,6 +92,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
+        Jobs $jobs,
         GitHub $github,
         array $platform,
     ) {
@@ -119,7 +122,8 @@ class Create extends Base
             activate: $activate,
             platform: $platform,
             reference: $reference,
-            referenceType: $type
+            referenceType: $type,
+            jobs: $jobs
         );
 
         $queueForEvents
