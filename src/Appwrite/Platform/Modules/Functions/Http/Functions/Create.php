@@ -20,6 +20,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Abuse;
@@ -131,7 +132,7 @@ class Create extends Base
             ->inject('publisherForFunctions')
             ->inject('dbForPlatform')
             ->inject('request')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('authorization')
             ->inject('platform')
@@ -177,7 +178,7 @@ class Create extends Base
         FunctionPublisher $publisherForFunctions,
         Database $dbForPlatform,
         Request $request,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         array $platform
@@ -310,7 +311,7 @@ class Create extends Base
             ]));
 
             try {
-                $providerAdapter = $vcsForInstallation($installation);
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
                 if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -363,7 +364,7 @@ class Create extends Base
                     publisherForBuilds: $publisherForBuilds,
                     jobs: $jobs,
                     template: $template,
-                    vcs: $vcsForInstallation($installation),
+                    vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
                     platform: $platform,
                     reference: $providerBranch,

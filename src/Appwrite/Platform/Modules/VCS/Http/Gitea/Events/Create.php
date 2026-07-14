@@ -8,6 +8,7 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -35,8 +36,7 @@ class Create extends Action
             ->desc('Create event')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
-            ->inject('vcsForProvider')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('vcsWebhookSecret')
             ->inject('request')
             ->inject('response')
@@ -49,8 +49,7 @@ class Create extends Action
     }
 
     public function action(
-        callable $vcsForProvider,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         callable $vcsWebhookSecret,
         Request $request,
         Response $response,
@@ -60,7 +59,7 @@ class Create extends Action
         BuildPublisher $publisherForBuilds,
         array $platform
     ) {
-        $vcs = $vcsForProvider('gitea');
+        $vcs = $vcsFactory->fromProvider('gitea');
 
         $event = $request->getHeaderLine($vcs->getEventHeaderName(), '');
         Span::add('vcs.gitea.event.name', $event);
@@ -79,8 +78,8 @@ class Create extends Action
         $parsedPayload = $vcs->getEvent($event, $payload);
 
         match ($event) {
-            'push' => $this->handlePushEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
-            'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsForInstallation, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            'push' => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            'pull_request' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
             default => null,
         };
 
@@ -98,7 +97,7 @@ class Create extends Action
         return $installation;
     }
 
-    private function resolveAdapterForRepository(Document $repository, callable $vcsForInstallation, Database $dbForPlatform, Authorization $authorization): ?Git
+    private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, Database $dbForPlatform, Authorization $authorization): ?Git
     {
         $installation = $this->resolveGiteaInstallation($repository, $dbForPlatform, $authorization);
 
@@ -107,7 +106,7 @@ class Create extends Action
         }
 
         try {
-            return $vcsForInstallation($installation);
+            return $vcsFactory->fromInstallation($installation);
         } catch (\Throwable $error) {
             Console::warning("Failed to resolve Gitea adapter for installation '{$installation->getId()}': " . $error->getMessage());
             return null;
@@ -116,7 +115,7 @@ class Create extends Action
 
     private function handlePushEvent(
         array $parsedPayload,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -153,7 +152,7 @@ class Create extends Action
         $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
 
         foreach ($repositories as $repository) {
-            $adapter = $this->resolveAdapterForRepository($repository, $vcsForInstallation, $dbForPlatform, $authorization);
+            $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $dbForPlatform, $authorization);
 
             if ($adapter === null) {
                 continue;
@@ -167,7 +166,7 @@ class Create extends Action
 
     private function handlePullRequestEvent(
         array $parsedPayload,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Database $dbForPlatform,
         Authorization $authorization,
         BuildPublisher $publisherForBuilds,
@@ -205,7 +204,7 @@ class Create extends Action
             ]));
 
             foreach ($repositories as $repository) {
-                $adapter = $this->resolveAdapterForRepository($repository, $vcsForInstallation, $dbForPlatform, $authorization);
+                $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $dbForPlatform, $authorization);
 
                 if ($adapter === null) {
                     continue;

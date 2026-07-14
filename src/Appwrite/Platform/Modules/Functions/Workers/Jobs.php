@@ -13,6 +13,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -63,7 +64,7 @@ class Jobs extends Action
             ->inject('publisherForUsage')
             ->inject('usage')
             ->inject('deviceForBuilds')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('cache')
             ->inject('locks')
             ->callback($this->action(...));
@@ -81,7 +82,7 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         UsageContext $usage,
         Device $deviceForBuilds,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Cache $cache,
         callable $locks,
     ): void {
@@ -92,7 +93,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $vcsForInstallation, $cache, $deploymentId): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $deploymentId): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -113,7 +114,7 @@ class Jobs extends Action
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $vcsForInstallation),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory),
                 default => $deployment,
             };
 
@@ -202,10 +203,10 @@ class Jobs extends Action
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         Device $deviceForBuilds,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
     ): Document {
         if ($exitCode !== 0) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $vcsForInstallation);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $vcsFactory);
         }
 
         $path = Job::buildPath($project->getId(), $deployment->getId());
@@ -214,10 +215,10 @@ class Jobs extends Action
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $vcsForInstallation);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $vcsFactory);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $vcsForInstallation, $size);
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $vcsFactory, $size);
     }
 
     /**
@@ -234,7 +235,7 @@ class Jobs extends Action
         string $message,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         int $buildSize = 0,
     ): Document {
         $function = $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId'));
@@ -287,7 +288,7 @@ class Jobs extends Action
         // deployments only; best-effort). "pending" at build start is a follow-up.
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $function->isEmpty()) {
-            $this->gitStatus($vcsForInstallation, $dbForPlatform, $project, $function, $deployment, $status === 'ready' ? 'success' : 'failure');
+            $this->gitStatus($vcsFactory, $dbForPlatform, $project, $function, $deployment, $status === 'ready' ? 'success' : 'failure');
         }
 
         return $deployment;
@@ -297,7 +298,7 @@ class Jobs extends Action
      * Post a VCS commit status for a VCS deployment (no-op for non-VCS builds
      * or silent mode). Best-effort — a failed status update never fails the build.
      */
-    private function gitStatus(callable $vcsForInstallation, Database $dbForPlatform, Document $project, Document $function, Document $deployment, string $state): void
+    private function gitStatus(VcsFactory $vcsFactory, Database $dbForPlatform, Document $project, Document $function, Document $deployment, string $state): void
     {
         $commitHash = $deployment->getAttribute('providerCommitHash', '');
         if ($commitHash === '' || $function->getAttribute('providerSilentMode', false) === true) {
@@ -310,7 +311,7 @@ class Jobs extends Action
             if ($providerInstallationId === '') {
                 return;
             }
-            $vcs = $vcsForInstallation($installation);
+            $vcs = $vcsFactory->fromInstallation($installation);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));

@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -115,7 +116,7 @@ class Update extends Base
             ->inject('publisherForBuilds')
             ->inject('jobs')
             ->inject('dbForPlatform')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('authorization')
@@ -154,7 +155,7 @@ class Update extends Base
         BuildPublisher $publisherForBuilds,
         Jobs $jobs,
         Database $dbForPlatform,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
@@ -251,7 +252,7 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             try {
-                $providerAdapter = $vcsForInstallation($installation);
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
                 if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -327,7 +328,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsForInstallation($installation), true, $platform, jobs: $jobs);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform, jobs: $jobs);
         }
 
         // Inform scheduler if function is still active

@@ -5,6 +5,7 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -238,11 +239,11 @@ Http::get('/v1/mock/github/callback')
     ->label('docs', false)
     ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
     ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
-    ->inject('vcsForInstallation')
+    ->inject('vcsFactory')
     ->inject('project')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $projectId, callable $vcsForInstallation, Document $project, Response $response, Database $dbForPlatform) {
+    ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
@@ -260,7 +261,7 @@ Http::get('/v1/mock/github/callback')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing provider installation ID');
         }
 
-        $vcs = $vcsForInstallation(new Document([
+        $vcs = $vcsFactory->fromInstallation(new Document([
             'provider' => 'github',
             'providerInstallationId' => $providerInstallationId,
         ]));

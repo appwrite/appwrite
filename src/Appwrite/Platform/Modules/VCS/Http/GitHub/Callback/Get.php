@@ -6,6 +6,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -39,7 +40,7 @@ class Get extends Action
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
             ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -52,7 +53,7 @@ class Get extends Action
         string $setupAction,
         string $state,
         string $code,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Document $project,
         Response $response,
         Database $dbForPlatform,
@@ -100,7 +101,7 @@ class Get extends Action
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $vcs = $vcsForInstallation(new Document([
+            $vcs = $vcsFactory->fromInstallation(new Document([
                 'provider' => 'github',
                 'providerInstallationId' => $providerInstallationId,
             ]));

@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use Utopia\Config\Config;
@@ -109,7 +110,7 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('platform')
@@ -147,7 +148,7 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         array $platform
@@ -252,7 +253,7 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             try {
-                $providerAdapter = $vcsForInstallation($installation);
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
                 if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
                     $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
                     $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -330,7 +331,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsForInstallation($installation), true, $platform);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());
