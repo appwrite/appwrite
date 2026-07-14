@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationVa
 use Appwrite\Platform\Permission as AppwritePermission;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -168,10 +169,18 @@ class Base extends Action
 
         if ($useJobs) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
+            $presignedUrl = $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref);
             $source = [
-                'url' => $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
+                'url' => $presignedUrl,
                 'subdir' => Job::sourceSubdirectory($vcs, $repositoryName, $function->getAttribute('providerRootDirectory', '')),
             ];
+
+            // TODO: Temporary diagnostic for the intermittent Gitea "No source
+            // code found" CI failure -- verifies the sidecar's exact source URL
+            // resolves at submission time, since the sidecar's own logs aren't
+            // captured by `docker compose logs`. Remove once root-caused.
+            $this->probeSourceUrl($presignedUrl, $deployment->getId());
+
             $jobs->create(...Job::build($project, $function, $deployment, $platform, $source));
         } else {
             $publisherForBuilds->enqueue(new BuildMessage(
@@ -185,6 +194,34 @@ class Base extends Action
         }
 
         return $deployment;
+    }
+
+    /**
+     * TODO: Temporary diagnostic for the intermittent Gitea "No source code
+     * found" CI failure. Fetches the presigned source URL with the same GET
+     * the sidecar performs and logs the outcome, so a failing CI run's
+     * "Failure Logs" step (docker compose logs) surfaces the real HTTP
+     * status/size instead of relying on the sidecar's own unretrievable logs.
+     * Never throws -- purely observational. Remove once root-caused.
+     */
+    private function probeSourceUrl(string $url, string $deploymentId): void
+    {
+        try {
+            $redactedUrl = \preg_replace('/([?&]token=)[^&]+/', '$1REDACTED', $url);
+
+            $ch = \curl_init($url);
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            \curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $body = \curl_exec($ch);
+            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = \curl_error($ch);
+            \curl_close($ch);
+
+            $size = $body === false ? 0 : \strlen($body);
+            Console::warning("[vcs-source-probe] deployment={$deploymentId} url={$redactedUrl} status={$statusCode} bytes={$size} curlError=" . ($error ?: 'none'));
+        } catch (\Throwable $error) {
+            Console::warning("[vcs-source-probe] deployment={$deploymentId} probe threw: " . $error->getMessage());
+        }
     }
 
     public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
