@@ -163,6 +163,37 @@ final class FormatTest extends TestCase
 
     }
 
+    public function testMultiMethodRouteEmitsEveryOperation(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route(['GET', 'POST'], '/v1/tests/:testId'))
+            ->desc('Get or update test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getOrUpdateTest',
+                description: 'Get or update test.',
+                auth: [],
+                responses: [],
+            ))
+            ->param('testId', '', new Text(256), 'Test ID.')
+            ->param('name', null, new Nullable(new Text(256)), 'Test name.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $get = $openApi['paths']['/tests/{testId}']['get'];
+        $post = $openApi['paths']['/tests/{testId}']['post'];
+
+        $this->assertSame('path', $get['parameters'][0]['in']);
+        $this->assertSame('query', $get['parameters'][1]['in']);
+        $this->assertArrayNotHasKey('requestBody', $get);
+        $this->assertSame('path', $post['parameters'][0]['in']);
+        $this->assertCount(1, $post['parameters']);
+        $this->assertArrayHasKey('name', $post['requestBody']['content']['application/json']['schema']['properties']);
+    }
+
     public function testModelReferencesDoNotEmitItemsOnObjectProperties(): void
     {
         Method::$processed = [];

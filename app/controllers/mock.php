@@ -303,12 +303,13 @@ Http::shutdown()
         $result = [];
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
+        $methods = \implode(',', $route->getMethods());
 
         if (!\is_array($tests)) {
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to read results', 500);
         }
 
-        $result[$route->getMethod() . ':' . $route->getPath()] = true;
+        $result[$methods . ':' . $route->getPath()] = true;
 
         $tests = \array_merge($tests, $result);
 
@@ -316,5 +317,5 @@ Http::shutdown()
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to save results', 500);
         }
 
-        $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
+        $response->dynamic(new Document(['result' => $methods . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
     });
