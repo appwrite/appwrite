@@ -149,12 +149,14 @@ final class GithubTest extends TestCase
 
                     \parse_str($payload, $params);
 
-                    return $params === [
+                    $this->assertSame([
                         'client_id' => 'client-id',
                         'redirect_uri' => 'https://example.com/callback',
                         'client_secret' => 'client-secret',
                         'code' => $code,
-                    ];
+                    ], $params);
+
+                    return true;
                 }),
             )
             ->willReturn($response);
