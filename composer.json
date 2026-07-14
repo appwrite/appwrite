@@ -94,7 +94,7 @@
         "utopia-php/storage": "2.*",
         "utopia-php/system": "0.10.*",
         "utopia-php/telemetry": "^0.4",
-        "utopia-php/vcs": "dev-feat/appwrite-provider-parity as 4.99.99",
+        "utopia-php/vcs": "4.4.2",
         "utopia-php/websocket": "1.0.*",
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
