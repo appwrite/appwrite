@@ -110,6 +110,24 @@ final class GithubTest extends TestCase
         $this->assertSame($previous, $exception->getPrevious());
     }
 
+    public function testPlainTextProviderFailure(): void
+    {
+        $previous = new Exception('Invalid secret');
+        $providerError = $previous->getError() ?: $previous->getMessage();
+
+        $exception = new AppwriteException(
+            AppwriteException::USER_OAUTH2_PROVIDER_FAILURE,
+            previous: $previous,
+            params: ['Apple', $providerError],
+        );
+
+        $this->assertSame(
+            'Apple couldn\'t complete sign-in (Invalid secret). Please try again.',
+            $exception->getMessage(),
+        );
+        $this->assertSame($previous, $exception->getPrevious());
+    }
+
     private function createGithub(string $response, string $code = 'authorization-code'): Github&MockObject
     {
         $github = $this->getMockBuilder(Github::class)

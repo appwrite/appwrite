@@ -1617,11 +1617,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         } catch (OAuth2Exception $ex) {
+            $providerError = $ex->getError() ?: $ex->getMessage();
 
             $failureRedirect(
                 Exception::USER_OAUTH2_PROVIDER_FAILURE,
                 previous: $ex,
-                params: [$providerName, $ex->getError()],
+                params: [$providerName, $providerError],
             );
         }
 
