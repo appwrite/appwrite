@@ -186,6 +186,8 @@ final class FormatTest extends TestCase
         $get = $openApi['paths']['/tests/{testId}']['get'];
         $post = $openApi['paths']['/tests/{testId}']['post'];
 
+        $this->assertSame('testGetOrUpdateTestGet', $get['operationId']);
+        $this->assertSame('testGetOrUpdateTestPost', $post['operationId']);
         $this->assertSame('path', $get['parameters'][0]['in']);
         $this->assertSame('query', $get['parameters'][1]['in']);
         $this->assertArrayNotHasKey('requestBody', $get);

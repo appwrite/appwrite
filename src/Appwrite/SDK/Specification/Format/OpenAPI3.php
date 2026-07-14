@@ -832,8 +832,12 @@ class OpenAPI3 extends Format
                 $url = \implode('/', $segments);
             }
 
-            foreach ($route->getMethods() as $method) {
+            $methods = $route->getMethods();
+            foreach ($methods as $method) {
                 $methodTemp = $temp;
+                if (\count($methods) > 1) {
+                    $methodTemp['operationId'] .= \ucfirst(\strtolower($method));
+                }
                 $body = [
                     'content' => [
                         $consumes[0]  => [
