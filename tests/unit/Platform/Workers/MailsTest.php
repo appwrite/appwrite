@@ -19,6 +19,7 @@ final class SpyMailAdapter extends EmailAdapter
     public ?EmailMessage $captured = null;
     public int $deliveredTo = 1;
     public ?string $error = null;
+    public bool $emptyResults = false;
     public int $sendCount = 0;
 
     public function getName(): string
@@ -36,6 +37,20 @@ final class SpyMailAdapter extends EmailAdapter
         $this->sendCount++;
         $this->captured = $message;
 
+        $response = [
+            'deliveredTo' => $this->deliveredTo,
+            'type' => $this->getType(),
+            'results' => [],
+        ];
+
+        if ($this->emptyResults) {
+            if ($this->error !== null) {
+                $response['error'] = $this->error;
+            }
+
+            return $response;
+        }
+
         $result = [
             'recipient' => $message->getTo()[0]['email'] ?? '',
             'status' => $this->deliveredTo === 0 ? 'failure' : 'success',
@@ -45,11 +60,9 @@ final class SpyMailAdapter extends EmailAdapter
             $result['error'] = $this->error;
         }
 
-        return [
-            'deliveredTo' => $this->deliveredTo,
-            'type' => $this->getType(),
-            'results' => [$result],
-        ];
+        $response['results'] = [$result];
+
+        return $response;
     }
 }
 
@@ -115,6 +128,21 @@ final class MailsTest extends TestCase
         $adapter->deliveredTo = 0;
         $adapter->error = 'Domain not verified';
 
+        $this->assertMailWorkerThrows($adapter, 'Error sending mail: Domain not verified');
+    }
+
+    public function testMailDeliveryFailureUsesTopLevelErrorWhenResultsEmpty(): void
+    {
+        $adapter = new SpyMailAdapter();
+        $adapter->deliveredTo = 0;
+        $adapter->emptyResults = true;
+        $adapter->error = 'Provider rejected request';
+
+        $this->assertMailWorkerThrows($adapter, 'Error sending mail: Provider rejected request');
+    }
+
+    private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
+    {
         $registry = new Registry();
         $registry->set('smtp', static fn () => $adapter);
 
@@ -123,7 +151,7 @@ final class MailsTest extends TestCase
 
         try {
             $this->expectException(\Exception::class);
-            $this->expectExceptionMessage('Error sending mail: Domain not verified');
+            $this->expectExceptionMessage($expectedMessage);
 
             $worker = new Mails();
             $worker->action(

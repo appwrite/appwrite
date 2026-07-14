@@ -219,7 +219,7 @@ class Mails extends Action
             $result = $adapter->send($emailMessage);
 
             if (($result['deliveredTo'] ?? 0) === 0) {
-                $error = $result['results'][0]['error'] ?? 'Unknown error';
+                $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
                 throw new Exception($error);
             }
         } catch (\Throwable $error) {
