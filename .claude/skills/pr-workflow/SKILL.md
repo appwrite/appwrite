@@ -2,30 +2,22 @@
 
 ## Branch Targeting
 
-**Important:** Appwrite does NOT use `main` as the primary development branch.
+PRs should target **`main`**.
 
-PRs should target the **current version branch** (e.g., `1.8.x`, `1.9.x`), not `main`.
-
-### How to determine the correct target branch
-
-1. Check which version branch you're currently on: `git branch --show-current`
-2. Look for branches matching the pattern `X.Y.x` (e.g., `1.8.x`, `1.9.x`)
-3. The current active development branch is typically the highest version number with the `.x` suffix
+`main` is the primary development branch. Version branches (`1.8.x`, `1.9.x`, …) are for release maintenance / backports only — do not use them as the default PR base unless you are intentionally backporting.
 
 ### When creating PRs
 
-Always use the version branch as the base:
-
 ```bash
-# Correct - targets the version branch
-gh pr create --base 1.8.x --title "Your PR title" --body "..."
+# Correct - targets main
+gh pr create --base main --title "Your PR title" --body "..."
 
-# Wrong - do not target main
-gh pr create --base main ...
+# Only for intentional backports
+gh pr create --base 1.9.x --title "…" --body "…"
 ```
 
 ### Branch naming convention
 
-- `X.Y.x` branches (e.g., `1.8.x`) - Active development branches for each minor version
-- `main` - Not used for regular PRs; reserved for release management
-- Feature branches should be created from and merged back into the current version branch
+- `main` — primary development; feature branches merge here by default
+- `X.Y.x` branches (e.g. `1.8.x`, `1.9.x`) — release / maintenance lines; use only for backports
+- Feature branches should be created from and merged back into `main`
