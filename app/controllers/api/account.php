@@ -39,8 +39,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -65,6 +63,7 @@ use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -3169,15 +3168,9 @@ Http::post('/v1/account/tokens/phone')
                 providerType: MESSAGE_TYPE_SMS,
             ));
 
-            $helper = PhoneNumberUtil::getInstance();
-            try {
-                $countryCode = $helper->parse($phone)->getCountryCode();
-
-                if (!empty($countryCode)) {
-                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                }
-            } catch (NumberParseException $e) {
-                // Ignore invalid phone number for country code stats
+            $countryCode = CallingCode::fromPhoneNumber($phone);
+            if (!empty($countryCode)) {
+                $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
             }
             $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
@@ -4516,15 +4509,9 @@ Http::post('/v1/account/verifications/phone')
                 providerType: MESSAGE_TYPE_SMS,
             ));
 
-            $helper = PhoneNumberUtil::getInstance();
-            try {
-                $countryCode = $helper->parse($phone)->getCountryCode();
-
-                if (!empty($countryCode)) {
-                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                }
-            } catch (NumberParseException $e) {
-                // Ignore invalid phone number for country code stats
+            $countryCode = CallingCode::fromPhoneNumber($phone);
+            if (!empty($countryCode)) {
+                $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
             }
             $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
