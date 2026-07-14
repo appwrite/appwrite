@@ -103,7 +103,9 @@ import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getFirstEnabledSpecification,
   hasUnavailableSpecifications,
-  isSpecificationAllowedInPlan} from '@/lib/specifications'
+  isSpecificationAllowedInPlan,
+  SpecificationType,
+} from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -410,7 +412,10 @@ export function View() {
   const { data: runtimesData } = useProjectRuntimes(projectId)
 
   // Fetch specifications to get resource limits
-  const { data: specificationsData } = useFunctionSpecifications(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(
+    projectId,
+    SpecificationType.Runtimes,
+  )
 
   // Filter domains for active deployment and sort by length (shortest first), limit to 3
   const activeDomains = useMemo(() => {

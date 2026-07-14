@@ -57,6 +57,7 @@ import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
   hasUnavailableSpecifications,
+  SpecificationType,
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
@@ -141,7 +142,10 @@ export function RepositoryConfigView({
     providerRepositoryId || null,
   )
   const { data: runtimesData } = useProjectRuntimes(projectId)
-  const { data: specificationsData } = useFunctionSpecifications(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(
+    projectId,
+    SpecificationType.Builds,
+  )
   const runtimes = runtimesData?.runtimes ?? []
   const specifications = useMemo(
     () => specificationsData?.specifications ?? [],

@@ -8,6 +8,7 @@ import {
   projectVariablesQueryOptions,
   functionSpecificationsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { SpecificationType } from '@/lib/specifications'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessFunctionSecuritySettings } from '@/lib/console-rbac-loader'
 
@@ -47,7 +48,16 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
       queryClient.ensureQueryData(
-        functionSpecificationsQueryOptions(projectId),
+        functionSpecificationsQueryOptions(
+          projectId,
+          SpecificationType.Runtimes,
+        ),
+      ),
+      queryClient.ensureQueryData(
+        functionSpecificationsQueryOptions(
+          projectId,
+          SpecificationType.Builds,
+        ),
       ),
     ])
     const fn = queryClient.getQueryData<{ name?: string }>(

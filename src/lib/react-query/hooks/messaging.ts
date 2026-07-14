@@ -21,26 +21,6 @@ import { bucketsQueryOptions } from './storage'
 /** Message detail: list targets page size (must match message detail View + route loader). */
 export const MESSAGE_DETAIL_TARGETS_LIMIT = 100
 
-/**
- * Messaging log endpoints exist in the console API specs, but the installed
- * `@appwrite.io/console` SDK omits `listMessageLogs` / related methods.
- * Call the REST paths directly until the SDK is regenerated with them.
- */
-function messagingUrl(projectId: string, path: string): URL {
-  const { client } = sdk.forProject(projectId)
-  return new URL(`${client.config.endpoint}/messaging${path}`)
-}
-
-async function listMessagingLogs(
-  projectId: string,
-  path: string,
-  queries: string[],
-): Promise<Models.LogList> {
-  return (await sdk
-    .forProject(projectId)
-    .client.call('get', messagingUrl(projectId, path), {}, { queries })) as Models.LogList
-}
-
 // ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
@@ -491,13 +471,6 @@ export async function prefetchMessageDetailData(
     queryClient.ensureQueryData(bucketsQueryOptions(projectId, 0, 100, '')),
   ])
 
-  // Logs power a dialog only; do not block navigation on them.
-  void queryClient
-    .prefetchQuery(
-      messageLogsQueryOptions(projectId, messageId, 0, DEFAULT_PAGE_SIZE),
-    )
-    .catch(() => {})
-
   const targetsOpts = messageTargetsQueryOptions(
     projectId,
     messageId,
@@ -872,128 +845,5 @@ export function messagingTargetPickerUsersQueryOptions(
     enabled: !!projectId,
     staleTime: 30 * 1000,
     retry: false,
-  })
-}
-
-export async function fetchMessageLogs(
-  projectId: string,
-  messageId: string,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-): Promise<Models.LogList> {
-  // API only allows limit and offset for message logs (not orderAsc/orderDesc).
-  const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return listMessagingLogs(projectId, `/messages/${messageId}/logs`, queries)
-}
-
-export function messageLogsQueryOptions(
-  projectId: string | null | undefined,
-  messageId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  return queryOptions({
-    queryKey: ['message-logs', 'project', projectId, messageId, page, limit],
-    queryFn: () => fetchMessageLogs(projectId!, messageId!, page, limit),
-    enabled: !!projectId && !!messageId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    placeholderData: keepPreviousData,
-    gcTime: projectId && messageId ? 5 * 60 * 1000 : 0,
-  })
-}
-
-export async function fetchTopicLogs(
-  projectId: string,
-  topicId: string,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-): Promise<Models.LogList> {
-  // API only allows limit and offset for topic logs (not orderAsc/orderDesc).
-  const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return listMessagingLogs(projectId, `/topics/${topicId}/logs`, queries)
-}
-
-export function topicLogsQueryOptions(
-  projectId: string | null | undefined,
-  topicId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  return queryOptions({
-    queryKey: ['topic-logs', 'project', projectId, topicId, page, limit],
-    queryFn: () => fetchTopicLogs(projectId!, topicId!, page, limit),
-    enabled: !!projectId && !!topicId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    placeholderData: keepPreviousData,
-  })
-}
-
-export async function fetchProviderLogs(
-  projectId: string,
-  providerId: string,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-): Promise<Models.LogList> {
-  // API only allows limit and offset for provider logs (not orderAsc/orderDesc).
-  const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return listMessagingLogs(projectId, `/providers/${providerId}/logs`, queries)
-}
-
-export function providerLogsQueryOptions(
-  projectId: string | null | undefined,
-  providerId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  return queryOptions({
-    queryKey: ['provider-logs', 'project', projectId, providerId, page, limit],
-    queryFn: () => fetchProviderLogs(projectId!, providerId!, page, limit),
-    enabled: !!projectId && !!providerId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    placeholderData: keepPreviousData,
-  })
-}
-
-export async function fetchSubscriberLogs(
-  projectId: string,
-  subscriberId: string,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-): Promise<Models.LogList> {
-  // API only allows limit and offset for subscriber logs (not orderAsc/orderDesc).
-  const queries = [Query.limit(limit), Query.offset(page * limit)]
-  return listMessagingLogs(
-    projectId,
-    `/subscribers/${subscriberId}/logs`,
-    queries,
-  )
-}
-
-export function subscriberLogsQueryOptions(
-  projectId: string | null | undefined,
-  subscriberId: string | null | undefined,
-  page: number = 0,
-  limit: number = DEFAULT_PAGE_SIZE,
-) {
-  return queryOptions({
-    queryKey: [
-      'subscriber-logs',
-      'project',
-      projectId,
-      subscriberId,
-      page,
-      limit,
-    ],
-    queryFn: () => fetchSubscriberLogs(projectId!, subscriberId!, page, limit),
-    enabled: !!projectId && !!subscriberId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false,
-    placeholderData: keepPreviousData,
   })
 }

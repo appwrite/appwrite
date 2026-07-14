@@ -15,6 +15,7 @@ import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { SpecificationType } from '@/lib/specifications'
 import {
   MARKETING_SITE_TEMPLATES_PROJECT_ID,
   MARKETING_SITE_TEMPLATES_PAGE_SIZE,
@@ -310,13 +311,16 @@ export async function fetchSiteFrameworks(projectId: string) {
 /**
  * Query function to fetch site specifications (Cloud only)
  */
-export async function fetchSiteSpecifications(projectId: string) {
+export async function fetchSiteSpecifications(
+  projectId: string,
+  type: SpecificationType = SpecificationType.Runtimes,
+) {
   if (!projectId) {
     return { specifications: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.sites.listSpecifications()
+  const response = await projectSdk.sites.listSpecifications({ type })
   return {
     specifications: response.specifications || [],
     total: response.total || 0,
@@ -749,10 +753,11 @@ export function siteFrameworksQueryOptions(
  */
 export function siteSpecificationsQueryOptions(
   projectId: string | null | undefined,
+  type: SpecificationType = SpecificationType.Runtimes,
 ) {
   return queryOptions({
-    queryKey: ['specifications', 'site', projectId],
-    queryFn: () => fetchSiteSpecifications(projectId!),
+    queryKey: ['specifications', 'site', projectId, type],
+    queryFn: () => fetchSiteSpecifications(projectId!, type),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
     retry: false,
@@ -964,8 +969,11 @@ export function useSiteFrameworks(projectId: string | null | undefined) {
 /**
  * Hook to fetch site specifications
  */
-export function useSiteSpecifications(projectId: string | null | undefined) {
-  return useQuery(siteSpecificationsQueryOptions(projectId))
+export function useSiteSpecifications(
+  projectId: string | null | undefined,
+  type: SpecificationType = SpecificationType.Runtimes,
+) {
+  return useQuery(siteSpecificationsQueryOptions(projectId, type))
 }
 
 /**

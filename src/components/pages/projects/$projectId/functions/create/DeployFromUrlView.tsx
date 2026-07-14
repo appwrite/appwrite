@@ -39,6 +39,7 @@ import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
   hasUnavailableSpecifications,
+  SpecificationType,
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { FunctionDomainCard } from './_components/FunctionDomainCard'
@@ -97,7 +98,10 @@ export function DeployFromUrlView({
   const [isDeploying, setIsDeploying] = useState(false)
 
   const { data: runtimesData } = useProjectRuntimes(projectId)
-  const { data: specificationsData } = useFunctionSpecifications(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(
+    projectId,
+    SpecificationType.Builds,
+  )
   const runtimes = runtimesData?.runtimes ?? []
   const specifications = useMemo(
     () => specificationsData?.specifications ?? [],

@@ -15,6 +15,7 @@ import {
   functionSpecificationsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import { SpecificationType } from '@/lib/specifications'
 import {
   CREATE_FUNCTION_WIZARD_BROWSE_LIMIT,
   CREATE_FUNCTION_WIZARD_STARTER_LIMIT,
@@ -60,7 +61,10 @@ export const Route = createFileRoute(
         ),
         queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
         queryClient.ensureQueryData(
-          functionSpecificationsQueryOptions(projectId),
+          functionSpecificationsQueryOptions(
+            projectId,
+            SpecificationType.Builds,
+          ),
         ),
         queryClient.ensureQueryData(
           functionTemplatesPageQueryOptions(

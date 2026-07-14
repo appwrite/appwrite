@@ -43,6 +43,7 @@ import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
   hasUnavailableSpecifications,
+  SpecificationType,
 } from '@/lib/specifications'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useFunctionWizard } from './WizardContext'
@@ -77,7 +78,10 @@ export function TemplateConfigView({
     projectId,
     templateId,
   )
-  const { data: specificationsData } = useFunctionSpecifications(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(
+    projectId,
+    SpecificationType.Builds,
+  )
   const specifications = useMemo(
     () => specificationsData?.specifications ?? [],
     [specificationsData],

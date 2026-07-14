@@ -5,7 +5,6 @@ import {
   Mail,
   Phone,
   Bell,
-  ScrollText,
   Trash2} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -19,8 +18,7 @@ import {
   canShowTopicSettingsTab,
   canWriteTopics} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { subscriberLogsQueryOptions } from '@/lib/react-query/hooks/messaging'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
@@ -56,14 +54,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
-import { MessagingLogsTable } from '../../_components/MessagingLogsTable'
-
 export type TopicSubscribersInitialData = {
   subscribers: Models.Subscriber[]
   total: number
@@ -85,12 +75,6 @@ export function View({
   const [addTargetsOpen, setAddTargetsOpen] = useState(false)
   const [subscriberPendingDelete, setSubscriberPendingDelete] =
     useState<Models.Subscriber | null>(null)
-  const [subscriberLogFor, setSubscriberLogFor] =
-    useState<Models.Subscriber | null>(null)
-  const [subscriberLogRequestedPage, setSubscriberLogRequestedPage] =
-    useState(1)
-  const [subscriberLogDisplayedPage, setSubscriberLogDisplayedPage] =
-    useState(1)
 
   const { data: topic } = useTopic(projectId, topicId, initialTopic)
   const topicResolved = topic ?? initialTopic
@@ -256,50 +240,6 @@ export function View({
       toast.error(getErrorMessage(e) || t('Failed to remove subscriber'))
     }})
 
-  const subscriberLogPageReq = subscriberLogRequestedPage - 1
-  const subscriberLogPageDisp = subscriberLogDisplayedPage - 1
-
-  const {
-    isFetching: subscriberLogReqFetching,
-    isLoading: subscriberLogReqLoading} = useQuery({
-    ...subscriberLogsQueryOptions(
-      projectId,
-      subscriberLogFor?.$id ?? null,
-      subscriberLogPageReq,
-      DEFAULT_PAGE_SIZE,
-    ),
-    enabled: !!projectId && !!subscriberLogFor})
-
-  const { data: subscriberLogDataDisplayed } = useQuery({
-    ...subscriberLogsQueryOptions(
-      projectId,
-      subscriberLogFor?.$id ?? null,
-      subscriberLogPageDisp,
-      DEFAULT_PAGE_SIZE,
-    ),
-    enabled: !!projectId && !!subscriberLogFor})
-
-  useEffect(() => {
-    if (!subscriberLogFor) {
-      setSubscriberLogRequestedPage(1)
-      setSubscriberLogDisplayedPage(1)
-    }
-  }, [subscriberLogFor])
-
-  useEffect(() => {
-    if (!subscriberLogFor) return
-    if (subscriberLogReqFetching || subscriberLogReqLoading) return
-    if (subscriberLogRequestedPage !== subscriberLogDisplayedPage) {
-      setSubscriberLogDisplayedPage(subscriberLogRequestedPage)
-    }
-  }, [
-    subscriberLogFor,
-    subscriberLogReqFetching,
-    subscriberLogReqLoading,
-    subscriberLogRequestedPage,
-    subscriberLogDisplayedPage,
-  ])
-
   const handleBack = () => {
     navigate({
       to: '/projects/$projectId/messaging/topics',
@@ -388,13 +328,6 @@ export function View({
     setRequestedPage(1)
     setDisplayedPage(1)
   }
-
-  const subscriberLogRows = subscriberLogDataDisplayed?.logs ?? []
-  const subscriberLogTotal = subscriberLogDataDisplayed?.total ?? 0
-  const subscriberLogFullLoading =
-    !!subscriberLogFor &&
-    subscriberLogRows.length === 0 &&
-    (subscriberLogReqLoading || subscriberLogReqFetching)
 
   return (
     <div className="flex flex-col">
@@ -537,15 +470,6 @@ export function View({
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      setSubscriberLogFor(subscriber)
-                                    }
-                                  >
-                                    <MenuItemContent icon={ScrollText}>
-                                      {t('Logs')}
-                                    </MenuItemContent>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
                                     disabled={!canManageSubscribers}
                                     title={subscribersPermissionTooltip}
                                     onClick={() =>
@@ -608,60 +532,6 @@ export function View({
           addSubscribersMutation.mutate(newTargetIds)
         }}
       />
-
-      <Dialog
-        open={subscriberLogFor != null}
-        onOpenChange={(open) => {
-          if (!open) setSubscriberLogFor(null)
-        }}
-      >
-        <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
-          <DialogHeader className="px-6 pt-6 text-start">
-            <DialogTitle>{t('Subscriber logs')}</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t('Audit log events for subscriber')}{' '}
-              {subscriberLogFor ? (
-                <CopyableId id={subscriberLogFor.$id} size="xs" />
-              ) : null}
-              .
-            </DialogDescription>
-          </DialogHeader>
-          <div className="border-t border-border" />
-          <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-4">
-            {subscriberLogFullLoading ? (
-              <p className="text-[13px] text-muted-foreground py-6 text-center">
-                {t('Loading logs…')}
-              </p>
-            ) : (
-              <>
-                <MessagingLogsTable
-                  logs={subscriberLogRows}
-                  emptyLabel={t('No log entries for this subscriber.')}
-                />
-                <Pagination
-                  className="py-1"
-                  currentPage={subscriberLogDisplayedPage}
-                  totalItems={subscriberLogTotal}
-                  pageSize={DEFAULT_PAGE_SIZE}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                  onPageChange={setSubscriberLogRequestedPage}
-                  onPageSizeChange={() => {}}
-                  showPageSizeSelector={false}
-                  itemLabel={t('entries')}
-                />
-              </>
-            )}
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setSubscriberLogFor(null)}
-            >
-              {t('Close')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog
         open={subscriberPendingDelete != null}

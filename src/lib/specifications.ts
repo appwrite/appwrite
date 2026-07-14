@@ -6,6 +6,18 @@
  * we show specification options so we consistently limit/display only allowed options.
  */
 
+/**
+ * Specification list type for `functions.listSpecifications` / `sites.listSpecifications`.
+ * SDK types this as string; API accepts `runtimes` or `builds`.
+ */
+export const SpecificationType = {
+  Runtimes: 'runtimes',
+  Builds: 'builds',
+} as const
+
+export type SpecificationType =
+  (typeof SpecificationType)[keyof typeof SpecificationType]
+
 export type SpecificationWithPlan = {
   enabled?: boolean
   slug?: string

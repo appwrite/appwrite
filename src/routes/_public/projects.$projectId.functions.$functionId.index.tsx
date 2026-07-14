@@ -11,6 +11,7 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { SpecificationType } from '@/lib/specifications'
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
 
@@ -76,7 +77,10 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
       // Fetch specifications (for resource limits) - blocks navigation until ready
       queryClient.ensureQueryData(
-        functionSpecificationsQueryOptions(projectId),
+        functionSpecificationsQueryOptions(
+          projectId,
+          SpecificationType.Runtimes,
+        ),
       ),
     ]
 

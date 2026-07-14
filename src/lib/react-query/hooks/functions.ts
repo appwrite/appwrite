@@ -15,6 +15,7 @@ import { useMemo } from 'react'
 import { Query, Runtime, FunctionTemplateUseCase, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { SpecificationType } from '@/lib/specifications'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -586,13 +587,16 @@ export async function fetchProjectRuntimes(projectId: string) {
 /**
  * Query function to fetch function specifications (Cloud only)
  */
-export async function fetchFunctionSpecifications(projectId: string) {
+export async function fetchFunctionSpecifications(
+  projectId: string,
+  type: SpecificationType = SpecificationType.Runtimes,
+) {
   if (!projectId) {
     return { specifications: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const response = await projectSdk.functions.listSpecifications()
+  const response = await projectSdk.functions.listSpecifications({ type })
   return {
     specifications: response.specifications || [],
     total: response.total || 0,
@@ -902,10 +906,11 @@ export function functionVariablesQueryOptions(
  */
 export function functionSpecificationsQueryOptions(
   projectId: string | null | undefined,
+  type: SpecificationType = SpecificationType.Runtimes,
 ) {
   return queryOptions({
-    queryKey: ['specifications', 'function', projectId],
-    queryFn: () => fetchFunctionSpecifications(projectId!),
+    queryKey: ['specifications', 'function', projectId, type],
+    queryFn: () => fetchFunctionSpecifications(projectId!, type),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
     retry: false,
@@ -1382,8 +1387,9 @@ export function useProjectRuntimes(projectId: string | null | undefined) {
  */
 export function useFunctionSpecifications(
   projectId: string | null | undefined,
+  type: SpecificationType = SpecificationType.Runtimes,
 ) {
-  return useQuery(functionSpecificationsQueryOptions(projectId))
+  return useQuery(functionSpecificationsQueryOptions(projectId, type))
 }
 
 /**

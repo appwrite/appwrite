@@ -9,6 +9,7 @@ import {
   projectVariablesQueryOptions,
   vcsInstallationsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { SpecificationType } from '@/lib/specifications'
 import { canAccessSiteSettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
@@ -40,7 +41,17 @@ export const Route = createFileRoute(
         vcsInstallationsQueryOptions(projectId, 0, 10),
       ),
       queryClient
-        .ensureQueryData(siteSpecificationsQueryOptions(projectId))
+        .ensureQueryData(
+          siteSpecificationsQueryOptions(
+            projectId,
+            SpecificationType.Runtimes,
+          ),
+        )
+        .catch(() => {}),
+      queryClient
+        .ensureQueryData(
+          siteSpecificationsQueryOptions(projectId, SpecificationType.Builds),
+        )
         .catch(() => {}),
     ])
   },

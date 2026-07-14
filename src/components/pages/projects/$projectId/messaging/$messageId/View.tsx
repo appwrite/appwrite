@@ -24,9 +24,7 @@ import {
   useProjectTopics,
   useProjectBuckets,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { messageLogsQueryOptions } from '@/lib/react-query/hooks/messaging'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -109,7 +107,6 @@ import {
 } from '../_components/MessageDeliveryDialogs'
 import { MessagingTargetsModal } from '../_components/MessagingTargetsModal'
 import { MessagingRecipientUsersModal } from '../_components/MessagingRecipientUsersModal'
-import { MessagingLogsTable } from '../_components/MessagingLogsTable'
 import { EmailAttachmentRow } from '../_components/EmailAttachmentRow'
 import {
   Select,
@@ -128,7 +125,6 @@ type MessageComposeCardFooterProps = {
   onSend: () => void
   onCancelSchedule: () => void
   onReschedule: () => void
-  onOpenLogs: () => void
 }
 
 function MessageComposeCardFooter({
@@ -140,76 +136,63 @@ function MessageComposeCardFooter({
   onSend,
   onCancelSchedule,
   onReschedule,
-  onOpenLogs,
 }: MessageComposeCardFooterProps) {
   const t = useT()
   const isDraft = messageStatus === 'draft'
   const isScheduled = messageStatus === 'scheduled'
-  const logsEnabled = messageStatus !== 'draft'
 
   return (
     <div className="px-6 py-4 border-t border-border bg-muted/30">
-      <div className="flex w-full flex-wrap items-center justify-between gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 shrink-0 text-[13px]"
-          disabled={!logsEnabled}
-          onClick={onOpenLogs}
-        >
-          {t('Logs')}
-        </Button>
-        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-          {isDraft ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={onSchedule}
-              >
-                {t('Schedule')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-9 text-[13px]"
-                disabled={!hasContentChanges || updatePending}
-                onClick={onUpdateDraft}
-              >
-                {t('Update draft')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-9 shrink-0 text-[13px]"
-                onClick={onSend}
-              >
-                {t('Send message')}
-              </Button>
-            </>
-          ) : isScheduled ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={onCancelSchedule}
-              >
-                {t('Cancel scheduling')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={onReschedule}
-              >
-                <Calendar className="me-1.5 h-4 w-4" />
-                {t('Reschedule')}
-              </Button>
-            </>
-          ) : null}
-        </div>
+      <div className="flex w-full flex-wrap items-center justify-end gap-2">
+        {isDraft ? (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={onSchedule}
+            >
+              {t('Schedule')}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={!hasContentChanges || updatePending}
+              onClick={onUpdateDraft}
+            >
+              {t('Update draft')}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 shrink-0 text-[13px]"
+              onClick={onSend}
+            >
+              {t('Send message')}
+            </Button>
+          </>
+        ) : isScheduled ? (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={onCancelSchedule}
+            >
+              {t('Cancel scheduling')}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={onReschedule}
+            >
+              <Calendar className="me-1.5 h-4 w-4" />
+              {t('Reschedule')}
+            </Button>
+          </>
+        ) : null}
       </div>
     </div>
   )
@@ -463,7 +446,6 @@ export function View({
 
   const [topicsModalOpen, setTopicsModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [messageLogsDialogOpen, setMessageLogsDialogOpen] = useState(false)
 
   // Update email message mutation
   const updateEmailMutation = useMutation({
@@ -806,11 +788,6 @@ export function View({
       .map((id) => topicsById[id])
       .filter((t): t is Models.Topic => Boolean(t))
   }, [message, topicsById])
-
-  const { data: messageLogsData } = useQuery({
-    ...messageLogsQueryOptions(projectId, messageId, 0, DEFAULT_PAGE_SIZE),
-    enabled: Boolean(projectId && messageId && message),
-  })
 
   const messagingModalInitialSelection = useMemo(() => {
     if (!targetPickerFor) return {}
@@ -1320,7 +1297,6 @@ export function View({
                 onSend={() => setSendDialogOpen(true)}
                 onCancelSchedule={() => setCancelScheduleOpen(true)}
                 onReschedule={() => setScheduleDialogOpen(true)}
-                onOpenLogs={() => setMessageLogsDialogOpen(true)}
               />
             </div>
           )}
@@ -1376,7 +1352,6 @@ export function View({
                 onSend={() => setSendDialogOpen(true)}
                 onCancelSchedule={() => setCancelScheduleOpen(true)}
                 onReschedule={() => setScheduleDialogOpen(true)}
-                onOpenLogs={() => setMessageLogsDialogOpen(true)}
               />
             </div>
           )}
@@ -1711,7 +1686,6 @@ export function View({
                 onSend={() => setSendDialogOpen(true)}
                 onCancelSchedule={() => setCancelScheduleOpen(true)}
                 onReschedule={() => setScheduleDialogOpen(true)}
-                onOpenLogs={() => setMessageLogsDialogOpen(true)}
               />
             </div>
           )}
@@ -2428,56 +2402,6 @@ export function View({
                 disabled={deleteMessageMutation.isPending}
               >
                 {t('Delete')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog
-          open={messageLogsDialogOpen}
-          onOpenChange={setMessageLogsDialogOpen}
-        >
-          <DialogContent className="sm:max-w-2xl p-0 max-h-[90dvh] flex flex-col">
-            <DialogHeader className="px-6 pt-6 text-start">
-              <DialogTitle>{t('Message logs')}</DialogTitle>
-              <DialogDescription className="text-[13px] mt-2">
-                {t('Audit log entries for this message.')}
-                {message.status === 'failed'
-                  ? ' ' +
-                    t(
-                      'When delivery fails, API errors are included below when available.',
-                    )
-                  : ''}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="border-t border-border" />
-            <div className="px-6 pb-4 pt-0 flex-1 min-h-0 overflow-y-auto space-y-6">
-              {message.deliveryErrors && message.deliveryErrors.length > 0 ? (
-                <div>
-                  <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                    {t('Delivery errors')}
-                  </h4>
-                  <pre className="max-h-[220px] overflow-auto rounded-md border border-border bg-muted/30 p-4 text-[12px]">
-                    {JSON.stringify(message.deliveryErrors, null, 2)}
-                  </pre>
-                </div>
-              ) : null}
-              <div>
-                <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                  {t('Log entries')}
-                </h4>
-                <MessagingLogsTable
-                  logs={messageLogsData?.logs ?? []}
-                  emptyLabel={t('No log entries returned for this message.')}
-                />
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setMessageLogsDialogOpen(false)}
-              >
-                {t('Close')}
               </Button>
             </div>
           </DialogContent>

@@ -13,7 +13,10 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { hasUnavailableSpecifications } from '@/lib/specifications'
+import {
+  hasUnavailableSpecifications,
+  SpecificationType,
+} from '@/lib/specifications'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { FunctionDeploymentRetentionCard } from './FunctionDeploymentRetentionCard'
@@ -34,7 +37,10 @@ export function View() {
     projectId,
     functionId,
   )
-  const { data: specificationsData } = useFunctionSpecifications(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(
+    projectId,
+    SpecificationType.Builds,
+  )
 
   const [commands, setCommands] = useState('')
   const [buildSpecification, setBuildSpecification] = useState('')

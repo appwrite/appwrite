@@ -9,7 +9,10 @@ import {
   useSiteSpecifications,
 } from '@/lib/react-query/hooks'
 import { useProject } from '@/lib/react-query/hooks'
-import { hasUnavailableSpecifications } from '@/lib/specifications'
+import {
+  hasUnavailableSpecifications,
+  SpecificationType,
+} from '@/lib/specifications'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { useT } from '@/lib/i18n/translate'
@@ -30,7 +33,10 @@ export function SiteBuildSpecificationCard({
   const t = useT()
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
-  const { data: specificationsData } = useSiteSpecifications(projectId)
+  const { data: specificationsData } = useSiteSpecifications(
+    projectId,
+    SpecificationType.Builds,
+  )
 
   const specifications = useMemo(
     () => specificationsData?.specifications || [],
