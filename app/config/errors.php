@@ -347,6 +347,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
+        'code' => 424,
+    ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
         'name' => Exception::USER_EMAIL_NOT_VERIFIED,
         'description' => 'User email is not verified',

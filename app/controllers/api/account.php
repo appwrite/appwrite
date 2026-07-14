@@ -1570,8 +1570,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null) use ($failure, $response) {
-            $exception = new Exception($type, $message, $code);
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response) {
+            $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
                 $query['error'] = json_encode([
@@ -1619,9 +1619,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         } catch (OAuth2Exception $ex) {
 
             $failureRedirect(
-                $ex->getType(),
-                'Failed to obtain access token. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),
-                $ex->getCode(),
+                Exception::USER_OAUTH2_PROVIDER_FAILURE,
+                previous: $ex,
+                params: [$providerName, $ex->getError()],
             );
         }
 
