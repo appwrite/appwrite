@@ -168,7 +168,12 @@ final class FormatTest extends TestCase
         Method::$processed = [];
         Method::$errors = [];
 
-        $route = (new Route(['GET', 'POST'], '/v1/tests/:testId'))
+        $route = (new class (['GET', 'POST'], '/v1/tests/:testId') extends Route {
+            public function getMethods(): array
+            {
+                return [2 => 'GET', 4 => 'POST'];
+            }
+        })
             ->desc('Get or update test')
             ->label('sdk', new Method(
                 namespace: 'test',

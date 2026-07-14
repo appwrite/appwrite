@@ -832,7 +832,7 @@ class OpenAPI3 extends Format
                 $url = \implode('/', $segments);
             }
 
-            $methods = $route->getMethods();
+            $methods = \array_values($route->getMethods());
             foreach ($methods as $index => $method) {
                 $methodTemp = $temp;
                 if (\count($methods) > 1) {
