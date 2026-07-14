@@ -3827,6 +3827,14 @@ Http::post('/v1/account/recovery')
         $customTemplate =
             $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ??
             $project->getAttribute('templates', [])['email.recovery-' . $locale->fallback] ?? [];
+        $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+        $validator = new FileName();
+        if (!$validator->isValid($smtpBaseTemplate)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+        }
+
+        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -3906,12 +3914,27 @@ Http::post('/v1/account/recovery')
             'team' => ''
         ];
 
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $emailVariables = [
+                ...$emailVariables,
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
+            ];
+        }
+
         $publisherForMails->enqueue(new MailMessage(
             project: $project,
             recipient: $profile->getAttribute('email', ''),
             name: $profile->getAttribute('name', ''),
             subject: $subject,
             template: MAIL_TEMPLATE_RECOVERY,
+            bodyTemplate: $bodyTemplate,
             body: $body,
             preview: $preview,
             smtp: $smtpConfig,
