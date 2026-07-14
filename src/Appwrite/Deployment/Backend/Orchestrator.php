@@ -170,28 +170,10 @@ readonly class Orchestrator extends Backend
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
         ] + $output['environment'];
 
-        // TODO: Temporary diagnostic for the intermittent Gitea "No source
-        // code found" CI failure. Appwrite can fetch the exact same presigned
-        // URL fine (confirmed via a separate external probe), so this checks
-        // reachability from inside the sidecar/job container itself, right
-        // before build.sh runs. Uses `node` (guaranteed present in a runtime
-        // image) rather than curl, which turned out to be absent here. Only
-        // prints status/size (never the URL, which carries the access token)
-        // into buildLogs. Remove once root-caused.
-        $probeScript = "require('http').get(process.argv[1], r => { let s=0; r.on('data',c=>s+=c.length); r.on('end',()=>console.error('[vcs-source-probe-sidecar] status='+r.statusCode+' size='+s)); }).on('error', e => console.error('[vcs-source-probe-sidecar] error='+e.message));";
-        // Stop guessing about subdir/unarchive semantics -- just show what the
-        // artifact system actually placed at OPEN_RUNTIMES_BUILD_INPUT_DIR
-        // right before build.sh reads it. `find` over `ls` since we need to
-        // see into any unexpected nesting depth.
-        $listingProbe = 'echo "[vcs-source-probe-listing]"; find /mnt/code/source -maxdepth 4 2>&1 || echo "[vcs-source-probe-listing] /mnt/code/source missing"; ';
-        $sourceProbe = $source !== null
-            ? 'node -e ' . \escapeshellarg($probeScript) . ' ' . \escapeshellarg($source['url']) . ' || echo "[vcs-source-probe-sidecar] node unavailable or failed"; ' . $listingProbe
-            : '';
-
         return [
             'id' => static::id($projectId, $deploymentId),
             'image' => $runtime['image'],
-            'command' => $sourceProbe . '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
+            'command' => '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
             'cpu' => $cpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
