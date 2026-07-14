@@ -9,7 +9,6 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 return [
     'github' => [
-        'enabled' => true,
         'adapter' => GitHub::class,
         'envVariables' => [
             'APP_NAME' => '_APP_VCS_GITHUB_APP_NAME',
@@ -22,7 +21,6 @@ return [
         'requiredEnvVariables' => ['APP_NAME', 'PRIVATE_KEY', 'APP_ID', 'CLIENT_ID', 'CLIENT_SECRET'],
     ],
     'gitea' => [
-        'enabled' => true,
         'adapter' => Gitea::class,
         'envVariables' => [
             'ENDPOINT' => '_APP_VCS_GITEA_ENDPOINT',

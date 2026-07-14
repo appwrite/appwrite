@@ -23,15 +23,7 @@ class Factory
         protected Cache $cache,
         ?array $registry = null,
     ) {
-        $registry ??= Config::getParam('vcs', []);
-
-        foreach ($registry as $key => $entry) {
-            if (!($entry['enabled'] ?? false)) {
-                continue;
-            }
-
-            $this->registry[$key] = $entry;
-        }
+        $this->registry = $registry ?? Config::getParam('vcs', []);
     }
 
     public function getProviders(): array

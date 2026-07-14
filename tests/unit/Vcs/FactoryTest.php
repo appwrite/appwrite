@@ -35,17 +35,6 @@ final class FactoryTest extends TestCase
         }
     }
 
-    public function testDisabledProvidersAreNotRegistered(): void
-    {
-        $factory = new Factory($this->cache(), [
-            'github' => $this->githubEntry(),
-            'legacy' => ['enabled' => false] + $this->githubEntry(),
-        ]);
-
-        $this->expectException(Exception::class);
-        $factory->fromProvider('legacy');
-    }
-
     public function testFromProviderUnknownThrows(): void
     {
         $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);
@@ -84,7 +73,6 @@ final class FactoryTest extends TestCase
     public function testIsConfigured(): void
     {
         $entry = [
-            'enabled' => true,
             'adapter' => GitHub::class,
             'envVariables' => ['TOKEN' => '_APP_VCS_TEST_TOKEN'],
             'requiredEnvVariables' => ['TOKEN'],
@@ -122,7 +110,6 @@ final class FactoryTest extends TestCase
     protected function githubEntry(): array
     {
         return [
-            'enabled' => true,
             'adapter' => GitHub::class,
             'envVariables' => [
                 'APP_NAME' => '_APP_VCS_GITHUB_APP_NAME',
