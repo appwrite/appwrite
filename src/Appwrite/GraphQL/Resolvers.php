@@ -72,13 +72,15 @@ class Resolvers
      *
      * @param Http $utopia
      * @param ?Route $route
+     * @param string $method
      * @return callable
      */
     public static function api(
         Http $utopia,
         ?Route $route,
+        string $method,
     ): callable {
-        return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $args) {
+        return static fn ($type, $args, $context, $info) => new Swoole(function (callable $resolve, callable $reject) use ($utopia, $route, $method, $args) {
             $utopia = $utopia->context()->get('utopia:graphql');
             $request = $utopia->context()->get('request');
             $response = $utopia->context()->get('response');
@@ -89,7 +91,7 @@ class Resolvers
                 $response,
                 $resolve,
                 $reject,
-                prepareRequest: static function (Request $request) use ($route, $args): void {
+                prepareRequest: static function (Request $request) use ($route, $method, $args): void {
                     $path = $route->getPath();
                     foreach ($args as $key => $value) {
                         if (\str_contains($path, '/:' . $key)) {
@@ -97,10 +99,10 @@ class Resolvers
                         }
                     }
 
-                    $request->setMethod($route->getMethod());
+                    $request->setMethod($method);
                     $request->setURI($path);
 
-                    switch ($route->getMethod()) {
+                    switch ($method) {
                         case 'GET':
                             $request->setQueryString($args);
                             break;
