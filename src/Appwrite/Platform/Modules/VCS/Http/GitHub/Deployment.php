@@ -147,7 +147,7 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $vcs->getOwnerName($providerInstallationId);
+                $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                 try {
                     $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
@@ -334,7 +334,7 @@ trait Deployment
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $vcs->getOwnerName($providerInstallationId);
+                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                     continue;
                 }
@@ -566,7 +566,7 @@ trait Deployment
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $vcs->getOwnerName($providerInstallationId);
+                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
                     $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
                     $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
