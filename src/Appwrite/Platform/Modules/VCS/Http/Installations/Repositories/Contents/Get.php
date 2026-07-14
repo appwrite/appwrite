@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
@@ -49,7 +50,7 @@ class Get extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
             ->param('providerReference', '', new Text(256, 0), 'Git reference (branch, tag, commit) to get contents from', true)
-            ->inject('vcsForInstallation')
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -60,7 +61,7 @@ class Get extends Action
         string $providerRepositoryId,
         string $providerRootDirectory,
         string $providerReference,
-        callable $vcsForInstallation,
+        VcsFactory $vcsFactory,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -71,7 +72,7 @@ class Get extends Action
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $vcs = $vcsForInstallation($installation);
+        $vcs = $vcsFactory->fromInstallation($installation);
 
         $owner = $vcs->getOwnerName($providerInstallationId);
         try {
