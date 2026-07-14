@@ -110,28 +110,10 @@ final class Job
             'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => self::cachePath($projectId, $cacheKey),
         ];
 
-        // TODO: Temporary diagnostic for the intermittent Gitea "No source
-        // code found" CI failure. Appwrite can fetch the exact same presigned
-        // URL fine (confirmed via a separate external probe), so this checks
-        // reachability from inside the sidecar/job container itself, right
-        // before build.sh runs. Uses `node` (guaranteed present in a runtime
-        // image) rather than curl, which turned out to be absent here. Only
-        // prints status/size (never the URL, which carries the access token)
-        // into buildLogs. Remove once root-caused.
-        $probeScript = "require('http').get(process.argv[1], r => { let s=0; r.on('data',c=>s+=c.length); r.on('end',()=>console.error('[vcs-source-probe-sidecar] status='+r.statusCode+' size='+s)); }).on('error', e => console.error('[vcs-source-probe-sidecar] error='+e.message));";
-        // Stop guessing about subdir/unarchive semantics -- just show what the
-        // artifact system actually placed at OPEN_RUNTIMES_BUILD_INPUT_DIR
-        // right before build.sh reads it. `find` over `ls` since we need to
-        // see into any unexpected nesting depth.
-        $listingProbe = 'echo "[vcs-source-probe-listing]"; find /mnt/code/source -maxdepth 4 2>&1 || echo "[vcs-source-probe-listing] /mnt/code/source missing"; ';
-        $sourceProbe = $source !== null
-            ? 'node -e ' . \escapeshellarg($probeScript) . ' ' . \escapeshellarg($source['url']) . ' || echo "[vcs-source-probe-sidecar] node unavailable or failed"; ' . $listingProbe
-            : '';
-
         return [
             'id' => self::id($projectId, $deploymentId),
             'image' => $runtime['image'],
-            'command' => $sourceProbe . '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
+            'command' => '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
             'cpu' => $cpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
@@ -181,25 +163,12 @@ final class Job
         return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}/code.tar.gz";
     }
 
-    /**
-     * TODO: Under active investigation for the intermittent Gitea "No source
-     * code found" CI failure. Confirmed via a live archive inspection that
-     * Gitea's tarball is NOT auto-stripped of its `{repo}/` wrapper the way
-     * GitHub's `{repo}-{ref}/` apparently is when no subdir is given (omitting
-     * subdir entirely left the entrypoint nested one level too deep instead).
-     * So the repository-name descent is genuinely required for Gitea -- but
-     * with it, the real CI run still found nothing. Trying a trailing slash
-     * here since tar directory entries are typically stored with one and the
-     * orchestrator's subdir match may be doing exact rather than prefix
-     * comparison. Remove this comment once confirmed either way.
-     */
     public static function sourceSubdirectory(Git $vcs, string $repositoryName, string $rootDirectory): string
     {
         $rootDirectory = \trim($rootDirectory, '/');
 
         if ($vcs->getName() === 'gitea') {
-            $subdir = \trim($repositoryName . '/' . $rootDirectory, '/');
-            return $subdir . '/';
+            return \trim($repositoryName . '/' . $rootDirectory, '/');
         }
 
         return $rootDirectory;
