@@ -1257,6 +1257,60 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_VCS_GITEA_ENDPOINT',
+                'description' => 'URL of your self-hosted Gitea instance, reachable from the Appwrite server (e.g. for API calls and webhook token exchange).',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_BROWSER_ENDPOINT',
+                'description' => 'URL of your Gitea instance reachable from the browser, if different from _APP_VCS_GITEA_ENDPOINT (e.g. when Appwrite and Gitea are on the same Docker network but Gitea is exposed to the browser on a different host). Falls back to _APP_VCS_GITEA_ENDPOINT when unset.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_ID',
+                'description' => 'Gitea OAuth2 application client ID. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_CLIENT_SECRET',
+                'description' => 'Gitea OAuth2 application client secret. You can generate one in your Gitea instance under Settings > Applications.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITEA_WEBHOOK_SECRET',
+                'description' => 'Secret used to validate incoming Gitea webhook payloads.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_WEBHOOK_URL',
+                'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
+                'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

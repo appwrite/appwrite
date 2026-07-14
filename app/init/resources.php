@@ -384,6 +384,8 @@ $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new Reposit
 
 $container->set('vcsProviders', fn (VcsFactory $vcsFactory) => fn () => $vcsFactory->getProviders(), ['vcsFactory']);
 
+$container->set('vcsConfigured', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->isConfigured($provider), ['vcsFactory']);
+
 $container->set('vcsWebhookSecret', fn (VcsFactory $vcsFactory) => fn (string $provider) => $vcsFactory->getWebhookSecret($provider), ['vcsFactory']);
 
 $container->set('plan', fn () => []);
