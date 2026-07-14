@@ -58,6 +58,8 @@ import {
   Undo2,
   GripVertical,
   Columns3,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import {
   type Collection,
@@ -3045,6 +3047,21 @@ export function RowsSpreadsheet({
   const copiedColumnHeaderClearRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null)
+  const [revealedEncryptedColumns, setRevealedEncryptedColumns] = useState(
+    () => new Set<string>(),
+  )
+
+  const toggleEncryptedColumnReveal = useCallback((columnKey: string) => {
+    setRevealedEncryptedColumns((prev) => {
+      const next = new Set(prev)
+      if (next.has(columnKey)) {
+        next.delete(columnKey)
+      } else {
+        next.add(columnKey)
+      }
+      return next
+    })
+  }, [])
 
   const copyColumnHeaderName = useCallback(async (name: string) => {
     const ok = await copyToClipboard('Column name', name, {
@@ -5052,6 +5069,11 @@ export function RowsSpreadsheet({
                 const columnType =
                   (columnInfo as { type?: string } | undefined)?.type ||
                   'string'
+                const isEncryptedColumn = Boolean(
+                  (columnInfo as { encrypt?: boolean } | undefined)?.encrypt,
+                )
+                const encryptedValuesRevealed =
+                  isEncryptedColumn && revealedEncryptedColumns.has(col)
                 const ColumnIcon = getColumnIcon(columnType)
                 const isDragResize = resizingDataColumnKey === col
                 const isCopiedHeader = copiedColumnHeaderKey === col
@@ -5097,6 +5119,37 @@ export function RowsSpreadsheet({
                         )}
                       </button>
                       <span className="min-w-0 flex-1 shrink" aria-hidden />
+                      {isEncryptedColumn ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={
+                                encryptedValuesRevealed
+                                  ? t('Hide encrypted values')
+                                  : t('Show encrypted values')
+                              }
+                              aria-pressed={encryptedValuesRevealed}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleEncryptedColumnReveal(col)
+                              }}
+                              className="shrink-0 cursor-pointer rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                              {encryptedValuesRevealed ? (
+                                <EyeOff className="h-3 w-3 shrink-0" aria-hidden />
+                              ) : (
+                                <Eye className="h-3 w-3 shrink-0" aria-hidden />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            {encryptedValuesRevealed
+                              ? t('Hide encrypted values')
+                              : t('Show encrypted values')}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => handleSortColumn(col)}
@@ -5359,6 +5412,8 @@ export function RowsSpreadsheet({
                             typeof cellValue === 'string'
                               ? isRTL(cellValue)
                               : false
+                          const revealEncrypted =
+                            revealedEncryptedColumns.has(col)
                           return (
                             <InlineTableCell
                               tableId={tableId}
@@ -5386,6 +5441,7 @@ export function RowsSpreadsheet({
                               dir={isRTLContent ? 'rtl' : 'ltr'}
                               display={display}
                               isNull={isNull}
+                              revealEncrypted={revealEncrypted}
                             />
                           )
                         })()}

@@ -135,7 +135,6 @@ export function isColumnInlineEditable(
   if (columnKey && isSystemDateColumnKey(columnKey)) return true
   const col = getColumnMeta(columnInfo)
   if (col.array) return false
-  if (col.encrypt) return false
   if (col.type && NON_INLINE_EDITABLE_TYPES.has(col.type)) return false
   if (isTableColumnStatusPending(col.status)) return false
   return true

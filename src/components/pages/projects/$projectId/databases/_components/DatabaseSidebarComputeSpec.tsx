@@ -100,7 +100,12 @@ export function DatabaseSidebarComputeSpec({
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
-  const { database: productDatabase } = useProjectDatabase(projectId, databaseId)
+  // Only fetch product DB metadata on product routes. Passing the Postgres id into
+  // `useProjectDatabase` probes tablesdb/documentsdb/vectorsdb and fails noisily.
+  const { database: productDatabase } = useProjectDatabase(
+    projectId,
+    mode === 'product' ? databaseId : null,
+  )
   const { database: postgresDatabase } = usePostgresDatabase(
     projectId,
     mode === 'postgres' ? databaseId : null,

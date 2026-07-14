@@ -16,10 +16,7 @@ import {
   getDedicatedDatabaseOperationsLockTooltipKey,
   type DedicatedDatabaseOperationsLockState,
 } from '@/lib/databases/dedicated-database-write-lock'
-import {
-  usePostgresDatabase,
-  useProjectDedicatedDatabases,
-} from '@/lib/react-query/hooks'
+import { useProjectDedicatedDatabases } from '@/lib/react-query/hooks'
 import { useOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { useT } from '@/lib/i18n/translate'
@@ -66,27 +63,20 @@ export function DatabaseOperationsLockProvider({
   }
   const projectId = projectIdProp ?? params.projectId ?? null
   const databaseId = databaseIdProp ?? params.databaseId ?? null
+  // When status is omitted (product `$dbKind` layout), resolve from the dedicated
+  // list only. Do not call `usePostgresDatabase`: that fires `postgresql.get` for
+  // tablesdb/documentsdb/vectorsdb IDs. Postgres shell always passes `status`.
   const resolveStatus = statusProp == null
 
-  const { database: postgresDatabase } = usePostgresDatabase(
-    resolveStatus ? projectId : null,
-    resolveStatus ? databaseId : null,
-  )
   const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
     resolveStatus ? projectId : null,
   )
 
   const resolvedStatus = useMemo(() => {
     if (statusProp != null) return statusProp
-    if (postgresDatabase?.status) return postgresDatabase.status
     if (!databaseId) return undefined
     return dedicatedDatabases.find((db) => db.$id === databaseId)?.status
-  }, [
-    databaseId,
-    dedicatedDatabases,
-    postgresDatabase?.status,
-    statusProp,
-  ])
+  }, [databaseId, dedicatedDatabases, statusProp])
 
   const value = useMemo(() => {
     const operationsLock = getDedicatedDatabaseOperationsLock(resolvedStatus)
