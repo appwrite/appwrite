@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -10,7 +11,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -62,7 +62,7 @@ class Update extends Action
             ->inject('authorization')
             ->inject('getProjectDB')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -78,7 +78,7 @@ class Update extends Action
         Authorization $authorization,
         callable $getProjectDB,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Backend $deployments,
         array $platform
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -140,7 +140,7 @@ class Update extends Action
             ...array_filter(array_column($prFiles, 'previous_filename'))
         ];
 
-        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $jobs);
+        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform, $deployments);
 
         $response->noContent();
     }

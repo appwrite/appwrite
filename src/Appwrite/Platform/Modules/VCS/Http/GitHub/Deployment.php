@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
-use Appwrite\Compute\Job;
-use Appwrite\Event\Event;
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -52,7 +50,7 @@ trait Deployment
         BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Jobs $jobs = null,
+        ?Backend $deployments = null,
     ) {
         $errors = [];
         foreach ($repositories as $repository) {
@@ -363,25 +361,8 @@ trait Deployment
                     $commands[] = $resource->getAttribute('commands', '');
                 }
 
-                // Build function deployments on the jobs-service when the caller
-                // opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator. Sites stay
-                // on the executor. On jobs the deployment is pre-declared 'waiting'
-                // with its buildPath so build.sh writes onto the mounted volume.
-                $useJobs = $jobs !== null
-                    && $resourceCollection === 'functions'
-                    && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-                $buildFields = $useJobs
-                    ? ['status' => 'waiting', 'buildPath' => Job::buildPath($projectId, $deploymentId)]
-                    : [];
-
-                $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
+                $deployment = new Document([
                     '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    ...$buildFields,
                     'resourceId' => $resourceId,
                     'resourceInternalId' => $resourceInternalId,
                     'resourceType' => $resourceCollection,
@@ -409,7 +390,37 @@ trait Deployment
                     'providerCommentId' => \strval($latestCommentId),
                     'providerBranch' => $providerBranch,
                     'activate' => $activate,
-                ])));
+                ]);
+
+                // Build function deployments through $deployments (executor
+                // or jobs-service, decided by _APP_BUILDS_BACKEND) when the
+                // caller opts in. Sites always stay on the executor.
+                if ($deployments !== null && $resourceCollection === 'functions') {
+                    $deployment = $authorization->skip(fn () => $deployments->createFromUrl(
+                        $resource,
+                        $deployment,
+                        $github->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $resource->getAttribute('providerRootDirectory', ''),
+                    ));
+                } else {
+                    $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        ...$deployment->getArrayCopy(),
+                        'status' => 'waiting',
+                    ])));
+
+                    $publisherForBuilds->enqueue(new BuildMessage(
+                        project: $project,
+                        resource: $resource,
+                        deployment: $deployment,
+                        type: BUILD_TYPE_DEPLOYMENT,
+                        platform: $platform,
+                    ));
+                }
 
                 if ($resource->getCollection() === 'sites') {
                     $projectId = $project->getId();
@@ -572,27 +583,6 @@ trait Deployment
                     $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
-                if ($useJobs) {
-                    $source = [
-                        'url' => $github->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
-                        'subdir' => $resource->getAttribute('providerRootDirectory', ''),
-                    ];
-                    $jobs->create(...Job::build($project, $resource, $deployment, $platform, $source));
-                } else {
-                    $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
-
-                    $publisherForBuilds->enqueue(
-                        new BuildMessage(
-                            project: $project,
-                            resource: $resource,
-                            deployment: $deployment,
-                            type: BUILD_TYPE_DEPLOYMENT,
-                            platform: $platform,
-                        ),
-                        new \Utopia\Queue\Queue($queueName)
-                    );
-                }
-
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
             } catch (Exception $e) {
@@ -616,11 +606,6 @@ trait Deployment
 
     protected function beforeCreateGitDeployment(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
     {
-    }
-
-    protected function getBuildQueueName(Document $project, Database $dbForPlatform, Authorization $authorization): string
-    {
-        return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
     }
 
 }
