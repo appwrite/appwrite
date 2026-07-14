@@ -190,10 +190,7 @@ final class FunctionsCustomServerTest extends Scope
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
         $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
         $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
-        $buildSpecification = array_find(
-            $buildSpecifications['body']['specifications'],
-            fn (array $specification) => $specification['enabled']
-        )['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $function = $this->createFunction([
             'functionId' => ID::unique(),

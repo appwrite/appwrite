@@ -43,10 +43,7 @@ final class SitesCustomServerTest extends Scope
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
         $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
         $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
-        $buildSpecification = array_find(
-            $buildSpecifications['body']['specifications'],
-            fn (array $specification) => $specification['enabled']
-        )['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
@@ -89,10 +86,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateSite(): void
     {
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
-        $buildSpecification = array_find(
-            $buildSpecifications['body']['specifications'],
-            fn (array $specification) => $specification['enabled']
-        )['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         /**
          * Test for SUCCESS
@@ -754,10 +748,7 @@ final class SitesCustomServerTest extends Scope
          */
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'buildSpecification' => array_find(
-                $buildSpecifications['body']['specifications'],
-                fn (array $specification) => $specification['enabled']
-            )['slug'],
+            'buildSpecification' => $this->getEnabledSpecification($buildSpecifications['body']['specifications']),
             'fallbackFile' => '',
             'framework' => 'analog',
             'name' => 'Test List Sites',
@@ -903,10 +894,7 @@ final class SitesCustomServerTest extends Scope
 
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'buildSpecification' => array_find(
-                $buildSpecifications['body']['specifications'],
-                fn (array $specification) => $specification['enabled']
-            )['slug'],
+            'buildSpecification' => $this->getEnabledSpecification($buildSpecifications['body']['specifications']),
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1694,10 +1682,7 @@ final class SitesCustomServerTest extends Scope
     public function testUpdateSpecs(): void
     {
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
-        $buildSpecification = array_find(
-            $buildSpecifications['body']['specifications'],
-            fn (array $specification) => $specification['enabled']
-        )['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
