@@ -83,6 +83,7 @@ class Mapper
         Http $utopia,
         Route $route,
         Method $method,
+        string $httpMethod,
         callable $complexity
     ): iterable {
         foreach (self::$blacklist as $blacklist) {
@@ -151,7 +152,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($utopia, $route)
+                'resolve' => Resolvers::api($utopia, $route, $httpMethod)
             ];
 
             if ($list) {
