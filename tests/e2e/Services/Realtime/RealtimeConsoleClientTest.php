@@ -12,6 +12,8 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use WebSocket\Client as WebSocketClient;
+use WebSocket\TimeoutException;
 
 final class RealtimeConsoleClientTest extends Scope
 {
@@ -19,6 +21,37 @@ final class RealtimeConsoleClientTest extends Scope
     use RealtimeBase;
     use ProjectCustom;
     use SideConsole;
+
+    /**
+     * Console-channel subscriptions receive events from every project sharing
+     * the console session. Skip unrelated frames until the expected event arrives.
+     */
+    private function receiveUntilEvent(WebSocketClient $client, string $event, int $timeoutMs = 10000): array
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        $lastMessage = [];
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $message = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            if (!\is_array($message)) {
+                continue;
+            }
+
+            $lastMessage = $message;
+            if (($message['type'] ?? null) === 'event'
+                && \in_array($event, $message['data']['events'] ?? [], true)
+            ) {
+                return $message;
+            }
+        }
+
+        $this->fail('Timed out waiting for realtime event "' . $event . '". Last frame: ' . \json_encode($lastMessage));
+    }
 
     /**
      * Helper to create database + collection with a string attribute.
@@ -641,7 +674,10 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            "databases.{$databaseId}.tables.{$actorsId}.indexes.*.create"
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -660,7 +696,10 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            "databases.{$databaseId}.tables.{$actorsId}.indexes.*.update"
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
