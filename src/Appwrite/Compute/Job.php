@@ -177,16 +177,27 @@ final class Job
     }
 
     /**
-     * The orchestrator's unarchive step strips the archive's single top-level
-     * wrapper folder regardless of its name (GitHub's `{repo}-{ref}/`, Gitea's
-     * `{repo}/`, etc.) before applying subdir, so this needs to be relative to
-     * the repository root -- never prefixed with the repository name, or it
-     * resolves to a folder that no longer exists post-strip and the build sees
-     * an empty source ("No source code found").
+     * TODO: Under active investigation for the intermittent Gitea "No source
+     * code found" CI failure. Confirmed via a live archive inspection that
+     * Gitea's tarball is NOT auto-stripped of its `{repo}/` wrapper the way
+     * GitHub's `{repo}-{ref}/` apparently is when no subdir is given (omitting
+     * subdir entirely left the entrypoint nested one level too deep instead).
+     * So the repository-name descent is genuinely required for Gitea -- but
+     * with it, the real CI run still found nothing. Trying a trailing slash
+     * here since tar directory entries are typically stored with one and the
+     * orchestrator's subdir match may be doing exact rather than prefix
+     * comparison. Remove this comment once confirmed either way.
      */
     public static function sourceSubdirectory(Git $vcs, string $repositoryName, string $rootDirectory): string
     {
-        return \trim($rootDirectory, '/');
+        $rootDirectory = \trim($rootDirectory, '/');
+
+        if ($vcs->getName() === 'gitea') {
+            $subdir = \trim($repositoryName . '/' . $rootDirectory, '/');
+            return $subdir . '/';
+        }
+
+        return $rootDirectory;
     }
 
     /**
