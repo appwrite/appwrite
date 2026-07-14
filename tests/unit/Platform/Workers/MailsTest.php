@@ -17,6 +17,8 @@ use Utopia\Telemetry\Adapter\None;
 final class SpyMailAdapter extends EmailAdapter
 {
     public ?EmailMessage $captured = null;
+    public int $deliveredTo = 1;
+    public ?string $error = null;
     public int $sendCount = 0;
 
     public function getName(): string
@@ -34,10 +36,19 @@ final class SpyMailAdapter extends EmailAdapter
         $this->sendCount++;
         $this->captured = $message;
 
+        $result = [
+            'recipient' => $message->getTo()[0]['email'] ?? '',
+            'status' => $this->deliveredTo === 0 ? 'failure' : 'success',
+        ];
+
+        if ($this->error !== null) {
+            $result['error'] = $this->error;
+        }
+
         return [
-            'deliveredTo' => 1,
+            'deliveredTo' => $this->deliveredTo,
             'type' => $this->getType(),
-            'results' => [['recipient' => $message->getTo()[0]['email'] ?? '', 'status' => 'sent']],
+            'results' => [$result],
         ];
     }
 }
@@ -61,10 +72,12 @@ final class MailsTest extends TestCase
                     'queue' => 'v1-mails',
                     'timestamp' => \time(),
                     'payload' => [
+                        'smtp' => [],
                         'recipient' => 'legacy@example.test',
                         'name' => 'Legacy User',
                         'subject' => 'Hello {{name}}',
                         'body' => 'Body {{name}}',
+                        'bodyTemplate' => '',
                         'variables' => ['name' => 'Legacy'],
                         'customMailOptions' => [
                             'senderEmail' => 'sender@example.test',
@@ -94,5 +107,47 @@ final class MailsTest extends TestCase
         $this->assertSame('Custom Sender', $message->getFromName());
         $this->assertSame('reply@example.test', $message->getReplyToEmail());
         $this->assertSame('Custom Reply', $message->getReplyToName());
+    }
+
+    public function testMailDeliveryFailureIsThrownByMailsWorker(): void
+    {
+        $adapter = new SpyMailAdapter();
+        $adapter->deliveredTo = 0;
+        $adapter->error = 'Domain not verified';
+
+        $registry = new Registry();
+        $registry->set('smtp', static fn () => $adapter);
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            $this->expectException(\Exception::class);
+            $this->expectExceptionMessage('Error sending mail: Domain not verified');
+
+            $worker = new Mails();
+            $worker->action(
+                new Message([
+                    'pid' => 'pid',
+                    'queue' => 'v1-mails',
+                    'timestamp' => \time(),
+                    'payload' => [
+                        'smtp' => [],
+                        'recipient' => 'legacy@example.test',
+                        'name' => 'Legacy User',
+                        'subject' => 'Hello',
+                        'body' => 'Body',
+                        'bodyTemplate' => '',
+                        'variables' => [],
+                    ],
+                ]),
+                new Document(['$id' => 'project-x']),
+                $registry,
+                new Log(),
+                new None(),
+            );
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
     }
 }

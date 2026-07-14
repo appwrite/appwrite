@@ -216,7 +216,12 @@ class Mails extends Action
         $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
 
         try {
-            $adapter->send($emailMessage);
+            $result = $adapter->send($emailMessage);
+
+            if (($result['deliveredTo'] ?? 0) === 0) {
+                $error = $result['results'][0]['error'] ?? 'Unknown error';
+                throw new Exception($error);
+            }
         } catch (\Throwable $error) {
             Span::add('mail.status', 'failure');
 
