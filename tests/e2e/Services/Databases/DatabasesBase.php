@@ -7436,21 +7436,29 @@ trait DatabasesBase
             $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
         }
 
+        // ~12MB payloads: under parallel CI load a single create can exceed the default 120s
+        // curl timeout (seen repeatedly as DocumentsDBCustomServerTest::testTimeout flakes).
+        $longtextValue = file_get_contents(__DIR__ . '/../../../resources/longtext.txt');
+        $this->assertNotFalse($longtextValue);
+        $createTimeout = 300;
+
         for ($i = 0; $i < 10; $i++) {
-            $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
+            $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 $this->getRecordIdParam() => ID::unique(),
                 'data' => [
-                    'longtext' => file_get_contents(__DIR__ . '/../../../resources/longtext.txt'),
+                    'longtext' => $longtextValue,
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
                     Permission::update(Role::user($this->getUser()['$id'])),
                     Permission::delete(Role::user($this->getUser()['$id'])),
                 ]
-            ]);
+            ], true, true, $createTimeout);
+
+            $this->assertEquals(201, $document['headers']['status-code']);
         }
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
