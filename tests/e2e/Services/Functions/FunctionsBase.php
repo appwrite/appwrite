@@ -492,4 +492,13 @@ trait FunctionsBase
 
         return $specifications;
     }
+
+    protected function getEnabledSpecification(array $specifications): string
+    {
+        $specification = array_find($specifications, fn (array $specification) => $specification['enabled']);
+
+        $this->assertNotNull($specification, 'Expected at least one enabled specification.');
+
+        return $specification['slug'];
+    }
 }
