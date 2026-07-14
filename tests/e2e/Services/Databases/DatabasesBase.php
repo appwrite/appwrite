@@ -7436,8 +7436,7 @@ trait DatabasesBase
             $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
         }
 
-        // ~12MB payloads: under parallel CI load a single create can exceed the default 120s
-        // curl timeout (seen repeatedly as DocumentsDBCustomServerTest::testTimeout flakes).
+        // Large (~12MB) creates can exceed the default 120s client timeout under CI load.
         $longtextValue = file_get_contents(__DIR__ . '/../../../resources/longtext.txt');
         $this->assertNotFalse($longtextValue);
         $createTimeout = 300;
