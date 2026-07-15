@@ -3,4037 +3,4465 @@ import type { DocsPageMeta } from '../types'
 
 export const DOCS_PAGES: DocsPageMeta[] = [
   {
-    "slug": "advanced/billing",
-    "title": "Billing",
-    "description": "Understand Appwrite's plans, add-ons, service level agreements, and billing policies.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/billing',
+    title: 'Billing',
+    description:
+      "Understand Appwrite's plans, add-ons, service level agreements, and billing policies.",
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'advanced/billing/abuse',
+    title: 'Abuse policy',
+    description:
+      'Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'advanced/billing/compute',
+    title: 'Compute',
+    description:
+      'Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'advanced/billing/database-reads-and-writes',
+    title: 'Database Reads and Writes',
+    description:
+      'Learn how Appwrite handles database reads and writes and their associated costs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'advanced/billing/enterprise',
+    title: 'Enterprise',
+    description:
+      'How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'advanced/billing/fair-use-policy',
+    title: 'Fair use policy',
+    description:
+      "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'advanced/billing/free',
+    title: 'Free',
+    description:
+      "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'advanced/billing/image-transformations',
+    title: 'Image Transformations',
+    description: "Learn how to transform images using Appwrite's storage API.",
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'advanced/billing/oss',
+    title: 'Open source',
+    description:
+      'Learn how Appwrite supports open-source projects by providing free credits and other benefits.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'advanced/billing/payments',
+    title: 'Manage billing',
+    description:
+      "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'advanced/billing/phone-otp',
+    title: 'Phone OTP',
+    description:
+      'Learn how Appwrite handles SMS-based OTP authentication for secure user verification.',
+    layout: 'article',
+    readingTimeMinutes: 9,
+  },
+  {
+    slug: 'advanced/billing/pro',
+    title: 'Pro',
+    description:
+      "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'advanced/billing/refund-policy',
+    title: 'Refund policy',
+    description:
+      "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/billing/abuse",
-    "title": "Abuse policy",
-    "description": "Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/billing/support-sla',
+    title: 'Support SLA',
+    description:
+      "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/billing/compute",
-    "title": "Compute",
-    "description": "Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/billing/uptime-sla',
+    title: 'Uptime SLA',
+    description:
+      "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/billing/database-reads-and-writes",
-    "title": "Database Reads and Writes",
-    "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/migrations',
+    title: 'Migrations',
+    description:
+      'Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/billing/enterprise",
-    "title": "Enterprise",
-    "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/migrations/cloud',
+    title: 'Migrate from Cloud',
+    description:
+      "Self-hosted application migration made easy with Appwrite. Discover the steps and strategies for migrating your self-hosted apps to Appwrite's managed platform.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/billing/fair-use-policy",
-    "title": "Fair use policy",
-    "description": "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/migrations/firebase',
+    title: 'Migrate from Firebase',
+    description:
+      "Migrate seamlessly from Firebase to Appwrite. Learn how to transfer data, authentication, and services from Firebase to leverage Appwrite's capabilities.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/billing/free",
-    "title": "Free",
-    "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/migrations/nhost',
+    title: 'Migrate from Nhost',
+    description:
+      'Transition to Appwrite from NHost with confidence. Explore migration steps, considerations, and tools to ensure a successful migration process.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/billing/image-transformations",
-    "title": "Image Transformations",
-    "description": "Learn how to transform images using Appwrite's storage API.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/migrations/self-hosted',
+    title: 'Migrate from self-hosted',
+    description:
+      'Migrate to Appwrite from self-hosted platforms seamlessly. Learn how to move your applications and data to Appwrite for enhanced flexibility and control.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/billing/oss",
-    "title": "Open source",
-    "description": "Learn how Appwrite supports open-source projects by providing free credits and other benefits.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/migrations/supabase',
+    title: 'Migrate from Supabase',
+    description:
+      'Effortlessly migrate from Supabase to Appwrite. Discover migration strategies, data transfer methods, and tips for a smooth transition to Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "advanced/billing/payments",
-    "title": "Manage billing",
-    "description": "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/security',
+    title: 'Security',
+    description:
+      'Learn how Appwrite keeps your project, users, and data secure through security measures and compliance.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/billing/phone-otp",
-    "title": "Phone OTP",
-    "description": "Learn how Appwrite handles SMS-based OTP authentication for secure user verification.",
-    "layout": "article",
-    "readingTimeMinutes": 9
+    slug: 'advanced/security/abuse-protection',
+    title: 'Abuse protection',
+    description:
+      'Learn how Appwrite protects your apps from abuse through rate limiting and cross-site scripting protection.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/billing/pro",
-    "title": "Pro",
-    "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/audit-logs',
+    title: 'Audit logs',
+    description:
+      'Appwrite provides audit logs to help detect anomalies and investigate security incidents.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/billing/refund-policy",
-    "title": "Refund policy",
-    "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/authentication',
+    title: 'Authentication',
+    description:
+      'Learn how Appwrite protects your passwords and helps users pick better passwords.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/billing/support-sla",
-    "title": "Support SLA",
-    "description": "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/backups',
+    title: 'Backups',
+    description:
+      'Appwrite provides both self-managed project backups and automated disaster recovery backups to ensure data security and availability.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/billing/uptime-sla",
-    "title": "Uptime SLA",
-    "description": "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/security/ccpa',
+    title: 'CCPA',
+    description:
+      "Protecting your and your users' data privacy is a priority at Appwrite. Learn about Appwrite's compliance with the California Consumer Privacy Act (CCPA).",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/migrations",
-    "title": "Migrations",
-    "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/dev-keys',
+    title: 'Dev keys',
+    description:
+      'Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/migrations/cloud",
-    "title": "Migrate from Cloud",
-    "description": "Self-hosted application migration made easy with Appwrite. Discover the steps and strategies for migrating your self-hosted apps to Appwrite's managed platform.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/encryption',
+    title: 'Encryption',
+    description:
+      "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/migrations/firebase",
-    "title": "Migrate from Firebase",
-    "description": "Migrate seamlessly from Firebase to Appwrite. Learn how to transfer data, authentication, and services from Firebase to leverage Appwrite's capabilities.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/security/gdpr',
+    title: 'GDPR',
+    description:
+      "The safeguarding of your and your users' data is taken seriously at Appwrite. Learn about Appwrite's measures and compliance with the European General Data Protection Regulation (GDPR).",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/migrations/nhost",
-    "title": "Migrate from Nhost",
-    "description": "Transition to Appwrite from NHost with confidence. Explore migration steps, considerations, and tools to ensure a successful migration process.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/security/hipaa',
+    title: 'HIPAA',
+    description:
+      "Learn about Appwrite Cloud's measures to achieve HIPAA compliance.",
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "advanced/migrations/self-hosted",
-    "title": "Migrate from self-hosted",
-    "description": "Migrate to Appwrite from self-hosted platforms seamlessly. Learn how to move your applications and data to Appwrite for enhanced flexibility and control.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/security/https',
+    title: 'HTTPS',
+    description:
+      'Learn how Appwrite Cloud enforces secure connections by enforcing HTTPS on all endpoints.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/migrations/supabase",
-    "title": "Migrate from Supabase",
-    "description": "Effortlessly migrate from Supabase to Appwrite. Discover migration strategies, data transfer methods, and tips for a smooth transition to Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'advanced/security/mfa',
+    title: 'Multi-factor Authentication',
+    description:
+      'Appwrite helps you secure your developer accounts with MFA (multi-factor authentication).',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/security",
-    "title": "Security",
-    "description": "Learn how Appwrite keeps your project, users, and data secure through security measures and compliance.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/security/pci',
+    title: 'PCI',
+    description:
+      "Learn about Appwrite's measure to achieve PCI compliance when handling payments and transactions, ensuring secure and safe handling of payment information and personal data.",
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/security/abuse-protection",
-    "title": "Abuse protection",
-    "description": "Learn how Appwrite protects your apps from abuse through rate limiting and cross-site scripting protection.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/penetration-tests',
+    title: 'Penetration tests',
+    description:
+      'Learn about how Appwrite keeps your data safe by employing manual third-party penetration tests to discover vulnerabilities.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/security/audit-logs",
-    "title": "Audit logs",
-    "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/permissions',
+    title: 'Permissions',
+    description:
+      'Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.',
+    layout: 'article',
+    readingTimeMinutes: 6,
   },
   {
-    "slug": "advanced/security/authentication",
-    "title": "Authentication",
-    "description": "Learn how Appwrite protects your passwords and helps users pick better passwords.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/security/rate-limits',
+    title: 'Rate-limits',
+    description:
+      'Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/security/backups",
-    "title": "Backups",
-    "description": "Appwrite provides both self-managed project backups and automated disaster recovery backups to ensure data security and availability.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/security/roles',
+    title: 'Roles',
+    description:
+      'Learn how to setup role-based access controls in the Appwrite Console',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/security/ccpa",
-    "title": "CCPA",
-    "description": "Protecting your and your users' data privacy is a priority at Appwrite. Learn about Appwrite's compliance with the California Consumer Privacy Act (CCPA).",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/soc2',
+    title: 'SOC 2',
+    description:
+      "Learn about Appwrite Cloud's measures to achieve SOC 2 compliance.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/security/dev-keys",
-    "title": "Dev keys",
-    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/security/tls',
+    title: 'TLS',
+    description:
+      'Appwrite helps keep the web secure by generating TLS (Transport Layer Security) certificates for all user and generated domains.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/security/encryption",
-    "title": "Encryption",
-    "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting',
+    title: 'Self-hosting',
+    description:
+      'Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "advanced/security/gdpr",
-    "title": "GDPR",
-    "description": "The safeguarding of your and your users' data is taken seriously at Appwrite. Learn about Appwrite's measures and compliance with the European General Data Protection Regulation (GDPR).",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/configuration/databases',
+    title: 'Databases',
+    description:
+      'Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/security/hipaa",
-    "title": "HIPAA",
-    "description": "Learn about Appwrite Cloud's measures to achieve HIPAA compliance.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'advanced/self-hosting/configuration/email',
+    title: 'Email delivery',
+    description:
+      'Configure email services for your self-hosted Appwrite instance. Learn how to set up email notifications, templates, and delivery for your applications.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/security/https",
-    "title": "HTTPS",
-    "description": "Learn how Appwrite Cloud enforces secure connections by enforcing HTTPS on all endpoints.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/configuration/environment-variables',
+    title: 'Environment variables',
+    description:
+      'Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.',
+    layout: 'article',
+    readingTimeMinutes: 19,
   },
   {
-    "slug": "advanced/security/mfa",
-    "title": "Multi-factor Authentication",
-    "description": "Appwrite helps you secure your developer accounts with MFA (multi-factor authentication).",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/configuration/functions',
+    title: 'Functions',
+    description:
+      'Harness the full power of self-hosted functions with Appwrite. Explore function deployment, management, and integration in your self-hosted environment.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/security/pci",
-    "title": "PCI",
-    "description": "Learn about Appwrite's measure to achieve PCI compliance when handling payments and transactions, ensuring secure and safe handling of payment information and personal data.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/configuration/sites',
+    title: 'Sites',
+    description:
+      'Harness the full power of self-hosted sites with Appwrite. Explore site deployment, management, and integration in your self-hosted environment.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "advanced/security/penetration-tests",
-    "title": "Penetration tests",
-    "description": "Learn about how Appwrite keeps your data safe by employing manual third-party penetration tests to discover vulnerabilities.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/configuration/sms',
+    title: 'SMS delivery',
+    description:
+      'Set up SMS services for your self-hosted Appwrite instance. Discover how to configure SMS notifications, verification, and messaging for your applications.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/security/permissions",
-    "title": "Permissions",
-    "description": "Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.",
-    "layout": "article",
-    "readingTimeMinutes": 6
+    slug: 'advanced/self-hosting/configuration/storage',
+    title: 'Storage',
+    description:
+      'Manage self-hosted storage options with Appwrite. Explore file storage, uploads, and customization in your self-hosted Appwrite environment.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/security/rate-limits",
-    "title": "Rate-limits",
-    "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/self-hosting/configuration/tls-certificates',
+    title: 'TLS Certificates',
+    description:
+      'Secure your self-hosted Appwrite instance with TLS certificates. Learn how to obtain, configure, and manage TLS certificates for enhanced security.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/security/roles",
-    "title": "Roles",
-    "description": "Learn how to setup role-based access controls in the Appwrite Console",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/configuration/version-control',
+    title: 'Version control',
+    description:
+      'Configure version control integration for Functions and Sites in your self-hosted Appwrite instance.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/security/soc2",
-    "title": "SOC 2",
-    "description": "Learn about Appwrite Cloud's measures to achieve SOC 2 compliance.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/installation',
+    title: 'Installation',
+    description:
+      'Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.',
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "advanced/security/tls",
-    "title": "TLS",
-    "description": "Appwrite helps keep the web secure by generating TLS (Transport Layer Security) certificates for all user and generated domains.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/platforms/aws',
+    title: 'AWS deployment',
+    description:
+      'Deploy Appwrite on Amazon Web Services using the one-click Marketplace app.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting",
-    "title": "Self-hosting",
-    "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'advanced/self-hosting/platforms/azure',
+    title: 'Azure deployment',
+    description:
+      'Deploy Appwrite on Microsoft Azure using Virtual Machines. Learn how to set up a production-ready Appwrite instance on Azure.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/configuration/databases",
-    "title": "Databases",
-    "description": "Configure the database backend for your self-hosted Appwrite instance. Learn about the supported database options and their configuration.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/platforms/coolify',
+    title: 'Coolify',
+    description:
+      'Learn how to self-host Appwrite on your infrastructure with Coolify.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/configuration/email",
-    "title": "Email delivery",
-    "description": "Configure email services for your self-hosted Appwrite instance. Learn how to set up email notifications, templates, and delivery for your applications.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/self-hosting/platforms/digitalocean',
+    title: 'DigitalOcean deployment',
+    description:
+      'Deploy Appwrite on DigitalOcean using the one-click Marketplace app.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/configuration/environment-variables",
-    "title": "Environment variables",
-    "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
-    "layout": "article",
-    "readingTimeMinutes": 19
+    slug: 'advanced/self-hosting/platforms/dokploy',
+    title: 'Dokploy',
+    description:
+      'Learn how to self-host Appwrite on your infrastructure with Dokploy.',
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "advanced/self-hosting/configuration/functions",
-    "title": "Functions",
-    "description": "Harness the full power of self-hosted functions with Appwrite. Explore function deployment, management, and integration in your self-hosted environment.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/self-hosting/platforms/google-cloud',
+    title: 'Google Cloud deployment',
+    description:
+      'Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/configuration/sites",
-    "title": "Sites",
-    "description": "Harness the full power of self-hosted sites with Appwrite. Explore site deployment, management, and integration in your self-hosted environment.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'advanced/self-hosting/production',
+    title: 'Preparation',
+    description:
+      'Optimize self-hosted Appwrite for production environments. Learn key concepts and best practices for deploying Appwrite in production.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/configuration/sms",
-    "title": "SMS delivery",
-    "description": "Set up SMS services for your self-hosted Appwrite instance. Discover how to configure SMS notifications, verification, and messaging for your applications.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/production/backups',
+    title: 'Backups',
+    description:
+      'Learn how to set up and manage backups for your self-hosted Appwrite instance to ensure data safety and disaster recovery.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "advanced/self-hosting/configuration/storage",
-    "title": "Storage",
-    "description": "Manage self-hosted storage options with Appwrite. Explore file storage, uploads, and customization in your self-hosted Appwrite environment.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/production/debugging',
+    title: 'Debug',
+    description:
+      'Master debugging techniques for self-hosted Appwrite. Discover best practices and tools for troubleshooting and maintaining a robust deployment.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/configuration/tls-certificates",
-    "title": "TLS Certificates",
-    "description": "Secure your self-hosted Appwrite instance with TLS certificates. Learn how to obtain, configure, and manage TLS certificates for enhanced security.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'advanced/self-hosting/production/emails',
+    title: 'Email delivery',
+    description:
+      'Configure reliable email delivery for your self-hosted Appwrite instance in production environments.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/configuration/version-control",
-    "title": "Version control",
-    "description": "Configure version control integration for Functions and Sites in your self-hosted Appwrite instance.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/production/errors',
+    title: 'Error monitoring',
+    description:
+      'Configure error reporting and monitoring for your self-hosted Appwrite instance in production.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/installation",
-    "title": "Installation",
-    "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'advanced/self-hosting/production/rate-limits',
+    title: 'Rate limits',
+    description:
+      'Configure rate limiting for your self-hosted Appwrite instance to protect against abuse and attacks.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/platforms/aws",
-    "title": "AWS deployment",
-    "description": "Deploy Appwrite on Amazon Web Services using the one-click Marketplace app.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/production/scaling',
+    title: 'Scaling',
+    description:
+      'Learn how to scale your self-hosted Appwrite instance horizontally and vertically to handle increased load.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/platforms/azure",
-    "title": "Azure deployment",
-    "description": "Deploy Appwrite on Microsoft Azure using Virtual Machines. Learn how to set up a production-ready Appwrite instance on Azure.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'advanced/self-hosting/production/security',
+    title: 'Security',
+    description:
+      'Implement essential security practices for your self-hosted Appwrite instance to protect your data and infrastructure.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/platforms/coolify",
-    "title": "Coolify",
-    "description": "Learn how to self-host Appwrite on your infrastructure with Coolify.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'advanced/self-hosting/production/updates',
+    title: 'Updates and migrations',
+    description:
+      'Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/platforms/digitalocean",
-    "title": "DigitalOcean deployment",
-    "description": "Deploy Appwrite on DigitalOcean using the one-click Marketplace app.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'apis/(overview)',
+    title: 'APIs',
+    description:
+      'Explore the ways to talk to Appwrite. Access every service through the REST and GraphQL APIs, subscribe to changes in Realtime, and react to events with webhooks.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/platforms/dokploy",
-    "title": "Dokploy",
-    "description": "Learn how to self-host Appwrite on your infrastructure with Dokploy.",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'apis/events',
+    title: 'Events',
+    description:
+      'Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/platforms/google-cloud",
-    "title": "Google Cloud deployment",
-    "description": "Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'apis/graphql',
+    title: 'GraphQL',
+    description:
+      'Get to know Appwrite GraphQL API for flexible data querying & manipulation. Our docs cover the schema, queries, mutations, integration tips and more.',
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "advanced/self-hosting/production",
-    "title": "Preparation",
-    "description": "Optimize self-hosted Appwrite for production environments. Learn key concepts and best practices for deploying Appwrite in production.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/realtime',
+    title: 'Realtime',
+    description:
+      'Want to build dynamic and interactive applications with real-time data updates? Appwrite Realtime API makes it possible, get started with our intro guide.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/production/backups",
-    "title": "Backups",
-    "description": "Learn how to set up and manage backups for your self-hosted Appwrite instance to ensure data safety and disaster recovery.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'apis/realtime/authentication',
+    title: 'Authentication',
+    description:
+      'Learn how authentication works with Appwrite Realtime subscriptions and how to handle session-based access.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/production/debugging",
-    "title": "Debug",
-    "description": "Master debugging techniques for self-hosted Appwrite. Discover best practices and tools for troubleshooting and maintaining a robust deployment.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/realtime/channels',
+    title: 'Channels',
+    description:
+      'Explore the available Realtime channels and learn how to use Channel helpers for type-safe subscriptions in Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/production/emails",
-    "title": "Email delivery",
-    "description": "Configure reliable email delivery for your self-hosted Appwrite instance in production environments.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'apis/realtime/custom-endpoint',
+    title: 'Custom endpoint',
+    description:
+      'Learn how to configure a custom WebSocket endpoint for the Appwrite Realtime API when using a custom proxy.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/production/errors",
-    "title": "Error monitoring",
-    "description": "Configure error reporting and monitoring for your self-hosted Appwrite instance in production.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'apis/realtime/payload',
+    title: 'Payload',
+    description:
+      'Understand the structure of Appwrite Realtime subscription payloads and learn how to work with the response data.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/production/rate-limits",
-    "title": "Rate limits",
-    "description": "Configure rate limiting for your self-hosted Appwrite instance to protect against abuse and attacks.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'apis/realtime/presences',
+    title: 'Presences',
+    description:
+      'Use the Appwrite Presences API to track which users are currently active, broadcast their status, and subscribe to live presence updates over Realtime.',
+    layout: 'article',
+    readingTimeMinutes: 8,
   },
   {
-    "slug": "advanced/self-hosting/production/scaling",
-    "title": "Scaling",
-    "description": "Learn how to scale your self-hosted Appwrite instance horizontally and vertically to handle increased load.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/realtime/queries',
+    title: 'Queries',
+    description:
+      'Filter realtime events using queries. Use familiar SDK query methods to receive only the updates that match your conditions.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "advanced/self-hosting/production/security",
-    "title": "Security",
-    "description": "Implement essential security practices for your self-hosted Appwrite instance to protect your data and infrastructure.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/realtime/subscribe',
+    title: 'Subscribe',
+    description:
+      'Learn how to subscribe to realtime events from Appwrite services. Subscribe to single or multiple channels and manage your subscriptions.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "advanced/self-hosting/production/updates",
-    "title": "Updates and migrations",
-    "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/release-policy',
+    title: 'Release policy',
+    description:
+      'Understand how Appwrite releases and versions its platforms and APIs.',
+    layout: 'article',
+    readingTimeMinutes: 6,
   },
   {
-    "slug": "apis/(overview)",
-    "title": "APIs",
-    "description": "Explore the ways to talk to Appwrite. Access every service through the REST and GraphQL APIs, subscribe to changes in Realtime, and react to events with webhooks.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/response-codes',
+    title: 'Response codes',
+    description:
+      'Understand Appwrite platform response codes and error handling. Learn to interpret HTTP status codes, error types, and implement best practices for handling errors gracefully.',
+    layout: 'article',
+    readingTimeMinutes: 19,
   },
   {
-    "slug": "apis/events",
-    "title": "Events",
-    "description": "Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'apis/rest',
+    title: 'REST',
+    description:
+      'Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.',
+    layout: 'article',
+    readingTimeMinutes: 8,
   },
   {
-    "slug": "apis/graphql",
-    "title": "GraphQL",
-    "description": "Get to know Appwrite GraphQL API for flexible data querying & manipulation. Our docs cover the schema, queries, mutations, integration tips and more.",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'apis/webhooks',
+    title: 'Webhooks',
+    description:
+      'Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "apis/realtime",
-    "title": "Realtime",
-    "description": "Want to build dynamic and interactive applications with real-time data updates? Appwrite Realtime API makes it possible, get started with our intro guide.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners',
+    title: 'Partners',
+    description:
+      'Integrate Appwrite into your platform. Provision organizations, projects, and domains with OAuth connect, organization API keys, and Console SDK APIs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "apis/realtime/authentication",
-    "title": "Authentication",
-    "description": "Learn how authentication works with Appwrite Realtime subscriptions and how to handle session-based access.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/apps',
+    title: 'Apps',
+    description:
+      'Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "apis/realtime/channels",
-    "title": "Channels",
-    "description": "Explore the available Realtime channels and learn how to use Channel helpers for type-safe subscriptions in Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners/architecture',
+    title: 'Architecture',
+    description:
+      'Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "apis/realtime/custom-endpoint",
-    "title": "Custom endpoint",
-    "description": "Learn how to configure a custom WebSocket endpoint for the Appwrite Realtime API when using a custom proxy.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/domains',
+    title: 'Domains API',
+    description:
+      'Manage organization domains and DNS from your partner platform using the Console Domains API.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "apis/realtime/payload",
-    "title": "Payload",
-    "description": "Understand the structure of Appwrite Realtime subscription payloads and learn how to work with the response data.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/guides/marketplaces',
+    title: 'Marketplaces',
+    description:
+      'Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "apis/realtime/presences",
-    "title": "Presences",
-    "description": "Use the Appwrite Presences API to track which users are currently active, broadcast their status, and subscribe to live presence updates over Realtime.",
-    "layout": "article",
-    "readingTimeMinutes": 8
+    slug: 'partners/guides/multi-tenancy',
+    title: 'Multi-tenancy',
+    description:
+      'Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "apis/realtime/queries",
-    "title": "Queries",
-    "description": "Filter realtime events using queries. Use familiar SDK query methods to receive only the updates that match your conditions.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/guides/provisioning',
+    title: 'Provisioning',
+    description:
+      'End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "apis/realtime/subscribe",
-    "title": "Subscribe",
-    "description": "Learn how to subscribe to realtime events from Appwrite services. Subscribe to single or multiple channels and manage your subscriptions.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners/oauth-connect',
+    title: 'OAuth connect',
+    description:
+      "Connect your platform to users' Appwrite accounts with OAuth 2.0. Request consent to manage organizations and projects on their behalf.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "apis/release-policy",
-    "title": "Release policy",
-    "description": "Understand how Appwrite releases and versions its platforms and APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 6
+    slug: 'partners/oauth-connect/scopes',
+    title: 'OAuth connect scopes',
+    description:
+      'Request the right Console OAuth scopes when connecting to user Appwrite accounts from your partner platform.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "apis/response-codes",
-    "title": "Response codes",
-    "description": "Understand Appwrite platform response codes and error handling. Learn to interpret HTTP status codes, error types, and implement best practices for handling errors gracefully.",
-    "layout": "article",
-    "readingTimeMinutes": 19
+    slug: 'partners/oauth-connect/setup',
+    title: 'OAuth connect setup',
+    description:
+      'Register an OAuth app and implement the authorization code flow to connect your platform to user Appwrite accounts.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "apis/rest",
-    "title": "REST",
-    "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
-    "layout": "article",
-    "readingTimeMinutes": 8
+    slug: 'partners/org-api-keys',
+    title: 'Org API keys',
+    description:
+      'Use organization API keys to proxy Appwrite and programmatically manage projects, domains, and resources from your partner platform.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "apis/webhooks",
-    "title": "Webhooks",
-    "description": "Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'partners/org-api-keys/scopes',
+    title: 'Org API key scopes',
+    description:
+      'Configure organization API key scopes for Console operations like managing projects, domains, and organization settings.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners",
-    "title": "Partners",
-    "description": "Integrate Appwrite into your platform. Provision organizations, projects, and domains with OAuth connect, organization API keys, and Console SDK APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners/organizations',
+    title: 'Organization API',
+    description:
+      'Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/apps",
-    "title": "Apps",
-    "description": "Register and manage OAuth apps with the Appwrite Console Apps API. Publish integrations, manage client secrets, and connect users through OAuth 2.0.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'partners/organizations/manage',
+    title: 'Manage organizations',
+    description:
+      'Create and update Appwrite organizations from your partner platform using the Console Organization API.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/architecture",
-    "title": "Architecture",
-    "description": "Understand how partner platforms connect to Appwrite with OAuth connect, organization API keys, and Console versus project SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners/organizations/members',
+    title: 'Members and roles',
+    description:
+      'Manage organization members and roles from your partner platform using the Console Organization and Teams APIs.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/domains",
-    "title": "Domains API",
-    "description": "Manage organization domains and DNS from your partner platform using the Console Domains API.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/project',
+    title: 'Project',
+    description:
+      'Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/guides/marketplaces",
-    "title": "Marketplaces",
-    "description": "Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'partners/project/api-keys',
+    title: 'API keys',
+    description:
+      "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
+    layout: 'article',
+    readingTimeMinutes: 6,
   },
   {
-    "slug": "partners/guides/multi-tenancy",
-    "title": "Multi-tenancy",
-    "description": "Design patterns for multi-tenant partner platforms on Appwrite with isolated projects, org API keys, and optional OAuth connect.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/project/auth-methods',
+    title: 'Auth methods',
+    description:
+      'Enable or disable authentication methods on your Appwrite project programmatically using server SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/guides/provisioning",
-    "title": "Provisioning",
-    "description": "End-to-end guide for provisioning an Appwrite project per customer from a partner platform using organization API keys.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/project/branded-emails',
+    title: 'White-label transactional emails',
+    description:
+      "Route a customer's project emails through their own SMTP server and rebrand the email templates per locale with the Project API.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-connect",
-    "title": "OAuth connect",
-    "description": "Connect your platform to users' Appwrite accounts with OAuth 2.0. Request consent to manage organizations and projects on their behalf.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners/project/email-templates',
+    title: 'Email templates',
+    description:
+      'Customize the account management emails Appwrite sends to your users, including verification, password recovery, and magic URL emails, per locale.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-connect/scopes",
-    "title": "OAuth connect scopes",
-    "description": "Request the right Console OAuth scopes when connecting to user Appwrite accounts from your partner platform.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'partners/project/environment-variables',
+    title: 'Environment variables',
+    description:
+      'Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "partners/oauth-connect/setup",
-    "title": "OAuth connect setup",
-    "description": "Register an OAuth app and implement the authorization code flow to connect your platform to user Appwrite accounts.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'partners/project/key-rotation',
+    title: 'Issue and rotate API keys',
+    description:
+      'Manage the full life of an API key with the Project API, from issuing a scoped credential to auditing, rotating, and revoking it.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-server",
-    "title": "OAuth2 server",
-    "description": "Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'partners/project/labels',
+    title: 'Labels',
+    description:
+      'Assign customizable labels to your Appwrite project to categorize and filter projects within an organization.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/authorization",
-    "title": "Authorization",
-    "description": "How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.",
-    "layout": "article",
-    "readingTimeMinutes": 7
+    slug: 'partners/project/mock-phones',
+    title: 'Mock phones',
+    description:
+      'Register fictional phone numbers and OTPs to test phone authentication flows without sending real SMS messages.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/clients",
-    "title": "Clients",
-    "description": "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
-    "layout": "article",
-    "readingTimeMinutes": 6
+    slug: 'partners/project/oauth',
+    title: 'OAuth providers',
+    description:
+      'Configure OAuth2 sign-in providers for your project from the Console or programmatically with a Server SDK.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-1",
-    "title": "Protect your API with custom scopes",
-    "description": "Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 1,
-    "category": "OAuth2 server",
-    "framework": "TanStack Start"
+    slug: 'partners/project/platforms',
+    title: 'Platforms',
+    description:
+      'Register Web, Apple, Android, Windows, and Linux apps to your Appwrite project programmatically using server SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-2",
-    "title": "Define the scopes",
-    "description": "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'partners/project/policies',
+    title: 'Policies',
+    description:
+      'Configure password rules, session limits, user limits, and membership privacy on your Appwrite project programmatically using server SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-3",
-    "title": "Request the scopes",
-    "description": "Ask for the task scopes during authorization and let the user grant each one individually.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
+    slug: 'partners/project/protocols',
+    title: 'Protocols',
+    description:
+      'Enable or disable the REST, GraphQL, and WebSocket protocols on your Appwrite project programmatically using server SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-4",
-    "title": "Validate access tokens",
-    "description": "Verify incoming access tokens against your project's JWKS and read their scopes.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 4
+    slug: 'partners/project/provisioning',
+    title: "Provision a project's baseline",
+    description:
+      "Apply a standard configuration to a customer's project programmatically with the Project API, including platforms, auth methods, services, protocols, and variables.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-5",
-    "title": "Protect the API route",
-    "description": "Serve tasks only to tokens that carry tasks.read.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'partners/project/services',
+    title: 'Services',
+    description:
+      'Enable or disable individual Appwrite services on your project programmatically using server SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-6",
-    "title": "Call the API from Vantage",
-    "description": "Read tasks with the granted access token and add a task composer that lives or dies by its scope.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 6
+    slug: 'partners/project/smtp',
+    title: 'SMTP',
+    description:
+      "Configure a custom SMTP server to send Appwrite's account management emails from your own domain, improve deliverability, and unlock custom email templates.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/custom-scopes/step-7",
-    "title": "Run the flow",
-    "description": "Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 7
+    slug: 'partners/projects',
+    title: 'Project API',
+    description:
+      'Use the Appwrite Console Project API to create and manage projects for your customers from a partner platform.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/oauth-server/device-flow",
-    "title": "Device flow",
-    "description": "Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'partners/projects/create',
+    title: 'Create projects',
+    description:
+      'Provision Appwrite projects for customers using the Console Project API and organization API keys.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/oauth-server/quick-start",
-    "title": "OAuth2 server quick start",
-    "description": "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
-    "layout": "article",
-    "readingTimeMinutes": 7
+    slug: 'partners/projects/resources',
+    title: 'Manage resources',
+    description:
+      'Manage Appwrite project resources from your partner platform using the project SDK and project API keys.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/oauth-server/scopes",
-    "title": "Scopes",
-    "description": "The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'partners/proxy',
+    title: 'Proxy',
+    description:
+      'Proxy Appwrite Console and project APIs from your partner platform using organization and project credentials.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-1",
-    "title": "Sign in with your product",
-    "description": "Build an end-to-end \"Sign in with your product\" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 1,
-    "category": "OAuth2 server",
-    "framework": "TanStack Start"
+    slug: 'partners/quick-start',
+    title: 'Quick start',
+    description:
+      'Choose an Appwrite partner integration model and take your first steps with OAuth connect or organization API keys.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-2",
-    "title": "Enable the OAuth2 server",
-    "description": "Turn on the OAuth2 server on your Appwrite project and register the client app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 2
+    slug: 'partners/usage',
+    title: 'Usage',
+    description:
+      'Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-3",
-    "title": "Create the apps",
-    "description": "Scaffold the two TanStack Start apps and wire up their environment.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'products/ai',
+    title: 'Artificial intelligence',
+    description:
+      'Learn how to implement machine learning models in your applications.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-4",
-    "title": "Add Sign in with your product",
-    "description": "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'products/ai/audio-processing',
+    title: 'Audio processing',
+    description:
+      'Learn about the basics of audio processing, the most popular tasks and applications of audio processing with ML and how we can leverage Appwrite to build audio processing enabled applications.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-5",
-    "title": "Build the consent screen",
-    "description": "Host the consent screen where your users sign in and approve access.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 5
+    slug: 'products/ai/computer-vision',
+    title: 'Computer vision',
+    description:
+      'Learn about the basics of computer vision, the most popular tasks and applications of computer vision and how we can leverage Appwrite to build computer vision enabled applications.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-6",
-    "title": "Exchange the code for tokens",
-    "description": "Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'products/ai/integrations/anyscale',
+    title: 'Integrating Anyscale',
+    description: 'Learn how to integrate Anyscale into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-server/sign-in-with-your-product/step-7",
-    "title": "Run the flow",
-    "description": "Start both apps and sign in with your product end to end.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 7
+    slug: 'products/ai/integrations/elevenlabs',
+    title: 'Integrating ElevenLabs',
+    description:
+      'Learn how to integrate ElevenLabs into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/oauth-server/tokens",
-    "title": "Tokens",
-    "description": "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
-    "layout": "article",
-    "readingTimeMinutes": 6
+    slug: 'products/ai/integrations/fal-ai',
+    title: 'Integrating fal.ai',
+    description: 'Learn how to integrate fal.ai into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/org-api-keys",
-    "title": "Org API keys",
-    "description": "Use organization API keys to proxy Appwrite and programmatically manage projects, domains, and resources from your partner platform.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/ai/integrations/langchain',
+    title: 'Integrating LangChain',
+    description: 'Learn how to integrate LangChain into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/org-api-keys/scopes",
-    "title": "Org API key scopes",
-    "description": "Configure organization API key scopes for Console operations like managing projects, domains, and organization settings.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/ai/integrations/lmnt',
+    title: 'Integrating LMNT',
+    description: 'Learn how to integrate LMNT into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/organizations",
-    "title": "Organization API",
-    "description": "Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/ai/integrations/openai',
+    title: 'Integrating OpenAI',
+    description: 'Learn how to integrate OpenAI into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/organizations/manage",
-    "title": "Manage organizations",
-    "description": "Create and update Appwrite organizations from your partner platform using the Console Organization API.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/ai/integrations/perplexity',
+    title: 'Integrating Perplexity',
+    description:
+      'Learn how to integrate the Perplexity API into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/organizations/members",
-    "title": "Members and roles",
-    "description": "Manage organization members and roles from your partner platform using the Console Organization and Teams APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/ai/integrations/pinecone',
+    title: 'Integrating Pinecone',
+    description: 'Learn how to integrate Pinecone into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/project",
-    "title": "Project",
-    "description": "Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/ai/integrations/replicate',
+    title: 'Integrating Replicate',
+    description: 'Learn how to integrate Replicate into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/project/api-keys",
-    "title": "API keys",
-    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "layout": "article",
-    "readingTimeMinutes": 6
+    slug: 'products/ai/integrations/tensorflow',
+    title: 'Integrating TensorFlow with Appwrite',
+    description:
+      'Learn how to integrate TensorFlow into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/project/auth-methods",
-    "title": "Auth methods",
-    "description": "Enable or disable authentication methods on your Appwrite project programmatically using server SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/ai/integrations/togetherai',
+    title: 'Integrating Together AI',
+    description:
+      'Learn how to integrate Together AI into your Appwrite project.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "partners/project/branded-emails",
-    "title": "White-label transactional emails",
-    "description": "Route a customer's project emails through their own SMTP server and rebrand the email templates per locale with the Project API.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/ai/natural-language',
+    title: 'Natural language processing',
+    description:
+      'Learn about the basics of natural language processing, the most popular tasks and applications of natural language processing and how we can leverage Appwrite to build natural language processing enabled applications.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/project/email-templates",
-    "title": "Email templates",
-    "description": "Customize the account management emails Appwrite sends to your users, including verification, password recovery, and magic URL emails, per locale.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/ai/tutorials/image-classification',
+    title: 'Image classification with Hugging Face',
+    description:
+      "Build image classification powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "partners/project/environment-variables",
-    "title": "Environment variables",
-    "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'products/ai/tutorials/language-translation',
+    title: 'Language translation with Hugging Face',
+    description:
+      'Implement language translation into your app with Appwrite and Hugging Face.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/project/key-rotation",
-    "title": "Issue and rotate API keys",
-    "description": "Manage the full life of an API key with the Project API, from issuing a scoped credential to auditing, rotating, and revoking it.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/ai/tutorials/music-generation',
+    title: 'Music generation with Hugging Face',
+    description:
+      'Learn how to integrate Hugging Face into your Appwrite project for music generation.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/project/labels",
-    "title": "Labels",
-    "description": "Assign customizable labels to your Appwrite project to categorize and filter projects within an organization.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/ai/tutorials/object-detection',
+    title: 'Object detection with Hugging Face',
+    description:
+      "Build object recognition powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "partners/project/mock-phones",
-    "title": "Mock phones",
-    "description": "Register fictional phone numbers and OTPs to test phone authentication flows without sending real SMS messages.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/ai/tutorials/speech-recognition',
+    title: 'Speech recognition with Hugging Face',
+    description:
+      'Implement speech recognition into your app with Appwrite and Hugging Face.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/project/oauth",
-    "title": "OAuth providers",
-    "description": "Configure OAuth2 sign-in providers for your project from the Console or programmatically with a Server SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'products/ai/tutorials/text-generation',
+    title: 'Text generation with Hugging Face',
+    description:
+      'Implement text generation into your app with Appwrite and Hugging Face.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/project/platforms",
-    "title": "Platforms",
-    "description": "Register Web, Apple, Android, Windows, and Linux apps to your Appwrite project programmatically using server SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/ai/tutorials/text-to-speech',
+    title: 'Text to Speech with Hugging Face',
+    description:
+      'Learn how to integrate Hugging Face into your Appwrite project for text to speech processing.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/project/policies",
-    "title": "Policies",
-    "description": "Configure password rules, session limits, user limits, and membership privacy on your Appwrite project programmatically using server SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'products/ai/video-processing',
+    title: 'Video processing',
+    description:
+      'Learn about the basics of video processing, the most popular tasks and applications of video processing with ML and how we can leverage Appwrite to build video processing enabled applications.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/project/protocols",
-    "title": "Protocols",
-    "description": "Enable or disable the REST, GraphQL, and WebSocket protocols on your Appwrite project programmatically using server SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/auth',
+    title: 'Authentication',
+    description:
+      "Explore Appwrite's powerful authentication solutions. Learn how to implement secure user authentication, manage user identities, and enhance your application's security.\"",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/project/provisioning",
-    "title": "Provision a project's baseline",
-    "description": "Apply a standard configuration to a customer's project programmatically with the Project API, including platforms, auth methods, services, protocols, and variables.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/auth/accounts',
+    title: 'Accounts',
+    description:
+      "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/project/services",
-    "title": "Services",
-    "description": "Enable or disable individual Appwrite services on your project programmatically using server SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/auth/anonymous',
+    title: 'Anonymous login',
+    description:
+      'Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "partners/project/smtp",
-    "title": "SMTP",
-    "description": "Configure a custom SMTP server to send Appwrite's account management emails from your own domain, improve deliverability, and unlock custom email templates.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/auth/checking-auth-status',
+    title: 'Checking auth status',
+    description:
+      "Learn how to check a user's authentication status in your Appwrite application and handle authentication flow appropriately.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/projects",
-    "title": "Project API",
-    "description": "Use the Appwrite Console Project API to create and manage projects for your customers from a partner platform.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/auth/custom-token',
+    title: 'Custom token login',
+    description:
+      'Limitless authentication flow in Appwrite. Find out how to implement custom authentication flow or connect to 3rd party authentication providers.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/projects/create",
-    "title": "Create projects",
-    "description": "Provision Appwrite projects for customers using the Console Project API and organization API keys.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/auth/email-otp',
+    title: 'Email OTP',
+    description:
+      'Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/projects/resources",
-    "title": "Manage resources",
-    "description": "Manage Appwrite project resources from your partner platform using the project SDK and project API keys.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/auth/email-password',
+    title: 'Email and password login',
+    description:
+      "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/proxy",
-    "title": "Proxy",
-    "description": "Proxy Appwrite Console and project APIs from your partner platform using organization and project credentials.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/auth/email-policies',
+    title: 'Email policies',
+    description:
+      'Control which email addresses can sign up for your Appwrite project by blocking free, aliased, or disposable email providers from the Console or Project API.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "partners/quick-start",
-    "title": "Quick start",
-    "description": "Choose an Appwrite partner integration model and take your first steps with OAuth connect or organization API keys.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/auth/identities',
+    title: 'Identities',
+    description:
+      'Handle multiple authentication methods per user through a unified system that maintains consistent identity across providers.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "partners/usage",
-    "title": "Usage",
-    "description": "Read organization usage, plan limits, and billing aggregation with the Partners Usage API for metering and reselling Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/auth/impersonation',
+    title: 'User impersonation',
+    description:
+      'Let trusted operators act as another user in Appwrite Auth for support, QA, and troubleshooting while keeping the flow controlled and auditable.',
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "products/ai",
-    "title": "Artificial intelligence",
-    "description": "Learn how to implement machine learning models in your applications.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/auth/jwt',
+    title: 'JWT login',
+    description:
+      "Integrate Appwrite's authentication into your server-side applications. Explore server integrations, best practices, and security considerations for seamless authentication.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "products/ai/audio-processing",
-    "title": "Audio processing",
-    "description": "Learn about the basics of audio processing, the most popular tasks and applications of audio processing with ML and how we can leverage Appwrite to build audio processing enabled applications.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/auth/labels',
+    title: 'Labels',
+    description:
+      'Organize your users and grant custom permissions for subscriptions or VIP users with labels.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "products/ai/computer-vision",
-    "title": "Computer vision",
-    "description": "Learn about the basics of computer vision, the most popular tasks and applications of computer vision and how we can leverage Appwrite to build computer vision enabled applications.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/auth/magic-url',
+    title: 'Magic URL login',
+    description:
+      'Add magic URL to your authentication in Appwrite. Explore the convenience of passwordless login and email-based authentication using magic links.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "products/ai/integrations/anyscale",
-    "title": "Integrating Anyscale",
-    "description": "Learn how to integrate Anyscale into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/auth/message-templates',
+    title: 'Message templates',
+    description:
+      "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "products/ai/integrations/elevenlabs",
-    "title": "Integrating ElevenLabs",
-    "description": "Learn how to integrate ElevenLabs into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/auth/mfa',
+    title: 'Multi-factor authentication',
+    description:
+      'Add multiple layers of authentication to your applications powered by Appwrite Authentication.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "products/ai/integrations/fal-ai",
-    "title": "Integrating fal.ai",
-    "description": "Learn how to integrate fal.ai into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/auth/multi-tenancy',
+    title: 'Multi-tenancy with Teams',
+    description:
+      'Learn how to implement multi-tenancy in your applications using Appwrite Teams.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "products/ai/integrations/langchain",
-    "title": "Integrating LangChain",
-    "description": "Learn how to integrate LangChain into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/auth/oauth-server',
+    title: 'OAuth2 server',
+    description:
+      'Turn your Appwrite project into an OAuth 2.1 and OpenID Connect (OIDC) provider so third-party apps can sign in with your product.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "products/ai/integrations/lmnt",
-    "title": "Integrating LMNT",
-    "description": "Learn how to integrate LMNT into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/auth/oauth-server/authorization',
+    title: 'Authorization',
+    description:
+      'How clients request authorization and how to host a consent screen for your Appwrite OAuth2 server.',
+    layout: 'article',
+    readingTimeMinutes: 7,
   },
   {
-    "slug": "products/ai/integrations/openai",
-    "title": "Integrating OpenAI",
-    "description": "Learn how to integrate OpenAI into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/integrations/perplexity",
-    "title": "Integrating Perplexity",
-    "description": "Learn how to integrate the Perplexity API into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/integrations/pinecone",
-    "title": "Integrating Pinecone",
-    "description": "Learn how to integrate Pinecone into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/integrations/replicate",
-    "title": "Integrating Replicate",
-    "description": "Learn how to integrate Replicate into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/integrations/tensorflow",
-    "title": "Integrating TensorFlow with Appwrite",
-    "description": "Learn how to integrate TensorFlow into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/ai/integrations/togetherai",
-    "title": "Integrating Together AI",
-    "description": "Learn how to integrate Together AI into your Appwrite project.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/ai/natural-language",
-    "title": "Natural language processing",
-    "description": "Learn about the basics of natural language processing, the most popular tasks and applications of natural language processing and how we can leverage Appwrite to build natural language processing enabled applications.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/ai/tutorials/image-classification",
-    "title": "Image classification with Hugging Face",
-    "description": "Build image classification powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/ai/tutorials/language-translation",
-    "title": "Language translation with Hugging Face",
-    "description": "Implement language translation into your app with Appwrite and Hugging Face.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/ai/tutorials/music-generation",
-    "title": "Music generation with Hugging Face",
-    "description": "Learn how to integrate Hugging Face into your Appwrite project for music generation.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/tutorials/object-detection",
-    "title": "Object detection with Hugging Face",
-    "description": "Build object recognition powered apps with Appwrite and learn how to use Hugging Face's image classification models.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/ai/tutorials/speech-recognition",
-    "title": "Speech recognition with Hugging Face",
-    "description": "Implement speech recognition into your app with Appwrite and Hugging Face.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/tutorials/text-generation",
-    "title": "Text generation with Hugging Face",
-    "description": "Implement text generation into your app with Appwrite and Hugging Face.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/ai/tutorials/text-to-speech",
-    "title": "Text to Speech with Hugging Face",
-    "description": "Learn how to integrate Hugging Face into your Appwrite project for text to speech processing.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/ai/video-processing",
-    "title": "Video processing",
-    "description": "Learn about the basics of video processing, the most popular tasks and applications of video processing with ML and how we can leverage Appwrite to build video processing enabled applications.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth",
-    "title": "Authentication",
-    "description": "Explore Appwrite's powerful authentication solutions. Learn how to implement secure user authentication, manage user identities, and enhance your application's security.\"",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/accounts",
-    "title": "Accounts",
-    "description": "Unlock advanced user management - Appwrite's Account API for seamless signups, authentication, and dynamic permissions.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/anonymous",
-    "title": "Anonymous login",
-    "description": "Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/checking-auth-status",
-    "title": "Checking auth status",
-    "description": "Learn how to check a user's authentication status in your Appwrite application and handle authentication flow appropriately.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/custom-token",
-    "title": "Custom token login",
-    "description": "Limitless authentication flow in Appwrite. Find out how to implement custom authentication flow or connect to 3rd party authentication providers.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/email-otp",
-    "title": "Email OTP",
-    "description": "Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/auth/email-password",
-    "title": "Email and password login",
-    "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/auth/email-policies",
-    "title": "Email policies",
-    "description": "Control which email addresses can sign up for your Appwrite project by blocking free, aliased, or disposable email providers from the Console or Project API.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/identities",
-    "title": "Identities",
-    "description": "Handle multiple authentication methods per user through a unified system that maintains consistent identity across providers.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/auth/impersonation",
-    "title": "User impersonation",
-    "description": "Let trusted operators act as another user in Appwrite Auth for support, QA, and troubleshooting while keeping the flow controlled and auditable.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/auth/jwt",
-    "title": "JWT login",
-    "description": "Integrate Appwrite's authentication into your server-side applications. Explore server integrations, best practices, and security considerations for seamless authentication.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/auth/labels",
-    "title": "Labels",
-    "description": "Organize your users and grant custom permissions for subscriptions or VIP users with labels.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/magic-url",
-    "title": "Magic URL login",
-    "description": "Add magic URL to your authentication in Appwrite. Explore the convenience of passwordless login and email-based authentication using magic links.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/message-templates",
-    "title": "Message templates",
-    "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/auth/mfa",
-    "title": "Multi-factor authentication",
-    "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/auth/multi-tenancy",
-    "title": "Multi-tenancy with Teams",
-    "description": "Learn how to implement multi-tenancy in your applications using Appwrite Teams.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/oauth2",
-    "title": "OAuth 2 login",
-    "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/auth/phone-sms",
-    "title": "Phone (SMS) login",
-    "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/preferences",
-    "title": "Preferences",
-    "description": "Store and manage user preferences in Appwrite using Account API and Teams API for individual and shared settings.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/presences",
-    "title": "Presences",
-    "description": "Track which signed-in users are active right now and broadcast their status in realtime with the Appwrite Presences API.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/auth/quick-start",
-    "title": "Start with Authentication",
-    "description": "Effortlessly add authentication to your apps - simple signup & login in just minutes with Appwrite Authentication",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/auth/react",
-    "title": "React library",
-    "description": "Add authentication to React apps with Appwrite's official React library. Supports client-side React, Next.js, and TanStack Start with a single provider and a small set of hooks.",
-    "layout": "article",
-    "readingTimeMinutes": 9
-  },
-  {
-    "slug": "products/auth/security",
-    "title": "Security",
-    "description": "Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/server-side-rendering",
-    "title": "SSR login",
-    "description": "How to implement SSR authentication with Appwrite",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "products/auth/team-invites",
-    "title": "Team invites",
-    "description": "Learn how to manage team invites in Appwrite. Implement both client-side email invites and server-side custom flows for team memberships.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/auth/teams",
-    "title": "Teams",
-    "description": "Master team management in the Appwrite Cloud. Explore team-related functions, permissions, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/auth/tokens",
-    "title": "Tokens",
-    "description": "What are tokens and how to use them in Appwrite",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/users",
-    "title": "Manage users",
-    "description": "Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/auth/verify-user",
-    "title": "Verify user",
-    "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars",
-    "title": "Avatars",
-    "description": "Generate avatars, icons, and images for your applications. Use Appwrite Avatars to create user initials, QR codes, country flags, browser icons, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/browsers",
-    "title": "Browser icons",
-    "description": "Retrieve browser icons for displaying user agent information and device compatibility.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/favicons",
-    "title": "Favicons",
-    "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/flags",
-    "title": "Country flags",
-    "description": "Retrieve country flag icons by country code for displaying user locations and regional information.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/image-manipulation",
-    "title": "Image proxy",
-    "description": "Transform remote images with resizing, cropping, and quality adjustments for optimal display and performance.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/initials",
-    "title": "User initials",
-    "description": "Generate avatar images from user names or initials with customizable appearance and dimensions.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/payment-methods",
-    "title": "Payment methods",
-    "description": "Retrieve payment method logos for checkout flows and transaction displays.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/avatars/qr-codes",
-    "title": "QR codes",
-    "description": "Generate QR codes from text strings with customizable size and margin for authentication, sharing, and data encoding.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/avatars/quick-start",
-    "title": "Start with Avatars",
-    "description": "Get started quickly with Appwrite Avatars. Learn how to generate user initials, QR codes, and other avatar images in minutes.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/avatars/screenshots",
-    "title": "Screenshots",
-    "description": "Capture webpage screenshots with customizable viewport, theme, browser settings, and geolocation options for comprehensive web page documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "products/databases",
-    "title": "Databases",
-    "description": "Store and query structured data with Appwrite Databases. Databases provide performant and scalable storage for your application, business, and user data.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/ai-suggestions",
-    "title": "AI suggestions",
-    "description": "Use AI suggestions to automatically generate database schemas. Learn how to create tables with recommended columns and indexes based on your table name and context.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/atomic-numeric-operations",
-    "title": "Atomic numeric operations",
-    "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/backups",
-    "title": "Backups",
-    "description": "Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/databases/bulk-operations",
-    "title": "Bulk operations",
-    "description": "Perform bulk operations on rows within your tables for efficient data handling.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/databases/csv-exports",
-    "title": "CSV exports",
-    "description": "Export table data to CSV files from the Console. Share clean datasets with your team without writing custom scripts.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/databases/csv-imports",
-    "title": "CSV imports",
-    "description": "Master row imports with Appwrite's CSV Import feature. Learn how to create rows within your tables by uploading a CSV file.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/databases/databases",
-    "title": "Databases",
-    "description": "Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/documentsdb",
-    "title": "DocumentsDB",
-    "description": "Store schemaless documents in collections with Appwrite DocumentsDB for flexible, JSON-style application data.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/geo-queries",
-    "title": "Geo queries",
-    "description": "Query geographic data with distance, intersects, overlaps, and other location-based operations using spatial columns.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/legacy/atomic-numeric-operations",
-    "title": "Atomic numeric operations",
-    "description": "Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/legacy/bulk-operations",
-    "title": "Bulk operations",
-    "description": "Perform bulk operations on documents within your collections for efficient data handling.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/databases/legacy/collections",
-    "title": "Collections",
-    "description": "Organize your data with Appwrite Collections. Explore how to create and configure collections to store and structure your data effectively.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/databases/legacy/databases",
-    "title": "Databases",
-    "description": "Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/legacy/documents",
-    "title": "Documents",
-    "description": "Master document management with Appwrite Databases. Learn how to create, update, and query documents within your collections for dynamic data storage.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/legacy/order",
-    "title": "Order",
-    "description": "Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.\"",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/legacy/pagination",
-    "title": "Pagination",
-    "description": "Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/legacy/permissions",
-    "title": "Database permissions",
-    "description": "Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database collections",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/legacy/queries",
-    "title": "Queries",
-    "description": "Harness the power of querying with Appwrite Databases. Discover various query options, filtering, sorting, and advanced querying techniques.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/databases/legacy/quick-start",
-    "title": "Start with Databases",
-    "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define collections, and perform basic data operations.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/legacy/relationships",
-    "title": "Relationships",
-    "description": "Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between documents for interconnected data.",
-    "layout": "article",
-    "readingTimeMinutes": 7
-  },
-  {
-    "slug": "products/databases/legacy/type-generation",
-    "title": "Type generation",
-    "description": "Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/mysql",
-    "title": "MySQL",
-    "description": "Run a dedicated, native MySQL database provisioned for your project and connect to it directly with standard MySQL clients.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/offline",
-    "title": "Offline sync",
-    "description": "Enable offline synchronization of data between your apps and Appwrite Databases.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/operators",
-    "title": "Operators",
-    "description": "Update multiple fields atomically without fetching the full row. Perform numeric, array, string, and date updates in a single, consistent workflow.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/databases/order",
-    "title": "Order",
-    "description": "Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/pagination",
-    "title": "Pagination",
-    "description": "Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/databases/permissions",
-    "title": "Database permissions",
-    "description": "Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database tables",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/postgresql",
-    "title": "PostgreSQL",
-    "description": "Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/databases/queries",
-    "title": "Queries",
-    "description": "Harness the power of querying with Appwrite tablesDB. Discover various query options, filtering, sorting, and advanced querying techniques.",
-    "layout": "article",
-    "readingTimeMinutes": 8
-  },
-  {
-    "slug": "products/databases/quick-start",
-    "title": "Start with Databases",
-    "description": "Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define tables, and perform basic data operations.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/relationships",
-    "title": "Relationships",
-    "description": "Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between rows for interconnected data.",
-    "layout": "article",
-    "readingTimeMinutes": 7
-  },
-  {
-    "slug": "products/databases/rows",
-    "title": "Rows",
-    "description": "Master row management with Appwrite Databases. Learn how to create, update, upsert, and query rows within your tables for dynamic data storage.",
-    "layout": "article",
-    "readingTimeMinutes": 9
-  },
-  {
-    "slug": "products/databases/tables",
-    "title": "Tables",
-    "description": "Organize your data with Appwrite Tables. Explore how to create and configure tables to store and structure your data effectively.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/databases/timestamp-overrides",
-    "title": "Timestamp overrides",
-    "description": "Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/transactions",
-    "title": "Transactions",
-    "description": "Stage multiple database operations and commit them atomically. Group changes across databases and tables with ordering, isolation, and conflict detection.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/databases/type-generation",
-    "title": "Type generation",
-    "description": "Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/databases/vectorsdb",
-    "title": "VectorsDB",
-    "description": "Store vector embeddings and run similarity search with Appwrite VectorsDB to power semantic search, recommendations, and other AI features.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/domains",
-    "title": "Domains",
-    "description": "Register, transfer, and manage domains with Appwrite. Buy domains, configure DNS, and connect them to Sites, Functions, and APIs from your organization.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/domains/change-organization",
-    "title": "Change organization",
-    "description": "Reassign a domain from one Appwrite organization to another. This is not a registrar transfer.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/connect",
-    "title": "Connect to products",
-    "description": "Connect apex domains and subdomains to Appwrite Sites, Functions, and custom API endpoints. Covers DNS methods, verification, and multi-product layouts.",
-    "layout": "article",
-    "readingTimeMinutes": 8
-  },
-  {
-    "slug": "products/domains/delete",
-    "title": "Delete a domain",
-    "description": "Remove a domain and its DNS zone from Appwrite, including bulk delete from the organization list.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/dns",
-    "title": "DNS records",
-    "description": "Learn how DNS zones work for organization domains in Appwrite, including record types and locked entries.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/domains/external",
-    "title": "Add external domain",
-    "description": "Add a domain registered with another registrar and delegate DNS to Appwrite without moving registration.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/manage-dns",
-    "title": "Manage DNS records",
-    "description": "Create, update, import, and filter DNS records for organization domains in Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/presets",
-    "title": "DNS presets",
-    "description": "Add email provider DNS records to organization domains with one-click presets in Appwrite Cloud.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/domains/pricing",
-    "title": "Pricing",
-    "description": "Learn how Appwrite prices domain registration, transfers, and renewals, including premium names and registration periods.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/domains/quick-start",
-    "title": "Start with Domains",
-    "description": "Register or add your first domain in Appwrite Cloud and verify DNS in a few steps.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/register",
-    "title": "Register a domain",
-    "description": "Search for available domain names and register them through Appwrite with transparent pricing and organization billing.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/domains/registration",
-    "title": "Registration",
-    "description": "Learn how domain registration works in Appwrite, including Appwrite-registered and external domains, organization scope, and verification.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/renewal",
-    "title": "Renewal",
-    "description": "Learn how domain expiry, auto-renewal, and billing work for Appwrite-registered domains.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/domains/transfer",
-    "title": "Transfer a domain",
-    "description": "Transfer domain registration into or out of Appwrite, including authorization codes, fees, and transfer status.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/functions",
-    "title": "Functions",
-    "description": "Appwrite Functions is your gateway to scalable applications. Explore our complete guide to building and deploying serverless functions effortlessly.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/functions/deploy-from-git",
-    "title": "Deploy from Git",
-    "description": "Learn to version and update your Appwrite Functions' code with deployments.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/functions/deploy-manually",
-    "title": "Deploy manually",
-    "description": "Learn to deploy Appwrite functions manually from the Appwrite CLI or the Appwrite Console.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/functions/deployments",
-    "title": "Deployments",
-    "description": "Efficiently deploy your serverless functions with Appwrite. Explore deployment options, strategies, and best practices for seamless function execution.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/functions/develop",
-    "title": "Develop Appwrite Functions",
-    "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
-    "layout": "article",
-    "readingTimeMinutes": 8
-  },
-  {
-    "slug": "products/functions/develop-locally",
-    "title": "Develop locally",
-    "description": "Learn to develop Appwrite functions locally.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/functions/domains",
-    "title": "Domains",
-    "description": "Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/functions/environment-variables",
-    "title": "Environment variables",
-    "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/functions/examples",
-    "title": "Examples",
-    "description": "Accelerate your serverless development with Appwrite Functions examples. Access a library of code samples and use cases to jumpstart your projects.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/functions/execute",
-    "title": "Execution",
-    "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/functions/executions",
-    "title": "Execution",
-    "description": "Learn how Appwrite handles serverless function executions. More specifically, execution status, details and function logging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/functions/functions",
-    "title": "Functions",
-    "description": "Learn what an Appwrite Function can do for you and how to create a new Appwrite Function",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "products/functions/quick-start",
-    "title": "Start with Functions",
-    "description": "Get started quickly with Appwrite Functions. Follow a step-by-step guide to create your first serverless function, define triggers, and execute code.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/functions/runtimes",
-    "title": "Runtimes",
-    "description": "Choose the right runtime environment for your serverless functions in Appwrite. Explore available runtimes, dependencies, and runtime-specific considerations.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/functions/templates",
-    "title": "Templates",
-    "description": "Learn about Appwrite Functions' templates that let you jump start function development to extend your Appwrite APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/messaging",
-    "title": "Messaging",
-    "description": "Send push notifications, text, or emails to users or groups of users using your app.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/messaging/apns",
-    "title": "Apple Push Notification service",
-    "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/messaging/fcm",
-    "title": "Firebase Cloud Messaging",
-    "description": "Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/messaging/mailgun",
-    "title": "Mailgun",
-    "description": "Send emails to your Appwrite users using Mailgun and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/messaging/messages",
-    "title": "Messages",
-    "description": "Learn about Appwrite messages, the different types of messages, what can be sent in different message types.",
-    "layout": "article",
-    "readingTimeMinutes": 7
-  },
-  {
-    "slug": "products/messaging/msg91",
-    "title": "MSG91",
-    "description": "Send SMS messages to your Appwrite users using MSG91 and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/providers",
-    "title": "Providers",
-    "description": "Learn the different providers that you can use to send messages with Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/messaging/send-email-messages",
-    "title": "Send email messages",
-    "description": "Send email messages to your users using Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/send-push-notifications",
-    "title": "Send push notification",
-    "description": "Send push notification to your users using Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/messaging/send-sms-messages",
-    "title": "Send SMS messages",
-    "description": "Send SMS messages to your users using Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/sendgrid",
-    "title": "SendGrid",
-    "description": "Send emails to your Appwrite users using SendGrid and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/smtp",
-    "title": "SMTP",
-    "description": "Send emails to your Appwrite users using SMTP and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/messaging/targets",
-    "title": "Targets",
-    "description": "Manage avenues of communication by targetting user's device, email, or phone number in your notification and messages.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/messaging/telesign",
-    "title": "Telesign",
-    "description": "Send SMS messages to your Appwrite users using Telesign and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/textmagic",
-    "title": "Textmagic",
-    "description": "Send SMS messages to your Appwrite users using Textmagic and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/topics",
-    "title": "Topics",
-    "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/twilio",
-    "title": "Twilio",
-    "description": "Send SMS messages to your Appwrite users using Twilio and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/messaging/vonage",
-    "title": "Vonage",
-    "description": "Send SMS messages to your Appwrite users using Vonage and Appwrite Messaging.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/network",
-    "title": "Network",
-    "description": "Discover Appwrite's network architecture with global regions, edge nodes, and optimized routing. Explore how it ensures low latency, reliable performance, and scalable infrastructure for modern applications.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/network/caa-records",
-    "title": "Certification Authority Authorization (CAA) records",
-    "description": "Learn what DNS Certification Authority Authorization (CAA) records are, when they are required to use a custom domain with Appwrite, and how to configure one or more of them at your DNS provider.",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "products/network/caching",
-    "title": "Caching",
-    "description": "Learn how Appwrite uses smart caching strategies at the region, edge, and CDN levels to optimize performance and protect dynamic APIs, with advanced options for enterprise customers.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/network/cdn",
-    "title": "Content Delivery Network (CDN)",
-    "description": "Learn about Appwrite's CDN, designed to optimize content delivery with compression, and edge optimization for improved performance and reduced latency.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/network/compression",
-    "title": "Compression",
-    "description": "Appwrite is leveraging compression algorithms to both boost the performance of your app and to reduce and optimize…",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/network/custom-domains",
-    "title": "Custom domains",
-    "description": "Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/network/ddos",
-    "title": "DDoS mitigation",
-    "description": "Learn how Appwrite protects your applications from Distributed Denial-of-Service (DDoS) attacks with built-in, always-on protection for all Appwrite Cloud plans.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/network/dns",
-    "title": "Appwrite DNS service",
-    "description": "Learn about Appwrite's DNS service and how to configure domain records for your applications",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/network/edges",
-    "title": "Edges",
-    "description": "Learn about Appwrite edges, where lightweight compute tasks like caching, request routing, and content delivery are handled. Understand how edges enhance performance by bringing operations closer to end-users.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/network/endpoints",
-    "title": "Endpoints",
-    "description": "Understand the differences between Appwrite's endpoints, including geo-balanced edges, region-specific services, and custom domains for compute processes.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/network/regions",
-    "title": "Regions",
-    "description": "Learn about Appwrite regions, where core services like databases, auth, functions, sites, and storage are hosted. Understand data sovereignty, fault isolation, and scalability for compliant, high-performance deployments",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/network/tls",
-    "title": "Transport Layer Security (TLS)",
-    "description": "Learn how Appwrite uses TLS to encrypt data in transit, ensuring secure and private communication between clients and servers.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/network/waf",
-    "title": "Web application firewall (WAF)",
-    "description": "Appwrite's Web Application Firewall (WAF) provides enterprise-grade protection against web vulnerabilities like SQL injection, XSS, and DDoS attacks.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "products/sites",
-    "title": "Sites",
-    "description": "Appwrite Sites is your gateway to scalable web applications. Explore our complete guide to building and deploying websites effortlessly.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/deploy-from-cli",
-    "title": "Deploy from CLI",
-    "description": "Learn to deploy Appwrite Sites from the Appwrite CLI.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/deploy-from-git",
-    "title": "Deploy from Git",
-    "description": "Learn to version and update your Appwrite Sites' code with deployments.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/sites/deploy-manually",
-    "title": "Deploy manually",
-    "description": "Learn to deploy Appwrite Sites manually via the Appwrite Console.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/deployments",
-    "title": "Deployments",
-    "description": "Efficiently deploy your web apps with Appwrite. Explore deployment options, strategies, and best practices.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "products/sites/develop",
-    "title": "Develop Appwrite Sites",
-    "description": "Master site development with Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
+    slug: 'products/auth/oauth-server/clients',
+    title: 'Clients',
+    description:
+      "Register confidential and public OAuth clients against your Appwrite project's OAuth2 server and manage them from your own developer platform.",
+    layout: 'article',
+    readingTimeMinutes: 6,
+  },
   {
-    "slug": "products/sites/domains",
-    "title": "Domains",
-    "description": "Discover how domains can be managed for an Appwrite Site",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "products/sites/environment-variables",
-    "title": "Environment variables",
-    "description": "Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/sites/frameworks",
-    "title": "Frameworks",
-    "description": "Discover which frameworks are supported out-of-the-box by Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/instant-rollbacks",
-    "title": "Instant rollbacks",
-    "description": "Safely revert a site to a previous deployment using instant rollbacks.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/logs",
-    "title": "Logs",
-    "description": "Learn how Appwrite Sites handles logs",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/migrations/vercel",
-    "title": "Migrating from Vercel to Appwrite Sites",
-    "description": "A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 7
-  },
-  {
-    "slug": "products/sites/previews",
-    "title": "Previews",
-    "description": "Preview site deployments to test changes before promoting to production.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start",
-    "title": "Start with Sites",
-    "description": "Get started quickly with Appwrite Sites. Follow a step-by-step guide to create your first Appwrite Site and deploy a web app.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/quick-start/angular",
-    "title": "Deploy an Angular app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Angular apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/astro",
-    "title": "Deploy a Astro app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Astro apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/flutter",
-    "title": "Deploy a Flutter Web app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Flutter Web apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/quick-start/nextjs",
-    "title": "Deploy a Next.js app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Next.js apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/quick-start/nuxt",
-    "title": "Deploy a Nuxt app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Nuxt apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/react",
-    "title": "Deploy a React app to Appwrite Sites",
-    "description": "Learn how to setup and deploy React apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/react-native",
-    "title": "Deploy a React Native app to Appwrite Sites",
-    "description": "Learn how to setup and deploy React Native apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/quick-start/remix",
-    "title": "Deploy a Remix app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Remix apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/sveltekit",
-    "title": "Deploy a SvelteKit app to Appwrite Sites",
-    "description": "Learn how to setup and deploy SvelteKit apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/tanstack-start",
-    "title": "Deploy a TanStack Start app to Appwrite Sites",
-    "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/quick-start/vanilla",
-    "title": "Deploy a Vanilla JS app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Vanilla JS apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/quick-start/vue",
-    "title": "Deploy a Vue.js app to Appwrite Sites",
-    "description": "Learn how to setup and deploy Vue.js apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/sites/rendering",
-    "title": "Rendering",
-    "description": "Explore how sites are rendered on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/rendering/ssr",
-    "title": "Server Side Rendering",
-    "description": "Learn how to host SSR web apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/sites/rendering/static",
-    "title": "Static",
-    "description": "Learn how to host static web apps on Appwrite Sites.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/sites/templates",
-    "title": "Templates",
-    "description": "Learn about Appwrite Sites' templates that let you jump start site development.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/storage",
-    "title": "Storage",
-    "description": "Unlock the power of cloud storage with Appwrite Storage. Learn how to store, manage, and retrieve files and media assets securely in your applications.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/storage/buckets",
-    "title": "Buckets",
-    "description": "Organize and manage your files effectively with Appwrite Storage Buckets. Explore how to create, configure, and use storage buckets for seamless file organization.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/storage/file-tokens",
-    "title": "File tokens",
-    "description": "Easily share files with external users using file tokens.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/storage/images",
-    "title": "Image transformations",
-    "description": "Optimize image storage and processing with Appwrite. Explore image resizing, transformations, and manipulation to deliver rich media experiences in your apps.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "products/storage/permissions",
-    "title": "Storage permissions",
-    "description": "Enhance data security and control with Appwrite Storage Permissions. Learn how to set access rules, permissions, and restrictions for your stored files.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "products/storage/quick-start",
-    "title": "Start with Storage",
-    "description": "Get started quickly with Appwrite Storage. Follow step-by-step instructions to set up storage, upload files, and integrate cloud storage into your projects",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "products/storage/upload-download",
-    "title": "Upload and download",
-    "description": "Effortlessly upload and download files with Appwrite Storage. Learn how to handle file uploads, manage file versions, and ensure secure downloads in your applications.",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "quick-starts/android",
-    "title": "Start with Android (Kotlin)",
-    "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/android-java",
-    "title": "Start with Android (Java)",
-    "description": "Get started with Appwrite on Android using Java and learn how to build secure and scalable apps using our powerful backend.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/angular",
-    "title": "Start with Angular",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Angular apps.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "quick-starts/apple",
-    "title": "Start with Apple",
-    "description": "Build iOS apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/astro",
-    "title": "Start with Astro",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Astro apps.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "quick-starts/dart",
-    "title": "Start with Dart",
-    "description": "Build Flutter apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/deno",
-    "title": "Start with Deno",
-    "description": "Dive into our step-by-step guide on integrating Appwrite with your Deno server backend application. Get your backend up and running quickly with this tutorial.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/dotnet",
-    "title": "Start with .NET",
-    "description": "Learn to get started with server integrations with Appwrite .NET SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/flutter",
-    "title": "Start with Flutter",
-    "description": "Build Flutter apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "quick-starts/go",
-    "title": "Start with Go",
-    "description": "Integrating Appwrite with your Go backend application is a quick and simple process. Get your backend up and running with our step-by-step guide.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/kotlin",
-    "title": "Start with Kotlin",
-    "description": "Learn to get started with server integrations with Appwrite Kotlin SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/nextjs",
-    "title": "Start with Next.js",
-    "description": "Build Next.js apps with the Appwrite React library. Add server-rendered authentication, sign-in, sign-up, and user state without writing the SSR plumbing yourself.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/node",
-    "title": "Start with Node.js",
-    "description": "Dive into our step-by-step guide on integrating Appwrite with your Node.js server backend application. Get your backend up and running quickly with this tutorial.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/nuxt",
-    "title": "Start with Nuxt",
-    "description": "Build Nuxt.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "quick-starts/php",
-    "title": "Start with PHP",
-    "description": "Dive into our step-by-step guide on integrating Appwrite with your PHP server backend application. Get your backend up and running quickly with this tutorial.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
+    slug: 'products/auth/oauth-server/custom-scopes/step-1',
+    title: 'Protect your API with custom scopes',
+    description:
+      'Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 1,
+    category: 'OAuth2 server',
+    framework: 'TanStack Start',
+  },
+  {
+    slug: 'products/auth/oauth-server/custom-scopes/step-2',
+    title: 'Define the scopes',
+    description:
+      "Add tasks.read and tasks.write to your OAuth2 server's scopes.",
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'products/auth/oauth-server/custom-scopes/step-3',
+    title: 'Request the scopes',
+    description:
+      'Ask for the task scopes during authorization and let the user grant each one individually.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 3,
+  },
+  {
+    slug: 'products/auth/oauth-server/custom-scopes/step-4',
+    title: 'Validate access tokens',
+    description:
+      "Verify incoming access tokens against your project's JWKS and read their scopes.",
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 4,
+  },
+  {
+    slug: 'products/auth/oauth-server/custom-scopes/step-5',
+    title: 'Protect the API route',
+    description: 'Serve tasks only to tokens that carry tasks.read.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'products/auth/oauth-server/custom-scopes/step-6',
+    title: 'Call the API from Vantage',
+    description:
+      'Read tasks with the granted access token and add a task composer that lives or dies by its scope.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 6,
+  },
+  {
+    slug: 'products/auth/oauth-server/custom-scopes/step-7',
+    title: 'Run the flow',
+    description:
+      'Grant the read scope, watch a write get refused, then grant the write scope and watch it succeed.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 7,
+  },
+  {
+    slug: 'products/auth/oauth-server/device-flow',
+    title: 'Device flow',
+    description:
+      'Authorize TVs, CLIs, and other input-constrained devices against your Appwrite OAuth2 server with the device authorization grant.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/auth/oauth-server/quick-start',
+    title: 'OAuth2 server quick start',
+    description:
+      "Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.",
+    layout: 'article',
+    readingTimeMinutes: 7,
+  },
+  {
+    slug: 'products/auth/oauth-server/scopes',
+    title: 'Scopes',
+    description:
+      'The built-in OpenID Connect scopes and the custom scopes clients can request from your Appwrite OAuth2 server.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-1',
+    title: 'Sign in with your product',
+    description:
+      'Build an end-to-end "Sign in with your product" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 1,
+    category: 'OAuth2 server',
+    framework: 'TanStack Start',
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-2',
+    title: 'Enable the OAuth2 server',
+    description:
+      'Turn on the OAuth2 server on your Appwrite project and register the client app.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 2,
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-3',
+    title: 'Create the apps',
+    description:
+      'Scaffold the two TanStack Start apps and wire up their environment.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-4',
+    title: 'Add Sign in with your product',
+    description:
+      "Build the consumer's sign-in button and the redirect that starts the OAuth flow.",
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-5',
+    title: 'Build the consent screen',
+    description:
+      'Host the consent screen where your users sign in and approve access.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 5,
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-6',
+    title: 'Exchange the code for tokens',
+    description:
+      'Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
+  },
+  {
+    slug: 'products/auth/oauth-server/sign-in-with-your-product/step-7',
+    title: 'Run the flow',
+    description: 'Start both apps and sign in with your product end to end.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 7,
+  },
+  {
+    slug: 'products/auth/oauth-server/tokens',
+    title: 'Tokens',
+    description:
+      "Access, refresh, and ID tokens issued by Appwrite's OAuth2 server, their lifetimes, and how to validate, refresh, introspect, revoke, and end sessions.",
+    layout: 'article',
+    readingTimeMinutes: 6,
+  },
+  {
+    slug: 'products/auth/oauth2',
+    title: 'OAuth 2 login',
+    description:
+      'Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/auth/phone-sms',
+    title: 'Phone (SMS) login',
+    description:
+      'Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/auth/preferences',
+    title: 'Preferences',
+    description:
+      'Store and manage user preferences in Appwrite using Account API and Teams API for individual and shared settings.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/auth/presences',
+    title: 'Presences',
+    description:
+      'Track which signed-in users are active right now and broadcast their status in realtime with the Appwrite Presences API.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/auth/quick-start',
+    title: 'Start with Authentication',
+    description:
+      'Effortlessly add authentication to your apps - simple signup & login in just minutes with Appwrite Authentication',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/auth/react',
+    title: 'React library',
+    description:
+      "Add authentication to React apps with Appwrite's official React library. Supports client-side React, Next.js, and TanStack Start with a single provider and a small set of hooks.",
+    layout: 'article',
+    readingTimeMinutes: 9,
+  },
+  {
+    slug: 'products/auth/security',
+    title: 'Security',
+    description:
+      'Prioritize security in your applications with Appwrite. Discover best practices, security features, and guidelines to protect user data and ensure authentication integrity.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/auth/server-side-rendering',
+    title: 'SSR login',
+    description: 'How to implement SSR authentication with Appwrite',
+    layout: 'article',
+    readingTimeMinutes: 6,
+  },
+  {
+    slug: 'products/auth/team-invites',
+    title: 'Team invites',
+    description:
+      'Learn how to manage team invites in Appwrite. Implement both client-side email invites and server-side custom flows for team memberships.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/auth/teams',
+    title: 'Teams',
+    description:
+      'Master team management in the Appwrite Cloud. Explore team-related functions, permissions, and more.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/auth/tokens',
+    title: 'Tokens',
+    description: 'What are tokens and how to use them in Appwrite',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/auth/users',
+    title: 'Manage users',
+    description:
+      'Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/auth/verify-user',
+    title: 'Verify user',
+    description:
+      "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars',
+    title: 'Avatars',
+    description:
+      'Generate avatars, icons, and images for your applications. Use Appwrite Avatars to create user initials, QR codes, country flags, browser icons, and more.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/browsers',
+    title: 'Browser icons',
+    description:
+      'Retrieve browser icons for displaying user agent information and device compatibility.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/favicons',
+    title: 'Favicons',
+    description:
+      'Fetch favicons from remote websites for link previews and bookmark displays.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/flags',
+    title: 'Country flags',
+    description:
+      'Retrieve country flag icons by country code for displaying user locations and regional information.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/image-manipulation',
+    title: 'Image proxy',
+    description:
+      'Transform remote images with resizing, cropping, and quality adjustments for optimal display and performance.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/initials',
+    title: 'User initials',
+    description:
+      'Generate avatar images from user names or initials with customizable appearance and dimensions.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/payment-methods',
+    title: 'Payment methods',
+    description:
+      'Retrieve payment method logos for checkout flows and transaction displays.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/avatars/qr-codes',
+    title: 'QR codes',
+    description:
+      'Generate QR codes from text strings with customizable size and margin for authentication, sharing, and data encoding.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/avatars/quick-start',
+    title: 'Start with Avatars',
+    description:
+      'Get started quickly with Appwrite Avatars. Learn how to generate user initials, QR codes, and other avatar images in minutes.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/avatars/screenshots',
+    title: 'Screenshots',
+    description:
+      'Capture webpage screenshots with customizable viewport, theme, browser settings, and geolocation options for comprehensive web page documentation.',
+    layout: 'article',
+    readingTimeMinutes: 6,
+  },
+  {
+    slug: 'products/databases',
+    title: 'Databases',
+    description:
+      'Store and query structured data with Appwrite Databases. Databases provide performant and scalable storage for your application, business, and user data.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/ai-suggestions',
+    title: 'AI suggestions',
+    description:
+      'Use AI suggestions to automatically generate database schemas. Learn how to create tables with recommended columns and indexes based on your table name and context.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/atomic-numeric-operations',
+    title: 'Atomic numeric operations',
+    description:
+      'Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/backups',
+    title: 'Backups',
+    description:
+      'Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/databases/bulk-operations',
+    title: 'Bulk operations',
+    description:
+      'Perform bulk operations on rows within your tables for efficient data handling.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/databases/csv-exports',
+    title: 'CSV exports',
+    description:
+      'Export table data to CSV files from the Console. Share clean datasets with your team without writing custom scripts.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/databases/csv-imports',
+    title: 'CSV imports',
+    description:
+      "Master row imports with Appwrite's CSV Import feature. Learn how to create rows within your tables by uploading a CSV file.",
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/databases/databases',
+    title: 'Databases',
+    description:
+      'Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/documentsdb',
+    title: 'DocumentsDB',
+    description:
+      'Store schemaless documents in collections with Appwrite DocumentsDB for flexible, JSON-style application data.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/geo-queries',
+    title: 'Geo queries',
+    description:
+      'Query geographic data with distance, intersects, overlaps, and other location-based operations using spatial columns.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/legacy/atomic-numeric-operations',
+    title: 'Atomic numeric operations',
+    description:
+      'Safely increment and decrement numeric fields without race conditions. Perfect for counters, quotas, inventory, and usage metrics in high-concurrency applications.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/legacy/bulk-operations',
+    title: 'Bulk operations',
+    description:
+      'Perform bulk operations on documents within your collections for efficient data handling.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/databases/legacy/collections',
+    title: 'Collections',
+    description:
+      'Organize your data with Appwrite Collections. Explore how to create and configure collections to store and structure your data effectively.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/databases/legacy/databases',
+    title: 'Databases',
+    description:
+      'Dive deeper into Appwrite Databases and their configuration. Learn how to create, manage, and optimize multiple databases for your application.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/legacy/documents',
+    title: 'Documents',
+    description:
+      'Master document management with Appwrite Databases. Learn how to create, update, and query documents within your collections for dynamic data storage.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/legacy/order',
+    title: 'Order',
+    description:
+      'Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval."',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/legacy/pagination',
+    title: 'Pagination',
+    description:
+      'Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/legacy/permissions',
+    title: 'Database permissions',
+    description:
+      'Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database collections',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/legacy/queries',
+    title: 'Queries',
+    description:
+      'Harness the power of querying with Appwrite Databases. Discover various query options, filtering, sorting, and advanced querying techniques.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/databases/legacy/quick-start',
+    title: 'Start with Databases',
+    description:
+      'Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define collections, and perform basic data operations.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/legacy/relationships',
+    title: 'Relationships',
+    description:
+      'Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between documents for interconnected data.',
+    layout: 'article',
+    readingTimeMinutes: 7,
+  },
+  {
+    slug: 'products/databases/legacy/type-generation',
+    title: 'Type generation',
+    description:
+      'Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/mysql',
+    title: 'MySQL',
+    description:
+      'Run a dedicated, native MySQL database provisioned for your project and connect to it directly with standard MySQL clients.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/offline',
+    title: 'Offline sync',
+    description:
+      'Enable offline synchronization of data between your apps and Appwrite Databases.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/operators',
+    title: 'Operators',
+    description:
+      'Update multiple fields atomically without fetching the full row. Perform numeric, array, string, and date updates in a single, consistent workflow.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/databases/order',
+    title: 'Order',
+    description:
+      'Understand how to do data ordering in Appwrite Databases. Learn how to order and sort your database records for efficient data retrieval.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/pagination',
+    title: 'Pagination',
+    description:
+      'Implement pagination for large data sets in Appwrite Databases. Explore techniques for splitting and displaying data across multiple pages.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/databases/permissions',
+    title: 'Database permissions',
+    description:
+      'Enhance data security and access control with Appwrite Database Permissions. Learn how to set permissions and access rules for your database tables',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/postgresql',
+    title: 'PostgreSQL',
+    description:
+      'Run a dedicated, native PostgreSQL database provisioned for your project and connect to it directly with standard PostgreSQL clients.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/databases/queries',
+    title: 'Queries',
+    description:
+      'Harness the power of querying with Appwrite tablesDB. Discover various query options, filtering, sorting, and advanced querying techniques.',
+    layout: 'article',
+    readingTimeMinutes: 8,
+  },
+  {
+    slug: 'products/databases/quick-start',
+    title: 'Start with Databases',
+    description:
+      'Get started with Appwrite Databases. Follow a step-by-step guide to create your first database, define tables, and perform basic data operations.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/relationships',
+    title: 'Relationships',
+    description:
+      'Manage complex data relationships with Appwrite Databases. Discover how to define and work with relationships between rows for interconnected data.',
+    layout: 'article',
+    readingTimeMinutes: 7,
+  },
+  {
+    slug: 'products/databases/rows',
+    title: 'Rows',
+    description:
+      'Master row management with Appwrite Databases. Learn how to create, update, upsert, and query rows within your tables for dynamic data storage.',
+    layout: 'article',
+    readingTimeMinutes: 9,
+  },
+  {
+    slug: 'products/databases/tables',
+    title: 'Tables',
+    description:
+      'Organize your data with Appwrite Tables. Explore how to create and configure tables to store and structure your data effectively.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/databases/timestamp-overrides',
+    title: 'Timestamp overrides',
+    description:
+      'Set custom $createdAt and $updatedAt timestamps for your documents when using server SDKs.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/transactions',
+    title: 'Transactions',
+    description:
+      'Stage multiple database operations and commit them atomically. Group changes across databases and tables with ordering, isolation, and conflict detection.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/databases/type-generation',
+    title: 'Type generation',
+    description:
+      'Generate types from your Appwrite database schema. Learn how to use the Appwrite CLI to create and manage your types effectively.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/databases/vectorsdb',
+    title: 'VectorsDB',
+    description:
+      'Store vector embeddings and run similarity search with Appwrite VectorsDB to power semantic search, recommendations, and other AI features.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/domains',
+    title: 'Domains',
+    description:
+      'Register, transfer, and manage domains with Appwrite. Buy domains, configure DNS, and connect them to Sites, Functions, and APIs from your organization.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/domains/change-organization',
+    title: 'Change organization',
+    description:
+      'Reassign a domain from one Appwrite organization to another. This is not a registrar transfer.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/connect',
+    title: 'Connect to products',
+    description:
+      'Connect apex domains and subdomains to Appwrite Sites, Functions, and custom API endpoints. Covers DNS methods, verification, and multi-product layouts.',
+    layout: 'article',
+    readingTimeMinutes: 8,
+  },
+  {
+    slug: 'products/domains/delete',
+    title: 'Delete a domain',
+    description:
+      'Remove a domain and its DNS zone from Appwrite, including bulk delete from the organization list.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/dns',
+    title: 'DNS records',
+    description:
+      'Learn how DNS zones work for organization domains in Appwrite, including record types and locked entries.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/domains/external',
+    title: 'Add external domain',
+    description:
+      'Add a domain registered with another registrar and delegate DNS to Appwrite without moving registration.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/manage-dns',
+    title: 'Manage DNS records',
+    description:
+      'Create, update, import, and filter DNS records for organization domains in Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/presets',
+    title: 'DNS presets',
+    description:
+      'Add email provider DNS records to organization domains with one-click presets in Appwrite Cloud.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/domains/pricing',
+    title: 'Pricing',
+    description:
+      'Learn how Appwrite prices domain registration, transfers, and renewals, including premium names and registration periods.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/domains/quick-start',
+    title: 'Start with Domains',
+    description:
+      'Register or add your first domain in Appwrite Cloud and verify DNS in a few steps.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/register',
+    title: 'Register a domain',
+    description:
+      'Search for available domain names and register them through Appwrite with transparent pricing and organization billing.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/domains/registration',
+    title: 'Registration',
+    description:
+      'Learn how domain registration works in Appwrite, including Appwrite-registered and external domains, organization scope, and verification.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/renewal',
+    title: 'Renewal',
+    description:
+      'Learn how domain expiry, auto-renewal, and billing work for Appwrite-registered domains.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/domains/transfer',
+    title: 'Transfer a domain',
+    description:
+      'Transfer domain registration into or out of Appwrite, including authorization codes, fees, and transfer status.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/functions',
+    title: 'Functions',
+    description:
+      'Appwrite Functions is your gateway to scalable applications. Explore our complete guide to building and deploying serverless functions effortlessly.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/functions/deploy-from-git',
+    title: 'Deploy from Git',
+    description:
+      "Learn to version and update your Appwrite Functions' code with deployments.",
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/functions/deploy-manually',
+    title: 'Deploy manually',
+    description:
+      'Learn to deploy Appwrite functions manually from the Appwrite CLI or the Appwrite Console.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/functions/deployments',
+    title: 'Deployments',
+    description:
+      'Efficiently deploy your serverless functions with Appwrite. Explore deployment options, strategies, and best practices for seamless function execution.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/functions/develop',
+    title: 'Develop Appwrite Functions',
+    description:
+      'Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.',
+    layout: 'article',
+    readingTimeMinutes: 8,
+  },
+  {
+    slug: 'products/functions/develop-locally',
+    title: 'Develop locally',
+    description: 'Learn to develop Appwrite functions locally.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/functions/domains',
+    title: 'Domains',
+    description:
+      'Execute Appwrite Functions through domains using standard HTTP GET, POST, or other request methods to serve static, JSON, HTML, or other content.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/functions/environment-variables',
+    title: 'Environment variables',
+    description:
+      'Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/functions/examples',
+    title: 'Examples',
+    description:
+      'Accelerate your serverless development with Appwrite Functions examples. Access a library of code samples and use cases to jumpstart your projects.',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/functions/execute',
+    title: 'Execution',
+    description:
+      'Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/functions/executions',
+    title: 'Execution',
+    description:
+      'Learn how Appwrite handles serverless function executions. More specifically, execution status, details and function logging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/functions/functions',
+    title: 'Functions',
+    description:
+      'Learn what an Appwrite Function can do for you and how to create a new Appwrite Function',
+    layout: 'article',
+    readingTimeMinutes: 6,
+  },
+  {
+    slug: 'products/functions/quick-start',
+    title: 'Start with Functions',
+    description:
+      'Get started quickly with Appwrite Functions. Follow a step-by-step guide to create your first serverless function, define triggers, and execute code.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/functions/runtimes',
+    title: 'Runtimes',
+    description:
+      'Choose the right runtime environment for your serverless functions in Appwrite. Explore available runtimes, dependencies, and runtime-specific considerations.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/functions/templates',
+    title: 'Templates',
+    description:
+      "Learn about Appwrite Functions' templates that let you jump start function development to extend your Appwrite APIs.",
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/messaging',
+    title: 'Messaging',
+    description:
+      'Send push notifications, text, or emails to users or groups of users using your app.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/messaging/apns',
+    title: 'Apple Push Notification service',
+    description:
+      'Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/messaging/fcm',
+    title: 'Firebase Cloud Messaging',
+    description:
+      'Send push notifications to Android, Apple, or Web app with Firebase Cloud Messaging (FCM).',
+    layout: 'article',
+    readingTimeMinutes: 4,
+  },
+  {
+    slug: 'products/messaging/mailgun',
+    title: 'Mailgun',
+    description:
+      'Send emails to your Appwrite users using Mailgun and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/messaging/messages',
+    title: 'Messages',
+    description:
+      'Learn about Appwrite messages, the different types of messages, what can be sent in different message types.',
+    layout: 'article',
+    readingTimeMinutes: 7,
+  },
+  {
+    slug: 'products/messaging/msg91',
+    title: 'MSG91',
+    description:
+      'Send SMS messages to your Appwrite users using MSG91 and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/providers',
+    title: 'Providers',
+    description:
+      'Learn the different providers that you can use to send messages with Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
+  {
+    slug: 'products/messaging/send-email-messages',
+    title: 'Send email messages',
+    description: 'Send email messages to your users using Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/send-push-notifications',
+    title: 'Send push notification',
+    description:
+      'Send push notification to your users using Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/messaging/send-sms-messages',
+    title: 'Send SMS messages',
+    description: 'Send SMS messages to your users using Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/sendgrid',
+    title: 'SendGrid',
+    description:
+      'Send emails to your Appwrite users using SendGrid and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/smtp',
+    title: 'SMTP',
+    description:
+      'Send emails to your Appwrite users using SMTP and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/messaging/targets',
+    title: 'Targets',
+    description:
+      "Manage avenues of communication by targetting user's device, email, or phone number in your notification and messages.",
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/messaging/telesign',
+    title: 'Telesign',
+    description:
+      'Send SMS messages to your Appwrite users using Telesign and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/textmagic',
+    title: 'Textmagic',
+    description:
+      'Send SMS messages to your Appwrite users using Textmagic and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/topics',
+    title: 'Topics',
+    description:
+      'Allow groups of users to subscribe to a common topic and receive the same notifications.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/twilio',
+    title: 'Twilio',
+    description:
+      'Send SMS messages to your Appwrite users using Twilio and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/messaging/vonage',
+    title: 'Vonage',
+    description:
+      'Send SMS messages to your Appwrite users using Vonage and Appwrite Messaging.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/network',
+    title: 'Network',
+    description:
+      "Discover Appwrite's network architecture with global regions, edge nodes, and optimized routing. Explore how it ensures low latency, reliable performance, and scalable infrastructure for modern applications.",
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/network/caa-records',
+    title: 'Certification Authority Authorization (CAA) records',
+    description:
+      'Learn what DNS Certification Authority Authorization (CAA) records are, when they are required to use a custom domain with Appwrite, and how to configure one or more of them at your DNS provider.',
+    layout: 'article',
+    readingTimeMinutes: 6,
+  },
+  {
+    slug: 'products/network/caching',
+    title: 'Caching',
+    description:
+      'Learn how Appwrite uses smart caching strategies at the region, edge, and CDN levels to optimize performance and protect dynamic APIs, with advanced options for enterprise customers.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/network/cdn',
+    title: 'Content Delivery Network (CDN)',
+    description:
+      "Learn about Appwrite's CDN, designed to optimize content delivery with compression, and edge optimization for improved performance and reduced latency.",
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/network/compression',
+    title: 'Compression',
+    description:
+      'Appwrite is leveraging compression algorithms to both boost the performance of your app and to reduce and optimize…',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/network/custom-domains',
+    title: 'Custom domains',
+    description:
+      'Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.',
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/network/ddos',
+    title: 'DDoS mitigation',
+    description:
+      'Learn how Appwrite protects your applications from Distributed Denial-of-Service (DDoS) attacks with built-in, always-on protection for all Appwrite Cloud plans.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/network/dns',
+    title: 'Appwrite DNS service',
+    description:
+      "Learn about Appwrite's DNS service and how to configure domain records for your applications",
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
+  {
+    slug: 'products/network/edges',
+    title: 'Edges',
+    description:
+      'Learn about Appwrite edges, where lightweight compute tasks like caching, request routing, and content delivery are handled. Understand how edges enhance performance by bringing operations closer to end-users.',
+    layout: 'article',
+    readingTimeMinutes: 3,
+  },
+  {
+    slug: 'products/network/endpoints',
+    title: 'Endpoints',
+    description:
+      "Understand the differences between Appwrite's endpoints, including geo-balanced edges, region-specific services, and custom domains for compute processes.",
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
+  {
+    slug: 'products/network/regions',
+    title: 'Regions',
+    description:
+      'Learn about Appwrite regions, where core services like databases, auth, functions, sites, and storage are hosted. Understand data sovereignty, fault isolation, and scalability for compliant, high-performance deployments',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
   {
-    "slug": "quick-starts/python",
-    "title": "Start with Python",
-    "description": "Learn to get started with server integrations with Appwrite Python SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/qwik",
-    "title": "Start with Qwik",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Qwik apps.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
+    slug: 'products/network/tls',
+    title: 'Transport Layer Security (TLS)',
+    description:
+      'Learn how Appwrite uses TLS to encrypt data in transit, ensuring secure and private communication between clients and servers.',
+    layout: 'article',
+    readingTimeMinutes: 2,
+  },
   {
-    "slug": "quick-starts/react",
-    "title": "Start with React",
-    "description": "Build React apps with the Appwrite React library and add authentication, sign-in, sign-up, and user state in a few lines.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "quick-starts/react-native",
-    "title": "Start with React Native",
-    "description": "Discover how to leverage Appwrite's powerful backend to help you build React Native apps for iOS, Android and other native platforms.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
+    slug: 'products/network/waf',
+    title: 'Web application firewall (WAF)',
+    description:
+      "Appwrite's Web Application Firewall (WAF) provides enterprise-grade protection against web vulnerabilities like SQL injection, XSS, and DDoS attacks.",
+    layout: 'article',
+    readingTimeMinutes: 5,
+  },
   {
-    "slug": "quick-starts/refine",
-    "title": "Start with Refine",
-    "description": "Build Refine apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
+    slug: 'products/sites',
+    title: 'Sites',
+    description:
+      'Appwrite Sites is your gateway to scalable web applications. Explore our complete guide to building and deploying websites effortlessly.',
+    layout: 'article',
+    readingTimeMinutes: 1,
+  },
   {
-    "slug": "quick-starts/ruby",
-    "title": "Start with Ruby",
-    "description": "Dive into our step-by-step guide on integrating Appwrite with your Ruby server backend application. Get your backend up and running quickly with this tutorial.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/deploy-from-cli',
+    title: 'Deploy from CLI',
+    description: 'Learn to deploy Appwrite Sites from the Appwrite CLI.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
-  {
-    "slug": "quick-starts/rust",
-    "title": "Start with Rust",
-    "description": "Learn to get started with server integrations with Appwrite Rust SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+  {
+    slug: 'products/sites/deploy-from-git',
+    title: 'Deploy from Git',
+    description:
+      "Learn to version and update your Appwrite Sites' code with deployments.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "quick-starts/solid",
-    "title": "Start with Solid",
-    "description": "Build Solid apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/deploy-manually',
+    title: 'Deploy manually',
+    description:
+      'Learn to deploy Appwrite Sites manually via the Appwrite Console.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "quick-starts/sveltekit",
-    "title": "Start with SvelteKit",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your SvelteKit apps.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/deployments',
+    title: 'Deployments',
+    description:
+      'Efficiently deploy your web apps with Appwrite. Explore deployment options, strategies, and best practices.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "quick-starts/swift",
-    "title": "Start with Swift",
-    "description": "Learn to get started with server integrations with Appwrite Swift SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/develop',
+    title: 'Develop Appwrite Sites',
+    description: 'Master site development with Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "quick-starts/tanstack-start",
-    "title": "Start with TanStack Start",
-    "description": "Build TanStack Start apps with the Appwrite React library. Add server-rendered authentication via file-route handlers and server functions.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/domains',
+    title: 'Domains',
+    description: 'Discover how domains can be managed for an Appwrite Site',
+    layout: 'article',
+    readingTimeMinutes: 6,
   },
   {
-    "slug": "quick-starts/vue",
-    "title": "Start with Vue.js",
-    "description": "Build Vue.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/environment-variables',
+    title: 'Environment variables',
+    description:
+      'Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "quick-starts/web",
-    "title": "Start with Web",
-    "description": "Build JavaScript or Typescript web apps with Appwrite. Add authentication, user management, file storage, and more. Read our guide to get started!",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/frameworks',
+    title: 'Frameworks',
+    description:
+      'Discover which frameworks are supported out-of-the-box by Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "references",
-    "title": "API reference",
-    "description": "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/instant-rollbacks',
+    title: 'Instant rollbacks',
+    description:
+      'Safely revert a site to a previous deployment using instant rollbacks.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "references/quick-start",
-    "title": "Quick start",
-    "description": "Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'products/sites/logs',
+    title: 'Logs',
+    description: 'Learn how Appwrite Sites handles logs',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "sdks",
-    "title": "SDKs",
-    "description": "Get started with Appwrite SDKs and learn how to use them to add authentication, user management, file storage, and more to your apps.",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'products/sites/migrations/vercel',
+    title: 'Migrating from Vercel to Appwrite Sites',
+    description:
+      'A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 7,
   },
   {
-    "slug": "tooling/ai",
-    "title": "AI",
-    "description": "Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/previews',
+    title: 'Previews',
+    description:
+      'Preview site deployments to test changes before promoting to production.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/agents-md",
-    "title": "AGENTS.md",
-    "description": "Generate an AGENTS.md file to give AI agents project-specific context about Appwrite SDKs, APIs, and services.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start',
+    title: 'Start with Sites',
+    description:
+      'Get started quickly with Appwrite Sites. Follow a step-by-step guide to create your first Appwrite Site and deploy a web app.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/agents/antigravity",
-    "title": "Google Antigravity",
-    "description": "Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/quick-start/angular',
+    title: 'Deploy an Angular app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy Angular apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/agents/claude-code",
-    "title": "Claude Code",
-    "description": "Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start/astro',
+    title: 'Deploy a Astro app to Appwrite Sites',
+    description: 'Learn how to setup and deploy Astro apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/agents/codex",
-    "title": "Codex",
-    "description": "Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start/flutter',
+    title: 'Deploy a Flutter Web app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy Flutter Web apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/agents/cursor",
-    "title": "Cursor",
-    "description": "Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start/nextjs',
+    title: 'Deploy a Next.js app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy Next.js apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/agents/opencode",
-    "title": "OpenCode",
-    "description": "Learn how you can add the Appwrite MCP servers to OpenCode to interact with both the Appwrite API and documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/quick-start/nuxt',
+    title: 'Deploy a Nuxt app to Appwrite Sites',
+    description: 'Learn how to setup and deploy Nuxt apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/agents/vscode",
-    "title": "VS Code",
-    "description": "Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to Appwrite MCP servers for deeper integration.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/quick-start/react',
+    title: 'Deploy a React app to Appwrite Sites',
+    description: 'Learn how to setup and deploy React apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/agents/windsurf",
-    "title": "Windsurf",
-    "description": "Learn how you can use Windsurf Editor with Appwrite by leveraging MCP servers and quick start prompts to build applications faster.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/quick-start/react-native',
+    title: 'Deploy a React Native app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy React Native apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/agents/zed",
-    "title": "Zed",
-    "description": "Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start/remix',
+    title: 'Deploy a Remix app to Appwrite Sites',
+    description: 'Learn how to setup and deploy Remix apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/ai-in-functions",
-    "title": "AI in Functions",
-    "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start/sveltekit',
+    title: 'Deploy a SvelteKit app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy SvelteKit apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/arena",
-    "title": "Appwrite Arena",
-    "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'products/sites/quick-start/tanstack-start',
+    title: 'Deploy a TanStack Start app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy TanStack Start apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/assistant",
-    "title": "Assistant",
-    "description": "AI-powered assistant for precise Appwrite tasks. Troubleshoot issues faster, generate code snippets, and search Appwrite's docs with the use of AI.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/quick-start/vanilla',
+    title: 'Deploy a Vanilla JS app to Appwrite Sites',
+    description:
+      'Learn how to setup and deploy Vanilla JS apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/docs-as-markdown",
-    "title": "Docs as Markdown",
-    "description": "Access Appwrite documentation as Markdown for AI consumption.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/sites/quick-start/vue',
+    title: 'Deploy a Vue.js app to Appwrite Sites',
+    description: 'Learn how to setup and deploy Vue.js apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/mcp-servers",
-    "title": "Model Context Protocol",
-    "description": "Enable LLMs and code-generation tools to interact with your Appwrite project",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/rendering',
+    title: 'Rendering',
+    description: 'Explore how sites are rendered on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/mcp-servers/api",
-    "title": "MCP server for Appwrite API",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite API",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/rendering/ssr',
+    title: 'Server Side Rendering',
+    description: 'Learn how to host SSR web apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/mcp-servers/docs",
-    "title": "MCP server for Appwrite docs",
-    "description": "Enable LLMs and code-generation tools to interact with the Appwrite docs",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/rendering/static',
+    title: 'Static',
+    description: 'Learn how to host static web apps on Appwrite Sites.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tooling/ai/persistent-agents-with-realtime",
-    "title": "Persistent Agents with Realtime",
-    "description": "Building persistent AI agents using Appwrite Realtime.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/sites/templates',
+    title: 'Templates',
+    description:
+      "Learn about Appwrite Sites' templates that let you jump start site development.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts",
-    "title": "Quick start prompts",
-    "description": "Use AI assistants and code-generation tools to build Appwrite-powered applications faster using quick start prompts.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'products/storage',
+    title: 'Storage',
+    description:
+      'Unlock the power of cloud storage with Appwrite Storage. Learn how to store, manage, and retrieve files and media assets securely in your applications.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/android-java",
-    "title": "Android (Java)",
-    "description": "Quickstart prompt for integrating Appwrite with Android using Java.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/storage/buckets',
+    title: 'Buckets',
+    description:
+      'Organize and manage your files effectively with Appwrite Storage Buckets. Explore how to create, configure, and use storage buckets for seamless file organization.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/android-kotlin",
-    "title": "Android (Kotlin)",
-    "description": "Quickstart prompt for integrating Appwrite with Android using Kotlin.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/storage/file-tokens',
+    title: 'File tokens',
+    description: 'Easily share files with external users using file tokens.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/angular",
-    "title": "Angular",
-    "description": "Quickstart prompt for integrating Appwrite with Angular.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/storage/images',
+    title: 'Image transformations',
+    description:
+      'Optimize image storage and processing with Appwrite. Explore image resizing, transformations, and manipulation to deliver rich media experiences in your apps.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/apple",
-    "title": "Apple (Swift)",
-    "description": "Quickstart prompt for integrating Appwrite with Apple platforms using Swift.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/storage/permissions',
+    title: 'Storage permissions',
+    description:
+      'Enhance data security and control with Appwrite Storage Permissions. Learn how to set access rules, permissions, and restrictions for your stored files.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/dart",
-    "title": "Dart",
-    "description": "Quickstart prompt for integrating Appwrite with Dart.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/storage/quick-start',
+    title: 'Start with Storage',
+    description:
+      'Get started quickly with Appwrite Storage. Follow step-by-step instructions to set up storage, upload files, and integrate cloud storage into your projects',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/deno",
-    "title": "Deno",
-    "description": "Quickstart prompt for integrating Appwrite with Deno.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'products/storage/upload-download',
+    title: 'Upload and download',
+    description:
+      'Effortlessly upload and download files with Appwrite Storage. Learn how to handle file uploads, manage file versions, and ensure secure downloads in your applications.',
+    layout: 'article',
+    readingTimeMinutes: 6,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/dotnet",
-    "title": ".NET",
-    "description": "Quickstart prompt for integrating Appwrite with .NET.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/android',
+    title: 'Start with Android (Kotlin)',
+    description:
+      'Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/flutter",
-    "title": "Flutter",
-    "description": "Quickstart prompt for integrating Appwrite with Flutter.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/android-java',
+    title: 'Start with Android (Java)',
+    description:
+      'Get started with Appwrite on Android using Java and learn how to build secure and scalable apps using our powerful backend.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/go",
-    "title": "Go",
-    "description": "Quickstart prompt for integrating Appwrite with Go.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/angular',
+    title: 'Start with Angular',
+    description:
+      'Learn how to use Appwrite to add authentication, user management, file storage, and more to your Angular apps.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/kotlin",
-    "title": "Kotlin",
-    "description": "Quickstart prompt for integrating Appwrite with Kotlin.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/apple',
+    title: 'Start with Apple',
+    description:
+      'Build iOS apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/nextjs",
-    "title": "Next.js",
-    "description": "Quickstart prompt for integrating Appwrite with Next.js.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/astro',
+    title: 'Start with Astro',
+    description:
+      'Learn how to use Appwrite to add authentication, user management, file storage, and more to your Astro apps.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/node",
-    "title": "Node.js",
-    "description": "Quickstart prompt for integrating Appwrite with Node.js.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/dart',
+    title: 'Start with Dart',
+    description:
+      'Build Flutter apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/nuxt",
-    "title": "Nuxt",
-    "description": "Quickstart prompt for integrating Appwrite with Nuxt.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/deno',
+    title: 'Start with Deno',
+    description:
+      'Dive into our step-by-step guide on integrating Appwrite with your Deno server backend application. Get your backend up and running quickly with this tutorial.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/php",
-    "title": "PHP",
-    "description": "Quickstart prompt for integrating Appwrite with PHP.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/dotnet',
+    title: 'Start with .NET',
+    description:
+      'Learn to get started with server integrations with Appwrite .NET SDK.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/python",
-    "title": "Python",
-    "description": "Quickstart prompt for integrating Appwrite with Python.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/flutter',
+    title: 'Start with Flutter',
+    description:
+      'Build Flutter apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/react",
-    "title": "React",
-    "description": "Quickstart prompt for integrating Appwrite with React.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/go',
+    title: 'Start with Go',
+    description:
+      'Integrating Appwrite with your Go backend application is a quick and simple process. Get your backend up and running with our step-by-step guide.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/react-native",
-    "title": "React Native",
-    "description": "Quickstart prompt for integrating Appwrite with React Native.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/kotlin',
+    title: 'Start with Kotlin',
+    description:
+      'Learn to get started with server integrations with Appwrite Kotlin SDK.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/refine",
-    "title": "Refine",
-    "description": "Quickstart prompt for integrating Appwrite with Refine.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/nextjs',
+    title: 'Start with Next.js',
+    description:
+      'Build Next.js apps with the Appwrite React library. Add server-rendered authentication, sign-in, sign-up, and user state without writing the SSR plumbing yourself.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/ruby",
-    "title": "Ruby",
-    "description": "Quickstart prompt for integrating Appwrite with Ruby.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/node',
+    title: 'Start with Node.js',
+    description:
+      'Dive into our step-by-step guide on integrating Appwrite with your Node.js server backend application. Get your backend up and running quickly with this tutorial.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/rust",
-    "title": "Rust",
-    "description": "Quickstart prompt for integrating Appwrite with Rust.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/nuxt',
+    title: 'Start with Nuxt',
+    description:
+      'Build Nuxt.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/solid",
-    "title": "Solid",
-    "description": "Quickstart prompt for integrating Appwrite with Solid.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/php',
+    title: 'Start with PHP',
+    description:
+      'Dive into our step-by-step guide on integrating Appwrite with your PHP server backend application. Get your backend up and running quickly with this tutorial.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/sveltekit",
-    "title": "SvelteKit",
-    "description": "Quickstart prompt for integrating Appwrite with SvelteKit.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/python',
+    title: 'Start with Python',
+    description:
+      'Learn to get started with server integrations with Appwrite Python SDK.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/swift",
-    "title": "Swift",
-    "description": "Quickstart prompt for integrating Appwrite with Swift.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/qwik',
+    title: 'Start with Qwik',
+    description:
+      'Learn how to use Appwrite to add authentication, user management, file storage, and more to your Qwik apps.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/tanstack-start",
-    "title": "TanStack Start",
-    "description": "Quickstart prompt for integrating Appwrite with TanStack Start.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/react',
+    title: 'Start with React',
+    description:
+      'Build React apps with the Appwrite React library and add authentication, sign-in, sign-up, and user state in a few lines.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/vue",
-    "title": "Vue",
-    "description": "Quickstart prompt for integrating Appwrite with Vue.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/react-native',
+    title: 'Start with React Native',
+    description:
+      "Discover how to leverage Appwrite's powerful backend to help you build React Native apps for iOS, Android and other native platforms.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/quickstart-prompts/web",
-    "title": "Web",
-    "description": "Quickstart prompt for integrating Appwrite with Web.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/refine',
+    title: 'Start with Refine',
+    description:
+      'Build Refine apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/responsible-ai",
-    "title": "Responsible AI",
-    "description": "Best practices for responsible AI usage with Appwrite. Learn how to protect user data, secure API keys, and build transparent AI-powered applications.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'quick-starts/ruby',
+    title: 'Start with Ruby',
+    description:
+      'Dive into our step-by-step guide on integrating Appwrite with your Ruby server backend application. Get your backend up and running quickly with this tutorial.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/skills",
-    "title": "Agent skills",
-    "description": "Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'quick-starts/rust',
+    title: 'Start with Rust',
+    description:
+      'Learn to get started with server integrations with Appwrite Rust SDK.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/vector-db-and-embeddings",
-    "title": "Vector DB and embeddings",
-    "description": "Using vector databases and embeddings with Appwrite.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'quick-starts/solid',
+    title: 'Start with Solid',
+    description:
+      'Build Solid apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/vibe-coding/bolt",
-    "title": "Bolt",
-    "description": "Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/sveltekit',
+    title: 'Start with SvelteKit',
+    description:
+      'Learn how to use Appwrite to add authentication, user management, file storage, and more to your SvelteKit apps.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/vibe-coding/claude-desktop",
-    "title": "Claude Desktop",
-    "description": "Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'quick-starts/swift',
+    title: 'Start with Swift',
+    description:
+      'Learn to get started with server integrations with Appwrite Swift SDK.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/vibe-coding/emergent",
-    "title": "Emergent",
-    "description": "Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/tanstack-start',
+    title: 'Start with TanStack Start',
+    description:
+      'Build TanStack Start apps with the Appwrite React library. Add server-rendered authentication via file-route handlers and server functions.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/ai/vibe-coding/lovable",
-    "title": "Lovable",
-    "description": "Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'quick-starts/vue',
+    title: 'Start with Vue.js',
+    description:
+      'Build Vue.js apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/ai/vibe-coding/zenflow",
-    "title": "Zenflow",
-    "description": "Learn how to add the Appwrite MCP servers to agents in Zenflow to interact with both the Appwrite API and documentation.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'quick-starts/web',
+    title: 'Start with Web',
+    description:
+      'Build JavaScript or Typescript web apps with Appwrite. Add authentication, user management, file storage, and more. Read our guide to get started!',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/appwriter",
-    "title": "The Appwriter",
-    "description": "Learn about the custom Appwriter mechanical keyboard and its specifications",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'references',
+    title: 'API reference',
+    description:
+      "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/arena",
-    "title": "Arena",
-    "description": "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'references/quick-start',
+    title: 'Quick start',
+    description:
+      'Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tooling/command-center",
-    "title": "Command Center",
-    "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'sdks',
+    title: 'SDKs',
+    description:
+      'Get started with Appwrite SDKs and learn how to use them to add authentication, user management, file storage, and more to your apps.',
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "tooling/command-center/shortcuts",
-    "title": "Keyboard shortcuts",
-    "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'tooling/ai',
+    title: 'AI',
+    description:
+      "Discover Appwrite's AI tooling ecosystem. Build with AI-powered development tools, integrate AI capabilities into your apps, and leverage documentation designed for AI consumption.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/command-line/buckets",
-    "title": "Buckets",
-    "description": "Efficiently deploy your Appwrite buckets using the Command-Line Tool (CLI).",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'tooling/ai/agents-md',
+    title: 'AGENTS.md',
+    description:
+      'Generate an AGENTS.md file to give AI agents project-specific context about Appwrite SDKs, APIs, and services.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/command-line/commands",
-    "title": "Commands",
-    "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 6
+    slug: 'tooling/ai/agents/antigravity',
+    title: 'Google Antigravity',
+    description:
+      'Learn how you can add the Appwrite MCP servers to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/command-line/functions",
-    "title": "Functions",
-    "description": "Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'tooling/ai/agents/claude-code',
+    title: 'Claude Code',
+    description:
+      'Learn how to use Claude Code with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/command-line/generate",
-    "title": "Generate SDK",
-    "description": "Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/agents/codex',
+    title: 'Codex',
+    description:
+      'Learn how to use Codex with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/command-line/installation",
-    "title": "Installation",
-    "description": "Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'tooling/ai/agents/cursor',
+    title: 'Cursor',
+    description:
+      'Learn how to use Cursor with Appwrite through the Appwrite plugin, quick start prompts, and MCP servers for AI-assisted development.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/command-line/non-interactive",
-    "title": "Non-interactive",
-    "description": "Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/agents/opencode',
+    title: 'OpenCode',
+    description:
+      'Learn how you can add the Appwrite MCP servers to OpenCode to interact with both the Appwrite API and documentation.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/command-line/sites",
-    "title": "Sites",
-    "description": "Efficiently deploy your Appwrite Sites using the Command-Line Tool (CLI).",
-    "layout": "article",
-    "readingTimeMinutes": 5
+    slug: 'tooling/ai/agents/vscode',
+    title: 'VS Code',
+    description:
+      'Learn how you can use Appwrite with VS Code and GitHub Copilot for AI-assisted development. Get started quickly with pre-built prompts and connect to Appwrite MCP servers for deeper integration.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/command-line/tables",
-    "title": "Tables",
-    "description": "Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'tooling/ai/agents/windsurf',
+    title: 'Windsurf',
+    description:
+      'Learn how you can use Windsurf Editor with Appwrite by leveraging MCP servers and quick start prompts to build applications faster.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/command-line/teams",
-    "title": "Teams",
-    "description": "Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'tooling/ai/agents/zed',
+    title: 'Zed',
+    description:
+      'Learn how you can use Zed with Appwrite by adding Appwrite MCP servers and installing Appwrite skills for AI-assisted development.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/command-line/topics",
-    "title": "Topics",
-    "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",
-    "layout": "article",
-    "readingTimeMinutes": 4
+    slug: 'tooling/ai/ai-in-functions',
+    title: 'AI in Functions',
+    description:
+      'Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform",
-    "title": "Terraform provider",
-    "description": "Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.",
-    "layout": "article",
-    "readingTimeMinutes": 3
+    slug: 'tooling/ai/arena',
+    title: 'Appwrite Arena',
+    description:
+      "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tooling/terraform/provider",
-    "title": "Configuration",
-    "description": "Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/assistant',
+    title: 'Assistant',
+    description:
+      "AI-powered assistant for precise Appwrite tasks. Troubleshoot issues faster, generate code snippets, and search Appwrite's docs with the use of AI.",
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform/resources/auth",
-    "title": "Auth",
-    "description": "Manage Appwrite users and teams with the Terraform provider.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'tooling/ai/docs-as-markdown',
+    title: 'Docs as Markdown',
+    description:
+      'Access Appwrite documentation as Markdown for AI consumption.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/terraform/resources/backups",
-    "title": "Backups",
-    "description": "Configure Appwrite backup policies with Terraform where your plan supports them.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'tooling/ai/mcp-servers',
+    title: 'Model Context Protocol',
+    description:
+      'Enable LLMs and code-generation tools to interact with your Appwrite project',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform/resources/databases",
-    "title": "Databases",
-    "description": "Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/mcp-servers/api',
+    title: 'MCP server for Appwrite API',
+    description:
+      'Enable LLMs and code-generation tools to interact with the Appwrite API',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform/resources/functions",
-    "title": "Functions",
-    "description": "Manage Appwrite Functions, environment variables, and deployments with Terraform.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/mcp-servers/docs',
+    title: 'MCP server for Appwrite docs',
+    description:
+      'Enable LLMs and code-generation tools to interact with the Appwrite docs',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform/resources/messaging",
-    "title": "Messaging",
-    "description": "Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/persistent-agents-with-realtime',
+    title: 'Persistent Agents with Realtime',
+    description: 'Building persistent AI agents using Appwrite Realtime.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform/resources/sites",
-    "title": "Sites",
-    "description": "Manage Appwrite Sites, environment variables, and deployments with Terraform.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/quickstart-prompts',
+    title: 'Quick start prompts',
+    description:
+      'Use AI assistants and code-generation tools to build Appwrite-powered applications faster using quick start prompts.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tooling/terraform/resources/storage",
-    "title": "Storage",
-    "description": "Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.",
-    "layout": "article",
-    "readingTimeMinutes": 2
+    slug: 'tooling/ai/quickstart-prompts/android-java',
+    title: 'Android (Java)',
+    description:
+      'Quickstart prompt for integrating Appwrite with Android using Java.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tooling/terraform/resources/webhooks",
-    "title": "Webhooks",
-    "description": "Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.",
-    "layout": "article",
-    "readingTimeMinutes": 1
+    slug: 'tooling/ai/quickstart-prompts/android-kotlin',
+    title: 'Android (Kotlin)',
+    description:
+      'Quickstart prompt for integrating Appwrite with Android using Kotlin.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-1",
-    "title": "Build an ideas tracker with Android",
-    "description": "Learn to build an Android app with no backend code using an Appwrite backend.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Mobile and native",
-    "framework": "Android"
+    slug: 'tooling/ai/quickstart-prompts/angular',
+    title: 'Angular',
+    description: 'Quickstart prompt for integrating Appwrite with Angular.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-2",
-    "title": "Create app",
-    "description": "Create a Android app project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tooling/ai/quickstart-prompts/apple',
+    title: 'Apple (Swift)',
+    description:
+      'Quickstart prompt for integrating Appwrite with Apple platforms using Swift.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-3",
-    "title": "Set up Appwrite",
-    "description": "Initialize Appwrite in your Android project.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tooling/ai/quickstart-prompts/dart',
+    title: 'Dart',
+    description: 'Quickstart prompt for integrating Appwrite with Dart.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-4",
-    "title": "Add authentication",
-    "description": "Add Appwrite authentication to you Android app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tooling/ai/quickstart-prompts/deno',
+    title: 'Deno',
+    description: 'Quickstart prompt for integrating Appwrite with Deno.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-5",
-    "title": "Add MainActivity",
-    "description": "Add navigation to your Android application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/ai/quickstart-prompts/dotnet',
+    title: '.NET',
+    description: 'Quickstart prompt for integrating Appwrite with .NET.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-6",
-    "title": "Add database",
-    "description": "Add databases and queries to store user data in you Android application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tooling/ai/quickstart-prompts/flutter',
+    title: 'Flutter',
+    description: 'Quickstart prompt for integrating Appwrite with Flutter.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-7",
-    "title": "Create ideas page",
-    "description": "Add pagination and ordering to you Android application powered by Appwrite Databases.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tooling/ai/quickstart-prompts/go',
+    title: 'Go',
+    description: 'Quickstart prompt for integrating Appwrite with Go.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/android/step-8",
-    "title": "Next steps",
-    "description": "View your Android project powered by Appwrite authentication and databases.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tooling/ai/quickstart-prompts/kotlin',
+    title: 'Kotlin',
+    description: 'Quickstart prompt for integrating Appwrite with Kotlin.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/apple/step-1",
-    "title": "Coming soon",
-    "description": "Learn to build an Apple app with no backend code using an Appwrite backend.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Mobile and native",
-    "framework": "Apple",
-    "draft": true
+    slug: 'tooling/ai/quickstart-prompts/nextjs',
+    title: 'Next.js',
+    description: 'Quickstart prompt for integrating Appwrite with Next.js.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-1",
-    "title": "Server-side authentication with Astro",
-    "description": "Add SSR authentication to your Astro app with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Auth",
-    "framework": "Astro SSR"
+    slug: 'tooling/ai/quickstart-prompts/node',
+    title: 'Node.js',
+    description: 'Quickstart prompt for integrating Appwrite with Node.js.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-2",
-    "title": "Create project",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tooling/ai/quickstart-prompts/nuxt',
+    title: 'Nuxt',
+    description: 'Quickstart prompt for integrating Appwrite with Nuxt.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-3",
-    "title": "Initialize SDK",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
+    slug: 'tooling/ai/quickstart-prompts/php',
+    title: 'PHP',
+    description: 'Quickstart prompt for integrating Appwrite with PHP.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-4",
-    "title": "Add a server hook",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tooling/ai/quickstart-prompts/python',
+    title: 'Python',
+    description: 'Quickstart prompt for integrating Appwrite with Python.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-5",
-    "title": "Create sign up page",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/ai/quickstart-prompts/react',
+    title: 'React',
+    description: 'Quickstart prompt for integrating Appwrite with React.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-6",
-    "title": "Create account page",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tooling/ai/quickstart-prompts/react-native',
+    title: 'React Native',
+    description:
+      'Quickstart prompt for integrating Appwrite with React Native.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-7",
-    "title": "OAuth authentication with SSR",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tooling/ai/quickstart-prompts/refine',
+    title: 'Refine',
+    description: 'Quickstart prompt for integrating Appwrite with Refine.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/astro-ssr-auth/step-8",
-    "title": "All set",
-    "description": "Add authentication to a Astro project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tooling/ai/quickstart-prompts/ruby',
+    title: 'Ruby',
+    description: 'Quickstart prompt for integrating Appwrite with Ruby.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/flutter/step-1",
-    "title": "Coming soon",
-    "description": "Learn to build an Flutter app with no backend code using an Appwrite backend.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Mobile and native",
-    "framework": "Flutter",
-    "draft": true
+    slug: 'tooling/ai/quickstart-prompts/rust',
+    title: 'Rust',
+    description: 'Quickstart prompt for integrating Appwrite with Rust.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-1",
-    "title": "Server-side authentication with Next.js",
-    "description": "Add SSR authentication to your Next.js app with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Auth",
-    "framework": "Next.js SSR"
+    slug: 'tooling/ai/quickstart-prompts/solid',
+    title: 'Solid',
+    description: 'Quickstart prompt for integrating Appwrite with Solid.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-2",
-    "title": "Create project",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tooling/ai/quickstart-prompts/sveltekit',
+    title: 'SvelteKit',
+    description: 'Quickstart prompt for integrating Appwrite with SvelteKit.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-3",
-    "title": "Initialize SDK",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
+    slug: 'tooling/ai/quickstart-prompts/swift',
+    title: 'Swift',
+    description: 'Quickstart prompt for integrating Appwrite with Swift.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-4",
-    "title": "Get the logged in user",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tooling/ai/quickstart-prompts/tanstack-start',
+    title: 'TanStack Start',
+    description:
+      'Quickstart prompt for integrating Appwrite with TanStack Start.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-5",
-    "title": "Create sign up page",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/ai/quickstart-prompts/vue',
+    title: 'Vue',
+    description: 'Quickstart prompt for integrating Appwrite with Vue.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-6",
-    "title": "Create account page",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tooling/ai/quickstart-prompts/web',
+    title: 'Web',
+    description: 'Quickstart prompt for integrating Appwrite with Web.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-7",
-    "title": "OAuth authentication with SSR",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tooling/ai/responsible-ai',
+    title: 'Responsible AI',
+    description:
+      'Best practices for responsible AI usage with Appwrite. Learn how to protect user data, secure API keys, and build transparent AI-powered applications.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nextjs-ssr-auth/step-8",
-    "title": "All set",
-    "description": "Add authentication to a Next.js project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tooling/ai/skills',
+    title: 'Agent skills',
+    description:
+      'Install Appwrite skills to give AI agents pre-built knowledge of Appwrite SDKs and services for your preferred language.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/nextjs/step-1",
-    "title": "Build an idea tracker with Next.js",
-    "description": "Learn to build an idea tracker app with Appwrite and Next.js with authentication, databases and tables, queries, pagination, and file storage.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Web",
-    "framework": "Next.js"
+    slug: 'tooling/ai/vector-db-and-embeddings',
+    title: 'Vector DB and embeddings',
+    description: 'Using vector databases and embeddings with Appwrite.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nextjs/step-2",
-    "title": "Create app",
-    "description": "Create a Next.js app project and integrate with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tooling/ai/vibe-coding/bolt',
+    title: 'Bolt',
+    description:
+      'Learn how to connect the Appwrite docs MCP server to Bolt for AI-assisted development with access to Appwrite documentation.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs/step-3",
-    "title": "Set up Appwrite",
-    "description": "Import and configure a project with Appwrite Cloud.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tooling/ai/vibe-coding/claude-desktop',
+    title: 'Claude Desktop',
+    description:
+      'Learn how to use Claude Desktop with Appwrite through quick start prompts and MCP servers for AI-assisted development.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/nextjs/step-4",
-    "title": "Add authentication",
-    "description": "Add authentication to your Next.js application using Appwrite Web SDK",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 4
+    slug: 'tooling/ai/vibe-coding/emergent',
+    title: 'Emergent',
+    description:
+      'Learn how to connect Appwrite MCP servers to Emergent for AI-assisted development with access to the Appwrite API and documentation.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs/step-5",
-    "title": "Add navigation",
-    "description": "Add navigation to your app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/ai/vibe-coding/lovable',
+    title: 'Lovable',
+    description:
+      'Learn how to connect the Appwrite docs MCP server to Lovable for AI-assisted development with access to Appwrite documentation.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nextjs/step-6",
-    "title": "Add database",
-    "description": "Add databases and queries for ideas in your Next.js project.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 6
+    slug: 'tooling/ai/vibe-coding/zenflow',
+    title: 'Zenflow',
+    description:
+      'Learn how to add the Appwrite MCP servers to agents in Zenflow to interact with both the Appwrite API and documentation.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/nextjs/step-7",
-    "title": "Ideas page",
-    "description": "Add ideas from Appwrite database in your app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tooling/appwriter',
+    title: 'The Appwriter',
+    description:
+      'Learn about the custom Appwriter mechanical keyboard and its specifications',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tutorials/nextjs/step-8",
-    "title": "Next steps",
-    "description": "View your Next.js app built on Appwrite Cloud.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tooling/arena',
+    title: 'Arena',
+    description:
+      "An open-source benchmark that evaluates how well AI models understand Appwrite's services, SDKs, and APIs.",
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-1",
-    "title": "Server-side authentication with Nuxt",
-    "description": "Add SSR authentication to your Nuxt app with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Auth",
-    "framework": "Nuxt SSR"
+    slug: 'tooling/command-center',
+    title: 'Command Center',
+    description:
+      'Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-2",
-    "title": "Create project",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tooling/command-center/shortcuts',
+    title: 'Keyboard shortcuts',
+    description:
+      'Learn to navigate the Appwrite Console efficiently and effectively with your keyboard',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-3",
-    "title": "Initialize SDK",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
+    slug: 'tooling/command-line/buckets',
+    title: 'Buckets',
+    description:
+      'Efficiently deploy your Appwrite buckets using the Command-Line Tool (CLI).',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-4",
-    "title": "Add server middleware",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tooling/command-line/commands',
+    title: 'Commands',
+    description:
+      "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
+    layout: 'article',
+    readingTimeMinutes: 6,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-5",
-    "title": "Create sign up page",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/command-line/functions',
+    title: 'Functions',
+    description:
+      'Efficiently deploy your Appwrite functions using the Command-Line Tool (CLI).',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-6",
-    "title": "Create account page",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tooling/command-line/generate',
+    title: 'Generate SDK',
+    description:
+      'Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-7",
-    "title": "OAuth authentication with SSR",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tooling/command-line/installation',
+    title: 'Installation',
+    description:
+      'Get started with the Appwrite CLI by following the installation guide. Learn how to set up and configure the CLI on your development environment.',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-8",
-    "title": "Enable the sign up and account pages",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tooling/command-line/non-interactive',
+    title: 'Non-interactive',
+    description:
+      'Deploy changes to Appwrite projects to migrate databases and tables schema, functions, teams, buckets, and more.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/nuxt-ssr-auth/step-9",
-    "title": "All set",
-    "description": "Add authentication to a Nuxt project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 9
+    slug: 'tooling/command-line/sites',
+    title: 'Sites',
+    description:
+      'Efficiently deploy your Appwrite Sites using the Command-Line Tool (CLI).',
+    layout: 'article',
+    readingTimeMinutes: 5,
   },
   {
-    "slug": "tutorials/nuxt/step-1",
-    "title": "Build an ideas tracker with Nuxt",
-    "description": "Learn to build an idea tracker app with Appwrite and Nuxt with authentication, databases and tables, queries, pagination, and file storage.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Web",
-    "framework": "Nuxt"
+    slug: 'tooling/command-line/tables',
+    title: 'Tables',
+    description:
+      'Efficiently deploy your Appwrite tables using the Command-Line Tool (CLI).',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tutorials/nuxt/step-2",
-    "title": "Create app",
-    "description": "Create a Nuxt app project and integrate with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 2
+    slug: 'tooling/command-line/teams',
+    title: 'Teams',
+    description:
+      'Efficiently deploy your Appwrite teams using the Command-Line Tool (CLI).',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tutorials/nuxt/step-3",
-    "title": "Set up Appwrite",
-    "description": "Import and configure a project with Appwrite Cloud.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tooling/command-line/topics',
+    title: 'Topics',
+    description:
+      'Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).',
+    layout: 'article',
+    readingTimeMinutes: 4,
   },
   {
-    "slug": "tutorials/nuxt/step-4",
-    "title": "Add authentication",
-    "description": "Add authentication to your Nuxt application using Appwrite Web SDK",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 4
+    slug: 'tooling/terraform',
+    title: 'Terraform provider',
+    description:
+      'Manage Appwrite infrastructure as code with the official Terraform provider. Works with Appwrite Cloud and Community Edition.',
+    layout: 'article',
+    readingTimeMinutes: 3,
   },
   {
-    "slug": "tutorials/nuxt/step-5",
-    "title": "Add navigation",
-    "description": "Add navigation to your app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/terraform/provider',
+    title: 'Configuration',
+    description:
+      'Configure the Appwrite Terraform provider for Cloud or Community Edition using endpoints, API keys, and optional environment variables.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/nuxt/step-6",
-    "title": "Add database",
-    "description": "Add databases and queries for ideas in your Nuxt project.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 6
+    slug: 'tooling/terraform/resources/auth',
+    title: 'Auth',
+    description: 'Manage Appwrite users and teams with the Terraform provider.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nuxt/step-7",
-    "title": "Ideas page",
-    "description": "Add ideas from Appwrite database in your app.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 7
+    slug: 'tooling/terraform/resources/backups',
+    title: 'Backups',
+    description:
+      'Configure Appwrite backup policies with Terraform where your plan supports them.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/nuxt/step-8",
-    "title": "Next steps",
-    "description": "View your Nuxt app built on Appwrite Cloud.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tooling/terraform/resources/databases',
+    title: 'Databases',
+    description:
+      'Use Terraform to manage Appwrite TablesDB databases, tables, columns, indexes, and rows with the official Appwrite provider.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/react-native/step-1",
-    "title": "Build an ideas tracker with React Native",
-    "description": "Learn to build a React Native app with no backend code using an Appwrite backend.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Mobile and native",
-    "framework": "React Native"
+    slug: 'tooling/terraform/resources/functions',
+    title: 'Functions',
+    description:
+      'Manage Appwrite Functions, environment variables, and deployments with Terraform.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/react-native/step-2",
-    "title": "Create app",
-    "description": "Create a React Native app project and integrate with Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tooling/terraform/resources/messaging',
+    title: 'Messaging',
+    description:
+      'Configure Appwrite Messaging providers, topics, and subscribers with Terraform for email, SMS, and push delivery.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/react-native/step-3",
-    "title": "Set up Appwrite",
-    "description": "Import and initialize Appwrite for your React Native application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tooling/terraform/resources/sites',
+    title: 'Sites',
+    description:
+      'Manage Appwrite Sites, environment variables, and deployments with Terraform.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/react-native/step-4",
-    "title": "Add authentication",
-    "description": "Add authentication to your React Native application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tooling/terraform/resources/storage',
+    title: 'Storage',
+    description:
+      'Manage Appwrite Storage buckets and files with the Terraform provider, including file limits, extensions, compression, and security options.',
+    layout: 'article',
+    readingTimeMinutes: 2,
   },
   {
-    "slug": "tutorials/react-native/step-5",
-    "title": "Add routing",
-    "description": "Add routing to your React Native applicating using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tooling/terraform/resources/webhooks',
+    title: 'Webhooks',
+    description:
+      'Register Appwrite webhooks with Terraform to deliver events to your HTTP endpoints.',
+    layout: 'article',
+    readingTimeMinutes: 1,
   },
   {
-    "slug": "tutorials/react-native/step-6",
-    "title": "Add database",
-    "description": "Connect a database to your React Native application using Appwrite Web SDK.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 6
+    slug: 'tutorials/android/step-1',
+    title: 'Build an ideas tracker with Android',
+    description:
+      'Learn to build an Android app with no backend code using an Appwrite backend.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Mobile and native',
+    framework: 'Android',
   },
   {
-    "slug": "tutorials/react-native/step-7",
-    "title": "Create ideas page",
-    "description": "Add database queries and pagination using Appwrite in your React Native application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tutorials/android/step-2',
+    title: 'Create app',
+    description: 'Create a Android app project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
   },
   {
-    "slug": "tutorials/react-native/step-8",
-    "title": "Next steps",
-    "description": "Run your React Native project built with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tutorials/android/step-3',
+    title: 'Set up Appwrite',
+    description: 'Initialize Appwrite in your Android project.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
   },
   {
-    "slug": "tutorials/react/step-1",
-    "title": "Build an ideas tracker with React",
-    "description": "Learn to build a React app with no backend code using an Appwrite backend.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Web",
-    "framework": "React"
+    slug: 'tutorials/android/step-4',
+    title: 'Add authentication',
+    description: 'Add Appwrite authentication to you Android app.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
   },
   {
-    "slug": "tutorials/react/step-2",
-    "title": "Create app",
-    "description": "Create a React app project and integrate with Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tutorials/android/step-5',
+    title: 'Add MainActivity',
+    description: 'Add navigation to your Android application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
   },
   {
-    "slug": "tutorials/react/step-3",
-    "title": "Set up Appwrite",
-    "description": "Import and initialize Appwrite for your react application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tutorials/android/step-6',
+    title: 'Add database',
+    description:
+      'Add databases and queries to store user data in you Android application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
   },
   {
-    "slug": "tutorials/react/step-4",
-    "title": "Add authentication",
-    "description": "Add authentication to your react application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tutorials/android/step-7',
+    title: 'Create ideas page',
+    description:
+      'Add pagination and ordering to you Android application powered by Appwrite Databases.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
   },
   {
-    "slug": "tutorials/react/step-5",
-    "title": "Add navigation",
-    "description": "Add navigation to your React applicating using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tutorials/android/step-8',
+    title: 'Next steps',
+    description:
+      'View your Android project powered by Appwrite authentication and databases.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
   {
-    "slug": "tutorials/react/step-6",
-    "title": "Add database",
-    "description": "Add a database to your React application using Appwrite Web SDK.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 6
+    slug: 'tutorials/apple/step-1',
+    title: 'Coming soon',
+    description:
+      'Learn to build an Apple app with no backend code using an Appwrite backend.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Mobile and native',
+    framework: 'Apple',
+    draft: true,
   },
   {
-    "slug": "tutorials/react/step-7",
-    "title": "Create ideas page",
-    "description": "Add database queries and pagination using Appwrite in your React application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tutorials/astro-ssr-auth/step-1',
+    title: 'Server-side authentication with Astro',
+    description: 'Add SSR authentication to your Astro app with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Auth',
+    framework: 'Astro SSR',
   },
   {
-    "slug": "tutorials/react/step-8",
-    "title": "Next steps",
-    "description": "Run your React project built with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tutorials/astro-ssr-auth/step-2',
+    title: 'Create project',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
   },
   {
-    "slug": "tutorials/refine/step-1",
-    "title": "Build a blog admin panel with Refine",
-    "description": "Learn to build a Refine app with no backend code using an Appwrite backend.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Web",
-    "framework": "Refine"
+    slug: 'tutorials/astro-ssr-auth/step-3',
+    title: 'Initialize SDK',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 3,
   },
   {
-    "slug": "tutorials/refine/step-2",
-    "title": "Create app",
-    "description": "Create a Refine app project and integrate with Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tutorials/astro-ssr-auth/step-4',
+    title: 'Add a server hook',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
   },
   {
-    "slug": "tutorials/refine/step-3",
-    "title": "Set up Appwrite",
-    "description": "Import and initialize Appwrite for your react application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tutorials/astro-ssr-auth/step-5',
+    title: 'Create sign up page',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
   },
   {
-    "slug": "tutorials/refine/step-4",
-    "title": "Add authentication",
-    "description": "Add authentication to your Refine application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 4
+    slug: 'tutorials/astro-ssr-auth/step-6',
+    title: 'Create account page',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
   },
   {
-    "slug": "tutorials/refine/step-5",
-    "title": "Add database",
-    "description": "Add a database to your React application using Appwrite Web SDK.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 5
+    slug: 'tutorials/astro-ssr-auth/step-7',
+    title: 'OAuth authentication with SSR',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
   },
   {
-    "slug": "tutorials/refine/step-6",
-    "title": "Create CRUD pages",
-    "description": "Add database queries and CRUD pages using Appwrite in your Refine application.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tutorials/astro-ssr-auth/step-8',
+    title: 'All set',
+    description: 'Add authentication to a Astro project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
   {
-    "slug": "tutorials/refine/step-7",
-    "title": "Next steps",
-    "description": "Run your Refine project built with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tutorials/flutter/step-1',
+    title: 'Coming soon',
+    description:
+      'Learn to build an Flutter app with no backend code using an Appwrite backend.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Mobile and native',
+    framework: 'Flutter',
+    draft: true,
   },
   {
-    "slug": "tutorials/subscriptions-with-stripe/step-1",
-    "title": "Add app subscriptions with Stripe",
-    "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Functions",
-    "framework": "Stripe"
+    slug: 'tutorials/nextjs-ssr-auth/step-1',
+    title: 'Server-side authentication with Next.js',
+    description: 'Add SSR authentication to your Next.js app with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Auth',
+    framework: 'Next.js SSR',
   },
   {
-    "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
-    "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 2
+    slug: 'tutorials/nextjs-ssr-auth/step-2',
+    title: 'Create project',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
   },
   {
-    "slug": "tutorials/subscriptions-with-stripe/step-3",
-    "title": "Create function",
-    "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
+    slug: 'tutorials/nextjs-ssr-auth/step-3',
+    title: 'Initialize SDK',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 3,
   },
   {
-    "slug": "tutorials/subscriptions-with-stripe/step-4",
-    "title": "Configure web platform",
-    "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tutorials/nextjs-ssr-auth/step-4',
+    title: 'Get the logged in user',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
   },
   {
-    "slug": "tutorials/subscriptions-with-stripe/step-5",
-    "title": "All set",
-    "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 5
+    slug: 'tutorials/nextjs-ssr-auth/step-5',
+    title: 'Create sign up page',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-1",
-    "title": "Authentication with SvelteKit",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Auth",
-    "framework": "SvelteKit"
+    slug: 'tutorials/nextjs-ssr-auth/step-6',
+    title: 'Create account page',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-2",
-    "title": "Create project",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tutorials/nextjs-ssr-auth/step-7',
+    title: 'OAuth authentication with SSR',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-3",
-    "title": "Initialize SDK",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tutorials/nextjs-ssr-auth/step-8',
+    title: 'All set',
+    description: 'Add authentication to a Next.js project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-4",
-    "title": "Check if logged in",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tutorials/nextjs/step-1',
+    title: 'Build an idea tracker with Next.js',
+    description:
+      'Learn to build an idea tracker app with Appwrite and Next.js with authentication, databases and tables, queries, pagination, and file storage.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Web',
+    framework: 'Next.js',
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-5",
-    "title": "Create login page",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tutorials/nextjs/step-2',
+    title: 'Create app',
+    description: 'Create a Next.js app project and integrate with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-6",
-    "title": "Create signup page",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tutorials/nextjs/step-3',
+    title: 'Set up Appwrite',
+    description: 'Import and configure a project with Appwrite Cloud.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
   },
   {
-    "slug": "tutorials/sveltekit-csr-auth/step-7",
-    "title": "All set",
-    "description": "Add Authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tutorials/nextjs/step-4',
+    title: 'Add authentication',
+    description:
+      'Add authentication to your Next.js application using Appwrite Web SDK',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 4,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-1",
-    "title": "Server-side authentication with SvelteKit",
-    "description": "Add SSR authentication to your SvelteKit app with Appwrite",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Auth",
-    "framework": "SvelteKit SSR"
+    slug: 'tutorials/nextjs/step-5',
+    title: 'Add navigation',
+    description: 'Add navigation to your app.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-2",
-    "title": "Create project",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tutorials/nextjs/step-6',
+    title: 'Add database',
+    description: 'Add databases and queries for ideas in your Next.js project.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 6,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-3",
-    "title": "Initialize SDK",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 2,
-    "step": 3
+    slug: 'tutorials/nextjs/step-7',
+    title: 'Ideas page',
+    description: 'Add ideas from Appwrite database in your app.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-4",
-    "title": "Add a server hook",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tutorials/nextjs/step-8',
+    title: 'Next steps',
+    description: 'View your Next.js app built on Appwrite Cloud.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-5",
-    "title": "Create sign up page",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tutorials/nuxt-ssr-auth/step-1',
+    title: 'Server-side authentication with Nuxt',
+    description: 'Add SSR authentication to your Nuxt app with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Auth',
+    framework: 'Nuxt SSR',
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-6",
-    "title": "Create account page",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tutorials/nuxt-ssr-auth/step-2',
+    title: 'Create project',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-7",
-    "title": "OAuth authentication with SSR",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tutorials/nuxt-ssr-auth/step-3',
+    title: 'Initialize SDK',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 3,
   },
   {
-    "slug": "tutorials/sveltekit-ssr-auth/step-8",
-    "title": "All set",
-    "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
+    slug: 'tutorials/nuxt-ssr-auth/step-4',
+    title: 'Add server middleware',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
   },
   {
-    "slug": "tutorials/sveltekit/step-1",
-    "title": "Build an ideas tracker with SvelteKit",
-    "description": "Build a SvelteKit project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Web",
-    "framework": "SvelteKit"
+    slug: 'tutorials/nuxt-ssr-auth/step-5',
+    title: 'Create sign up page',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
   },
   {
-    "slug": "tutorials/sveltekit/step-2",
-    "title": "Create app",
-    "description": "Create a SvelteKit app project using Appwrite.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tutorials/nuxt-ssr-auth/step-6',
+    title: 'Create account page',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
   },
   {
-    "slug": "tutorials/sveltekit/step-3",
-    "title": "Set up Appwrite",
-    "description": "Initialize Appwrite in your SvelteKit project.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+    slug: 'tutorials/nuxt-ssr-auth/step-7',
+    title: 'OAuth authentication with SSR',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
   },
   {
-    "slug": "tutorials/sveltekit/step-4",
-    "title": "Add authentication",
-    "description": "Add Appwrite authentication to you Svelte app using your Svelte store.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+    slug: 'tutorials/nuxt-ssr-auth/step-8',
+    title: 'Enable the sign up and account pages',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
   {
-    "slug": "tutorials/sveltekit/step-5",
-    "title": "Add navigation",
-    "description": "Add navigation to your SvelteKit application with Appwrite authentication.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+    slug: 'tutorials/nuxt-ssr-auth/step-9',
+    title: 'All set',
+    description: 'Add authentication to a Nuxt project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 9,
   },
   {
-    "slug": "tutorials/sveltekit/step-6",
-    "title": "Add database",
-    "description": "Add databases and queries to store user data in you SvelteKit project.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+    slug: 'tutorials/nuxt/step-1',
+    title: 'Build an ideas tracker with Nuxt',
+    description:
+      'Learn to build an idea tracker app with Appwrite and Nuxt with authentication, databases and tables, queries, pagination, and file storage.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Web',
+    framework: 'Nuxt',
   },
   {
-    "slug": "tutorials/sveltekit/step-7",
-    "title": "Create ideas page",
-    "description": "Add pagining and ordering to you SvelteKit application powered by Appwrite Databases.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+    slug: 'tutorials/nuxt/step-2',
+    title: 'Create app',
+    description: 'Create a Nuxt app project and integrate with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 2,
   },
   {
-    "slug": "tutorials/vue/step-1",
-    "title": "Build an ideas tracker with Vue.js",
-    "description": "Learn to build an idea tracker app with Appwrite and Vue with authentication, databases and tables, queries, pagination, and file storage.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 1,
-    "category": "Web",
-    "framework": "Vue"
+    slug: 'tutorials/nuxt/step-3',
+    title: 'Set up Appwrite',
+    description: 'Import and configure a project with Appwrite Cloud.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
   },
   {
-    "slug": "tutorials/vue/step-2",
-    "title": "Create app",
-    "description": "Create and app with Appwrite Cloud and Vue.js.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 2
+    slug: 'tutorials/nuxt/step-4',
+    title: 'Add authentication',
+    description:
+      'Add authentication to your Nuxt application using Appwrite Web SDK',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 4,
   },
-  {
-    "slug": "tutorials/vue/step-3",
-    "title": "Set up Appwrite",
-    "description": "Import and configure a project with Appwrite Cloud and Vue.js.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 3
+  {
+    slug: 'tutorials/nuxt/step-5',
+    title: 'Add navigation',
+    description: 'Add navigation to your app.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
   },
-  {
-    "slug": "tutorials/vue/step-4",
-    "title": "Add authentication",
-    "description": "Add authentication to your Vue application using Appwrite Web SDK.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 4
+  {
+    slug: 'tutorials/nuxt/step-6',
+    title: 'Add database',
+    description: 'Add databases and queries for ideas in your Nuxt project.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 6,
   },
-  {
-    "slug": "tutorials/vue/step-5",
-    "title": "Add navigation",
-    "description": "Add navigation to your Vue.js app with Appwrite authentication and pinia stores.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 5
+  {
+    slug: 'tutorials/nuxt/step-7',
+    title: 'Ideas page',
+    description: 'Add ideas from Appwrite database in your app.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 7,
   },
-  {
-    "slug": "tutorials/vue/step-6",
-    "title": "Add database",
-    "description": "Add data storage to your Vue.js project powered by Appwrite Cloud databases.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 6
+  {
+    slug: 'tutorials/nuxt/step-8',
+    title: 'Next steps',
+    description: 'View your Nuxt app built on Appwrite Cloud.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
-  {
-    "slug": "tutorials/vue/step-7",
-    "title": "Create ideas page",
-    "description": "Add data queries and pagination to your Vue.js project powered by Appwrite Cloud databases.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 7
+  {
+    slug: 'tutorials/react-native/step-1',
+    title: 'Build an ideas tracker with React Native',
+    description:
+      'Learn to build a React Native app with no backend code using an Appwrite backend.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Mobile and native',
+    framework: 'React Native',
+  },
+  {
+    slug: 'tutorials/react-native/step-2',
+    title: 'Create app',
+    description:
+      'Create a React Native app project and integrate with Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/react-native/step-3',
+    title: 'Set up Appwrite',
+    description:
+      'Import and initialize Appwrite for your React Native application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/react-native/step-4',
+    title: 'Add authentication',
+    description: 'Add authentication to your React Native application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/react-native/step-5',
+    title: 'Add routing',
+    description: 'Add routing to your React Native applicating using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/react-native/step-6',
+    title: 'Add database',
+    description:
+      'Connect a database to your React Native application using Appwrite Web SDK.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/react-native/step-7',
+    title: 'Create ideas page',
+    description:
+      'Add database queries and pagination using Appwrite in your React Native application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/react-native/step-8',
+    title: 'Next steps',
+    description: 'Run your React Native project built with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
+  },
+  {
+    slug: 'tutorials/react/step-1',
+    title: 'Build an ideas tracker with React',
+    description:
+      'Learn to build a React app with no backend code using an Appwrite backend.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Web',
+    framework: 'React',
+  },
+  {
+    slug: 'tutorials/react/step-2',
+    title: 'Create app',
+    description: 'Create a React app project and integrate with Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/react/step-3',
+    title: 'Set up Appwrite',
+    description: 'Import and initialize Appwrite for your react application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/react/step-4',
+    title: 'Add authentication',
+    description: 'Add authentication to your react application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/react/step-5',
+    title: 'Add navigation',
+    description: 'Add navigation to your React applicating using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/react/step-6',
+    title: 'Add database',
+    description:
+      'Add a database to your React application using Appwrite Web SDK.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/react/step-7',
+    title: 'Create ideas page',
+    description:
+      'Add database queries and pagination using Appwrite in your React application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/react/step-8',
+    title: 'Next steps',
+    description: 'Run your React project built with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
+  },
+  {
+    slug: 'tutorials/refine/step-1',
+    title: 'Build a blog admin panel with Refine',
+    description:
+      'Learn to build a Refine app with no backend code using an Appwrite backend.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Web',
+    framework: 'Refine',
+  },
+  {
+    slug: 'tutorials/refine/step-2',
+    title: 'Create app',
+    description: 'Create a Refine app project and integrate with Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/refine/step-3',
+    title: 'Set up Appwrite',
+    description: 'Import and initialize Appwrite for your react application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/refine/step-4',
+    title: 'Add authentication',
+    description: 'Add authentication to your Refine application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/refine/step-5',
+    title: 'Add database',
+    description:
+      'Add a database to your React application using Appwrite Web SDK.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/refine/step-6',
+    title: 'Create CRUD pages',
+    description:
+      'Add database queries and CRUD pages using Appwrite in your Refine application.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/refine/step-7',
+    title: 'Next steps',
+    description: 'Run your Refine project built with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/subscriptions-with-stripe/step-1',
+    title: 'Add app subscriptions with Stripe',
+    description:
+      'Add paid app subscription plans to your app with Stripe and Appwrite Functions.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Functions',
+    framework: 'Stripe',
+  },
+  {
+    slug: 'tutorials/subscriptions-with-stripe/step-2',
+    title: 'Setup Stripe',
+    description:
+      'Add paid app subscription plans to your app with Stripe and Appwrite Functions.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/subscriptions-with-stripe/step-3',
+    title: 'Create function',
+    description:
+      'Add paid app subscription plans to your app with Stripe and Appwrite Functions.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/subscriptions-with-stripe/step-4',
+    title: 'Configure web platform',
+    description:
+      'Add paid app subscription plans to your app with Stripe and Appwrite Functions.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/subscriptions-with-stripe/step-5',
+    title: 'All set',
+    description:
+      'Add paid app subscription plans to your app with Stripe and Appwrite Functions.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-1',
+    title: 'Authentication with SvelteKit',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Auth',
+    framework: 'SvelteKit',
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-2',
+    title: 'Create project',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-3',
+    title: 'Initialize SDK',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-4',
+    title: 'Check if logged in',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-5',
+    title: 'Create login page',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-6',
+    title: 'Create signup page',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/sveltekit-csr-auth/step-7',
+    title: 'All set',
+    description: 'Add Authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-1',
+    title: 'Server-side authentication with SvelteKit',
+    description: 'Add SSR authentication to your SvelteKit app with Appwrite',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Auth',
+    framework: 'SvelteKit SSR',
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-2',
+    title: 'Create project',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-3',
+    title: 'Initialize SDK',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 2,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-4',
+    title: 'Add a server hook',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-5',
+    title: 'Create sign up page',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-6',
+    title: 'Create account page',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-7',
+    title: 'OAuth authentication with SSR',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/sveltekit-ssr-auth/step-8',
+    title: 'All set',
+    description: 'Add authentication to a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
+  },
+  {
+    slug: 'tutorials/sveltekit/step-1',
+    title: 'Build an ideas tracker with SvelteKit',
+    description: 'Build a SvelteKit project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Web',
+    framework: 'SvelteKit',
+  },
+  {
+    slug: 'tutorials/sveltekit/step-2',
+    title: 'Create app',
+    description: 'Create a SvelteKit app project using Appwrite.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/sveltekit/step-3',
+    title: 'Set up Appwrite',
+    description: 'Initialize Appwrite in your SvelteKit project.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/sveltekit/step-4',
+    title: 'Add authentication',
+    description:
+      'Add Appwrite authentication to you Svelte app using your Svelte store.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/sveltekit/step-5',
+    title: 'Add navigation',
+    description:
+      'Add navigation to your SvelteKit application with Appwrite authentication.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/sveltekit/step-6',
+    title: 'Add database',
+    description:
+      'Add databases and queries to store user data in you SvelteKit project.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/sveltekit/step-7',
+    title: 'Create ideas page',
+    description:
+      'Add pagining and ordering to you SvelteKit application powered by Appwrite Databases.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/vue/step-1',
+    title: 'Build an ideas tracker with Vue.js',
+    description:
+      'Learn to build an idea tracker app with Appwrite and Vue with authentication, databases and tables, queries, pagination, and file storage.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 1,
+    category: 'Web',
+    framework: 'Vue',
+  },
+  {
+    slug: 'tutorials/vue/step-2',
+    title: 'Create app',
+    description: 'Create and app with Appwrite Cloud and Vue.js.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 2,
+  },
+  {
+    slug: 'tutorials/vue/step-3',
+    title: 'Set up Appwrite',
+    description:
+      'Import and configure a project with Appwrite Cloud and Vue.js.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 3,
+  },
+  {
+    slug: 'tutorials/vue/step-4',
+    title: 'Add authentication',
+    description:
+      'Add authentication to your Vue application using Appwrite Web SDK.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 4,
+  },
+  {
+    slug: 'tutorials/vue/step-5',
+    title: 'Add navigation',
+    description:
+      'Add navigation to your Vue.js app with Appwrite authentication and pinia stores.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 5,
+  },
+  {
+    slug: 'tutorials/vue/step-6',
+    title: 'Add database',
+    description:
+      'Add data storage to your Vue.js project powered by Appwrite Cloud databases.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 6,
+  },
+  {
+    slug: 'tutorials/vue/step-7',
+    title: 'Create ideas page',
+    description:
+      'Add data queries and pagination to your Vue.js project powered by Appwrite Cloud databases.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 7,
+  },
+  {
+    slug: 'tutorials/vue/step-8',
+    title: 'Next steps',
+    description: 'View your Vue.js app build on Appwrite Cloud.',
+    layout: 'tutorial',
+    readingTimeMinutes: 1,
+    step: 8,
   },
-  {
-    "slug": "tutorials/vue/step-8",
-    "title": "Next steps",
-    "description": "View your Vue.js app build on Appwrite Cloud.",
-    "layout": "tutorial",
-    "readingTimeMinutes": 1,
-    "step": 8
-  }
 ] as DocsPageMeta[]
 
 export const DOCS_PAGE_MAP: Record<string, DocsPageMeta> = Object.fromEntries(

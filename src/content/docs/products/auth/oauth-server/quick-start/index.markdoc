@@ -1,0 +1,847 @@
+---
+layout: article
+title: OAuth2 server quick start
+description: Enable Appwrite's OAuth2 server, register a client, and run your first authorization code sign-in end to end.
+back: /docs/products/auth/oauth-server
+---
+
+This guide turns your project into an OAuth2 provider and runs one sign-in through it. By the end you will have an enabled server, a registered client, and an access token issued by your project.
+
+The examples follow two apps, the same pair the [tutorials](/docs/products/auth/oauth-server/sign-in-with-your-product/step-1) build out in full:
+
+- **TaskFlow** (`http://taskflow.localhost`): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens.
+- **Vantage** (`http://vantage.localhost`): the third-party **consumer**, called the client in OAuth2. It sends users to TaskFlow for authorization and receives tokens after they approve access.
+
+# Enable the server {% #enable %}
+
+In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **Enable OAuth2 server**.
+
+{% only_dark %}
+![Enabling the OAuth2 server in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-settings.avif)
+{% /only_dark %}
+{% only_light %}
+![Enabling the OAuth2 server in the Appwrite Console](/images/docs/oauth-server/oauth2-server-settings.avif)
+{% /only_light %}
+
+Set the **Authorization URL** to the page you will host the consent screen on. This is where Appwrite redirects users during authorization, and where you present them the details of the request so they can approve or cancel. Point it at `http://taskflow.localhost/consent`, where TaskFlow will host its consent screen. Nothing needs to run there yet. The `openid`, `profile`, and `email` scopes are always included; add any scopes your custom APIs will support.
+
+You can also enable and configure the server with a [Server SDK](/docs/sdks#server) using the `updateOAuth2Server` method.
+
+{% info title="Required scope" %}
+The API key used for this call needs the `project.write` scope.
+{% /info %}
+
+{% multicode %}
+```server-nodejs
+import { Client, Project } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const project = new Project(client);
+
+const result = await project.updateOAuth2Server({
+    enabled: false,
+    authorizationUrl: 'https://example.com',
+    scopes: [], // optional
+    authorizationDetailsTypes: [], // optional
+    accessTokenDuration: 60, // optional
+    refreshTokenDuration: 60, // optional
+    publicAccessTokenDuration: 60, // optional
+    publicRefreshTokenDuration: 60, // optional
+    confidentialPkce: false, // optional
+    verificationUrl: 'https://example.com', // optional
+    userCodeLength: 6, // optional
+    userCodeFormat: 'numeric', // optional
+    deviceCodeDuration: 60 // optional
+});
+```
+```server-deno
+import { Client, Project } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const project = new Project(client);
+
+const result = await project.updateOAuth2Server({
+    enabled: false,
+    authorizationUrl: 'https://example.com',
+    scopes: [], // optional
+    authorizationDetailsTypes: [], // optional
+    accessTokenDuration: 60, // optional
+    refreshTokenDuration: 60, // optional
+    publicAccessTokenDuration: 60, // optional
+    publicRefreshTokenDuration: 60, // optional
+    confidentialPkce: false, // optional
+    verificationUrl: 'https://example.com', // optional
+    userCodeLength: 6, // optional
+    userCodeFormat: 'numeric', // optional
+    deviceCodeDuration: 60 // optional
+});
+```
+```server-php
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Project;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$project = new Project($client);
+
+$result = $project->updateOAuth2Server(
+    enabled: false,
+    authorizationUrl: 'https://example.com',
+    scopes: [], // optional
+    authorizationDetailsTypes: [], // optional
+    accessTokenDuration: 60, // optional
+    refreshTokenDuration: 60, // optional
+    publicAccessTokenDuration: 60, // optional
+    publicRefreshTokenDuration: 60, // optional
+    confidentialPkce: false, // optional
+    verificationUrl: 'https://example.com', // optional
+    userCodeLength: 6, // optional
+    userCodeFormat: 'numeric', // optional
+    deviceCodeDuration: 60 // optional
+);```
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.project import Project
+from appwrite.models import Project as ProjectModel
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+project = Project(client)
+
+result: ProjectModel = project.update_o_auth2_server(
+    enabled = False,
+    authorization_url = 'https://example.com',
+    scopes = [], # optional
+    authorization_details_types = [], # optional
+    access_token_duration = 60, # optional
+    refresh_token_duration = 60, # optional
+    public_access_token_duration = 60, # optional
+    public_refresh_token_duration = 60, # optional
+    confidential_pkce = False, # optional
+    verification_url = 'https://example.com', # optional
+    user_code_length = 6, # optional
+    user_code_format = 'numeric', # optional
+    device_code_duration = 60 # optional
+)
+
+print(result.model_dump())
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+project = Project.new(client)
+
+result = project.update_o_auth2_server(
+    enabled: false,
+    authorization_url: 'https://example.com',
+    scopes: [], # optional
+    authorization_details_types: [], # optional
+    access_token_duration: 60, # optional
+    refresh_token_duration: 60, # optional
+    public_access_token_duration: 60, # optional
+    public_refresh_token_duration: 60, # optional
+    confidential_pkce: false, # optional
+    verification_url: 'https://example.com', # optional
+    user_code_length: 6, # optional
+    user_code_format: 'numeric', # optional
+    device_code_duration: 60 # optional
+)
+```
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Project project = Project(client);
+
+Project result = await project.updateOAuth2Server(
+    enabled: false,
+    authorizationUrl: 'https://example.com',
+    scopes: [], // (optional)
+    authorizationDetailsTypes: [], // (optional)
+    accessTokenDuration: 60, // (optional)
+    refreshTokenDuration: 60, // (optional)
+    publicAccessTokenDuration: 60, // (optional)
+    publicRefreshTokenDuration: 60, // (optional)
+    confidentialPkce: false, // (optional)
+    verificationUrl: 'https://example.com', // (optional)
+    userCodeLength: 6, // (optional)
+    userCodeFormat: 'numeric', // (optional)
+    deviceCodeDuration: 60, // (optional)
+);
+```
+```server-dotnet
+```csharp
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Project project = new Project(client);
+
+Project result = await project.UpdateOAuth2Server(
+    enabled: false,
+    authorizationUrl: "https://example.com",
+    scopes: new List<string>(), // optional
+    authorizationDetailsTypes: new List<string>(), // optional
+    accessTokenDuration: 60, // optional
+    refreshTokenDuration: 60, // optional
+    publicAccessTokenDuration: 60, // optional
+    publicRefreshTokenDuration: 60, // optional
+    confidentialPkce: false, // optional
+    verificationUrl: "https://example.com", // optional
+    userCodeLength: 6, // optional
+    userCodeFormat: "numeric", // optional
+    deviceCodeDuration: 60 // optional
+);```
+```
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Project
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val project = Project(client)
+
+val response = project.updateOAuth2Server(
+    enabled = false,
+    authorizationUrl = "https://example.com",
+    scopes = listOf(), // optional
+    authorizationDetailsTypes = listOf(), // optional
+    accessTokenDuration = 60, // optional
+    refreshTokenDuration = 60, // optional
+    publicAccessTokenDuration = 60, // optional
+    publicRefreshTokenDuration = 60, // optional
+    confidentialPkce = false, // optional
+    verificationUrl = "https://example.com", // optional
+    userCodeLength = 6, // optional
+    userCodeFormat = "numeric", // optional
+    deviceCodeDuration = 60 // optional
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Project;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Project project = new Project(client);
+
+project.updateOAuth2Server(
+    false, // enabled
+    "https://example.com", // authorizationUrl
+    List.of(), // scopes (optional)
+    List.of(), // authorizationDetailsTypes (optional)
+    60, // accessTokenDuration (optional)
+    60, // refreshTokenDuration (optional)
+    60, // publicAccessTokenDuration (optional)
+    60, // publicRefreshTokenDuration (optional)
+    false, // confidentialPkce (optional)
+    "https://example.com", // verificationUrl (optional)
+    6, // userCodeLength (optional)
+    "numeric", // userCodeFormat (optional)
+    60, // deviceCodeDuration (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let project = Project(client)
+
+let project = try await project.updateOAuth2Server(
+    enabled: false,
+    authorizationUrl: "https://example.com",
+    scopes: [], // optional
+    authorizationDetailsTypes: [], // optional
+    accessTokenDuration: 60, // optional
+    refreshTokenDuration: 60, // optional
+    publicAccessTokenDuration: 60, // optional
+    publicRefreshTokenDuration: 60, // optional
+    confidentialPkce: false, // optional
+    verificationUrl: "https://example.com", // optional
+    userCodeLength: 6, // optional
+    userCodeFormat: "numeric", // optional
+    deviceCodeDuration: 60 // optional
+)
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/repoowner/reponame/client"
+    "github.com/repoowner/reponame/project"
+)
+
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithKey("<YOUR_API_KEY>")
+)
+
+service := project.New(client)
+
+response, error := service.UpdateOAuth2Server(
+    false,
+    "https://example.com",
+    project.WithUpdateOAuth2ServerScopes([]string{}),
+    project.WithUpdateOAuth2ServerAuthorizationDetailsTypes([]string{}),
+    project.WithUpdateOAuth2ServerAccessTokenDuration(60),
+    project.WithUpdateOAuth2ServerRefreshTokenDuration(60),
+    project.WithUpdateOAuth2ServerPublicAccessTokenDuration(60),
+    project.WithUpdateOAuth2ServerPublicRefreshTokenDuration(60),
+    project.WithUpdateOAuth2ServerConfidentialPkce(false),
+    project.WithUpdateOAuth2ServerVerificationUrl("https://example.com"),
+    project.WithUpdateOAuth2ServerUserCodeLength(6),
+    project.WithUpdateOAuth2ServerUserCodeFormat("numeric"),
+    project.WithUpdateOAuth2ServerDeviceCodeDuration(60),
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::Project;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    client.set_endpoint("https://<REGION>.cloud.appwrite.io/v1"); // Your API Endpoint
+    client.set_project("<YOUR_PROJECT_ID>"); // Your project ID
+    client.set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let project = Project::new(&client);
+
+    let result = project.update_o_auth2_server(
+        false,
+        "https://example.com",
+        Some(vec![]), // optional
+        Some(vec![]), // optional
+        Some(60), // optional
+        Some(60), // optional
+        Some(60), // optional
+        Some(60), // optional
+        Some(false), // optional
+        Some("https://example.com"), // optional
+        Some(6), // optional
+        Some("numeric"), // optional
+        Some(60) // optional
+    ).await?;
+
+    let _ = result;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Copy the discovery URL {% #discovery %}
+
+Once enabled, the server publishes an OpenID Connect discovery document. Integrators point their OAuth or OIDC library at this URL and it learns every endpoint automatically.
+
+{% only_dark %}
+![The OIDC discovery URL in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-discovery.avif)
+{% /only_dark %}
+{% only_light %}
+![The OIDC discovery URL in the Appwrite Console](/images/docs/oauth-server/oauth2-server-discovery.avif)
+{% /only_light %}
+
+Open it in a browser to confirm the server is live. It returns JSON describing the authorization, token, userinfo, and JWKS endpoints, and more.
+
+# Register a client {% #register %}
+
+Each app that integrates with your project registers as a client. Here that is Vantage. The **redirect URI** it declares is a URL on Vantage, `http://vantage.localhost/auth/redirect`, where the OAuth2 server sends users back with the authorization code. Any HTTP or HTTPS URL works.
+
+Open the **Apps** sub-tab and create a client. Name it `Vantage`, add the redirect URI, and choose a type. Pick **Confidential** for this walkthrough so you get a secret to authenticate the token exchange. Copy the secret when it is shown, because it appears only once.
+
+{% only_dark %}
+![Creating an OAuth2 client](/images/docs/oauth-server/dark/oauth2-server-create-app.avif)
+{% /only_dark %}
+{% only_light %}
+![Creating an OAuth2 client](/images/docs/oauth-server/oauth2-server-create-app.avif)
+{% /only_light %}
+
+Clients can also be registered from code with the `apps` service in the [Client SDKs](/docs/sdks#client). Any signed-in user on your project can register an app, which enables self-serve registration for integrators. Creating a client needs only a name and a redirect URI:
+
+{% multicode %}
+```client-web
+import { Client, Apps, ID } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.create({
+    appId: ID.unique(),
+    name: 'Vantage',
+    redirectUris: ['http://vantage.localhost/auth/redirect'],
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Apps apps = Apps(client);
+
+App app = await apps.create(
+    appId: ID.unique(),
+    name: 'Vantage',
+    redirectUris: ['http://vantage.localhost/auth/redirect'],
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let apps = Apps(client)
+
+let app = try await apps.create(
+    appId: ID.unique(),
+    name: "Vantage",
+    redirectUris: ["http://vantage.localhost/auth/redirect"]
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.services.Apps
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val apps = Apps(client)
+
+val app = apps.create(
+    appId = ID.unique(),
+    name = "Vantage",
+    redirectUris = listOf("http://vantage.localhost/auth/redirect")
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.ID;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Apps;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Apps apps = new Apps(client);
+
+apps.create(
+    ID.unique(), // appId
+    "Vantage", // name
+    List.of("http://vantage.localhost/auth/redirect"), // redirectUris
+    null, // description (optional)
+    null, // clientUri (optional)
+    null, // logoUri (optional)
+    null, // privacyPolicyUrl (optional)
+    null, // termsUrl (optional)
+    null, // contacts (optional)
+    null, // tagline (optional)
+    null, // tags (optional)
+    null, // images (optional)
+    null, // supportUrl (optional)
+    null, // dataDeletionUrl (optional)
+    null, // postLogoutRedirectUris (optional)
+    null, // enabled (optional)
+    null, // type (optional)
+    null, // deviceFlow (optional)
+    null, // teamId (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Apps, ID } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.create({
+    appId: ID.unique(),
+    name: 'Vantage',
+    redirectUris: ['http://vantage.localhost/auth/redirect'],
+});
+```
+{% /multicode %}
+
+Updating a client accepts the full set of options, from consent screen branding to logout URIs and the device flow:
+
+{% multicode %}
+```client-web
+import { Client, Apps } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.update({
+    appId: '<APP_ID>',
+    name: 'Vantage',
+    description: 'A dashboard that signs in with TaskFlow.',
+    logoUri: 'https://example.com/logo.png',
+    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    enabled: true,
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+Apps apps = Apps(client);
+
+App app = await apps.update(
+    appId: '<APP_ID>',
+    name: 'Vantage',
+    description: 'A dashboard that signs in with TaskFlow.',
+    logoUri: 'https://example.com/logo.png',
+    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    enabled: true,
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+let apps = Apps(client)
+
+let app = try await apps.update(
+    appId: "<APP_ID>",
+    name: "Vantage",
+    description: "A dashboard that signs in with TaskFlow.",
+    logoUri: "https://example.com/logo.png",
+    redirectUris: ["http://vantage.localhost/auth/redirect"],
+    enabled: true
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Apps
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+
+val apps = Apps(client)
+
+val app = apps.update(
+    appId = "<APP_ID>",
+    name = "Vantage",
+    description = "A dashboard that signs in with TaskFlow.",
+    logoUri = "https://example.com/logo.png",
+    redirectUris = listOf("http://vantage.localhost/auth/redirect"),
+    enabled = true
+)
+```
+```client-android-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Apps;
+
+Client client = new Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>"); // Your project ID
+
+Apps apps = new Apps(client);
+
+apps.update(
+    "<APP_ID>", // appId
+    "Vantage", // name
+    "A dashboard that signs in with TaskFlow.", // description (optional)
+    null, // clientUri (optional)
+    "https://example.com/logo.png", // logoUri (optional)
+    null, // privacyPolicyUrl (optional)
+    null, // termsUrl (optional)
+    null, // contacts (optional)
+    null, // tagline (optional)
+    null, // tags (optional)
+    null, // images (optional)
+    null, // supportUrl (optional)
+    null, // dataDeletionUrl (optional)
+    true, // enabled (optional)
+    List.of("http://vantage.localhost/auth/redirect"), // redirectUris (optional)
+    null, // postLogoutRedirectUris (optional)
+    null, // type (optional)
+    null, // deviceFlow (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        Log.d("Appwrite", result.toString());
+    })
+);
+```
+```client-react-native
+import { Client, Apps } from "react-native-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>'); // Your project ID
+
+const apps = new Apps(client);
+
+const app = await apps.update({
+    appId: '<APP_ID>',
+    name: 'Vantage',
+    description: 'A dashboard that signs in with TaskFlow.',
+    logoUri: 'https://example.com/logo.png',
+    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    enabled: true,
+});
+```
+{% /multicode %}
+
+The same `apps` service is available in the [Server SDKs](/docs/sdks#server) with an API key. See [Clients](/docs/products/auth/oauth-server/clients) for the full set of options.
+
+# Run the authorization code flow {% #flow %}
+
+With the server enabled and a client registered, you can run a sign-in. The flow has four steps: send the user to authorize, approve the grant, exchange the returned code for tokens, and use the access token to read their profile.
+
+## 1. Send the user to the authorization endpoint {% #send-to-authorization %}
+
+Vantage begins the sign-in by sending the user's browser to TaskFlow's authorization endpoint. This is the URL behind Vantage's **Sign in with TaskFlow** button.
+
+The URL uses TaskFlow's Appwrite API endpoint because its Appwrite project is acting as the authorization server. Replace `<REGION>` with the region from your API endpoint, `<PROJECT_ID>` with TaskFlow's Appwrite project ID, and `<CLIENT_ID>` with the ID generated when you registered Vantage:
+
+{% multicode %}
+```text
+https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize
+    ?client_id=<CLIENT_ID>
+    &redirect_uri=http://vantage.localhost/auth/redirect
+    &response_type=code
+    &scope=openid profile email
+    &state=<STATE>
+```
+```curl
+curl -G 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize' \
+  --data-urlencode 'client_id=<CLIENT_ID>' \
+  --data-urlencode 'redirect_uri=http://vantage.localhost/auth/redirect' \
+  --data-urlencode 'response_type=code' \
+  --data-urlencode 'scope=openid profile email' \
+  --data-urlencode 'state=<STATE>'
+```
+```hurl
+GET https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize
+[Query]
+client_id: <CLIENT_ID>
+redirect_uri: http://vantage.localhost/auth/redirect
+response_type: code
+scope: openid profile email
+state: <STATE>
+```
+{% /multicode %}
+
+Each query parameter tells TaskFlow how to handle the request:
+
+| Parameter | Meaning |
+| --- | --- |
+| `client_id` | Identifies Vantage as the client requesting access. |
+| `redirect_uri` | Tells TaskFlow where to return the browser after the user approves or cancels. It must match a URI registered for Vantage. |
+| `response_type=code` | Requests an authorization code. The browser receives this temporary code, then Vantage's server exchanges it for tokens in step 3. |
+| `scope` | Lists the access Vantage is requesting. `openid` starts an OpenID Connect sign-in, while `profile` and `email` request the user's basic profile and email claims. |
+| `state` | Carries a random value created and stored by Vantage. Vantage compares it with the value returned after authorization to confirm the response belongs to the same sign-in request. |
+
+When you open this URL, Appwrite validates the request and checks for an active TaskFlow user session.
+
+## 2. Review and approve Vantage's request {% #approve-grant %}
+
+After Vantage opens the authorization endpoint:
+
+- **Appwrite creates a grant.** For a signed-in user, Appwrite creates a pending authorization request that connects the user, Vantage, the requested scopes, and Vantage's redirect URI. This pending request is called a grant.
+
+- **Appwrite redirects to TaskFlow.** The **authorization endpoint** is the Appwrite Cloud URL Vantage opens. The **authorization URL** is TaskFlow's consent page, where Appwrite sends the browser with a `grant_id`.
+
+- **TaskFlow presents the request.** A complete consent screen uses the grant ID to show that Vantage is asking for the user's profile and email, then lets the user approve or cancel. The [Authorization](/docs/products/auth/oauth-server/authorization#consent) guide shows how to build this screen.
+
+- **Copy the grant ID.** This quick start does not build TaskFlow's consent screen, so the browser lands on `http://taskflow.localhost/consent` and finds nothing there. Copy the `grant_id` from the address bar to continue manually.
+
+- **Sign in if the grant ID is missing.** A URL without a `grant_id` means the user does not have an active TaskFlow session. Sign in a user on the project, then open Vantage's authorization URL again.
+
+- **Approve Vantage's request.** Send the `grant_id` to the approval endpoint using the same TaskFlow user's session. A browser sends the session cookie automatically. From another environment, send the same cookie yourself: it is named `a_session_<PROJECT_ID>` and holds the session token. Use this request:
+
+{% multicode %}
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve' \
+  -H 'Content-Type: application/json' \
+  -H 'Cookie: a_session_<PROJECT_ID>=<SESSION_TOKEN>' \
+  -d '{
+    "grant_id": "<GRANT_ID>"
+  }'
+```
+```hurl
+POST https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve
+Content-Type: application/json
+Cookie: a_session_<PROJECT_ID>=<SESSION_TOKEN>
+{
+    "grant_id": "<GRANT_ID>"
+}
+```
+{% /multicode %}
+
+- **Return to Vantage.** After approval, Appwrite redirects the browser to Vantage's registered redirect URI with an authorization `code` in the query string. Vantage uses this code in the next step.
+
+## 3. Exchange the code for tokens {% #exchange-code %}
+
+Vantage's server sends the code to the token endpoint. A confidential client passes its `client_secret`; a public client passes its PKCE `code_verifier` instead.
+
+{% multicode %}
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/token' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "grant_type": "authorization_code",
+    "code": "<CODE>",
+    "redirect_uri": "http://vantage.localhost/auth/redirect",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
+    "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
+  }'
+```
+```hurl
+POST https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/token
+Content-Type: application/json
+{
+    "grant_type": "authorization_code",
+    "code": "<CODE>",
+    "redirect_uri": "http://vantage.localhost/auth/redirect",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
+    "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
+}
+```
+{% /multicode %}
+
+The response contains an access token, a refresh token, and an ID token:
+
+```json
+{
+    "access_token": "eyJ0eXAiOiJhdCtqd3Qi...",
+    "token_type": "Bearer",
+    "expires_in": 28800,
+    "refresh_token": "eyJ0eXAiOiJKV1Qi...",
+    "scope": "openid profile email",
+    "id_token": "eyJ0eXAiOiJKV1Qi..."
+}
+```
+
+## 4. Read the user's profile {% #read-profile %}
+
+Call the userinfo endpoint with the access token to confirm the sign-in worked end to end:
+
+{% multicode %}
+```curl
+curl 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/userinfo' \
+  -H 'Authorization: Bearer <ACCESS_TOKEN>'
+```
+```hurl
+GET https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/userinfo
+Authorization: Bearer <ACCESS_TOKEN>
+```
+{% /multicode %}
+
+```json
+{
+    "sub": "6a5138d1971d49a87f0a",
+    "email": "walter@example.com",
+    "email_verified": true,
+    "name": "Walter O'Brien",
+    "updated_at": 1784040398
+}
+```
+
+See [Tokens](/docs/products/auth/oauth-server/tokens) for token structure, validation, refresh, and revocation.
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/products/auth/oauth-server/authorization" title="Authorization" %}
+Host your consent screen and drive the authorize, grant, and approve steps.
+{% /cards_item %}
+{% cards_item href="/docs/products/auth/oauth-server/clients" title="Clients" %}
+Confidential vs public clients, secrets, and rotation.
+{% /cards_item %}
+{% cards_item href="/docs/products/auth/oauth-server/tokens" title="Tokens" %}
+Token lifetimes, refresh with rotation, introspection, and revocation.
+{% /cards_item %}
+{% /cards %}
