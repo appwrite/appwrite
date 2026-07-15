@@ -209,8 +209,12 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $github);
         }
 
-        $path = Job::buildPath($project->getId(), $deployment->getId());
-        $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
+        $path = $this->findBuildPath($deviceForBuilds, $project->getId(), $deployment);
+        if ($path === '') {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build must produce exactly one output artifact.', $usage, $publisherForUsage, $github);
+        }
+
+        $size = $deviceForBuilds->getFileSize($path);
 
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
@@ -218,7 +222,19 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $github);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $github, $size);
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $github, $size, $path);
+    }
+
+    private function findBuildPath(Device $deviceForBuilds, string $projectId, Document $deployment): string
+    {
+        $path = (string) $deployment->getAttribute('buildPath', '');
+        if ($path !== '' && $deviceForBuilds->exists($path)) {
+            return $path;
+        }
+
+        $files = $deviceForBuilds->getFiles(Job::outputDirectory($projectId, $deployment->getId()));
+
+        return \count($files) === 1 ? (string) $files[0] : '';
     }
 
     /**
@@ -237,6 +253,7 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         GitHub $github,
         int $buildSize = 0,
+        string $buildPath = '',
     ): Document {
         $function = $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId'));
 
@@ -252,6 +269,7 @@ class Jobs extends Action
             'buildLogs' => $this->truncate($logs . $trailer),
         ];
         if ($success) {
+            $update['buildPath'] = $buildPath;
             $update['buildSize'] = $buildSize;
             $update['totalSize'] = $buildSize + (int) $deployment->getAttribute('sourceSize', 0);
         }

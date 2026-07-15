@@ -365,14 +365,11 @@ trait Deployment
 
                 // Build function deployments on the jobs-service when the caller
                 // opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator. Sites stay
-                // on the executor. On jobs the deployment is pre-declared 'waiting'
-                // with its buildPath so build.sh writes onto the mounted volume.
+                // on the executor.
                 $useJobs = $jobs !== null
                     && $resourceCollection === 'functions'
                     && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-                $buildFields = $useJobs
-                    ? ['status' => 'waiting', 'buildPath' => Job::buildPath($projectId, $deploymentId)]
-                    : [];
+                $buildFields = $useJobs ? ['status' => 'waiting'] : [];
 
                 $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,

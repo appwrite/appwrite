@@ -188,7 +188,7 @@ class Create extends Base
             'type' => 'vcs',
             'activate' => $activate,
             'status' => 'waiting',
-            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
+            'buildPath' => '',
         ]));
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);

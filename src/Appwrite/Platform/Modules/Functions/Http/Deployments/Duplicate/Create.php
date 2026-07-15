@@ -106,8 +106,7 @@ class Create extends Action
         $deploymentId = ID::unique();
 
         // Build backend for the rebuild: 'orchestrator' (jobs-service, submitted
-        // here) or 'executor' (default; Builds worker). The jobs path pre-declares
-        // buildPath so build.sh writes output straight onto the mounted volume.
+        // here) or 'executor' (default; Builds worker).
         $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
 
         $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
@@ -127,7 +126,7 @@ class Create extends Action
             'buildDuration' => null,
             'buildSize' => null,
             'status' => 'waiting',
-            'buildPath' => $useJobs ? Job::buildPath($project->getId(), $deploymentId) : '',
+            'buildPath' => '',
             'buildLogs' => '',
         ]));
 

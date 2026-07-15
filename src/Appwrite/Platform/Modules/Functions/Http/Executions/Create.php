@@ -417,8 +417,7 @@ class Create extends Base
             }
 
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
-            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
+            $command = $version === 'v2' ? '' : "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$command\"";
             try {
                 $executionResponse = $executor->createExecution(
                     projectId: $project->getId(),

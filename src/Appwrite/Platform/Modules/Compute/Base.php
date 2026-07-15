@@ -124,16 +124,12 @@ class Base extends Action
         // when the caller opts in ($jobs) and _APP_BUILDS_BACKEND=orchestrator.
         // Sites stay on the executor; template-into-repo pushes go through the
         // Builds worker (which does the git write, then hands the build to the
-        // jobs-service itself when on orchestrator). When on jobs the deployment
-        // is pre-declared 'waiting' with its buildPath so build.sh writes output
-        // onto the mounted volume.
+        // jobs-service itself when on orchestrator).
         $useJobs = $jobs !== null
             && $function->getCollection() === 'functions'
             && $template->isEmpty()
             && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-        $buildFields = $useJobs
-            ? ['status' => 'waiting', 'buildPath' => Job::buildPath($project->getId(), $deploymentId)]
-            : [];
+        $buildFields = $useJobs ? ['status' => 'waiting'] : [];
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,

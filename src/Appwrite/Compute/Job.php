@@ -21,7 +21,7 @@ use Utopia\System\System;
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
  * sources are fine. The build output and package-manager cache instead go on a
  * mounted volume: the builds storage volume is attached to the build worker at
- * its Appwrite path, so build.sh writes code.tar.gz + the cache squashfs
+ * its Appwrite path, so build.sh writes the build artifact + cache squashfs
  * straight onto the volume Appwrite already reads. That keeps the multi-hundred-MB
  * output off the (capped) HTTP upload path and out of the Appwrite process.
  *
@@ -98,14 +98,14 @@ final class Job
         }
 
         // Output + cache live on the mounted builds volume (see class doc): the
-        // build writes code.tar.gz to the deployment's build dir and the cache
+        // build writes its artifact to the deployment's build dir and the cache
         // squashfs to its per-function keyed path — both directly on the volume
         // Appwrite reads, so nothing large crosses the HTTP boundary.
         $cacheKey = self::cacheKey($projectId, $function->getId(), $runtime['image'] ?? '');
         $command = $deployment->getAttribute('buildCommands', '');
         $env = self::variables($project, $function, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
-            'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => \dirname(self::buildPath($projectId, $deploymentId)),
+            'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => self::outputDirectory($projectId, $deploymentId),
             'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => self::cachePath($projectId, $cacheKey),
         ];
 
@@ -153,13 +153,12 @@ final class Job
     }
 
     /**
-     * The build output path on the builds volume. build.sh writes code.tar.gz
-     * into OPEN_RUNTIMES_BUILD_OUTPUT_DIR (this file's directory); pre-computed
-     * so it can be persisted on the deployment before the job is submitted.
+     * The build output directory on the builds volume. The produced artifact's
+     * complete path is discovered and persisted after the job finishes.
      */
-    public static function buildPath(string $projectId, string $deploymentId): string
+    public static function outputDirectory(string $projectId, string $deploymentId): string
     {
-        return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}/code.tar.gz";
+        return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}";
     }
 
     /**

@@ -339,13 +339,8 @@ class Create extends Action
                     $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
 
                     // Fields marking the deployment as queued. The build worker
-                    // promotes 'waiting' → 'building' on the first callback. The
-                    // jobs path also pre-declares buildPath so build.sh writes the
-                    // output straight onto the mounted builds volume.
+                    // promotes 'waiting' → 'building' on the first callback.
                     $buildFields = ['status' => 'waiting'];
-                    if ($useJobs) {
-                        $buildFields['buildPath'] = Job::buildPath($project->getId(), $deploymentId);
-                    }
 
                     if ($deployment->isEmpty()) {
                         $deployment = $dbForProject->createDocument('deployments', new Document([

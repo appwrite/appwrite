@@ -532,10 +532,6 @@ class Builds extends Action
                 // builds volume, progress via callbacks to the jobs worker.
                 if ($resource->getCollection() === 'functions'
                     && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                        'buildPath' => Job::buildPath($project->getId(), $deploymentId),
-                    ]));
-
                     $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
                     $jobs->create(...Job::build($project, $resource, $deployment, $platform, [
                         'url' => $github->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
