@@ -53,8 +53,9 @@ trait Deployment
         ?Backend $deployments = null,
     ) {
         $errors = [];
+        $provider = $vcs->getName();
         foreach ($repositories as $repository) {
-            $logBase = 'vcs.github.event.repo.unknown';
+            $logBase = "vcs.{$provider}.event.repo.unknown";
 
             try {
                 $repositoryId = $repository->getId();
@@ -62,7 +63,7 @@ trait Deployment
                 $resourceId = $repository->getAttribute('resourceId');
                 $resourceType = $repository->getAttribute('resourceType');
 
-                $logBase = "vcs.github.event.repo.{$repositoryId}";
+                $logBase = "vcs.{$provider}.event.repo.{$repositoryId}";
                 Span::add('project.id', $projectId);
                 Span::add("{$logBase}.resource.id", $resourceId);
                 Span::add("{$logBase}.resource.type", $resourceType);

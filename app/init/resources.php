@@ -379,6 +379,7 @@ $container->set('servers', function () {
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
 $container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+$container->set('gitHub', fn (VcsFactory $vcsFactory) => $vcsFactory->fromProvider('github'), ['vcsFactory']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 

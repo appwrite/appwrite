@@ -102,7 +102,15 @@ class Create extends Action
         return $installation;
     }
 
-    private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization): ?Git
+    /**
+     * Resolves the adapter for a repository's installation, refreshing its
+     * OAuth2 token first. A null installation (not a Gitea installation) is
+     * not an error -- the caller silently skips it. A token-refresh/adapter
+     * failure, on the other hand, is pushed onto $errors so the caller can
+     * surface it instead of dropping it silently -- Gitea's webhook delivery
+     * gets a non-2xx response and the failure shows up in its redelivery log.
+     */
+    private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization, array &$errors): ?Git
     {
         $installation = $this->resolveGiteaInstallation($repository, $dbForPlatform, $authorization);
 
@@ -122,7 +130,10 @@ class Create extends Action
 
             return $vcsFactory->fromInstallation($installation);
         } catch (\Throwable $error) {
-            Console::warning("Failed to resolve Gitea adapter for installation '{$installation->getId()}': " . $error->getMessage());
+            $message = "Failed to resolve Gitea adapter for installation '{$installation->getId()}': " . $error->getMessage();
+            Console::warning($message);
+            Span::add("vcs.gitea.event.installation.{$installation->getId()}.error", $message);
+            $errors[] = $message;
             return null;
         }
     }
@@ -166,8 +177,9 @@ class Create extends Action
 
         $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
 
+        $errors = [];
         foreach ($repositories as $repository) {
-            $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization);
+            $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $errors);
 
             if ($adapter === null) {
                 continue;
@@ -176,6 +188,10 @@ class Create extends Action
             $providerInstallationId = $repository->getAttribute('installationId', '');
 
             $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+        }
+
+        if (!empty($errors)) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
         }
     }
 
@@ -219,8 +235,9 @@ class Create extends Action
                 Query::limit(100),
             ]));
 
+            $errors = [];
             foreach ($repositories as $repository) {
-                $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization);
+                $adapter = $this->resolveAdapterForRepository($repository, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $errors);
 
                 if ($adapter === null) {
                     continue;
@@ -244,6 +261,10 @@ class Create extends Action
                 ];
 
                 $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            }
+
+            if (!empty($errors)) {
+                throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
             }
         } elseif ($action === 'closed') {
             $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
