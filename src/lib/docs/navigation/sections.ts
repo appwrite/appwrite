@@ -440,6 +440,66 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
+      prefix: "partners/oauth-server",
+      parent: {
+        href: "/docs",
+        label: "OAuth2 server",
+      },
+      navigation: [
+        {
+          label: "Getting started",
+          items: [
+            {
+              label: "Overview",
+              href: "/docs/partners/oauth-server",
+            },
+            {
+              label: "Quick start",
+              href: "/docs/partners/oauth-server/quick-start",
+            },
+          ],
+        },
+        {
+          label: "Concepts",
+          items: [
+            {
+              label: "Clients",
+              href: "/docs/partners/oauth-server/clients",
+            },
+            {
+              label: "Authorization",
+              href: "/docs/partners/oauth-server/authorization",
+            },
+            {
+              label: "Tokens",
+              href: "/docs/partners/oauth-server/tokens",
+            },
+            {
+              label: "Scopes",
+              href: "/docs/partners/oauth-server/scopes",
+            },
+            {
+              label: "Device flow",
+              href: "/docs/partners/oauth-server/device-flow",
+            },
+          ],
+        },
+        {
+          label: "Guides",
+          items: [
+            {
+              label: "Sign in with your product",
+              href: "/docs/partners/oauth-server/sign-in-with-your-product/step-1",
+            },
+            {
+              label: "Custom scopes",
+              href: "/docs/partners/oauth-server/custom-scopes/step-1",
+            },
+          ],
+        },
+      ],
+    },
+    {
       prefix: "partners/project",
       parent: {
         href: "/docs",

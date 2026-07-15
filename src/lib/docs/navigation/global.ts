@@ -26,6 +26,18 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
     ],
   },
   {
+    label: 'Partners',
+    items: [
+      {
+        label: 'OAuth2 server',
+        href: '/docs/partners/oauth-server',
+        icon: 'key',
+        isParent: true,
+        new: true,
+      },
+    ],
+  },
+  {
     label: 'Utilities',
     collapsible: true,
     initiallyCollapsed: true,
