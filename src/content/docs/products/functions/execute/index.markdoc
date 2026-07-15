@@ -34,7 +34,7 @@ Asynchronous executions are added to a queue and processed by the function worke
 
 Asynchronous executions are created via:
 - The [Create execution](/docs/references/cloud/client-web/functions#createExecution) endpoint where the `async` parameter is `true`
-- Event triggers (when functions are triggered by [platform events](/docs/advanced/platform/events))
+- Event triggers (when functions are triggered by [platform events](/docs/apis/events))
 - Scheduled executions (cron jobs or delayed executions)
 
 Asynchronous executions:
@@ -524,7 +524,7 @@ Changes in Appwrite emit events. You can configure Functions to be executed in r
 5. Be careful to avoid selecting events that can be caused by the function itself. This can cause the function to trigger its own execution, resulting in infinite recursions.
 
 In these executions, the event that triggered the function will be passed as the header `x-appwrite-event` to the function.
-The `request.body` parameter will contain the event data. [Learn more about events](/docs/advanced/platform/events).
+The `request.body` parameter will contain the event data. [Learn more about events](/docs/apis/events).
 
 You can use one of the following events.
 {% accordion %}
@@ -1055,6 +1055,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Permissions {% #permission %}
 
-Appwrite Functions can be executed using Client or Server SDKs. Client SDKs must be authenticated with an account that has been granted execution [permissions](/docs/advanced/platform/permissions) on the function's settings page. Server SDKs require an API key with the correct scopes.
+Appwrite Functions can be executed using Client or Server SDKs. Client SDKs must be authenticated with an account that has been granted execution [permissions](/docs/advanced/security/permissions) on the function's settings page. Server SDKs require an API key with the correct scopes.
 
 If your function has a generated or custom domain, executions are not authenticated. Anyone visiting the configured domains will be considered a guest, so make sure to give `Any` execute permission in order for domain executions to work. If you need to enforce permissions for functions with a domain, use authentication methods like JWT.

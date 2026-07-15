@@ -40,7 +40,7 @@ resource "appwrite_webhook" "authenticated" {
 }
 ```
 
-Use the read-only **`secret`** attribute when configuring **signature verification** for payloads Appwrite sends to your URL (see [Webhooks](/docs/advanced/platform/webhooks) in the platform docs).
+Use the read-only **`secret`** attribute when configuring **signature verification** for payloads Appwrite sends to your URL (see [Webhooks](/docs/apis/webhooks) in the platform docs).
 
 # Data sources {% #data-sources %}
 
@@ -61,4 +61,4 @@ See the [Terraform Registry](https://registry.terraform.io/providers/appwrite/ap
 # Related {% #related %}
 
 - [Configuration](/docs/tooling/terraform/provider): authentication and endpoints
-- [Webhooks](/docs/advanced/platform/webhooks): event delivery, headers, and signatures
+- [Webhooks](/docs/apis/webhooks): event delivery, headers, and signatures

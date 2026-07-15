@@ -14,7 +14,7 @@ Rate limits limit the number of requests a user or IP can make against an API wi
 Rate limits help protect against brute force attacks against authentication endpoints and other forms of API
 abuse like [denial of service attacks](https://en.wikipedia.org/wiki/Denial-of-service_attack).
 
-{% arrow_link href="/docs/advanced/platform/rate-limits" %}
+{% arrow_link href="/docs/advanced/security/rate-limits" %}
 Learn more about rate limits
 {% /arrow_link %}
 

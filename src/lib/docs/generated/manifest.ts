@@ -3,11 +3,109 @@ import type { DocsPageMeta } from '../types'
 
 export const DOCS_PAGES: DocsPageMeta[] = [
   {
-    "slug": "advanced/integration",
-    "title": "Integration",
-    "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
+    "slug": "advanced/billing",
+    "title": "Billing",
+    "description": "Understand Appwrite's plans, add-ons, service level agreements, and billing policies.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/abuse",
+    "title": "Abuse policy",
+    "description": "Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/billing/compute",
+    "title": "Compute",
+    "description": "Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/billing/database-reads-and-writes",
+    "title": "Database Reads and Writes",
+    "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/enterprise",
+    "title": "Enterprise",
+    "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/billing/fair-use-policy",
+    "title": "Fair use policy",
+    "description": "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/free",
+    "title": "Free",
+    "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/billing/image-transformations",
+    "title": "Image Transformations",
+    "description": "Learn how to transform images using Appwrite's storage API.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/billing/oss",
+    "title": "Open source",
+    "description": "Learn how Appwrite supports open-source projects by providing free credits and other benefits.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/payments",
+    "title": "Manage billing",
+    "description": "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/billing/phone-otp",
+    "title": "Phone OTP",
+    "description": "Learn how Appwrite handles SMS-based OTP authentication for secure user verification.",
+    "layout": "article",
+    "readingTimeMinutes": 9
+  },
+  {
+    "slug": "advanced/billing/pro",
+    "title": "Pro",
+    "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/refund-policy",
+    "title": "Refund policy",
+    "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/support-sla",
+    "title": "Support SLA",
+    "description": "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/billing/uptime-sla",
+    "title": "Uptime SLA",
+    "description": "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/migrations",
@@ -52,221 +150,11 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
-    "slug": "advanced/platform",
-    "title": "Platform",
-    "description": "Appwrite is a development platform designed to adapt to your unique use cases. It provides features that help you maintain and scale your application.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/abuse",
-    "title": "Abuse policy",
-    "description": "Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "advanced/platform/api-keys",
-    "title": "API keys",
-    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "advanced/platform/billing",
-    "title": "Billing",
-    "description": "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "advanced/platform/compute",
-    "title": "Compute",
-    "description": "Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "advanced/platform/custom-domains",
-    "title": "Custom domains",
-    "description": "Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.",
-    "layout": "article",
-    "readingTimeMinutes": 5
-  },
-  {
-    "slug": "advanced/platform/database-reads-and-writes",
-    "title": "Database Reads and Writes",
-    "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/dev-keys",
-    "title": "Dev keys",
-    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/enterprise",
-    "title": "Enterprise",
-    "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "advanced/platform/environment-variables",
-    "title": "Environment variables",
-    "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "advanced/platform/error-handling",
-    "title": "Error handling",
-    "description": "Best practices for handling Appwrite errors in your applications. Learn how to provide friendly error messages to your users while effectively troubleshooting issues.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "advanced/platform/events",
-    "title": "Events",
-    "description": "Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/fair-use-policy",
-    "title": "Fair use policy",
-    "description": "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/free",
-    "title": "Free",
-    "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "advanced/platform/image-transformations",
-    "title": "Image Transformations",
-    "description": "Learn how to transform images using Appwrite's storage API.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/message-templates",
-    "title": "Message templates",
-    "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
-    "layout": "article",
-    "readingTimeMinutes": 4
-  },
-  {
-    "slug": "advanced/platform/oss",
-    "title": "Open source",
-    "description": "Learn how Appwrite supports open-source projects by providing free credits and other benefits.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/permissions",
-    "title": "Permissions",
-    "description": "Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "advanced/platform/phone-otp",
-    "title": "Phone OTP",
-    "description": "Learn how Appwrite handles SMS-based OTP authentication for secure user verification.",
-    "layout": "article",
-    "readingTimeMinutes": 9
-  },
-  {
-    "slug": "advanced/platform/pro",
-    "title": "Pro",
-    "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/rate-limits",
-    "title": "Rate-limits",
-    "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "advanced/platform/refund-policy",
-    "title": "Refund policy",
-    "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/release-policy",
-    "title": "Release policy",
-    "description": "Understand how Appwrite releases and versions its platforms and APIs.",
-    "layout": "article",
-    "readingTimeMinutes": 6
-  },
-  {
-    "slug": "advanced/platform/response-codes",
-    "title": "Response codes",
-    "description": "Understand Appwrite platform response codes for effective error handling. Learn how to interpret and handle response codes to enhance your application's reliability.",
-    "layout": "article",
-    "readingTimeMinutes": 18
-  },
-  {
-    "slug": "advanced/platform/roles",
-    "title": "Roles",
-    "description": "Learn how to setup role-based access controls in the Appwrite Console",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/scale",
-    "title": "Scale",
-    "description": "Appwrite's Scale plan fully supports scaling your application.",
-    "layout": "article",
-    "readingTimeMinutes": 1
-  },
-  {
-    "slug": "advanced/platform/shortcuts",
-    "title": "Keyboard shortcuts",
-    "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "advanced/platform/support-sla",
-    "title": "Support SLA",
-    "description": "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
-    "layout": "article",
-    "readingTimeMinutes": 2
-  },
-  {
-    "slug": "advanced/platform/uptime-sla",
-    "title": "Uptime SLA",
-    "description": "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
-    "slug": "advanced/platform/webhooks",
-    "title": "Webhooks",
-    "description": "Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.",
-    "layout": "article",
-    "readingTimeMinutes": 3
-  },
-  {
     "slug": "advanced/security",
     "title": "Security",
     "description": "Learn how Appwrite keeps your project, users, and data secure through security measures and compliance.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/security/abuse-protection",
@@ -300,6 +188,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "slug": "advanced/security/ccpa",
     "title": "CCPA",
     "description": "Protecting your and your users' data privacy is a priority at Appwrite. Learn about Appwrite's compliance with the California Consumer Privacy Act (CCPA).",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "advanced/security/dev-keys",
+    "title": "Dev keys",
+    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -351,6 +246,27 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Learn about how Appwrite keeps your data safe by employing manual third-party penetration tests to discover vulnerabilities.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/security/permissions",
+    "title": "Permissions",
+    "description": "Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "advanced/security/rate-limits",
+    "title": "Rate-limits",
+    "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/security/roles",
+    "title": "Roles",
+    "description": "Learn how to setup role-based access controls in the Appwrite Console",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/soc2",
@@ -472,6 +388,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "advanced/self-hosting/platforms/dokploy",
+    "title": "Dokploy",
+    "description": "Learn how to self-host Appwrite on your infrastructure with Dokploy.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "advanced/self-hosting/platforms/google-cloud",
     "title": "Google Cloud deployment",
     "description": "Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.",
@@ -542,6 +465,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "apis/(overview)",
+    "title": "APIs",
+    "description": "Explore the ways to talk to Appwrite. Access every service through the REST and GraphQL APIs, subscribe to changes in Realtime, and react to events with webhooks.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "apis/events",
+    "title": "Events",
+    "description": "Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
     "slug": "apis/graphql",
     "title": "GraphQL",
     "description": "Get to know Appwrite GraphQL API for flexible data querying & manipulation. Our docs cover the schema, queries, mutations, integration tips and more.",
@@ -605,11 +542,32 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "apis/release-policy",
+    "title": "Release policy",
+    "description": "Understand how Appwrite releases and versions its platforms and APIs.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "apis/response-codes",
+    "title": "Response codes",
+    "description": "Understand Appwrite platform response codes and error handling. Learn to interpret HTTP status codes, error types, and implement best practices for handling errors gracefully.",
+    "layout": "article",
+    "readingTimeMinutes": 19
+  },
+  {
     "slug": "apis/rest",
     "title": "REST",
     "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
     "layout": "article",
     "readingTimeMinutes": 8
+  },
+  {
+    "slug": "apis/webhooks",
+    "title": "Webhooks",
+    "description": "Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.",
+    "layout": "article",
+    "readingTimeMinutes": 3
   },
   {
     "slug": "partners",
@@ -715,6 +673,118 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Manage organization members and roles from your partner platform using the Console Organization and Teams APIs.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "partners/project",
+    "title": "Project",
+    "description": "Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/project/api-keys",
+    "title": "API keys",
+    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "partners/project/auth-methods",
+    "title": "Auth methods",
+    "description": "Enable or disable authentication methods on your Appwrite project programmatically using server SDKs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/project/branded-emails",
+    "title": "White-label transactional emails",
+    "description": "Route a customer's project emails through their own SMTP server and rebrand the email templates per locale with the Project API.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/project/email-templates",
+    "title": "Email templates",
+    "description": "Customize the account management emails Appwrite sends to your users, including verification, password recovery, and magic URL emails, per locale.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/project/environment-variables",
+    "title": "Environment variables",
+    "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "partners/project/key-rotation",
+    "title": "Issue and rotate API keys",
+    "description": "Manage the full life of an API key with the Project API, from issuing a scoped credential to auditing, rotating, and revoking it.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/project/labels",
+    "title": "Labels",
+    "description": "Assign customizable labels to your Appwrite project to categorize and filter projects within an organization.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/project/mock-phones",
+    "title": "Mock phones",
+    "description": "Register fictional phone numbers and OTPs to test phone authentication flows without sending real SMS messages.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/project/oauth",
+    "title": "OAuth providers",
+    "description": "Configure OAuth2 sign-in providers for your project from the Console or programmatically with a Server SDK.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "partners/project/platforms",
+    "title": "Platforms",
+    "description": "Register Web, Apple, Android, Windows, and Linux apps to your Appwrite project programmatically using server SDKs.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/project/policies",
+    "title": "Policies",
+    "description": "Configure password rules, session limits, user limits, and membership privacy on your Appwrite project programmatically using server SDKs.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "partners/project/protocols",
+    "title": "Protocols",
+    "description": "Enable or disable the REST, GraphQL, and WebSocket protocols on your Appwrite project programmatically using server SDKs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/project/provisioning",
+    "title": "Provision a project's baseline",
+    "description": "Apply a standard configuration to a customer's project programmatically with the Project API, including platforms, auth methods, services, protocols, and variables.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "partners/project/services",
+    "title": "Services",
+    "description": "Enable or disable individual Appwrite services on your project programmatically using server SDKs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "partners/project/smtp",
+    "title": "SMTP",
+    "description": "Configure a custom SMTP server to send Appwrite's account management emails from your own domain, improve deliverability, and unlock custom email templates.",
+    "layout": "article",
+    "readingTimeMinutes": 2
   },
   {
     "slug": "partners/projects",
@@ -1011,6 +1081,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "products/auth/message-templates",
+    "title": "Message templates",
+    "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
+    "layout": "article",
+    "readingTimeMinutes": 4
+  },
+  {
     "slug": "products/auth/mfa",
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
@@ -1058,6 +1135,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Effortlessly add authentication to your apps - simple signup & login in just minutes with Appwrite Authentication",
     "layout": "article",
     "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/auth/react",
+    "title": "React library",
+    "description": "Add authentication to React apps with Appwrite's official React library. Supports client-side React, Next.js, and TanStack Start with a single provider and a small set of hooks.",
+    "layout": "article",
+    "readingTimeMinutes": 9
   },
   {
     "slug": "products/auth/security",
@@ -1781,6 +1865,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 5
   },
   {
+    "slug": "products/network/custom-domains",
+    "title": "Custom domains",
+    "description": "Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.",
+    "layout": "article",
+    "readingTimeMinutes": 5
+  },
+  {
     "slug": "products/network/ddos",
     "title": "DDoS mitigation",
     "description": "Learn how Appwrite protects your applications from Distributed Denial-of-Service (DDoS) attacks with built-in, always-on protection for all Appwrite Cloud plans.",
@@ -2168,7 +2259,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "quick-starts/nextjs",
     "title": "Start with Next.js",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Next.js apps.",
+    "description": "Build Next.js apps with the Appwrite React library. Add server-rendered authentication, sign-in, sign-up, and user state without writing the SSR plumbing yourself.",
     "layout": "article",
     "readingTimeMinutes": 2
   },
@@ -2210,9 +2301,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "quick-starts/react",
     "title": "Start with React",
-    "description": "Build React apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
+    "description": "Build React apps with the Appwrite React library and add authentication, sign-in, sign-up, and user state in a few lines.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "quick-starts/react-native",
@@ -2266,9 +2357,9 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   {
     "slug": "quick-starts/tanstack-start",
     "title": "Start with TanStack Start",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your TanStack Start apps.",
+    "description": "Build TanStack Start apps with the Appwrite React library. Add server-rendered authentication via file-route handlers and server functions.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "quick-starts/vue",
@@ -2283,6 +2374,20 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Build JavaScript or Typescript web apps with Appwrite. Add authentication, user management, file storage, and more. Read our guide to get started!",
     "layout": "article",
     "readingTimeMinutes": 2
+  },
+  {
+    "slug": "references",
+    "title": "API reference",
+    "description": "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "references/quick-start",
+    "title": "Quick start",
+    "description": "Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.",
+    "layout": "article",
+    "readingTimeMinutes": 4
   },
   {
     "slug": "sdks",
@@ -2680,6 +2785,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "tooling/command-center/shortcuts",
+    "title": "Keyboard shortcuts",
+    "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
     "layout": "article",
     "readingTimeMinutes": 3
   },

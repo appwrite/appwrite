@@ -33,7 +33,7 @@ individual users using the `Role.user(<USER_ID>, <STATUS>)` role.
 | Unverified user | `Role.user(<USER_ID>, 'unverified')` |
 
 
-{% arrow_link href="/docs/advanced/platform/permissions" %}
+{% arrow_link href="/docs/advanced/security/permissions" %}
 Learn more about permissions
 {% /arrow_link %}
 

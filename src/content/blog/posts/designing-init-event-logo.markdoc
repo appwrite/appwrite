@@ -43,7 +43,15 @@ We had a few iterations of the event logo before settling on our final version. 
 
 ![Sara's pass](/images/blog/designing-init/saras-pass.avif)
 
-After several days of going back and forth, Jade gave us the version that we would end up going with, designed in Figma, and animated in After Effects. We all agreed this was the right direction: it felt snappy and performant, but wasn't so ornate that it would be impossible to build under a tight timeline. Once we had our conceptual animation, the challenge became translating it to the browser. In order to animate the stroke along the letter paths, I started with some of the gradient tracing concepts from [Rauno Frieberg](https://rauno.me/craft/nextjs#gradient-tracing), but it was feeling like overkill (lots of JavaScript and an animation library), and it wasn't quite getting us where we needed to go, looking more like a broad brushstroke animating in, rather than individual lines being drawn onto the paths.
+{% video src="/images/blog/designing-init/first-browser-pass.mov" /%}
+
+After several days of going back and forth, Jade gave us the version that we would end up going with, designed in Figma, and animated in After Effects.
+
+{% video src="/images/blog/designing-init/first-pass.mp4" /%}
+
+We all agreed this was the right direction- it felt snappy and performant, but wasn’t so ornate that it would be impossible to build under a tight timeline. Once we had our conceptual animation, the challenge became translating it to the browser. In order to animate the stroke along the letter paths, I started with some of the gradient tracing concepts from [Rauno Frieberg](https://rauno.me/craft/nextjs#gradient-tracing), but it was feeling like overkill (lots of JavaScript and an animation library), and it wasn’t quite getting us where we needed to go, looking more like a broad brushstroke animating in, rather than individual lines being drawn onto the paths.
+
+{% video src="/images/blog/designing-init/gradient-tracing.mov" /%}
 
 What we ended up shipping was much simpler, and significantly more performant, relying entirely on CSS.
 
@@ -126,7 +134,9 @@ With a few ways not to do the animation under my belt, the final step was findin
 }
 ```
 
-Applying the same animation properties to 75% and 100% is a nice little hack to delay an animation. The `animation-delay` property only applies to the first paint, so adding this, and extending the total duration made sure that the animation was completed by 75%, and there would be a pause, equivalent to 1/4 of the total duration, before it would start again. With this in place, the logo animation was how we'd envisioned it.
+Applying the same animation properties to 75% and 100% is a nice little hack to delay an animation. The `animation-delay` property only applies to the first paint, so adding this, and extending the total duration made sure that the animation was completed by 75%, and there would be a pause, equivalent to 1/4 of the total duration, before it would start again. With this in place, the logo animation was how we’d envisioned it.
+
+{% video src="/images/blog/designing-init/final.mov" /%}
 
 ## Animated lines
 

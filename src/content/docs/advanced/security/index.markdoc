@@ -9,7 +9,7 @@ Appwrite is compliant with [GDPR](/docs/advanced/security/gdpr), [CCPA](/docs/ad
 [HIPAA](/docs/advanced/security/hipaa), and [SOC 2](/docs/advanced/security/soc2).
 
 Appwrite also employs [enhanced password protection and encryption](/docs/products/auth/security), [rate limits](/docs/advanced/security/abuse-protection),
-[robust permission systems](/docs/advanced/platform/permissions), and [HTTPS/TLS](/docs/advanced/security/tls) to protect you and your users' data.
+[robust permission systems](/docs/advanced/security/permissions), and [HTTPS/TLS](/docs/advanced/security/tls) to protect you and your users' data.
 
 # Compliance {% #compliance %}
 
@@ -54,12 +54,17 @@ Appwrite encrypts sensitive data and files
 in Appwrite Databases and Storage.
 {% /cards_item %}
 
+{% cards_item href="/docs/advanced/security/mfa" title="Multi-factor authentication" %}
+Add a second layer of protection by requiring
+users to verify their identity with multiple factors.
+{% /cards_item %}
+
 {% cards_item href="/docs/advanced/security/https" title="HTTPS" %}
 Appwrite Cloud enforces HTTPS on all endpoints to prevent on-path
 attacks like packet sniffing.
 {% /cards_item %}
 
-{% cards_item href="/docs/advanced/security/https" title="TLS" %}
+{% cards_item href="/docs/advanced/security/tls" title="TLS" %}
 Appwrite assigns TLS certificates on all
 Appwrite and user provided domains connected to Appwrite.
 {% /cards_item %}
@@ -84,6 +89,43 @@ Appwrite protects against common abuse methods
 like DoS and brute-force attacks.
 {% /cards_item %}
 
+{% /cards %}
+
+# Access control {% #access-control %}
+
+Appwrite is secure by default and provides tools for you to manage
+access control and prevent abuse.
+
+{% cards %}
+{% cards_item href="/docs/advanced/security/permissions" title="Permissions" %}
+Control which users can access which resources.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/roles" title="Roles" %}
+Learn about Console organization member roles and the access each one grants.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/rate-limits" title="Rate limits" %}
+Appwrite has rate limits on some endpoints to prevent abuse.
+{% /cards_item %}
+
+{% cards_item href="/docs/partners/project/api-keys" title="API keys" %}
+Create and manage API keys used by Server SDKs.
+{% /cards_item %}
+
+{% cards_item href="/docs/advanced/security/dev-keys" title="Dev keys" %}
+Create and manage dev keys used by Client SDKs in dev environments.
+{% /cards_item %}
+{% /cards %}
+
+# Configuration {% #configuration %}
+
+Pass constants and secrets to your Appwrite resources.
+
+{% cards %}
+{% cards_item href="/docs/partners/project/environment-variables" title="Environment variables" %}
+Use project, function, and site environment variables to pass constants and secrets to your Functions and Sites.
+{% /cards_item %}
 {% /cards %}
 
 # Reporting vulnerabilities {% #reporting-vulnerabilities %}

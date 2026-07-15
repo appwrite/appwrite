@@ -792,7 +792,7 @@ val isAdmin = membership?.roles?.contains("admin") ?: false
 ```
 {% /multicode %}
 
-See how to grant row and file access to team roles in the [permissions](/docs/advanced/platform/permissions#example-2-team-roles) guide.
+See how to grant row and file access to team roles in the [permissions](/docs/advanced/security/permissions#example-2-team-roles) guide.
 
 {% arrow_link href="/docs/products/auth/teams" %}
 Learn more about team management

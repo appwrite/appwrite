@@ -206,6 +206,6 @@ This would correspond with the permissions below.
 | Delete | `Permissions.delete(Role.label('subscriber'))` |
 | Create | `Permissions.create(Role.label('subscriber'))` |
 
-{% arrow_link href="/docs/advanced/platform/permissions" %}
+{% arrow_link href="/docs/advanced/security/permissions" %}
 Learn more about permissions
 {% /arrow_link %}

@@ -8,7 +8,7 @@ Appwrite Functions can read environment variables at build and runtime. Use them
 
 A function reads from three sources, in this order of precedence:
 
-1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See [project variables](/docs/advanced/platform/environment-variables) for the platform-wide reference.
+1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See [project variables](/docs/partners/project/environment-variables) for the full reference.
 2. **Function variables** are scoped to a single function. Override a project variable for one function by setting the same key on the function itself.
 3. **Appwrite-injected variables** are set by Appwrite at execution time (for example, `APPWRITE_FUNCTION_PROJECT_ID`). These take final precedence and cannot be overridden.
 
@@ -31,11 +31,11 @@ Variable changes only take effect on the next deployment. Redeploy your function
 ![Function environment variables](/images/docs/functions/env-variables.avif)
 {% /only_light %}
 
-You can also configure global variables that apply to all your functions from your project's **Settings** page. See [project variables](/docs/advanced/platform/environment-variables) for details.
+You can also configure global variables that apply to all your functions from your project's **Settings** page. See [project variables](/docs/partners/project/environment-variables) for details.
 
 # Manage with a Server SDK {% #server-sdks %}
 
-You can also manage function variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/advanced/platform/api-keys) with the `functions.write` scope to create, update, or delete variables, or the `functions.read` scope to list and read them.
+You can also manage function variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/partners/project/api-keys) with the `functions.write` scope to create, update, or delete variables, or the `functions.read` scope to list and read them.
 
 ## Create a variable {% #create-variable %}
 

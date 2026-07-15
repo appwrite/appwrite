@@ -319,7 +319,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 {% /tabsitem %}
 {% /tabs %}
 
-You can follow the [Send email messages](/docs/products/messaging/send-push-notifications) journey to send your first push notification and test your provider.
+You can follow the [Send email messages](/docs/products/messaging/send-push-notifications) guide to send your first push notification and test your provider.
 {% /section %}
 
 {% section #manage-provider step=4 title="Manage provider" %}

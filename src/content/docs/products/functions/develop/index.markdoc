@@ -1549,7 +1549,7 @@ Appwrite can be used in your functions by adding the relevant SDK to your functi
 Authenticating with Appwrite is done via a dynamic API key or a JWT token.
 
 ## Dynamic API key {% #dynamic-api-key %}
-Dynamic API keys are the same as [API keys](/docs/advanced/platform/api-keys) but are automatically generated.
+Dynamic API keys are the same as [API keys](/docs/partners/project/api-keys) but are automatically generated.
 They are generated in your functions per execution.
 However, you can only use dynamic API keys inside Appwrite functions.
 

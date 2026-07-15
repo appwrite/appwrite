@@ -46,6 +46,8 @@ We found that the rebrand was a great opportunity to breathe some life into our 
 
 These animations were coded from scratch, using powerful tools such as [Svelte’s transitions](https://svelte.dev/docs/svelte-transition) and [native web animation API libraries](https://motion.dev/), bringing interactivity and good performance together in harmony.
 
+{% video src="/images/blog/designing-the-new-appwrite-website/animations.mp4" autoplay=true /%}
+
 Designing the new Appwrite website was a very pleasurable and fun experience. It gave us the opportunity to improve areas that needed attention, to implement new ideas, and to foster experimentation every step of the way.
 
 Moving forward, we want the both our website and documentation to be living environments that will keep evolving as we expand our offerings and improve our products.

@@ -15,7 +15,7 @@ Rate limits in self-hosted Appwrite apply differently depending on how you're ac
 - **Client SDKs**: Rate limits apply to all requests from client applications
 - **Server SDKs with API keys**: Rate limits do not apply when using API keys
 
-{% arrow_link href="/docs/advanced/platform/rate-limits" %}
+{% arrow_link href="/docs/advanced/security/rate-limits" %}
 Learn more about how rate limits work
 {% /arrow_link %}
 

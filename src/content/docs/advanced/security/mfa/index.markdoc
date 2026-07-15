@@ -10,7 +10,7 @@ More factors of authentication will be added in the future.
 
 {% info title="Looking to add MFA to your app?" %}
 This page covers MFA for your Appwrite Console account.
-If you're looking to add MFA to your app, follow the [Multi-factor authentication journey](/docs/products/auth/mfa).
+If you're looking to add MFA to your app, follow the [Multi-factor authentication guide](/docs/products/auth/mfa).
 {% /info %}
 
 # Enable MFA {% #enable-mfa %}

@@ -41,7 +41,7 @@ You can then click on the three-dots menu, click on **Copy URL** and get the tok
 
 {% tabsitem #server-sdk title="Server SDK" %}
 
-You can create file tokens programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#createFileToken). Appwrite's Server SDKs require an [API key](/docs/advanced/platform/api-keys) with the `tokens.write` scope enabled.
+You can create file tokens programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#createFileToken). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.write` scope enabled.
 
 {% multicode %}
 ```server-nodejs
@@ -345,7 +345,7 @@ Head to the **Storage** page, open a file inside a bucket, and scroll down to th
 
 {% tabsitem #server-sdk title="Server SDK" %}
 
-You can list all file tokens programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#list). Appwrite's Server SDKs require an [API key](/docs/advanced/platform/api-keys) with the `tokens.read` scope enabled.
+You can list all file tokens programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#list). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.read` scope enabled.
 
 {% multicode %}
 ```server-nodejs
@@ -724,7 +724,7 @@ Head to the **Storage** page, open a file inside a bucket, and scroll down to th
 
 {% tabsitem #server-sdk title="Server SDK" %}
 
-You can update file token expiry programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#update). Appwrite's Server SDKs require an [API key](/docs/advanced/platform/api-keys) with the `tokens.write` scope enabled.
+You can update file token expiry programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#update). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.write` scope enabled.
 
 {% multicode %}
 ```server-nodejs
@@ -1014,7 +1014,7 @@ Head to the **Storage** page, open a file inside a bucket, and scroll down to th
 
 {% tabsitem #server-sdk title="Server SDK" %}
 
-You can delete a file token programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#delete). Appwrite's Server SDKs require an [API key](/docs/advanced/platform/api-keys) with the `tokens.write` scope enabled.
+You can delete a file token programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#delete). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.write` scope enabled.
 
 {% multicode %}
 ```server-nodejs

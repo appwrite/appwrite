@@ -1,0 +1,73 @@
+---
+layout: article
+title: API reference
+description: Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.
+---
+Appwrite lets you build integrations on web, mobile, native, and server platforms through a set of APIs. You can use one of our many [SDKs](/docs/sdks) or integrate directly through the [REST API](/docs/apis/rest) or [GraphQL API](/docs/apis/graphql).
+
+## Client vs Server APIs {% #client-vs-server %}
+
+Client APIs and SDKs are for integrating with Appwrite to build client-based applications and websites.
+Client APIs only give access to resources if users have been [granted permissions](/docs/advanced/security/permissions).
+
+Server API and SDKs are for integrating with Appwrite to build backend or server applications.
+Server APIs are constrained by an [API key's](/docs/partners/project/api-keys) scope, ignoring user permissions.
+
+## APIs {% #api %}
+Before using the Appwrite APIs, in the **Settings** of your Appwrite project, obtain your **API endpoint** and **Project ID**.
+Client APIs require an active session, created from [signing up and logging in](/docs/products/auth/accounts#signup-login).
+Server APIs require [API keys](/docs/partners/project/api-keys).
+
+
+{% only_dark %}
+![Project settings screen](/images/docs/quick-starts/dark/project-id.avif)
+{% /only_dark %}
+{% only_light %}
+![Project settings screen](/images/docs/quick-starts/project-id.avif)
+{% /only_light %}
+
+{% cards %}
+{% cards_item href="/docs/references/cloud/client-web/account" title="Account" %}
+Add signup, login, logout, and other common authentication methods to client apps.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/server-nodejs/users" title="Users" %}
+Manage users from an admin scope to build server integrations.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/teams" title="Teams" %}
+Group users to share access to rows, files, and functions.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/databases" title="Databases" %}
+Scalable and robust database backed by your favorite technologies.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/tablesDB" title="TablesDB" %}
+Create structured tables of rows with validated columns and fine-grained permissions.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/server-nodejs/sites" title="Sites" %}
+Build and deploy websites on the internet at scale.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/storage" title="Storage" %}
+Securely store files with advanced compression, encryption and image transformations.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/functions" title="Functions" %}
+Deploy and scale serverless functions in secure, isolated runtimes.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/server-nodejs/messaging" title="Messaging" %}
+Send push notifications, SMS, or emails to users or groups of users using your app.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/server-nodejs/tokens" title="Tokens" %}
+Create and manage temporary access tokens for secure file sharing and resource access control.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/locale" title="Localization" %}
+Utility APIs to customize your app based on your users' location.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/avatars" title="Avatars" %}
+Complete everyday tasks related to your app image, icons, and avatars.
+{% /cards_item %}
+{% cards_item href="/docs/references/cloud/client-web/presences" title="Presences" %}
+Track which signed-in users are active right now and broadcast their status in realtime.
+{% /cards_item %}
+{% /cards %}
+
+## Error handling {% #error-handling %}
+
+When building with Appwrite, implement proper error handling to provide user-friendly messages instead of exposing raw error responses. For implementation details and best practices, refer to our [Error handling guide](/docs/apis/response-codes#error-handling) and [Response codes](/docs/apis/response-codes) documentation.

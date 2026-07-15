@@ -1,13 +1,14 @@
 ---
 layout: article
 title: Start with React
-description: Build React apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.
+description: Build React apps with the Appwrite React library and add authentication, sign-in, sign-up, and user state in a few lines.
 difficulty: beginner
-readtime: 3
+readtime: 5
 back: /docs/quick-starts
 ---
 
-Learn how to setup your first React project powered by Appwrite.
+Learn how to set up your first React project with the [Appwrite React library](/docs/products/auth/react).
+
 {% section #step-1 step=1 title="Create project" %}
 Head to the [Appwrite Console](https://cloud.appwrite.io/console).
 
@@ -34,22 +35,26 @@ Then, under **Add a platform**, add a **Web app**. The **Hostname** should be `l
 You can skip optional steps.
 
 {% /section %}
+
 {% section #step-2 step=2 title="Create React project" %}
 Create a Vite project.
 
 ```sh
-npm create vite@latest my-app -- --template react && cd my-app
+npm create vite@latest my-app -- --template react-ts && cd my-app
+npm install
 ```
 {% /section %}
-{% section #step-3 step=3 title="Install Appwrite" %}
 
-Install the JavaScript Appwrite SDK.
+{% section #step-3 step=3 title="Install the React library" %}
+
+Install the Appwrite React library along with the `appwrite` Web SDK and `@tanstack/react-query` peer dependency.
 
 ```sh
-npm install appwrite
+npm install @appwrite.io/react appwrite @tanstack/react-query
 ```
 {% /section %}
-{% section #step-4 step=4 title="Import Appwrite" %}
+
+{% section #step-4 step=4 title="Configure environment variables" %}
 Find your project's ID in the **Settings** page.
 
 {% only_dark %}
@@ -58,92 +63,109 @@ Find your project's ID in the **Settings** page.
 {% only_light %}
 ![Project settings screen](/images/docs/quick-starts/project-id.avif)
 {% /only_light %}
-Create a new file `src/lib/appwrite.js` and add the following code to it, replace `<PROJECT_ID>` with your project ID.
 
-```client-web
-import { Client, Account} from 'appwrite';
+Create a `.env` file at the project root and add your endpoint and project ID. Replace `<REGION>` and `<PROJECT_ID>` with your own values.
 
-export const client = new Client();
-
-client
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>'); // Replace with your project ID
-
-export const account = new Account(client);
-export { ID } from 'appwrite';
+```sh
+VITE_APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=<PROJECT_ID>
 ```
 {% /section %}
-{% section #step-5 step=5 title="Create a login page" %}
-Add the following code to `src/App.jsx`.
 
-```js
-import React, { useState } from 'react';
-import { account, ID } from './lib/appwrite';
+{% section #step-5 step=5 title="Wrap your app with AppwriteProvider" %}
 
-const App = () => {
-  const [loggedInUser, setLoggedInUser] = useState(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+Replace the contents of `src/main.tsx` with the following.
 
-  async function login(email, password) {
-    await account.createEmailPasswordSession({
-        email,
-        password
-    });
-    setLoggedInUser(await account.get());
+```tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { AppwriteProvider } from "@appwrite.io/react";
+import App from "./App";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <AppwriteProvider
+      endpoint={import.meta.env.VITE_APPWRITE_ENDPOINT}
+      projectId={import.meta.env.VITE_APPWRITE_PROJECT_ID}
+    >
+      <App />
+    </AppwriteProvider>
+  </StrictMode>,
+);
+```
+
+`AppwriteProvider` sets up the Appwrite Web SDK client and a per-instance TanStack Query cache so all hooks share the same auth state.
+
+{% /section %}
+
+{% section #step-6 step=6 title="Add sign-up, sign-in, and sign-out" %}
+
+Replace the contents of `src/App.tsx` with the following.
+
+```tsx
+import { useState } from "react";
+import { useAuth } from "@appwrite.io/react";
+
+export default function App() {
+  const { user, isLoading, signIn, signUp, signOut, error } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+
+  if (isLoading) return <p>Loading...</p>;
+
+  if (user) {
+    return (
+      <main>
+        <h1>Welcome, {user.name || user.email}</h1>
+        <button onClick={() => signOut.signOut()}>Sign out</button>
+      </main>
+    );
   }
 
   return (
-    <div>
-      <p>
-        {loggedInUser ? `Logged in as ${loggedInUser.name}` : 'Not logged in'}
-      </p>
-
-      <form>
-        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-        <input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
-
-        <button type="button" onClick={() => login(email, password)}>
-          Login
-        </button>
-
-        <button
-          type="button"
-          onClick={async () => {
-            await account.create({
-                userId: ID.unique(),
-                email,
-                password,
-                name
-            });
-            login(email, password);
-          }}
-        >
-          Register
-        </button>
-
-        <button
-          type="button"
-          onClick={async () => {
-            await account.deleteSession({
-                sessionId: 'current'
-            });
-            setLoggedInUser(null);
-          }}
-        >
-          Logout
-        </button>
-      </form>
-    </div>
+    <main>
+      <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input
+        placeholder="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button
+        onClick={() => signUp.emailPassword({ email, password, name })}
+        disabled={signUp.isPending}
+      >
+        Sign up
+      </button>
+      <button
+        onClick={() => signIn.emailPassword({ email, password })}
+        disabled={signIn.isPending}
+      >
+        Sign in
+      </button>
+      {error && <p style={{ color: "red" }}>{error.message}</p>}
+    </main>
   );
-};
-
-export default App;
+}
 ```
+
+`useAuth` returns the current user, loading state, and the `signIn`, `signUp`, and `signOut` mutations. The user state is cached by TanStack Query and stays in sync across components automatically.
+
 {% /section %}
 
-{% section #step-6 step=6 title="All set" %}
-Run your project with `npm run dev -- --open --port 3000` and open [Localhost on Port 3000](http://localhost:3000) in your browser.
+{% section #step-7 step=7 title="Run your app" %}
+Run your project.
+
+```sh
+npm run dev
+```
+
+Open [localhost on port 5173](http://localhost:5173) in your browser. Sign up, sign out, and sign back in to verify the flow.
 {% /section %}
+
+# Next steps {% #next-steps %}
+
+For Next.js or TanStack Start integration, server-side rendering, and the full hook reference, see the [React library docs](/docs/products/auth/react).

@@ -5,7 +5,7 @@ description: Enhance security with SMS and phone authentication in Appwrite. Add
 ---
 
 {% info title="Note" %}
-OTPs are billed per message, with rates varying by country. See the [phone OTP rates](/docs/advanced/platform/phone-otp#rates) for more information.
+OTPs are billed per message, with rates varying by country. See the [phone OTP rates](/docs/advanced/billing/phone-otp#rates) for more information.
 {% /info %}
 
 Phone authentication lets users create accounts using their phone numbers and log in through SMS messages.

@@ -10,7 +10,7 @@ If you are already authenticated on your client-side app and need your backend a
 
 # Proof of Identity {% #proof-of-identity %}
 
-Before making requests to your backend APIs, your client application needs to first create a session **directly with Appwrite** using the account service. This session will act like an ID card for the user and can be used to access resources in Appwrite. The client will **only receive information accessible to the user** based on the resources' [permissions](/docs/advanced/platform/permissions).
+Before making requests to your backend APIs, your client application needs to first create a session **directly with Appwrite** using the account service. This session will act like an ID card for the user and can be used to access resources in Appwrite. The client will **only receive information accessible to the user** based on the resources' [permissions](/docs/advanced/security/permissions).
 
 When you build backend APIs to extend Appwrite's functionality, these APIs should still **respect access permissions** to keep user data secure. Appwrite's backend SDKs allow you to securely act on behalf of a user with the same permissions by using JWT authentication.
 
@@ -173,7 +173,7 @@ var client = new Client()
 
 JWT auth is useful when you need your backend app's Server SDK to be restricted by the same set of permissions.
 
-If your backend app's Server SDK is using an [API key](/docs/advanced/platform/api-keys), it will fetch **all resources** regardless of permissions. This means the Server SDK might fetch files and rows your user should not be able to see, which is not helpful when you need to act on behalf of a user.
+If your backend app's Server SDK is using an [API key](/docs/partners/project/api-keys), it will fetch **all resources** regardless of permissions. This means the Server SDK might fetch files and rows your user should not be able to see, which is not helpful when you need to act on behalf of a user.
 
 If your backend app's Server SDK is using a **JWT**, it will only fetch resources your user has permissions to access.
 

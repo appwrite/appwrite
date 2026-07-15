@@ -111,6 +111,9 @@ Deploy Appwrite on modern PaaS platforms for simplified management:
 {% cards_item href="/docs/advanced/self-hosting/platforms/coolify" title="Coolify" %}
 Open-source platform for easy self-hosting with one-click deployments.
 {% /cards_item %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/dokploy" title="Dokploy" %}
+Open-source deployment platform with one-click Appwrite template deployment.
+{% /cards_item %}
 {% /cards %}
 
 # Configuration {% #configuration %}
@@ -170,4 +173,4 @@ Ready to self-host Appwrite? Choose your preferred path:
 
 **Cloud Platform** - [Choose a cloud platform](#cloud-platforms) for production hosting with custom configuration
 
-**Platform-as-a-Service** - Deploy on [Coolify](/docs/advanced/self-hosting/platforms/coolify) or similar platforms for simplified management
+**Platform-as-a-Service** - Deploy on [Coolify](/docs/advanced/self-hosting/platforms/coolify) or [Dokploy](/docs/advanced/self-hosting/platforms/dokploy) for simplified management

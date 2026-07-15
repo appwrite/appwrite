@@ -3,13 +3,168 @@ import type { DocsSearchEntry } from '../search'
 
 export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
-    "slug": "advanced/integration",
-    "title": "Integration",
-    "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
-    "excerpt": "Integration",
+    "slug": "advanced/billing",
+    "title": "Billing",
+    "description": "Understand Appwrite's plans, add-ons, service level agreements, and billing policies.",
+    "excerpt": "Learn how to manage billing for your organization, find the plan that best suits your needs, explore optional add-ons, and understand Appwrite's service level agreements and billing policies. Manage billing Configure your organization's plan, payment methods, and spending controls. Manage your plan, billing periods, payment methods, budget caps, and invoices. Plans Learn which plan best suits your organization. Learn about Appwrite Free plan. Free plan for hobby projects and learners. Learn about Appwrite Pro, for growing organizations that need to…",
     "breadcrumbs": [
-      "advanced",
-      "Integration"
+      "Billing",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "advanced/billing/abuse",
+    "title": "Abuse policy",
+    "description": "Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.",
+    "excerpt": "Appwrite is committed to providing a fair, secure, and high-quality experience for all users. This Abuse Policy, as part of our overall Fair Use Policy, outlines unacceptable behaviors and the steps you can take to report any suspected abuse. Our goal is to maintain a safe environment where everyone can build, innovate, and collaborate without fear of harmful or illegal activity. Reporting Abuse If you observe or suspect any prohibited activity, please report it as soon as possible to abuse@appwrite.io.…",
+    "breadcrumbs": [
+      "Billing",
+      "Policies",
+      "Abuse"
+    ]
+  },
+  {
+    "slug": "advanced/billing/compute",
+    "title": "Compute",
+    "description": "Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.",
+    "excerpt": "On Appwrite Cloud, paid plans let you choose how much **CPU** and **memory** apply to **build** work and to **runtime** work. Functions and Sites each expose two settings: a **build specification** (install, compile, bundle, package) and a **runtime specification** (executions for functions; serving traffic and SSR for sites). You can pick different tiers for each phase so heavy builds do not force you to oversize steady execution, and vice versa. These options help you tune performance and cost: for example,…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Compute"
+    ]
+  },
+  {
+    "slug": "advanced/billing/database-reads-and-writes",
+    "title": "Database Reads and Writes",
+    "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
+    "excerpt": "Appwrite provides powerful database capabilities through its Database API, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or . **Write Operations**: Any action that modifies data in your database, including: - Creating rows with .…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Database Reads and Writes"
+    ]
+  },
+  {
+    "slug": "advanced/billing/enterprise",
+    "title": "Enterprise",
+    "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
+    "excerpt": "Enterprise development teams face unique challenges and have unique needs. Appwrite can provide tailored solutions for enterprise customers with custom hosting, training, and support needs. If you're interested to learn about what Appwrite can do for your enterprise development teams, contact us for more details.",
+    "breadcrumbs": [
+      "Billing",
+      "Plans",
+      "Enterprise"
+    ]
+  },
+  {
+    "slug": "advanced/billing/fair-use-policy",
+    "title": "Fair use policy",
+    "description": "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
+    "excerpt": "At Appwrite, we are committed to providing high-quality, reliable, and scalable backend services for all users. Our Fair Use Policy ensures that resources are used responsibly and that every user receives a consistent experience. This policy applies to all users and outlines acceptable usage patterns and limitations. Definitions and scope - **Normal usage:** Resource usage that falls within expected thresholds for a user's selected plan. - **Excessive usage:** Usage that exceeds defined thresholds and may affect the platform's performance for…",
+    "breadcrumbs": [
+      "Billing",
+      "Policies",
+      "Fair use"
+    ]
+  },
+  {
+    "slug": "advanced/billing/free",
+    "title": "Free",
+    "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
+    "excerpt": "Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project. When you create your Appwrite Cloud…",
+    "breadcrumbs": [
+      "Billing",
+      "Plans",
+      "Free"
+    ]
+  },
+  {
+    "slug": "advanced/billing/image-transformations",
+    "title": "Image Transformations",
+    "description": "Learn how to transform images using Appwrite's storage API.",
+    "excerpt": "Appwrite enables the transformation of images before retrieval using the getFilePreview endpoint. This functionality supports resizing images by width and height, adjusting quality, and applying filters such as opacity, border colour, border radius, and more. Origin Image An \"origin image\" represents the original, unmodified image file in Appwrite Storage. Each origin image serves as the base for unlimited transformations, allowing the creation of multiple variants without incurring additional origin image charges. How it works: 1. Upload an image to Appwrite…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Image Transformations"
+    ]
+  },
+  {
+    "slug": "advanced/billing/oss",
+    "title": "Open source",
+    "description": "Learn how Appwrite supports open-source projects by providing free credits and other benefits.",
+    "excerpt": "Appwrite remains open source and continues to support open-source maintainers that build fundamental software that modern developers depend upon with the OSS Program. The OSS Program supports open-projects and their maintainers by alleviating financial burdens and promoting growth. You will receive a free Appwrite Pro subscription and benefit from all its resources and support. The program has no fixed end date but will be reviewed annually to ensure optimal mutual support. Criteria To apply for this program, you must adhere…",
+    "breadcrumbs": [
+      "Billing",
+      "Plans",
+      "Open source"
+    ]
+  },
+  {
+    "slug": "advanced/billing/payments",
+    "title": "Manage billing",
+    "description": "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
+    "excerpt": "Appwrite allows you to configure billing per organization. You can access your organizations billing information under the **Billing** tab of your organization. Plans You can view or change your organization's plan under the **Billing** section. You'll also find the expected cost, as well as the start and end date of the current billing period. Billing period Billing periods begin the day you change your plan, and lasts 30 days. Your resource limits are reset at the beginning of each billing…",
+    "breadcrumbs": [
+      "Billing",
+      "Getting started",
+      "Manage billing"
+    ]
+  },
+  {
+    "slug": "advanced/billing/phone-otp",
+    "title": "Phone OTP",
+    "description": "Learn how Appwrite handles SMS-based OTP authentication for secure user verification.",
+    "excerpt": "Appwrite supports SMS-based OTP (One-Time Password) authentication to provide secure and reliable user verification. This feature enhances your app's security by adding an extra layer of authentication. Free testing You can use the Mock phone numbers feature to test your integrations without incurring any costs. SMS messages You'll be charged per SMS sent. The cost for additional messages is calculated based on two factors: 1. The number of messages sent 2. The destination country of each message As part of…",
+    "breadcrumbs": [
+      "Billing",
+      "Add ons",
+      "Phone OTP"
+    ]
+  },
+  {
+    "slug": "advanced/billing/pro",
+    "title": "Pro",
+    "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
+    "excerpt": "Appwrite Cloud's Pro plan is designed for professional developers or development teams that need to build applications at scale. When applications outgrow Appwrite's Free plan, organizations can switch to a Pro plan to continue growing their apps. You can learn more about the Pro plan on the pricing page. Create a Pro plan organization Appwrite's plans are applied to an entire organization, but resources are allocated per project. Get started with a Pro plan organization by visiting the pricing page…",
+    "breadcrumbs": [
+      "Billing",
+      "Plans",
+      "Pro"
+    ]
+  },
+  {
+    "slug": "advanced/billing/refund-policy",
+    "title": "Refund policy",
+    "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
+    "excerpt": "At Appwrite, we strive to provide exceptional backend services that meet your development needs. This policy outlines our approach to refunds for Appwrite services and ensures a fair and consistent process for all customers. General policy Appwrite services are **non-refundable by default**. All purchases, including self-hosted support plans, Appwrite Cloud subscriptions, and professional services (e.g., onboarding, solution engineering, consulting) are considered final transactions. However, we recognize that exceptional circumstances may arise. In rare and specific situations where service performance, billing,…",
+    "breadcrumbs": [
+      "Billing",
+      "Policies",
+      "Refund"
+    ]
+  },
+  {
+    "slug": "advanced/billing/support-sla",
+    "title": "Support SLA",
+    "description": "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
+    "excerpt": "This Support Service Level Agreement (\"SLA\") describes the support services provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Scope This SLA outlines our commitments for providing support services via email, including response and resolution processes based on issue severity. The specific response times depend on the support tier associated with your support plan: **Silver**, **Gold**, or **Platinum**. Severity levels…",
+    "breadcrumbs": [
+      "Billing",
+      "SLAs",
+      "Support SLA"
+    ]
+  },
+  {
+    "slug": "advanced/billing/uptime-sla",
+    "title": "Uptime SLA",
+    "description": "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
+    "excerpt": "This Uptime Service Level Agreement (\"SLA\") describes the uptime commitments and related service credit terms provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Uptime commitments We commit to maintaining the following monthly uptime percentages based on your subscription plan: | Plan | Monthly Uptime Commitment | | --- | --- | | **Free** | N/A | | **Pro** |…",
+    "breadcrumbs": [
+      "Billing",
+      "SLAs",
+      "Uptime SLA"
     ]
   },
   {
@@ -79,365 +234,6 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
-    "slug": "advanced/platform",
-    "title": "Platform",
-    "description": "Appwrite is a development platform designed to adapt to your unique use cases. It provides features that help you maintain and scale your application.",
-    "excerpt": "Appwrite is a development platform designed to adapt your unique use cases. Appwrite provides features that help you maintain, scale, and integrate Appwrite with other platforms. Integration Appwrite is designed to integrate with both frontend and backend apps. Learn about advanced integrations and API response codes. Appwrite allows you to react to events that occur on the platform. Use webhooks to update backend integrations about Appwrite events. Learn about response codes and errors returned by Appwrite APIs. Access control Appwrite…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform"
-    ]
-  },
-  {
-    "slug": "advanced/platform/abuse",
-    "title": "Abuse policy",
-    "description": "Guidelines on abusive behavior, prohibited activities, and reporting mechanisms under our Fair Use Policy.",
-    "excerpt": "Appwrite is committed to providing a fair, secure, and high-quality experience for all users. This Abuse Policy, as part of our overall Fair Use Policy, outlines unacceptable behaviors and the steps you can take to report any suspected abuse. Our goal is to maintain a safe environment where everyone can build, innovate, and collaborate without fear of harmful or illegal activity. Reporting Abuse If you observe or suspect any prohibited activity, please report it as soon as possible to abuse@appwrite.io.…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Abuse policy"
-    ]
-  },
-  {
-    "slug": "advanced/platform/api-keys",
-    "title": "API keys",
-    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
-    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "API keys"
-    ]
-  },
-  {
-    "slug": "advanced/platform/billing",
-    "title": "Billing",
-    "description": "Understand Appwrite's billing features, like budget caps, billing periods, taxes, and more.",
-    "excerpt": "Appwrite allows you to configure billing per organization. You can access your organizations billing information under the **Billing** tab of your organization. Plans You can view or change your organization's plan under the **Billing** section. You'll also find the expected cost, as well as the start and end date of the current billing period. Billing period Billing periods begin the day you change your plan, and lasts 30 days. Your resource limits are reset at the beginning of each billing…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Billing"
-    ]
-  },
-  {
-    "slug": "advanced/platform/compute",
-    "title": "Compute",
-    "description": "Learn about CPU and memory options for Appwrite Functions and Sites on Cloud, including separate build and runtime specifications and plan build timeouts.",
-    "excerpt": "On Appwrite Cloud, paid plans let you choose how much **CPU** and **memory** apply to **build** work and to **runtime** work. Functions and Sites each expose two settings: a **build specification** (install, compile, bundle, package) and a **runtime specification** (executions for functions; serving traffic and SSR for sites). You can pick different tiers for each phase so heavy builds do not force you to oversize steady execution, and vice versa. These options help you tune performance and cost: for example,…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Compute"
-    ]
-  },
-  {
-    "slug": "advanced/platform/custom-domains",
-    "title": "Custom domains",
-    "description": "Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.",
-    "excerpt": "Appwrite custom domains allows you to use your own domain as your Appwrite API endpoint. Third-party cookies A recent change made in modern browsers will not allow your web app to use 3rd-party cookies. This change is done to protect your users' privacy from malicious web tracking services. When accessing Appwrite from a 3rd party domain, like or , some browsers will treat our secure cookies as 3rd-party cookies and block them, as a fallback Appwrite will store your users'…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Custom domains"
-    ]
-  },
-  {
-    "slug": "advanced/platform/database-reads-and-writes",
-    "title": "Database Reads and Writes",
-    "description": "Learn how Appwrite handles database reads and writes and their associated costs.",
-    "excerpt": "Updated pricing will take effect on April 10th, 2025. Check out this blog post for more information. Appwrite provides powerful database capabilities through its Database API, allowing you to perform read and write operations across your application data. Understanding how these operations are counted and billed is essential for planning your application's scalability. Database Operations Database operations in Appwrite are categorized into two types: **Read Operations**: Any action that retrieves data from your database, including: - Fetching rows with or…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Database Reads and Writes"
-    ]
-  },
-  {
-    "slug": "advanced/platform/dev-keys",
-    "title": "Dev keys",
-    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
-    "excerpt": "Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits: - Appwrite rate limits and CORS errors are bypassed - Configurable expiration date with 1 day, 7 days, and 30 day options This is highly beneficial in scenarios where you are repeatedly sending the same requests to Appwrite in a short period of time, such as manual or…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Dev keys"
-    ]
-  },
-  {
-    "slug": "advanced/platform/enterprise",
-    "title": "Enterprise",
-    "description": "How Appwrite can accelerate enterprise development teams and provide custom support and hosting options.",
-    "excerpt": "Enterprise development teams face unique challenges and have unique needs. Appwrite can provide tailored solutions for enterprise customers with custom hosting, training, and support needs. If you're interested to learn about what Appwrite can do for your enterprise development teams, contact us for more details.",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Enterprise"
-    ]
-  },
-  {
-    "slug": "advanced/platform/environment-variables",
-    "title": "Environment variables",
-    "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
-    "excerpt": "Environment variables let you pass constants and secrets such as API keys, connection strings, and feature flags into your Appwrite Functions and Appwrite Sites at build and runtime. Storing values outside your source keeps secrets out of version control and lets you change configuration without code changes. Appwrite supports three scopes of environment variables: - **Project variables** are shared across every function and site in the project. Use them for values consumed by more than one resource, such as a…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Environment variables"
-    ]
-  },
-  {
-    "slug": "advanced/platform/error-handling",
-    "title": "Error handling",
-    "description": "Best practices for handling Appwrite errors in your applications. Learn how to provide friendly error messages to your users while effectively troubleshooting issues.",
-    "excerpt": "When integrating Appwrite into your applications, proper error handling is important for delivering a good user experience while still being able to troubleshoot issues effectively. Consider user-friendly error messages **It's generally best to avoid returning Appwrite's raw error messages directly to your users.** These messages are designed for developers and may contain technical details that: - Could confuse non-technical users - Might expose implementation details - Often create an inconsistent user experience Instead, consider this approach: 1. Catch errors from…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Error handling"
-    ]
-  },
-  {
-    "slug": "advanced/platform/events",
-    "title": "Events",
-    "description": "Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.",
-    "excerpt": "Appwrite provides a variety of events that allows your application to react to changes as they happen. An event will fire when a change occurs in your Appwrite project, like when a new user registers or a new file is uploaded to Appwrite. You can subscribe to these events with Appwrite Functions, Realtime, or Webhooks. You can subscribe to events for specific resources using their ID or subscribe to changes of all resources of the same type by using a…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Events"
-    ]
-  },
-  {
-    "slug": "advanced/platform/fair-use-policy",
-    "title": "Fair use policy",
-    "description": "Understand Appwrite's usage limits, prohibited activities, and enforcement actions.",
-    "excerpt": "At Appwrite, we are committed to providing high-quality, reliable, and scalable backend services for all users. Our Fair Use Policy ensures that resources are used responsibly and that every user receives a consistent experience. This policy applies to all users and outlines acceptable usage patterns and limitations. Definitions and scope - **Normal usage:** Resource usage that falls within expected thresholds for a user's selected plan. - **Excessive usage:** Usage that exceeds defined thresholds and may affect the platform's performance for…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Fair use policy"
-    ]
-  },
-  {
-    "slug": "advanced/platform/free",
-    "title": "Free",
-    "description": "Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.",
-    "excerpt": "Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite. Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike. Learn more about the Free plan's generous resource limits on the pricing page. Create a Free plan organization Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project. When you create your Appwrite Cloud…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Free"
-    ]
-  },
-  {
-    "slug": "advanced/platform/image-transformations",
-    "title": "Image Transformations",
-    "description": "Learn how to transform images using Appwrite's storage API.",
-    "excerpt": "Changes will take effect on April 1st, 2025. Check out this blog post for more information. Appwrite enables the transformation of images before retrieval using the getFilePreview endpoint. This functionality supports resizing images by width and height, adjusting quality, and applying filters such as opacity, border colour, border radius, and more. Origin Image An \"origin image\" represents the original, unmodified image file in Appwrite Storage. Each origin image serves as the base for unlimited transformations, allowing the creation of multiple…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Image Transformations"
-    ]
-  },
-  {
-    "slug": "advanced/platform/message-templates",
-    "title": "Message templates",
-    "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
-    "excerpt": "Appwrite uses emails to communicate with users to perform authentication and verification actions. Emails can be customized to fit your app's design and voice. Each Appwrite project can have its own set of unique templates. Templates also support localization, so every template can be written in multiple languages and served depending on the configured locale. Custom SMTP server Appwrite Cloud has a default SMTP server to get you started. This SMTP server sends generic emails and doesn't allow customizing SMTP…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Message templates"
-    ]
-  },
-  {
-    "slug": "advanced/platform/oss",
-    "title": "Open source",
-    "description": "Learn how Appwrite supports open-source projects by providing free credits and other benefits.",
-    "excerpt": "Appwrite remains open source and continues to support open-source maintainers that build fundamental software that modern developers depend upon with the OSS Program. The OSS Program supports open-projects and their maintainers by alleviating financial burdens and promoting growth. You will receive a free Appwrite Pro subscription and benefit from all its resources and support. The program has no fixed end date but will be reviewed annually to ensure optimal mutual support. Criteria To apply for this program, you must adhere…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Open source"
-    ]
-  },
-  {
-    "slug": "advanced/platform/permissions",
-    "title": "Permissions",
-    "description": "Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.",
-    "excerpt": "Appwrite's permission mechanism offers a simple, yet flexible way to manage which users, teams, or roles can access a specific resource in your project, such as rows and files. Using permissions, you can decide that only **user A** and **user B** will have read and update access to a specific database row, while **user C** and **team X** will be the only ones with delete access. As the name suggests, read permission allows a user to read a resource, create…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Permissions"
-    ]
-  },
-  {
-    "slug": "advanced/platform/phone-otp",
-    "title": "Phone OTP",
-    "description": "Learn how Appwrite handles SMS-based OTP authentication for secure user verification.",
-    "excerpt": "Changes will take effect on February 10th, 2025. Check out this blog post for more information. Appwrite supports SMS-based OTP (One-Time Password) authentication to provide secure and reliable user verification. This feature enhances your app's security by adding an extra layer of authentication. Free testing You can use the Mock phone numbers feature to test your integrations without incurring any costs. SMS messages You'll be charged per SMS sent. The cost for additional messages is calculated based on two factors:…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Phone OTP"
-    ]
-  },
-  {
-    "slug": "advanced/platform/pro",
-    "title": "Pro",
-    "description": "Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.",
-    "excerpt": "Appwrite Cloud's Pro plan is designed for professional developers or development teams that need to build applications at scale. When applications outgrow Appwrite's Free plan, organizations can switch to a Pro plan to continue growing their apps. You can learn more about the Pro plan on the pricing page. Create a Pro plan organization Appwrite's plans are applied to an entire organization, but resources are allocated per project. Get started with a Pro plan organization by visiting the pricing page…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Pro"
-    ]
-  },
-  {
-    "slug": "advanced/platform/rate-limits",
-    "title": "Rate-limits",
-    "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
-    "excerpt": "Some of Appwrite's API endpoints have a rate limit to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits only apply to Client SDKs. Rate limits do not apply when accessing Appwrite with a Server SDK authenticated using an API key. Headers You can check the returned HTTP headers of any API request to see your current rate limit status: The headers tell…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Rate-limits"
-    ]
-  },
-  {
-    "slug": "advanced/platform/refund-policy",
-    "title": "Refund policy",
-    "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
-    "excerpt": "At Appwrite, we strive to provide exceptional backend services that meet your development needs. This policy outlines our approach to refunds for Appwrite services and ensures a fair and consistent process for all customers. General policy Appwrite services are **non-refundable by default**. All purchases, including self-hosted support plans, Appwrite Cloud subscriptions, and professional services (e.g., onboarding, solution engineering, consulting) are considered final transactions. However, we recognize that exceptional circumstances may arise. In rare and specific situations where service performance, billing,…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Refund policy"
-    ]
-  },
-  {
-    "slug": "advanced/platform/release-policy",
-    "title": "Release policy",
-    "description": "Understand how Appwrite releases and versions its platforms and APIs.",
-    "excerpt": "We value the trust of developers in Appwrite as the backbone of their applications. Our release policy is designed to provide developers with a reliable and consistent experience when using Appwrite. We are committed to providing support for our API, SDKs, and product versions for a reasonable length of time, and we follow industry-standard versioning protocols. Appwrite will prioritize security updates and will release new versions as soon as possible to fix any security vulnerabilities. Schedule We work to release…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Release policy"
-    ]
-  },
-  {
-    "slug": "advanced/platform/response-codes",
-    "title": "Response codes",
-    "description": "Understand Appwrite platform response codes for effective error handling. Learn how to interpret and handle response codes to enhance your application's reliability.",
-    "excerpt": "Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request. - Codes in the range indicate success. - Codes in the range indicate an error caused by invalid request, usually caused by user error. - Codes in the range indicate an error with Appwrite, please check Docker container logs. Response codes | Code | Text | Description | |------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| | 200 | OK | Success! | | 201 | Created | The requested resource…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Response codes"
-    ]
-  },
-  {
-    "slug": "advanced/platform/roles",
-    "title": "Roles",
-    "description": "Learn how to setup role-based access controls in the Appwrite Console",
-    "excerpt": "The Appwrite Console supports granular permissions to improve team collaboration and security. Each member of your Console team can be assigned a specific role that grants them access to certain areas of your organization's projects. Below is a breakdown of the new roles available, detailing their permissions and intended use cases. This page covers organization member roles for the Appwrite Console. Visit the Auth roles documentation if you want to learn more about roles for the Teams service. Owner The…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Roles"
-    ]
-  },
-  {
-    "slug": "advanced/platform/scale",
-    "title": "Scale",
-    "description": "Appwrite's Scale plan fully supports scaling your application.",
-    "excerpt": "Appwrite's Scale plan is designed for growing development teams and agencies with many organizational members and large projects. The plan offers unlimited seats across your organization and dedicated resources per project. Scale plan organizations will receive additional compliance measures, organization roles, and dedicated support.",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Scale"
-    ]
-  },
-  {
-    "slug": "advanced/platform/shortcuts",
-    "title": "Keyboard shortcuts",
-    "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
-    "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Keyboard shortcuts"
-    ]
-  },
-  {
-    "slug": "advanced/platform/support-sla",
-    "title": "Support SLA",
-    "description": "Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.",
-    "excerpt": "This Support Service Level Agreement (\"SLA\") describes the support services provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Scope This SLA outlines our commitments for providing support services via email, including response and resolution processes based on issue severity. The specific response times depend on the support tier associated with your support plan: **Silver**, **Gold**, or **Platinum**. Severity levels…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Support SLA"
-    ]
-  },
-  {
-    "slug": "advanced/platform/uptime-sla",
-    "title": "Uptime SLA",
-    "description": "Learn about Appwrite's uptime service level agreement and commitments for different subscription plans.",
-    "excerpt": "This Uptime Service Level Agreement (\"SLA\") describes the uptime commitments and related service credit terms provided by APPWRITE (\"we,\" \"us,\" or \"our\") to users of our products and services (\"you\" or \"user\"). By using our services, you agree to the terms of this SLA. Uptime commitments We commit to maintaining the following monthly uptime percentages based on your subscription plan: | Plan | Monthly Uptime Commitment | | --- | --- | | **Free** | N/A | | **Pro** |…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Uptime SLA"
-    ]
-  },
-  {
-    "slug": "advanced/platform/webhooks",
-    "title": "Webhooks",
-    "description": "Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.",
-    "excerpt": "Webhooks allow you to build or set up integrations which subscribe to certain events on Appwrite. When one of those events is triggered, we'll send an HTTP POST payload to the webhook's configured URL. Webhooks can be used to purge cache from CDN, calculate data or send a Slack notification. You're only limited by your imagination. Getting started To add a webhook from the Appwrite Console: 1. Navigate to your project's **Settings** page. 2. Select the **Webhooks** tab. 3. Click…",
-    "breadcrumbs": [
-      "Platform",
-      "advanced",
-      "Platform",
-      "Webhooks"
-    ]
-  },
-  {
     "slug": "advanced/security",
     "title": "Security",
     "description": "Learn how Appwrite keeps your project, users, and data secure through security measures and compliance.",
@@ -504,6 +300,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/security/dev-keys",
+    "title": "Dev keys",
+    "description": "Bypass Appwrite rate limits and CORS errors in your development environment with Appwrite Dev keys.",
+    "excerpt": "Dev keys are going to be deprecated on September 1, 2026. We recommend planning your migration away from dev keys ahead of time. Dev keys are secrets used by Appwrite Client SDKs to avoid abuse limits in testing. They are meant to be used specifically in development environments, where they hold several developer experience-related benefits: - Appwrite rate limits and CORS errors are bypassed - Configurable expiration date with 1 day, 7 days, and 30 day options This is highly…",
+    "breadcrumbs": [
+      "Security",
+      "Access control",
+      "Dev keys"
+    ]
+  },
+  {
     "slug": "advanced/security/encryption",
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
@@ -551,7 +358,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/security/mfa",
     "title": "Multi-factor Authentication",
     "description": "Appwrite helps you secure your developer accounts with MFA (multi-factor authentication).",
-    "excerpt": "Multi-factor authentication (MFA) adds multiple layers of authentication to your Appwrite account. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite currently supports MFA using TOTP (Time-based One-Time Password) with an authenticator app. More factors of authentication will be added in the future. This page covers MFA for your Appwrite Console account. If you're looking to add MFA to your app, follow the Multi-factor authentication journey. Enable MFA To enable MFA…",
+    "excerpt": "Multi-factor authentication (MFA) adds multiple layers of authentication to your Appwrite account. When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access. Appwrite currently supports MFA using TOTP (Time-based One-Time Password) with an authenticator app. More factors of authentication will be added in the future. This page covers MFA for your Appwrite Console account. If you're looking to add MFA to your app, follow the Multi-factor authentication guide. Enable MFA To enable MFA…",
     "breadcrumbs": [
       "Security",
       "Measures",
@@ -578,6 +385,39 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Security",
       "Measures",
       "Penetration tests"
+    ]
+  },
+  {
+    "slug": "advanced/security/permissions",
+    "title": "Permissions",
+    "description": "Enhance data security and access control with Appwrite platform permissions. Learn how to set fine-grained permissions to protect user data and resources.",
+    "excerpt": "Appwrite's permission mechanism offers a simple, yet flexible way to manage which users, teams, or roles can access a specific resource in your project, such as rows and files. Using permissions, you can decide that only **user A** and **user B** will have read and update access to a specific database row, while **user C** and **team X** will be the only ones with delete access. As the name suggests, read permission allows a user to read a resource, create…",
+    "breadcrumbs": [
+      "Security",
+      "Access control",
+      "Permissions"
+    ]
+  },
+  {
+    "slug": "advanced/security/rate-limits",
+    "title": "Rate-limits",
+    "description": "Optimize application performance with Appwrite rate limits. Explore rate limiting strategies, configurations, and how to prevent abuse of your services.",
+    "excerpt": "Some of Appwrite's API endpoints have a rate limit to avoid abuse or brute-force attacks against Appwrite's REST API. Each Appwrite route documentation has information about any rate limits that might apply to them. Rate limits only apply to Client SDKs. Rate limits do not apply when accessing Appwrite with a Server SDK authenticated using an API key. Headers You can check the returned HTTP headers of any API request to see your current rate limit status: The headers tell…",
+    "breadcrumbs": [
+      "Security",
+      "Access control",
+      "Rate limits"
+    ]
+  },
+  {
+    "slug": "advanced/security/roles",
+    "title": "Roles",
+    "description": "Learn how to setup role-based access controls in the Appwrite Console",
+    "excerpt": "The Appwrite Console supports granular permissions to improve team collaboration and security. Each member of your Console team can be assigned a specific role that grants them access to certain areas of your organization's projects. Below is a breakdown of the new roles available, detailing their permissions and intended use cases. This page covers organization member roles for the Appwrite Console. Visit the Auth roles documentation if you want to learn more about roles for the Teams service. Owner The…",
+    "breadcrumbs": [
+      "Security",
+      "Access control",
+      "Roles"
     ]
   },
   {
@@ -768,6 +608,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/self-hosting/platforms/dokploy",
+    "title": "Dokploy",
+    "description": "Learn how to self-host Appwrite on your infrastructure with Dokploy.",
+    "excerpt": "Dokploy is an open-source, self-hosted deployment platform that simplifies application management through an intuitive dashboard and one-click template deployments. Appwrite is available as a template in Dokploy's template catalog, letting you deploy the complete Appwrite stack, including the database, workers, and function executor, in a few clicks. This guide walks you through setting up Appwrite on your Dokploy instance and provides necessary configuration and troubleshooting tips. Prerequisites Before starting, ensure your server meets the minimum requirements for hosting Appwrite with…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "platforms",
+      "Dokploy"
+    ]
+  },
+  {
     "slug": "advanced/self-hosting/platforms/google-cloud",
     "title": "Google Cloud deployment",
     "description": "Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.",
@@ -878,6 +729,26 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "apis/(overview)",
+    "title": "APIs",
+    "description": "Explore the ways to talk to Appwrite. Access every service through the REST and GraphQL APIs, subscribe to changes in Realtime, and react to events with webhooks.",
+    "excerpt": "Every Appwrite service is available through a consistent set of APIs. You can call them directly over REST or GraphQL, subscribe to changes in Realtime, or react to changes using events and webhooks. Most applications don't call these APIs by hand. Instead, use one of the official SDKs, which wrap every endpoint for your language and platform, and browse the API reference for the full list of services and methods. The pages below describe the underlying protocols and conventions for…",
+    "breadcrumbs": [
+      "apis",
+      "APIs"
+    ]
+  },
+  {
+    "slug": "apis/events",
+    "title": "Events",
+    "description": "Harness the power of events in Appwrite. Explore event-driven architecture, event types, and how to use events to create dynamic applications.",
+    "excerpt": "Appwrite provides a variety of events that allows your application to react to changes as they happen. An event will fire when a change occurs in your Appwrite project, like when a new user registers or a new file is uploaded to Appwrite. You can subscribe to these events with Appwrite Functions, Realtime, or Webhooks. You can subscribe to events for specific resources using their ID or subscribe to changes of all resources of the same type by using a…",
+    "breadcrumbs": [
+      "apis",
+      "Events"
+    ]
+  },
+  {
     "slug": "apis/graphql",
     "title": "GraphQL",
     "description": "Get to know Appwrite GraphQL API for flexible data querying & manipulation. Our docs cover the schema, queries, mutations, integration tips and more.",
@@ -977,6 +848,26 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "apis/release-policy",
+    "title": "Release policy",
+    "description": "Understand how Appwrite releases and versions its platforms and APIs.",
+    "excerpt": "We value the trust of developers in Appwrite as the backbone of their applications. Our release policy is designed to provide developers with a reliable and consistent experience when using Appwrite. We are committed to providing support for our API, SDKs, and product versions for a reasonable length of time, and we follow industry-standard versioning protocols. Appwrite will prioritize security updates and will release new versions as soon as possible to fix any security vulnerabilities. Schedule We work to release…",
+    "breadcrumbs": [
+      "apis",
+      "Release policy"
+    ]
+  },
+  {
+    "slug": "apis/response-codes",
+    "title": "Response codes",
+    "description": "Understand Appwrite platform response codes and error handling. Learn to interpret HTTP status codes, error types, and implement best practices for handling errors gracefully.",
+    "excerpt": "Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request. - Codes in the range indicate success. - Codes in the range indicate an error caused by invalid request, usually caused by user error. - Codes in the range indicate an error with Appwrite, please check Docker container logs. Response codes | Code | Text | Description | |------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| | 200 | OK | Success! | | 201 | Created | The requested resource…",
+    "breadcrumbs": [
+      "apis",
+      "Response codes"
+    ]
+  },
+  {
     "slug": "apis/rest",
     "title": "REST",
     "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
@@ -985,6 +876,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "REST",
       "apis",
       "REST"
+    ]
+  },
+  {
+    "slug": "apis/webhooks",
+    "title": "Webhooks",
+    "description": "Leverage webhooks in the Appwrite platform for real-time updates. Learn how to configure, manage, and integrate webhooks to keep your applications in sync.",
+    "excerpt": "Webhooks allow you to build or set up integrations which subscribe to certain events on Appwrite. When one of those events is triggered, we'll send an HTTP POST payload to the webhook's configured URL. Webhooks can be used to purge cache from CDN, calculate data or send a Slack notification. You're only limited by your imagination. Getting started To add a webhook from the Appwrite Console: 1. Navigate to your project's **Settings** page. 2. Select the **Webhooks** tab. 3. Click…",
+    "breadcrumbs": [
+      "apis",
+      "Webhooks"
     ]
   },
   {
@@ -1152,6 +1053,181 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Organization",
       "Partners API",
       "Members and roles"
+    ]
+  },
+  {
+    "slug": "partners/project",
+    "title": "Project",
+    "description": "Configure your Appwrite project, including auth methods, platforms, protocols, services, and policies.",
+    "excerpt": "An Appwrite **Project** is the top-level container for all the resources your app uses, from users and databases to storage buckets and functions. The settings on a project control which authentication methods are available, which client platforms can connect, which protocols and services are exposed, and which policies apply to the resources inside it. Built for platform teams The Console configures one project at a time by hand. The Project API does the same configuration programmatically, which is what teams…",
+    "breadcrumbs": [
+      "Partners",
+      "Project"
+    ]
+  },
+  {
+    "slug": "partners/project/api-keys",
+    "title": "API keys",
+    "description": "Secure your application with Appwrite API Keys. Discover how to create and manage API keys to control access and enhance your application's security.",
+    "excerpt": "API keys are secrets used by Appwrite Server SDKs and the Appwrite CLI to prove their identity. What can be accessed each API key is restricted by scopes instead of permissions. It is a best practice to grant only the scopes you need to meet your project's goals to an API key. API keys should be treated as a secret. Never share the API key and keep API keys out of client applications. API keys vs Dev keys API keys…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "API keys"
+    ]
+  },
+  {
+    "slug": "partners/project/auth-methods",
+    "title": "Auth methods",
+    "description": "Enable or disable authentication methods on your Appwrite project programmatically using server SDKs.",
+    "excerpt": "Each Appwrite project ships with a configurable set of authentication methods, including email and password, magic URL, email OTP, phone, anonymous sessions, JWT, and team invites. Methods can be toggled on or off from the Appwrite Console under **Auth** > **Settings**, or programmatically through any server SDK using the Project service. When a method is disabled, the matching account endpoints reject requests for that project until it is re-enabled. Toggle from the Console To toggle auth methods manually: 1. Open…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Auth methods"
+    ]
+  },
+  {
+    "slug": "partners/project/branded-emails",
+    "title": "White-label transactional emails",
+    "description": "Route a customer's project emails through their own SMTP server and rebrand the email templates per locale with the Project API.",
+    "excerpt": "When a user on your customer's app resets their password, the email that lands in their inbox is part of your customer's brand, or it should be. Out of the box, those messages go through Appwrite's shared sender and carry Appwrite's default templates, which quietly breaks the white-label illusion the moment a user reads the \"from\" line. The Project API lets you route a project's mail through the customer's own SMTP server and rewrite every template, so verification, recovery, and…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "White-label transactional emails"
+    ]
+  },
+  {
+    "slug": "partners/project/email-templates",
+    "title": "Email templates",
+    "description": "Customize the account management emails Appwrite sends to your users, including verification, password recovery, and magic URL emails, per locale.",
+    "excerpt": "Appwrite sends transactional emails on your behalf for account management flows such as email verification, password recovery, and magic URL sign-in. Email templates let you customize the subject, message body, sender identity, and reply-to address of each of these emails, with a separate version for every locale you support. You can view the built-in default templates at any time, but saving a customization requires a custom SMTP server enabled on your project. See Custom SMTP server to set one up.…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Email templates"
+    ]
+  },
+  {
+    "slug": "partners/project/environment-variables",
+    "title": "Environment variables",
+    "description": "Use project, function, and site environment variables to pass constants and secrets to your Appwrite Functions and Appwrite Sites at build and runtime.",
+    "excerpt": "Environment variables let you pass constants and secrets such as API keys, connection strings, and feature flags into your Appwrite Functions and Appwrite Sites at build and runtime. Storing values outside your source keeps secrets out of version control and lets you change configuration without code changes. Appwrite supports three scopes of environment variables: - **Project variables** are shared across every function and site in the project. Use them for values consumed by more than one resource, such as a…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Environment variables"
+    ]
+  },
+  {
+    "slug": "partners/project/key-rotation",
+    "title": "Issue and rotate API keys",
+    "description": "Manage the full life of an API key with the Project API, from issuing a scoped credential to auditing, rotating, and revoking it.",
+    "excerpt": "Every connection your platform makes into a customer's project rides on an API key, and a key is a credential like any other in production. Left alone, a long-lived key with broad scopes is exactly the thing a security review flags: too much access, no expiry, no record of when it was last rotated. The Project API lets you run a key's whole life from your backend so it never becomes that liability: - Issue it scoped to one integration,…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Issue and rotate API keys"
+    ]
+  },
+  {
+    "slug": "partners/project/labels",
+    "title": "Labels",
+    "description": "Assign customizable labels to your Appwrite project to categorize and filter projects within an organization.",
+    "excerpt": "Labels are short alphanumeric tags you assign to a project. Use them to categorize your projects and filter them within an organization, for example by environment (, ), team, or region. Manage in the Console To manage labels from the Appwrite Console: 1. Navigate to your project. 2. Open the **Settings** section. The **Labels** card is on the **Overview** tab. 3. In the **Labels** field, type a label and press Enter, or select one of the suggested labels. Labels may…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Labels"
+    ]
+  },
+  {
+    "slug": "partners/project/mock-phones",
+    "title": "Mock phones",
+    "description": "Register fictional phone numbers and OTPs to test phone authentication flows without sending real SMS messages.",
+    "excerpt": "Mock phones let you register fictional phone numbers and a fixed verification code at the project level. When a tester signs in with a registered number, the registered code works in place of a real SMS, so phone authentication flows can be exercised in CI, demo accounts, and app store review submissions without sending SMS or paying provider fees. Each project stores its mock phones on the project document. Numbers must be in E.164 format, and verification codes are exactly…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Mock phones"
+    ]
+  },
+  {
+    "slug": "partners/project/oauth",
+    "title": "OAuth providers",
+    "description": "Configure OAuth2 sign-in providers for your project from the Console or programmatically with a Server SDK.",
+    "excerpt": "OAuth2 providers let your users sign in with accounts they already have, such as GitHub, Google, or Apple. Each provider stores a client ID and client secret at the project level, and can be enabled or disabled independently. You can configure providers from the Appwrite Console or programmatically with a Server SDK. Each provider has its own update method (, , and so on), the read methods and cover all of them. Configure from the Console To configure a provider…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "OAuth providers"
+    ]
+  },
+  {
+    "slug": "partners/project/platforms",
+    "title": "Platforms",
+    "description": "Register Web, Apple, Android, Windows, and Linux apps to your Appwrite project programmatically using server SDKs.",
+    "excerpt": "Each Appwrite project has a list of registered platforms. A platform identifies a client application that is allowed to talk to your project's API: a Web platform pins an allowed hostname for CORS, while Apple, Android, Windows, and Linux platforms pin a bundle, package, or application ID for native clients. Platforms can be added from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To add a platform manually: 1. Open your…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Platforms"
+    ]
+  },
+  {
+    "slug": "partners/project/policies",
+    "title": "Policies",
+    "description": "Configure password rules, session limits, user limits, and membership privacy on your Appwrite project programmatically using server SDKs.",
+    "excerpt": "Project policies control how users authenticate, how long their sessions live, how many users can sign up, and what team members can see about each other. Each policy is an independent toggle on the project. Policies can be configured from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To configure policies manually: 1. Open your project in the Appwrite Console. 2. Navigate to **Auth** in the sidebar. 3. Open the **Security**…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Policies"
+    ]
+  },
+  {
+    "slug": "partners/project/protocols",
+    "title": "Protocols",
+    "description": "Enable or disable the REST, GraphQL, and WebSocket protocols on your Appwrite project programmatically using server SDKs.",
+    "excerpt": "Each Appwrite project exposes its API through three protocols: REST, GraphQL, and WebSocket. You can disable any protocol your clients don't use to shrink the project's surface area, then re-enable it when needed. Protocols can be toggled from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To toggle a protocol manually: 1. Open your project in the Appwrite Console. 2. Open **Settings** from the bottom of the side nav. 3. Scroll…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Protocols"
+    ]
+  },
+  {
+    "slug": "partners/project/provisioning",
+    "title": "Provision a project's baseline",
+    "description": "Apply a standard configuration to a customer's project programmatically with the Project API, including platforms, auth methods, services, protocols, and variables.",
+    "excerpt": "A customer signs up to your platform and a project is created for them. Right now it is wide open: every authentication method is enabled, every service is exposed on the API, and nothing is constrained to the way you run things. Before that customer ever logs in, you want their project to match the baseline that every project on your platform shares. The Project API lets you encode that baseline once and apply it from your backend or a…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Provision a project's baseline"
+    ]
+  },
+  {
+    "slug": "partners/project/services",
+    "title": "Services",
+    "description": "Enable or disable individual Appwrite services on your project programmatically using server SDKs.",
+    "excerpt": "Each Appwrite project ships with the full set of services enabled by default: Account, TablesDB, Storage, Functions, and so on. You can disable any service your clients don't use to remove it from the client-facing API. Disabled services remain accessible to server SDKs using an API key. Services can be toggled from the Appwrite Console, or programmatically through any server SDK using the Project service. Manage from the Console To toggle a service manually: 1. Open your project in the…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "Services"
+    ]
+  },
+  {
+    "slug": "partners/project/smtp",
+    "title": "SMTP",
+    "description": "Configure a custom SMTP server to send Appwrite's account management emails from your own domain, improve deliverability, and unlock custom email templates.",
+    "excerpt": "By default, Appwrite sends account management emails such as verification, password recovery, and magic URL links from a shared SMTP server. Configuring a custom SMTP server lets you send these emails through your own provider instead. This sends mail from your own domain, improves deliverability, and unlocks custom email templates. Configure in the Console To configure a custom SMTP server from the Appwrite Console: 1. Navigate to your project. 2. Open the **Settings** section and select the **SMTP** tab. 3.…",
+    "breadcrumbs": [
+      "Partners",
+      "Project",
+      "SMTP"
     ]
   },
   {
@@ -1616,6 +1692,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/message-templates",
+    "title": "Message templates",
+    "description": "Communicate using your brand and voice by customizing email and SMS message templates, localized to your user's language.",
+    "excerpt": "Appwrite uses emails to communicate with users to perform authentication and verification actions. Emails can be customized to fit your app's design and voice. Each Appwrite project can have its own set of unique templates. Templates also support localization, so every template can be written in multiple languages and served depending on the configured locale. Custom SMTP server Appwrite Cloud has a default SMTP server to get you started. This SMTP server sends generic emails and doesn't allow customizing SMTP…",
+    "breadcrumbs": [
+      "Auth",
+      "Concepts",
+      "Message templates"
+    ]
+  },
+  {
     "slug": "products/auth/mfa",
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
@@ -1690,6 +1777,16 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Getting started",
       "Quick start"
+    ]
+  },
+  {
+    "slug": "products/auth/react",
+    "title": "React library",
+    "description": "Add authentication to React apps with Appwrite's official React library. Supports client-side React, Next.js, and TanStack Start with a single provider and a small set of hooks.",
+    "excerpt": "The Appwrite React library is a thin layer over the Web SDK that exposes a provider and a small set of hooks for authentication operations and current user state. It works in both client-rendered React apps and server-rendered apps on Next.js and TanStack Start. Why use it - **SSR auth without boilerplate.** Drop in one handler route per framework and skip the days normally spent writing cookie logic, session sync, and server/client hydration. - **Consistent user state across server and…",
+    "breadcrumbs": [
+      "Auth",
+      "React library"
     ]
   },
   {
@@ -2488,7 +2585,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
-    "excerpt": "Appwrite Functions can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A function reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See project variables for the platform-wide reference. 2. **Function variables** are scoped to a single…",
+    "excerpt": "Appwrite Functions can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A function reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every function inherits them automatically. See project variables for the full reference. 2. **Function variables** are scoped to a single…",
     "breadcrumbs": [
       "Functions",
       "Concepts",
@@ -2825,6 +2922,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/network/custom-domains",
+    "title": "Custom domains",
+    "description": "Customize your Appwrite platform with custom domains. Learn how to set up and configure custom domains to provide a branded experience for your users.",
+    "excerpt": "Appwrite custom domains allows you to use your own domain as your Appwrite API endpoint. Third-party cookies A recent change made in modern browsers will not allow your web app to use 3rd-party cookies. This change is done to protect your users' privacy from malicious web tracking services. When accessing Appwrite from a 3rd party domain, like or , some browsers will treat our secure cookies as 3rd-party cookies and block them, as a fallback Appwrite will store your users'…",
+    "breadcrumbs": [
+      "Network",
+      "Features",
+      "Custom domains"
+    ]
+  },
+  {
     "slug": "products/network/ddos",
     "title": "DDoS mitigation",
     "description": "Learn how Appwrite protects your applications from Distributed Denial-of-Service (DDoS) attacks with built-in, always-on protection for all Appwrite Cloud plans.",
@@ -2982,7 +3090,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Sites to pass constants and secrets at build and runtime.",
-    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See project variables for the platform-wide reference. 2. **Site variables** are scoped to a single…",
+    "excerpt": "Appwrite Sites can read environment variables at build and runtime. Use them to pass constants and secrets such as API keys, connection strings, and feature flags without hardcoding them in your source. A site reads from three sources, in this order of precedence: 1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See project variables for the full reference. 2. **Site variables** are scoped to a single…",
     "breadcrumbs": [
       "Sites",
       "Concepts",
@@ -3430,8 +3538,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "quick-starts/nextjs",
     "title": "Start with Next.js",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your Next.js apps.",
-    "excerpt": "Learn how to setup your first Next.js project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Next.js project by running the following command: When prompted, configure your project with these recommended settings: - **Would you like to use TypeScript?** → No - **Would…",
+    "description": "Build Next.js apps with the Appwrite React library. Add server-rendered authentication, sign-in, sign-up, and user state without writing the SSR plumbing yourself.",
+    "excerpt": "Learn how to set up your first Next.js project with the Appwrite React library. The library ships SSR auth handlers, server helpers, and the same React hooks you use on the client. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. In your project, go to **Overview** > **Integrations**…",
     "breadcrumbs": [
       "Quick start",
       "Web app",
@@ -3495,8 +3603,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "quick-starts/react",
     "title": "Start with React",
-    "description": "Build React apps with Appwrite and learn how to use our powerful backend to add authentication, user management, file storage, and more.",
-    "excerpt": "Learn how to setup your first React project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vite project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to it, replace…",
+    "description": "Build React apps with the Appwrite React library and add authentication, sign-in, sign-up, and user state in a few lines.",
+    "excerpt": "Learn how to set up your first React project with the Appwrite React library. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a Vite project. Install the Appwrite React library along with the Web SDK and peer dependency. Find your project's ID in the **Settings** page. Create…",
     "breadcrumbs": [
       "Quick start",
       "Web app",
@@ -3583,8 +3691,8 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
   {
     "slug": "quick-starts/tanstack-start",
     "title": "Start with TanStack Start",
-    "description": "Learn how to use Appwrite to add authentication, user management, file storage, and more to your TanStack Start apps.",
-    "excerpt": "Learn how to setup your first TanStack Start project powered by Appwrite. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. Create a TanStack Start project. Install the JavaScript Appwrite SDK. Find your project's ID in the **Settings** page. Create a new file and add the following code to…",
+    "description": "Build TanStack Start apps with the Appwrite React library. Add server-rendered authentication via file-route handlers and server functions.",
+    "excerpt": "Learn how to set up your first TanStack Start project with the Appwrite React library. The library exposes a TanStack file-route handler, server helpers, and the same React hooks you use on the client. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Web app**. The **Hostname** should be . You can skip optional steps. In your project, go to **Overview**…",
     "breadcrumbs": [
       "Quick start",
       "Web app",
@@ -3611,6 +3719,26 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Quick start",
       "Web app",
       "Web"
+    ]
+  },
+  {
+    "slug": "references",
+    "title": "API reference",
+    "description": "Here's a complete API reference for Appwrite SDK, REST, and GraphQL APIs. Learn how to use Authentication, Databases, Storage, and other Appwrite APIs.",
+    "excerpt": "Appwrite lets you build integrations on web, mobile, native, and server platforms through a set of APIs. You can use one of our many SDKs or integrate directly through the REST API or GraphQL API. Client vs Server APIs Client APIs and SDKs are for integrating with Appwrite to build client-based applications and websites. Client APIs only give access to resources if users have been granted permissions. Server API and SDKs are for integrating with Appwrite to build backend or…",
+    "breadcrumbs": [
+      "API references",
+      "API reference"
+    ]
+  },
+  {
+    "slug": "references/quick-start",
+    "title": "Quick start",
+    "description": "Configure the Appwrite SDKs and take the necessary steps to start using Appwrite.",
+    "excerpt": "Follow these steps before you begin using the Appwrite SDKs or accessing Appwrite through the REST and GraphQL API. If you are choosing Appwrite among BaaS platforms or mapping backend infrastructure options first, skim that guide, then return here to wire SDKs. Appwrite has two types of APIs for different use cases, select one or both depending on your use case. If you're creating a **web, mobile, or native application** used by end-users that will register and create accounts, install…",
+    "breadcrumbs": [
+      "API references",
+      "Quick start"
     ]
   },
   {
@@ -4234,6 +4362,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Command Center",
       "Getting started",
       "Overview"
+    ]
+  },
+  {
+    "slug": "tooling/command-center/shortcuts",
+    "title": "Keyboard shortcuts",
+    "description": "Learn to navigate the Appwrite Console efficiently and effectively with your keyboard",
+    "excerpt": "The Appwrite Console was designed with a keyboard first approach. The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform actions quicker. Shortcuts The Appwrite Console supports keyboard shortcuts that make it easier to navigate and perform common actions quicker. The shortcuts use the following pattern: use the first letter from the call to action followed by the resource, product, service, or page you're targeting. For example, the shortcut keys + navigates to the project's Storage…",
+    "breadcrumbs": [
+      "Command Center",
+      "Getting started",
+      "Shortcuts"
     ]
   },
   {

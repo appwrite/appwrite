@@ -80,6 +80,8 @@ There are different kernels to compute loads of different features and they aren
 
 Convolutions aren't only used for things like edge detection but are extremely common in the image processing world, for tools you've probably used loads without even thinking about it, such as blurring images, sharpening and embossing.
 
+{% video src="/images/blog/state-of-computer-vision/convolution.mp4" /%}
+
 # Applications of Computer Vision
 
 Now you have a good understanding of both the history and fundamentals of computer vision, you can dive into our other guides where we provide an even deeper dive into the different types of computer vision and how to implement them in your Appwrite application.

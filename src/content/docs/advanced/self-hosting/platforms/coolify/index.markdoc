@@ -56,12 +56,12 @@ To enable email notifications, configure these environment variables:
 _APP_SMTP_HOST=smtp.example.com
 _APP_SMTP_PASSWORD=password
 _APP_SMTP_PORT=587
-_APP_SMTP_SECURE=true
+_APP_SMTP_SECURE=tls
 _APP_SMTP_USERNAME=username
 ```
 
 **GitHub Integration**
-To enable GitHub authentication for your Appwrite console, set these environment variables:
+To connect a GitHub App so Appwrite can build and deploy functions and sites from your GitHub repositories, set these environment variables:
 
 ```bash
 _APP_VCS_GITHUB_APP_ID

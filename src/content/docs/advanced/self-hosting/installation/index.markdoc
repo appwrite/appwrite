@@ -38,7 +38,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:1.9.5
 ```
 {% /tabsitem %}
 
@@ -49,7 +49,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:1.9.5
 ```
 {% /tabsitem %}
 
@@ -60,7 +60,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.9.0
+    appwrite/appwrite:1.9.5
 ```
 {% /tabsitem %}
 {% /tabs %}
@@ -156,7 +156,7 @@ On non-Linux hosts, the server might take a few minutes to start after installat
 
 ## SDK version compatibility {% #sdk-version-compatibility %}
 
-The tables below map each released self-hosted Appwrite version to the SDK versions that were current at the time of that release. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 1.9.0.
+The tables below map each released self-hosted Appwrite version to the SDK versions that were current at the time of that release. Use this to pin your SDK to a version known to work with your server. The latest stable self-hosted Appwrite release is 1.9.5.
 
 ### Client SDKs {% #client-compatibility %}
 
@@ -216,6 +216,13 @@ The tables below map each released self-hosted Appwrite version to the SDK versi
 * 0.27.1
 * 16.0.0
 * 14.1.0
+---
+* 1.9.5
+* 26.1.0
+* 25.2.0
+* 0.33.0
+* 18.2.0
+* 25.2.0
 {% /table %}
 
 ### Server SDKs {% #server-compatibility %}
@@ -316,6 +323,18 @@ The tables below map each released self-hosted Appwrite version to the SDK versi
 * 16.0.0
 * 15.0.0
 * 17.4.0
+---
+* 1.9.5
+* 26.2.0
+* 21.0.0
+* 26.1.0
+* 25.1.0
+* 25.1.0
+* 5.1.0
+* v5.1.0
+* 19.1.0
+* 18.1.0
+* 22.3.0
 {% /table %}
 
 # Managing your installation {% #managing-installation %}

@@ -32,6 +32,12 @@ Client libraries for integrating with Appwrite to build client-based application
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
+* React library `0.1.0`
+* [appwrite/sdk-for-react](https://github.com/appwrite/sdk-for-react)
+* `beta`
+---
+* {% only_dark %}{% icon_image src="/images/platforms/dark/react.svg" alt="React logo" size="m" /%}{% /only_dark %}
+{% only_light %}{% icon_image src="/images/platforms/light/react.svg" alt="React logo" size="m" /%}{% /only_light %}
 * React Native SDK `0.25.0`
 * [appwrite/sdk-for-react-native](https://github.com/appwrite/sdk-for-react-native)
 * `beta`
@@ -424,7 +430,7 @@ You can discover the available enums in each SDK at the source.
 
 ## Queries and permissions {% #queries-and-permissions %}
 Appwrite has utility classes for queries and permissions. 
-You can learn more about [query utility classes](/docs/products/databases/queries) and [permissions utility classes](/docs/advanced/platform/permissions) in their own pages.
+You can learn more about [query utility classes](/docs/products/databases/queries) and [permissions utility classes](/docs/advanced/security/permissions) in their own pages.
 
 ## File I/O {% #file-io %}
 Depending on your platform, you will also need some helpers to interface with system I/O.

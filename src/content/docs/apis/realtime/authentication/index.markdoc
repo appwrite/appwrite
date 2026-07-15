@@ -9,7 +9,7 @@ Realtime authenticates using an existing user session. If you authenticate **aft
 More information and examples of authenticating users can be found in the dedicated [authentication docs](/docs/products/auth).
 
 {% info title="Permissions" %}
-All subscriptions are secured by the [permissions system](/docs/advanced/platform/permissions) offered by Appwrite, meaning a user will only receive updates to resources they have permission to access.
+All subscriptions are secured by the [permissions system](/docs/advanced/security/permissions) offered by Appwrite, meaning a user will only receive updates to resources they have permission to access.
 
 Using `Role.any()` on read permissions will allow any client to receive updates.
 {% /info %}

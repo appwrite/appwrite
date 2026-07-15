@@ -1,12 +1,14 @@
 ---
 layout: article
 title: Start with TanStack Start
-description: Learn how to use Appwrite to add authentication, user management, file storage, and more to your TanStack Start apps.
+description: Build TanStack Start apps with the Appwrite React library. Add server-rendered authentication via file-route handlers and server functions.
 difficulty: beginner
-readtime: 3
+readtime: 7
 back: /docs/quick-starts
 ---
-Learn how to setup your first TanStack Start project powered by Appwrite.
+
+Learn how to set up your first TanStack Start project with the [Appwrite React library](/docs/products/auth/react). The library exposes a TanStack file-route handler, server helpers, and the same React hooks you use on the client.
+
 {% section #step-1 step=1 title="Create project" %}
 Head to the [Appwrite Console](https://cloud.appwrite.io/console).
 
@@ -33,133 +35,193 @@ Then, under **Add a platform**, add a **Web app**. The **Hostname** should be `l
 You can skip optional steps.
 
 {% /section %}
-{% section #step-2 step=2 title="Create TanStack Start project" %}
+
+{% section #step-2 step=2 title="Create an API key" %}
+
+In your project, go to **Overview** > **Integrations** > **API keys** and create a new key with the scopes `users.read`, `users.write`, and `sessions.write`. Copy the key secret. The SSR handler uses this to create sessions on behalf of users; never expose it to the browser.
+
+{% /section %}
+
+{% section #step-3 step=3 title="Create TanStack Start project" %}
+
 Create a TanStack Start project.
 
 ```sh
-npm create @tanstack/start@latest my-app && cd my-app
+npx @tanstack/cli create my-app --framework react && cd my-app
 ```
-{% /section %}
-{% section #step-3 step=3 title="Install Appwrite" %}
 
-Install the JavaScript Appwrite SDK.
+{% /section %}
+
+{% section #step-4 step=4 title="Install the React library" %}
+
+Install the React library along with the Appwrite Web SDK, Appwrite Node SDK, and `@tanstack/react-query` packages.
 
 ```sh
-npm install appwrite
+npm install @appwrite.io/react appwrite node-appwrite @tanstack/react-query
 ```
+
 {% /section %}
-{% section #step-4 step=4 title="Import Appwrite" %}
-Find your project's ID in the **Settings** page.
 
-{% only_dark %}
-![Project settings screen](/images/docs/quick-starts/dark/project-id.avif)
-{% /only_dark %}
-{% only_light %}
-![Project settings screen](/images/docs/quick-starts/project-id.avif)
-{% /only_light %}
-Create a new file `src/utils/appwrite.ts` and add the following code to it, replace `<PROJECT_ID>` with your project ID.
+{% section #step-5 step=5 title="Configure environment variables" %}
 
-```client-web
-import { Client, Account, ID, Models } from 'appwrite';
+Create a `.env` file at the project root. Replace `<REGION>`, `<PROJECT_ID>`, and `<API_KEY>` with your own values.
 
-export const client = new Client();
-
-client
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>'); // Replace with your project ID
-
-export const account = new Account(client);
-export { ID };
-export type { Models };
+```sh
+VITE_APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=<PROJECT_ID>
+APPWRITE_API_KEY=<API_KEY>
 ```
+
+`VITE_*` values are shipped to the browser. `APPWRITE_API_KEY` stays server-only.
+
 {% /section %}
-{% section #step-5 step=5 title="Create a login page" %}
-Create or update `src/routes/index.tsx` with the following code.
+
+{% section #step-6 step=6 title="Mount the auth handler route" %}
+
+Create `src/routes/api/appwrite/$.ts`. The TanStack file route exposes the library's `sign-in`, `sign-up`, `sign-out`, and `oauth/callback` endpoints under `/api/appwrite/*`.
+
+```ts
+import { createFileRoute } from "@tanstack/react-router";
+import { createAppwriteHandlers } from "@appwrite.io/react/handlers/tanstack";
+
+export const Route = createFileRoute("/api/appwrite/$")({
+  server: {
+    handlers: createAppwriteHandlers({
+      endpoint: import.meta.env.VITE_APPWRITE_ENDPOINT,
+      projectId: import.meta.env.VITE_APPWRITE_PROJECT_ID,
+      apiKey: process.env.APPWRITE_API_KEY!,
+      basePath: "/api/appwrite",
+    }),
+  },
+});
+```
+
+{% /section %}
+
+{% section #step-7 step=7 title="Read auth state in a server function" %}
+
+Replace `src/routes/index.tsx` with the following. A `createServerFn` loader reads the session cookie server-side; the page receives the result via `Route.useLoaderData()` and passes it into `AppwriteProvider`.
 
 ```tsx
-import { useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { account, ID, type Models } from '../utils/appwrite';
+import { useState } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { AppwriteProvider, useAuth } from "@appwrite.io/react";
+import { createTanStackServerHelpers } from "@appwrite.io/react/server/tanstack";
 
-export const Route = createFileRoute('/')({
-    component: Index,
+const getAuthSnapshot = createServerFn({ method: "GET" }).handler(async () => {
+  const helpers = createTanStackServerHelpers({
+    endpoint: import.meta.env.VITE_APPWRITE_ENDPOINT,
+    projectId: import.meta.env.VITE_APPWRITE_PROJECT_ID,
+  });
+  return {
+    session: helpers.readSessionCookie() ?? null,
+    user: await helpers.getLoggedInUser(),
+  };
 });
 
-function Index() {
-    const [loggedInUser, setLoggedInUser] = useState<Models.User<Models.Preferences> | null>(null);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
+export const Route = createFileRoute("/")({
+  loader: () => getAuthSnapshot(),
+  component: Page,
+});
 
-    async function login(email: string, password: string) {
-        await account.createEmailPasswordSession({
-            email,
-            password,
-        });
-        setLoggedInUser(await account.get());
-    }
+function Page() {
+  const { session, user } = Route.useLoaderData();
 
-    async function register() {
-        await account.create({
-            userId: ID.unique(),
+  return (
+    <AppwriteProvider
+      endpoint={import.meta.env.VITE_APPWRITE_ENDPOINT}
+      projectId={import.meta.env.VITE_APPWRITE_PROJECT_ID}
+      ssr={{ session, basePath: "/api/appwrite" }}
+    >
+      <main>
+        <h1>Appwrite React library on TanStack Start</h1>
+        <p>SSR user: {user?.email ?? "signed out"}</p>
+        <AuthPanel />
+      </main>
+    </AppwriteProvider>
+  );
+}
+
+function AuthPanel() {
+  const { user, isLoading, signIn, signUp, signOut, error } = useAuth();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+
+  if (isLoading) return <p>Loading...</p>;
+
+  if (user) {
+    return (
+      <div>
+        <p>Welcome, {user.name || user.email}</p>
+        <button onClick={() => signOut.signOut({ onSuccess: () => router.invalidate() })}>
+          Sign out
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input
+        placeholder="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button
+        onClick={() =>
+          signUp.emailPassword({
             email,
             password,
             name,
-        });
-        await login(email, password);
-    }
-
-    async function logout() {
-        await account.deleteSession({ sessionId: 'current' });
-        setLoggedInUser(null);
-    }
-
-    if (loggedInUser) {
-        return (
-            <div>
-                <p>Logged in as {loggedInUser.name}</p>
-                <button type="button" onClick={logout}>
-                    Logout
-                </button>
-            </div>
-        );
-    }
-
-    return (
-        <div>
-            <p>Not logged in</p>
-            <form>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-                <button type="button" onClick={() => login(email, password)}>
-                    Login
-                </button>
-                <button type="button" onClick={register}>
-                    Register
-                </button>
-            </form>
-        </div>
-    );
+            onSuccess: () => router.invalidate(),
+          })
+        }
+        disabled={signUp.isPending}
+      >
+        Sign up
+      </button>
+      <button
+        onClick={() =>
+          signIn.emailPassword({
+            email,
+            password,
+            onSuccess: () => router.invalidate(),
+          })
+        }
+        disabled={signIn.isPending}
+      >
+        Sign in
+      </button>
+      {error && <p style={{ color: "red" }}>{error.message}</p>}
+    </div>
+  );
 }
 ```
+
+After every auth mutation, `router.invalidate()` re-runs the loader so the SSR user reflects the new session cookie.
+
+{% info title="Multi-route apps" %}
+In a multi-route TanStack Start app, move `AppwriteProvider` (and the auth loader) into `src/routes/__root.tsx` so the TanStack Query cache and auth state persist across navigations. Mounting the provider in a single route works for this quickstart, but resets the cache every time the route changes.
+{% /info %}
+
 {% /section %}
 
-{% section #step-6 step=6 title="All set" %}
-Run your project with `npm run dev` and open [localhost on port 3000](http://localhost:3000) in your browser.
+{% section #step-8 step=8 title="Run your app" %}
+
+```sh
+npm run dev
+```
+
+Open [localhost on port 3000](http://localhost:3000). Sign up, sign out, and sign back in to verify the cookie-based SSR flow.
+
 {% /section %}
+
+# Next steps {% #next-steps %}
+
+For server-side admin operations, per-request session clients, OAuth callbacks, and the full hook reference, see the [React library docs](/docs/products/auth/react).

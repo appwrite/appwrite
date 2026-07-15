@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Best vibe coding tools for beginners in 2026
-description: Compare the best vibe coding tools for beginners in 2026 and learn how to choose the right AI coding tool to build faster, avoid setup friction, and ship your app with Appwrite.
+description: Compare the best vibe coding tools for beginners in 2026 and learn how to choose the right AI coding tool to build faster with Appwrite.
 date: 2026-05-25
 cover: /images/blog/best-vibe-coding-tools-for-beginners-in-2026/cover.avif
 timeToRead: 5
@@ -47,7 +47,7 @@ With those filters in mind, here is the list.
 
 Claude Code is Anthropic's agentic coding tool that started in the terminal and now works across the terminal, IDE, desktop app, and browser. The terminal sounds intimidating, but the experience is closer to texting a senior engineer than writing shell commands. It reads your repo, makes changes, runs tests, and explains what it did in plain English.
 
-Best for: beginners who want UI to be the major focus of their projects and prefer workflows like subagents to handle many tasks at once. 
+Best for: beginners who want UI to be the major focus of their projects and prefer workflows like subagents to handle many tasks at once.
 
 ## 2. Codex
 
@@ -128,6 +128,8 @@ If you want the absolute fastest path to a working app, start with Bolt.new or L
 Vibe coding tools are great at scaffolding the app you can see. The part you cannot see, auth, databases, file storage, APIs, is where most beginner projects stall.
 
 Appwrite is a backend platform developers can use once their projects need more than a quick prototype. A Cloud version that gets out of your way so you can ship. One platform for auth, database, storage, functions, messaging, and realtime, with SDKs that feel native in whatever framework your AI just spun up.
+
+Recent releases have added [MongoDB support, Appwrite 1.9.0, realtime upgrades, and new AI tooling](https://dev.to/appwrite/april-product-update-mongodb-support-appwrite-190-realtime-upgrades-and-ai-tooling-1eg6), with [more landing every few weeks](https://dev.to/appwrite/may-product-update-presences-api-rust-runtime-7x-faster-storage-uploads-and-more-9h5). We post weekly roundups of product announcements, AI updates, and [developer insights](https://dev.to/appwrite/weekly-roundup-presences-api-git-deployment-triggers-and-ai-updates-58lj) on the [Appwrite blog](https://appwrite.io/blog) and across our developer channels, so follow along wherever you read.
 
 Sign up for [Appwrite Cloud](https://cloud.appwrite.io/) or set up a self-hosted instance, and give your AI-built app a real backend for auth, data, storage, functions, messaging, and realtime.
 

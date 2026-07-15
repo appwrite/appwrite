@@ -71,7 +71,7 @@ Push notifications require configuration on both the Appwrite platform and your 
 1. Add `google-services.json` at the root of your project.
 1. Add Google Services class path to your app-level Gradle dependencies block `"com.google.gms:google-services:4.4.0"`.
 1. Add Google Services plugin to your app-level Gradle in the plugins block as `"com.google.gms.google-services"`.
-1. Add notification handler service to `AndroidManifest.xml` inside the application tag, alongside other activities. Find an example of this service in the [Send push notification](/docs/products/messaging/send-push-notifications#add-targets) journey.
+1. Add notification handler service to `AndroidManifest.xml` inside the application tag, alongside other activities. Find an example of this service in the [Send push notification](/docs/products/messaging/send-push-notifications#add-targets) guide.
 ```xml
 <service android:name="<YOUR_NOTIFICATION_HANDLER_SERVICE>" android:exported="false">
     <intent-filter>

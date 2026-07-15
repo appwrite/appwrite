@@ -22,7 +22,7 @@ You can change the session limit in the **Security** tab of the Auth Service in 
 # Permissions {% #permissions %}
 
 Security is very important to protect users' data and privacy.
-Appwrite uses a [permissions model](/docs/advanced/platform/permissions) coupled with user sessions to ensure users need correct permissions to access resources.
+Appwrite uses a [permissions model](/docs/advanced/security/permissions) coupled with user sessions to ensure users need correct permissions to access resources.
 With all Appwrite services, including databases and storage, access is granted at the collection, bucket, document, or file level.
 These permissions are enforced for client SDKs and server SDKs when using JWT, but are ignored when using a server SDK with an API key.
 
@@ -45,7 +45,7 @@ Password history can be enabled in the Auth service's **Security** tab on the Ap
 
 # Password dictionary {% #password-dictionary %}
 
-Password dictionary protects users from using bad passwords. It compares the user's password to the [10,000 most common passwords](https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt) and throws an error if there's a match. Together with [rate limits](/docs/advanced/platform/rate-limits), password dictionary will significantly reduce the chance of a malicious actor guessing user passwords.
+Password dictionary protects users from using bad passwords. It compares the user's password to the [10,000 most common passwords](https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt) and throws an error if there's a match. Together with [rate limits](/docs/advanced/security/rate-limits), password dictionary will significantly reduce the chance of a malicious actor guessing user passwords.
 
 Password dictionary can be enabled in the Auth service's **Security** tab on the Appwrite Console.
 

@@ -113,7 +113,7 @@ X-Appwrite-Project: <PROJECT_ID>
 
 Server integrations use API keys to authenticate and are typically used for backend applications.
 
-Server APIs are authenticated with API keys instead of account sessions. Simply pass an [API key](/docs/advanced/platform/api-keys) in the `X-Appwrite-key: [API-KEY]` header with the appropriate scopes.
+Server APIs are authenticated with API keys instead of account sessions. Simply pass an [API key](/docs/partners/project/api-keys) in the `X-Appwrite-key: [API-KEY]` header with the appropriate scopes.
 
 ```json
 GET /v1/tablesdb/{databaseId}/tables/{tableId}/rows HTTP/1.1
@@ -464,7 +464,7 @@ In these cases, `column` is empty and `values` is an array of queries.
 
 Appwrite's REST APIs are protected by the same rate limit policies, just like when using an SDK. Each API has a different rate limit, which is documented in the References section of each service in the Appwrite documentation.
 
-[Learn more about Rate Limits](/docs/advanced/platform/rate-limits).
+[Learn more about Rate Limits](/docs/advanced/security/rate-limits).
 
 # Specifications {% #specifications %}
 

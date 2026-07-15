@@ -17,7 +17,7 @@ If a user has read, create, update, or delete permissions at the collection leve
 
 Configure collection level permissions by navigating to **Your collection** > **Settings** > **Permissions**.
 
-[Learn more about permissions and roles](/docs/advanced/platform/permissions)
+[Learn more about permissions and roles](/docs/advanced/security/permissions)
 
 # Document level {% #document-level %}
 Document level permissions grant access to individual documents.
@@ -28,10 +28,10 @@ Enable document level permissions by navigating to **Your collection** > **Setti
 
 Document level permissions are configured in individual documents.
 
-[Learn more about permissions and roles](/docs/advanced/platform/permissions)
+[Learn more about permissions and roles](/docs/advanced/security/permissions)
 
 # Common use cases {% #common-use-cases %}
 
-For examples of how to implement common permission patterns, including creating private documents that are only accessible to their creators, see the [permissions examples](/docs/advanced/platform/permissions#examples) in our platform documentation.
+For examples of how to implement common permission patterns, including creating private documents that are only accessible to their creators, see the [permissions examples](/docs/advanced/security/permissions#examples) in our platform documentation.
 
 

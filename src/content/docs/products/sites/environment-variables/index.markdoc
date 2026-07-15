@@ -8,7 +8,7 @@ Appwrite Sites can read environment variables at build and runtime. Use them to 
 
 A site reads from three sources, in this order of precedence:
 
-1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See [project variables](/docs/advanced/platform/environment-variables) for the platform-wide reference.
+1. **Project variables** are shared across every function and site in your project. Set them once and every site inherits them automatically. See [project variables](/docs/partners/project/environment-variables) for the full reference.
 2. **Site variables** are scoped to a single site. Override a project variable for one site by setting the same key on the site itself.
 3. **Appwrite-injected variables** are set by Appwrite at deployment time (for example, `APPWRITE_SITE_PROJECT_ID`). These take final precedence and cannot be overridden.
 
@@ -31,11 +31,11 @@ Variable changes only take effect on the next deployment. Redeploy your site aft
 ![Site environment variables](/images/docs/sites/env-variables.avif)
 {% /only_light %}
 
-You can also configure global variables that apply to all your sites from your project's **Settings** page. See [project variables](/docs/advanced/platform/environment-variables) for details.
+You can also configure global variables that apply to all your sites from your project's **Settings** page. See [project variables](/docs/partners/project/environment-variables) for details.
 
 # Manage with a Server SDK {% #server-sdks %}
 
-You can also manage site variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/advanced/platform/api-keys) with the `sites.write` scope to create, update, or delete variables, or the `sites.read` scope to list and read them.
+You can also manage site variables programmatically using a [Server SDK](/docs/sdks#server). Each call requires an [API key](/docs/partners/project/api-keys) with the `sites.write` scope to create, update, or delete variables, or the `sites.read` scope to list and read them.
 
 ## Create a variable {% #create-variable %}
 

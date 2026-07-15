@@ -6,7 +6,7 @@ description: Track which signed-in users are active right now and broadcast thei
 
 Authentication tells you **who a user is**. Presences tell you **whether they are around right now**. The Appwrite **Presences API** records a live status for each signed-in user and broadcasts every change over [Realtime](/docs/apis/realtime), so your app can render online indicators, "viewing this page" cues, typing signals, and collaboration banners without writing any socket plumbing.
 
-A presence is a short-lived record attached to a user. It carries a `userId`, a `status` string, an optional `metadata` JSON object for richer context, and an `expiresAt` timestamp that controls automatic cleanup. Presences are written by either the user's own session or a server SDK, and read by any client with the right [permissions](/docs/advanced/platform/permissions).
+A presence is a short-lived record attached to a user. It carries a `userId`, a `status` string, an optional `metadata` JSON object for richer context, and an `expiresAt` timestamp that controls automatic cleanup. Presences are written by either the user's own session or a server SDK, and read by any client with the right [permissions](/docs/advanced/security/permissions).
 
 # Set the user's presence {% #set-the-users-presence %}
 
@@ -125,7 +125,7 @@ There is no fixed heartbeat interval enforced by the server, so pick whichever c
 
 # Show other users' presence {% #show-other-users-presence %}
 
-List the presences the current user can read to paint the initial "online now" view, a list of viewers on a page, or a typing dot in a chat. The list call honors the same [permissions](/docs/advanced/platform/permissions) you set on each record, so each client only sees the statuses it is allowed to render.
+List the presences the current user can read to paint the initial "online now" view, a list of viewers on a page, or a typing dot in a chat. The list call honors the same [permissions](/docs/advanced/security/permissions) you set on each record, so each client only sees the statuses it is allowed to render.
 
 {% multicode %}
 ```client-web
@@ -313,7 +313,7 @@ If a user closes the browser tab or loses connection without signing out, the re
 
 # Scoping who can see a presence {% #scoping-who-can-see-a-presence %}
 
-Presences use the standard Appwrite [permissions system](/docs/advanced/platform/permissions). Set read permissions on each record to match how your app already groups users:
+Presences use the standard Appwrite [permissions system](/docs/advanced/security/permissions). Set read permissions on each record to match how your app already groups users:
 
 - `Role.users()` for any signed-in user, useful for a global "X users online" counter.
 - `Role.team('<TEAM_ID>')` for collaboration features that should only show statuses to teammates.
@@ -407,4 +407,4 @@ If you do not pass a `permissions` array when upserting a presence, Appwrite def
 
 - [Realtime: Presences](/docs/apis/realtime/presences). The full concept reference, including channel patterns, expiry behaviour, and server-side usage.
 - [Realtime channels](/docs/apis/realtime/channels). See how `presences` fits alongside `account`, `teams`, and `rows`.
-- [Permissions](/docs/advanced/platform/permissions). Refresher on how `Role.team()` and `Role.user()` work.
+- [Permissions](/docs/advanced/security/permissions). Refresher on how `Role.team()` and `Role.user()` work.

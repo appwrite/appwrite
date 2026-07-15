@@ -17,7 +17,7 @@ The payload from the subscription will contain the following properties:
 ---
 * events
 * string[]
-* The [Appwrite events](/docs/advanced/platform/events) that triggered this update.
+* The [Appwrite events](/docs/apis/events) that triggered this update.
 ---
 * channels
 * string[]

@@ -46,7 +46,7 @@ Admin clients should only be used if you need to perform admin actions that bypa
 or [unauthenticated requests that bypass rate limits](#rate-limits).
 {% /info %}
 
-To initialize the admin client, we'll need to first [generate an API key](/docs/advanced/platform/api-keys#create-api-key).
+To initialize the admin client, we'll need to first [generate an API key](/docs/partners/project/api-keys#create-api-key).
 The API key should have the following scope in order to perform authentication:
 
 | Category  {% width=120 %} | Required scopes    | Purpose |
@@ -94,7 +94,7 @@ let admin_client = Client::new()
 ```
 {% /multicode %}
 
-It is important to use an API key, as this will allow your server requests to bypass [rate limits](/docs/advanced/platform/rate-limits). If you don't use an API key, your server will be rate limited as if it were a client from a single IP address.
+It is important to use an API key, as this will allow your server requests to bypass [rate limits](/docs/advanced/security/rate-limits). If you don't use an API key, your server will be rate limited as if it were a client from a single IP address.
 
 ## Session client {% #session-client %}
 
@@ -103,7 +103,7 @@ It will be initialized with the session, usually stored within a cookie.
 
 You should create a new client for each request and **never** share the client between requests.
 
-Use `a_session_<PROJECT_ID>` as the [cookie name](/docs/apis/rest#client-integration) and a [custom domain](/docs/advanced/platform/custom-domains) for your Appwrite endpoint if you want the session to work client-side as well.
+Use `a_session_<PROJECT_ID>` as the [cookie name](/docs/apis/rest#client-integration) and a [custom domain](/docs/products/network/custom-domains) for your Appwrite endpoint if you want the session to work client-side as well.
 
 {% multicode %}
 ```server-nodejs
@@ -406,7 +406,7 @@ let user = account.get().await?;
 {% /multicode %}
 
 # Rate limits {% #rate-limits %}
-Unauthenticated requests are subject to [rate limits](/docs/advanced/platform/rate-limits).
+Unauthenticated requests are subject to [rate limits](/docs/advanced/security/rate-limits).
 Normally, rate limits are applied by an abuse key, which is usually a combination of IP and another factor like user ID.
 When you make unauthenticated requests from your server, however, all requests originate from the same IP and no user ID is provided.
 This means that all unauthenticated requests from your server will be **subject to the same rate limits**.

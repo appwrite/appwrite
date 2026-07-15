@@ -322,7 +322,7 @@ Learn more about the CLI topics commands
 Before you can subscribe to a topic, a user needs the appropriate permission.
 You can set permission by navigating to **Messaging** > **Topics** > select a topic to configure > **Subscription access**.
 
-{% arrow_link href="/docs/advanced/platform/permissions#permission-roles" %}
+{% arrow_link href="/docs/advanced/security/permissions#permission-roles" %}
 Learn more about permission roles
 {% /arrow_link %}
 

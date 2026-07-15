@@ -11,7 +11,7 @@ Appwrite generates TLS certificates to ensure your API traffic is appropriately 
 
 TLS certificates are generated for all of the following.
 - Appwrite products and endpoints, like Databases, Storage, Authentication, Functions, Messaging, and all other endpoints.
-- [Custom domains](/docs/advanced/platform/custom-domains) that you configure for your Appwrite projects.
+- [Custom domains](/docs/products/network/custom-domains) that you configure for your Appwrite projects.
 - [Domains for Appwrite Functions](/docs/products/functions/domains), generated or user provided.
 - [Domains for Appwrite Sites](/docs/products/sites/domains), generated or user provided.
 

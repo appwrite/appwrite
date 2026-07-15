@@ -107,11 +107,11 @@ These are terminal commands that will be executed in the runtime containers in t
 
 Under **Settings** - **Resource limits**, you can set **build** and **runtime** specifications independently. The build spec applies while your deployment is being built and packaged; the runtime spec applies to each function execution. Both use the same CPU and memory tiers on Cloud. This lets you align compute with heavy dependency installs or compilation without over-provisioning every invocation.
 
-On Appwrite Cloud, customizing specifications requires the **Pro** plan. See [Compute](/docs/advanced/platform/compute) for tiers, GB-hours, and pricing.
+On Appwrite Cloud, customizing specifications requires the **Pro** plan. See [Compute](/docs/advanced/billing/compute) for tiers, GB-hours, and pricing.
 
 ## Build timeout {% #build-timeout %}
 
-On Appwrite Cloud, the **build** phase of each deployment must complete within your plan’s **maximum build duration** (for example, 15 minutes on Free and 45 minutes on Pro and Scale). See [Build timeouts](/docs/advanced/platform/compute#build-timeouts) and the [pricing page](/pricing).
+On Appwrite Cloud, the **build** phase of each deployment must complete within your plan’s **maximum build duration** (for example, 15 minutes on Free and 45 minutes on Pro and Scale). See [Build timeouts](/docs/advanced/billing/compute#build-timeouts) and the [pricing page](/pricing).
 
 ## Git integration {% #git-integration %}
 You can update the entrypoint file and build settings of your function by navigating to your function > **Settings** > **Configuration**.
@@ -133,13 +133,13 @@ In production environments, you can choose to disable execution logs to protect 
 ## Execute access {% #execution-access %}
 You can control who can execute your functions
 by navigating to your function > **Settings** > **Execute access**
-and granting access to select [permission roles](/docs/advanced/platform/permissions#permission-roles).
+and granting access to select [permission roles](/docs/advanced/security/permissions#permission-roles).
 
 If this is left empty, no user can execute your function.
 Server SDKs, scheduled executions, and event function triggers don't require permissions to execute a function.
 
 ## Events{% #events %}
-Functions can be triggered by [platform events](/docs/advanced/platform/events) which reflect changes 
+Functions can be triggered by [platform events](/docs/apis/events) which reflect changes 
 that occur in your Appwrite project.
 You can configure events triggers by navigating to your function > **Settings** > **Events**.
 
@@ -168,6 +168,6 @@ There is a system wide maximum timeout of 900 seconds (15 minutes).
 
 You can configure the permission scopes for the function [dynamic API key](/docs/products/functions/develop#dynamic-api-key). The dynamic API key is automatically generated to access your project resources like users and buckets but can only be used inside of Appwrite functions. Navigate to your function > **Settings** > **Scopes** to configure your dynamic API key permission scopes.
 
-{% arrow_link href="/docs/advanced/platform/api-keys#scopes" %}
+{% arrow_link href="/docs/partners/project/api-keys#scopes" %}
 Learn more about scopes
 {% /arrow_link %}

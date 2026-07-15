@@ -14,7 +14,7 @@ You can create a database by navigating to the **Databases** page and clicking *
 
 
 # Create using Server SDKs {% #create-using-server-sdks %}
-You can programmatically create databases using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/advanced/platform/api-keys).
+You can programmatically create databases using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/partners/project/api-keys).
 
 {% multicode %}
 ```server-nodejs

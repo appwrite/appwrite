@@ -293,6 +293,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
               label: "Coolify",
               href: "/docs/advanced/self-hosting/platforms/coolify",
             },
+            {
+              label: "Dokploy",
+              href: "/docs/advanced/self-hosting/platforms/dokploy",
+            },
           ],
         },
         {
@@ -436,7 +440,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       ],
     },
     {
-      prefix: "platforms/project",
+      prefix: "partners/project",
       parent: {
         href: "/docs",
         label: "Project",
@@ -447,7 +451,7 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Overview",
-              href: "/docs/platforms/project",
+              href: "/docs/partners/project",
             },
           ],
         },
@@ -456,51 +460,51 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Auth methods",
-              href: "/docs/platforms/project/auth-methods",
+              href: "/docs/partners/project/auth-methods",
             },
             {
               label: "OAuth providers",
-              href: "/docs/platforms/project/oauth",
+              href: "/docs/partners/project/oauth",
             },
             {
               label: "API keys",
-              href: "/docs/platforms/project/api-keys",
+              href: "/docs/partners/project/api-keys",
             },
             {
               label: "Platforms",
-              href: "/docs/platforms/project/platforms",
+              href: "/docs/partners/project/platforms",
             },
             {
               label: "Protocols",
-              href: "/docs/platforms/project/protocols",
+              href: "/docs/partners/project/protocols",
             },
             {
               label: "Services",
-              href: "/docs/platforms/project/services",
+              href: "/docs/partners/project/services",
             },
             {
               label: "Policies",
-              href: "/docs/platforms/project/policies",
+              href: "/docs/partners/project/policies",
             },
             {
               label: "Mock phones",
-              href: "/docs/platforms/project/mock-phones",
+              href: "/docs/partners/project/mock-phones",
             },
             {
               label: "Environment variables",
-              href: "/docs/platforms/project/environment-variables",
+              href: "/docs/partners/project/environment-variables",
             },
             {
               label: "SMTP",
-              href: "/docs/platforms/project/smtp",
+              href: "/docs/partners/project/smtp",
             },
             {
               label: "Email templates",
-              href: "/docs/platforms/project/email-templates",
+              href: "/docs/partners/project/email-templates",
             },
             {
               label: "Labels",
-              href: "/docs/platforms/project/labels",
+              href: "/docs/partners/project/labels",
             },
           ],
         },
@@ -509,23 +513,15 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           items: [
             {
               label: "Provisioning",
-              href: "/docs/platforms/project/provisioning",
+              href: "/docs/partners/project/provisioning",
             },
             {
               label: "Key rotation",
-              href: "/docs/platforms/project/key-rotation",
+              href: "/docs/partners/project/key-rotation",
             },
             {
               label: "Branded emails",
-              href: "/docs/platforms/project/branded-emails",
-            },
-            {
-              label: "Plan tiers",
-              href: "/docs/platforms/project/plan-tiers",
-            },
-            {
-              label: "Offboarding",
-              href: "/docs/platforms/project/offboarding",
+              href: "/docs/partners/project/branded-emails",
             },
           ],
         },
@@ -761,6 +757,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             {
               label: "SSR login",
               href: "/docs/products/auth/server-side-rendering",
+            },
+            {
+              label: "React library",
+              href: "/docs/products/auth/react",
             },
             {
               label: "Custom token login",

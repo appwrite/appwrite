@@ -35,6 +35,9 @@ I jest, I was super stoked! The animations looked fantastic. But I'm not joking 
 
 First things first, what was I supposed to animate? Well, in this article, I'll be mainly talking about this animation, that's present at [Appwrite's homepage](https://appwrite.io).
 
+{% video
+   src="/images/blog/defying-the-laws-of-web-animations/animations.mp4" /%}
+
 There's a lot of stuff going on in there! There are multiple sections, each one with possible interactivity,
 and there's also animation **between** the sections, where the phone moves positions.
 
@@ -52,7 +55,7 @@ P.S. The code for the website, including animations, can be found at [https://gi
 
 Scroll-based animations are quite common. There are two types. Animations that start when you scroll to a certain section, and animations that progress together with your scroll. For our animations, we're using the former.
 
-We have 5 sections in our animation (we technically have 2 more, one for the beginning and one for the end), and they're pretty similar. They are all in a really tall container, so that we have ample space to scroll through, but the animations
+We have 5 sections in our animation, as showcased in our video (we technically have 2 more, one for the beginning and one for the end), and they're pretty similar. They are all in a really tall container, so that we have ample space to scroll through, but the animations
 themselves always stick to the center of the screen.
 
 ![Excali viewport](/images/blog/defying-the-laws-of-web-animations/excali_viewport.avif)
@@ -159,7 +162,12 @@ async function authAnim() {
 
 In the example above, the `box`element will animate and only after it finished animating, will the other elements animate, simultaneously.
 
-But that's not all we used. We also took heavy advantage of Svelte's in-built [transition directives](https://svelte.dev/docs/svelte-transition), which automatically animate elements when they enter or exit the DOM, and also allow us to move surrounding elements that are affected by the new elements, e.g. when entering a list. The table and code box enter animations are controlled by Motion, while the new user entering the table is animated by Svelte, as well as the OAuth options.
+But that's not all we used. We also took heavy advantage of Svelte's in-built [transition directives](https://svelte.dev/docs/svelte-transition), which automatically animate elements when they enter or exit the DOM, and also allow us to move surrounding elements that are affected by the new elements, e.g. when entering a list.
+
+{% video
+   src="/images/blog/defying-the-laws-of-web-animations/auth_transitions.mov" /%}
+
+The video above showcases both Motion and Svelte transitions in action. The table and code box enter animations are controlled by Motion, while the new user entering the table is animated by Svelte, as well as the OAuth options.
 
 ```html
 <!-- Svelte Animations -->

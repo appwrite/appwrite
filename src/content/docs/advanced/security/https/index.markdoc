@@ -25,7 +25,7 @@ man-in-the-middle attacks such as protocol downgrade attacks and cookie hijackin
 By enforcing HTTPS, Appwrite Cloud's endpoint will always be served over a secure connection, which helps protect users' data and privacy.
 
 # Custom domains {% #custom-domains %}
-You can add a [custom domain](/docs/advanced/platform/custom-domains) to your Appwrite project so you can access Appwrite API endpoints
+You can add a [custom domain](/docs/products/network/custom-domains) to your Appwrite project so you can access Appwrite API endpoints
 on your own domain. Appwrite will [generate TLS certificates](/docs/advanced/security/tls) for your domain and enforce HTTPS communication.
 
 # Function domains {% #function-domains %}

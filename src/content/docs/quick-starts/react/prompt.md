@@ -1,6 +1,6 @@
 ## Add Appwrite Auth to a New React (Vite) App
 
-Goal: Add Appwrite auth to a new React (Vite) app with a working login/register/logout page.
+Goal: Add Appwrite auth to a new React (Vite) app using the official Appwrite React library, with a working sign-up, sign-in, and sign-out flow.
 
 Do exactly these steps in order. Confirm each step succeeds before continuing. If any command fails, show the error and fix it automatically.
 
@@ -11,60 +11,112 @@ Respect user's package manager at all time. Don't use NPM if the user uses somet
 - First, check if the current working directory contains files that appear unrelated to a development workspace (e.g., personal files, downloads, random documents, media files).
 - If unrelated files are detected, ask the user: 'The current directory appears to contain personal or non-project files. Would you like to: (1) proceed here anyway, or (2) create the project in a subdirectory with a specific folder name?' and proceed based on their choice.
 - If the directory is empty OR contains an existing project (`package.json`, source files, config files, etc.), proceed without asking - integrate Appwrite into whatever is there.
-- For a new project, run: `npm create vite@latest . -- --template react`
+- For a new project, run: `npm create vite@latest . -- --template react-ts`
 - Create the project in the current directory (`.`). Do NOT use `cd` to switch directories.
 
-## Step 2: Install Appwrite SDK
+## Step 2: Install the Appwrite React library
 
-- Run: `npm install appwrite`
+- Run: `npm install @appwrite.io/react appwrite @tanstack/react-query`
 
-## Step 3: Create Appwrite Client Module (Ask User for Details; Never Assume)
+## Step 3: Configure environment variables (Ask User for Details; Never Assume)
 
 - Ask the user for:
     - Appwrite Cloud Region (e.g. `fra`, `nyc`)
     - **Project ID** (from Console -> Settings)
-- Hardcode the endpoint and project ID in the file: `src/lib/appwrite.js` (or `.ts`) if provided, else leave placeholder and ask the user to provide them.
-- Create file: `src/lib/appwrite.js` (or `.ts`) with key snippet:
+- Create a `.env` file at the project root with the values provided. If either is missing, leave a placeholder and ask the user to fill it in:
 
-```js
-import { Client, Account, ID } from 'appwrite';
-const endpoint = 'https://<REGION>.cloud.appwrite.io/v1';
-const projectId = '<PROJECT_ID>';
-if (!endpoint || !projectId) throw new Error('Missing Appwrite endpoint and project ID');
-const client = new Client().setEndpoint(endpoint).setProject(projectId);
-export const account = new Account(client);
-export { ID };
+```sh
+VITE_APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=<PROJECT_ID>
 ```
 
-## Step 4: Build the Login Page
+## Step 4: Mount AppwriteProvider
 
-- If this is a fresh project, you may replace `src/App.jsx` (or `.tsx`) with a component that renders the auth UI.
-- If you are working in an existing project, add a new route/page instead of overriding the default route. If routing is not set up, install `react-router-dom` and add a `/auth` route that renders this component.
-- The component should render:
-    - Email/password inputs
-    - Name input for registration
-    - Buttons: **Login**, **Register**, **Logout**
-    - Shows "Logged in as \<name\>" when a session exists
-- Implement functions:
-    - `login(email, password)`: `account.createEmailPasswordSession({ email, password })` then set user via `account.get()`
-    - `register()`: `account.create({ userId: ID.unique(), email, password, name })` then call `login`
-    - `logout()`: `account.deleteSession({ sessionId: 'current' })` then clear user state
+- Replace `src/main.tsx` (or `.jsx`) so the entire app is wrapped with `AppwriteProvider`:
 
-## Step 5: Verify Environment (Ask User to Confirm)
+```tsx
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { AppwriteProvider } from '@appwrite.io/react';
+import App from './App';
+import './index.css';
 
-- Confirm endpoint and project ID are set in `src/lib/appwrite.js`.
+createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+        <AppwriteProvider
+            endpoint={import.meta.env.VITE_APPWRITE_ENDPOINT}
+            projectId={import.meta.env.VITE_APPWRITE_PROJECT_ID}
+        >
+            <App />
+        </AppwriteProvider>
+    </StrictMode>
+);
+```
+
+## Step 5: Build the auth page
+
+- If this is a fresh project, you may replace `src/App.tsx` (or `.jsx`) with a component that renders the auth UI.
+- If you are working in an existing project, add a new route/page instead of overriding the default route. If routing is not set up, install `react-router-dom` and add an `/auth` route that renders this component.
+- The component must render:
+    - Email, password, and name inputs
+    - Buttons: **Sign up**, **Sign in**, **Sign out**
+    - Shows "Welcome, \<name\>" when a session exists
+- Use the `useAuth` hook from `@appwrite.io/react`:
+
+```tsx
+import { useState } from 'react';
+import { useAuth } from '@appwrite.io/react';
+
+export default function App() {
+    const { user, isLoading, signIn, signUp, signOut, error } = useAuth();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+
+    if (isLoading) return <p>Loading...</p>;
+
+    if (user) {
+        return (
+            <main>
+                <p>Welcome, {user.name || user.email}</p>
+                <button onClick={() => signOut.signOut()}>Sign out</button>
+            </main>
+        );
+    }
+
+    return (
+        <main>
+            <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input
+                placeholder="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            <button onClick={() => signUp.emailPassword({ email, password, name })}>Sign up</button>
+            <button onClick={() => signIn.emailPassword({ email, password })}>Sign in</button>
+            {error && <p>{error.message}</p>}
+        </main>
+    );
+}
+```
+
+## Step 6: Verify environment (Ask User to Confirm)
+
+- Confirm the `.env` file contains the correct endpoint and project ID.
 - Ensure the Web app platform exists in Appwrite Console with **Hostname** = `localhost`. If missing, guide the user to add it.
 
-## Step 6: Run and Test
+## Step 7: Run and test
 
-- Run: `npm run dev -- --open --port 3000`
-- Open: `http://localhost:3000`
+- Run: `npm run dev`
+- Open: `http://localhost:5173`
 - Test flows:
-    - Register a new user and auto login works
-    - Logout then login again
-- Surface any Appwrite errors (invalid project, endpoint, CORS/hostname) and fix by guiding updates to `appwrite.js` and Console settings.
+    - Sign up a new user and confirm the page shows the welcome state
+    - Sign out, then sign in again
+- Surface any Appwrite errors (invalid project, endpoint, CORS/hostname) and fix by guiding updates to `.env` and Console settings.
 
 ## Deliverables
 
-- A running React app with working Appwrite auth (register/login/logout)
-- Files created/updated: `package.json` (deps), `src/lib/appwrite.js`, `src/App.jsx`
+- A running React app with working Appwrite auth using `@appwrite.io/react`
+- Files created/updated: `package.json` (deps), `.env`, `src/main.tsx`, `src/App.tsx`

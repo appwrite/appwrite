@@ -27,7 +27,7 @@ Here's the information shown on this table.
 - Timestamp of when the execution was created
 ---
 - Trigger
-- The [platform event](/docs/advanced/platform/events) that triggered the execution
+- The [platform event](/docs/apis/events) that triggered the execution
 ---
 - Method
 - The HTTP method used to create the execution

@@ -56,7 +56,7 @@ The callbackUrlScheme parameter in the authenticate() method isn't applicable wh
 {% info title="Flutter web cross-domain communication & cookies" %}
 While running Flutter Web, make sure your Appwrite project and your Flutter client use the same top-level domain and protocol (HTTP or HTTPS) to communicate.
 When communicating between different domains or protocols, you may receive HTTP status error 401 because some modern browsers block cross-site or insecure cookies for enhanced privacy.
-In production, Appwrite allows you to set multiple [custom-domains](/docs/advanced/platform/custom-domains) for each project.
+In production, Appwrite allows you to set multiple [custom-domains](/docs/products/network/custom-domains) for each project.
 {% /info %}
 
 {% /tabsitem %}

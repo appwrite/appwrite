@@ -34,7 +34,7 @@ docker logs [CONTAINER-ID]
 
 Appwrite uses conventional HTTP response codes to indicate the success or failure of an API request. In general: Codes in the 2xx range indicate success. Codes in the 4xx range indicate an error that failed given the information provided (e.g., a required parameter was omitted, invalid input, etc.). Codes in the 5xx range indicate an error with the Appwrite server, but these are rare.
 
-{% arrow_link href="/docs/advanced/platform/response-codes" %}
+{% arrow_link href="/docs/apis/response-codes" %}
 Learn more about Appwrite status codes
 {% /arrow_link %}
 

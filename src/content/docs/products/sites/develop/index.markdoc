@@ -49,11 +49,11 @@ The default timeout is set at `15 seconds` and the maximum value possible is `30
 
 Under **Settings** - **Resource limits**, you can set **build** and **runtime** specifications independently. The build spec applies while dependencies are installed and your site is built for deployment; the runtime spec applies when your site serves traffic, including server-side rendering (SSR). Both use the same CPU and memory tiers on Cloud.
 
-On Appwrite Cloud, customizing specifications requires the **Pro** plan. See [Compute](/docs/advanced/platform/compute) for tiers, GB-hours, and pricing.
+On Appwrite Cloud, customizing specifications requires the **Pro** plan. See [Compute](/docs/advanced/billing/compute) for tiers, GB-hours, and pricing.
 
 ## Build timeouts {% #build-timeouts %}
 
-On Appwrite Cloud, the **build** phase of each deployment must complete within your plan’s **maximum build duration** (for example, 15 minutes on Free and 45 minutes on Pro and Scale). See [Build timeouts](/docs/advanced/platform/compute#build-timeouts) and the [pricing page](/pricing).
+On Appwrite Cloud, the **build** phase of each deployment must complete within your plan’s **maximum build duration** (for example, 15 minutes on Free and 45 minutes on Pro and Scale). See [Build timeouts](/docs/advanced/billing/compute#build-timeouts) and the [pricing page](/pricing).
 
 # Project dependencies
 

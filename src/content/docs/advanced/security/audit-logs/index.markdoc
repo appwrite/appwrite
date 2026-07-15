@@ -36,7 +36,7 @@ Each entry describes an event.
 - Name of the user that performed the event.
 ---
 - Event
-- The name of the [event](/docs/advanced/platform/events).
+- The name of the [event](/docs/apis/events).
 ---
 - Location
 - The physical of the user when they performed the action.

@@ -12,7 +12,7 @@ When sending data to AI providers like OpenAI, Anthropic, or others, be mindful 
 
 - **Avoid sending personal data** to AI providers unless necessary for the feature. Strip personally identifiable information (PII) like names, emails, and addresses from prompts before sending them to an LLM.
 - **Review provider data policies** to understand how each AI provider handles the data you send. Some providers use input data for model training unless you opt out.
-- **Use Appwrite permissions** to control which users and roles can trigger AI-powered features. Appwrite's [permission system](/docs/advanced/platform/permissions) lets you restrict access at the database, storage, and function level.
+- **Use Appwrite permissions** to control which users and roles can trigger AI-powered features. Appwrite's [permission system](/docs/advanced/security/permissions) lets you restrict access at the database, storage, and function level.
 
 # Secure your API keys {% #secure-api-keys %}
 

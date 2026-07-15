@@ -116,10 +116,10 @@ To subscribe to updates from different Appwrite resources, you need to specify o
 
 If you subscribe to a channel, you will receive callbacks for a variety of events related to the channel. The events column in the callback can be used to filter and respond to specific events in a channel.
 
-[View a list of all available events](/docs/advanced/platform/events).
+[View a list of all available events](/docs/apis/events).
 
 {% info title="Permissions" %}
-All subscriptions are secured by the [permissions system](/docs/advanced/platform/permissions) offered by Appwrite, meaning a user will only receive updates to resources they have permission to access.
+All subscriptions are secured by the [permissions system](/docs/advanced/security/permissions) offered by Appwrite, meaning a user will only receive updates to resources they have permission to access.
 
 Using `Role.any()` on read permissions will allow any client to receive updates.
 {% /info %}

@@ -1,12 +1,14 @@
 ---
 layout: article
 title: Start with Next.js
-description: Learn how to use Appwrite to add authentication, user management, file storage, and more to your Next.js apps.
+description: Build Next.js apps with the Appwrite React library. Add server-rendered authentication, sign-in, sign-up, and user state without writing the SSR plumbing yourself.
 difficulty: beginner
-readtime: 3
+readtime: 7
 back: /docs/quick-starts
 ---
-Learn how to setup your first Next.js project powered by Appwrite.
+
+Learn how to set up your first Next.js project with the [Appwrite React library](/docs/products/auth/react). The library ships SSR auth handlers, server helpers, and the same React hooks you use on the client.
+
 {% section #step-1 step=1 title="Create project" %}
 Head to the [Appwrite Console](https://cloud.appwrite.io/console).
 
@@ -33,99 +35,178 @@ Then, under **Add a platform**, add a **Web app**. The **Hostname** should be `l
 You can skip optional steps.
 
 {% /section %}
-{% section #step-2 step=2 title="Create Next.js project" %}
-Create a Next.js project by running the following command:
+
+{% section #step-2 step=2 title="Create an API key" %}
+
+In your project, go to **Overview** > **Integrations** > **API keys** and create a new key with the scopes `users.read`, `users.write`, and `sessions.write`. Copy the key secret. The SSR handler uses this to create sessions on behalf of users; never expose it to the browser.
+
+{% /section %}
+
+{% section #step-3 step=3 title="Create Next.js project" %}
+
+Create a Next.js project with TypeScript and the App Router.
 
 ```sh
-npx create-next-app@latest && cd my-app
+npx create-next-app@latest my-app --ts --app && cd my-app
 ```
 
-When prompted, configure your project with these recommended settings:
-- **Would you like to use TypeScript?** → No
-- **Would you like to use ESLint?** → Yes
-- **Would you like to use Tailwind CSS?** → No (unless you plan to use it)
-- **Would you like to use `src/` directory?** → Yes/No (either works for this tutorial)
-- **Would you like to use App Router?** → Yes
-- **Would you like to customize the default import alias?** → No
+Accept the defaults for the remaining prompts.
 
-These settings will create a minimal Next.js setup that's perfect for getting started with Appwrite.
 {% /section %}
-{% section #step-3 step=3 title="Install Appwrite SDK" %}
 
-Install the JavaScript Appwrite SDK.
+{% section #step-4 step=4 title="Install the React library" %}
+
+Install the React library along with the Appwrite Web SDK, Appwrite Node SDK, and `@tanstack/react-query` packages.
 
 ```sh
-npm install appwrite
+npm install @appwrite.io/react appwrite node-appwrite @tanstack/react-query
 ```
+
 {% /section %}
-{% section #step-4 step=4 title="Define Appwrite service" %}
-Find your project's ID in the **Settings** page.
 
-{% only_dark %}
-![Project settings screen](/images/docs/quick-starts/dark/project-id.avif)
-{% /only_dark %}
-{% only_light %}
-![Project settings screen](/images/docs/quick-starts/project-id.avif)
-{% /only_light %}
+{% section #step-5 step=5 title="Configure environment variables" %}
 
-Create a new file `app/appwrite.js` and add the following code to it, replace `<PROJECT_ID>` with your project ID.
+Create a `.env.local` file at the project root. Replace `<REGION>`, `<PROJECT_ID>`, and `<API_KEY>` with your own values.
 
-```client-web
-import { Client, Account } from 'appwrite';
-
-export const client = new Client();
-
-client
-    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-    .setProject('<PROJECT_ID>'); // Replace with your project ID
-
-export const account = new Account(client);
-export { ID } from 'appwrite';
+```sh
+NEXT_PUBLIC_APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+NEXT_PUBLIC_APPWRITE_PROJECT_ID=<PROJECT_ID>
+APPWRITE_API_KEY=<API_KEY>
 ```
-{% /section %}
-{% section #step-5 step=5 title="Create a login page" %}
-Create or update `app/page.js` file and add the following code to it.
 
-```js
+`NEXT_PUBLIC_*` values are shipped to the browser. `APPWRITE_API_KEY` stays server-only.
+
+{% /section %}
+
+{% section #step-6 step=6 title="Mount the auth handler route" %}
+
+Create `app/api/appwrite/[...appwrite]/route.ts`. The handler exposes the `sign-in`, `sign-up`, `sign-out`, and `oauth/callback` endpoints that the React hooks POST to in SSR mode.
+
+```ts
+import { createAppwriteHandlers } from "@appwrite.io/react/handlers/next";
+
+export const { GET, POST } = createAppwriteHandlers({
+  endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!,
+  projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!,
+  apiKey: process.env.APPWRITE_API_KEY!,
+  basePath: "/api/appwrite",
+});
+```
+
+{% /section %}
+
+{% section #step-7 step=7 title="Wrap your app with AppwriteProvider" %}
+
+Create `app/providers.tsx`. The provider runs in client components and accepts the SSR session secret as a prop so the underlying Web SDK can hydrate authenticated.
+
+```tsx
 "use client";
-import { useState } from "react";
-import { account, ID } from "./appwrite";
 
-const LoginPage = () => {
-  const [loggedInUser, setLoggedInUser] = useState(null);
+import { AppwriteProvider } from "@appwrite.io/react";
+
+export function Providers({
+  session,
+  children,
+}: {
+  session?: string | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <AppwriteProvider
+      endpoint={process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!}
+      projectId={process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!}
+      ssr={{ session, basePath: "/api/appwrite" }}
+    >
+      {children}
+    </AppwriteProvider>
+  );
+}
+```
+
+Replace `app/layout.tsx` with the following. It reads the session cookie on the server and passes it into the provider.
+
+```tsx
+import { createNextServerHelpers } from "@appwrite.io/react/server/next";
+import { Providers } from "./providers";
+
+const appwrite = {
+  endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!,
+  projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!,
+};
+
+export default async function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const helpers = createNextServerHelpers(appwrite);
+  const session = await helpers.readSessionCookie();
+
+  return (
+    <html lang="en">
+      <body>
+        <Providers session={session}>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+{% /section %}
+
+{% section #step-8 step=8 title="Read the user on the server" %}
+
+Replace `app/page.tsx`. `getLoggedInUser()` calls the Appwrite API server-side with the session cookie, so the user is rendered with the first byte.
+
+```tsx
+import { createNextServerHelpers } from "@appwrite.io/react/server/next";
+import { AuthPanel } from "./auth-panel";
+
+const appwrite = {
+  endpoint: process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!,
+  projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!,
+};
+
+export default async function Page() {
+  const helpers = createNextServerHelpers(appwrite);
+  const user = await helpers.getLoggedInUser();
+
+  return (
+    <main>
+      <h1>Appwrite React library on Next.js</h1>
+      <p>SSR user: {user?.email ?? "signed out"}</p>
+      <AuthPanel />
+    </main>
+  );
+}
+```
+
+{% /section %}
+
+{% section #step-9 step=9 title="Add the client auth panel" %}
+
+Create `app/auth-panel.tsx`. The hooks POST to the handler route, the server sets a cookie, and `router.refresh()` re-runs the server component so the SSR user updates.
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { useAuth } from "@appwrite.io/react";
+import { useRouter } from "next/navigation";
+
+export function AuthPanel() {
+  const { user, isLoading, signIn, signUp, signOut, error } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  const login = async (email, password) => {
-    const session = await account.createEmailPasswordSession({
-        email,
-        password
-    });
-    setLoggedInUser(await account.get());
-  };
+  if (isLoading) return <p>Loading...</p>;
 
-  const register = async () => {
-    await account.create({
-      userId: ID.unique(),
-      email,
-      password,
-      name
-    });
-    login(email, password);
-  };
-
-  const logout = async () => {
-    await account.deleteSession({ sessionId: 'current' });
-    setLoggedInUser(null);
-  };
-
-  if (loggedInUser) {
+  if (user) {
     return (
       <div>
-        <p>Logged in as {loggedInUser.name}</p>
-        <button type="button" onClick={logout}>
-          Logout
+        <p>Welcome, {user.name || user.email}</p>
+        <button onClick={() => signOut.signOut({ onSuccess: () => router.refresh() })}>
+          Sign out
         </button>
       </div>
     );
@@ -133,43 +214,57 @@ const LoginPage = () => {
 
   return (
     <div>
-      <p>Not logged in</p>
-      <form>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button type="button" onClick={() => login(email, password)}>
-          Login
-        </button>
-        <button type="button" onClick={register}>
-          Register
-        </button>
-      </form>
+      <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input
+        placeholder="Password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button
+        onClick={() =>
+          signUp.emailPassword({
+            email,
+            password,
+            name,
+            onSuccess: () => router.refresh(),
+          })
+        }
+        disabled={signUp.isPending}
+      >
+        Sign up
+      </button>
+      <button
+        onClick={() =>
+          signIn.emailPassword({
+            email,
+            password,
+            onSuccess: () => router.refresh(),
+          })
+        }
+        disabled={signIn.isPending}
+      >
+        Sign in
+      </button>
+      {error && <p style={{ color: "red" }}>{error.message}</p>}
     </div>
   );
-};
-
-export default LoginPage;
+}
 ```
+
 {% /section %}
 
-{% section #step-6 step=6 title="All set" %}
-Run your project with `npm run dev` and open [Localhost on Port 3000](http://localhost:3000) in your browser.
+{% section #step-10 step=10 title="Run your app" %}
 
-Don't forget to add some CSS to suit your style.
+```sh
+npm run dev
+```
+
+Open [localhost on port 3000](http://localhost:3000). Sign up, sign out, and sign back in to verify the cookie-based SSR flow.
+
 {% /section %}
+
+# Next steps {% #next-steps %}
+
+For server-side admin operations, per-request session clients, OAuth callbacks, and the full hook reference, see the [React library docs](/docs/products/auth/react).

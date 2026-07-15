@@ -17,7 +17,7 @@ If a user has read, create, update, or delete permissions at the bucket level, t
 
 Configure bucket level permissions by navigating to **Your bucket** > **Settings** > **Permissions**.
 
-[Learn more about permissions and roles](/docs/advanced/platform/permissions)
+[Learn more about permissions and roles](/docs/advanced/security/permissions)
 
 # File level {% #file-level %}
 File level permissions grant access to individual files.
@@ -28,6 +28,6 @@ Enable file level permissions by navigating to **Your bucket** > **Settings** > 
 
 File level permissions are configured in individual [files](/docs/products/storage/permissions#file-level).
 
-[Learn more about permissions and roles](/docs/advanced/platform/permissions)
+[Learn more about permissions and roles](/docs/advanced/security/permissions)
 
 

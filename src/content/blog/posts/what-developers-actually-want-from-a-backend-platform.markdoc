@@ -96,7 +96,7 @@ A backend platform should handle the following by default:
 - Rate limiting on authentication endpoints
 - Session management with configurable expiry
 
-Appwrite's [permissions model](/docs/products/databases/permissions) operates at the table and row-level. Combined with [roles and labels](/docs/products/auth/roles) on user accounts, you can model granular access patterns without writing custom middleware for every endpoint.
+Appwrite's [permissions model](/docs/products/databases/permissions) operates at the table and row-level. Combined with [roles and labels](/docs/advanced/security/roles) on user accounts, you can model granular access patterns without writing custom middleware for every endpoint.
 
 # Scalability from first commit to production
 

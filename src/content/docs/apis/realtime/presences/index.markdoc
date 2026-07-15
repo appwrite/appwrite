@@ -115,7 +115,7 @@ The SDK remembers the latest payload and re-sends it after a reconnect, so a bri
 
 # Upsert a presence {% #upsert-a-presence %}
 
-`upsert` creates a presence or updates the existing record with the same `presenceId`. Call it on every page navigation, focus change, or heartbeat without worrying about duplicates. From a client session, `userId` is inferred from the signed-in user; from a server SDK with an API key, pass `userId` explicitly. Server SDKs need an [API key](/docs/advanced/platform/api-keys) with the `presences.write` scope.
+`upsert` creates a presence or updates the existing record with the same `presenceId`. Call it on every page navigation, focus change, or heartbeat without worrying about duplicates. From a client session, `userId` is inferred from the signed-in user; from a server SDK with an API key, pass `userId` explicitly. Server SDKs need an [API key](/docs/partners/project/api-keys) with the `presences.write` scope.
 
 {% multicode %}
 ```client-web
@@ -1578,7 +1578,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Subscribe to presence updates {% #subscribe-to-presence-updates %}
 
-Presence is most useful when other clients can react to it live. Use the `Channel.presences()` helper to subscribe to the global presences channel, or `Channel.presence('<PRESENCE_ID>')` to follow a single record. All Realtime subscriptions are gated by the [permissions system](/docs/advanced/platform/permissions), so a client will only receive updates for presences it has permission to read.
+Presence is most useful when other clients can react to it live. Use the `Channel.presences()` helper to subscribe to the global presences channel, or `Channel.presence('<PRESENCE_ID>')` to follow a single record. All Realtime subscriptions are gated by the [permissions system](/docs/advanced/security/permissions), so a client will only receive updates for presences it has permission to read.
 
 {% multicode %}
 ```client-web
@@ -1781,7 +1781,7 @@ To remove a presence immediately, for example on sign out or when the user close
 
 # Permissions and scopes {% #permissions-and-scopes %}
 
-Presences use the standard Appwrite [permissions system](/docs/advanced/platform/permissions). Set read permissions on a presence to control who can subscribe to it:
+Presences use the standard Appwrite [permissions system](/docs/advanced/security/permissions). Set read permissions on a presence to control who can subscribe to it:
 
 - `Role.any()` makes the presence visible to anyone, including unauthenticated visitors.
 - `Role.users()` restricts visibility to signed-in users.
