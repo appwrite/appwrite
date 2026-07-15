@@ -22,7 +22,8 @@ env:
 
 jobs:
     build:
-        runs-on: ubuntu-latest
+        runs-on: runs-on=${{ github.run_id }}/runner=4cpu-linux-x64/family=c7/extras=otel
+        timeout-minutes: 45
         steps:
             - name: Checkout the repo
               uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -62,7 +63,8 @@ jobs:
 
     deploy:
         needs: build
-        runs-on: ubuntu-latest
+        runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/family=c7/extras=otel
+        timeout-minutes: 10
         # Shared across the staging and production workflows so their deploy
         # jobs never push to assets-applications at the same time.
         concurrency:
