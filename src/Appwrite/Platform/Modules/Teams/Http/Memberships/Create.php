@@ -336,6 +336,10 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
                 }
                 $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/' . $smtpBaseTemplate . '.tpl';
+                if (! \is_readable($bodyTemplate)) {
+                    $smtpBaseTemplate = 'email-base';
+                    $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/email-base.tpl';
+                }
 
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
