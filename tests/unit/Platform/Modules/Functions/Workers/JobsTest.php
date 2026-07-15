@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Functions;
+namespace Tests\Unit\Platform\Modules\Functions\Workers;
 
 use Appwrite\Platform\Modules\Functions\Workers\Jobs;
 use PHPUnit\Framework\TestCase;

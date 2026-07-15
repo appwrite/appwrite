@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
-use Appwrite\Compute\Job;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -13,6 +13,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -22,7 +23,6 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 /**
  * Applies open-runtimes jobs-service callbacks to a deployment. The API
@@ -64,7 +64,7 @@ class Jobs extends Action
             ->inject('publisherForUsage')
             ->inject('usage')
             ->inject('deviceForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('cache')
             ->inject('locks')
             ->callback($this->action(...));
@@ -82,7 +82,7 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         UsageContext $usage,
         Device $deviceForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Cache $cache,
         callable $locks,
     ): void {
@@ -93,7 +93,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $github, $cache, $deploymentId): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $deploymentId): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -107,14 +107,13 @@ class Jobs extends Action
                 return;
             }
 
-            // The build writes its output onto the mounted volume before build.sh
-            // exits, so the exit callback is a truthful completion signal.
-            $finalizing = $event->event === 'orchestrator.job.exit';
+            $statusBefore = $deployment->getAttribute('status');
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $github),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory, $cache),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory, $cache),
                 default => $deployment,
             };
 
@@ -130,8 +129,10 @@ class Jobs extends Action
 
             // On a real terminal outcome (not a concurrently-canceled build),
             // notify webhooks + event-triggered functions of the deployment
-            // update (mirrors the executor Builds worker).
-            if ($finalizing && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            // update (mirrors the executor Builds worker). The transition can
+            // land on either the exit (failures) or the complete callback
+            // (success), so key off the status change rather than the event.
+            if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
         }, self::LOCK_TIMEOUT);
@@ -190,9 +191,13 @@ class Jobs extends Action
     }
 
     /**
-     * Resolve the build-command exit into a terminal outcome. The output is
-     * already on the mounted builds volume, so a zero exit enforces the size
-     * limit against the on-disk artifact before readying; a non-zero exit fails.
+     * A successful build needs both terminal callbacks before it can ready:
+     * exit carries the code but fires before post-job artifacts are
+     * delivered; complete confirms delivery but carries no code. Failures
+     * short-circuit at exit — no output is needed to fail. The success join
+     * is order-independent: each of exit(0)/complete leaves a marker, and
+     * whichever finds the other's marker finalizes (markers live in cache,
+     * applied under the per-deployment lock).
      */
     private function onExit(
         Database $dbForProject,
@@ -203,15 +208,67 @@ class Jobs extends Action
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
         Device $deviceForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        Cache $cache,
     ): Document {
         if ($exitCode !== 0) {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $github);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $vcsFactory);
         }
 
+        $cache->save('jobs-exit-' . $deployment->getId(), true);
+        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory);
+        }
+
+        return $deployment;
+    }
+
+    /**
+     * The delivery half of the success join — see onExit. Emitted by the
+     * jobs-service once the job's post-job artifacts have run, so on every
+     * storage strategy the output is already where Appwrite reads it.
+     */
+    private function onComplete(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        Device $deviceForBuilds,
+        VcsFactory $vcsFactory,
+        Cache $cache,
+    ): Document {
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            return $deployment; // already finalized (a non-zero exit fails at the exit callback)
+        }
+
+        if ($cache->load('jobs-exit-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory);
+        }
+
+        $cache->save('jobs-complete-' . $deployment->getId(), true);
+
+        return $deployment;
+    }
+
+    /**
+     * Finalize a successful build: enforce the size limit against the stored
+     * output, then mark ready.
+     */
+    private function ready(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        Device $deviceForBuilds,
+        VcsFactory $vcsFactory,
+    ): Document {
         $path = $this->findBuildPath($deviceForBuilds, $project->getId(), $deployment);
         if ($path === '') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build must produce exactly one output artifact.', $usage, $publisherForUsage, $github);
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build must produce exactly one output artifact.', $usage, $publisherForUsage, $vcsFactory);
         }
 
         $size = $deviceForBuilds->getFileSize($path);
@@ -219,10 +276,11 @@ class Jobs extends Action
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $github);
+
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $vcsFactory);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $github, $size, $path);
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $vcsFactory, $size, $path);
     }
 
     private function findBuildPath(Device $deviceForBuilds, string $projectId, Document $deployment): string
@@ -232,7 +290,7 @@ class Jobs extends Action
             return $path;
         }
 
-        $files = $deviceForBuilds->getFiles(Job::outputDirectory($projectId, $deployment->getId()));
+        $files = $deviceForBuilds->getFiles(Orchestrator::outputDirectory($projectId, $deployment->getId()));
 
         return \count($files) === 1 ? (string) $files[0] : '';
     }
@@ -251,7 +309,7 @@ class Jobs extends Action
         string $message,
         UsageContext $usage,
         UsagePublisher $publisherForUsage,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         int $buildSize = 0,
         string $buildPath = '',
     ): Document {
@@ -306,17 +364,17 @@ class Jobs extends Action
         // deployments only; best-effort). "pending" at build start is a follow-up.
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $function->isEmpty()) {
-            $this->gitStatus($github, $dbForPlatform, $project, $function, $deployment, $status === 'ready' ? 'success' : 'failure');
+            $this->gitStatus($vcsFactory, $dbForPlatform, $project, $function, $deployment, $status === 'ready' ? 'success' : 'failure');
         }
 
         return $deployment;
     }
 
     /**
-     * Post a GitHub commit status for a VCS deployment (no-op for non-VCS builds
+     * Post a VCS commit status for a VCS deployment (no-op for non-VCS builds
      * or silent mode). Best-effort — a failed status update never fails the build.
      */
-    private function gitStatus(GitHub $github, Database $dbForPlatform, Document $project, Document $function, Document $deployment, string $state): void
+    private function gitStatus(VcsFactory $vcsFactory, Database $dbForPlatform, Document $project, Document $function, Document $deployment, string $state): void
     {
         $commitHash = $deployment->getAttribute('providerCommitHash', '');
         if ($commitHash === '' || $function->getAttribute('providerSilentMode', false) === true) {
@@ -329,7 +387,7 @@ class Jobs extends Action
             if ($providerInstallationId === '') {
                 return;
             }
-            $github->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''), System::getEnv('_APP_VCS_GITHUB_APP_ID', ''));
+            $vcs = $vcsFactory->fromInstallation($installation);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
@@ -338,7 +396,7 @@ class Jobs extends Action
             $message = $state === 'success' ? 'Build succeeded.' : 'Build failed.';
             $name = $function->getAttribute('name', '') . ' (' . $project->getAttribute('name', '') . ')';
 
-            $github->updateCommitStatus(
+            $vcs->updateCommitStatus(
                 $deployment->getAttribute('providerRepositoryName', ''),
                 $commitHash,
                 $deployment->getAttribute('providerRepositoryOwner', ''),

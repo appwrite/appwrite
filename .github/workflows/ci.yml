@@ -103,7 +103,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
         with:
-          php-version: '8.3'
+          php-version: '8.5'
           extensions: swoole
           tools: composer:v2
           coverage: none
@@ -252,7 +252,7 @@ jobs:
               return;
             }
 
-            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('databases', JSON.stringify(['PostgreSQL']));
             core.setOutput('modes', JSON.stringify(['dedicated']));
 
   build:

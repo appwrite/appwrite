@@ -7,7 +7,7 @@ When bumping a patch version (e.g., `1.9.0` -> `1.9.1`), follow this checklist.
 ### Bump console image
 
 Update the console Docker image tag:
-- [ ] `docker-compose.yml` -- update `image: appwrite/vibes:X.Y.Z` (the `appwrite-console` service)
+- [ ] `docker-compose.yml` -- update `image: appwrite/new:X.Y.Z` (the `appwrite-console` service)
 
 ### Bump Appwrite version
 

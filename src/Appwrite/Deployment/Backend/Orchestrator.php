@@ -1,45 +1,105 @@
 <?php
 
-namespace Appwrite\Compute;
+namespace Appwrite\Deployment\Backend;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Deployment\Backend;
 use Appwrite\Deployment\Token;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
+use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
 /**
- * Builds an open-runtimes jobs-service job payload for a function deployment.
+ * Builds and submits an open-runtimes jobs-service job for a deployment.
  *
  * Source crosses the boundary via the artifacts system (presigned GET download
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
- * sources are fine. The build output and package-manager cache instead go on a
- * mounted volume: the builds storage volume is attached to the build worker at
- * its Appwrite path, so build.sh writes the build artifact + cache squashfs
- * straight onto the volume Appwrite already reads. That keeps the multi-hundred-MB
- * output off the (capped) HTTP upload path and out of the Appwrite process.
+ * sources are fine. The build output and package-manager cache, by default,
+ * go on a mounted volume: the builds storage volume is attached to the build
+ * worker at its Appwrite path, so build.sh writes its artifact + the cache
+ * squashfs straight onto the volume Appwrite already reads. That keeps the
+ * multi-hundred-MB output off the (capped) HTTP upload path and out of the
+ * Appwrite process. Deployments that need a different strategy (e.g. S3
+ * upload/download artifacts instead of a shared volume) override storage()
+ * — everything else about the payload stays the same.
  *
  * Covers function deployments whose source is a tarball: manual upload,
- * duplicate/rebuild, and templates (public GitHub tarball via `$template`).
+ * duplicate/rebuild, and templates (public GitHub tarball resolved from a
+ * git reference).
  */
-final class Job
+readonly class Orchestrator extends Backend
 {
+    public function __construct(
+        private Jobs $jobs,
+        Database $dbForProject,
+        Document $project,
+        private array $platform,
+    ) {
+        parent::__construct($dbForProject, $project);
+    }
+
+    public function createFromUpload(Document $resource, Document $deployment): Document
+    {
+        return $this->submit($resource, $deployment, null);
+    }
+
+    public function createFromRef(
+        Document $resource,
+        Document $deployment,
+        string $owner,
+        string $repository,
+        string $type,
+        string $reference,
+        string $rootDirectory = '',
+    ): Document {
+        // The jobs-service has no GitHub client of its own — it only fetches
+        // tarballs — so $reference must already be a concrete commit/branch/
+        // tag; codeload only understands one ref per tarball, not a range.
+        $url = "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}";
+
+        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory]);
+    }
+
+    public function createFromUrl(
+        Document $resource,
+        Document $deployment,
+        string $url,
+        string $rootDirectory = '',
+    ): Document {
+        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory]);
+    }
+
+    private function submit(Document $resource, Document $deployment, ?array $source): Document
+    {
+        $deployment = $this->upload($resource, $deployment);
+        $this->deactivateOthers($resource, $deployment);
+
+        $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'status' => 'waiting',
+        ]));
+
+        $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
+
+        return $deployment;
+    }
+
+    public function cancel(string $deploymentId): void
+    {
+        $this->jobs->delete(static::id($this->project->getId(), $deploymentId));
+    }
+
     /**
      * @return array<string, mixed> Named arguments for OpenRuntimes\Orchestrator\Jobs::create().
      */
-    /**
-     * @param  ?array{url: string, subdir?: string}  $source Remote tarball source
-     *   (template codeload URL, or a VCS presigned URL). When null, the source is
-     *   the deployment's own uploaded tarball, fetched from Appwrite via a
-     *   presigned token (manual upload / duplicate).
-     */
-    public static function build(
+    protected static function payload(
         Document $project,
         Document $function,
         Document $deployment,
@@ -97,20 +157,18 @@ final class Job
             ];
         }
 
-        // Output + cache live on the mounted builds volume (see class doc): the
-        // build writes its artifact to the deployment's build dir and the cache
-        // squashfs to its per-function keyed path — both directly on the volume
-        // Appwrite reads, so nothing large crosses the HTTP boundary.
-        $cacheKey = self::cacheKey($projectId, $function->getId(), $runtime['image'] ?? '');
+        // Where output + cache land is a swappable strategy (see storage()) —
+        // the default mounts the shared builds volume; nothing else here cares
+        // which strategy is active.
+        $output = static::storage($project, $function, $deployment);
+
         $command = $deployment->getAttribute('buildCommands', '');
         $env = self::variables($project, $function, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
-            'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => self::outputDirectory($projectId, $deploymentId),
-            'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => self::cachePath($projectId, $cacheKey),
-        ];
+        ] + $output['environment'];
 
         return [
-            'id' => self::id($projectId, $deploymentId),
+            'id' => static::id($projectId, $deploymentId),
             'image' => $runtime['image'],
             'command' => '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
             'cpu' => $cpus,
@@ -125,20 +183,19 @@ final class Job
             ],
             // The orchestrator expects environment as a string->string map.
             'environment' => \array_map('strval', $env),
-            'artifacts' => $sourceArtifacts,
-            // Attach the builds storage volume (Docker volume / K8s PVC named by
-            // _APP_BUILDS_VOLUME) to the worker at its Appwrite path so build.sh
-            // writes output + cache straight onto it.
-            'volumes' => [
-                new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
-            ],
+            'artifacts' => [...$sourceArtifacts, ...$output['artifacts']],
+            'volumes' => $output['volumes'],
             'callback' => new Callback(
                 url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
-                // Artifact callbacks only carry the source-size stat, which exists
-                // only for remote-source builds (templates / VCS).
+                // Two terminal callbacks: exit carries the code (fires on
+                // command exit, before post-job artifacts), complete confirms
+                // artifact delivery (carries only jobId + meta) — the worker
+                // joins them, so readiness holds on any storage strategy.
+                // Artifact callbacks only carry the source-size stat, which
+                // exists only for remote-source builds (templates / VCS).
                 events: $source !== null
-                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit]
-                    : [CallbackEvent::Log, CallbackEvent::Exit],
+                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit, CallbackEvent::Complete]
+                    : [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete],
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
@@ -175,7 +232,45 @@ final class Job
         return APP_STORAGE_BUILDS . "/app-{$projectId}/cache/{$cacheKey}.sqfs";
     }
 
-    private static function runtime(Document $function, string $version): array
+    /**
+     * Where build.sh's output artifact and package-manager cache
+     * (a squashfs) land, and what the job needs to get them there. The
+     * default mounts the shared builds volume at outputDirectory()/cachePath();
+     * build.sh only cares that OPEN_RUNTIMES_BUILD_OUTPUT_DIR/_CACHE_ARTIFACT
+     * point somewhere on its local filesystem, volume-backed or not — so a
+     * strategy without a shared volume (e.g. S3) instead points them at a
+     * local tmp path and moves things in/out via 'artifacts':
+     *   - cache pull, before the build: a plain DownloadArtifact (no
+     *     `depends`, so it runs before the command) into the local cache path.
+     *   - cache push and output upload, after the build: an UploadArtifact
+     *     with `depends: 'job'` — 'job' is the orchestrator's sentinel id for
+     *     "after the build command finishes", not an id of another artifact.
+     *
+     * @return array{volumes: array<Volume>, artifacts: array<mixed>, environment: array<string, string>}
+     */
+    protected static function storage(Document $project, Document $resource, Document $deployment): array
+    {
+        $projectId = $project->getId();
+        $deploymentId = $deployment->getId();
+        $runtime = self::runtime($resource, $resource->getAttribute('version', 'v2'));
+        $cacheKey = static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? '');
+
+        return [
+            // Docker volume / K8s PVC named by _APP_BUILDS_VOLUME, attached
+            // to the worker at its Appwrite path so build.sh writes output +
+            // cache straight onto it.
+            'volumes' => [
+                new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+            ],
+            'artifacts' => [],
+            'environment' => [
+                'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
+                'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => static::cachePath($projectId, $cacheKey),
+            ],
+        ];
+    }
+
+    protected static function runtime(Document $function, string $version): array
     {
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;

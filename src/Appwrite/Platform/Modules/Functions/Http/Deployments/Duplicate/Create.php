@@ -2,24 +2,21 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Duplicate;
 
-use Appwrite\Compute\Job;
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\System\System;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
 {
@@ -65,12 +62,11 @@ class Create extends Action
             ->param('buildId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Build unique ID.', true, ['dbForProject']) // added as optional param for backward compatibility
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForPlatform')
             ->inject('queueForEvents')
-            ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('deviceForFunctions')
-            ->inject('project')
-            ->inject('platform')
+            ->inject('vcsFactory')
             ->callback($this->action(...));
     }
 
@@ -80,12 +76,11 @@ class Create extends Action
         string $buildId,
         Response $response,
         Database $dbForProject,
+        Database $dbForPlatform,
         Event $queueForEvents,
-        BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Backend $deployments,
         Device $deviceForFunctions,
-        Document $project,
-        array $platform
+        VcsFactory $vcsFactory,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -98,26 +93,38 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        // Remote-source deployments (templates / VCS) on the jobs-service
+        // backend never store a source tarball — the build sidecar fetches
+        // it — so a duplicate re-fetches the same source from the
+        // coordinates persisted on the deployment.
         $path = $deployment->getAttribute('sourcePath');
-        if (empty($path) || !$deviceForFunctions->exists($path)) {
+        $hasSource = ! empty($path) && $deviceForFunctions->exists($path);
+        $installationId = $deployment->getAttribute('installationId', '');
+        $owner = $deployment->getAttribute('providerRepositoryOwner', '');
+        $repository = $deployment->getAttribute('providerRepositoryName', '');
+
+        if (! $hasSource && ($owner === '' || $repository === '')) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $deploymentId = ID::unique();
 
-        // Build backend for the rebuild: 'orchestrator' (jobs-service, submitted
-        // here) or 'executor' (default; Builds worker).
-        $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
+        $destination = '';
+        if ($hasSource) {
+            $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+            $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
+        }
 
-        $destination = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-        $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
-
+        // Cloning the source deployment's attributes onto the new one, with
+        // its own $id and no $sequence, tells the service to create it fresh
+        // rather than update the deployment being duplicated. A re-fetched
+        // source starts unsized; its stat artifact reports the size.
         $deployment->removeAttribute('$sequence');
-
-        $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
+        $deployment->setAttributes([
             '$id' => $deploymentId,
             'sourcePath' => $destination,
-            'totalSize' => $deployment->getAttribute('sourceSize', 0),
+            'sourceSize' => $hasSource ? $deployment->getAttribute('sourceSize', 0) : 0,
+            'totalSize' => $hasSource ? $deployment->getAttribute('sourceSize', 0) : 0,
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
             'startCommand' => $function->getAttribute('startCommand', ''),
@@ -125,21 +132,39 @@ class Create extends Action
             'buildEndedAt' => null,
             'buildDuration' => null,
             'buildSize' => null,
-            'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
-        ]));
+        ]);
 
-        if ($useJobs) {
-            $jobs->create(...Job::build($project, $function, $deployment, $platform));
+        if ($hasSource) {
+            $deployment = $deployments->createFromUpload($function, $deployment);
+        } elseif ($installationId !== '') {
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+            if ($installation->isEmpty()) {
+                throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+            }
+
+            $github = $vcsFactory->fromInstallation($installation);
+
+            $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
+            $deployment = $deployments->createFromUrl(
+                $function,
+                $deployment,
+                $github->getRepositoryPresignedUrl($owner, $repository, $ref),
+                $deployment->getAttribute('providerRootDirectory', ''),
+            );
         } else {
-            $publisherForBuilds->enqueue(new BuildMessage(
-                project: $project,
-                resource: $function,
-                deployment: $deployment,
-                type: BUILD_TYPE_DEPLOYMENT,
-                platform: $platform,
-            ));
+            // Public template repo: providerBranch holds the resolved ref
+            // (branch, tag, or commit — see Deployments/Template/Create).
+            $deployment = $deployments->createFromRef(
+                $function,
+                $deployment,
+                $owner,
+                $repository,
+                GitHub::CLONE_TYPE_BRANCH,
+                $deployment->getAttribute('providerBranch', ''),
+                $deployment->getAttribute('providerRootDirectory', ''),
+            );
         }
 
         $queueForEvents

@@ -1,9 +1,9 @@
 {
     "preset": "psr12",
     "exclude": [
-        "./app/sdks",
-        "./tests/resources/functions",
-        "./app/console"
+        "app/sdks",
+        "tests/resources/functions",
+        "app/console"
     ],
     "rules": {
         "array_indentation": true,

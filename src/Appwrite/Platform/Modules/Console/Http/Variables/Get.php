@@ -46,14 +46,19 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON
             ))
+            ->inject('vcsProviders')
             ->inject('response')
             ->inject('platform')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, array $platform, Database $dbForProject)
-    {
+    public function action(
+        callable $vcsProviders,
+        Response $response,
+        array $platform,
+        Database $dbForProject
+    ) {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
 
@@ -66,11 +71,7 @@ class Get extends Action
 
         $isDomainEnabled = $isAAAAValid || $isAValid || $isCNAMEValid;
 
-        $isVcsEnabled = !empty(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
-            && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
+        $isVcsEnabled = !empty($vcsProviders());
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
@@ -86,6 +87,7 @@ class Get extends Action
             '_APP_COMPUTE_SIZE_LIMIT' => +System::getEnv('_APP_COMPUTE_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => System::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
+            '_APP_VCS_PROVIDERS' => $vcsProviders(),
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
             '_APP_DOMAIN_SITES' => $platform['sitesDomain'],
