@@ -1199,7 +1199,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'Use app and fill credentials': 'アプリを使って認証情報を入力',
 
   'AI prompt': 'AI プロンプト',
-  'AI sign-in prompt': 'AI サインインプロンプト',
+  'Sign-in with': 'サインイン（',
+  'prompt': '）プロンプト',
   'Copy SVG': 'SVG をコピー',
   'Copy a ready-made prompt for your coding agent to add this provider sign-in button to your app.': 'このプロバイダーのサインインボタンをアプリに追加するための、コーディングエージェント向けの完成プロンプトをコピーします。',
   'Failed to copy provider icon': 'プロバイダーアイコンのコピーに失敗しました',

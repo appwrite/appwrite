@@ -196,7 +196,7 @@ export function OAuth2ProviderHelpers({
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            {t('AI sign-in prompt')}
+            {t('Sign-in with')} {providerName} {t('prompt')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             {t(
