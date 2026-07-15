@@ -9,12 +9,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Branches;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -54,7 +54,7 @@ class XList extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -65,7 +65,7 @@ class XList extends Action
         string $providerRepositoryId,
         string $search,
         array $queries,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -82,13 +82,11 @@ class XList extends Action
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        $vcs = $vcsFactory->fromInstallation($installation);
 
-        $owner = $github->getOwnerName($providerInstallationId);
+        $owner = $vcs->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
@@ -96,7 +94,10 @@ class XList extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        $branches = $github->listBranches($owner, $repositoryName, search: $search);
+        // Server-side branch search is GitHub-specific until the adapters gain signature parity upstream.
+        $branches = $vcs instanceof GitHub
+            ? $vcs->listBranches($owner, $repositoryName, search: $search)
+            : $vcs->listBranches($owner, $repositoryName);
 
         $total = \count($branches);
         [

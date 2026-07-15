@@ -18,6 +18,8 @@ final class Audit extends Base
         public readonly string $ip = '',
         public readonly string $userAgent = '',
         public readonly string $hostname = '',
+        public readonly string $sdk = '',
+        public readonly string $sdkVersion = '',
     ) {
     }
 
@@ -38,6 +40,8 @@ final class Audit extends Base
             'userAgent' => $this->userAgent,
             'event' => $this->event,
             'hostname' => $this->hostname,
+            'sdk' => $this->sdk,
+            'sdkVersion' => $this->sdkVersion,
         ];
     }
 
@@ -54,6 +58,8 @@ final class Audit extends Base
             ip: $data['ip'] ?? '',
             userAgent: $data['userAgent'] ?? '',
             hostname: $data['hostname'] ?? '',
+            sdk: $data['sdk'] ?? '',
+            sdkVersion: $data['sdkVersion'] ?? '',
         );
     }
 
@@ -70,6 +76,8 @@ final class Audit extends Base
             ip: $context->ip,
             userAgent: $context->userAgent,
             hostname: $context->hostname,
+            sdk: $context->sdk,
+            sdkVersion: $context->sdkVersion,
         );
     }
 }

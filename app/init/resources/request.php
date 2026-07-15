@@ -5,15 +5,20 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
+use Appwrite\Deployment\Backend\Executor as ExecutorBackend;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locale\GeoRecord;
+use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -22,6 +27,8 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Executor\Executor;
+use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
@@ -34,6 +41,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
@@ -41,9 +49,12 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -64,6 +75,17 @@ return function (Container $context): void {
     $context->set('log', fn () => new Log(), []);
 
     $context->set('logger', fn ($register) => $register->get('logger'), ['register']);
+
+    $context->set('lock', function (Group $pools, Telemetry $telemetry, ?Logger $logger, Document $project): Lock {
+        return new Lock(
+            fn (string $key, int $ttl, Closure $callback): mixed => $pools->get('lock')->use(
+                fn (\Redis $redis): mixed => $callback(new DistributedLock($redis, $key, $ttl))
+            ),
+            $telemetry,
+            $logger,
+            $project
+        );
+    }, ['pools', 'telemetry', 'logger', 'project']);
 
     $context->set('authorization', fn () => new Authorization(), []);
 
@@ -174,6 +196,18 @@ return function (Container $context): void {
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
+    $context->set('deployments', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Database $dbForProject, Document $project, Executor $executor, array $platform, Request $request) {
+        // The jobs-service orchestrator backend only understands functions
+        // (its payload builder reads function-shaped attributes like
+        // `runtime`); sites always build on the executor. Transitional:
+        // once sites build on the jobs-service too, this URI check and the
+        // nullable Backend params in the VCS trait can both go.
+        $isSite = \str_starts_with($request->getURI(), '/v1/sites');
+
+        return !$isSite && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
+            ? new Orchestrator($jobs, $dbForProject, $project, $platform)
+            : new ExecutorBackend($publisherForBuilds, $dbForProject, $project, $executor, $platform);
+    }, ['publisherForBuilds', 'jobs', 'dbForProject', 'project', 'executor', 'platform', 'request']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
         $pools,
@@ -562,6 +596,12 @@ return function (Container $context): void {
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
             $projectId = $request->getHeaderLine('x-appwrite-project', '');
+        }
+        // For non-GET requests getParam() reads the body, so a project passed
+        // as a query parameter (e.g. presigned artifact URLs) is only visible
+        // via getQuery().
+        if (empty($projectId)) {
+            $projectId = (string) $request->getQuery('project', '');
         }
 
         // Backwards compatibility for new services, originally project resources
@@ -1319,4 +1359,79 @@ return function (Container $context): void {
         $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
         return new Agent($adapter);
     }, ['register']);
+
+    $context->set('geoRecord', function ($request, Locale $locale, callable $getGeoForIp) {
+        $ip = $request->getIp();
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            Console::warning("Invalid IP address: {$ip}");
+            $ip = '0.0.0.0';
+        }
+
+        return $getGeoForIp($locale, $ip);
+    }, ['request', 'locale', 'getGeoForIp']);
+
+    $context->set('getGeoForIp', function () {
+        return function (Locale $locale, string $ip): GeoRecord {
+            $record = null;
+            $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+            $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
+
+            if (!empty($geoEndpoint) && !empty($geoSecret) && filter_var($ip, FILTER_VALIDATE_IP)) {
+                try {
+                    $client = new Client();
+                    $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
+                    $client->setTimeout(3000);
+
+                    $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
+                    if ($response->getStatusCode() === 200) {
+                        $body = $response->json();
+                        if (\is_array($body)) {
+                            $record = $body;
+                        }
+                    }
+                } catch (\Throwable $th) {
+                    Console::warning('Geo service unavailable: ' . $th->getMessage());
+                }
+            }
+
+            $countryCode = \strtoupper($record['countryCode'] ?? '--');
+            $continentCode = \strtoupper($record['continentCode'] ?? '--');
+
+            $eu = \array_map('strtoupper', Config::getParam('locale-eu'));
+            $currencies = Config::getParam('locale-currencies');
+            $currency = null;
+
+            if ($countryCode !== '--') {
+                foreach ($currencies as $element) {
+                    if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'], true)) {
+                        $currency = $element['code'];
+                        break;
+                    }
+                }
+            }
+
+            $autonomousSystemNumber = $record['autonomousSystemNumber'] ?? null;
+
+            return (new GeoRecord([
+                'ip' => $ip,
+                'countryCode' => $countryCode,
+                'continentCode' => $continentCode,
+                'eu' => $countryCode !== '--' && \in_array($countryCode, $eu, true),
+                'currency' => $currency,
+                'latitude' => $record['latitude'] ?? null,
+                'longitude' => $record['longitude'] ?? null,
+                'timeZone' => $record['timeZone'] ?? null,
+                'weatherCode' => $record['weatherCode'] ?? null,
+                'postalCode' => $record['postalCode'] ?? null,
+                'autonomousSystemNumber' => $autonomousSystemNumber === null ? null : (string) $autonomousSystemNumber,
+                'autonomousSystemOrganization' => $record['autonomousSystemOrganization'] ?? null,
+                'connectionType' => $record['connection'] ?? null,
+                'connectionUsageType' => $record['user'] ?? $record['type'] ?? null,
+                'connectionOrganization' => $record['organization'] ?? null,
+                'isp' => $record['isp'] ?? null,
+            ]))
+                ->setLocale($locale);
+        };
+    }, []);
 };

@@ -23,6 +23,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
@@ -1076,14 +1077,18 @@ class Deletes extends Action
         /* delete log for a given $resourceInternalId  */
         $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
             // get the execution at position `N+1`
-            $execution = $dbForProject->findOne('executions', [
-                Query::select(['$createdAt']),
-                Query::equal('resourceInternalId', [$resourceInternalId]),
-                Query::equal('resourceType', [$resourceType]),
-                Query::orderDesc('$createdAt'),
-                Query::orderDesc(),
-                Query::offset($executionsRetentionCount),
-            ]);
+            try {
+                $execution = $dbForProject->findOne('executions', [
+                    Query::select(['$createdAt']),
+                    Query::equal('resourceInternalId', [$resourceInternalId]),
+                    Query::equal('resourceType', [$resourceType]),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc(),
+                    Query::offset($executionsRetentionCount),
+                ]);
+            } catch (NotFoundException) {
+                return;
+            }
 
             if (!$execution->isEmpty()) {
                 // delete everything older

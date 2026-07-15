@@ -108,6 +108,7 @@ const APP_SDK_PLATFORM_STATIC = 'static';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
+const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings

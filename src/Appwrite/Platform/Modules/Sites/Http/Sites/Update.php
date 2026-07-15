@@ -11,6 +11,8 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -29,7 +31,7 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Update extends Base
 {
@@ -108,7 +110,8 @@ class Update extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('dbForPlatform')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('repositoryWebhooks')
             ->inject('executor')
             ->inject('platform')
             ->callback($this->action(...));
@@ -145,7 +148,8 @@ class Update extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         Database $dbForPlatform,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         array $platform
     ) {
@@ -156,6 +160,12 @@ class Update extends Base
             if (!$validator->isValid($adapter)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Adapter not supported for the selected framework.');
             }
+        }
+
+        $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
+
+        if (!empty($allowList) && !empty($buildRuntime) && !\in_array($buildRuntime, $allowList, true)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
         }
 
         // TODO: If only branch changes, re-deploy
@@ -241,6 +251,18 @@ class Update extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
+
+            try {
+                $providerAdapter = $vcsFactory->fromInstallation($installation);
+                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
+                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
+                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
+                }
+            } catch (\Throwable $error) {
+                $dbForPlatform->deleteDocument('repositories', $repository->getId());
+                throw $error;
+            }
         }
 
         $live = true;
@@ -309,7 +331,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $github, true, $platform);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

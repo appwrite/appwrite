@@ -25,7 +25,7 @@ final class ComposeTest extends TestCase
 
     public function testServices(): void
     {
-        $this->assertCount(15, $this->object->getServices());
+        $this->assertCount(14, $this->object->getServices());
         $this->assertSame('appwrite', $this->object->getService('appwrite')->getContainerName());
         $this->assertSame('', $this->object->getService('appwrite')->getImageVersion());
         $this->assertSame('3.6', $this->object->getService('traefik')->getImageVersion());

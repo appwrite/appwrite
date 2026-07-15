@@ -56,7 +56,7 @@ class Github extends OAuth2
             $response = $this->request(
                 'POST',
                 'https://github.com/login/oauth/access_token',
-                [],
+                ['Accept: application/json'],
                 \http_build_query([
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
@@ -65,9 +65,7 @@ class Github extends OAuth2
                 ])
             );
 
-            $output = [];
-            \parse_str($response, $output);
-            $this->tokens = $output;
+            $this->tokens = $this->parseTokens($response);
         }
 
         return $this->tokens;
@@ -83,7 +81,7 @@ class Github extends OAuth2
         $response = $this->request(
             'POST',
             'https://github.com/login/oauth/access_token',
-            [],
+            ['Accept: application/json'],
             \http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
@@ -92,15 +90,42 @@ class Github extends OAuth2
             ])
         );
 
-        $output = [];
-        \parse_str($response, $output);
-        $this->tokens = $output;
+        $this->tokens = $this->parseTokens($response);
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
         return $this->tokens;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function parseTokens(string $response): array
+    {
+        $tokens = \json_decode($response, true);
+
+        if (!\is_array($tokens)) {
+            $tokens = [];
+            \parse_str($response, $tokens);
+        }
+
+        if (isset($tokens['error'])) {
+            throw new Exception(\json_encode(
+                $tokens,
+                JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR,
+            ), 400);
+        }
+
+        if (empty($tokens['access_token'])) {
+            throw new Exception(\json_encode([
+                'error' => 'access_token_missing',
+                'error_description' => 'GitHub did not return an access token.',
+            ]), 400);
+        }
+
+        return $tokens;
     }
 
     /**
