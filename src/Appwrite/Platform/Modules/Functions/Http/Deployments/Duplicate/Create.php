@@ -9,13 +9,13 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Action
@@ -66,7 +66,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('deployments')
             ->inject('deviceForFunctions')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->callback($this->action(...));
     }
 
@@ -80,7 +80,7 @@ class Create extends Action
         Event $queueForEvents,
         Backend $deployments,
         Device $deviceForFunctions,
-        GitHub $github,
+        VcsFactory $vcsFactory,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -144,11 +144,7 @@ class Create extends Action
                 throw new Exception(Exception::INSTALLATION_NOT_FOUND);
             }
 
-            $github->initializeVariables(
-                $installation->getAttribute('providerInstallationId', ''),
-                System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'),
-                System::getEnv('_APP_VCS_GITHUB_APP_ID'),
-            );
+            $github = $vcsFactory->fromInstallation($installation);
 
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $deployment = $deployments->createFromUrl(

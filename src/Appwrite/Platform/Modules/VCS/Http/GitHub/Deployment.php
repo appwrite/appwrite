@@ -23,13 +23,13 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\Contains;
 use Utopia\Validator\Globstar;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 trait Deployment
 {
     protected function createGitDeployments(
-        GitHub $github,
+        Git $vcs,
         string $providerInstallationId,
         array $repositories,
         string $providerBranch,
@@ -53,8 +53,9 @@ trait Deployment
         ?Backend $deployments = null,
     ) {
         $errors = [];
+        $provider = $vcs->getName();
         foreach ($repositories as $repository) {
-            $logBase = 'vcs.github.event.repo.unknown';
+            $logBase = "vcs.{$provider}.event.repo.unknown";
 
             try {
                 $repositoryId = $repository->getId();
@@ -62,7 +63,7 @@ trait Deployment
                 $resourceId = $repository->getAttribute('resourceId');
                 $resourceType = $repository->getAttribute('resourceType');
 
-                $logBase = "vcs.github.event.repo.{$repositoryId}";
+                $logBase = "vcs.{$provider}.event.repo.{$repositoryId}";
                 Span::add('project.id', $projectId);
                 Span::add("{$logBase}.resource.id", $resourceId);
                 Span::add("{$logBase}.resource.type", $resourceType);
@@ -145,9 +146,9 @@ trait Deployment
                     $activate = true;
                 }
 
-                $owner = $github->getOwnerName($providerInstallationId);
+                $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                 try {
-                    $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                    $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
@@ -234,10 +235,10 @@ trait Deployment
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
                                 $comment = new Comment($platform);
-                                $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                                $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
-                                $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                                $latestCommentId = \strval($vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } catch (\Throwable $e) {
                                 Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                             } finally {
@@ -247,7 +248,7 @@ trait Deployment
                     } else {
                         $comment = new Comment($platform);
                         $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
-                        $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
+                        $latestCommentId = \strval($vcs->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                         if (!empty($latestCommentId)) {
                             $teamId = $project->getAttribute('teamId', '');
@@ -307,10 +308,10 @@ trait Deployment
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
                                 $comment = new Comment($platform);
-                                $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                                $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
-                                $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                                $latestCommentId = \strval($vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } catch (\Throwable $e) {
                                 Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
                             } finally {
@@ -328,12 +329,12 @@ trait Deployment
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                     try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $github->getOwnerName($providerInstallationId);
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
+                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                     continue;
                 }
 
@@ -399,7 +400,7 @@ trait Deployment
                     $deployment = $authorization->skip(fn () => $deployments->createFromUrl(
                         $resource,
                         $deployment,
-                        $github->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
                         $resource->getAttribute('providerRootDirectory', ''),
                     ));
                 } else {
@@ -552,9 +553,9 @@ trait Deployment
 
                             if (!empty($previewUrl)) {
                                 $comment = new Comment($platform);
-                                $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                                $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
-                                $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
+                                $vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                             }
                         } catch (\Throwable $e) {
                             Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
@@ -573,14 +574,14 @@ trait Deployment
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                     try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                        $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                     } catch (RepositoryNotFound $e) {
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
-                    $owner = $github->getOwnerName($providerInstallationId);
+                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
                     $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
                 Span::add("{$logBase}.build.triggered", 'true');
