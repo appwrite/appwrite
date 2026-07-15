@@ -1,0 +1,86 @@
+---
+layout: tutorial
+title: Add Sign in with your product
+description: Build the consumer's sign-in button and the redirect that starts the OAuth flow.
+step: 4
+---
+
+Start with Vantage, the consumer. It needs a helper for the OAuth values, a landing page with a **Sign in with TaskFlow** button, and a route that kicks off the flow.
+
+# The OAuth helper {% #helper %}
+
+Create `consumer/src/lib/oauth.ts`. It reads the config and builds the authorization URL. Import `@tanstack/react-start/server-only` at the top: it makes the build fail if this module is ever pulled into the browser bundle, which keeps the client secret server-side.
+
+```ts
+// consumer/src/lib/oauth.ts
+import '@tanstack/react-start/server-only'
+import { useSession } from '@tanstack/react-start/server'
+
+const issuer = process.env.OAUTH_ISSUER!
+const clientId = process.env.OAUTH_CLIENT_ID!
+const redirectUri = process.env.OAUTH_REDIRECT_URI!
+
+export const SCOPES = 'openid profile email'
+
+/** Build the URL that starts the authorization code flow. */
+export function authorizeUrl(state: string) {
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: SCOPES,
+    state,
+  })
+  return `${issuer}/authorize?${params.toString()}`
+}
+
+type SessionData = { accessToken?: string; user?: unknown; state?: string }
+
+/** A signed, httpOnly cookie session for Vantage. */
+export function vantageSession() {
+  return useSession<SessionData>({
+    name: 'vantage_session',
+    password: process.env.SESSION_SECRET!,
+  })
+}
+```
+
+# The start route {% #start-route %}
+
+Clicking the button navigates to `/oauth/start`. Its loader mints a random `state` value, stores it in the session to protect against CSRF, and redirects to the OAuth2 server. Create `consumer/src/routes/oauth.start.tsx`:
+
+```tsx
+// consumer/src/routes/oauth.start.tsx
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+import { authorizeUrl, vantageSession } from '../lib/oauth'
+
+const start = createServerFn().handler(async () => {
+  const state = crypto.randomUUID()
+  const session = await vantageSession()
+  await session.update({ state })
+  throw redirect({ href: authorizeUrl(state) })
+})
+
+export const Route = createFileRoute('/oauth/start')({
+  loader: async () => {
+    await start()
+  },
+  component: () => null,
+})
+```
+
+# The sign-in button {% #button %}
+
+![Vantage landing page with a Sign in with TaskFlow button](/images/docs/oauth-server/guide/vantage-landing.avif)
+
+On the landing page, the button is a link to `/oauth/start`:
+
+```tsx
+// consumer/src/routes/index.tsx (excerpt)
+<a href="/oauth/start" className="...">
+  Sign in with TaskFlow
+</a>
+```
+
+Start the app with `pnpm dev` and open `http://localhost:4100`. You have a landing page with a working sign-in button. Clicking it redirects to the OAuth2 server, which sends the user to TaskFlow's consent screen. That screen does not exist yet, so build it next.
