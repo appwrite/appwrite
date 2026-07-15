@@ -104,6 +104,7 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -218,7 +219,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/vibes:0.3.16
+    image: appwrite/new:0.3.24
     restart: unless-stopped
     networks:
       - appwrite
@@ -328,6 +329,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_CONSOLE_URL_SCHEME=root
   appwrite-worker-deletes:
     entrypoint: worker-deletes
     logging:
@@ -490,6 +492,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY

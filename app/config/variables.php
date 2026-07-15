@@ -224,6 +224,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_URL_SCHEME',
+                'description' => 'Console URL scheme used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments). Set to \'root\' for the new console served at the root path (appwrite/new), or \'legacy\' for the older console served under the /console path prefix. The default value is \'legacy\'.',
+                'introduction' => '2.0.0',
+                'default' => 'legacy',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_HOSTNAMES',
                 'description' => 'This option allows you to add additional hostnames to your Appwrite console. This option is very useful for allowing access to the console project from additional domains. To enable it, pass a list of allowed hostnames separated by a comma.',
                 'introduction' => '1.5.0',
