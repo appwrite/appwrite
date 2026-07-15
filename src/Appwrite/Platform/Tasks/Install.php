@@ -728,7 +728,7 @@ class Install extends Action
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void
     {
         $email = $account['email'] ?? null;
-$password = $account['password'] ?? null;
+        $name = $account['name'] ?? 'Admin';
         $password = $account['password'] ?? null;
 
         if (!$email || !$password) {
