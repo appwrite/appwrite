@@ -13,7 +13,11 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
-import { AppwriteException, ProjectAuthMethodId } from '@appwrite.io/console'
+import {
+  AppwriteException,
+  ProjectAuthMethodId,
+  Query,
+} from '@appwrite.io/console'
 import {
   clearConsoleImpersonateUser,
   clearConsoleSessionLocally,
@@ -1053,13 +1057,33 @@ export function useMFAFactors() {
  * Query function to fetch account identities
  *
  * This is extracted so it can be reused in both hooks and route loaders.
+ *
+ * Pages through the full list: the API caps each response at its default
+ * limit (25), and consumers like the connected-applications page need every
+ * identity to filter and group locally.
  */
 export async function fetchAccountIdentities() {
-  const response = await sdk.forConsole.account.listIdentities()
-  return {
-    identities: response.identities || [],
-    total: response.total || 0,
+  const pageSize = 100
+  const maxPages = 50 // safety cap against runaway requests: 5,000 identities
+  const identities: Models.Identity[] = []
+  let total = 0
+
+  for (let page = 0; page < maxPages; page++) {
+    const response = await sdk.forConsole.account.listIdentities({
+      queries: [
+        Query.limit(pageSize),
+        Query.offset(identities.length),
+        Query.orderDesc('$createdAt'),
+      ],
+    })
+    const chunk = response.identities || []
+    identities.push(...chunk)
+    total = response.total || 0
+
+    if (chunk.length < pageSize || identities.length >= total) break
   }
+
+  return { identities, total }
 }
 
 /**

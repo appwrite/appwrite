@@ -11,8 +11,9 @@ import type { Models } from '@appwrite.io/console'
  * Matching is heuristic and display-only: DCR metadata (client_name,
  * redirect_uris, client_uri) is entirely attacker-controllable, so a match
  * must never grant trust — it only picks a logo and groups duplicates.
- * A name match alone is never enough: at least one redirect or client URI
- * must also corroborate it, so casual spoofing can't borrow a logo.
+ * When the API exposes redirect/client URIs, at least one must corroborate
+ * the name match; when it strips them (apps the viewer can't manage), the
+ * name match stands on its own.
  */
 export type KnownOAuthClient = {
   id: string
@@ -144,10 +145,14 @@ export function matchKnownOAuthClient(
 
   for (const client of KNOWN_CLIENTS) {
     if (!client.namePattern.test(name)) continue
-    // Real DCR clients always register redirect URIs, so a registration
-    // with none is anomalous — never let it borrow a logo on name alone.
+    // Corroborate the name with a redirect or client URI when we have any.
+    // The API strips redirectUris from apps the viewer can't manage (all
+    // DCR-registered clients on the account applications page), so an empty
+    // list means "unavailable", not "none registered" — fall back to the
+    // name match alone there. Matching stays display-only either way.
     if (
       client.uriPatterns &&
+      uris.length > 0 &&
       !uris.some((uri) => client.uriPatterns!.some((p) => p.test(uri)))
     ) {
       continue

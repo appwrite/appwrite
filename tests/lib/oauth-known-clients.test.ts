@@ -74,9 +74,14 @@ describe('matchKnownOAuthClient', () => {
     expect(matchKnownOAuthClient(app)).toBeNull()
   })
 
-  it('rejects a name match when the registration has no URIs to corroborate', () => {
+  it('matches on name alone when the API returns no URIs (stripped for non-managers)', () => {
     const app = makeApp({ name: 'Claude Code (appwrite)' })
-    expect(matchKnownOAuthClient(app)).toBeNull()
+    expect(matchKnownOAuthClient(app)?.id).toBe('claude-code')
+  })
+
+  it('matches Codex on name alone when URIs are unavailable', () => {
+    const app = makeApp({ name: 'Codex' })
+    expect(matchKnownOAuthClient(app)?.id).toBe('codex')
   })
 
   it('accepts client_uri as corroboration when there are no redirect URIs', () => {
