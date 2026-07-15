@@ -74,7 +74,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
       - appwrite-geo
     environment:
@@ -261,7 +261,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -305,7 +305,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -341,7 +341,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
@@ -409,7 +409,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -454,7 +454,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -538,7 +538,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -578,7 +578,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
@@ -638,7 +638,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
@@ -684,7 +684,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -879,7 +879,7 @@ services:
       - appwrite-imports:/storage/imports:rw
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -923,7 +923,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -970,7 +970,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -1012,7 +1012,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1051,7 +1051,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1090,7 +1090,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:

@@ -252,7 +252,7 @@ jobs:
               return;
             }
 
-            core.setOutput('databases', JSON.stringify(['MongoDB']));
+            core.setOutput('databases', JSON.stringify(['PostgreSQL']));
             core.setOutput('modes', JSON.stringify(['dedicated']));
 
   build:
