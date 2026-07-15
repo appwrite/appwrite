@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { DomainPurchaseStatus } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { PaymentMethodDropdown } from '@/components/pages/organizations/$orgId/billing/change-plan/PaymentMethodDropdown'
 import { PaymentModal } from '@/components/pages/organizations/$orgId/billing/Payment'
+import { AddressModal } from '@/components/pages/account/Payments/Address'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -209,6 +211,7 @@ export function BuyDomainCheckout({
   const [billingAddressId, setBillingAddressId] = useState('')
   const [paymentMethodId, setPaymentMethodId] = useState('')
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [addressModalOpen, setAddressModalOpen] = useState(false)
 
   const completedPaymentMethods = useMemo(
     () => paymentMethods.filter((pm) => pm.last4),
@@ -497,16 +500,19 @@ export function BuyDomainCheckout({
                 </SelectContent>
               </Select>
             ) : (
-              <p className="text-[13px] text-muted-foreground">
+              <div className="rounded-md border border-border bg-background px-3 py-2 text-[13px] text-muted-foreground">
                 {t('No billing addresses on file.')}
-              </p>
+              </div>
             )}
-            <Link
-              to="/account/billing-addresses"
-              className="link-neutral inline-block text-[13px]"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-[13px]"
+              onClick={() => setAddressModalOpen(true)}
             >
-              {t('Manage addresses in account settings')}
-            </Link>
+              <Plus className="me-1.5 h-4 w-4" />
+              {t('Add billing address')}
+            </Button>
           </div>
         </div>
 
@@ -527,6 +533,19 @@ export function BuyDomainCheckout({
           </div>
         </div>
       </div>
+
+      <AddressModal
+        open={addressModalOpen}
+        onOpenChange={setAddressModalOpen}
+        organizationId={orgId}
+        elevatedForWizard
+        onSuccess={(address) => {
+          setAddressModalOpen(false)
+          if (address?.$id) {
+            setBillingAddressId(address.$id)
+          }
+        }}
+      />
 
       <PaymentModal
         open={paymentModalOpen}

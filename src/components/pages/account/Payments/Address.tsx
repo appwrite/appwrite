@@ -47,7 +47,9 @@ interface AddressModalProps {
   address?: Models.BillingAddress
   /** When creating, if set the new address will be assigned to this organization */
   organizationId?: string
-  onSuccess?: () => void
+  onSuccess?: (address?: Models.BillingAddress) => void
+  /** When true, dialog and overlay use z-[9999] so they appear above fullscreen wizards */
+  elevatedForWizard?: boolean
 }
 
 export function AddressModal({
@@ -56,6 +58,7 @@ export function AddressModal({
   address,
   organizationId,
   onSuccess,
+  elevatedForWizard = false,
 }: AddressModalProps) {
   const t = useT()
   const isEditing = !!address
@@ -123,8 +126,9 @@ export function AddressModal({
     }
 
     try {
+      let savedAddress: Models.BillingAddress | undefined
       if (isEditing && address) {
-        await updateAddressMutation.mutateAsync({
+        savedAddress = await updateAddressMutation.mutateAsync({
           billingAddressId: address.$id,
           country,
           streetAddress,
@@ -135,7 +139,7 @@ export function AddressModal({
         })
         toast.success(t('Billing address updated'))
       } else {
-        const newAddress = await createAddressMutation.mutateAsync({
+        savedAddress = await createAddressMutation.mutateAsync({
           country,
           streetAddress,
           city,
@@ -146,7 +150,7 @@ export function AddressModal({
         if (organizationId) {
           await setOrgAddressMutation.mutateAsync({
             organizationId,
-            billingAddressId: newAddress.$id,
+            billingAddressId: savedAddress.$id,
           })
           toast.success(t('Billing address has been added to your organization'))
         } else {
@@ -155,7 +159,7 @@ export function AddressModal({
       }
 
       onOpenChange(false)
-      onSuccess?.()
+      onSuccess?.(savedAddress)
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -173,7 +177,10 @@ export function AddressModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className={cn('sm:max-w-md p-0', elevatedForWizard && 'z-[9999]')}
+        overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
+      >
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>
             {isEditing ? t('Update billing address') : t('Add billing address')}
