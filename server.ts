@@ -81,6 +81,10 @@ import {
   isSeoIndexableHost,
   NOINDEX_ROBOTS_HEADER,
 } from './src/lib/seo/indexing.ts'
+import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from './src/lib/legacy-console-path.ts'
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000)
@@ -631,14 +635,14 @@ async function initializeStaticRoutes(
   return { routes, loaded, skipped }
 }
 
-/** Minimal HTML for fatal errors so the tab keeps Appwrite branding (browsers request /favicon.ico when there is no document head). */
+/** Redirect pre-2.0 `/console/...` and typed-resource deep links to vibes routes. */
 function redirectLegacyConsolePath(req: Request): Response {
   const url = new URL(req.url)
-  const suffix = url.pathname.slice('/console'.length).replace(/^\/+/, '')
+  const location = rewriteLegacyConsolePath(url.pathname) + url.search
   return new Response(null, {
     status: 302,
     headers: {
-      Location: '/' + suffix + url.search,
+      Location: location,
       'Cache-Control': 'no-store',
     },
   })
@@ -745,6 +749,12 @@ async function initializeServer() {
                 'Cache-Control': 'no-store',
               },
             })
+          }
+
+          // Incomplete strip-only redirects may land on /project-{region}-{id}/...
+          // without the /console prefix — rewrite those before the SPA.
+          if (isLegacyConsolePath(url.pathname)) {
+            return redirectLegacyConsolePath(req)
           }
 
           const res = await handler.fetch(req)
