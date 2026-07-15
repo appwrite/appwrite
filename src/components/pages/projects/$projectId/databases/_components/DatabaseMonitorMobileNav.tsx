@@ -1,7 +1,10 @@
 import { useMemo, useCallback } from 'react'
 import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
-import { useProjectDatabase } from '@/lib/react-query/hooks'
+import {
+  useProjectDatabase,
+  useProjectDedicatedDatabases,
+} from '@/lib/react-query/hooks'
 import {
   getEffectiveDatabaseSpecIdForMonitoring,
   isServerlessDatabaseMonitoring,
@@ -19,10 +22,20 @@ export function DatabaseMonitorMobileNav({
 }: DatabaseMonitorMobileNavProps) {
   const t = useT()
   const { database } = useProjectDatabase(projectId, databaseId)
+  const { databases: dedicatedDatabases } = useProjectDedicatedDatabases(
+    projectId,
+  )
   const databaseType =
     (database as { databaseType?: ApiDatabaseType } | null)?.databaseType ??
     ApiDatabaseType.Tablesdb
-  const specId = getEffectiveDatabaseSpecIdForMonitoring(databaseType)
+  const dedicated = useMemo(
+    () => dedicatedDatabases.find((item) => item.$id === databaseId),
+    [dedicatedDatabases, databaseId],
+  )
+  const specId = getEffectiveDatabaseSpecIdForMonitoring(
+    databaseType,
+    dedicated?.specification?.trim() || null,
+  )
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
 
   const sections = useMemo(
@@ -33,11 +46,12 @@ export function DatabaseMonitorMobileNav({
             { id: 'writes', label: 'Write operations' },
           ]
         : [
-            { id: 'cpu', label: 'CPU usage' },
-            { id: 'memory', label: 'Memory usage' },
-            { id: 'disk', label: 'Disk usage' },
-            { id: 'network', label: 'Network throughput' },
+            { id: 'cpu', label: 'CPU' },
+            { id: 'memory', label: 'Memory' },
+            { id: 'storage', label: 'Storage' },
             { id: 'connections', label: 'Connections' },
+            { id: 'qps', label: 'Queries per second' },
+            { id: 'iops', label: 'Disk IOPS' },
           ],
     [serverless],
   )

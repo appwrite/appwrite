@@ -20,6 +20,7 @@ import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { buildUsageResourceFilterQueries } from '@/lib/usage/usage-resource-queries'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import {
@@ -221,6 +222,8 @@ export async function fetchProjectUsageEventBreakdown(
   dimension: UsageEventBreakdownDimension,
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<UsageBreakdownItem[]> {
   if (!projectId) {
     return []
@@ -238,6 +241,8 @@ export async function fetchProjectUsageEventBreakdown(
     startAt: from.toISOString(),
     endAt: to.toISOString(),
     queries,
+    resourceId,
+    resourceType,
   })
 
   return mapBreakdownGroupsForDimension(groups, dimension, breakdownLimit)
@@ -365,6 +370,10 @@ function advanceIntervalCursor(date: Date, interval: UsageChartInterval): Date {
 export interface FetchUsageOverviewOptions {
   includeBreakdown?: boolean
   queries?: string[]
+  /** Scope event/gauge metrics to a single resource (e.g. database id). */
+  resourceId?: string
+  /** Usage resource type filter (e.g. `dedicatedDatabases`). Sent via queries[]. */
+  resourceType?: string
   /** Plan log retention in hours; defaults to Pro (30 days). */
   logRetentionHours?: number
 }
@@ -377,6 +386,7 @@ interface ListUsageEventGroupsParams {
   dimensions?: string[]
   queries?: string[]
   resourceId?: string
+  resourceType?: string
 }
 
 function mergeValuesByTime(groups: Models.UsageDataPoint[]): Map<string, number> {
@@ -572,6 +582,8 @@ export async function fetchUsageMetricsChartSeriesByMetric(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<
   Map<string, Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>>
 > {
@@ -594,6 +606,8 @@ export async function fetchUsageMetricsChartSeriesByMetric(
       startAt: from.toISOString(),
       endAt: to.toISOString(),
       queries,
+      resourceId,
+      resourceType,
     }),
     listUsageEventGroupsByMetric(projectId, {
       metrics,
@@ -601,6 +615,8 @@ export async function fetchUsageMetricsChartSeriesByMetric(
       startAt: previousFrom.toISOString(),
       endAt: previousTo.toISOString(),
       queries,
+      resourceId,
+      resourceType,
     }),
   ])
 
@@ -638,6 +654,8 @@ async function fetchUsageMetricChartSeries(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<Pick<UsageMetricSeriesResult, 'chartPoints' | 'previousChartPoints'>> {
   const chartSeriesByMetric = await fetchUsageMetricsChartSeriesByMetric(
     projectId,
@@ -646,6 +664,8 @@ async function fetchUsageMetricChartSeries(
     interval,
     queries,
     logRetentionHours,
+    resourceId,
+    resourceType,
   )
 
   return (
@@ -663,6 +683,8 @@ export async function fetchUsageMetricsBreakdownByMetric(
   dimensions: readonly string[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<Map<string, UsageTopEndpoint[]>> {
   if (metrics.length === 0) {
     return new Map()
@@ -675,6 +697,8 @@ export async function fetchUsageMetricsBreakdownByMetric(
     startAt: from.toISOString(),
     endAt: to.toISOString(),
     queries,
+    resourceId,
+    resourceType,
   })
 
   const result = new Map<string, UsageTopEndpoint[]>()
@@ -699,6 +723,8 @@ async function fetchUsageMetricBreakdown(
   dimensions: readonly string[],
   breakdownLimit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<UsageTopEndpoint[]> {
   const breakdownByMetric = await fetchUsageMetricsBreakdownByMetric(
     projectId,
@@ -707,6 +733,8 @@ async function fetchUsageMetricBreakdown(
     dimensions,
     breakdownLimit,
     queries,
+    resourceId,
+    resourceType,
   )
 
   return breakdownByMetric.get(metric) ?? []
@@ -724,6 +752,8 @@ async function fetchUsageMetricSeries(
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
   const queries = options?.queries
+  const resourceId = options?.resourceId
+  const resourceType = options?.resourceType
   const logRetentionHours =
     options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
   const [chartSeries, topEndpoints] = await Promise.all([
@@ -734,6 +764,8 @@ async function fetchUsageMetricSeries(
       interval,
       queries,
       logRetentionHours,
+      resourceId,
+      resourceType,
     ),
     dimensions.length > 0 && includeBreakdown
       ? fetchUsageMetricBreakdown(
@@ -743,6 +775,8 @@ async function fetchUsageMetricSeries(
           dimensions,
           breakdownLimit,
           queries,
+          resourceId,
+          resourceType,
         )
       : Promise.resolve([]),
   ])
@@ -862,9 +896,10 @@ export function fillChartPointsGaps(
 }
 
 /**
- * Fill gauge chart buckets by carrying the last known snapshot forward.
- * Gauges report levels (MAU, storage), not per-interval deltas — missing buckets
- * must not be treated as zero.
+ * Fill gauge chart buckets by carrying snapshots across missing intervals.
+ * Gauges report levels (MAU, storage, CPU %), not per-interval deltas — missing
+ * buckets must not be treated as zero. Leading gaps before the first sample are
+ * backfilled with the first known value so charts do not plot a fake 0%.
  */
 export function fillGaugeChartPointsGaps(
   merged: Map<string, number>,
@@ -873,27 +908,43 @@ export function fillGaugeChartPointsGaps(
   interval: UsageChartInterval,
 ): UsageChartPoint[] {
   const lookup = buildBucketLookup(merged, interval)
-  const points: UsageChartPoint[] = []
+  const skeleton: {
+    date: string
+    day: Date
+    sample: number | undefined
+  }[] = []
   let cursor = getIntervalStart(from, interval)
   const endCursor = getIntervalStart(to, interval)
-  let lastKnown: number | undefined
 
   while (cursor.getTime() <= endCursor.getTime()) {
     const key = cursor.getTime()
-    const bucketValue = lookup.get(key)
-    if (bucketValue !== undefined) {
-      lastKnown = bucketValue
-    }
-
-    points.push({
+    skeleton.push({
       date: formatChartPointLabel(cursor, interval, from, to),
       day: cursor,
-      total: lastKnown ?? 0,
+      sample: lookup.get(key),
     })
     cursor = advanceIntervalCursor(cursor, interval)
   }
 
-  return points
+  let firstKnown: number | undefined
+  for (const row of skeleton) {
+    if (row.sample !== undefined) {
+      firstKnown = row.sample
+      break
+    }
+  }
+
+  let lastKnown = firstKnown
+  return skeleton.map((row) => {
+    if (row.sample !== undefined) {
+      lastKnown = row.sample
+    }
+    return {
+      date: row.date,
+      day: row.day,
+      total: lastKnown ?? 0,
+    }
+  })
 }
 
 async function listUsageEventGroupsByMetric(
@@ -905,6 +956,11 @@ async function listUsageEventGroupsByMetric(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const queries = buildUsageResourceFilterQueries({
+    queries: params.queries,
+    resourceId: params.resourceId,
+    resourceType: params.resourceType,
+  })
   const request: {
     metrics: string[]
     interval?: string
@@ -912,11 +968,12 @@ async function listUsageEventGroupsByMetric(
     endAt: string
     dimensions?: string[]
     queries?: string[]
-    resourceId?: string
+    orderDir?: string
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
+    orderDir: 'asc',
   }
 
   if (params.interval) {
@@ -925,11 +982,8 @@ async function listUsageEventGroupsByMetric(
   if (params.dimensions?.length) {
     request.dimensions = params.dimensions
   }
-  if (params.queries?.length) {
-    request.queries = params.queries
-  }
-  if (params.resourceId) {
-    request.resourceId = params.resourceId
+  if (queries?.length) {
+    request.queries = queries
   }
 
   const response = await projectSdk.usage.listEvents(request)

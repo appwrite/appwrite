@@ -23,7 +23,12 @@ import {
   Activity,
 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
+import { DatabaseType } from '@appwrite.io/console'
 import { fetchProjectDatabase } from '@/lib/react-query/hooks'
+import {
+  databaseRouteKindFromApiType,
+  productDatabaseHomePath,
+} from '@/lib/database-routes'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -37,6 +42,7 @@ import { useT } from '@/lib/i18n/translate'
 type DatabaseContextMenuDatabase = {
   $id: string
   name?: string | null
+  databaseType?: DatabaseType
 }
 
 interface DatabaseContextMenuProps {
@@ -58,9 +64,10 @@ export function DatabaseContextMenu({
 }: DatabaseContextMenuProps) {
   const t = useT()
   const navigate = useNavigate()
+  const dbKind = databaseRouteKindFromApiType(database.databaseType)
 
   const databaseHref = buildConsoleUrl(
-    `/projects/${projectId}/databases/${database.$id}/`,
+    productDatabaseHomePath(projectId, database.$id, database.databaseType),
   )
   const hasName = !!database.name
 
@@ -76,7 +83,7 @@ export function DatabaseContextMenu({
   ) => {
     navigate({
       to: path,
-      params: { projectId, databaseId: database.$id },
+      params: { projectId, dbKind, databaseId: database.$id },
     })
   }
 
@@ -190,7 +197,11 @@ export function DatabaseContextMenu({
             <ContextMenuItem
               onSelect={() =>
                 void copyResourceAsJson(() =>
-                  fetchProjectDatabase(projectId, database.$id),
+                  fetchProjectDatabase(
+                    projectId,
+                    database.$id,
+                    databaseRouteKindFromApiType(database.databaseType),
+                  ),
                 )
               }
             >

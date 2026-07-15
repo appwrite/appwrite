@@ -1,6 +1,6 @@
 import { parseISO } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
-import type { Models } from '@appwrite.io/console'
+import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
@@ -15,6 +15,7 @@ import {
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
+import { buildUsageResourceFilterQueries } from '@/lib/usage/usage-resource-queries'
 
 export type { UsageTopEndpoint, UsageChartInterval } from '@/lib/usage/usage-events-common'
 
@@ -32,6 +33,7 @@ interface ListUsageGaugeGroupsParams {
   dimensions?: string[]
   queries?: string[]
   resourceId?: string
+  resourceType?: string
   teamId?: string
 }
 
@@ -44,6 +46,19 @@ async function listUsageGaugeGroupsByMetric(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  // Prefer Utopia queries for filters — top-level resourceId is not in the SDK.
+  const queries = [
+    ...(buildUsageResourceFilterQueries({
+      queries: params.queries,
+      resourceId: params.resourceId,
+      resourceType: params.resourceType,
+    }) ?? []),
+  ]
+  const teamId = params.teamId?.trim()
+  if (teamId && !queries.some((query) => query.includes('"teamId"'))) {
+    queries.push(Query.equal('teamId', teamId))
+  }
+
   const request: {
     metrics: string[]
     interval?: string
@@ -51,12 +66,12 @@ async function listUsageGaugeGroupsByMetric(
     endAt: string
     dimensions?: string[]
     queries?: string[]
-    resourceId?: string
-    teamId?: string
+    orderDir?: string
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
+    orderDir: 'asc',
   }
 
   if (params.interval) {
@@ -65,14 +80,8 @@ async function listUsageGaugeGroupsByMetric(
   if (params.dimensions?.length) {
     request.dimensions = params.dimensions
   }
-  if (params.queries?.length) {
-    request.queries = params.queries
-  }
-  if (params.resourceId) {
-    request.resourceId = params.resourceId
-  }
-  if (params.teamId) {
-    request.teamId = params.teamId
+  if (queries.length > 0) {
+    request.queries = queries
   }
 
   const response = await projectSdk.usage.listGauges(request)
@@ -270,6 +279,8 @@ export async function fetchProjectUsageGaugeChartSeries(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<{
   chartPoints: ProjectUsageChartOverview['chartPoints']
   previousChartPoints: ProjectUsageChartOverview['chartPoints']
@@ -292,12 +303,16 @@ export async function fetchProjectUsageGaugeChartSeries(
       startAt: from.toISOString(),
       endAt: to.toISOString(),
       queries,
+      resourceId,
+      resourceType,
     }),
     listUsageGaugeGroupsForMetrics(projectId, metrics, {
       interval: resolvedInterval,
       startAt: previousFrom.toISOString(),
       endAt: previousTo.toISOString(),
       queries,
+      resourceId,
+      resourceType,
     }),
   ])
 
@@ -328,6 +343,8 @@ export async function fetchProjectUsageGaugesChartOverview(
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   queries?: string[],
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
+  resourceId?: string,
+  resourceType?: string,
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId || metrics.length === 0) {
     return { changePercent: 0, chartPoints: [] }
@@ -341,6 +358,8 @@ export async function fetchProjectUsageGaugesChartOverview(
       interval,
       queries,
       logRetentionHours,
+      resourceId,
+      resourceType,
     )
 
   const currentLatest =

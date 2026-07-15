@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { endOfDay, startOfDay, subDays } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import { Info, Minus, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -27,13 +29,22 @@ import {
 } from '@/lib/database-create-pricing'
 import {
   useDatabaseSpecifications,
-  usePostgresMetricsSnapshot,
+  useDedicatedDatabaseStorageChart,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
+import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+
+function getDefaultStorageUsageDateRange(): DateRange {
+  return {
+    from: startOfDay(subDays(new Date(), 1)),
+    to: endOfDay(new Date()),
+  }
+}
 import { PostgresReplicationSyncModePicker } from './PostgresReplicationSyncModePicker'
 import { PostgresHaClusterDiagram } from './PostgresHaClusterDiagram'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
@@ -556,9 +567,13 @@ export function PostgresDatabaseStorageCard({
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const { data: specificationsData, isLoading: specificationsLoading } =
     useDatabaseSpecifications(projectId)
-  const { snapshot, isLoading: snapshotLoading } = usePostgresMetricsSnapshot(
+  const storageDateRange = useMemo(() => getDefaultStorageUsageDateRange(), [])
+  const storageUsageQuery = useDedicatedDatabaseStorageChart(
     projectId,
     databaseId,
+    storageDateRange,
+    true,
+    DEFAULT_USAGE_CHART_INTERVAL,
   )
   const [storageAutoscaling, setStorageAutoscaling] = useState(
     database.storageAutoscaling === true,
@@ -610,20 +625,34 @@ export function PostgresDatabaseStorageCard({
     return storageLimitGb * 1_000_000_000
   }, [storageLimitGb])
 
+  const storagePoints = storageUsageQuery.isError
+    ? []
+    : (storageUsageQuery.data?.chartPoints ?? [])
+  const storageUsedBytes =
+    storagePoints.length > 0
+      ? getDedicatedDatabaseGaugeHeadline(storagePoints)
+      : null
+
   const storageUsagePercent = useMemo(() => {
-    if (!snapshot || storageLimitBytes == null || storageLimitBytes <= 0) {
+    if (
+      storageUsedBytes == null ||
+      storageLimitBytes == null ||
+      storageLimitBytes <= 0
+    ) {
       return null
     }
-    return (snapshot.databaseSizeBytes / storageLimitBytes) * 100
-  }, [snapshot, storageLimitBytes])
+    return (storageUsedBytes / storageLimitBytes) * 100
+  }, [storageUsedBytes, storageLimitBytes])
 
   const storageUsageTone = getStorageUsageTone(storageUsagePercent)
 
   const awaitingStorageLimit =
     storageLimitBytes == null && specificationsLoading
-  const awaitingSnapshot =
-    storageLimitBytes != null && snapshotLoading && snapshot == null
-  const storageUsageLoading = awaitingStorageLimit || awaitingSnapshot
+  const awaitingUsage =
+    storageLimitBytes != null &&
+    storageUsageQuery.isLoading &&
+    storageUsedBytes == null
+  const storageUsageLoading = awaitingStorageLimit || awaitingUsage
   const showStorageProgress = storageLimitBytes != null || awaitingStorageLimit
 
   const handleStorageUpdate = () => {
@@ -681,7 +710,7 @@ export function PostgresDatabaseStorageCard({
               >
                 <p>
                   {t(
-                    'On-disk database size compared to provisioned storage for this instance.',
+                    'Storage used by this database instance compared to provisioned capacity.',
                   )}
                 </p>
               </TooltipContent>
@@ -697,8 +726,8 @@ export function PostgresDatabaseStorageCard({
           ) : (
             <>
               <span className="text-[15px] font-semibold tabular-nums text-foreground">
-                {snapshot
-                  ? formatCompactBytes(snapshot.databaseSizeBytes)
+                {storageUsedBytes != null
+                  ? formatCompactBytes(storageUsedBytes)
                   : '0B'}
               </span>
               {storageLimitBytes != null ? (

@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { Info } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { POSTGRES_USAGE_PLACEHOLDER_NOTE } from '@/lib/postgres-usage-placeholder-metrics'
 import {
@@ -35,23 +36,36 @@ type PostgresMetricChartProps = {
   description: string
   unit?: string
   secondaryUnit?: string
+  /** Legend/tooltip label for the primary series (defaults to title). */
+  primaryLabel?: string
   secondaryLabel?: string
   data: PostgresMetricSeriesPoint[]
   formatY?: (value: number) => string
   formatSecondaryY?: (value: number) => string
   emptyMessage?: string
-  /** When set with usageQuota, shows "value / quota" in the chart header. */
+  /** When set with usageQuota or usageUnitLabel, shows a value in the chart header. */
   usageValue?: number | null
+  /** Peer headline value shown at equal weight beside usageValue (e.g. write IOPS). */
+  usageSecondaryValue?: number | null
   usageQuota?: number | null
   usageQuotaLabel?: string
+  /** Shown next to the value when there is no meaningful quota (e.g. percent gauges). */
+  usageUnitLabel?: string
+  /** Label for usageSecondaryValue when dual headlines are shown. */
+  usageSecondaryUnitLabel?: string
   /** Renders sample-data styling until usage service metrics are wired up. */
   isPlaceholder?: boolean
   placeholderNote?: string
+  /** Keep chart/header height stable while date range or interval refetch. */
+  isLoading?: boolean
   className?: string
 }
 
 const CHART_COLOR = 'var(--chart-brand)'
 const SECONDARY_CHART_COLOR = 'var(--chart-2)'
+const CHART_HEIGHT_PX = 180
+const METRIC_HEADER_MIN_CLASS =
+  'mt-2 min-h-[52px] flex flex-wrap items-baseline gap-x-2 gap-y-1'
 
 const AREA_MARGIN = {
   top: 8,
@@ -116,29 +130,59 @@ function measureYAxisWidth(
   return Math.min(Y_AXIS_WIDTH_MAX, Math.max(Y_AXIS_WIDTH_MIN, w))
 }
 
+function ChartBodySkeleton() {
+  return (
+    <div
+      className="relative w-full shrink-0"
+      style={{ height: CHART_HEIGHT_PX }}
+    >
+      <Skeleton className="absolute inset-0 rounded-md" />
+    </div>
+  )
+}
+
 export function PostgresMetricChart({
   id,
   title,
   description,
   unit,
   secondaryUnit,
+  primaryLabel,
   secondaryLabel,
   data,
   formatY = (v) => v.toFixed(1),
   formatSecondaryY,
   emptyMessage = 'Collecting samples. Keep this view open to build a time series from live SQL metrics.',
   usageValue,
+  usageSecondaryValue,
   usageQuota,
   usageQuotaLabel = 'available',
+  usageUnitLabel,
+  usageSecondaryUnitLabel,
   isPlaceholder = false,
   placeholderNote = POSTGRES_USAGE_PLACEHOLDER_NOTE,
+  isLoading = false,
   className,
 }: PostgresMetricChartProps) {
   const t = useT()
   const gradientId = `postgres-metric-gradient-${id}`
   const secondaryGradientId = `postgres-metric-gradient-secondary-${id}`
+  const seriesPrimaryLabel = primaryLabel ?? title
   const hasSecondary = data.some((point) => point.secondaryValue != null)
   const secondaryFormatter = formatSecondaryY ?? formatY
+  const hasUsageQuota = usageQuota != null && usageQuota > 0
+  // Percent gauges already imply 0–100; do not show "/ 100% capacity · 42%".
+  const isTrivialPercentQuota =
+    hasUsageQuota &&
+    usageQuota === 100 &&
+    (formatY(0).includes('%') ||
+      (usageValue != null && formatY(usageValue).includes('%')))
+  const reserveUsageHeader =
+    hasUsageQuota ||
+    !!usageUnitLabel ||
+    usageSecondaryValue != null ||
+    !!usageSecondaryUnitLabel
+  const showUsageQuotaSummary = hasUsageQuota && !isTrivialPercentQuota
 
   const chartData = useMemo(
     () =>
@@ -177,17 +221,18 @@ export function PostgresMetricChart({
     ] as [number, (max: number) => number]
   }, [usageQuota])
 
-  const showUsageSummary =
-    usageValue != null &&
-    usageQuota != null &&
-    usageQuota > 0 &&
-    Number.isFinite(usageValue)
+  const showUsageValue =
+    usageValue != null && Number.isFinite(usageValue)
+  const showUsageSecondaryValue =
+    usageSecondaryValue != null && Number.isFinite(usageSecondaryValue)
+  const showDualUsageHeadline = showUsageValue && showUsageSecondaryValue
 
-  const usagePercent = showUsageSummary
-    ? (usageValue / usageQuota) * 100
-    : null
+  const usagePercent =
+    showUsageValue && showUsageQuotaSummary && usageQuota != null
+      ? (usageValue / usageQuota) * 100
+      : null
 
-  const showEmpty = data.length < 2
+  const showEmpty = !isLoading && data.length < 2
 
   return (
     <div
@@ -226,36 +271,85 @@ export function PostgresMetricChart({
               </UITooltip>
             </TooltipProvider>
           </div>
-          {showUsageSummary ? (
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-[24px] font-semibold tabular-nums text-foreground">
-                {formatY(usageValue)}
-              </span>
-              <span className="text-[13px] text-muted-foreground">
-                / {formatY(usageQuota)} {usageQuotaLabel}
-                {usagePercent != null
-                  ? ` · ${usagePercent.toFixed(1)}%`
-                  : null}
-              </span>
+          {reserveUsageHeader ? (
+            <div className={METRIC_HEADER_MIN_CLASS}>
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-7 w-28 shrink-0 rounded-sm" />
+                  <Skeleton className="h-4 w-[4.5rem] shrink-0 rounded-sm" />
+                  {usageSecondaryUnitLabel || usageSecondaryValue != null ? (
+                    <>
+                      <Skeleton className="h-7 w-28 shrink-0 rounded-sm" />
+                      <Skeleton className="h-4 w-[4.5rem] shrink-0 rounded-sm" />
+                    </>
+                  ) : null}
+                </>
+              ) : showDualUsageHeadline ? (
+                <>
+                  <span className="inline-flex items-baseline gap-2">
+                    <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                      {formatY(usageValue)}
+                    </span>
+                    {usageUnitLabel ? (
+                      <span className="text-[13px] text-muted-foreground">
+                        {t(usageUnitLabel)}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-[13px] text-muted-foreground" aria-hidden>
+                    ·
+                  </span>
+                  <span className="inline-flex items-baseline gap-2">
+                    <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                      {secondaryFormatter(usageSecondaryValue)}
+                    </span>
+                    {usageSecondaryUnitLabel ? (
+                      <span className="text-[13px] text-muted-foreground">
+                        {t(usageSecondaryUnitLabel)}
+                      </span>
+                    ) : null}
+                  </span>
+                </>
+              ) : showUsageValue ? (
+                <>
+                  <span className="text-[24px] font-semibold tabular-nums text-foreground">
+                    {formatY(usageValue)}
+                  </span>
+                  {showUsageQuotaSummary ? (
+                    <span className="text-[13px] text-muted-foreground">
+                      / {formatY(usageQuota!)} {t(usageQuotaLabel)}
+                      {usagePercent != null
+                        ? ` · ${usagePercent.toFixed(1)}%`
+                        : null}
+                    </span>
+                  ) : usageUnitLabel ? (
+                    <span className="text-[13px] text-muted-foreground">
+                      {t(usageUnitLabel)}
+                    </span>
+                  ) : null}
+                </>
+              ) : null}
             </div>
           ) : null}
-          {hasSecondary ? (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: CHART_COLOR }}
-                />
-                {title}
-              </span>
-              {secondaryLabel ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: SECONDARY_CHART_COLOR }}
-                  />
-                  {secondaryLabel}
-                </span>
+          {secondaryLabel ? (
+            <div className="mt-2 flex min-h-[20px] flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+              {hasSecondary || isLoading ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: CHART_COLOR }}
+                    />
+                    {t(seriesPrimaryLabel)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: SECONDARY_CHART_COLOR }}
+                    />
+                    {t(secondaryLabel)}
+                  </span>
+                </>
               ) : null}
             </div>
           ) : null}
@@ -263,14 +357,22 @@ export function PostgresMetricChart({
       </div>
 
       <div className="p-4">
-        {showEmpty ? (
-          <div className="flex h-[180px] items-center justify-center rounded-md border border-dashed border-border bg-muted/20 px-6 text-center">
+        {isLoading ? (
+          <ChartBodySkeleton />
+        ) : showEmpty ? (
+          <div
+            className="flex items-center justify-center rounded-md border border-dashed border-border bg-muted/20 px-6 text-center"
+            style={{ height: CHART_HEIGHT_PX }}
+          >
             <p className="max-w-sm text-[12px] leading-relaxed text-muted-foreground">
               {t(emptyMessage)}
             </p>
           </div>
         ) : (
-          <div className="h-[180px] text-muted-foreground">
+          <div
+            className="shrink-0 text-muted-foreground"
+            style={{ height: CHART_HEIGHT_PX }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ ...AREA_MARGIN }}>
                 <defs>
@@ -341,9 +443,9 @@ export function PostgresMetricChart({
                   width={yAxisWidth}
                   domain={yAxisDomain}
                 />
-                {usageQuota != null && usageQuota > 0 ? (
+                {showUsageQuotaSummary ? (
                   <ReferenceLine
-                    y={usageQuota}
+                    y={usageQuota!}
                     stroke="hsl(var(--muted-foreground) / 0.45)"
                     strokeDasharray="4 4"
                     ifOverflow="extendDomain"
@@ -362,28 +464,49 @@ export function PostgresMetricChart({
                         <p className="mb-1 text-[11px] text-muted-foreground">
                           {row.fullDate}
                         </p>
-                        <p className="text-[13px] font-medium text-foreground">
-                          {unit
-                            ? `${formatY(row.value)} ${unit}`
-                            : formatY(row.value)}
-                          {usageQuota != null && usageQuota > 0 ? (
-                            <span className="font-normal text-muted-foreground">
-                              {' '}
-                              ·{' '}
-                              {((row.value / usageQuota) * 100).toFixed(1)}%
-                            </span>
-                          ) : null}
-                        </p>
-                        {row.secondaryValue != null && secondaryLabel ? (
-                          <p className="mt-1 text-[12px] text-muted-foreground">
-                            {secondaryLabel}:{' '}
-                            <span className="font-medium text-foreground">
-                              {secondaryUnit
-                                ? `${secondaryFormatter(row.secondaryValue)} ${secondaryUnit}`
-                                : secondaryFormatter(row.secondaryValue)}
-                            </span>
+                        {hasSecondary && secondaryLabel ? (
+                          <div className="space-y-1">
+                            <p className="text-[13px] font-medium text-foreground">
+                              <span
+                                className="me-1.5 inline-block h-2 w-2 rounded-full align-middle"
+                                style={{ backgroundColor: CHART_COLOR }}
+                              />
+                              {t(seriesPrimaryLabel)}:{' '}
+                              {unit
+                                ? `${formatY(row.value)} ${unit}`
+                                : formatY(row.value)}
+                            </p>
+                            {row.secondaryValue != null ? (
+                              <p className="text-[13px] font-medium text-foreground">
+                                <span
+                                  className="me-1.5 inline-block h-2 w-2 rounded-full align-middle"
+                                  style={{
+                                    backgroundColor: SECONDARY_CHART_COLOR,
+                                  }}
+                                />
+                                {t(secondaryLabel)}:{' '}
+                                {secondaryUnit
+                                  ? `${secondaryFormatter(row.secondaryValue)} ${secondaryUnit}`
+                                  : secondaryFormatter(row.secondaryValue)}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <p className="text-[13px] font-medium text-foreground">
+                            {unit
+                              ? `${formatY(row.value)} ${unit}`
+                              : formatY(row.value)}
+                            {showUsageQuotaSummary &&
+                            usageQuota != null &&
+                            !formatY(row.value).includes('%') ? (
+                              <span className="font-normal text-muted-foreground">
+                                {' '}
+                                ·{' '}
+                                {((row.value / usageQuota) * 100).toFixed(1)}%
+                              </span>
+                            ) : null}
                           </p>
-                        ) : null}
+                        )}
                       </div>
                     )
                   }}
@@ -394,7 +517,8 @@ export function PostgresMetricChart({
                   stroke={CHART_COLOR}
                   strokeWidth={2}
                   fill={`url(#${gradientId})`}
-                  name={title}
+                  name={seriesPrimaryLabel}
+                  isAnimationActive={false}
                 />
                 {hasSecondary ? (
                   <Area
@@ -404,6 +528,7 @@ export function PostgresMetricChart({
                     strokeWidth={2}
                     fill={`url(#${secondaryGradientId})`}
                     name={secondaryLabel ?? 'Secondary'}
+                    isAnimationActive={false}
                   />
                 ) : null}
               </AreaChart>

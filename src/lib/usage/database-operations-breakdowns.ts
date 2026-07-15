@@ -59,6 +59,7 @@ export async function fetchProjectDatabaseReadsBreakdown(
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  resourceId?: string,
 ): Promise<UsageBreakdownItem[]> {
   const breakdowns = await Promise.all(
     DATABASE_READS_EVENT_METRICS.map((metric) =>
@@ -69,6 +70,7 @@ export async function fetchProjectDatabaseReadsBreakdown(
         dimension,
         limit,
         queries,
+        resourceId,
       ),
     ),
   )
@@ -82,6 +84,7 @@ export async function fetchProjectDatabaseWritesBreakdown(
   dimension: UsageEventBreakdownDimension,
   limit = OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
   queries?: string[],
+  resourceId?: string,
 ): Promise<UsageBreakdownItem[]> {
   const breakdowns = await Promise.all(
     DATABASE_WRITES_EVENT_METRICS.map((metric) =>
@@ -92,6 +95,7 @@ export async function fetchProjectDatabaseWritesBreakdown(
         dimension,
         limit,
         queries,
+        resourceId,
       ),
     ),
   )

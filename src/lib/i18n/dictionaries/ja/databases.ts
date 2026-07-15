@@ -151,6 +151,9 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Connections': '接続',
   'connections': '接続',
   'Connections by app': 'アプリ別の接続',
+  "Couldn't load database metrics": 'データベースメトリクスを読み込めませんでした',
+  'Active client connections sampled for this database instance.':
+    'このデータベースインスタンスでサンプリングされたアクティブなクライアント接続。',
   'connections currently idle in transaction.': '件の接続がトランザクション内でアイドル状態です。',
   'Contact sales': '営業にお問い合わせ',
   'Context (Optional)': 'コンテキスト (任意)',
@@ -297,7 +300,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database backup has started': 'データベースのバックアップを開始しました',
   'Database created': 'データベースを作成しました',
   'Database deleted successfully': 'データベースを削除しました',
-  'Database health': 'データベースの健全性',
+  'Health': 'ヘルス',
   'Database ID': 'データベース ID',
   'Database is disabled': 'データベースは無効です',
   'Database name': 'データベース名',
@@ -752,7 +755,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Nullable': 'NULL 許可',
   'Number': '数値',
   'Number of rows': '行数',
-  'On-disk database size compared to provisioned storage for this instance.': 'このインスタンスのプロビジョニングされたストレージに対するオンディスクデータベースサイズ。',
+  'Storage used by this database instance compared to provisioned capacity.':
+    'このデータベースインスタンスの使用ストレージとプロビジョンされた容量の比較。',
   'One Relation column within this table': 'このテーブル内の 1 つのリレーション列',
   'One Relation column within this table and another within the related table': 'このテーブル内の 1 つのリレーション列と、関連テーブル内の別のリレーション列',
   'One-way relationship': '一方向リレーション',
@@ -1780,4 +1784,42 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Filter by category': 'カテゴリで絞り込み',
   'Install PostgreSQL extensions to add capabilities like vector search, geospatial data, and advanced indexing.':
     'ベクトル検索、地理空間データ、高度なインデックスなどの機能を追加するには、PostgreSQL 拡張機能をインストールしてください。',
+  'Disk IOPS': 'ディスク IOPS',
+  'Disk read and write operations per second for instance storage.':
+    'インスタンスストレージの1秒あたりのディスク読み取り/書き込み操作。',
+  'Disk read operations per second for instance storage.':
+    'インスタンスストレージの1秒あたりのディスク読み取り操作。',
+  'Disk write operations per second for instance storage.':
+    'インスタンスストレージの1秒あたりのディスク書き込み操作。',
+  'Instance metrics for this dedicated database.':
+    'この専用データベースのインスタンスメトリクス。',
+  'Memory utilization relative to provisioned RAM for this database instance.':
+    'このデータベースインスタンスに割り当てられた RAM に対するメモリ使用率。',
+  'No connection metrics for this date range':
+    'この期間の接続メトリクスはありません',
+  'No CPU metrics for this date range': 'この期間の CPU メトリクスはありません',
+  'No IOPS metrics for this date range': 'この期間の IOPS メトリクスはありません',
+  'No memory metrics for this date range':
+    'この期間のメモリメトリクスはありません',
+  'No QPS metrics for this date range': 'この期間の QPS メトリクスはありません',
+  'No storage metrics for this date range':
+    'この期間のストレージメトリクスはありません',
+  'qps': 'qps',
+  'Queries per second': '1秒あたりのクエリ数',
+  'Queries per second handled by this database instance.':
+    'このデータベースインスタンスが処理する1秒あたりのクエリ数。',
+  'Read and write operations for this database.':
+    'このデータベースの読み取りと書き込み操作。',
+  'Read operations for this database. Each row returned counts as one read.':
+    'このデータベースの読み取り操作。返された各行が1回の読み取りとしてカウントされます。',
+  'Create, update, and delete operations for this database. Each mutation counts as one write.':
+    'このデータベースの作成、更新、削除操作。各変更が1回の書き込みとしてカウントされます。',
+  'read iops': '読み取り iops',
+  'Storage used by this database instance over the selected period.':
+    '選択した期間におけるこのデータベースインスタンスのストレージ使用量。',
+  'utilization': '使用率',
+  'read': '読み取り',
+  'write': '書き込み',
+  'used': '使用中',
+  'Write IOPS latest': '最新の書き込み IOPS',
 }

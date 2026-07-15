@@ -375,7 +375,11 @@ function ProductDatabasesSectionContent({
               <DatabaseContextMenu
                 key={db.$id}
                 projectId={projectId}
-                database={{ $id: db.$id, name: db.name }}
+                database={{
+                  $id: db.$id,
+                  name: db.name,
+                  databaseType: db.databaseType ?? backend,
+                }}
                 showSecuritySettings={showDbSecuritySettings}
                 showMonitor={features.usageStats}
                 showBackups={features.databaseBackups}

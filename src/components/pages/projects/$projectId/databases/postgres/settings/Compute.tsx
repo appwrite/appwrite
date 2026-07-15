@@ -2,6 +2,7 @@ import {
   SettingsCardsList,
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
+import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { PostgresDatabaseComputeTierCard } from '../_components/PostgresDatabaseGeneralSettings'
 import { usePostgresDatabaseSettingsPage } from './usePostgresDatabaseSettingsPage'
 import { PostgresSettingsLoading } from './PostgresSettingsLoading'
@@ -9,6 +10,7 @@ import { PostgresSettingsLoading } from './PostgresSettingsLoading'
 export function View() {
   const { projectId, databaseId, database, canWrite, isLoading } =
     usePostgresDatabaseSettingsPage()
+  useScrollToCard()
 
   if (isLoading) return <PostgresSettingsLoading />
   if (!database) return null

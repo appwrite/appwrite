@@ -308,7 +308,10 @@ export function PostgresDatabaseComputeTierCard({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+    <div
+      data-card-id="specification"
+      className="rounded-xl border border-border bg-card/50 overflow-hidden"
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           {t('Compute tier')}

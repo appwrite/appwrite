@@ -151,6 +151,9 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Connections': 'חיבורים',
   'connections': 'חיבורים',
   'Connections by app': 'חיבורים לפי אפליקציה',
+  "Couldn't load database metrics": 'לא ניתן לטעון מדדי מסד נתונים',
+  'Active client connections sampled for this database instance.':
+    'חיבורי לקוח פעילים שנדגמו עבור מופע מסד נתונים זה.',
   'connections currently idle in transaction.': 'חיבורים במצב לא פעיל בתוך טרנזקציה.',
   'Contact sales': 'יצירת קשר עם מכירות',
   'Context (Optional)': 'הקשר (אופציונלי)',
@@ -298,7 +301,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database backup has started': 'גיבוי מסד הנתונים החל',
   'Database created': 'מסד הנתונים נוצר',
   'Database deleted successfully': 'מסד הנתונים נמחק בהצלחה',
-  'Database health': 'תקינות מסד הנתונים',
+  'Health': 'תקינות',
   'Database ID': 'מזהה מסד נתונים',
   'Database is disabled': 'מסד הנתונים מושבת',
   'Database name': 'שם מסד הנתונים',
@@ -795,7 +798,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Nullable': 'מאפשר NULL',
   'Number': 'מספר',
   'Number of rows': 'מספר שורות',
-  'On-disk database size compared to provisioned storage for this instance.': 'גודל מסד הנתונים בדיסק בהשוואה לאחסון שהוקצה למופע זה.',
+  'Storage used by this database instance compared to provisioned capacity.':
+    'אחסון בשימוש במסד הנתונים בהשוואה לקיבולת שהוקצתה.',
   'One Relation column within this table': 'עמודת קשר (Relation) אחת בטבלה זו',
   'One Relation column within this table and another within the related table': 'עמודת קשר (Relation) אחת בטבלה זו ועוד אחת בטבלה המקושרת',
   'One-way relationship': 'קשר חד-כיווני',
@@ -1842,4 +1846,41 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Filter by category': 'סינון לפי קטגוריה',
   'Install PostgreSQL extensions to add capabilities like vector search, geospatial data, and advanced indexing.':
     'התקינו הרחבות PostgreSQL כדי להוסיף יכולות כמו חיפוש וקטורים, נתונים גיאו-מרחביים ואינדוקס מתקדם.',
+  'Disk IOPS': 'IOPS של דיסק',
+  'Disk read and write operations per second for instance storage.':
+    'פעולות קריאה וכתיבה לדיסק לשנייה עבור אחסון המופע.',
+  'Disk read operations per second for instance storage.':
+    'פעולות קריאה לדיסק לשנייה עבור אחסון המופע.',
+  'Disk write operations per second for instance storage.':
+    'פעולות כתיבה לדיסק לשנייה עבור אחסון המופע.',
+  'Instance metrics for this dedicated database.':
+    'מדדי מופע עבור מסד נתונים ייעודי זה.',
+  'Memory utilization relative to provisioned RAM for this database instance.':
+    'ניצול זיכרון ביחס ל-RAM שהוקצה למופע מסד נתונים זה.',
+  'No connection metrics for this date range': 'אין מדדי חיבורים לטווח תאריכים זה',
+  'No CPU metrics for this date range': 'אין מדדי CPU לטווח תאריכים זה',
+  'No IOPS metrics for this date range': 'אין מדדי IOPS לטווח תאריכים זה',
+  'No memory metrics for this date range': 'אין מדדי זיכרון לטווח תאריכים זה',
+  'No QPS metrics for this date range': 'אין מדדי QPS לטווח תאריכים זה',
+  'No storage metrics for this date range': 'אין מדדי אחסון לטווח תאריכים זה',
+  'qps': 'qps',
+  'Queries per second': 'שאילתות לשנייה',
+  'Queries per second handled by this database instance.':
+    'שאילתות לשנייה שמטופלות על ידי מופע מסד נתונים זה.',
+  'Read and write operations for this database.':
+    'פעולות קריאה וכתיבה עבור מסד נתונים זה.',
+  'Read operations for this database. Each row returned counts as one read.':
+    'פעולות קריאה עבור מסד נתונים זה. כל שורה שמוחזרת נספרת כקריאה אחת.',
+  'Create, update, and delete operations for this database. Each mutation counts as one write.':
+    'פעולות יצירה, עדכון ומחיקה עבור מסד נתונים זה. כל שינוי נספר ככתיבה אחת.',
+  'read iops': 'iops קריאה',
+  'Storage used by this database instance over the selected period.':
+    'אחסון בשימוש על ידי מופע מסד נתונים זה בטווח שנבחר.',
+  'utilization': 'ניצול',
+  'read': 'קריאה',
+  'write': 'כתיבה',
+  'used': 'בשימוש',
+  'Write IOPS latest': 'IOPS כתיבה אחרון',
+  "We couldn't fetch usage data from the server. Check your connection and try again.":
+    'לא הצלחנו לטעון נתוני שימוש מהשרת. בדקו את החיבור ונסו שוב.',
 }

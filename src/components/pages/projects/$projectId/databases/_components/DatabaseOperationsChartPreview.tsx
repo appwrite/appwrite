@@ -5,7 +5,6 @@ import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
-const CHART_HEIGHT = 72
 const READ_COLOR = 'var(--chart-brand)'
 const WRITE_COLOR = 'var(--chart-2)'
 
@@ -93,44 +92,50 @@ export function DatabaseOperationsChartPreview({
       )}
     >
       <div
-        className="min-w-0 px-4 pt-2.5"
+        className="flex min-h-0 min-w-0 flex-col"
         style={{ height: DATABASE_CLUSTER_PREVIEW_HEIGHT }}
       >
-        <div className="mb-1.5 flex h-5 min-w-0 items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: READ_COLOR }}
-              aria-hidden
-            />
-            {t('Reads')}
-            <span className="font-mono tabular-nums text-foreground">
-              {totals.reads.toLocaleString()}
+        <div className="shrink-0 px-4 pt-2.5 pb-3">
+          <div className="flex h-5 min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: READ_COLOR }}
+                  aria-hidden
+                />
+                {t('Reads')}
+                <span className="font-mono tabular-nums text-foreground">
+                  {totals.reads.toLocaleString()}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: WRITE_COLOR }}
+                  aria-hidden
+                />
+                {t('Writes')}
+                <span className="font-mono tabular-nums text-foreground">
+                  {totals.writes.toLocaleString()}
+                </span>
+              </span>
+            </div>
+            <span className="shrink-0 text-[11px] font-medium leading-none text-muted-foreground/80">
+              {t('Last 24 hours')}
             </span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: WRITE_COLOR }}
-              aria-hidden
-            />
-            {t('Writes')}
-            <span className="font-mono tabular-nums text-foreground">
-              {totals.writes.toLocaleString()}
-            </span>
-          </span>
+          </div>
         </div>
 
         <div
-          className="relative w-full min-w-0 overflow-hidden"
-          style={{ height: CHART_HEIGHT }}
+          className="relative min-h-0 w-full min-w-0 flex-1 overflow-hidden"
           role="img"
-          aria-label={t('Read and write operations')}
+          aria-label={`${t('Read and write operations')}. ${t('Last 24 hours')}`}
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
-              margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             >
               <defs>
                 <linearGradient

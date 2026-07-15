@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/databases/View'
 import {
+  consoleDatabasesQueryOptions,
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
   productDatabasesQueryOptions,
@@ -104,6 +105,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
         shouldPrefetchNativeDatabases
           ? queryClient.ensureQueryData(
               dedicatedDatabasesQueryOptions(projectId),
+            )
+          : Promise.resolve(),
+        // Unified All Databases list (console.listDatabases)
+        profileFeatures.dedicatedDbsSupport
+          ? queryClient.ensureQueryData(
+              consoleDatabasesQueryOptions(
+                projectId,
+                0,
+                GRID_DEFAULT_PAGE_SIZE,
+              ),
             )
           : Promise.resolve(),
         projectData?.teamId

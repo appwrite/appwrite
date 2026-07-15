@@ -1,33 +1,26 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
-  differenceInCalendarDays,
   endOfDay,
-  format,
   formatDistanceToNow,
   startOfDay,
   subDays,
 } from 'date-fns'
-import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import type { DateRange } from 'react-day-picker'
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity,
   AlertCircle,
   AppWindow,
-  ArrowLeftRight,
   Cpu,
-  Gauge,
   HardDrive,
   HeartPulse,
-  Layers,
   MemoryStick,
-  Network,
   ScanLine,
   Table2,
   Timer,
   Users,
+  Zap,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Select,
@@ -49,6 +42,7 @@ import {
 import { mapDedicatedDatabaseSpecifications } from '@/lib/database-specs'
 import {
   useDatabaseSpecifications,
+  useDedicatedDatabaseMonitorMetrics,
   usePostgresConnectionApps,
   usePostgresConnectionStates,
   usePostgresDatabase,
@@ -56,16 +50,29 @@ import {
   usePostgresTableActivity,
 } from '@/lib/react-query/hooks'
 import {
-  filterSamplesByRange,
   formatConnectionStateLabel,
   formatPostgresUptime,
 } from '@/lib/postgres-metrics'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
-  buildMockUsageMetricSeries,
-  latestMockSeriesValue,
-  POSTGRES_USAGE_PLACEHOLDER_NOTE,
-} from '@/lib/postgres-usage-placeholder-metrics'
+  DEDICATED_DATABASE_CONNECTIONS_DESCRIPTION,
+  DEDICATED_DATABASE_CPU_DESCRIPTION,
+  DEDICATED_DATABASE_IOPS_DESCRIPTION,
+  DEDICATED_DATABASE_MEMORY_DESCRIPTION,
+  DEDICATED_DATABASE_QPS_DESCRIPTION,
+  DEDICATED_DATABASE_STORAGE_DESCRIPTION,
+  getDedicatedDatabaseGaugeHeadline,
+  getDedicatedDatabaseRateHeadline,
+  mergeDualUsageChartSeries,
+  usageChartPointsToMonitorSeries,
+} from '@/lib/usage/dedicated-databases-usage'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
+import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
+import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
 import { PostgresMetricChart } from './_components/PostgresMetricChart'
 import { PostgresMetricRankedList } from './_components/PostgresMetricRankedList'
 import { PostgresMetricKpiCard } from './_components/PostgresMetricKpiCard'
@@ -82,23 +89,6 @@ function getDefaultMonitorDateRange(): DateRange {
   return {
     from: startOfDay(subDays(new Date(), 1)),
     to: endOfDay(new Date()),
-  }
-}
-
-function dateRangeToBounds(range: DateRange | undefined): {
-  fromMs: number
-  toMs: number
-} {
-  if (!range?.from) {
-    const fallback = getDefaultMonitorDateRange()
-    return {
-      fromMs: startOfDay(fallback.from!).getTime(),
-      toMs: endOfDay(fallback.to ?? fallback.from!).getTime(),
-    }
-  }
-  return {
-    fromMs: startOfDay(range.from).getTime(),
-    toMs: endOfDay(range.to ?? range.from).getTime(),
   }
 }
 
@@ -223,10 +213,13 @@ type MonitorProps = {
 export function View({ projectId, databaseId }: MonitorProps) {
   const t = useT()
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultMonitorDateRange)
+  const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
+    DEFAULT_USAGE_CHART_INTERVAL,
+  )
   const [activeSectionId, setActiveSectionId] = useState('connections')
-  const { fromMs, toMs } = useMemo(
-    () => dateRangeToBounds(dateRange),
-    [dateRange],
+  const resolvedInterval = useMemo(
+    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
+    [chartInterval, dateRange],
   )
 
   const { database } = usePostgresDatabase(projectId, databaseId)
@@ -243,7 +236,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
 
   const {
     snapshot,
-    samples,
     lastRecordedAt,
     isLoading,
     isFetching,
@@ -269,9 +261,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
     error: tableActivityError,
   } = usePostgresTableActivity(projectId, databaseId)
 
-  const filteredSamples = useMemo(
-    () => filterSamplesByRange(samples, fromMs, toMs),
-    [samples, fromMs, toMs],
+  const dedicatedMetrics = useDedicatedDatabaseMonitorMetrics(
+    projectId,
+    databaseId,
+    dateRange,
+    true,
+    resolvedInterval,
   )
 
   const storageLimitGb = useMemo(() => {
@@ -301,13 +296,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
     return null
   }, [currentSpec?.connections])
 
-  const storageUsagePercent = useMemo(() => {
-    if (!snapshot || storageLimitBytes == null || storageLimitBytes <= 0) {
-      return null
-    }
-    return (snapshot.databaseSizeBytes / storageLimitBytes) * 100
-  }, [snapshot, storageLimitBytes])
-
   const connectionUsagePercent = useMemo(() => {
     if (!snapshot || maxConnections == null) return null
     return (snapshot.totalConnections / maxConnections) * 100
@@ -318,17 +306,17 @@ export function View({ projectId, databaseId }: MonitorProps) {
       id: 'overview',
       label: 'Overview',
       items: [
-        { id: 'health', label: 'Database health', icon: HeartPulse },
+        { id: 'health', label: 'Health', icon: HeartPulse },
       ],
     },
     {
       id: 'compute',
       label: 'Compute',
       items: [
-        { id: 'cpu', label: 'CPU usage', icon: Cpu },
-        { id: 'memory', label: 'Memory usage', icon: MemoryStick },
-        { id: 'disk-io', label: 'Disk I/O', icon: HardDrive },
-        { id: 'network', label: 'Network throughput', icon: Network },
+        { id: 'cpu', label: 'CPU', icon: Cpu },
+        { id: 'memory', label: 'Memory', icon: MemoryStick },
+        { id: 'qps', label: 'Queries per second', icon: Zap },
+        { id: 'iops', label: 'Disk IOPS', icon: HardDrive },
       ],
     },
     {
@@ -357,20 +345,10 @@ export function View({ projectId, databaseId }: MonitorProps) {
       id: 'storage',
       label: 'Storage',
       items: [
-        { id: 'storage', label: 'Storage usage', icon: HardDrive },
+        { id: 'storage', label: 'Storage', icon: HardDrive },
         { id: 'tables', label: 'Largest tables', icon: Table2 },
         { id: 'table-bloat', label: 'Dead tuples', icon: Table2 },
         { id: 'sequential-scans', label: 'Sequential scans', icon: ScanLine },
-      ],
-    },
-    {
-      id: 'workload',
-      label: 'Workload',
-      items: [
-        { id: 'transactions', label: 'Transaction rate', icon: ArrowLeftRight },
-        { id: 'tuples', label: 'Tuple operations', icon: Layers },
-        { id: 'disk-reads', label: 'Disk block reads', icon: HardDrive },
-        { id: 'cache', label: 'Cache hit ratio', icon: Gauge },
       ],
     },
   ]
@@ -380,63 +358,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
     const el = document.getElementById(`postgres-metric-chart-${id}`)
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
-
-  const connectionsSeries = useMemo(
-    () =>
-      filteredSamples.map((sample) => ({
-        timestamp: sample.timestamp,
-        value: sample.totalConnections,
-        secondaryValue: sample.activeQueries,
-      })),
-    [filteredSamples],
-  )
-
-  const transactionsSeries = useMemo(
-    () =>
-      filteredSamples.map((sample) => ({
-        timestamp: sample.timestamp,
-        value: sample.commitsPerMin,
-        secondaryValue: sample.rollbacksPerMin,
-      })),
-    [filteredSamples],
-  )
-
-  const diskReadsSeries = useMemo(
-    () =>
-      filteredSamples.map((sample) => ({
-        timestamp: sample.timestamp,
-        value: sample.blockReadsPerMin,
-      })),
-    [filteredSamples],
-  )
-
-  const tuplesSeries = useMemo(
-    () =>
-      filteredSamples.map((sample) => ({
-        timestamp: sample.timestamp,
-        value: sample.tuplesReadPerMin,
-        secondaryValue: sample.tuplesWrittenPerMin,
-      })),
-    [filteredSamples],
-  )
-
-  const storageSeries = useMemo(
-    () =>
-      filteredSamples.map((sample) => ({
-        timestamp: sample.timestamp,
-        value: sample.databaseSizeBytes,
-      })),
-    [filteredSamples],
-  )
-
-  const cacheSeries = useMemo(
-    () =>
-      filteredSamples.map((sample) => ({
-        timestamp: sample.timestamp,
-        value: sample.cacheHitRatio,
-      })),
-    [filteredSamples],
-  )
 
   const tableSizeBars = useMemo(
     () =>
@@ -510,55 +431,109 @@ export function View({ projectId, databaseId }: MonitorProps) {
     return (snapshot.xactRollback / total) * 100
   }, [snapshot])
 
-  const placeholderEpoch = lastRecordedAt ?? 0
+  const cpuPoints = dedicatedMetrics.cpu.isError
+    ? []
+    : (dedicatedMetrics.cpu.data?.chartPoints ?? [])
+  const memoryPoints = dedicatedMetrics.memory.isError
+    ? []
+    : (dedicatedMetrics.memory.data?.chartPoints ?? [])
+  const qpsPoints = dedicatedMetrics.qps.isError
+    ? []
+    : (dedicatedMetrics.qps.data?.chartPoints ?? [])
+  const iopsReadPoints = dedicatedMetrics.iopsRead.isError
+    ? []
+    : (dedicatedMetrics.iopsRead.data?.chartPoints ?? [])
+  const iopsWritePoints = dedicatedMetrics.iopsWrite.isError
+    ? []
+    : (dedicatedMetrics.iopsWrite.data?.chartPoints ?? [])
+  const dedicatedStoragePoints = dedicatedMetrics.storage.isError
+    ? []
+    : (dedicatedMetrics.storage.data?.chartPoints ?? [])
+  const dedicatedConnectionsPoints = dedicatedMetrics.connections.isError
+    ? []
+    : (dedicatedMetrics.connections.data?.chartPoints ?? [])
+  const storageUsedBytes =
+    dedicatedStoragePoints.length > 0
+      ? getDedicatedDatabaseGaugeHeadline(dedicatedStoragePoints)
+      : null
+  const storageUsagePercent = useMemo(() => {
+    if (
+      storageUsedBytes == null ||
+      storageLimitBytes == null ||
+      storageLimitBytes <= 0
+    ) {
+      return null
+    }
+    return (storageUsedBytes / storageLimitBytes) * 100
+  }, [storageUsedBytes, storageLimitBytes])
 
-  const cpuPlaceholderSeries = useMemo(
-    () =>
-      buildMockUsageMetricSeries(fromMs, toMs, 0.5, 42, 18, {
-        refreshEpoch: placeholderEpoch,
-      }),
-    [fromMs, toMs, placeholderEpoch],
+  const cpuSeries = useMemo(
+    () => usageChartPointsToMonitorSeries(cpuPoints),
+    [cpuPoints],
+  )
+  const memorySeries = useMemo(
+    () => usageChartPointsToMonitorSeries(memoryPoints),
+    [memoryPoints],
+  )
+  const qpsSeries = useMemo(
+    () => usageChartPointsToMonitorSeries(qpsPoints),
+    [qpsPoints],
+  )
+  const iopsSeries = useMemo(
+    () => mergeDualUsageChartSeries(iopsReadPoints, iopsWritePoints),
+    [iopsReadPoints, iopsWritePoints],
+  )
+  const dedicatedStorageSeries = useMemo(
+    () => usageChartPointsToMonitorSeries(dedicatedStoragePoints),
+    [dedicatedStoragePoints],
+  )
+  const dedicatedConnectionsSeries = useMemo(
+    () => usageChartPointsToMonitorSeries(dedicatedConnectionsPoints),
+    [dedicatedConnectionsPoints],
   )
 
-  const memoryPlaceholderSeries = useMemo(
-    () =>
-      buildMockUsageMetricSeries(fromMs, toMs, 0.9, 58, 15, {
-        refreshEpoch: placeholderEpoch,
-      }),
-    [fromMs, toMs, placeholderEpoch],
+  const cpuPercent = getDedicatedDatabaseGaugeHeadline(cpuPoints)
+  const memoryPercent = getDedicatedDatabaseGaugeHeadline(memoryPoints)
+  const qpsLatest = getDedicatedDatabaseRateHeadline(qpsPoints)
+  const iopsReadLatest = getDedicatedDatabaseRateHeadline(iopsReadPoints)
+  const iopsWriteLatest = getDedicatedDatabaseRateHeadline(iopsWritePoints)
+
+  const cpuChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.cpu.isError,
+    dedicatedMetrics.cpu.isLoading,
+    dedicatedMetrics.cpu.isPlaceholderData,
+  )
+  const memoryChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.memory.isError,
+    dedicatedMetrics.memory.isLoading,
+    dedicatedMetrics.memory.isPlaceholderData,
+  )
+  const qpsChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.qps.isError,
+    dedicatedMetrics.qps.isLoading,
+    dedicatedMetrics.qps.isPlaceholderData,
+  )
+  const iopsChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.iopsRead.isError || dedicatedMetrics.iopsWrite.isError,
+    dedicatedMetrics.iopsRead.isLoading || dedicatedMetrics.iopsWrite.isLoading,
+    dedicatedMetrics.iopsRead.isPlaceholderData ||
+      dedicatedMetrics.iopsWrite.isPlaceholderData,
+  )
+  const connectionsChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.connections.isError,
+    dedicatedMetrics.connections.isLoading,
+    dedicatedMetrics.connections.isPlaceholderData,
+  )
+  const storageChartLoading = shouldShowUsageChartSkeleton(
+    dedicatedMetrics.storage.isError,
+    dedicatedMetrics.storage.isLoading,
+    dedicatedMetrics.storage.isPlaceholderData,
   )
 
-  const diskIoPlaceholderSeries = useMemo(
-    () =>
-      buildMockUsageMetricSeries(fromMs, toMs, 1.2, 18, 8, {
-        refreshEpoch: placeholderEpoch,
-        secondaryBase: 12,
-        secondaryAmplitude: 5,
-      }),
-    [fromMs, toMs, placeholderEpoch],
-  )
-
-  const networkPlaceholderSeries = useMemo(
-    () =>
-      buildMockUsageMetricSeries(fromMs, toMs, 2.0, 24, 10, {
-        refreshEpoch: placeholderEpoch,
-        secondaryBase: 16,
-        secondaryAmplitude: 6,
-      }),
-    [fromMs, toMs, placeholderEpoch],
-  )
-
-  const lastDiskIoPoint =
-    diskIoPlaceholderSeries[diskIoPlaceholderSeries.length - 1]
-  const lastNetworkPoint =
-    networkPlaceholderSeries[networkPlaceholderSeries.length - 1]
-
-  const mockCpuPercent = latestMockSeriesValue(cpuPlaceholderSeries)
-  const mockMemoryPercent = latestMockSeriesValue(memoryPlaceholderSeries)
-  const mockDiskReadMbps = lastDiskIoPoint?.value ?? null
-  const mockDiskWriteMbps = lastDiskIoPoint?.secondaryValue ?? null
-  const mockNetworkIngressMbps = lastNetworkPoint?.value ?? null
-  const mockNetworkEgressMbps = lastNetworkPoint?.secondaryValue ?? null
+  const refetchDedicatedMetrics = dedicatedMetrics.refetchAll
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refresh(), refetchDedicatedMetrics()])
+  }, [refresh, refetchDedicatedMetrics])
 
   const metricsError =
     error ??
@@ -566,13 +541,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
     connectionAppsError ??
     tableActivityError ??
     null
-  const rangeLabel = useMemo(() => {
-    if (!dateRange.from) return 'Last 24 hours'
-    const to = dateRange.to ?? dateRange.from
-    const days = differenceInCalendarDays(endOfDay(to), startOfDay(dateRange.from)) + 1
-    if (days <= 1) return 'Last 24 hours'
-    return `${days} day${days === 1 ? '' : 's'}`
-  }, [dateRange])
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
@@ -583,7 +551,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
               Updated {formatDistanceToNow(lastRecordedAt, { addSuffix: true })}
             </span>
           ) : null}
-          <div className="ms-auto flex shrink-0 items-center gap-3">
+          <div className="ms-auto flex shrink-0 flex-wrap items-center justify-end gap-3">
+            <UsageChartIntervalToggle
+              value={resolvedInterval}
+              onValueChange={setChartInterval}
+              dateRange={dateRange}
+            />
             <DateRangePicker
               dateRange={dateRange}
               onDateRangeChange={(range) =>
@@ -592,8 +565,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
               className="h-9 min-w-[200px]"
             />
             <RefreshButton
-              onClick={() => void refresh()}
-              isRefreshing={isFetching}
+              onClick={() => void handleRefresh()}
+              isRefreshing={
+                isFetching ||
+                dedicatedMetrics.cpu.isFetching ||
+                dedicatedMetrics.memory.isFetching
+              }
               tooltip={t('Refresh metrics')}
             />
           </div>
@@ -620,12 +597,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
             />
 
             <div className="min-w-0 flex-1 space-y-10">
-              <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
-                <p className="text-[12px] leading-relaxed text-muted-foreground">
-                  {t('Metrics are collected from live PostgreSQL statistics via the SQL API. Time-series charts use samples gathered while this view is open across the selected range.')}
-                </p>
-              </div>
-
               <section className="space-y-6">
                 <MonitorSectionHeading title={t('Overview')} />
 
@@ -649,9 +620,9 @@ export function View({ projectId, databaseId }: MonitorProps) {
                   <PostgresMetricKpiCard
                     label={t('Storage used')}
                     value={
-                      snapshot
-                        ? formatCompactBytes(snapshot.databaseSizeBytes)
-                        : isLoading
+                      storageUsedBytes != null
+                        ? formatCompactBytes(storageUsedBytes)
+                        : storageChartLoading
                           ? '—'
                           : '0B'
                     }
@@ -664,12 +635,14 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           }`
                         : undefined
                     }
-                    description={t('On-disk database size compared to provisioned storage for this instance.')}
+                    description={t(
+                      'Storage used by this database instance compared to provisioned capacity.',
+                    )}
                     progress={storageUsagePercent}
                     progressTone={getUsageTone(storageUsagePercent)}
                     progressCaption={
-                      snapshot && storageLimitBytes != null
-                        ? `${formatCompactBytes(snapshot.databaseSizeBytes)} of ${formatCompactBytes(storageLimitBytes)} available${
+                      storageUsedBytes != null && storageLimitBytes != null
+                        ? `${formatCompactBytes(storageUsedBytes)} of ${formatCompactBytes(storageLimitBytes)} available${
                             storageUsagePercent != null
                               ? ` (${storageUsagePercent.toFixed(1)}%)`
                               : ''
@@ -705,7 +678,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
                     className={MONITOR_SCROLL_MARGIN}
                   >
                     <PostgresMetricsBentoCard
-                      title={t('Database health')}
+                      title={t('Health')}
                       columns={4}
                       tiles={[
                         {
@@ -747,37 +720,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
                           description:
                             'Rolled back transactions since PostgreSQL statistics were last reset.',
                         },
-                        {
-                          id: 'deadlocks',
-                          label: 'Deadlocks',
-                          value: formatCompactCount(snapshot.deadlocks),
-                          description:
-                            'Deadlocks detected since PostgreSQL statistics were last reset.',
-                        },
-                        {
-                          id: 'conflicts',
-                          label: 'Conflicts',
-                          value: formatCompactCount(snapshot.conflicts),
-                          description:
-                            'Query conflicts on standby replicas since statistics were last reset.',
-                        },
-                        {
-                          id: 'temp-storage',
-                          label: 'Temp storage',
-                          value: formatCompactBytes(snapshot.tempBytes),
-                          description:
-                            'Temporary files written by queries since statistics were last reset.',
-                        },
-                        {
-                          id: 'last-sample',
-                          label: 'Last sample',
-                          value: formatLocalizedDate(
-                            new Date(snapshot.timestamp),
-                            'MMM d, HH:mm',
-                          ),
-                          description:
-                            'When the most recent metrics snapshot was collected.',
-                        },
                       ]}
                     />
                   </div>
@@ -787,125 +729,120 @@ export function View({ projectId, databaseId }: MonitorProps) {
               <section className="space-y-6">
                 <MonitorSectionHeading title={t('Compute')} />
 
-                <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="info" className="text-[10px] shrink-0">
-                      {t('Sample data')}
-                    </Badge>
-                    <p className="text-[12px] leading-relaxed text-muted-foreground">
-                      {t(POSTGRES_USAGE_PLACEHOLDER_NOTE)}
-                    </p>
-                  </div>
-                </div>
-
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <PostgresMetricKpiCard
-                    className="border-dashed"
-                    label={t('CPU usage')}
+                    label={t('CPU')}
                     value={
-                      mockCpuPercent != null
-                        ? `${mockCpuPercent.toFixed(1)}%`
-                        : '—'
+                      cpuPoints.length > 0 ? `${cpuPercent.toFixed(1)}%` : '—'
                     }
-                    description={t('Average CPU utilization for this database instance.')}
-                    progress={mockCpuPercent}
-                    progressTone={getUsageTone(mockCpuPercent)}
+                    description={t(DEDICATED_DATABASE_CPU_DESCRIPTION)}
+                    progress={cpuPoints.length > 0 ? cpuPercent : null}
+                    progressTone={getUsageTone(
+                      cpuPoints.length > 0 ? cpuPercent : null,
+                    )}
                   />
                   <PostgresMetricKpiCard
-                    className="border-dashed"
-                    label={t('Memory usage')}
+                    label={t('Memory')}
                     value={
-                      mockMemoryPercent != null
-                        ? `${mockMemoryPercent.toFixed(1)}%`
+                      memoryPoints.length > 0
+                        ? `${memoryPercent.toFixed(1)}%`
                         : '—'
                     }
-                    description={t('Memory utilization relative to provisioned RAM.')}
-                    progress={mockMemoryPercent}
-                    progressTone={getUsageTone(mockMemoryPercent)}
+                    description={t(DEDICATED_DATABASE_MEMORY_DESCRIPTION)}
+                    progress={memoryPoints.length > 0 ? memoryPercent : null}
+                    progressTone={getUsageTone(
+                      memoryPoints.length > 0 ? memoryPercent : null,
+                    )}
                   />
                   <PostgresMetricKpiCard
-                    className="border-dashed"
-                    label={t('Disk I/O')}
+                    label={t('Queries per second')}
                     value={
-                      mockDiskReadMbps != null
-                        ? `${mockDiskReadMbps.toFixed(1)} MB/s`
-                        : '—'
+                      qpsPoints.length > 0 ? qpsLatest.toFixed(1) : '—'
                     }
-                    subValue={
-                      mockDiskWriteMbps != null
-                        ? `${mockDiskWriteMbps.toFixed(1)} MB/s writes`
-                        : undefined
-                    }
-                    description={t('Combined read and write throughput for instance storage.')}
+                    description={t(DEDICATED_DATABASE_QPS_DESCRIPTION)}
                   />
                   <PostgresMetricKpiCard
-                    className="border-dashed"
-                    label={t('Network')}
+                    label={t('Disk IOPS')}
                     value={
-                      mockNetworkIngressMbps != null
-                        ? `${mockNetworkIngressMbps.toFixed(1)} MB/s`
-                        : '—'
+                      iopsChartLoading &&
+                      iopsReadPoints.length === 0 &&
+                      iopsWritePoints.length === 0
+                        ? '—'
+                        : `${(iopsReadPoints.length > 0 ? iopsReadLatest : 0).toFixed(1)} ${t('read')} · ${(iopsWritePoints.length > 0 ? iopsWriteLatest : 0).toFixed(1)} ${t('write')}`
                     }
-                    subValue={
-                      mockNetworkEgressMbps != null
-                        ? `${mockNetworkEgressMbps.toFixed(1)} MB/s egress`
-                        : undefined
-                    }
-                    description={t('Ingress and egress throughput for this database instance.')}
+                    description={t(DEDICATED_DATABASE_IOPS_DESCRIPTION)}
                   />
                 </div>
 
                 <div className="space-y-6">
                   <PostgresMetricChart
                     id="cpu"
-                    title={t('CPU usage')}
-                    description={t('Average CPU utilization for this database instance.')}
+                    title={t('CPU')}
+                    description={t(DEDICATED_DATABASE_CPU_DESCRIPTION)}
                     unit=""
-                    data={cpuPlaceholderSeries}
+                    data={cpuSeries}
                     formatY={(value) => `${value.toFixed(1)}%`}
-                    usageValue={mockCpuPercent}
+                    usageValue={cpuPoints.length > 0 ? cpuPercent : null}
                     usageQuota={100}
-                    usageQuotaLabel="capacity"
-                    isPlaceholder
+                    usageUnitLabel="utilization"
+                    isLoading={cpuChartLoading}
+                    emptyMessage={t('No CPU metrics for this date range')}
                   />
 
                   <PostgresMetricChart
                     id="memory"
-                    title={t('Memory usage')}
-                    description={t('Memory utilization relative to provisioned RAM.')}
+                    title={t('Memory')}
+                    description={t(DEDICATED_DATABASE_MEMORY_DESCRIPTION)}
                     unit=""
-                    data={memoryPlaceholderSeries}
+                    data={memorySeries}
                     formatY={(value) => `${value.toFixed(1)}%`}
-                    usageValue={mockMemoryPercent}
+                    usageValue={memoryPoints.length > 0 ? memoryPercent : null}
                     usageQuota={100}
-                    usageQuotaLabel="capacity"
-                    isPlaceholder
+                    usageUnitLabel="utilization"
+                    isLoading={memoryChartLoading}
+                    emptyMessage={t('No memory metrics for this date range')}
                   />
 
                   <PostgresMetricChart
-                    id="disk-io"
-                    title={t('Disk I/O')}
-                    description={t('Read and write throughput for instance storage.')}
-                    unit="MB/s reads"
+                    id="qps"
+                    title={t('Queries per second')}
+                    description={t(DEDICATED_DATABASE_QPS_DESCRIPTION)}
+                    unit="qps"
+                    data={qpsSeries}
+                    formatY={(value) => value.toFixed(1)}
+                    isLoading={qpsChartLoading}
+                    emptyMessage={t('No QPS metrics for this date range')}
+                  />
+
+                  <PostgresMetricChart
+                    id="iops"
+                    title={t('Disk IOPS')}
+                    description={t(DEDICATED_DATABASE_IOPS_DESCRIPTION)}
+                    unit="iops"
+                    primaryLabel="Reads"
                     secondaryLabel="Writes"
-                    secondaryUnit="MB/s"
-                    data={diskIoPlaceholderSeries}
+                    secondaryUnit="iops"
+                    data={iopsSeries}
                     formatY={(value) => value.toFixed(1)}
                     formatSecondaryY={(value) => value.toFixed(1)}
-                    isPlaceholder
-                  />
-
-                  <PostgresMetricChart
-                    id="network"
-                    title={t('Network throughput')}
-                    description={t('Ingress and egress for this database instance.')}
-                    unit="MB/s ingress"
-                    secondaryLabel="Egress"
-                    secondaryUnit="MB/s"
-                    data={networkPlaceholderSeries}
-                    formatY={(value) => value.toFixed(1)}
-                    formatSecondaryY={(value) => value.toFixed(1)}
-                    isPlaceholder
+                    usageValue={
+                      iopsReadPoints.length > 0 || iopsWritePoints.length > 0
+                        ? iopsReadPoints.length > 0
+                          ? iopsReadLatest
+                          : 0
+                        : null
+                    }
+                    usageSecondaryValue={
+                      iopsReadPoints.length > 0 || iopsWritePoints.length > 0
+                        ? iopsWritePoints.length > 0
+                          ? iopsWriteLatest
+                          : 0
+                        : null
+                    }
+                    usageUnitLabel="read"
+                    usageSecondaryUnitLabel="write"
+                    isLoading={iopsChartLoading}
+                    emptyMessage={t('No IOPS metrics for this date range')}
                   />
                 </div>
               </section>
@@ -917,12 +854,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
                   <PostgresMetricChart
                     id="connections"
                     title={t('Connections')}
-                    description={t('Total client sessions and active queries sampled from pg_stat_activity.')}
+                    description={t(DEDICATED_DATABASE_CONNECTIONS_DESCRIPTION)}
                     unit="connections"
-                    secondaryLabel={t('Active queries')}
-                    data={connectionsSeries}
+                    data={dedicatedConnectionsSeries}
                     formatY={(value) => Math.round(value).toLocaleString()}
-                    emptyMessage={`Collecting connection samples for ${rangeLabel.toLowerCase()}. Samples refresh automatically every minute.`}
+                    isLoading={connectionsChartLoading}
+                    emptyMessage={t('No connection metrics for this date range')}
                   />
 
                   <PostgresMetricRankedList
@@ -989,13 +926,19 @@ export function View({ projectId, databaseId }: MonitorProps) {
                 <div className="space-y-6">
                   <PostgresMetricChart
                     id="storage"
-                    title={t('Storage usage')}
-                    description={t('Database size over time from pg_database_size, relative to provisioned storage.')}
+                    title={t('Storage')}
+                    description={t(DEDICATED_DATABASE_STORAGE_DESCRIPTION)}
                     unit=""
-                    data={storageSeries}
+                    data={dedicatedStorageSeries}
                     formatY={(value) => formatCompactBytes(value)}
-                    usageValue={snapshot?.databaseSizeBytes ?? null}
+                    usageValue={
+                      dedicatedStoragePoints.length > 0
+                        ? getDedicatedDatabaseGaugeHeadline(dedicatedStoragePoints)
+                        : null
+                    }
                     usageQuota={storageLimitBytes}
+                    isLoading={storageChartLoading}
+                    emptyMessage={t('No storage metrics for this date range')}
                   />
 
                   <PostgresMetricRankedList
@@ -1038,55 +981,6 @@ export function View({ projectId, databaseId }: MonitorProps) {
                 </div>
               </section>
 
-              <section className="space-y-6">
-                <MonitorSectionHeading title={t('Workload')} />
-
-                <PostgresMetricChart
-                  id="transactions"
-                  title={t('Transaction rate')}
-                  description={t('Commits and rollbacks per minute, derived from pg_stat_database counters.')}
-                  unit="commits / min"
-                  secondaryLabel="Rollbacks"
-                  secondaryUnit="/ min"
-                  data={transactionsSeries}
-                  formatY={(value) => Math.round(value).toLocaleString()}
-                  formatSecondaryY={(value) =>
-                    Math.round(value).toLocaleString()
-                  }
-                />
-
-                <PostgresMetricChart
-                  id="tuples"
-                  title={t('Tuple operations')}
-                  description={t('Read and write tuple throughput per minute from pg_stat_database.')}
-                  unit="reads / min"
-                  secondaryLabel="Writes"
-                  secondaryUnit="/ min"
-                  data={tuplesSeries}
-                  formatY={(value) => Math.round(value).toLocaleString()}
-                  formatSecondaryY={(value) =>
-                    Math.round(value).toLocaleString()
-                  }
-                />
-
-                <PostgresMetricChart
-                  id="disk-reads"
-                  title={t('Disk block reads')}
-                  description={t('Blocks read from disk per minute. Rising disk reads alongside a falling cache hit ratio can signal memory pressure.')}
-                  unit="blocks / min"
-                  data={diskReadsSeries}
-                  formatY={(value) => Math.round(value).toLocaleString()}
-                />
-
-                <PostgresMetricChart
-                  id="cache"
-                  title={t('Cache hit ratio')}
-                  description={t('Buffer cache effectiveness from pg_stat_database block reads and hits.')}
-                  unit=""
-                  data={cacheSeries}
-                  formatY={(value) => `${value.toFixed(1)}%`}
-                />
-              </section>
             </div>
           </div>
         </div>

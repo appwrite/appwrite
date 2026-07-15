@@ -88,6 +88,12 @@ export const DATABASE_READS_DESCRIPTION =
 export const DATABASE_WRITES_DESCRIPTION =
   'Create, update, and delete operations across all databases. Each mutation counts as one write.'
 
+export const DATABASE_READS_FOR_DATABASE_DESCRIPTION =
+  'Read operations for this database. Each row returned counts as one read.'
+
+export const DATABASE_WRITES_FOR_DATABASE_DESCRIPTION =
+  'Create, update, and delete operations for this database. Each mutation counts as one write.'
+
 export const DATABASE_COLLECTIONS_DESCRIPTION =
   'Total collections (tables) across all databases in your project.'
 

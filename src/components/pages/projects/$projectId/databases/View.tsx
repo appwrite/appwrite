@@ -1044,7 +1044,13 @@ export function View() {
                   <DatabaseContextMenu
                     key={db.$id}
                     projectId={projectId}
-                    database={{ $id: db.$id, name: db.name }}
+                    database={{
+                      $id: db.$id,
+                      name: db.name,
+                      databaseType:
+                        (db as { databaseType?: ApiDatabaseType })
+                          .databaseType ?? ApiDatabaseType.Tablesdb,
+                    }}
                     showSecuritySettings={showDbSecuritySettings}
                     showMonitor={features.usageStats}
                     showBackups={features.databaseBackups}
@@ -1469,6 +1475,7 @@ export function DatabaseDetailLayout({
           <Link
             to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
             params={{ projectId, dbKind: dbKind, databaseId }}
+            hash="card-specification"
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Cpu className="h-3.5 w-3.5 shrink-0" />
@@ -1677,6 +1684,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           <Link
             to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
             params={{ projectId, dbKind: dbKind, databaseId }}
+            hash="card-specification"
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
             <Cpu className="h-3.5 w-3.5 shrink-0" />

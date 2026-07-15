@@ -6,11 +6,14 @@ import {
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import {
+  DatabaseType as ApiDatabaseType,
+  type Models,
+} from '@appwrite.io/console'
 import type { Database as DatabaseListItem } from '@/lib/utils/mock-data'
 import {
-  databaseRouteKindFromApiType,
-  dbNavLink,
+  dedicatedDatabaseHomeLink,
+  productDatabaseListLink,
 } from '@/lib/database-routes'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -66,18 +69,16 @@ type AllDatabasesSectionProps = {
   viewMode: 'list' | 'grid'
 }
 
-function databaseDeepLink(
+function databaseCardLink(
   projectId: string,
-  databaseId: string,
-  apiType: ApiDatabaseType | undefined,
+  db: { $id: string; databaseType?: ApiDatabaseType },
+  dedicated?: Pick<Models.DedicatedDatabase, '$id' | 'api' | 'engine'> | null,
 ) {
-  const dbKind = databaseRouteKindFromApiType(apiType)
-  return dbNavLink(dbKind).dataGrid({
-    projectId,
-    dbKind,
-    databaseId,
-    resourceId: '-',
-  })
+  if (dedicated) {
+    const dedicatedLink = dedicatedDatabaseHomeLink(projectId, dedicated)
+    if (dedicatedLink) return dedicatedLink
+  }
+  return productDatabaseListLink(projectId, db.$id, db.databaseType)
 }
 
 export function AllDatabasesSection({
@@ -105,16 +106,9 @@ export function AllDatabasesSection({
     useProjectDedicatedDatabases(projectId)
 
   const dedicatedById = useMemo(() => {
-    const map = new Map<
-      string,
-      { replicas: number; status: string; specification?: string }
-    >()
+    const map = new Map<string, Models.DedicatedDatabase>()
     for (const db of dedicatedDatabases) {
-      map.set(db.$id, {
-        replicas: db.replicas ?? 0,
-        status: db.status,
-        specification: db.specification || undefined,
-      })
+      map.set(db.$id, db)
     }
     return map
   }, [dedicatedDatabases])
@@ -199,10 +193,10 @@ export function AllDatabasesSection({
                     >
                       <TableCell className="px-4 py-3">
                         <Link
-                          {...databaseDeepLink(
+                          {...databaseCardLink(
                             projectId,
-                            db.$id,
-                            db.databaseType,
+                            db,
+                            dedicatedById.get(db.$id),
                           )}
                           className="block min-w-0 group"
                         >
@@ -221,7 +215,10 @@ export function AllDatabasesSection({
                         </Link>
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        <DatabaseTypeBadge apiType={db.databaseType} />
+                        <DatabaseTypeBadge
+                          apiType={db.databaseType}
+                          engine={dedicatedById.get(db.$id)?.engine}
+                        />
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">
@@ -309,19 +306,21 @@ export function AllDatabasesSection({
               const connectionSeed = db.$id
                 .split('')
                 .reduce((sum, char) => sum + char.charCodeAt(0), 0)
+              const cardLink = databaseCardLink(projectId, db, dedicated)
               return (
                 <DatabaseContextMenu
                   key={db.$id}
                   projectId={projectId}
-                  database={{ $id: db.$id, name: db.name }}
+                  database={{
+                    $id: db.$id,
+                    name: db.name,
+                    databaseType: db.databaseType,
+                  }}
                   showSecuritySettings={showDbSecuritySettings}
                   showMonitor={features.usageStats}
                   showBackups={features.databaseBackups}
                 >
-                  <Link
-                    {...databaseDeepLink(projectId, db.$id, db.databaseType)}
-                    className="block min-w-0"
-                  >
+                  <Link {...cardLink} className="block min-w-0">
                     <div
                       className={cn(
                         RESOURCE_CARD_PADDED_CLASSNAME,
@@ -367,7 +366,10 @@ export function AllDatabasesSection({
 
                       <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
                         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
-                          <DatabaseTypeBadge apiType={db.databaseType} />
+                          <DatabaseTypeBadge
+                            apiType={db.databaseType}
+                            engine={dedicated?.engine}
+                          />
                           <span className="truncate">
                             <span className="text-muted-foreground/80">
                               {t('Tier')}

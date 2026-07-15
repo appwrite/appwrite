@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
@@ -17,18 +17,14 @@ import {
   POSTGRES_METRICS_TABLE_ACTIVITY_SQL,
 } from '@/lib/postgres-metrics-sql'
 import {
-  appendPostgresMetricsSample,
-  buildPostgresMetricsSample,
   parsePostgresActiveConnections,
   parsePostgresConnectionApps,
   parsePostgresConnectionStates,
   parsePostgresMetricsSnapshot,
   parsePostgresTableActivity,
-  readPostgresMetricsSamples,
   type PostgresActiveConnectionRow,
   type PostgresConnectionAppRow,
   type PostgresConnectionStateRow,
-  type PostgresMetricsSample,
   type PostgresMetricsSnapshot,
   type PostgresTableActivityRow,
 } from '@/lib/postgres-metrics'
@@ -262,8 +258,8 @@ export function usePostgresTableActivity(
 }
 
 /**
- * Polls metrics via the SQL API and appends rate samples to session storage
- * for time-series charts while the monitor view is open.
+ * Polls the PostgreSQL metrics snapshot while the monitor view is open.
+ * Used for overview KPIs and live health signals (not time-series charts).
  */
 export function usePostgresMetricsSampling(
   projectId: string | null | undefined,
@@ -272,59 +268,21 @@ export function usePostgresMetricsSampling(
 ) {
   const enabled = options?.enabled ?? true
   const pollIntervalMs = options?.pollIntervalMs ?? METRICS_POLL_INTERVAL_MS
-  const [samples, setSamples] = useState<PostgresMetricsSample[]>(() =>
-    databaseId ? readPostgresMetricsSamples(databaseId) : [],
-  )
-  const [lastRecordedAt, setLastRecordedAt] = useState<number | null>(null)
 
-  const recordSnapshot = useCallback(
-    (snapshot: PostgresMetricsSnapshot | null) => {
-      if (!databaseId || !snapshot) return
-      const existing = readPostgresMetricsSamples(databaseId)
-      const previous = existing[existing.length - 1] ?? null
-      const sample = buildPostgresMetricsSample(snapshot, previous)
-      const next = appendPostgresMetricsSample(databaseId, sample)
-      setSamples(next)
-      setLastRecordedAt(sample.timestamp)
-    },
-    [databaseId],
-  )
+  const query = useQuery({
+    ...postgresMetricsSnapshotQueryOptions(projectId, databaseId),
+    enabled: enabled && !!projectId && !!databaseId,
+    refetchInterval: enabled ? pollIntervalMs : false,
+  })
 
-  const {
-    snapshot,
-    isLoading,
-    isFetching,
-    error,
-    refetch,
-  } = usePostgresMetricsSnapshot(projectId, databaseId)
-
-  useEffect(() => {
-    if (!databaseId) return
-    setSamples(readPostgresMetricsSamples(databaseId))
-  }, [databaseId])
-
-  useEffect(() => {
-    if (!enabled || !snapshot) return
-    recordSnapshot(snapshot)
-  }, [enabled, snapshot, recordSnapshot])
-
-  useEffect(() => {
-    if (!enabled || !projectId || !databaseId) return
-    const interval = window.setInterval(() => {
-      void refetch()
-    }, pollIntervalMs)
-    return () => window.clearInterval(interval)
-  }, [enabled, projectId, databaseId, pollIntervalMs, refetch])
-
-  const refresh = useCallback(() => refetch(), [refetch])
+  const refresh = useCallback(() => query.refetch(), [query.refetch])
 
   return {
-    snapshot,
-    samples,
-    lastRecordedAt,
-    isLoading,
-    isFetching,
-    error,
+    snapshot: query.data ?? null,
+    lastRecordedAt: query.dataUpdatedAt > 0 ? query.dataUpdatedAt : null,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error,
     refresh,
   }
 }

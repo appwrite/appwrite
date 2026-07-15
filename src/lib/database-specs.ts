@@ -121,13 +121,26 @@ export function getEffectiveDatabaseSpecIdForMonitoring(
   return 'micro'
 }
 
+/**
+ * Spec ids that mean TablesDB pay-per-operation (no fixed CPU/RAM).
+ * Console UI uses `shared`; some APIs still report `serverless`.
+ */
+export function isServerlessDatabaseSpecId(specId: string): boolean {
+  const normalized = specId.trim().toLowerCase()
+  return (
+    normalized === SERVERLESS_DATABASE_SPEC_ID ||
+    normalized === 'serverless' ||
+    normalized === ''
+  )
+}
+
 /** Serverless means Tables DB on the pay-per-operation tier (no fixed CPU/RAM). */
 export function isServerlessDatabaseMonitoring(
   databaseType: DatabaseType,
   specId: string,
 ): boolean {
   return (
-    databaseType === DatabaseType.Tablesdb && specId === DEFAULT_TABLES_MONITOR_SPEC_ID
+    databaseType === DatabaseType.Tablesdb && isServerlessDatabaseSpecId(specId)
   )
 }
 

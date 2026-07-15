@@ -176,6 +176,14 @@ export function dbNavLink(kind: DatabaseRouteKind) {
         params: baseDatabaseOnly(p),
       }
     },
+    /** Database settings scrolled to the Specification card (`#card-specification`). */
+    dbSpecificationSettings(p: DbNavLinkParams) {
+      return {
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+        params: baseDatabaseOnly(p),
+        hash: 'card-specification',
+      }
+    },
   }
 }
 
@@ -250,6 +258,31 @@ function productDatabaseDeepLink(
     to: link.to,
     params: link.params as unknown as Record<string, string>,
   }
+}
+
+/** Product database list/card deep link from API `database.type`. */
+export function productDatabaseListLink(
+  projectId: string,
+  databaseId: string,
+  type: DatabaseType | undefined,
+) {
+  const dbKind = databaseRouteKindFromApiType(type)
+  return dbNavLink(dbKind).dataGrid({
+    projectId,
+    dbKind,
+    databaseId,
+    resourceId: '-',
+  })
+}
+
+/** Console path for copy/open actions (includes `$dbKind`). */
+export function productDatabaseHomePath(
+  projectId: string,
+  databaseId: string,
+  type: DatabaseType | undefined,
+): string {
+  const dbKind = databaseRouteKindFromApiType(type)
+  return `/projects/${projectId}/databases/${dbKind}/${databaseId}/`
 }
 
 /** Resolve the console home link for a native or product-backed dedicated database row. */

@@ -161,8 +161,10 @@ export function PostgresSpecificationCard({
     (databaseLoading && !database) ||
     (specificationsLoading && specs.length === 0)
 
-  const showPlanUpgrade = !nextEnabledSpec && !!nextLockedSpec && billingEnabled
-  const showComputeUpgrade = !!nextEnabledSpec && canUpgrade
+  const showComputeUpgrade =
+    canUpgrade && (!!nextEnabledSpec || !!nextLockedSpec)
+  const showPlanUpgrade =
+    !showComputeUpgrade && !!nextLockedSpec && billingEnabled
 
   if (isLoading) {
     return <SpecCardSkeleton />

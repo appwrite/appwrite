@@ -49,15 +49,6 @@ export type PostgresMetricsSnapshot = {
   serverStartedAt: number | null
 }
 
-export type PostgresMetricsSample = PostgresMetricsSnapshot & {
-  transactionsPerMin: number
-  commitsPerMin: number
-  rollbacksPerMin: number
-  tuplesReadPerMin: number
-  tuplesWrittenPerMin: number
-  blockReadsPerMin: number
-}
-
 export type PostgresConnectionStateRow = {
   state: string
   count: number
@@ -97,10 +88,6 @@ export type PostgresTableActivityRow = {
   writeOperations: number
   readOperations: number
 }
-
-const SAMPLE_STORAGE_PREFIX = 'console.postgresMetricsSamples.'
-const MAX_STORED_SAMPLES = 2_880
-const MIN_SAMPLE_INTERVAL_MS = 15_000
 
 /** Active queries running longer than this are highlighted as long-running. */
 export const POSTGRES_LONG_RUNNING_QUERY_THRESHOLD_MS = 10_000
@@ -468,135 +455,6 @@ export function parsePostgresTableActivity(
     writeOperations: toFiniteNumber(row.write_operations),
     readOperations: toFiniteNumber(row.read_operations),
   }))
-}
-
-function perMinuteRate(
-  current: number,
-  previous: number,
-  elapsedMs: number,
-): number {
-  if (elapsedMs < MIN_SAMPLE_INTERVAL_MS) return 0
-  const delta = Math.max(0, current - previous)
-  return (delta / elapsedMs) * 60_000
-}
-
-export function buildPostgresMetricsSample(
-  snapshot: PostgresMetricsSnapshot,
-  previous: PostgresMetricsSnapshot | null,
-): PostgresMetricsSample {
-  if (!previous) {
-    return {
-      ...snapshot,
-      transactionsPerMin: 0,
-      commitsPerMin: 0,
-      rollbacksPerMin: 0,
-      tuplesReadPerMin: 0,
-      tuplesWrittenPerMin: 0,
-      blockReadsPerMin: 0,
-    }
-  }
-
-  const elapsedMs = snapshot.timestamp - previous.timestamp
-  const commitsPerMin = perMinuteRate(
-    snapshot.xactCommit,
-    previous.xactCommit,
-    elapsedMs,
-  )
-  const rollbacksPerMin = perMinuteRate(
-    snapshot.xactRollback,
-    previous.xactRollback,
-    elapsedMs,
-  )
-
-  return {
-    ...snapshot,
-    transactionsPerMin: commitsPerMin + rollbacksPerMin,
-    commitsPerMin,
-    rollbacksPerMin,
-    tuplesReadPerMin: perMinuteRate(
-      snapshot.tupReturned + snapshot.tupFetched,
-      previous.tupReturned + previous.tupFetched,
-      elapsedMs,
-    ),
-    tuplesWrittenPerMin: perMinuteRate(
-      snapshot.tupInserted + snapshot.tupUpdated + snapshot.tupDeleted,
-      previous.tupInserted + previous.tupUpdated + previous.tupDeleted,
-      elapsedMs,
-    ),
-    blockReadsPerMin: perMinuteRate(
-      snapshot.blksRead,
-      previous.blksRead,
-      elapsedMs,
-    ),
-  }
-}
-
-function sampleStorageKey(databaseId: string): string {
-  return `${SAMPLE_STORAGE_PREFIX}${databaseId}`
-}
-
-export function readPostgresMetricsSamples(
-  databaseId: string,
-): PostgresMetricsSample[] {
-  if (typeof window === 'undefined' || !databaseId) return []
-  try {
-    const raw = sessionStorage.getItem(sampleStorageKey(databaseId))
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed
-      .filter(
-        (item): item is PostgresMetricsSample =>
-          typeof item === 'object' &&
-          item !== null &&
-          typeof (item as PostgresMetricsSample).timestamp === 'number',
-      )
-      .sort((a, b) => a.timestamp - b.timestamp)
-  } catch {
-    return []
-  }
-}
-
-export function writePostgresMetricsSamples(
-  databaseId: string,
-  samples: PostgresMetricsSample[],
-): void {
-  if (typeof window === 'undefined' || !databaseId) return
-  try {
-    const trimmed = samples.slice(-MAX_STORED_SAMPLES)
-    sessionStorage.setItem(
-      sampleStorageKey(databaseId),
-      JSON.stringify(trimmed),
-    )
-  } catch {
-    /* ignore quota errors */
-  }
-}
-
-export function appendPostgresMetricsSample(
-  databaseId: string,
-  sample: PostgresMetricsSample,
-): PostgresMetricsSample[] {
-  const existing = readPostgresMetricsSamples(databaseId)
-  const last = existing[existing.length - 1]
-  if (last && sample.timestamp - last.timestamp < MIN_SAMPLE_INTERVAL_MS) {
-    const next = [...existing.slice(0, -1), sample]
-    writePostgresMetricsSamples(databaseId, next)
-    return next
-  }
-  const next = [...existing, sample]
-  writePostgresMetricsSamples(databaseId, next)
-  return next
-}
-
-export function filterSamplesByRange(
-  samples: PostgresMetricsSample[],
-  fromMs: number,
-  toMs: number,
-): PostgresMetricsSample[] {
-  return samples.filter(
-    (sample) => sample.timestamp >= fromMs && sample.timestamp <= toMs,
-  )
 }
 
 export function formatConnectionStateLabel(state: string): string {

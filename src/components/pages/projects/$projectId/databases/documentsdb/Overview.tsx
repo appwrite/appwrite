@@ -74,6 +74,7 @@ import {
   hasLockedDatabaseSpecifications,
 } from '@/lib/database-specs'
 import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
+import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import type { Models } from '@appwrite.io/console'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
@@ -169,6 +170,7 @@ export function Overview({
   const queryClient = useQueryClient()
   const location = useLocation()
   const { features } = useConsoleProfile()
+  useScrollToCard()
   const [searchValue, setSearchValue] = useState('')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
@@ -1459,7 +1461,10 @@ export function Overview({
 
               {features.dedicatedDbsDocumentsDB &&
                 (supportsDedicatedDatabaseCompute ? (
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div
+                  data-card-id="specification"
+                  className="rounded-xl border border-border bg-card/50 overflow-hidden"
+                >
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
                       {t('Specification')}
@@ -1564,7 +1569,10 @@ export function Overview({
                   </div>
                 </div>
                 ) : (
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden opacity-80">
+                <div
+                  data-card-id="specification"
+                  className="rounded-xl border border-border bg-card/50 overflow-hidden opacity-80"
+                >
                   <div className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-[15px] font-semibold text-foreground">

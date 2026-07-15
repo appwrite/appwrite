@@ -208,7 +208,9 @@ export function DatabaseSidebarComputeSpec({
       specTooltip,
       specSlug,
       serverless,
-      computeLink: dbNavLink(tableNavParams.dbKind).dbSettings(tableNavParams),
+      computeLink: dbNavLink(tableNavParams.dbKind).dbSpecificationSettings(
+        tableNavParams,
+      ),
     }
   }, [
     dedicatedById,
@@ -231,15 +233,16 @@ export function DatabaseSidebarComputeSpec({
     [resolved.specSlug, specs],
   )
 
-  const showPlanUpgrade =
-    !nextEnabledSpec && !!nextLockedSpec && billingEnabled
+  // Prefer compute/spec settings when available; /upgrade only as a fallback.
   const showComputeUpgrade =
     supportsDedicatedDatabaseCompute &&
     canManageCompute &&
-    (!!nextEnabledSpec || resolved.serverless)
+    (!!nextEnabledSpec || !!nextLockedSpec || resolved.serverless)
+  const showPlanUpgrade =
+    !showComputeUpgrade && !!nextLockedSpec && billingEnabled
   const showUpgradeComingSoon =
     supportsDedicatedDatabaseCompute === false &&
-    (resolved.serverless || !!nextEnabledSpec)
+    (resolved.serverless || !!nextEnabledSpec || !!nextLockedSpec)
 
   if (!isDedicatedDbFeatureEnabled(dbKind, features) && mode === 'product') {
     return null
