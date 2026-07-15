@@ -35,6 +35,7 @@ use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Locale\Locale;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
@@ -326,6 +327,15 @@ class Create extends Action
             $url = Template::unParseURL($url);
             if (! empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+                if ($project->getId() === 'console') {
+                    $projectName = $platform['platformName'];
+                }
+
+                $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+                if (! (new FileName())->isValid($smtpBaseTemplate)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+                }
+                $bodyTemplate = APP_CE_CONFIG_DIR . '/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
@@ -412,16 +422,32 @@ class Create extends Action
                     'project' => $projectName,
                 ];
 
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                    $emailVariables = [
+                        ...$emailVariables,
+                        'accentColor' => $platform['accentColor'],
+                        'logoUrl' => $platform['logoUrl'],
+                        'twitter' => $platform['twitterUrl'],
+                        'discord' => $platform['discordUrl'],
+                        'github' => $platform['githubUrl'],
+                        'terms' => $platform['termsUrl'],
+                        'privacy' => $platform['privacyUrl'],
+                        'platform' => $platform['platformName'],
+                    ];
+                }
+
                 $publisherForMails->enqueue(new MailMessage(
                     project: $project,
                     recipient: $invitee->getAttribute('email'),
                     name: $invitee->getAttribute('name', ''),
                     subject: $subject,
                     template: MAIL_TEMPLATE_INVITATION,
+                    bodyTemplate: $bodyTemplate,
                     body: $body,
                     preview: $preview,
                     smtp: $smtpConfig,
                     variables: $emailVariables,
+                    customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                     platform: $platform,
                 ));
             } elseif (! empty($phone)) {
