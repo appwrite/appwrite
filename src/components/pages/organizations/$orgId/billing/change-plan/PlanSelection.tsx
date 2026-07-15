@@ -124,9 +124,11 @@ export function PlanSelection({
 
   const showEnterpriseSection = !!selectedPlan && !selectedPlanIsFree
 
+  const currentCanonical = getPlanNameFromTier(currentPlan as string)
   const isEnterpriseCurrent =
-    getPlanNameFromTier(currentPlan as string) === 'custom' ||
-    (currentPlan as string).toLowerCase() === 'enterprise'
+    currentCanonical === 'custom' ||
+    (currentPlan as string).toLowerCase() === 'enterprise' ||
+    (currentPlan as string).toLowerCase() === 'ent-1'
 
   const enterpriseDetails = (
     <>

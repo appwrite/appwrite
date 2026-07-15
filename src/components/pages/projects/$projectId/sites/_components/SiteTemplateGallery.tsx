@@ -161,7 +161,7 @@ export function SiteTemplateGallery({
     : t('No templates available')
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('flex flex-col gap-4', className)}>
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[140px] flex-1">
           <Search

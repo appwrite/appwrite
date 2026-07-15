@@ -69,8 +69,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { confirmPayment } from '@/lib/utils/stripe'
 import {
   compareBillingPlanRefs,
+  getBillingPlanDisplayLabel,
   getPlanCanonicalFromRecord,
-  getPlanNameFromTier,
   isFreePlanRef,
   resolveBillingPlanRecord,
 } from '@/lib/utils/plan-filter'
@@ -874,7 +874,7 @@ export function ChangePlanWizardFullscreen() {
   const handleUpgrade = async () => {
     if (!orgId || !selectedPlan || !paymentMethodId) return
 
-    const planLabel = getPlanNameFromTier(selectedPlan)
+    const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const showActivationStep = !selectedPlanIsFree
 
     setSetupProgress({
@@ -980,7 +980,7 @@ export function ChangePlanWizardFullscreen() {
   const handleDowngrade = async () => {
     if (!orgId || !selectedPlan) return
 
-    const planLabel = getPlanNameFromTier(selectedPlan)
+    const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const selectedProjects =
       downgradeValidationRef.current?.getSelectedProjects?.()
     const shouldDeleteUnkeptProjects =
@@ -1138,7 +1138,7 @@ export function ChangePlanWizardFullscreen() {
       return
     }
 
-    const planLabel = getPlanNameFromTier(selectedPlan)
+    const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const showActivationStep = !selectedPlanIsFree
     let createdOrgId: string | null = null
 

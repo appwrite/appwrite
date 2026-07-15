@@ -67,6 +67,7 @@ export const ORG_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
       'change plan',
       'pro',
       'scale',
+      'core',
       'free',
       'next payment',
       'charges',

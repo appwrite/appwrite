@@ -315,7 +315,7 @@ export function CreateSiteView() {
           ) : (
             <div className="flex flex-1 flex-col">
               {/* Controls */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="mb-4 flex items-center gap-2">
                 <Select
                   value={selectedInstallationId}
                   onValueChange={(value) => {

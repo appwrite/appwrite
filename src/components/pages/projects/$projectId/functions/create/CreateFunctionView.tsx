@@ -31,6 +31,7 @@ import {
   Plus,
   Lock,
   ArrowRight,
+  ChevronRight,
   LayoutTemplate,
 } from 'lucide-react'
 import { RefreshButton } from '@/components/global/shared/RefreshButton'
@@ -47,10 +48,10 @@ import {
 } from '@/lib/react-query/hooks/constants'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
-import {
-  RESOURCE_CARD_GRID_2_COL_CLASSNAME,
-  RESOURCE_CARD_SHELL_CLASSNAME,
-} from '../../shared/ResourceCard'
+import { RESOURCE_CARD_GRID_2_COL_CLASSNAME } from '../../shared/ResourceCard'
+
+const TEMPLATE_CARD_FOCUS_CLASSNAME =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useFunctionWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
@@ -167,7 +168,7 @@ function LanguageCard({
       search={{ runtime: language }}
       className={cn(
         'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card',
-        RESOURCE_CARD_SHELL_CLASSNAME,
+        TEMPLATE_CARD_FOCUS_CLASSNAME,
       )}
     >
       {content}
@@ -188,7 +189,7 @@ function TemplateCard({
       params={{ projectId, templateId: template.id }}
       className={cn(
         'group block min-w-0 rounded-xl border border-border bg-card/50 p-4 text-start transition-all hover:border-border/80 hover:bg-card',
-        RESOURCE_CARD_SHELL_CLASSNAME,
+        TEMPLATE_CARD_FOCUS_CLASSNAME,
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -436,7 +437,7 @@ export function CreateFunctionView() {
             </div>
           ) : (
             <div className="flex flex-1 flex-col">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="mb-4 flex items-center gap-2">
                 <Select
                   value={selectedInstallationId}
                   onValueChange={(v) => {
@@ -602,54 +603,55 @@ export function CreateFunctionView() {
         </CreateWizardLeftColumn>
 
         <CreateWizardRightColumn title={t('Clone template')}>
-          {/* Language cards: one per runtime, link to template with runtime pre-selected */}
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
-            {LANGUAGE_RUNTIMES.map((lang) => (
-              <LanguageCard
-                key={lang}
-                projectId={projectId!}
-                language={lang}
-                template={templateByLanguage[lang] ?? null}
-              />
-            ))}
-          </div>
-
-          {/* Other highlighted templates from API */}
-          <div>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-[12px] text-muted-foreground">
-                {t('More templates')}
-              </p>
-              <Link
-                to="/projects/$projectId/functions/templates"
-                params={{ projectId: projectId! }}
-                className="shrink-0 text-[12px] font-medium link-neutral"
-              >
-                {t('View all templates')}
-              </Link>
+          <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {LANGUAGE_RUNTIMES.map((lang) => (
+                <LanguageCard
+                  key={lang}
+                  projectId={projectId!}
+                  language={lang}
+                  template={templateByLanguage[lang] ?? null}
+                />
+              ))}
             </div>
-            {highlighted.length > 0 ? (
-              <div className={cn(RESOURCE_CARD_GRID_2_COL_CLASSNAME, 'gap-3')}>
-                {highlighted.map((template) => (
-                  <TemplateCard
-                    key={template.id}
-                    projectId={projectId!}
-                    template={template}
-                  />
-                ))}
+
+            <div>
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <h3 className="text-[13px] font-semibold leading-none text-foreground">
+                  {t('More templates')}
+                </h3>
+                <Link
+                  to="/projects/$projectId/functions/templates"
+                  params={{ projectId: projectId! }}
+                  className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium leading-none link-neutral"
+                >
+                  {t('View all templates')}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-            ) : (
-              <EmptyState
-                icon={LayoutTemplate}
-                title={t('No additional templates')}
-                description={t(
-                  'More highlighted templates will show here when the catalog includes them.',
-                )}
-                isEmpty
-                hasFilters={false}
-                variant="card"
-              />
-            )}
+              {highlighted.length > 0 ? (
+                <div className={cn(RESOURCE_CARD_GRID_2_COL_CLASSNAME, 'gap-3')}>
+                  {highlighted.map((template) => (
+                    <TemplateCard
+                      key={template.id}
+                      projectId={projectId!}
+                      template={template}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={LayoutTemplate}
+                  title={t('No additional templates')}
+                  description={t(
+                    'More highlighted templates will show here when the catalog includes them.',
+                  )}
+                  isEmpty
+                  hasFilters={false}
+                  variant="card"
+                />
+              )}
+            </div>
           </div>
         </CreateWizardRightColumn>
       </div>

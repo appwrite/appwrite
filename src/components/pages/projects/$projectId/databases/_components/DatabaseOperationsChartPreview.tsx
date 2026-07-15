@@ -7,7 +7,7 @@ import { useT } from '@/lib/i18n/translate'
 
 const CHART_HEIGHT = 72
 const READ_COLOR = 'var(--chart-brand)'
-const WRITE_COLOR = 'hsl(var(--muted-foreground))'
+const WRITE_COLOR = 'var(--chart-2)'
 
 type OperationsPoint = {
   index: number
@@ -110,7 +110,8 @@ export function DatabaseOperationsChartPreview({
           </span>
           <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">
             <span
-              className="h-1.5 w-1.5 rounded-full bg-muted-foreground"
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: WRITE_COLOR }}
               aria-hidden
             />
             {t('Writes')}

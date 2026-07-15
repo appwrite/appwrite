@@ -57,7 +57,8 @@ export function SiteTemplateCard({
       className={cn(
         'group/template flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-start transition-all',
         isCompact ? 'h-[176px]' : 'h-[180px]',
-        interactive && 'cursor-pointer hover:border-border/80',
+        interactive &&
+          'cursor-pointer hover:border-border/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
         className,
       )}
     >

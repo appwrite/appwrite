@@ -151,6 +151,8 @@ export function getPlanBadgeColor(plan: PlanType): string {
   switch (plan) {
     case 'custom':
       return 'bg-purple-500/10 text-purple-600 dark:text-purple-300'
+    case 'core':
+      return 'bg-blue-500/10 text-blue-700 dark:text-blue-300'
     case 'pro':
     case 'education':
       return 'bg-emerald-500/10 text-emerald-900 dark:text-emerald-300'
