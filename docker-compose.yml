@@ -225,6 +225,7 @@ services:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
