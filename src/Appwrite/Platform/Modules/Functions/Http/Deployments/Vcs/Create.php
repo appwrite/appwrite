@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -12,7 +13,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -75,7 +75,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -93,7 +93,7 @@ class Create extends Base
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
-        Jobs $jobs,
+        Backend $deployments,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -123,7 +123,7 @@ class Create extends Base
             platform: $platform,
             reference: $reference,
             referenceType: $type,
-            jobs: $jobs
+            deployments: $deployments
         );
 
         $queueForEvents

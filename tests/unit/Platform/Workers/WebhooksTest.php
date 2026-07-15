@@ -69,7 +69,7 @@ final class WebhooksTest extends TestCase
         );
         $this->assertStringContainsString('Payments', (string) $payload['body']);
         $this->assertStringContainsString('Ada Lovelace', (string) $payload['body']);
-        $this->assertStringContainsString('/projects/project-1/settings/webhooks', (string) $payload['body']);
+        $this->assertStringContainsString('/console/project-fra-project-1/settings/webhooks/webhook-1', (string) $payload['body']);
         $this->assertStringNotContainsString('{{', (string) $payload['body']);
         $this->assertSame(APP_NAME, $payload['variables']['platform']);
         $this->assertSame(APP_EMAIL_LOGO_URL, $payload['variables']['logoUrl']);

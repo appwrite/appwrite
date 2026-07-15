@@ -2,10 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
-use Appwrite\Compute\Job;
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -13,13 +11,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -92,11 +86,9 @@ class Create extends Action
             ->inject('project')
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
-            ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('plan')
             ->inject('authorization')
-            ->inject('platform')
             ->inject('locks')
             ->callback($this->action(...));
     }
@@ -114,11 +106,9 @@ class Create extends Action
         Document $project,
         Device $deviceForFunctions,
         Device $deviceForLocal,
-        BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Backend $deployments,
         array $plan,
         Authorization $authorization,
-        array $platform,
         callable $locks
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
@@ -227,7 +217,7 @@ class Create extends Action
         $type = $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual';
 
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, &$metadata, $path, $type, &$completed, $response): void {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deployments, $deviceForFunctions, $entrypoint, $fileSize, &$function, &$metadata, $path, $type, &$completed, $response): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
                 if (!$deployment->isEmpty()) {
@@ -249,16 +239,8 @@ class Create extends Action
                     $deviceForFunctions->prepareUpload($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                     if (!empty($contentRange)) {
-                        $deployment = $dbForProject->createDocument('deployments', new Document([
+                        $deployment = $deployments->upload($function, $deployment->setAttributes([
                             '$id' => $deploymentId,
-                            '$permissions' => [
-                                Permission::read(Role::any()),
-                                Permission::update(Role::any()),
-                                Permission::delete(Role::any()),
-                            ],
-                            'resourceInternalId' => $function->getSequence(),
-                            'resourceId' => $function->getId(),
-                            'resourceType' => 'functions',
                             'entrypoint' => $entrypoint,
                             'buildCommands' => $commands,
                             'startCommand' => $function->getAttribute('startCommand', ''),
@@ -269,7 +251,7 @@ class Create extends Action
                             'sourceChunksUploaded' => 0,
                             'activate' => $activate,
                             'sourceMetadata' => $metadata,
-                            'type' => $type
+                            'type' => $type,
                         ]));
                     }
                 }
@@ -291,7 +273,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $functionId, $path, &$metadata, $mergeUploadMetadata, $platform, $project, $publisherForBuilds, $jobs, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -315,86 +297,24 @@ class Create extends Action
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                     $deviceForFunctions->finalizeUpload($path, $chunks, $metadata);
 
-                    if ($activate) {
-                        // Remove deploy for all other deployments.
-                        $activeDeployments = $dbForProject->find('deployments', [
-                            Query::equal('activate', [true]),
-                            Query::equal('resourceId', [$functionId]),
-                            Query::equal('resourceType', ['functions'])
-                        ]);
-
-                        foreach ($activeDeployments as $activeDeployment) {
-                            $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document([
-                                'activate' => false,
-                            ]));
-                        }
-                    }
-
                     $fileSize = $deviceForFunctions->getFileSize($path);
 
-                    // Build backend for manual-upload function deployments:
-                    // 'orchestrator' (open-runtimes jobs-service, submitted below
-                    // in the request flow) or 'executor' (default; enqueued to the
-                    // Builds worker). Selected by _APP_BUILDS_BACKEND.
-                    $useJobs = System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator';
-
-                    // Fields marking the deployment as queued. The build worker
-                    // promotes 'waiting' → 'building' on the first callback. The
-                    // jobs path also pre-declares buildPath so build.sh writes the
-                    // output straight onto the mounted builds volume.
-                    $buildFields = ['status' => 'waiting'];
-                    if ($useJobs) {
-                        $buildFields['buildPath'] = Job::buildPath($project->getId(), $deploymentId);
-                    }
-
-                    if ($deployment->isEmpty()) {
-                        $deployment = $dbForProject->createDocument('deployments', new Document([
-                            '$id' => $deploymentId,
-                            '$permissions' => [
-                                Permission::read(Role::any()),
-                                Permission::update(Role::any()),
-                                Permission::delete(Role::any()),
-                            ],
-                            'resourceInternalId' => $function->getSequence(),
-                            'resourceId' => $function->getId(),
-                            'resourceType' => 'functions',
-                            'entrypoint' => $entrypoint,
-                            'buildCommands' => $commands,
-                            'startCommand' => $function->getAttribute('startCommand', ''),
-                            'sourcePath' => $path,
-                            'sourceSize' => $fileSize,
-                            'totalSize' => $fileSize,
-                            'sourceChunksTotal' => $chunks,
-                            'sourceChunksUploaded' => $chunksUploaded,
-                            'activate' => $activate,
-                            'sourceMetadata' => $metadata,
-                            'type' => $type,
-                            ...$buildFields,
-                        ]));
-
-                    } else {
-                        $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                            'sourceSize' => $fileSize,
-                            'sourceChunksUploaded' => $chunksUploaded,
-                            'sourceMetadata' => $metadata,
-                            ...$buildFields,
-                        ]));
-                    }
-
-                    if ($useJobs) {
-                        $jobs->create(...Job::build($project, $function, $deployment, $platform));
-                    } else {
-                        // Default: build on the executor via the Builds worker.
-                        $publisherForBuilds->enqueue(new BuildMessage(
-                            project: $project,
-                            resource: $function,
-                            deployment: $deployment,
-                            type: BUILD_TYPE_DEPLOYMENT,
-                            platform: $platform,
-                        ));
-                    }
+                    $deployment = $deployments->createFromUpload($function, $deployment->setAttributes([
+                        '$id' => $deploymentId,
+                        'entrypoint' => $entrypoint,
+                        'buildCommands' => $commands,
+                        'startCommand' => $function->getAttribute('startCommand', ''),
+                        'sourcePath' => $path,
+                        'sourceSize' => $fileSize,
+                        'totalSize' => $fileSize,
+                        'sourceChunksTotal' => $chunks,
+                        'sourceChunksUploaded' => $chunksUploaded,
+                        'activate' => $activate,
+                        'sourceMetadata' => $metadata,
+                        'type' => $type,
+                    ]));
                 } else {
-                    $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    $deployment = $deployments->upload($function, $deployment->setAttributes([
                         'sourceChunksUploaded' => $chunksUploaded,
                         'sourceMetadata' => $metadata,
                     ]));

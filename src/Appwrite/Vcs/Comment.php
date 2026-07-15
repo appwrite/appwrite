@@ -161,7 +161,7 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/projects/' . $projectId . '/sites/' . $siteId . '/deployments/' . $site['deploymentId'] . ')';
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $site['region'] . '-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -209,7 +209,7 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/projects/' . $projectId . '/functions/' . $functionId . '/deployments/' . $function['deploymentId'] . ')';
+                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }

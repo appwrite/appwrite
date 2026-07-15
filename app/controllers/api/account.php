@@ -76,8 +76,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/auth/oauth2/success';
-$oauthDefaultFailure = '/auth/oauth2/failure';
+$oauthDefaultSuccess = '/console/auth/oauth2/success';
+$oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -1570,8 +1570,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $failure = URLParser::parse($state['failure']);
         }
 
-        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null) use ($failure, $response) {
-            $exception = new Exception($type, $message, $code);
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null, ?\Throwable $previous = null, array $params = []) use ($failure, $response) {
+            $exception = new Exception($type, $message, $code, $previous, params: $params);
             if (!empty($failure)) {
                 $query = URLParser::parseQuery($failure['query']);
                 $query['error'] = json_encode([
@@ -1617,11 +1617,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         } catch (OAuth2Exception $ex) {
+            $providerError = $ex->getError() ?: $ex->getMessage();
 
             $failureRedirect(
-                $ex->getType(),
-                'Failed to obtain access token. The ' . $providerName . ' OAuth2 provider returned an error: ' . $ex->getMessage(),
-                $ex->getCode(),
+                Exception::USER_OAUTH2_PROVIDER_FAILURE,
+                previous: $ex,
+                params: [$providerName, $providerError],
             );
         }
 
@@ -2395,7 +2396,7 @@ Http::post('/v1/account/tokens/magic-url')
             } elseif ($protocol === 'http' && $port !== '80') {
                 $callbackBase .= ':' . $port;
             }
-            $url = $callbackBase . '/auth/magic-url';
+            $url = $callbackBase . '/console/auth/magic-url';
         }
 
         $url = Template::parseURL($url);

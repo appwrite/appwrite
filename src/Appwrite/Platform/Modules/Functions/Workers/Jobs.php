@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
-use Appwrite\Compute\Job;
+use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -107,14 +107,13 @@ class Jobs extends Action
                 return;
             }
 
-            // The build writes its output onto the mounted volume before build.sh
-            // exits, so the exit callback is a truthful completion signal.
-            $finalizing = $event->event === 'orchestrator.job.exit';
+            $statusBefore = $deployment->getAttribute('status');
 
             $deployment = match ($event->event) {
                 'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
                 'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $deployment, $event->data),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory, $cache),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory, $cache),
                 default => $deployment,
             };
 
@@ -130,8 +129,10 @@ class Jobs extends Action
 
             // On a real terminal outcome (not a concurrently-canceled build),
             // notify webhooks + event-triggered functions of the deployment
-            // update (mirrors the executor Builds worker).
-            if ($finalizing && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            // update (mirrors the executor Builds worker). The transition can
+            // land on either the exit (failures) or the complete callback
+            // (success), so key off the status change rather than the event.
+            if ($statusBefore !== $deployment->getAttribute('status') && \in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
                 $this->dispatchUpdate($queueForEvents, $queueForWebhooks, $publisherForFunctions, $project, $deployment);
             }
         }, self::LOCK_TIMEOUT);
@@ -190,9 +191,13 @@ class Jobs extends Action
     }
 
     /**
-     * Resolve the build-command exit into a terminal outcome. The output is
-     * already on the mounted builds volume, so a zero exit enforces the size
-     * limit against the on-disk artifact before readying; a non-zero exit fails.
+     * A successful build needs both terminal callbacks before it can ready:
+     * exit carries the code but fires before post-job artifacts are
+     * delivered; complete confirms delivery but carries no code. Failures
+     * short-circuit at exit — no output is needed to fail. The success join
+     * is order-independent: each of exit(0)/complete leaves a marker, and
+     * whichever finds the other's marker finalizes (markers live in cache,
+     * applied under the per-deployment lock).
      */
     private function onExit(
         Database $dbForProject,
@@ -204,17 +209,70 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         Device $deviceForBuilds,
         VcsFactory $vcsFactory,
+        Cache $cache,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $vcsFactory);
         }
 
-        $path = Job::buildPath($project->getId(), $deployment->getId());
+        $cache->save('jobs-exit-' . $deployment->getId(), true);
+        if ($cache->load('jobs-complete-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory);
+        }
+
+        return $deployment;
+    }
+
+    /**
+     * The delivery half of the success join — see onExit. Emitted by the
+     * jobs-service once the job's post-job artifacts have run, so on every
+     * storage strategy the output is already where Appwrite reads it.
+     */
+    private function onComplete(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        Device $deviceForBuilds,
+        VcsFactory $vcsFactory,
+        Cache $cache,
+    ): Document {
+        if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
+            return $deployment; // already finalized (a non-zero exit fails at the exit callback)
+        }
+
+        if ($cache->load('jobs-exit-' . $deployment->getId(), self::DEDUPE_TTL) !== false) {
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $deviceForBuilds, $vcsFactory);
+        }
+
+        $cache->save('jobs-complete-' . $deployment->getId(), true);
+
+        return $deployment;
+    }
+
+    /**
+     * Finalize a successful build: enforce the size limit against the stored
+     * output, then mark ready.
+     */
+    private function ready(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Document $deployment,
+        UsageContext $usage,
+        UsagePublisher $publisherForUsage,
+        Device $deviceForBuilds,
+        VcsFactory $vcsFactory,
+    ): Document {
+        $path = Orchestrator::buildPath($project->getId(), $deployment->getId());
         $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
 
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
+
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $vcsFactory);
         }
 

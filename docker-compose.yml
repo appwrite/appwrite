@@ -74,7 +74,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
       - appwrite-geo
     environment:
@@ -224,22 +224,20 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/vibes:0.3.16
+    image: appwrite/console:8.7.11
     restart: unless-stopped
     networks:
       - appwrite
-    environment:
-      - VITE_CONSOLE_PROFILE=self-hosted
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
       - traefik.docker.network=appwrite
-      - traefik.http.services.appwrite_console.loadbalancer.server.port=3000
+      - traefik.http.services.appwrite_console.loadbalancer.server.port=80
       - traefik.http.routers.appwrite_console_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_console_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_console_http.rule=PathPrefix(`/console`)
       - traefik.http.routers.appwrite_console_http.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_console_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`)) && !PathPrefix(`/v1`) && !PathPrefix(`/.well-known`) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_console_https.rule=PathPrefix(`/console`)
       - traefik.http.routers.appwrite_console_https.service=appwrite_console
       - traefik.http.routers.appwrite_console_https.tls=true
   appwrite-realtime:
@@ -267,7 +265,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -311,7 +309,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -347,7 +345,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-uploads:/storage/uploads:rw
@@ -415,7 +413,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -460,7 +458,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     environment:
       - _APP_ENV
@@ -550,7 +548,7 @@ services:
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -590,7 +588,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
@@ -650,7 +648,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - appwrite-embedding
     volumes:
       - appwrite-config:/storage/config:rw
@@ -696,7 +694,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -891,7 +889,7 @@ services:
       - appwrite-imports:/storage/imports:rw
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
       - _APP_WORKERS_NUM=1
@@ -935,7 +933,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -982,7 +980,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
     environment:
       - _APP_ENV
@@ -1024,7 +1022,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1063,7 +1061,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1102,7 +1100,7 @@ services:
     networks:
       - appwrite
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
+      - ${_APP_DB_HOST:-postgresql}
       - redis
       - appwrite-embedding
     environment:
@@ -1228,7 +1226,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.4.3
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.6.0
     restart: unless-stopped
     user: root
     networks:
@@ -1239,7 +1237,7 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - ORCHESTRATOR_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.4.3
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.6.0
 
   mariadb:
     image: mariadb:10.11

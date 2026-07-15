@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Compute\Job;
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -22,7 +22,6 @@ use Exception;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
-use OpenRuntimes\Orchestrator\Jobs as JobsClient;
 use Swoole\Coroutine as Co;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -100,7 +99,7 @@ class Builds extends Action
             ->inject('deviceForFiles')
             ->inject('log')
             ->inject('executor')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -127,7 +126,7 @@ class Builds extends Action
         Device $deviceForFiles,
         Log $log,
         Executor $executor,
-        JobsClient $jobs,
+        Backend $deployments,
         array $plan
     ): void {
         $payload = $message->getPayload();
@@ -173,7 +172,7 @@ class Builds extends Action
                     $getIsResourceBlocked,
                     $log,
                     $executor,
-                    $jobs,
+                    $deployments,
                     $plan,
                     $platform,
                     (int) ($payload['timeout'] ?? System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900))
@@ -211,7 +210,7 @@ class Builds extends Action
         callable $getIsResourceBlocked,
         Log $log,
         Executor $executor,
-        JobsClient $jobs,
+        Backend $deployments,
         array $plan,
         array $platform,
         int $timeout
@@ -528,20 +527,17 @@ class Builds extends Action
                 // On the jobs backend the only build reaching this worker is the
                 // template-into-repo push above (a git *write* the jobs-service
                 // artifact system has no primitive for). With the commit pushed,
-                // hand the build to the jobs-service like any other VCS commit:
-                // source from the presigned tarball, output onto the mounted
-                // builds volume, progress via callbacks to the jobs worker.
+                // hand the build to the jobs-service like any other VCS commit,
+                // via the same Deployments service the HTTP endpoints use.
                 if ($resource->getCollection() === 'functions'
                     && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                        'buildPath' => Job::buildPath($project->getId(), $deploymentId),
-                    ]));
-
                     $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
-                    $jobs->create(...Job::build($project, $resource, $deployment, $platform, [
-                        'url' => $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
-                        'subdir' => $resource->getAttribute('providerRootDirectory', ''),
-                    ]));
+                    $deployments->createFromUrl(
+                        $resource,
+                        $deployment,
+                        $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
+                        $resource->getAttribute('providerRootDirectory', ''),
+                    );
 
                     Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
 

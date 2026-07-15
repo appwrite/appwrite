@@ -28,4 +28,3 @@ docker-compose.web-installer.yml
 .env.web-installer
 docker-compose.web-installer.yml.**.backup
 tests/playwright/screenshots
-.playwright-mcp/

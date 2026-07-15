@@ -43,7 +43,7 @@ final class SitesCustomServerTest extends Scope
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
         $this->assertEquals(200, $buildSpecifications['headers']['status-code']);
         $this->assertEquals($specifications['body']['total'], $buildSpecifications['body']['total']);
-        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $site = $this->createSite([
             'buildRuntime' => 'node-22',
@@ -86,7 +86,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateSite(): void
     {
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
-        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         /**
          * Test for SUCCESS
@@ -748,7 +748,7 @@ final class SitesCustomServerTest extends Scope
          */
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'buildSpecification' => $buildSpecifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $this->getEnabledSpecification($buildSpecifications['body']['specifications']),
             'fallbackFile' => '',
             'framework' => 'analog',
             'name' => 'Test List Sites',
@@ -894,7 +894,7 @@ final class SitesCustomServerTest extends Scope
 
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
-            'buildSpecification' => $buildSpecifications['body']['specifications'][0]['slug'],
+            'buildSpecification' => $this->getEnabledSpecification($buildSpecifications['body']['specifications']),
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
@@ -1682,7 +1682,7 @@ final class SitesCustomServerTest extends Scope
     public function testUpdateSpecs(): void
     {
         $buildSpecifications = $this->listSpecifications(['type' => 'builds']);
-        $buildSpecification = $buildSpecifications['body']['specifications'][0]['slug'];
+        $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
@@ -2229,7 +2229,7 @@ final class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $deploymentDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
@@ -2561,7 +2561,7 @@ final class SitesCustomServerTest extends Scope
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
         $this->assertStringContainsString('projectId=' . $this->getProject()['$id'], (string) $response['headers']['location']);
         $this->assertStringContainsString('origin=', (string) $response['headers']['location']);
         $this->assertStringContainsString('path=%2Fcontact', (string) $response['headers']['location']);
@@ -2624,7 +2624,7 @@ final class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         // Failure: User missing
         $cookie = 'a_session_console=' .$this->getRoot()['session'];
@@ -2659,7 +2659,7 @@ final class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         // Failure: Membership missing
         $email = \uniqid() . 'newuser@appwrite.io';
@@ -2699,7 +2699,7 @@ final class SitesCustomServerTest extends Scope
             'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+        $this->assertStringContainsString('/console/auth/preview', (string) $response['headers']['location']);
 
         $this->cleanupSite($siteId);
     }

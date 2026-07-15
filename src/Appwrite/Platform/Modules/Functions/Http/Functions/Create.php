@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -22,7 +23,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
-use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Abuse;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -126,7 +126,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('jobs')
+            ->inject('deployments')
             ->inject('queueForRealtime')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -172,7 +172,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        Jobs $jobs,
+        Backend $deployments,
         Realtime $queueForRealtime,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -362,7 +362,7 @@ class Create extends Base
                     installation: $installation,
                     dbForProject: $dbForProject,
                     publisherForBuilds: $publisherForBuilds,
-                    jobs: $jobs,
+                    deployments: $deployments,
                     template: $template,
                     vcs: $vcsFactory->fromInstallation($installation),
                     activate: true,
