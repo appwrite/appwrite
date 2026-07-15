@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bed2fe8ed058ba0dd6e4740893c8d7e8",
+    "content-hash": "45de7e539e6f6e6e1b15dc537c97706f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3234,16 +3234,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.8.1",
+            "version": "2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "6edcb0edf9bcb4479397cd04a9b3ce44e48f7c61"
+                "reference": "322fd475836be6aa20f8e7ec017299ac55b3c8f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/6edcb0edf9bcb4479397cd04a9b3ce44e48f7c61",
-                "reference": "6edcb0edf9bcb4479397cd04a9b3ce44e48f7c61",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/322fd475836be6aa20f8e7ec017299ac55b3c8f4",
+                "reference": "322fd475836be6aa20f8e7ec017299ac55b3c8f4",
                 "shasum": ""
             },
             "require": {
@@ -3252,11 +3252,6 @@
                 "utopia-php/fetch": "^1.1",
                 "utopia-php/query": "0.1.*",
                 "utopia-php/validators": "0.3.*"
-            },
-            "require-dev": {
-                "laravel/pint": "1.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
             },
             "type": "library",
             "autoload": {
@@ -3278,9 +3273,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.8.1"
+                "source": "https://github.com/utopia-php/audit/tree/2.9.0"
             },
-            "time": "2026-07-13T13:36:02+00:00"
+            "time": "2026-07-15T10:27:51+00:00"
         },
         {
             "name": "utopia-php/auth",

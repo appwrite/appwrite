@@ -62,7 +62,7 @@
         "utopia-php/abuse": "1.4.*",
         "utopia-php/agents": "2.*",
         "utopia-php/analytics": "0.15.*",
-        "utopia-php/audit": "2.8.*",
+        "utopia-php/audit": "2.9.*",
         "utopia-php/auth": "^0.9",
         "utopia-php/cache": "^3.0.0",
         "utopia-php/cli": "^0.24",
