@@ -7,16 +7,26 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AppwriteException, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, UserRoundX } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
-import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
+import {
+  refreshConsoleAccountAfterAuth,
+  performConsoleSignOut,
+} from '@/lib/react-query/hooks/auth'
+
+/** Current /join URL (path + query), used to return here after switching accounts. */
+function getJoinRedirectUrl(): string {
+  if (typeof window === 'undefined') return '/join'
+  return `${window.location.pathname}${window.location.search}`
+}
 
 const searchSchema = z.object({
   teamId: z.string().optional(),
@@ -85,17 +95,36 @@ function AcceptInviteContent() {
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { account: accountUnknown } = useAuth()
+  const account = accountUnknown as Models.User | undefined
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorIsAccountMismatch, setErrorIsAccountMismatch] = useState(false)
   const [teamName, setTeamName] = useState<string | null>(null)
+  const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
 
   // Check if we have all required parameters
   const hasAllParams =
     search.teamId && search.membershipId && search.userId && search.secret
 
-  // Verify the invitation and get team name (client-side)
+  // The invite carries the target userId — if it doesn't match the signed-in
+  // account, accepting is guaranteed to fail, so surface that upfront.
+  const isWrongAccount =
+    !!hasAllParams && !!account && account.$id !== search.userId
+
+  // Sign out and return to this invite link so the user can sign in with the
+  // account the invitation was sent to.
+  const handleSwitchAccount = () => {
+    setIsSwitchingAccount(true)
+    void performConsoleSignOut(queryClient, {
+      redirect: getJoinRedirectUrl(),
+    })
+  }
+
+  // Verify the invitation and get team name (client-side). Skipped when the
+  // signed-in account can't accept this invite anyway.
   useEffect(() => {
-    if (hasAllParams) {
+    if (hasAllParams && !isWrongAccount) {
       sdk.forConsole.teams
         .get(search.teamId!)
         .then((team) => {
@@ -115,7 +144,13 @@ function AcceptInviteContent() {
           console.warn('Failed to verify invitation:', err)
         })
     }
-  }, [hasAllParams, search.teamId, search.membershipId, search.userId])
+  }, [
+    hasAllParams,
+    isWrongAccount,
+    search.teamId,
+    search.membershipId,
+    search.userId,
+  ])
 
   const acceptMutation = useMutation({
     mutationFn: async () => {
@@ -150,12 +185,17 @@ function AcceptInviteContent() {
     onError: (err: unknown) => {
       const errorMessage = err?.message || t('Failed to accept invitation')
       setError(errorMessage)
+      // Switching accounts only helps when the invite targets another account.
+      setErrorIsAccountMismatch(
+        err instanceof AppwriteException && err.type === 'team_invite_mismatch',
+      )
       toast.error(errorMessage)
     },
   })
 
   const handleAccept = () => {
     setError(null)
+    setErrorIsAccountMismatch(false)
     acceptMutation.mutate()
   }
 
@@ -179,6 +219,52 @@ function AcceptInviteContent() {
                     </p>
                   </div>
                 </div>
+              ) : isWrongAccount ? (
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
+                    <UserRoundX className="h-8 w-8 text-amber-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                      {t("You're signed in with a different account")}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      {t('This invitation was sent to a different account.')}{' '}
+                      {t("You're currently signed in as")}{' '}
+                      <span className="font-medium text-foreground">
+                        {account?.email}
+                      </span>
+                      {'. '}
+                      {t(
+                        'Switch to the account the invitation was sent to in order to accept it.',
+                      )}
+                    </p>
+                  </div>
+                  <div className="mt-4 w-full space-y-3">
+                    <Button
+                      onClick={handleSwitchAccount}
+                      disabled={isSwitchingAccount}
+                      className="w-full"
+                    >
+                      {isSwitchingAccount ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t('Signing out...')}
+                        </>
+                      ) : (
+                        t('Switch account')
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => navigate({ to: '/' })}
+                      disabled={isSwitchingAccount}
+                      variant="ghost"
+                      className="w-full"
+                    >
+                      {t('Go to dashboard')}
+                    </Button>
+                  </div>
+                </div>
               ) : error ? (
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
@@ -190,13 +276,33 @@ function AcceptInviteContent() {
                     </h1>
                     <p className="text-sm text-muted-foreground">{error}</p>
                   </div>
-                  <Button
-                    onClick={() => navigate({ to: '/sign-in' })}
-                    variant="outline"
-                    className="mt-4"
-                  >
-                    {t('Go to Sign In')}
-                  </Button>
+                  <div className="mt-4 w-full space-y-3">
+                    {errorIsAccountMismatch && (
+                      <Button
+                        onClick={handleSwitchAccount}
+                        disabled={isSwitchingAccount}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        {isSwitchingAccount ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            {t('Signing out...')}
+                          </>
+                        ) : (
+                          t('Switch account')
+                        )}
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => navigate({ to: '/' })}
+                      disabled={isSwitchingAccount}
+                      variant={errorIsAccountMismatch ? 'ghost' : 'outline'}
+                      className="w-full"
+                    >
+                      {t('Go to dashboard')}
+                    </Button>
+                  </div>
                 </div>
               ) : !hasAllParams ? (
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -214,11 +320,11 @@ function AcceptInviteContent() {
                     </p>
                   </div>
                   <Button
-                    onClick={() => navigate({ to: '/sign-in' })}
+                    onClick={() => navigate({ to: '/' })}
                     variant="outline"
                     className="mt-4"
                   >
-                    {t('Go to Sign In')}
+                    {t('Go to dashboard')}
                   </Button>
                 </div>
               ) : (

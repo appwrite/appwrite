@@ -287,14 +287,24 @@ export function purgeConsoleAccountCaches(queryClient: QueryClient): void {
 }
 
 /** Hard navigation so protected routes (org overview) do not flash during SPA transitions. */
-export function redirectToSignInAfterConsoleSignOut(): void {
+export function redirectToSignInAfterConsoleSignOut(redirect?: string): void {
   if (typeof window === 'undefined') return
-  window.location.replace('/sign-in')
+  const isValidRelativeRedirect =
+    !!redirect &&
+    redirect.startsWith('/') &&
+    !redirect.startsWith('//') &&
+    !redirect.includes('://')
+  window.location.replace(
+    isValidRelativeRedirect
+      ? `/sign-in?redirect=${encodeURIComponent(redirect)}`
+      : '/sign-in',
+  )
 }
 
 /** Clear client auth state, best-effort server session delete, then open sign-in. */
 export async function performConsoleSignOut(
   queryClient: QueryClient,
+  options?: { redirect?: string },
 ): Promise<void> {
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
@@ -316,7 +326,7 @@ export async function performConsoleSignOut(
     console.error('Error signing out:', error)
   } finally {
     clearConsoleSessionLocally()
-    redirectToSignInAfterConsoleSignOut()
+    redirectToSignInAfterConsoleSignOut(options?.redirect)
   }
 }
 

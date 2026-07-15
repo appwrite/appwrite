@@ -417,6 +417,16 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Welcome to the organization!': '組織へようこそ',
   'Unable to accept invitation': '招待を承認できません',
   'Go to Sign In': 'サインインへ',
+  "You're signed in with a different account":
+    '別のアカウントでサインインしています',
+  'This invitation was sent to a different account.':
+    'この招待は別のアカウント宛てに送信されました。',
+  "You're currently signed in as": '現在サインイン中のアカウント:',
+  'Switch to the account the invitation was sent to in order to accept it.':
+    '招待を承認するには、招待が送信されたアカウントに切り替えてください。',
+  'Switch account': 'アカウントを切り替え',
+  'Signing out...': 'サインアウト中...',
+  'Go to dashboard': 'ダッシュボードへ',
   'Invalid invitation link': '招待リンクが無効です',
   'Accept invitation': '招待を承認',
   "You've been invited to join": '次の組織への参加に招待されています',

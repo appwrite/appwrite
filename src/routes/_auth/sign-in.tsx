@@ -34,8 +34,8 @@ import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
   try {
-    // Must start with / and not contain :// (which would indicate a protocol)
-    return url.startsWith('/') && !url.includes('://')
+    // Must start with / (but not // — protocol-relative) and not contain ://
+    return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
   } catch {
     return false
   }
@@ -53,10 +53,18 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-in')({
   component: SignInPage,
   validateSearch: searchSchema,
-  loader: async ({ context }) => {
+  loader: async ({ context, location }) => {
     if (typeof window === 'undefined') return
     const account = await ensureConsoleAccountQueryData(context.queryClient)
     if (account) {
+      // Already signed in: honor a console redirect (e.g. a /join invite link)
+      // instead of always bouncing to the dashboard.
+      const target = resolvePostAuthRedirect(
+        (location.search as { redirect?: string }).redirect,
+      )
+      if (target) {
+        throw redirect({ ...toRedirectNavigateOptions(target), replace: true })
+      }
       throw redirect({ to: '/', replace: true })
     }
   },

@@ -8,19 +8,21 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
+// `/join` is intentionally absent: accepting a team invite requires auth, so it
+// is a valid post-auth destination (e.g. after "Switch account" on the invite page).
 const AUTH_PAGE_PATHS = [
   '/sign-in',
   '/sign-up',
   '/recovery',
   '/reset',
-  '/join',
   '/mfa',
   '/verify-email',
   '/auth/magic-url',
 ] as const
 
 export function isValidRelativeRedirect(url: string): boolean {
-  return url.startsWith('/') && !url.includes('://')
+  // Reject protocol-relative URLs (//evil.com) alongside absolute ones.
+  return url.startsWith('/') && !url.startsWith('//') && !url.includes('://')
 }
 
 function normalizeRedirectPathname(redirect: string): string {

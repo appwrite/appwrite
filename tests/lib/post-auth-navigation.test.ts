@@ -1,5 +1,28 @@
 import { describe, it, expect } from 'vitest'
-import { toRedirectNavigateOptions } from '@/lib/post-auth-navigation'
+import {
+  resolvePostAuthRedirect,
+  toRedirectNavigateOptions,
+} from '@/lib/post-auth-navigation'
+
+describe('resolvePostAuthRedirect', () => {
+  it('returns a /join invite redirect (accepting an invite requires auth)', () => {
+    const redirect = '/join?membershipId=m&userId=u&secret=s&teamId=t'
+    expect(resolvePostAuthRedirect(redirect)).toBe(redirect)
+  })
+
+  it('rejects auth pages to avoid redirect loops', () => {
+    expect(resolvePostAuthRedirect('/sign-in')).toBeUndefined()
+    expect(resolvePostAuthRedirect('/sign-up?redirect=%2F')).toBeUndefined()
+    expect(resolvePostAuthRedirect('/mfa')).toBeUndefined()
+  })
+
+  it('rejects non-relative and root redirects', () => {
+    expect(resolvePostAuthRedirect('https://evil.example.com')).toBeUndefined()
+    expect(resolvePostAuthRedirect('//evil.example.com')).toBeUndefined()
+    expect(resolvePostAuthRedirect('/')).toBeUndefined()
+    expect(resolvePostAuthRedirect(undefined)).toBeUndefined()
+  })
+})
 
 describe('toRedirectNavigateOptions', () => {
   it('preserves query params from an OAuth2 consent redirect', () => {

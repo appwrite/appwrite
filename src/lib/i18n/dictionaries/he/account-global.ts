@@ -701,6 +701,15 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הצטרפתם בהצלחה. מעבירים אתכם כעת...',
   'Unable to accept invitation': 'לא ניתן לאשר את ההזמנה',
   'Go to Sign In': 'מעבר להתחברות',
+  "You're signed in with a different account": 'אתם מחוברים עם חשבון אחר',
+  'This invitation was sent to a different account.':
+    'הזמנה זו נשלחה לחשבון אחר.',
+  "You're currently signed in as": 'אתם מחוברים כעת בתור',
+  'Switch to the account the invitation was sent to in order to accept it.':
+    'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
+  'Switch account': 'החלפת חשבון',
+  'Signing out...': 'מתנתקים...',
+  'Go to dashboard': 'מעבר ללוח הבקרה',
   'Invalid invitation link': 'קישור הזמנה לא תקין',
   'This invitation link is missing required parameters. Please use the link from your invitation email.':
     'בקישור ההזמנה חסרים פרמטרים נדרשים. השתמשו בקישור מאימייל ההזמנה שקיבלתם.',
