@@ -19,6 +19,8 @@ import {
   type UsageTopEndpoint,
 } from '@/lib/usage/usage-events-common'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
+import { DEFAULT_USAGE_LOG_RETENTION_HOURS } from '@/lib/usage/usage-log-retention'
+import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
 
 /** Event metrics that represent project network bandwidth (in + out). */
 export const BANDWIDTH_EVENT_METRICS = [
@@ -136,6 +138,9 @@ export async function fetchProjectBandwidthOverview(
 ): Promise<ProjectBandwidthOverview> {
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
+  const queries = options?.queries
+  const logRetentionHours =
+    options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
 
   const [chartSeriesByMetric, breakdownByMetric] = await Promise.all([
     fetchUsageMetricsChartSeriesByMetric(
@@ -143,6 +148,8 @@ export async function fetchProjectBandwidthOverview(
       BANDWIDTH_EVENT_METRICS,
       dateRange,
       interval,
+      queries,
+      logRetentionHours,
     ),
     includeBreakdown
       ? fetchUsageMetricsBreakdownByMetric(
@@ -150,6 +157,8 @@ export async function fetchProjectBandwidthOverview(
           BANDWIDTH_EVENT_METRICS,
           dateRange,
           ['path'],
+          OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+          queries,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])
