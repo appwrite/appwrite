@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -304,7 +305,7 @@ class Webhooks extends Action
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
             $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
             $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-            $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
+            $template->setParam('{{path}}', ConsoleUrl::webhookSettings($region, $projectId, $webhookId));
             $template->setParam('{{attempts}}', $attempts);
 
             $publisherForNotifications->enqueue(new NotificationMessage(

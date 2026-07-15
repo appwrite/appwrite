@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Deployment\Backend;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -165,7 +166,11 @@ trait Deployment
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $hostname = $platform['consoleHostname'] ?? '';
 
-                $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+                $authorizeUrl = ConsoleUrl::absolute(
+                    $hostname,
+                    ConsoleUrl::gitAuthorizeContributor() . "?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}",
+                    $protocol,
+                );
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
@@ -579,7 +584,11 @@ trait Deployment
                     }
                     $owner = $github->getOwnerName($providerInstallationId);
 
-                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$region-$projectId/$resourceCollection/$resourceType-$resourceId";
+                    $providerTargetUrl = ConsoleUrl::absolute(
+                        $hostname,
+                        ConsoleUrl::projectResource($region, $projectId, $resourceCollection, $resourceType, $resourceId),
+                        $protocol,
+                    );
                     $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 

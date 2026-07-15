@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -1497,8 +1498,16 @@ class Builds extends Action
                 $region = $project->getAttribute('region', 'default');
                 $resourceId = $resource->getId();
                 $providerTargetUrl = match ($resource->getCollection()) {
-                    'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}",
-                    'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}",
+                    'functions' => ConsoleUrl::absolute(
+                        $hostname,
+                        ConsoleUrl::projectResource($region, $projectId, 'functions', 'function', $resourceId),
+                        $protocol,
+                    ),
+                    'sites' => ConsoleUrl::absolute(
+                        $hostname,
+                        ConsoleUrl::projectResource($region, $projectId, 'sites', 'site', $resourceId),
+                        $protocol,
+                    ),
                     default => throw new \Exception('Invalid resource type')
                 };
 

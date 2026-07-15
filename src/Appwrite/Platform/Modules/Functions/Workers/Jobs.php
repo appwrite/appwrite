@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -374,7 +375,11 @@ class Jobs extends Action
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
             $region = $project->getAttribute('region', 'default');
-            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/functions/function-{$function->getId()}";
+            $targetUrl = ConsoleUrl::absolute(
+                $hostname,
+                ConsoleUrl::projectResource($region, $project->getId(), 'functions', 'function', $function->getId()),
+                $protocol,
+            );
             $message = $state === 'success' ? 'Build succeeded.' : 'Build failed.';
             $name = $function->getAttribute('name', '') . ' (' . $project->getAttribute('name', '') . ')';
 

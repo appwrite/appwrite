@@ -2,6 +2,7 @@
 
 namespace Appwrite\Vcs;
 
+use Appwrite\Console\Url as ConsoleUrl;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
@@ -161,7 +162,11 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $site['region'] . '-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
+                        $action = '[View Logs](' . ConsoleUrl::absolute(
+                            $hostname,
+                            ConsoleUrl::siteDeployment($site['region'], $projectId, $siteId, $site['deploymentId']),
+                            $protocol,
+                        ) . ')';
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -209,7 +214,11 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                        $action = '[View Logs](' . ConsoleUrl::absolute(
+                            $hostname,
+                            ConsoleUrl::functionDeployment($function['region'], $projectId, $functionId, $function['deploymentId']),
+                            $protocol,
+                        ) . ')';
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }

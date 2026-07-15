@@ -7,6 +7,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
@@ -200,7 +201,13 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
+            $exception->addCTA('View deployments', $url . ConsoleUrl::projectResource(
+                $project->getAttribute('region', 'default'),
+                $projectId,
+                $type,
+                $resourceType,
+                $resourceId,
+            ));
             throw $exception;
         }
 
@@ -289,7 +296,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
-                    ->redirect($url . '/console/auth/preview?'
+                    ->redirect($url . ConsoleUrl::auth('preview') . '?'
                         . \http_build_query([
                             'projectId' => $projectId,
                             'origin' => $protocol . '://' . $host,
@@ -351,17 +358,17 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             switch ($status) {
                 case 'failed':
                     $exception = new AppwriteException(AppwriteException::BUILD_FAILED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = ConsoleUrl::siteDeployment($region, $project->getId(), $resource->getId(), $deployment->getId());
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments';
+                    $ctaUrl = ConsoleUrl::siteDeployments($region, $project->getId(), $resource->getId());
                     $exception->addCTA('View deployments', $url . $ctaUrl);
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
-                    $ctaUrl = '/console/project-' . $region . '-' . $project->getId() . '/sites/site-' . $resource->getId() . '/deployments/deployment-' . $deployment->getId();
+                    $ctaUrl = ConsoleUrl::siteDeployment($region, $project->getId(), $resource->getId(), $deployment->getId());
                     $exception->addCTA('Reload', '/');
                     $exception->addCTA('View logs', $url . $ctaUrl);
                     break;
@@ -373,7 +380,14 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $exception->addCTA('View settings', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
+                $exception->addCTA('View settings', $url . ConsoleUrl::projectResource(
+                    $project->getAttribute('region', 'default'),
+                    $project->getId(),
+                    'functions',
+                    'function',
+                    $resource->getId(),
+                    'settings',
+                ));
                 throw $exception;
             }
         }

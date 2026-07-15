@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
@@ -89,9 +90,14 @@ class Get extends Action
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
 
+        $gitInstallationsUrl = ConsoleUrl::absolute(
+            $hostname,
+            ConsoleUrl::gitInstallations($region, $projectId),
+            $protocol,
+        );
         $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
+            'success' => $gitInstallationsUrl,
+            'failure' => $gitInstallationsUrl,
         ];
 
         $state = \array_merge($defaultState, $state ?? []);

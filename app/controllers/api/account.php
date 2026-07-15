@@ -11,6 +11,7 @@ use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
+use Appwrite\Console\Url as ConsoleUrl;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -76,8 +77,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/console/auth/oauth2/success';
-$oauthDefaultFailure = '/console/auth/oauth2/failure';
+$oauthDefaultSuccess = ConsoleUrl::auth('oauth2/success');
+$oauthDefaultFailure = ConsoleUrl::auth('oauth2/failure');
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization) {
 
@@ -2396,7 +2397,7 @@ Http::post('/v1/account/tokens/magic-url')
             } elseif ($protocol === 'http' && $port !== '80') {
                 $callbackBase .= ':' . $port;
             }
-            $url = $callbackBase . '/console/auth/magic-url';
+            $url = $callbackBase . ConsoleUrl::auth('magic-url');
         }
 
         $url = Template::parseURL($url);
