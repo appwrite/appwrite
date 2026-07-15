@@ -612,6 +612,11 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Next page': 'עמוד הבא',
   'No OAuth identities linked to this user.': 'אין זהויות OAuth מקושרות למשתמש זה.',
   'No OAuth2 apps': 'אין אפליקציות OAuth2',
+  'Connect with': 'התחברות עם',
+  'Connect with Appwrite': 'התחברות עם Appwrite',
+  'Connect with this project': 'התחברות לפרויקט זה',
+  'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.':
+    'רשמו כאן לקוחות OAuth2 כאשר אתם רוצים שמוצרים אחרים יאפשרו למשתמשים להתחבר לפרויקט זה. לאפליקציות ארגון יש מטרה אחרת. צרו אותן תחת הארגון כאשר אתם רוצים שהמשתמשים שלכם יחברו את חשבון Appwrite שלהם ליישום שלכם.',
   'No Appwrite apps in this organization yet. Create one from the Create app tab.':
     'עדיין אין אפליקציות Appwrite בארגון זה. צרו אחת בלשונית יצירת אפליקציה.',
   'No active sessions': 'אין סשנים פעילים',
@@ -658,6 +663,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'OAuth2 clients registered against this project. These apps authenticate users through your project\'s authorization server.': 'לקוחות OAuth2 הרשומים לפרויקט זה. אפליקציות אלו מאמתות משתמשים דרך שרת ההרשאות של הפרויקט שלכם.',
   'OAuth2 providers': 'ספקי OAuth2',
   'OAuth2 server': 'שרת OAuth2',
+  'OAuth2 server docs': 'תיעוד שרת OAuth2',
   'OAuth2 server navigation': 'ניווט שרת OAuth2',
   'OAuth2 server section': 'אזור שרת OAuth2',
   'OAuth2 settings': 'הגדרות OAuth2',

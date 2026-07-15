@@ -904,7 +904,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Auth · Social providers': 'אימות · ספקי OAuth',
   'Configure OAuth2 providers for social login':
     'הגדרת ספקי OAuth2',
-  'Auth · OAuth2 server · Settings': 'אימות · שרת OAuth2 · הגדרות',
+  'Auth · OAuth2 server · Server': 'אימות · שרת OAuth2 · שרת',
   'Configure OAuth2 authorization server for third-party apps':
     'הגדרת שרת הרשאות OAuth2 לאפליקציות צד שלישי',
   'Auth · OAuth2 server · Apps': 'אימות · שרת OAuth2 · אפליקציות',

@@ -3,6 +3,7 @@ import {
   Copy,
   ExternalLink,
   FileJson,
+  Info,
   KeyRound,
   Link2,
   Loader2,
@@ -11,6 +12,7 @@ import {
   Square,
   Trash2,
 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -64,6 +66,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ProjectOAuth2AppDrawer } from './_components/ProjectOAuth2AppDrawer'
 import { ProjectOAuth2AppContextMenu } from './_components/ProjectOAuth2AppContextMenu'
+import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { resolveAppLogoDisplayUrl } from '@/lib/appwrite/apps-logo'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -199,6 +202,42 @@ export function View({ projectId }: OAuth2ServerAppsViewProps) {
           </Button>
         </div>
         <div className="border-t border-border" />
+        <div className="border-b border-border bg-blue-500/5 px-6 py-3">
+          <Alert
+            variant="default"
+            className="border-blue-500/30 bg-transparent"
+          >
+            <Info className="h-4 w-4 text-blue-500" />
+            <AlertTitle className="min-w-0 truncate text-[13px] font-medium text-blue-600 dark:text-blue-400">
+              {project?.name?.trim()
+                ? `${t('Connect with')} ${project.name.trim()}`
+                : t('Connect with this project')}
+            </AlertTitle>
+            <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
+              <p>
+                {t(
+                  'Register OAuth2 clients here when you want other products to let users connect with this project. Organization apps serve a different purpose. Create those under your organization when you want your users to connect their Appwrite account with your application.',
+                )}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <DocsRouteLink
+                  href="/docs"
+                  className="inline-flex items-center gap-1 font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+                >
+                  {t('OAuth2 server docs')}
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </DocsRouteLink>
+                <DocsRouteLink
+                  href="/docs/partners/apps"
+                  className="inline-flex items-center gap-1 font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+                >
+                  {t('Connect with Appwrite')}
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </DocsRouteLink>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
         <div className="relative px-6 py-4">
           {isFetching && !isLoading ? (
             <div className="absolute end-6 top-4 z-10">

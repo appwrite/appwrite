@@ -1122,7 +1122,7 @@ export function View({
                   {
                     id: 'oauth2-server' as const,
                     label: t('OAuth2 server'),
-                    to: '/projects/$projectId/auth/oauth2-server/settings',
+                    to: '/projects/$projectId/auth/oauth2-server',
                     params: { projectId: projectId as string },
                   },
                 ]

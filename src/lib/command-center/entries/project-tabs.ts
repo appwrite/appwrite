@@ -166,11 +166,11 @@ const PROJECT_TABS: CommandEntry[] = [
     to: (ctx) => `/projects/${ctx.projectId}/auth/social-providers`,
   },
   {
-    id: 'project.tab.auth.oauth2-server.settings',
+    id: 'project.tab.auth.oauth2-server.server',
     scopes: ['project'],
     kind: 'tab',
     group: 'Auth',
-    label: 'Auth · OAuth2 server · Settings',
+    label: 'Auth · OAuth2 server · Server',
     description: 'Configure OAuth2 authorization server for third-party apps',
     icon: Server,
     keywords: [
@@ -181,10 +181,11 @@ const PROJECT_TABS: CommandEntry[] = [
       'authorization server',
       'discovery',
       'tokens',
+      'settings',
     ],
     available: (ctx) =>
       canShowProjectOAuth2Server(ctx.access, ctx.features),
-    to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server/settings`,
+    to: (ctx) => `/projects/${ctx.projectId}/auth/oauth2-server`,
   },
   {
     id: 'project.tab.auth.oauth2-server.apps',

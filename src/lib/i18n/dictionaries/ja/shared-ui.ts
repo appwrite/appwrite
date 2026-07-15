@@ -512,7 +512,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Auth · Policies · Memberships': '認証 · ポリシー · メンバーシップ',
   'Auth · Policies · Passwords': '認証 · ポリシー · パスワード',
   'Auth · Social providers': '認証 · OAuth プロバイダー',
-  'Auth · OAuth2 server · Settings': '認証 · OAuth2 サーバー · 設定',
+  'Auth · OAuth2 server · Server': '認証 · OAuth2 サーバー · サーバー',
   'Auth · OAuth2 server · Apps': '認証 · OAuth2 サーバー · アプリ',
   'Auth · Templates': '認証 · テンプレート',
   'Auth · Settings': '認証 · 設定',

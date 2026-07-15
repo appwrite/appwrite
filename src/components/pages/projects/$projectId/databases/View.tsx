@@ -745,7 +745,7 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {projectId ? (
+        {features.dedicatedDbsSupport && projectId ? (
           <AllDatabasesSection projectId={projectId} viewMode={viewMode} />
         ) : null}
 

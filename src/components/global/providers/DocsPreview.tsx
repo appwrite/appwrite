@@ -50,7 +50,6 @@ import { isClientQueryEnabled } from '@/lib/react-query/hooks/constants'
 import {
   buildConsoleUrl,
   openInNewTab,
-  openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { cn } from '@/lib/utils'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -219,9 +218,9 @@ export function DocsPreviewContent() {
     }
   }, [isOpen, openDocsPreview, partnersDocsEnabled, slug])
 
-  const handleOpenInNewWindow = useCallback(() => {
+  const handleOpenInNewTab = useCallback(() => {
     if (slug === null) return
-    openInNewWindow(getDocsPreviewUrl(slug))
+    openInNewTab(getDocsPreviewUrl(slug))
   }, [slug])
 
   const handleOpenInDocs = useCallback(() => {
@@ -299,10 +298,10 @@ export function DocsPreviewContent() {
               variant="ghost"
               size="sm"
               className="h-8 px-2 text-[12px]"
-              onClick={handleOpenInNewWindow}
+              onClick={handleOpenInNewTab}
             >
               <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-              {t('Open in new window')}
+              {t('Open in new tab')}
             </Button>
             <button
               type="button"
@@ -397,10 +396,10 @@ export function DocsPreviewContent() {
                 variant="outline"
                 size="sm"
                 className="h-9 text-[13px]"
-                onClick={handleOpenInNewWindow}
+                onClick={handleOpenInNewTab}
               >
                 <ExternalLink className="me-1.5 h-3.5 w-3.5" />
-                {t('Open in new window')}
+                {t('Open in new tab')}
               </Button>
             </div>
           ) : (

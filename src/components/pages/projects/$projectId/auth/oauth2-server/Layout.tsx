@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
-import { KeyRound, Settings } from 'lucide-react'
+import { KeyRound, Server } from 'lucide-react'
 import { SettingsLayoutShell } from '@/components/global/shared/settings-search/SettingsLayoutShell'
 import { View as OAuth2ServerSettingsView } from './settings/View'
 import { View as OAuth2ServerAppsView } from './apps/View'
@@ -8,11 +8,11 @@ import { useT } from '@/lib/i18n/translate'
 
 const OAUTH2_SERVER_NAV_ITEMS = [
   {
-    id: 'settings',
-    label: 'Settings',
-    to: '/projects/$projectId/auth/oauth2-server/settings',
-    icon: Settings,
-    keywords: ['server', 'status', 'integration', 'tokens', 'discovery'],
+    id: 'server',
+    label: 'Server',
+    to: '/projects/$projectId/auth/oauth2-server',
+    icon: Server,
+    keywords: ['settings', 'status', 'integration', 'tokens', 'discovery'],
   },
   {
     id: 'apps',
@@ -32,7 +32,7 @@ function parseOAuth2ServerSubTab(pathname: string): OAuth2ServerSubTab {
     const subTab = pathParts[authIndex + 2]
     if (subTab === 'apps') return 'apps'
   }
-  return 'settings'
+  return 'server'
 }
 
 interface OAuth2ServerLayoutProps {
