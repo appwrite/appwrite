@@ -43,8 +43,22 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'האם ליצור מחדש את כל קודי השחזור? כל קודי השחזור שנוצרו בעבר יהפכו ללא תקפים.',
   'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':
     'האם לבטל את הגישה לאפליקציה הזו? ייתכן שתצטרכו לאשר אותה שוב כדי להשתמש בה.',
+  'Application access has been revoked for all authorizations':
+    'הגישה של האפליקציה בוטלה עבור כל ההרשאות',
   'Authentication method': 'שיטת אימות',
   Authorized: 'אושר',
+  authorizations: 'הרשאות',
+  'authorizations. You may need to authorize it again to use it.':
+    'ההרשאות. ייתכן שתצטרכו לאשר אותה שוב כדי להשתמש בה.',
+  'Client ID': 'מזהה לקוח',
+  'Hide authorizations': 'הסתרת הרשאות',
+  'Revoke all': 'ביטול הכול',
+  'Revoking will remove all': 'הביטול יסיר את כל',
+  'Show authorizations': 'הצגת הרשאות',
+  'Some authorizations could not be revoked. Please try again.':
+    'לא ניתן היה לבטל חלק מההרשאות. נסו שוב.',
+  'This application has been authorized multiple times, likely because it registers a new OAuth client on each connection.':
+    'האפליקציה הזו אושרה מספר פעמים, ככל הנראה משום שהיא רושמת לקוח OAuth חדש בכל התחברות.',
   'Authenticator app': 'אפליקציית אימות',
   'Authenticator app has been connected': 'אפליקציית האימות חוברה',
   'Authenticator app has been deleted': 'אפליקציית האימות נמחקה',

@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Package } from 'lucide-react'
+import { ChevronDown, Package } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useAccountConnectedApps,
-  type AccountConnectedApp,
+  groupConnectedApps,
+  type AccountConnectedAppGroup,
   type AccountConnectedAppsData,
 } from '@/lib/react-query/hooks/account-applications'
+import type { KnownOAuthClient } from '@/lib/oauth-known-clients'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -27,7 +29,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
 const Dependencies = {
@@ -35,19 +39,34 @@ const Dependencies = {
   APPLICATIONS: ['applications', 'account'],
 } as const
 
-function getConnectedAppDisplayName(
-  appId: string,
-  app: Models.App | null,
-): string {
-  return app?.name || appId
+function truncateClientId(id: string): string {
+  return id.length > 12 ? `${id.slice(0, 4)}…${id.slice(-4)}` : id
 }
 
-function ConnectedAppAvatar({ app }: { app: Models.App | null }) {
+function ConnectedAppAvatar({
+  app,
+  knownClient,
+}: {
+  app: Models.App | null
+  knownClient: KnownOAuthClient | null
+}) {
   if (app?.logoUri) {
     return (
       <img
         src={app.logoUri}
         alt={app.name}
+        className="h-9 w-9 rounded-xl object-cover ring-1 ring-border/50"
+        height={36}
+        width={36}
+      />
+    )
+  }
+
+  if (knownClient) {
+    return (
+      <img
+        src={knownClient.iconPath}
+        alt={knownClient.name}
         className="h-9 w-9 rounded-xl object-cover ring-1 ring-border/50"
         height={36}
         width={36}
@@ -72,40 +91,98 @@ export function AccountApplications({
   const t = useT()
   const queryClient = useQueryClient()
   const { data, isFetched } = useAccountConnectedApps()
-  const connectedApps = data?.connectedApps ?? initialData?.connectedApps ?? []
+  const resolvedData = data ?? initialData
+  const groups =
+    resolvedData?.groups ??
+    (resolvedData ? groupConnectedApps(resolvedData.connectedApps) : [])
   const hasResolvedData = isFetched || initialData !== undefined
 
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
-  const [appToRevoke, setAppToRevoke] = useState<AccountConnectedApp | null>(
-    null,
-  )
+  const [groupToRevoke, setGroupToRevoke] =
+    useState<AccountConnectedAppGroup | null>(null)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups((previous) => {
+      const next = new Set(previous)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
 
   const revokeMutation = useMutation({
-    mutationFn: async (identityId: string) => {
-      return await sdk.forConsole.account.deleteIdentity({ identityId })
+    mutationFn: async (identityIds: string[]) => {
+      const results = await Promise.allSettled(
+        identityIds.map((identityId) =>
+          sdk.forConsole.account.deleteIdentity({ identityId }),
+        ),
+      )
+      // A 404 means the identity is already gone (e.g. a retry after a
+      // partial failure) — treat it as revoked rather than failed.
+      const failed = results.filter(
+        (result) =>
+          result.status === 'rejected' &&
+          (result.reason as { code?: number } | null)?.code !== 404,
+      ).length
+      if (failed > 0) {
+        throw new Error(
+          failed === identityIds.length
+            ? t('Failed to revoke application access')
+            : t('Some authorizations could not be revoked. Please try again.'),
+        )
+      }
+      return results.length
     },
-    onSuccess: () => {
+    onSuccess: (revokedCount: number) => {
       queryClient.invalidateQueries({ queryKey: Dependencies.IDENTITIES })
       queryClient.invalidateQueries({ queryKey: Dependencies.APPLICATIONS })
-      toast.success(t('Application access has been revoked'))
+      toast.success(
+        revokedCount > 1
+          ? t('Application access has been revoked for all authorizations')
+          : t('Application access has been revoked'),
+      )
       setRevokeDialogOpen(false)
-      setAppToRevoke(null)
+      setGroupToRevoke(null)
     },
     onError: (error: Error) => {
+      queryClient.invalidateQueries({ queryKey: Dependencies.IDENTITIES })
+      queryClient.invalidateQueries({ queryKey: Dependencies.APPLICATIONS })
       toast.error(error.message || t('Failed to revoke application access'))
     },
   })
 
-  const handleRevokeClick = (connectedApp: AccountConnectedApp) => {
-    setAppToRevoke(connectedApp)
+  const handleRevokeGroupClick = (group: AccountConnectedAppGroup) => {
+    setGroupToRevoke(group)
+    setRevokeDialogOpen(true)
+  }
+
+  const handleRevokeSingleClick = (
+    group: AccountConnectedAppGroup,
+    identity: Models.Identity,
+  ) => {
+    const grant = group.grants.find((g) => g.identity.$id === identity.$id)
+    if (!grant) return
+    setGroupToRevoke({
+      ...group,
+      grants: [grant],
+      latestAuthorizedAt: grant.identity.$createdAt,
+    })
     setRevokeDialogOpen(true)
   }
 
   const handleConfirmRevoke = () => {
-    if (appToRevoke) {
-      revokeMutation.mutate(appToRevoke.identity.$id)
+    if (groupToRevoke) {
+      revokeMutation.mutate(
+        groupToRevoke.grants.map((grant) => grant.identity.$id),
+      )
     }
   }
+
+  const revokeCount = groupToRevoke?.grants.length ?? 0
 
   return (
     <>
@@ -120,7 +197,7 @@ export function AccountApplications({
         </p>
       </div>
 
-      {hasResolvedData && connectedApps.length === 0 ? (
+      {hasResolvedData && groups.length === 0 ? (
         <EmptyState
           icon={Package}
           title={t('No applications connected')}
@@ -131,7 +208,7 @@ export function AccountApplications({
           variant="card"
           iconSize="md"
         />
-      ) : connectedApps.length > 0 ? (
+      ) : groups.length > 0 ? (
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <Table>
             <TableHeader>
@@ -142,61 +219,170 @@ export function AccountApplications({
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('Authorized')}
                 </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]" />
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[130px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {connectedApps.map(({ identity, appId, app }) => {
-                const displayName = getConnectedAppDisplayName(appId, app)
-                const subtitle = app?.tagline?.trim() || app?.description?.trim()
+              {groups.map((group) => {
+                const { key, displayName, app, knownClient, grants } = group
+                const isGrouped = grants.length > 1
+                const isExpanded = expandedGroups.has(key)
+                const subtitle =
+                  app?.tagline?.trim() || app?.description?.trim()
+                const singleClientId = !isGrouped ? grants[0].appId : null
 
                 return (
-                  <TableRow key={identity.$id}>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <ConnectedAppAvatar app={app} />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="truncate text-[13px] font-medium text-foreground">
-                              {displayName}
-                            </span>
-                            {app?.deviceFlow ? (
-                              <Badge
-                                variant="info"
-                                className="text-[10px] shrink-0"
-                              >
-                                {t('Device flow')}
-                              </Badge>
+                  <Fragment key={key}>
+                    <TableRow
+                      className={cn(isGrouped && 'cursor-pointer')}
+                      onClick={
+                        isGrouped ? () => toggleGroup(key) : undefined
+                      }
+                    >
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <ConnectedAppAvatar
+                            app={app}
+                            knownClient={knownClient}
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="truncate text-[13px] font-medium text-foreground">
+                                {displayName}
+                              </span>
+                              {isGrouped ? (
+                                <Badge
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
+                                >
+                                  {grants.length} {t('authorizations')}
+                                </Badge>
+                              ) : null}
+                              {app?.deviceFlow ? (
+                                <Badge
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
+                                >
+                                  {t('Device flow')}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            {singleClientId ? (
+                              <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
+                                <span className="shrink-0">
+                                  {t('Client ID')}:
+                                </span>
+                                <CopyableId
+                                  id={singleClientId}
+                                  displayText={truncateClientId(
+                                    singleClientId,
+                                  )}
+                                  variant="inline"
+                                  size="sm"
+                                  copyToastLabel="Client ID"
+                                  className="-my-0.5 px-1 py-0.5 text-muted-foreground"
+                                />
+                              </div>
+                            ) : subtitle ? (
+                              <p className="truncate text-[12px] text-muted-foreground mt-0.5">
+                                {subtitle}
+                              </p>
                             ) : null}
                           </div>
-                          {subtitle ? (
-                            <p className="truncate text-[12px] text-muted-foreground mt-0.5">
-                              {subtitle}
-                            </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <DateTooltip
+                          date={new Date(group.latestAuthorizedAt)}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-[13px]"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleRevokeGroupClick(group)
+                            }}
+                            disabled={revokeMutation.isPending}
+                          >
+                            {isGrouped ? t('Revoke all') : t('Revoke')}
+                          </Button>
+                          {isGrouped ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                toggleGroup(key)
+                              }}
+                              aria-label={
+                                isExpanded
+                                  ? t('Hide authorizations')
+                                  : t('Show authorizations')
+                              }
+                              aria-expanded={isExpanded}
+                            >
+                              <ChevronDown
+                                className={cn(
+                                  'h-4 w-4 text-muted-foreground transition-transform',
+                                  isExpanded && 'rotate-180',
+                                )}
+                              />
+                            </Button>
                           ) : null}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip
-                        date={new Date(identity.$createdAt)}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-[13px]"
-                        onClick={() =>
-                          handleRevokeClick({ identity, appId, app })
-                        }
-                        disabled={revokeMutation.isPending}
-                      >
-                        {t('Revoke')}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                    </TableRow>
+
+                    {isGrouped && isExpanded
+                      ? grants.map(({ identity, appId }) => (
+                          <TableRow
+                            key={identity.$id}
+                            className="bg-muted/30 hover:bg-muted/40"
+                          >
+                            <TableCell className="px-4 py-2">
+                              <div className="flex items-center gap-1 ps-12 text-[12px] text-muted-foreground">
+                                <span className="shrink-0">
+                                  {t('Client ID')}:
+                                </span>
+                                <CopyableId
+                                  id={appId}
+                                  displayText={truncateClientId(appId)}
+                                  variant="inline"
+                                  size="sm"
+                                  copyToastLabel="Client ID"
+                                  className="-my-0.5 px-1 py-0.5 text-muted-foreground"
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-2">
+                              <DateTooltip
+                                date={new Date(identity.$createdAt)}
+                                className="text-[12px] text-muted-foreground"
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-2 text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[12px] text-muted-foreground hover:text-foreground"
+                                onClick={() =>
+                                  handleRevokeSingleClick(group, identity)
+                                }
+                                disabled={revokeMutation.isPending}
+                              >
+                                {t('Revoke')}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      : null}
+                  </Fragment>
                 )
               })}
             </TableBody>
@@ -209,12 +395,23 @@ export function AccountApplications({
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>{t('Revoke application access')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.',
+              {revokeCount > 1 ? (
+                <>
+                  {t(
+                    'This application has been authorized multiple times, likely because it registers a new OAuth client on each connection.',
+                  )}{' '}
+                  {t('Revoking will remove all')} {revokeCount}{' '}
+                  {t(
+                    'authorizations. You may need to authorize it again to use it.',
+                  )}
+                </>
+              ) : (
+                t(
+                  'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.',
+                )
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="border-t border-border" />
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
@@ -227,7 +424,7 @@ export function AccountApplications({
               onClick={handleConfirmRevoke}
               disabled={revokeMutation.isPending}
             >
-              {t('Revoke')}
+              {revokeCount > 1 ? t('Revoke all') : t('Revoke')}
             </Button>
           </div>
         </DialogContent>

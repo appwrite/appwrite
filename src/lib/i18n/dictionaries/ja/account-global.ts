@@ -19,9 +19,23 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   Applications: 'アプリケーション',
   "Applications you've authorized to access your Appwrite account.":
     'Appwrite アカウントへのアクセスを許可したアプリケーションです。',
+  'Application access has been revoked for all authorizations':
+    'すべての承認についてアプリケーションのアクセスを取り消しました',
   'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':
     'このアプリケーションのアクセスを取り消してもよろしいですか? 再度使用するには、もう一度許可が必要になる場合があります。',
   Authorized: '許可日',
+  authorizations: '件の承認',
+  'authorizations. You may need to authorize it again to use it.':
+    '件の承認が削除されます。再度使用するには、もう一度許可が必要になる場合があります。',
+  'Client ID': 'クライアント ID',
+  'Hide authorizations': '承認を非表示',
+  'Revoke all': 'すべて取り消し',
+  'Revoking will remove all': '取り消すと、すべての',
+  'Show authorizations': '承認を表示',
+  'Some authorizations could not be revoked. Please try again.':
+    '一部の承認を取り消せませんでした。もう一度お試しください。',
+  'This application has been authorized multiple times, likely because it registers a new OAuth client on each connection.':
+    'このアプリケーションは複数回承認されています。接続のたびに新しい OAuth クライアントを登録している可能性があります。',
   'Authentication method': '認証方法',
   'Authenticator app': '認証アプリ',
   'Authenticator app has been connected': '認証アプリを接続しました',
