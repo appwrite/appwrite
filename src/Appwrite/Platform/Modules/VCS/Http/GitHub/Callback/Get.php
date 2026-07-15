@@ -111,7 +111,8 @@ class Get extends Action
 
             $installation = $dbForPlatform->findOne('installations', [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
-                Query::equal('projectInternalId', [$projectInternalId])
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::equal('provider', ['github'])
             ]);
 
             $personal = false;

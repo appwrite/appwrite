@@ -113,6 +113,7 @@ class Create extends Action
         do {
             $installationQueries = [
                 Query::equal('providerInstallationId', [$providerInstallationId]),
+                Query::equal('provider', ['github']),
                 Query::limit(1000),
             ];
             if ($installationCursor !== null) {
