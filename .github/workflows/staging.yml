@@ -17,7 +17,7 @@ env:
     DECLARATIVE_REPOSITORY: assets-applications
     REGISTRY_GITHUB: ghcr.io
     REGISTRY_DOCKERHUB: docker.io
-    IMAGE_NAME: appwrite/vibes
+    IMAGE_NAME: appwrite/new
     TAG: ${{ github.sha }}
 
 jobs:
@@ -86,8 +86,8 @@ jobs:
                   repository: ${{ env.DECLARATIVE_OWNER }}/${{ env.DECLARATIVE_REPOSITORY }}
                   token: ${{ steps.app-token.outputs.token }}
 
-            - name: Update image tag
-              run: yq -i '.global.image.tag = strenv(TAG)' ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
+            - name: Update image reference
+              run: yq -i '.global.image.repository = strenv(IMAGE_NAME) | .global.image.tag = strenv(TAG)' ${{ env.ENVIRONMENT }}/${{ env.PROJECT }}/default.yaml
 
             - name: Commit and push
               run: |
@@ -97,6 +97,6 @@ jobs:
                   if git diff --cached --quiet; then
                     echo "No changes to commit"
                   else
-                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.PROJECT }} image tag to ${{ env.TAG }}"
+                    git commit -m "chore(${{ env.ENVIRONMENT }}): ${{ env.PROJECT }} image to ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
                     git push
                   fi
