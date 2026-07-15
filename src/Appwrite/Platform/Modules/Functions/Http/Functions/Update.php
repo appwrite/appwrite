@@ -99,12 +99,12 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
             )), 'Build specification for the function deployments.', true, ['plan'])
-            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('runtimeSpecification', null, fn (array $plan) => new Nullable(new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function executions.', true, ['plan'])
+            )), 'Runtime specification for the function executions.', true, ['plan'])
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('request')
             ->inject('response')
@@ -142,7 +142,7 @@ class Update extends Base
         ?array $providerBranches,
         ?array $providerPaths,
         ?string $buildSpecification,
-        string $runtimeSpecification,
+        ?string $runtimeSpecification,
         int $deploymentRetention,
         Request $request,
         Response $response,
@@ -179,6 +179,7 @@ class Update extends Base
         }
 
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
+        $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
