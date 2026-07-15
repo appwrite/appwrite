@@ -886,15 +886,15 @@ class Install extends Action
             'category' => 'self_hosted',
             'label' => 'self_hosted_' . $type,
             'version' => $version,
-           'data' => json_encode([
-    'domain' => $domain,
-    'database' => $database,
-    'ip' => ($hostIp !== $domain) ? $hostIp : null,
-    'os' => php_uname('s') . ' ' . php_uname('r'),
-    'arch' => php_uname('m'),
-    'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
-    'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
-]),
+            'data' => json_encode([
+                'domain' => $domain,
+                'database' => $database,
+                'ip' => ($hostIp !== $domain) ? $hostIp : null,
+                'os' => php_uname('s') . ' ' . php_uname('r'),
+                'arch' => php_uname('m'),
+                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
+                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
+            ]),
         ];
 
         try {
