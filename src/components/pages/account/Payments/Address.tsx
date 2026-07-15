@@ -4,7 +4,7 @@
  * Modal for creating or editing a billing address.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -77,45 +77,66 @@ export function AddressModal({
   const { data: localeData } = useLocale()
 
   const [countryPopoverOpen, setCountryPopoverOpen] = useState(false)
+  const didPrefillCountryRef = useRef(false)
 
-  // Initialize form with address data or locale default
+  const countries = countriesData?.countries || []
+
+  const resolveLocaleCountryCode = () => {
+    const raw = localeData?.countryCode?.trim()
+    if (!raw || raw === '--') return ''
+    const normalized = raw.toUpperCase()
+    const match = countries.find((c) => c.code.toUpperCase() === normalized)
+    return match?.code ?? normalized
+  }
+
+  // Reset / populate form when the modal opens or switches between create and edit
   useEffect(() => {
-    if (open) {
-      if (address) {
-        // Edit mode - populate with existing address
-        setCountry(address.country || '')
-        setStreetAddress(address.streetAddress || '')
-        setAddressLine2(address.addressLine2 || '')
-        setCity(address.city || '')
-        setState(address.state || '')
-        setPostalCode(address.postalCode || '')
-      } else {
-        // Create mode - reset all fields
-        setStreetAddress('')
-        setAddressLine2('')
-        setCity('')
-        setState('')
-        setPostalCode('')
-        // Country will be set in separate effect when locale data loads
-      }
-    } else {
-      // Reset form when modal closes
+    if (!open) {
+      didPrefillCountryRef.current = false
       setCountry('')
       setStreetAddress('')
       setAddressLine2('')
       setCity('')
       setState('')
       setPostalCode('')
+      return
     }
+
+    if (address) {
+      didPrefillCountryRef.current = true
+      setCountry(address.country || '')
+      setStreetAddress(address.streetAddress || '')
+      setAddressLine2(address.addressLine2 || '')
+      setCity(address.city || '')
+      setState(address.state || '')
+      setPostalCode(address.postalCode || '')
+      return
+    }
+
+    didPrefillCountryRef.current = false
+    setStreetAddress('')
+    setAddressLine2('')
+    setCity('')
+    setState('')
+    setPostalCode('')
+
+    const localeCountry = resolveLocaleCountryCode()
+    setCountry(localeCountry)
+    if (localeCountry) {
+      didPrefillCountryRef.current = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialize once per open/address change
   }, [open, address])
 
-  // Set default country from user's locale when creating new address
+  // Prefill country from locale once it (and countries) are available in create mode
   useEffect(() => {
-    if (open && !address && localeData?.countryCode && !country) {
-      // Use countryCode (ISO 3166-1 two-character code) from locale
-      setCountry(localeData.countryCode)
-    }
-  }, [open, address, localeData, country])
+    if (!open || address || didPrefillCountryRef.current) return
+    const localeCountry = resolveLocaleCountryCode()
+    if (!localeCountry) return
+    setCountry(localeCountry)
+    didPrefillCountryRef.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- prefill only until applied
+  }, [open, address, localeData?.countryCode, countriesData?.countries])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -173,7 +194,6 @@ export function AddressModal({
     createAddressMutation.isPending ||
     updateAddressMutation.isPending ||
     setOrgAddressMutation.isPending
-  const countries = countriesData?.countries || []
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

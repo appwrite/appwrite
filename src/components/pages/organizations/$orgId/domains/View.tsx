@@ -1,13 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import {
-  Globe,
-  CheckCircle2,
-  AlertCircle,
-  Search,
-  Plus,
-  ShoppingCart,
-  ArrowLeftRight,
-} from 'lucide-react'
+import { Globe, Search, Plus, ShoppingCart, ArrowLeftRight } from 'lucide-react'
 import {
   useOrganizationDomains,
   DOMAINS_DEFAULT_SORT_BY,
@@ -72,10 +64,6 @@ import { RetryVerification } from './RetryVerification'
 import { DomainContextMenu } from './_components/DomainContextMenu'
 import { useOrganizationDomainsPlanLimit } from './_components/useOrganizationDomainsPlanLimit'
 import type { Models } from '@appwrite.io/console'
-import {
-  getDomainTransferStatusBadgeConfig,
-  isDomainTransferInProgress,
-} from '@/lib/domains/transfer-status'
 import {
   useCreateOrganizationDomain,
   useDeleteOrganizationDomain,
@@ -579,25 +567,6 @@ export function View() {
     })
   }
 
-  // Get verification status
-  const getVerificationStatus = (domain: Models.Domain) => {
-    const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
-    if (isVerified) {
-      return {
-        status: 'verified' as const,
-        icon: CheckCircle2,
-        label: t('Verified'),
-        className: 'text-green-600 dark:text-green-500',
-      }
-    }
-    return {
-      status: 'unverified' as const,
-      icon: AlertCircle,
-      label: t('Unverified'),
-      className: 'text-yellow-600 dark:text-yellow-500',
-    }
-  }
-
   return (
     <div className="flex h-full flex-col">
       {/* Toolbar: Search + Filters + View Toggle (start) | Buy + Add (end) */}
@@ -735,23 +704,7 @@ export function View() {
         ) : paginatedDomains.length > 0 ? (
           <>
             <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-              {paginatedDomains.map((domain) => {
-                const verification = getVerificationStatus(domain)
-                const transferInProgress = isDomainTransferInProgress(domain)
-                const transferBadge = transferInProgress
-                  ? getDomainTransferStatusBadgeConfig(domain.transferStatus)
-                  : null
-                const cardStatus = transferInProgress
-                  ? 'processing'
-                  : verification.status === 'verified'
-                    ? 'success'
-                    : 'warning'
-                const cardStatusLabel = transferInProgress
-                  ? transferBadge
-                    ? t(transferBadge.label)
-                    : t('Transfer in progress')
-                  : verification.label
-                return (
+              {paginatedDomains.map((domain) => (
                   <DomainContextMenu
                     key={domain.$id}
                     orgId={orgId!}
@@ -764,16 +717,12 @@ export function View() {
                       <ResourceCard
                         title={domain.domain}
                         resourceId={domain.$id}
-                        icon={Globe}
-                        iconColor="bg-muted text-muted-foreground"
-                        status={cardStatus}
-                        statusLabel={cardStatusLabel}
                         metadata={[
                           {
                             label: t('Nameservers'),
                             value: (
                               <span className="text-[11px] font-medium text-muted-foreground">
-                                {domain.nameservers || '-'}
+                                {domain.nameservers || t('3rd party')}
                               </span>
                             ),
                           },
@@ -790,8 +739,7 @@ export function View() {
                       />
                     </Link>
                   </DomainContextMenu>
-                )
-              })}
+                ))}
             </div>
             {!showLoading && paginatedDomains.length > 0 && (
               <Pagination

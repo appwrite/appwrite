@@ -79,8 +79,13 @@ export function ReplaceAddressModal({
   }, [open, addresses, currentAddressId])
 
   useEffect(() => {
-    if (open && !selectedId && localeData?.countryCode) {
-      setCountry(localeData.countryCode)
+    if (
+      open &&
+      selectedId === NEW_ADDRESS_VALUE &&
+      localeData?.countryCode &&
+      localeData.countryCode !== '--'
+    ) {
+      setCountry(localeData.countryCode.toUpperCase())
     }
   }, [open, selectedId, localeData?.countryCode])
 

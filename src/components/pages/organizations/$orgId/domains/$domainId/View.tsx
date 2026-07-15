@@ -1069,7 +1069,7 @@ export function View({ initialData }: ViewProps = {}) {
                       </p>
                       <div className="min-h-[1.25rem] flex items-center min-w-0">
                         <code className="text-[12px] font-mono text-foreground truncate">
-                          {domain.nameservers || '-'}
+                          {domain.nameservers || t('3rd party')}
                         </code>
                       </div>
                     </div>
