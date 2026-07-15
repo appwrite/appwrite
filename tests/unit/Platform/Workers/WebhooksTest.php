@@ -32,7 +32,7 @@ final class WebhooksTest extends TestCase
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
         $worker = new Webhooks();
 
-        $worker->sendAlert(
+        $this->withConsoleUrlScheme('legacy', fn () => $worker->sendAlert(
             attempts: 10,
             statusCode: 500,
             webhook: new Document([
@@ -51,7 +51,7 @@ final class WebhooksTest extends TestCase
             dbForPlatform: $database,
             publisherForNotifications: $publisherForNotifications,
             plan: []
-        );
+        ));
 
         $events = $publisher->getEvents('v1-notifications');
 
@@ -105,32 +105,26 @@ final class WebhooksTest extends TestCase
         $publisherForNotifications = new NotificationPublisher($publisher, new Queue('v1-notifications'));
         $worker = new Webhooks();
 
-        \putenv('_APP_CONSOLE_URL_SCHEME=root');
-
-        try {
-            $worker->sendAlert(
-                attempts: 10,
-                statusCode: 500,
-                webhook: new Document([
-                    '$id' => 'webhook-1',
-                    '$updatedAt' => '2026-01-01T00:00:00.000+00:00',
-                    'name' => 'Payments',
-                    'url' => 'https://example.test/webhook',
-                ]),
-                project: new Document([
-                    '$id' => 'project-1',
-                    '$sequence' => 'project-internal-1',
-                    'name' => 'Production',
-                    'teamInternalId' => 'team-internal-1',
-                    'region' => 'fra',
-                ]),
-                dbForPlatform: $database,
-                publisherForNotifications: $publisherForNotifications,
-                plan: []
-            );
-        } finally {
-            \putenv('_APP_CONSOLE_URL_SCHEME');
-        }
+        $this->withConsoleUrlScheme('root', fn () => $worker->sendAlert(
+            attempts: 10,
+            statusCode: 500,
+            webhook: new Document([
+                '$id' => 'webhook-1',
+                '$updatedAt' => '2026-01-01T00:00:00.000+00:00',
+                'name' => 'Payments',
+                'url' => 'https://example.test/webhook',
+            ]),
+            project: new Document([
+                '$id' => 'project-1',
+                '$sequence' => 'project-internal-1',
+                'name' => 'Production',
+                'teamInternalId' => 'team-internal-1',
+                'region' => 'fra',
+            ]),
+            dbForPlatform: $database,
+            publisherForNotifications: $publisherForNotifications,
+            plan: []
+        ));
 
         $events = $publisher->getEvents('v1-notifications');
 
@@ -264,6 +258,18 @@ final class WebhooksTest extends TestCase
         yield 'other project owner' => [['project-project-2-owner'], false];
         yield 'non owner' => [['developer'], false];
         yield 'invalid roles' => [null, false];
+    }
+
+    private function withConsoleUrlScheme(string $scheme, callable $callback): void
+    {
+        $original = \getenv('_APP_CONSOLE_URL_SCHEME');
+        \putenv("_APP_CONSOLE_URL_SCHEME={$scheme}");
+
+        try {
+            $callback();
+        } finally {
+            \putenv($original === false ? '_APP_CONSOLE_URL_SCHEME' : "_APP_CONSOLE_URL_SCHEME={$original}");
+        }
     }
 
     private function createPlatformDatabase(): Database
