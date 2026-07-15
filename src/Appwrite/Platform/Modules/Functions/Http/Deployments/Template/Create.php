@@ -81,7 +81,6 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('deployments')
-            ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -104,7 +103,6 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Backend $deployments,
-        GitHub $github,
         Authorization $authorization,
         array $platform
     ) {
@@ -170,7 +168,7 @@ class Create extends Base
         $ref = $reference;
         if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
             try {
-                $tags = $github->listTags($owner, $repository, $reference);
+                $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
                 $ref = \end($tags) ?: $reference;
             } catch (\Throwable) {
                 // Fall back to the raw reference; the build surfaces a bad ref.
