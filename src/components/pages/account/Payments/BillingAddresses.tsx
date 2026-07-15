@@ -140,38 +140,50 @@ export function AccountBillingAddresses({
 
   if (addresses.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Billing addresses')}
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                {t('Manage your billing addresses for invoices and payments.')}
-              </p>
+      <>
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  {t('Billing addresses')}
+                </h3>
+                <p className="text-[13px] text-muted-foreground mt-1">
+                  {t('Manage your billing addresses for invoices and payments.')}
+                </p>
+              </div>
             </div>
           </div>
+          <div className="border-t border-border -mx-6" />
+          <div className="px-6 py-8 text-center">
+            <EmptyState
+              icon={MapPin}
+              title={t('No billing addresses')}
+              description={t('Add a billing address to get started')}
+              isEmpty={true}
+              hasFilters={false}
+              variant="default"
+            >
+              <div className="mt-4">
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={handleAdd}
+                >
+                  <Plus className="me-1.5 h-4 w-4" />
+                  {t('Add billing address')}
+                </Button>
+              </div>
+            </EmptyState>
+          </div>
         </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-8 text-center">
-          <EmptyState
-            icon={MapPin}
-            title={t('No billing addresses')}
-            description={t('Add a billing address to get started')}
-            isEmpty={true}
-            hasFilters={false}
-            variant="default"
-          >
-            <div className="mt-4">
-              <Button size="sm" className="h-9 text-[13px]" onClick={handleAdd}>
-                <Plus className="me-1.5 h-4 w-4" />
-                {t('Add billing address')}
-              </Button>
-            </div>
-          </EmptyState>
-        </div>
-      </div>
+
+        <AddressModal
+          open={addModalOpen}
+          onOpenChange={setAddModalOpen}
+          onSuccess={handleAddSuccess}
+        />
+      </>
     )
   }
 
