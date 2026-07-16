@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
-use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -266,9 +265,9 @@ class Jobs extends Action
         Device $deviceForBuilds,
         VcsFactory $vcsFactory,
     ): Document {
-        $path = $this->findBuildPath($deviceForBuilds, $project->getId(), $deployment);
-        if ($path === '') {
-            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build must produce exactly one output artifact.', $usage, $publisherForUsage, $vcsFactory);
+        $path = (string) $deployment->getAttribute('buildPath', '');
+        if ($path === '' || ! $deviceForBuilds->exists($path)) {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $vcsFactory);
         }
 
         $size = $deviceForBuilds->getFileSize($path);
@@ -280,19 +279,7 @@ class Jobs extends Action
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build size should be less than ' . \number_format($limit / (1000 * 1000), 2) . ' MBs.', $usage, $publisherForUsage, $vcsFactory);
         }
 
-        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $vcsFactory, $size, $path);
-    }
-
-    private function findBuildPath(Device $deviceForBuilds, string $projectId, Document $deployment): string
-    {
-        $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path !== '' && $deviceForBuilds->exists($path)) {
-            return $path;
-        }
-
-        $files = $deviceForBuilds->getFiles(Orchestrator::outputDirectory($projectId, $deployment->getId()));
-
-        return \count($files) === 1 ? (string) $files[0] : '';
+        return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, true, '', $usage, $publisherForUsage, $vcsFactory, $size);
     }
 
     /**
@@ -311,7 +298,6 @@ class Jobs extends Action
         UsagePublisher $publisherForUsage,
         VcsFactory $vcsFactory,
         int $buildSize = 0,
-        string $buildPath = '',
     ): Document {
         $function = $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId'));
 
@@ -327,7 +313,6 @@ class Jobs extends Action
             'buildLogs' => $this->truncate($logs . $trailer),
         ];
         if ($success) {
-            $update['buildPath'] = $buildPath;
             $update['buildSize'] = $buildSize;
             $update['totalSize'] = $buildSize + (int) $deployment->getAttribute('sourceSize', 0);
         }
