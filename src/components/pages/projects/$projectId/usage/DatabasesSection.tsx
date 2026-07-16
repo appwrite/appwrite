@@ -161,7 +161,7 @@ export function DatabasesSection({
     : (documentsQuery.data?.chartPoints ?? [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <DatabaseOperationBentoCard
         projectId={projectId}
         operation="reads"

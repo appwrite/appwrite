@@ -811,6 +811,32 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Operations grouped by caller IP address.': '呼び出し元の IP アドレス別にグループ化された操作。',
   'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).': 'Appwrite データベース API (TablesDB、DocumentsDB、VectorsDB、レガシー) 別にグループ化された操作。',
   'API endpoint paths driving database operations.': 'データベース操作を駆動する API エンドポイントパス。',
+  'API endpoint paths with the highest operation volume.':
+    '操作量が最も多い API エンドポイントパス。',
+  'Operations grouped by HTTP method.': 'HTTP メソッド別にグループ化された操作。',
+  'Reads breakdown': '読み取りの内訳',
+  'Writes breakdown': '書き込みの内訳',
+  'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB).':
+    'Appwrite データベース API (TablesDB、DocumentsDB、VectorsDB) 別にグループ化された操作。',
+  'Operations grouped by caller country.': '呼び出し元の国別にグループ化された操作。',
+  'Operations grouped by database or table.':
+    'データベースまたはテーブル別にグループ化された操作。',
+  'Top databases and tables by operation volume. Click a row to filter the charts.':
+    '操作量が最も多いデータベースとテーブル。行をクリックするとチャートをフィルタできます。',
+  'Top databases by operation volume. Click a row to filter the charts.':
+    '操作量が最も多いデータベース。行をクリックするとチャートをフィルタできます。',
+  'Top tables by operation volume. Click a row to filter the charts.':
+    '操作量が最も多いテーブル。行をクリックするとチャートをフィルタできます。',
+  'Share of operations on databases versus tables (collections).':
+    'データベースとテーブル (コレクション) の操作の内訳。',
+  'Operations by HTTP method. For writes, this separates creates, updates, and deletes.':
+    'HTTP メソッド別の操作。書き込みでは作成・更新・削除を分けて表示します。',
+  'API endpoint paths driving the most database operations.':
+    'データベース操作が最も多い API エンドポイントパス。',
+  'Operations by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).':
+    'Appwrite データベース API (TablesDB、DocumentsDB、VectorsDB、レガシー) 別の操作。',
+  'Caller IP addresses with the highest operation volume.':
+    '操作量が最も多い呼び出し元 IP アドレス。',
   'Products': '製品',
   'Avatars': 'アバター',
   'API request volume and breakdowns across paths, methods, status codes, and client attributes.': 'パス、メソッド、ステータスコード、クライアント属性にわたる API リクエスト量と内訳。',

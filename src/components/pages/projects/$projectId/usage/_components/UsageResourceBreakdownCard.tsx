@@ -39,6 +39,8 @@ type UsageResourceBreakdownCardProps = {
   formatValue: (value: number) => string
   onRetry?: () => void
   onShowMore?: () => void
+  /** When set, used instead of `items.length` for the Show more threshold. */
+  showMoreItemCount?: number
   titleAddon?: ReactNode
   embedded?: boolean
   className?: string
@@ -60,6 +62,7 @@ export function UsageResourceBreakdownCard({
   formatValue,
   onRetry,
   onShowMore,
+  showMoreItemCount,
   titleAddon,
   embedded = false,
   className,
@@ -72,7 +75,7 @@ export function UsageResourceBreakdownCard({
   const showEmptyOverlay = !isLoading && !isError && items.length === 0
   const showShowMore =
     !isError &&
-    items.length >= OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT &&
+    (showMoreItemCount ?? items.length) >= OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT &&
     !!onShowMore
 
   const breakdownContent = (

@@ -19,7 +19,7 @@ import {
   USAGE_DATE_RANGE_PRESET_GROUPS,
   type UsageDateRangePreset,
 } from '@/lib/usage/usage-date-range-presets'
-import { isFullCalendarDayRange } from '@/lib/usage/usage-date-range'
+import { isFullCalendarDayRange, normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import { useT } from '@/lib/i18n/translate'
 import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
@@ -125,7 +125,7 @@ export function DateRangePicker({
   }
 
   const handleApply = () => {
-    onDateRangeChange(pendingDateRange)
+    onDateRangeChange(normalizeUsageDateRangeSelection(pendingDateRange))
     setIsOpen(false)
   }
 

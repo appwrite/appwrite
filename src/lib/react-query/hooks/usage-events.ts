@@ -1883,7 +1883,12 @@ function databaseReadsChartQueryOptions(
       interval,
     ], filterQueries),
     queryFn: () =>
-      fetchProjectDatabaseReadsOverview(projectId!, getBounds(), interval),
+      fetchProjectDatabaseReadsOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1915,7 +1920,12 @@ function databaseWritesChartQueryOptions(
       interval,
     ], filterQueries),
     queryFn: () =>
-      fetchProjectDatabaseWritesOverview(projectId!, getBounds(), interval),
+      fetchProjectDatabaseWritesOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1947,7 +1957,12 @@ function databaseCollectionsChartQueryOptions(
       interval,
     ], filterQueries),
     queryFn: () =>
-      fetchProjectDatabaseCollectionsOverview(projectId!, getBounds(), interval),
+      fetchProjectDatabaseCollectionsOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1979,7 +1994,12 @@ function databaseDocumentsChartQueryOptions(
       interval,
     ], filterQueries),
     queryFn: () =>
-      fetchProjectDatabaseDocumentsOverview(projectId!, getBounds(), interval),
+      fetchProjectDatabaseDocumentsOverview(
+        projectId!,
+        getBounds(),
+        interval,
+        mergeUsageFetchOptions(undefined, filterQueries, logRetentionHours),
+      ),
     enabled: !!projectId,
     ...usageEventsQueryOptionsBase,
     placeholderData: keepPreviousUsageChartDataForProject(projectId),
@@ -1999,7 +2019,13 @@ export function useProjectDatabaseReadsChart(
   const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries()
 
   return useQuery({
-    ...databaseReadsChartQueryOptions(projectId, dateRange, interval, filterQueries),
+    ...databaseReadsChartQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+    ),
     enabled: !!projectId && enabled,
   })
 }
@@ -2013,7 +2039,13 @@ export function useProjectDatabaseWritesChart(
   const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries()
 
   return useQuery({
-    ...databaseWritesChartQueryOptions(projectId, dateRange, interval, filterQueries),
+    ...databaseWritesChartQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+    ),
     enabled: !!projectId && enabled,
   })
 }
@@ -2027,7 +2059,13 @@ export function useProjectDatabaseCollectionsChart(
   const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries('gauges')
 
   return useQuery({
-    ...databaseCollectionsChartQueryOptions(projectId, dateRange, interval, filterQueries),
+    ...databaseCollectionsChartQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+    ),
     enabled: !!projectId && enabled,
   })
 }
@@ -2041,7 +2079,13 @@ export function useProjectDatabaseDocumentsChart(
   const { filterQueries, logRetentionHours } = useUsageSectionFilterQueries('gauges')
 
   return useQuery({
-    ...databaseDocumentsChartQueryOptions(projectId, dateRange, interval, filterQueries),
+    ...databaseDocumentsChartQueryOptions(
+      projectId,
+      dateRange,
+      interval,
+      filterQueries,
+      logRetentionHours,
+    ),
     enabled: !!projectId && enabled,
   })
 }

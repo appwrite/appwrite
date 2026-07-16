@@ -5,7 +5,7 @@
     "": {
       "name": "template-tanstack-start",
       "dependencies": {
-        "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@2ffd626",
+        "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@f204d03",
         "@appwrite.io/specs": "github:appwrite/specs",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -151,7 +151,7 @@
 
     "@ai-sdk/react": ["@ai-sdk/react@3.0.200", "", { "dependencies": { "@ai-sdk/provider-utils": "4.0.27", "ai": "6.0.198", "swr": "^2.2.5", "throttleit": "2.1.0" }, "peerDependencies": { "react": "^18 || ~19.0.1 || ~19.1.2 || ^19.2.1" } }, "sha512-OzO/raYhgzQo5iVDRJYNCrlDj0gMmS8TBlOdGtZo5Elzl5unGEVQrtn0zjP3u4sFiKflr6D2En+qeeBMUzPZDA=="],
 
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@2ffd626", { "dependencies": { "json-bigint": "1.0.0" } }],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@f204d03", { "dependencies": { "json-bigint": "1.0.0" } }],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#570c9de", {}, "appwrite-specs-570c9de"],
 

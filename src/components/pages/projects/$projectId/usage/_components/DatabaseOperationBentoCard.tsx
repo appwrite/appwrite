@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
-import { cn } from '@/lib/utils'
+import { useId, useMemo } from 'react'
 import { useT } from '@/lib/i18n/translate'
+import { useCountries } from '@/lib/react-query/hooks'
+import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 import type { ComputeBreakdownResourceMap } from '@/lib/usage/resolve-compute-breakdown-resources'
 import type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-breakdown-resources'
@@ -19,11 +20,7 @@ import type { DatabaseOperationsBreakdownSection } from '@/lib/usage/database-op
 import type { UsageEventBreakdownDimension } from '@/lib/usage/usage-events-common'
 import { splitUsageBreakdownEntries } from '@/lib/usage/usage-resources-breakdown'
 import { UsageTimeSeriesChartCard } from './UsageTimeSeriesChartCard'
-import {
-  UsageBreakdownCard,
-  UsageMetricCardFooter,
-  UsageMetricCardShell,
-} from './UsageMetricCard'
+import { UsageBreakdownCard } from './UsageMetricCard'
 import { UsageResourceBreakdownCard } from './UsageResourceBreakdownCard'
 
 const DATABASE_USAGE_ERROR = {
@@ -31,9 +28,6 @@ const DATABASE_USAGE_ERROR = {
   message:
     "We couldn't fetch usage data from the server. Check your connection and try again.",
 } as const
-
-const breakdownRowGridClass =
-  'grid grid-cols-1 items-stretch divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0 xl:grid-cols-4'
 
 type DatabaseBreakdownEntry =
   | DatabaseReadsBreakdownQueryEntry
@@ -80,8 +74,13 @@ function breakdownDrawerTitle(
   return `${prefix} · ${t(section.title)}`
 }
 
+/**
+ * Chart + breakdown grid for database reads or writes.
+ * Chart and its breakdowns are grouped as one section so they stay visually
+ * tied together (unlike Requests/Bandwidth, Databases has two metric groups).
+ */
 export function DatabaseOperationBentoCard({
-  projectId,
+  projectId: _projectId,
   operation,
   title,
   description,
@@ -104,15 +103,24 @@ export function DatabaseOperationBentoCard({
   docsHref,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
+  const breakdownHeadingId = useId()
+  const { data: countriesData } = useCountries()
+  const countryLookups = useMemo(
+    () => buildCountryLookups(countriesData?.countries),
+    [countriesData?.countries],
+  )
+
   const { standardEntries, resourceEntry } = useMemo(
     () => splitUsageBreakdownEntries(breakdowns),
     [breakdowns],
   )
 
+  const breakdownHeading =
+    operation === 'reads' ? t('Reads breakdown') : t('Writes breakdown')
+
   return (
-    <UsageMetricCardShell>
+    <section className="space-y-4 border-b border-border pb-10 last:border-b-0 last:pb-0">
       <UsageTimeSeriesChartCard
-        embedded
         title={title}
         description={description}
         unitLabel={unitLabel}
@@ -128,72 +136,92 @@ export function DatabaseOperationBentoCard({
         formatTotal={formatDatabaseOperationsTotal}
         formatValue={formatDatabaseOperationsValue}
         onRetry={onRetry}
+        docsHref={docsHref}
       />
 
       {showBreakdown ? (
-        <div className={cn(breakdownRowGridClass, 'border-t border-border')}>
-          {resourceEntry ? (
-            <UsageResourceBreakdownCard
-              embedded
-              description={resourceEntry.section.description}
-              items={resourceEntry.items}
-              isLoading={resourceEntry.isLoading}
-              isError={resourceEntry.isError}
-              computeLookup={computeLookup}
-              databaseLookup={databaseLookup}
-              storageLookup={storageLookup}
-              tableLookup={tableLookup}
-              errorTitle={DATABASE_USAGE_ERROR.title}
-              errorMessage={DATABASE_USAGE_ERROR.message}
-              formatValue={formatDatabaseOperationsValue}
-              onRetry={onRetry}
-              onShowMore={() =>
-                onOpenBreakdownDrawer({
-                  operation,
-                  title: `${operation === 'reads' ? t('Reads') : t('Writes')} · ${t('Resources')}`,
-                  description: resourceEntry.section.description,
-                  dimension: 'resource',
-                  labelVariant: 'default',
-                })
-              }
-            />
-          ) : null}
+        <div className="space-y-3" aria-labelledby={breakdownHeadingId}>
+          <div className="flex items-center gap-3 pt-1">
+            <h3
+              id={breakdownHeadingId}
+              className="shrink-0 text-[13px] font-semibold text-foreground"
+            >
+              {breakdownHeading}
+            </h3>
+            <div className="h-px min-w-0 flex-1 bg-border" aria-hidden />
+          </div>
 
-          {standardEntries.map(({ section, items, isLoading, isError }) => (
-            <UsageBreakdownCard
-              key={section.dimension}
-              embedded
-              title={section.title}
-              description={section.description}
-              dimension={section.dimension}
-              items={items}
-              labelVariant={section.labelVariant}
-              countryLookups={null}
-              computeLookup={computeLookup}
-              databaseLookup={databaseLookup}
-              storageLookup={storageLookup}
-              tableLookup={tableLookup}
-              isLoading={isLoading}
-              isError={isError}
-              errorTitle={DATABASE_USAGE_ERROR.title}
-              errorMessage={DATABASE_USAGE_ERROR.message}
-              formatValue={formatDatabaseOperationsValue}
-              onRetry={onRetry}
-              onShowMore={() =>
-                onOpenBreakdownDrawer({
-                  operation,
-                  title: breakdownDrawerTitle(operation, section, t),
-                  description: section.description,
-                  dimension: section.dimension,
-                  labelVariant: section.labelVariant,
-                })
-              }
-            />
-          ))}
+          <div className="grid items-stretch gap-4 lg:grid-cols-2">
+            {standardEntries.map(({ section, items, isLoading, isError }) => (
+              <div
+                key={section.dimension}
+                className="flex h-full min-h-0 flex-col"
+              >
+                <UsageBreakdownCard
+                  title={section.title}
+                  description={section.description}
+                  dimension={section.dimension}
+                  items={items}
+                  labelVariant={section.labelVariant}
+                  countryLookups={countryLookups}
+                  computeLookup={computeLookup}
+                  databaseLookup={databaseLookup}
+                  storageLookup={storageLookup}
+                  tableLookup={tableLookup}
+                  isLoading={isLoading}
+                  isError={isError}
+                  errorTitle={DATABASE_USAGE_ERROR.title}
+                  errorMessage={DATABASE_USAGE_ERROR.message}
+                  formatValue={formatDatabaseOperationsValue}
+                  onRetry={onRetry}
+                  onShowMore={() =>
+                    onOpenBreakdownDrawer({
+                      operation,
+                      title: breakdownDrawerTitle(operation, section, t),
+                      description: section.description,
+                      dimension: section.dimension,
+                      labelVariant: section.labelVariant,
+                    })
+                  }
+                />
+              </div>
+            ))}
+
+            {resourceEntry ? (
+              <div className="flex h-full min-h-0 flex-col">
+                <UsageResourceBreakdownCard
+                  description={resourceEntry.section.description}
+                  items={resourceEntry.items}
+                  isLoading={resourceEntry.isLoading}
+                  isError={resourceEntry.isError}
+                  countryLookups={countryLookups}
+                  computeLookup={computeLookup}
+                  databaseLookup={databaseLookup}
+                  storageLookup={storageLookup}
+                  tableLookup={tableLookup}
+                  errorTitle={DATABASE_USAGE_ERROR.title}
+                  errorMessage={DATABASE_USAGE_ERROR.message}
+                  formatValue={formatDatabaseOperationsValue}
+                  onRetry={onRetry}
+                  onShowMore={() =>
+                    onOpenBreakdownDrawer({
+                      operation,
+                      title: breakdownDrawerTitle(
+                        operation,
+                        resourceEntry.section,
+                        t,
+                      ),
+                      description: resourceEntry.section.description,
+                      dimension: 'resource',
+                      labelVariant: 'default',
+                    })
+                  }
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
-
-      <UsageMetricCardFooter description={description} docsHref={docsHref} />
-    </UsageMetricCardShell>
+    </section>
   )
 }

@@ -19,14 +19,40 @@ export type DatabaseOperationsBreakdownSection = {
   labelVariant: 'mono' | 'default'
 }
 
-/** Breakdown dimensions that map cleanly to database read/write operations. */
+/**
+ * Breakdown dimensions for database read/write operations.
+ * Mirrors the Requests/Bandwidth card pattern and copy style; keeps only
+ * dimensions that are useful for diagnosing database traffic.
+ */
 export const DATABASE_OPERATIONS_BREAKDOWN_SECTIONS: readonly DatabaseOperationsBreakdownSection[] =
   [
     {
-      dimension: 'resource',
-      title: 'Resources',
-      description: 'Operations grouped by resource.',
-      metricId: 'breakdown-resources',
+      dimension: 'path',
+      title: 'Paths',
+      description: 'API endpoint paths with the highest operation volume.',
+      metricId: 'breakdown-path',
+      labelVariant: 'mono',
+    },
+    {
+      dimension: 'method',
+      title: 'HTTP methods',
+      description: 'Operations grouped by HTTP method.',
+      metricId: 'breakdown-method',
+      labelVariant: 'default',
+    },
+    {
+      dimension: 'service',
+      title: 'Services',
+      description:
+        'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB).',
+      metricId: 'breakdown-service',
+      labelVariant: 'default',
+    },
+    {
+      dimension: 'country',
+      title: 'Countries',
+      description: 'Operations grouped by caller country.',
+      metricId: 'breakdown-country',
       labelVariant: 'default',
     },
     {
@@ -37,19 +63,11 @@ export const DATABASE_OPERATIONS_BREAKDOWN_SECTIONS: readonly DatabaseOperations
       labelVariant: 'mono',
     },
     {
-      dimension: 'service',
-      title: 'Services',
-      description:
-        'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).',
-      metricId: 'breakdown-service',
+      dimension: 'resource',
+      title: 'Resources',
+      description: 'Operations grouped by database or table.',
+      metricId: 'breakdown-resources',
       labelVariant: 'default',
-    },
-    {
-      dimension: 'path',
-      title: 'API paths',
-      description: 'API endpoint paths driving database operations.',
-      metricId: 'breakdown-path',
-      labelVariant: 'mono',
     },
   ] as const
 

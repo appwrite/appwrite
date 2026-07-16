@@ -1318,6 +1318,32 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Operations grouped by caller IP address.': 'פעולות מקובצות לפי כתובת IP של המקור.',
   'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).': 'פעולות מקובצות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
   'API endpoint paths driving database operations.': 'נתיבי נקודות קצה של API שמניעים פעולות מסד נתונים.',
+  'API endpoint paths with the highest operation volume.':
+    'נתיבי נקודות קצה של API עם נפח הפעולות הגבוה ביותר.',
+  'Operations grouped by HTTP method.': 'פעולות מקובצות לפי מתודת HTTP.',
+  'Reads breakdown': 'פירוט קריאות',
+  'Writes breakdown': 'פירוט כתיבות',
+  'Operations grouped by Appwrite database API (TablesDB, DocumentsDB, VectorsDB).':
+    'פעולות מקובצות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB).', // pragma: allowlist secret
+  'Operations grouped by caller country.': 'פעולות מקובצות לפי מדינת המקור.',
+  'Operations grouped by database or table.':
+    'פעולות מקובצות לפי מסד נתונים או טבלה.',
+  'Top databases and tables by operation volume. Click a row to filter the charts.':
+    'מסדי הנתונים והטבלאות עם נפח הפעולות הגבוה ביותר. לחצו על שורה כדי לסנן את התרשימים.',
+  'Top databases by operation volume. Click a row to filter the charts.':
+    'מסדי הנתונים עם נפח הפעולות הגבוה ביותר. לחצו על שורה כדי לסנן את התרשימים.',
+  'Top tables by operation volume. Click a row to filter the charts.':
+    'הטבלאות עם נפח הפעולות הגבוה ביותר. לחצו על שורה כדי לסנן את התרשימים.',
+  'Share of operations on databases versus tables (collections).':
+    'חלק הפעולות על מסדי נתונים לעומת טבלאות (אוספים).',
+  'Operations by HTTP method. For writes, this separates creates, updates, and deletes.':
+    'פעולות לפי מתודת HTTP. בכתיבות, זה מפריד בין יצירות, עדכונים ומחיקות.',
+  'API endpoint paths driving the most database operations.':
+    'נתיבי נקודות קצה של API שמניעים הכי הרבה פעולות מסד נתונים.',
+  'Operations by Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).':
+    'פעולות לפי Appwrite database API (TablesDB, DocumentsDB, VectorsDB, legacy).', // pragma: allowlist secret
+  'Caller IP addresses with the highest operation volume.':
+    'כתובות IP של מקור עם נפח הפעולות הגבוה ביותר.',
   'Products': 'מוצרים',
   'Avatars': 'אווטארים',
   avatars: 'אווטארים',

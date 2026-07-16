@@ -860,8 +860,8 @@ export async function fetchProjectDatabase(
 
 /**
  * Options for creating Appwrite product databases (TablesDB, DocumentsDB, VectorsDB).
- * Dedicated tiers use the product API (`*.create` with `specification`). Engine
- * provisioning is only used when HA replicas or PITR are requested on create.
+ * Dedicated tiers use the product API (`*.create` with `specification` and optional
+ * `replicas`). Engine provisioning is only used when PITR is requested on create.
  */
 export type CreateProjectDatabaseOptions = {
   specification?: string
@@ -1063,12 +1063,16 @@ async function createProductDatabase(
     databaseId: string
     name: string
     specification?: string
+    replicas?: number
   },
 ) {
   const payload = {
     databaseId: params.databaseId,
     name: params.name,
     ...(params.specification ? { specification: params.specification } : {}),
+    ...(params.replicas != null && params.replicas > 0
+      ? { replicas: params.replicas }
+      : {}),
   }
 
   if (backend === DatabaseType.Documentsdb) {
@@ -1087,6 +1091,7 @@ async function createProductDatabaseWithExistsRecovery(
     databaseId: string
     name: string
     specification?: string
+    replicas?: number
   },
 ): Promise<Models.Database> {
   try {
@@ -1147,8 +1152,8 @@ async function provisionDedicatedCompute(
 /**
  * Create a new database in a project.
  * Product databases are created in one call via the product SDK (`tablesDB`,
- * `documentsDB`, or `vectorsDB`) with an optional `specification`. Engine
- * provisioning is only used when HA replicas or PITR are requested on create.
+ * `documentsDB`, or `vectorsDB`) with an optional `specification` and `replicas`.
+ * Engine provisioning is only used when PITR is requested on create.
  *
  * @param projectId - The project ID
  * @param data - { databaseId?: string; name: string }
@@ -1189,7 +1194,7 @@ export async function createProjectDatabase(
   const name = data.name.trim()
   const haReplicaCount = Math.max(0, options?.haReplicaCount ?? 0)
   const pitrEnabled = options?.pitrEnabled === true
-  const needsEngineOptions = haReplicaCount > 0 || pitrEnabled
+  const needsEngineProvisioning = pitrEnabled
 
   if (useDedicated) {
     const specification = await resolveDedicatedSpecification(
@@ -1201,7 +1206,7 @@ export async function createProjectDatabase(
 
     let created: Models.Database
 
-    if (needsEngineOptions) {
+    if (needsEngineProvisioning) {
       await provisionDedicatedCompute(projectSdk, {
         databaseId: productDatabaseId,
         name,
@@ -1229,6 +1234,7 @@ export async function createProjectDatabase(
           databaseId: productDatabaseId,
           name,
           specification,
+          ...(haReplicaCount > 0 ? { replicas: haReplicaCount } : {}),
         },
       )
     }

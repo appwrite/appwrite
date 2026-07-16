@@ -29,6 +29,10 @@ import {
   CLI_SHELL_MIN_HEIGHT_PX,
 } from '@/lib/cli-shell/constants'
 import type { SerializedUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import {
+  normalizeUsageDateRangeSelection,
+  serializeUsageChartDateRange,
+} from '@/lib/usage/usage-date-range'
 import { normalizeUsageChartIntervalPref } from '@/lib/usage/chart-interval'
 import {
   getUsageDateRangePresetByValue,
@@ -2478,6 +2482,14 @@ export function parseUsageChartDateRangeFromPrefs(
     const inferred = inferUsageDateRangePresetFromStoredRange(storedRange)
     if (inferred) {
       return { preset: inferred.value }
+    }
+
+    const normalized = normalizeUsageDateRangeSelection(storedRange)
+    if (normalized?.from && normalized.to) {
+      return serializeUsageChartDateRange({
+        from: normalized.from,
+        to: normalized.to,
+      })
     }
 
     return { from: parsed.from, to: parsed.to }

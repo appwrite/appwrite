@@ -218,6 +218,7 @@ export async function fetchProjectDatabaseCollectionsOverview(
     DATABASE_COLLECTIONS_GAUGE_METRICS,
     interval,
     options?.queries,
+    options?.logRetentionHours,
   )
 }
 
@@ -234,5 +235,6 @@ export async function fetchProjectDatabaseDocumentsOverview(
     DATABASE_DOCUMENTS_GAUGE_METRICS,
     interval,
     options?.queries,
+    options?.logRetentionHours,
   )
 }

@@ -7,11 +7,45 @@ import {
   inferUsageDateRangePresetFromStoredRange,
 } from '@/lib/usage/usage-date-range-presets'
 
+export function isStartOfLocalDay(date: Date): boolean {
+  return date.getTime() === startOfDay(date).getTime()
+}
+
 export function isFullCalendarDayRange(from: Date, to: Date): boolean {
   return (
-    from.getTime() === startOfDay(from).getTime() &&
-    to.getTime() === endOfDay(to).getTime()
+    isStartOfLocalDay(from) && to.getTime() === endOfDay(to).getTime()
   )
+}
+
+/**
+ * DayPicker range mode returns local midnights for both ends. A single day is
+ * `{ from: day, to: day }`; a multi-day span ends on the start of the last day.
+ * Those are date-only selections, not rolling hour windows.
+ */
+export function isCalendarDateOnlyRange(from: Date, to: Date): boolean {
+  return isStartOfLocalDay(from) && isStartOfLocalDay(to)
+}
+
+/**
+ * Expand DayPicker midnight ranges to inclusive calendar days so a specific
+ * date is not treated as an empty or ~24h rolling window.
+ */
+export function normalizeUsageDateRangeSelection(
+  dateRange: DateRange | undefined,
+): DateRange | undefined {
+  if (!dateRange?.from) return dateRange
+
+  const from = dateRange.from
+  const to = dateRange.to ?? from
+
+  if (!isCalendarDateOnlyRange(from, to)) {
+    return { from, to }
+  }
+
+  return {
+    from: startOfDay(from),
+    to: endOfDay(to),
+  }
 }
 
 /** Default overview chart range: rolling last 24 hours. */
@@ -51,8 +85,9 @@ export function resolveUsageDateBounds(dateRange: DateRange | undefined): {
     return getStableUsageChartDateRange() as { from: Date; to: Date }
   }
 
-  const from = dateRange.from
-  const to = dateRange.to ?? endOfDay(from)
+  const normalized = normalizeUsageDateRangeSelection(dateRange)
+  const from = normalized!.from!
+  const to = normalized!.to ?? endOfDay(from)
 
   if (isFullCalendarDayRange(from, to)) {
     return { from: startOfDay(from), to: endOfDay(to) }
@@ -72,12 +107,14 @@ export type SerializedUsageChartDateRange = {
 export function serializeUsageChartDateRange(
   dateRange: DateRange,
 ): SerializedUsageChartDateRange {
-  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
+  const normalized =
+    normalizeUsageDateRangeSelection(dateRange) ?? dateRange
+  const matchedPreset = findMatchingUsageDateRangePreset(normalized)
   if (matchedPreset) {
     return { preset: matchedPreset.value }
   }
 
-  const { from, to } = resolveUsageDateBounds(dateRange)
+  const { from, to } = resolveUsageDateBounds(normalized)
   return { from: from.toISOString(), to: to.toISOString() }
 }
 
@@ -101,12 +138,14 @@ export function parseUsageChartDateRange(
       !Number.isNaN(storedRange.from.getTime()) &&
       !Number.isNaN(storedRange.to.getTime())
     ) {
+      const normalized =
+        normalizeUsageDateRangeSelection(storedRange) ?? storedRange
       const inferredPreset =
-        inferUsageDateRangePresetFromStoredRange(storedRange)
+        inferUsageDateRangePresetFromStoredRange(normalized)
       if (inferredPreset) {
         return inferredPreset.getRange()
       }
-      return storedRange
+      return normalized
     }
   }
 
@@ -123,18 +162,20 @@ export function resolveUsageChartFetchBounds(
     if (preset) return preset.getRange()
   }
 
+  const normalized = normalizeUsageDateRangeSelection(dateRange) ?? dateRange
+
   // Prefer exact / calendar matches before duration-based rolling inference
   // so Today (midnight–midnight) is not treated as Last 24 hours.
-  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
+  const matchedPreset = findMatchingUsageDateRangePreset(normalized)
   if (matchedPreset) return matchedPreset.getRange()
 
-  const inferredPreset = inferUsageDateRangePresetFromStoredRange(dateRange)
+  const inferredPreset = inferUsageDateRangePresetFromStoredRange(normalized)
   if (inferredPreset) return inferredPreset.getRange()
 
-  const rollingPreset = inferRollingPresetByDuration(dateRange)
+  const rollingPreset = inferRollingPresetByDuration(normalized)
   if (rollingPreset) return rollingPreset.getRange()
 
-  return resolveUsageDateBounds(dateRange) as { from: Date; to: Date }
+  return resolveUsageDateBounds(normalized) as { from: Date; to: Date }
 }
 
 /** Stable query-key segment for usage charts (preset id when applicable). */
@@ -144,16 +185,18 @@ export function getUsageChartQueryRangeKeyPart(
 ): string {
   if (presetId) return `preset:${presetId}`
 
-  const matchedPreset = findMatchingUsageDateRangePreset(dateRange)
+  const normalized = normalizeUsageDateRangeSelection(dateRange) ?? dateRange
+
+  const matchedPreset = findMatchingUsageDateRangePreset(normalized)
   if (matchedPreset) return `preset:${matchedPreset.value}`
 
-  const inferredPreset = inferUsageDateRangePresetFromStoredRange(dateRange)
+  const inferredPreset = inferUsageDateRangePresetFromStoredRange(normalized)
   if (inferredPreset) return `preset:${inferredPreset.value}`
 
-  const rollingPreset = inferRollingPresetByDuration(dateRange)
+  const rollingPreset = inferRollingPresetByDuration(normalized)
   if (rollingPreset) return `preset:${rollingPreset.value}`
 
-  const { from, to } = resolveUsageDateBounds(dateRange)
+  const { from, to } = resolveUsageDateBounds(normalized)
   return `${from.toISOString()}|${to.toISOString()}`
 }
 

@@ -15,6 +15,7 @@ import {
 import {
   getStableUsageChartDateRange,
   isRollingUsageDateRangePresetId,
+  normalizeUsageDateRangeSelection,
   resetStableUsageChartDateRange,
 } from '@/lib/usage/usage-date-range'
 import { getUsageDateRangePresetByValue } from '@/lib/usage/usage-date-range-presets'
@@ -148,10 +149,11 @@ export function useUsageChartFilters(plan?: UsageChartIntervalPlan) {
     (nextDateRange: DateRange | undefined) => {
       if (!account) return
 
-      const resolvedDateRange = nextDateRange?.from
+      const normalizedSelection = normalizeUsageDateRangeSelection(nextDateRange)
+      const resolvedDateRange = normalizedSelection?.from
         ? {
-            from: nextDateRange.from,
-            to: nextDateRange.to ?? nextDateRange.from,
+            from: normalizedSelection.from,
+            to: normalizedSelection.to ?? normalizedSelection.from,
           }
         : getStableUsageChartDateRange()
 

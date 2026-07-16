@@ -20,6 +20,14 @@ function isFullCalendarDayRange(from: Date, to: Date): boolean {
   )
 }
 
+/** DayPicker date-only selections use local midnight for both ends. */
+function isCalendarDateOnlyRange(from: Date, to: Date): boolean {
+  return (
+    from.getTime() === startOfDay(from).getTime() &&
+    to.getTime() === startOfDay(to).getTime()
+  )
+}
+
 export type UsageDateRangePreset = {
   label: string
   value: string
@@ -174,6 +182,12 @@ export function inferRollingPresetByDuration(
     return null
   }
 
+  // DayPicker midnight–midnight spans are calendar dates, not rolling hours.
+  // e.g. Jul 10 00:00 → Jul 11 00:00 is one calendar day boundary, not Last 24h.
+  if (isCalendarDateOnlyRange(range.from, range.to)) {
+    return null
+  }
+
   const durationMs = range.to.getTime() - range.from.getTime()
   const hourMs = 60 * 60 * 1000
 
@@ -248,14 +262,22 @@ export function inferUsageDateRangePresetFromStoredRange(
 ): UsageDateRangePreset | null {
   if (!range?.from || !range?.to) return null
 
-  if (isFullCalendarDayRange(range.from, range.to)) {
+  // Expand DayPicker midnight ranges before matching calendar presets.
+  const from = isCalendarDateOnlyRange(range.from, range.to)
+    ? startOfDay(range.from)
+    : range.from
+  const to = isCalendarDateOnlyRange(range.from, range.to)
+    ? endOfDay(range.to)
+    : range.to
+
+  if (isFullCalendarDayRange(from, to)) {
     const now = new Date()
 
-    if (isSameDay(range.from, range.to)) {
-      if (isSameDay(range.from, now)) {
+    if (isSameDay(from, to)) {
+      if (isSameDay(from, now)) {
         return getUsageDateRangePresetByValue('today') ?? null
       }
-      if (isSameDay(range.from, subDays(now, 1))) {
+      if (isSameDay(from, subDays(now, 1))) {
         return getUsageDateRangePresetByValue('yesterday') ?? null
       }
       return null
@@ -263,26 +285,26 @@ export function inferUsageDateRangePresetFromStoredRange(
 
     // To-date presets: require the range to end today so we do not treat an
     // older custom span that starts on a period boundary as WTD/MTD/YTD.
-    if (isSameDay(range.to, now)) {
+    if (isSameDay(to, now)) {
       if (
-        range.from.getTime() ===
+        from.getTime() ===
         startOfWeek(now, { weekStartsOn: WEEK_STARTS_ON }).getTime()
       ) {
         return getUsageDateRangePresetByValue('wtd') ?? null
       }
-      if (range.from.getTime() === startOfMonth(now).getTime()) {
+      if (from.getTime() === startOfMonth(now).getTime()) {
         return getUsageDateRangePresetByValue('mtd') ?? null
       }
     }
 
-    const daySpan = differenceInCalendarDays(range.to, range.from) + 1
+    const daySpan = differenceInCalendarDays(to, from) + 1
     if (daySpan === 7) return getUsageDateRangePresetByValue('7d') ?? null
     if (daySpan === 30) return getUsageDateRangePresetByValue('30d') ?? null
 
     return null
   }
 
-  const durationMs = range.to.getTime() - range.from.getTime()
+  const durationMs = to.getTime() - from.getTime()
   const hourMs = 60 * 60 * 1000
 
   for (const hours of [1, 6, 24]) {
