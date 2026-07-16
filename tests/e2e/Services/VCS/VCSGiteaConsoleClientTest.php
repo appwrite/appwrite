@@ -79,12 +79,19 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $this->assertExecutionOutput($functionId, 'gitea-v1');
 
+        // Connecting the repository auto-creates a deployment alongside the
+        // explicit one above, so collect every pre-push deployment; only a
+        // deployment newer than all of these can be the webhook's.
+        $knownIds = $this->listDeploymentIds($functionId);
+
         $this->writeFunction($token, $repository['name'], 'gitea-v2', 'Update function');
 
-        $webhookDeployment = $this->waitForNextDeployment($functionId, $initialDeployment['$id']);
-        $this->assertNotSame($initialDeployment['$id'], $webhookDeployment['$id']);
+        $webhookDeployment = $this->waitForNextDeployment($functionId, $knownIds);
+        $this->assertNotContains($webhookDeployment['$id'], $knownIds);
 
-        $this->assertExecutionOutput($functionId, 'gitea-v2');
+        // The deployment turns 'ready' just before the worker points the
+        // function at it, so give activation a moment to land.
+        $this->assertEventually(fn () => $this->assertExecutionOutput($functionId, 'gitea-v2'), 30000, 1000);
     }
 
     private function createGiteaToken(): string
@@ -190,11 +197,23 @@ final class VCSGiteaConsoleClientTest extends Scope
         return $deployment;
     }
 
-    private function waitForNextDeployment(string $functionId, string $previousDeploymentId): array
+    private function listDeploymentIds(string $functionId): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code'], \json_encode($response['body'], JSON_PRETTY_PRINT));
+
+        return \array_column($response['body']['deployments'] ?? [], '$id');
+    }
+
+    private function waitForNextDeployment(string $functionId, array $knownDeploymentIds): array
     {
         $deployment = [];
 
-        $this->assertEventually(function () use ($functionId, $previousDeploymentId, &$deployment) {
+        $this->assertEventually(function () use ($functionId, $knownDeploymentIds, &$deployment) {
             $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -203,7 +222,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             $this->assertEquals(200, $response['headers']['status-code'], \json_encode($response['body'], JSON_PRETTY_PRINT));
 
             foreach ($response['body']['deployments'] ?? [] as $candidate) {
-                if ($candidate['$id'] === $previousDeploymentId) {
+                if (\in_array($candidate['$id'], $knownDeploymentIds, true)) {
                     continue;
                 }
 
