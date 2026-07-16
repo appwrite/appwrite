@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use Appwrite\Tests\Async\Exceptions\Critical;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -26,28 +27,41 @@ trait RealtimeBase
         int $timeoutMs = 60000,
         int $pollMs = 50
     ): array {
-        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        $matched = [];
         $lastMessage = [];
 
-        while (\microtime(true) < $deadline) {
-            try {
-                $message = \json_decode($client->receive(), true);
-            } catch (TimeoutException) {
-                \usleep($pollMs * 1000);
-                continue;
-            }
+        try {
+            $this->assertEventually(function () use ($client, $match, &$matched, &$lastMessage): void {
+                try {
+                    $frame = $client->receive();
+                } catch (TimeoutException) {
+                    // No frame arrived within the read timeout yet; keep polling.
+                    throw new \Exception('No websocket frame received within read timeout.');
+                } catch (ConnectionException $e) {
+                    // Server closed or reset the socket (e.g. idle-timeout eviction).
+                    // Retrying can never recover, so fail fast with context instead of
+                    // letting a raw stack trace bubble up.
+                    throw new Critical('WebSocket connection closed while waiting for expected frame: ' . $e->getMessage());
+                }
 
-            if (!\is_array($message)) {
-                continue;
-            }
+                $message = \json_decode($frame, true);
+                if (\is_array($message)) {
+                    $lastMessage = $message;
+                }
 
-            $lastMessage = $message;
-            if ($match($message)) {
-                return $message;
-            }
+                if (!\is_array($message) || !$match($message)) {
+                    throw new \Exception('Websocket frame did not match expected event.');
+                }
+
+                $matched = $message;
+            }, $timeoutMs, $pollMs);
+        } catch (Critical $e) {
+            $this->fail($e->getMessage() . ' Last frame: ' . \json_encode($lastMessage));
+        } catch (\Exception) {
+            $this->fail('Timed out waiting for expected websocket frame. Last frame: ' . \json_encode($lastMessage));
         }
 
-        $this->fail('Timed out waiting for expected websocket frame. Last frame: ' . \json_encode($lastMessage));
+        return $matched;
     }
 
     private function getWebsocket(
