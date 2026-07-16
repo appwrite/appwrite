@@ -7,7 +7,6 @@ namespace Tests\Unit\Functions;
 use Appwrite\Platform\Modules\Functions\Workers\Builds;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -18,29 +17,6 @@ final class BuildsTest extends TestCase
     public function setUp(): void
     {
         $this->builds = new Builds();
-    }
-
-    public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
-    {
-        Config::setParam('frameworks', [
-            'astro' => [
-                'envCommand' => 'cp .env.example .env',
-                'bundleCommand' => 'npm run bundle',
-            ],
-        ]);
-
-        $resource = new Document([
-            '$collection' => 'sites',
-            'framework' => 'astro',
-        ]);
-        $deployment = new Document([
-            'buildCommands' => 'npm run build',
-        ]);
-
-        $this->assertSame(
-            'cp .env.example .env && npm run build && npm run bundle',
-            $this->callBuilds('getCommand', $resource, $deployment)
-        );
     }
 
     public function testSiteBuildCommandAppendsDetectionFileListing(): void
@@ -72,22 +48,6 @@ final class BuildsTest extends TestCase
 
         $this->assertSame("before\n\nafter\n", $result['logs']);
         $this->assertSame("\n./index.html\n./server/entry.mjs\n", $result['detectionLogs']);
-    }
-
-    public function testDetectSiteRenderingFindsStaticFallbackFile(): void
-    {
-        $detection = $this->callBuilds('detectSiteRendering', 'other', "./main.html\n");
-
-        $this->assertSame('static', $detection->getName());
-        $this->assertSame('main.html', $detection->getFallbackFile());
-    }
-
-    public function testDetectSiteRenderingFindsAstroSSR(): void
-    {
-        $detection = $this->callBuilds('detectSiteRendering', 'astro', "./client/index.html\n./server/entry.mjs\n");
-
-        $this->assertSame('ssr', $detection->getName());
-        $this->assertNull($detection->getFallbackFile());
     }
 
     public function testDisconnectVcsClearsAllFieldsAndDeletesRepository(): void

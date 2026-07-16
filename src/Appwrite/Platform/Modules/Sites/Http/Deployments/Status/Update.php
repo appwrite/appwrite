@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Status;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Executor\Executor;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -56,9 +56,8 @@ class Update extends Action
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('queueForEvents')
-            ->inject('executor')
+            ->inject('deployments')
             ->callback($this->action(...));
     }
 
@@ -67,9 +66,8 @@ class Update extends Action
         string $deploymentId,
         Response $response,
         Database $dbForProject,
-        Document $project,
         Event $queueForEvents,
-        Executor $executor
+        Backend $deployments
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -92,11 +90,7 @@ class Update extends Action
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
         try {
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                'buildEndedAt' => DateTime::now(),
-                'buildDuration' => $duration,
-                'status' => 'canceled'
-            ]));
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
         } catch (TransactionException) {
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
@@ -109,18 +103,14 @@ class Update extends Action
             }
 
             if ($deployment->getAttribute('status') !== 'canceled') {
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                    'buildEndedAt' => DateTime::now(),
-                    'buildDuration' => $duration,
-                    'status' => 'canceled'
-                ]));
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration)));
             }
         }
 
+        // Best-effort cleanup — the deployment is already marked 'canceled'.
         try {
-            $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+            $deployments->cancel($deploymentId);
         } catch (\Throwable) {
-            // Best-effort cleanup — deployment status is already 'canceled'
         }
 
         $queueForEvents
@@ -128,5 +118,29 @@ class Update extends Action
             ->setParam('deploymentId', $deployment->getId());
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+    }
+
+    /**
+     * The sparse update marking a build canceled. Jobs-backed builds (identified
+     * by a buildPath set at submission) have no cancel worker to write the
+     * closing log line the executor's Builds worker adds, so it is appended here;
+     * executor deployments get it from their worker.
+     *
+     * @return array<string, mixed>
+     */
+    private function cancel(Document $deployment, int $duration): array
+    {
+        $update = [
+            'buildEndedAt' => DateTime::now(),
+            'buildDuration' => $duration,
+            'status' => 'canceled',
+        ];
+
+        if ($deployment->getAttribute('buildPath', '') !== '') {
+            $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+            $update['buildLogs'] = \substr($logs, -APP_LOG_LENGTH_LIMIT);
+        }
+
+        return $update;
     }
 }

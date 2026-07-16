@@ -8,6 +8,7 @@ use Appwrite\Deployment\Token;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Jobs;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
+use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\StatArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
@@ -31,9 +32,10 @@ use Utopia\System\System;
  * upload/download artifacts instead of a shared volume) override storage()
  * — everything else about the payload stays the same.
  *
- * Covers function deployments whose source is a tarball: manual upload,
- * duplicate/rebuild, and templates (public GitHub tarball resolved from a
- * git reference).
+ * Covers function and site deployments whose source is a tarball: manual
+ * upload, duplicate/rebuild, and templates (public GitHub tarball resolved
+ * from a git reference). Site builds also emit a JSON build manifest, read
+ * back post-job as an artifact callback for adapter detection.
  */
 readonly class Orchestrator extends Backend
 {
@@ -107,20 +109,26 @@ readonly class Orchestrator extends Backend
      */
     protected static function payload(
         Document $project,
-        Document $function,
+        Document $resource,
         Document $deployment,
         array $platform,
         ?array $source = null,
     ): array {
         $projectId = $project->getId();
         $deploymentId = $deployment->getId();
+        $isSite = $resource->getCollection() === 'sites';
         $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
-        $version = $function->getAttribute('version', 'v2');
-        $runtime = self::runtime($function, $version);
-        $spec = Config::getParam('specifications')[$function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $runtime = self::runtime($resource, self::version($resource));
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
         $cpus = (float) ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT);
-        $memory = \max((int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT), 1024);
+
+        // Some runtimes/frameworks can't compile with less memory than this.
+        $minMemory = $isSite ? 2048 : 1024;
+        if (\in_array($resource->getAttribute('framework', ''), ['analog', 'tanstack-start'], true)) {
+            $minMemory = 4096;
+        }
+        $memory = \max((int) ($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT), $minMemory);
 
         // The jobs-service (and the containers it spawns) reach Appwrite over
         // the internal Docker network, so the presigned + callback URLs use an
@@ -136,7 +144,13 @@ readonly class Orchestrator extends Backend
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
         if ($source !== null) {
+            // Normalize a "./"-style root directory — the unarchive matches
+            // subdir against literal tarball paths, so "./x" would match nothing.
             $subdir = \trim($source['subdir'] ?? '', '/');
+            if (\str_starts_with($subdir, './')) {
+                $subdir = \substr($subdir, 2);
+            }
+            $subdir = $subdir === '.' ? '' : $subdir;
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz'),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null),
@@ -151,7 +165,7 @@ readonly class Orchestrator extends Backend
             // the sidecar. Bound to this deployment + direction; valid for the whole
             // build window plus transfer slack.
             $ttl = $timeout + 300;
-            $base = "{$endpoint}/v1/functions/{$function->getId()}/deployments/{$deploymentId}";
+            $base = "{$endpoint}/v1/{$resource->getCollection()}/{$resource->getId()}/deployments/{$deploymentId}";
             $sourceUrl = "{$base}/download?" . \http_build_query([
                 'type' => Token::TYPE_SOURCE,
                 'project' => $projectId,
@@ -166,13 +180,26 @@ readonly class Orchestrator extends Backend
         // Where output + cache land is a swappable strategy (see storage()) —
         // the default mounts the shared builds volume; nothing else here cares
         // which strategy is active.
-        $output = static::storage($project, $function, $deployment);
+        $output = static::storage($project, $resource, $deployment);
 
-        $command = $deployment->getAttribute('buildCommands', '');
-        $env = self::variables($project, $function, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
+        // Site builds write a JSON build manifest into the workspace, read
+        // back post-job so the Jobs worker can run adapter detection.
+        $manifestArtifacts = $isSite ? [new ReadArtifact(id: 'manifest', in: 'manifest.json', depends: 'job')] : [];
+
+        $command = self::command($resource, $deployment);
+        $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
             'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
-        ] + $output['environment'];
+        ] + ($isSite ? ['OPEN_RUNTIMES_BUILD_MANIFEST' => '/mnt/code/manifest.json'] : []) + $output['environment'];
+
+        // Two terminal callbacks: exit carries the code (fires before
+        // post-job artifacts), complete confirms artifact delivery — the
+        // worker joins them, so readiness holds on any storage strategy.
+        // Artifact callbacks carry the source-size stat and the site manifest.
+        $events = [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete];
+        if ($source !== null || $isSite) {
+            $events[] = CallbackEvent::Artifact;
+        }
 
         return [
             'id' => static::id($projectId, $deploymentId),
@@ -185,24 +212,16 @@ readonly class Orchestrator extends Backend
             'meta' => [
                 'projectId' => $projectId,
                 'deploymentId' => $deploymentId,
-                'resourceId' => $function->getId(),
-                'resourceType' => 'functions',
+                'resourceId' => $resource->getId(),
+                'resourceType' => $resource->getCollection(),
             ],
             // The orchestrator expects environment as a string->string map.
             'environment' => \array_map('strval', $env),
-            'artifacts' => [...$sourceArtifacts, ...$output['artifacts']],
+            'artifacts' => [...$sourceArtifacts, ...$manifestArtifacts, ...$output['artifacts']],
             'volumes' => $output['volumes'],
             'callback' => new Callback(
                 url: "{$endpoint}/v1/jobs/event?" . \http_build_query(['project' => $projectId]),
-                // Two terminal callbacks: exit carries the code (fires on
-                // command exit, before post-job artifacts), complete confirms
-                // artifact delivery (carries only jobId + meta) — the worker
-                // joins them, so readiness holds on any storage strategy.
-                // Artifact callbacks only carry the source-size stat, which
-                // exists only for remote-source builds (templates / VCS).
-                events: $source !== null
-                    ? [CallbackEvent::Log, CallbackEvent::Artifact, CallbackEvent::Exit, CallbackEvent::Complete]
-                    : [CallbackEvent::Log, CallbackEvent::Exit, CallbackEvent::Complete],
+                events: $events,
                 key: System::getEnv('_APP_JOBS_SECRET', ''),
             ),
         ];
@@ -251,12 +270,12 @@ readonly class Orchestrator extends Backend
     }
 
     /**
-     * Deterministic build-cache key, shared across a function's deployments so
+     * Deterministic build-cache key, shared across a resource's deployments so
      * package-manager caches (npm/yarn/pnpm) survive between builds.
      */
-    public static function cacheKey(string $projectId, string $functionId, string $image): string
+    public static function cacheKey(string $projectId, string $resourceId, string $image): string
     {
-        return \substr(\hash('sha256', "{$projectId}:{$functionId}:{$image}"), 0, 48);
+        return \substr(\hash('sha256', "{$projectId}:{$resourceId}:{$image}"), 0, 48);
     }
 
     public static function cachePath(string $projectId, string $cacheKey): string
@@ -284,7 +303,7 @@ readonly class Orchestrator extends Backend
     {
         $projectId = $project->getId();
         $deploymentId = $deployment->getId();
-        $runtime = self::runtime($resource, $resource->getAttribute('version', 'v2'));
+        $runtime = self::runtime($resource, self::version($resource));
         $cacheKey = static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? '');
 
         return [
@@ -302,12 +321,17 @@ readonly class Orchestrator extends Backend
         ];
     }
 
-    protected static function runtime(Document $function, string $version): array
+    protected static function version(Document $resource): string
     {
-        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $runtime = $runtimes[$function->getAttribute('runtime')] ?? null;
+        return $resource->getCollection() === 'sites' ? 'v5' : $resource->getAttribute('version', 'v2');
+    }
+
+    protected static function runtime(Document $resource, string $version): array
+    {
+        $key = $resource->getAttribute($resource->getCollection() === 'sites' ? 'buildRuntime' : 'runtime');
+        $runtime = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', [])[$key] ?? null;
         if ($runtime === null) {
-            throw new \Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new \Exception('Runtime "' . $key . '" is not supported');
         }
 
         return $runtime;
@@ -315,7 +339,7 @@ readonly class Orchestrator extends Backend
 
     private static function variables(
         Document $project,
-        Document $function,
+        Document $resource,
         Document $deployment,
         array $runtime,
         float $cpus,
@@ -325,35 +349,37 @@ readonly class Orchestrator extends Backend
     ): array {
         $vars = [];
 
-        foreach ($function->getAttribute('varsProject', []) as $var) {
+        foreach ($resource->getAttribute('varsProject', []) as $var) {
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
-        foreach ($function->getAttribute('vars', []) as $var) {
+        foreach ($resource->getAttribute('vars', []) as $var) {
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
-            'scopes' => $function->getAttribute('scopes', []),
+            'scopes' => $resource->getAttribute('scopes', []),
         ]);
+
+        $prefix = $resource->getCollection() === 'sites' ? 'SITE' : 'FUNCTION';
 
         return \array_merge($vars, [
             // Consumed by the open-runtimes build helper (build.sh).
             'OPEN_RUNTIMES_ENTRYPOINT' => $deployment->getAttribute('entrypoint', ''),
-            'OPEN_RUNTIMES_OUTPUT_DIRECTORY' => $deployment->getAttribute('buildOutput', '') ?: $function->getAttribute('outputDirectory', ''),
+            'OPEN_RUNTIMES_OUTPUT_DIRECTORY' => $deployment->getAttribute('buildOutput', '') ?: $resource->getAttribute('outputDirectory', ''),
             'APPWRITE_VERSION' => APP_VERSION_STABLE,
             'APPWRITE_REGION' => $project->getAttribute('region'),
             'APPWRITE_DEPLOYMENT_TYPE' => $deployment->getAttribute('type', ''),
-            'APPWRITE_FUNCTION_API_ENDPOINT' => "{$endpoint}/v1",
-            'APPWRITE_FUNCTION_API_KEY' => API_KEY_EPHEMERAL . '_' . $apiKey,
-            'APPWRITE_FUNCTION_ID' => $function->getId(),
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_CPUS' => $cpus,
-            'APPWRITE_FUNCTION_MEMORY' => $memory,
+            "APPWRITE_{$prefix}_API_ENDPOINT" => "{$endpoint}/v1",
+            "APPWRITE_{$prefix}_API_KEY" => API_KEY_EPHEMERAL . '_' . $apiKey,
+            "APPWRITE_{$prefix}_ID" => $resource->getId(),
+            "APPWRITE_{$prefix}_NAME" => $resource->getAttribute('name'),
+            "APPWRITE_{$prefix}_DEPLOYMENT" => $deployment->getId(),
+            "APPWRITE_{$prefix}_PROJECT_ID" => $project->getId(),
+            "APPWRITE_{$prefix}_RUNTIME_NAME" => $runtime['name'] ?? '',
+            "APPWRITE_{$prefix}_RUNTIME_VERSION" => $runtime['version'] ?? '',
+            "APPWRITE_{$prefix}_CPUS" => $cpus,
+            "APPWRITE_{$prefix}_MEMORY" => $memory,
             'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
         ]);
     }

@@ -1308,6 +1308,11 @@ final class SitesCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 120000, 500);
 
+        // Adapter detection pinned the site on its first successful build.
+        $site = $this->getSite($siteId);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('main.html', $site['body']['fallbackFile']);
+
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'

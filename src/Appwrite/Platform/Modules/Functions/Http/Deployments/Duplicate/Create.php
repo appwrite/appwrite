@@ -134,6 +134,9 @@ class Create extends Action
             'buildSize' => null,
             'buildPath' => '',
             'buildLogs' => '',
+            // Not inherited: a redeploy always goes live, and the source's own
+            // flag is unset by deactivateOthers() once anything newer builds.
+            'activate' => true,
         ]);
 
         if ($hasSource) {

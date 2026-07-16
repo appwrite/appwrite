@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Deployment\Backend;
+use Appwrite\Deployment\Detection;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -12,7 +13,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -29,14 +30,11 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
-use Utopia\Detector\Detection\Rendering\XStatic;
-use Utopia\Detector\Detector\Rendering;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -529,8 +527,7 @@ class Builds extends Action
                 // artifact system has no primitive for). With the commit pushed,
                 // hand the build to the jobs-service like any other VCS commit,
                 // via the same Deployments service the HTTP endpoints use.
-                if ($resource->getCollection() === 'functions'
-                    && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
+                if (System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator') {
                     $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
                     $deployments->createFromUrl(
                         $resource,
@@ -745,10 +742,7 @@ class Builds extends Action
                     break;
             }
 
-            $command = $this->getCommand(
-                resource: $resource,
-                deployment: $deployment
-            );
+            $command = Backend::command($resource, $deployment);
 
             $cacheKey = $this->getNodeModulesCacheKey($project, $resource, $runtime, $version, $command);
 
@@ -960,7 +954,7 @@ class Builds extends Action
 
             $adapter = null;
             if ($resource->getCollection() === 'sites' && ! empty($detectionLogs)) {
-                $detection = $this->detectSiteRendering($resource->getAttribute('framework', ''), $detectionLogs);
+                $detection = Detection::rendering($resource->getAttribute('framework', ''), \explode("\n", $detectionLogs));
 
                 $adapter = $resource->getAttribute('adapter', '');
                 if (empty($adapter)) {
@@ -1108,63 +1102,9 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            if ($resource->getCollection() === 'sites') {
-                // VCS branch
-                $branchName = $deployment->getAttribute('providerBranch');
-                if (! empty($branchName)) {
-                    $domain = (new BranchDomainFilter())->apply([
-                        'branch' => $branchName,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $platform['sitesDomain'],
-                    ]);
-                    $ruleId = md5($domain);
-
-                    try {
-                        $dbForPlatform->createDocument('rules', new Document([
-                            '$id' => $ruleId,
-                            'projectId' => $project->getId(),
-                            'projectInternalId' => $project->getSequence(),
-                            'domain' => $domain,
-                            'type' => 'deployment',
-                            'trigger' => 'deployment',
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                            'deploymentResourceType' => 'site',
-                            'deploymentResourceId' => $resource->getId(),
-                            'deploymentResourceInternalId' => $resource->getSequence(),
-                            'deploymentVcsProviderBranch' => $branchName,
-                            'status' => 'verified',
-                            'certificateId' => '',
-                            'search' => implode(' ', [$ruleId, $domain]),
-                            'owner' => 'Appwrite',
-                            'region' => $project->getAttribute('region'),
-                        ]));
-                    } catch (Duplicate $err) {
-                        $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
-                    }
-
-                    $queries = [
-                        Query::equal('projectInternalId', [$project->getSequence()]),
-                        Query::equal('type', ['deployment']),
-                        Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
-                        Query::equal('deploymentResourceType', ['site']),
-                        Query::equal('deploymentVcsProviderBranch', [$branchName]),
-                        Query::equal('trigger', ['manual']),
-                    ];
-
-                    $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
-                        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                            'deploymentId' => $deployment->getId(),
-                            'deploymentInternalId' => $deployment->getSequence(),
-                        ]));
-                    }, $queries);
-
-                    Span::add('build.preview_rule_created', true);
-                }
+            if ($resource->getCollection() === 'sites' && ! empty($deployment->getAttribute('providerBranch'))) {
+                Base::activateBranchPreviewRule($project, $resource, $deployment, $dbForPlatform, $platform['sitesDomain']);
+                Span::add('build.preview_rule_created', true);
             }
 
             $queueForRealtime
@@ -1331,35 +1271,6 @@ class Builds extends Action
         };
     }
 
-    protected function getCommand(Document $resource, Document $deployment): string
-    {
-        if ($resource->getCollection() === 'functions') {
-            return $deployment->getAttribute('buildCommands', '');
-        } elseif ($resource->getCollection() === 'sites') {
-            $commands = [];
-
-            $frameworks = Config::getParam('frameworks', []);
-            $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-
-            $envCommand = '';
-            $bundleCommand = '';
-            if (! is_null($framework)) {
-                $envCommand = $framework['envCommand'] ?? '';
-                $bundleCommand = $framework['bundleCommand'] ?? '';
-            }
-
-            $commands[] = $envCommand;
-            $commands[] = $deployment->getAttribute('buildCommands', '');
-            $commands[] = $bundleCommand;
-
-            $commands = array_filter($commands, fn ($command) => ! empty($command));
-
-            return implode(' && ', $commands);
-        }
-
-        return '';
-    }
-
     protected function getNodeModulesCacheKey(Document $project, Document $resource, array $runtime, string $version, string $command): string
     {
         if ($version !== 'v5' || $command === '' || $command === '0') {
@@ -1420,24 +1331,6 @@ class Builds extends Action
             'logs' => "{$logsBefore}{$logsAfter}",
             'detectionLogs' => $detectionLogs,
         ];
-    }
-
-    protected function detectSiteRendering(string $framework, string $detectionLogs): object
-    {
-        $files = \explode("\n", $detectionLogs);
-        $files = \array_filter($files);
-        $files = \array_map(\trim(...), $files);
-        $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
-
-        $detector = new Rendering($framework);
-        foreach ($files as $file) {
-            $detector->addInput($file);
-        }
-
-        return $detector
-            ->addOption(new SSR())
-            ->addOption(new XStatic())
-            ->detect();
     }
 
     /**

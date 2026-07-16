@@ -196,18 +196,11 @@ return function (Container $context): void {
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
-    $context->set('deployments', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Database $dbForProject, Document $project, Executor $executor, array $platform, Request $request) {
-        // The jobs-service orchestrator backend only understands functions
-        // (its payload builder reads function-shaped attributes like
-        // `runtime`); sites always build on the executor. Transitional:
-        // once sites build on the jobs-service too, this URI check and the
-        // nullable Backend params in the VCS trait can both go.
-        $isSite = \str_starts_with($request->getURI(), '/v1/sites');
-
-        return !$isSite && System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
+    $context->set('deployments', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Database $dbForProject, Document $project, Executor $executor, array $platform) {
+        return System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
             ? new Orchestrator($jobs, $dbForProject, $project, $platform)
             : new ExecutorBackend($publisherForBuilds, $dbForProject, $project, $executor, $platform);
-    }, ['publisherForBuilds', 'jobs', 'dbForProject', 'project', 'executor', 'platform', 'request']);
+    }, ['publisherForBuilds', 'jobs', 'dbForProject', 'project', 'executor', 'platform']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
         $pools,
