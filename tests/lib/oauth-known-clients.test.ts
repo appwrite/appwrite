@@ -25,6 +25,7 @@ function makeApp(overrides: Partial<Models.App>): Models.App {
     enabled: true,
     type: 'public',
     deviceFlow: false,
+    labels: [],
     teamId: '',
     userId: '',
     secrets: [],

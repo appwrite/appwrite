@@ -16,7 +16,11 @@ import {
   GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
-import { listSearchSchema, parseListSearch } from '@/lib/table-filters'
+import {
+  listSearchSchema,
+  omitDatabaseTypeFilters,
+  parseListSearch,
+} from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
@@ -40,11 +44,17 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
         search,
         page,
         limit,
+        filterMap,
         filterQueries,
       } = parseListSearch(routeSearch, {
         page: DEFAULT_PAGE,
         limit: GRID_DEFAULT_PAGE_SIZE,
       })
+      const tablesDbFilterMap = omitDatabaseTypeFilters(filterMap)
+      const tablesDbFilterQueries =
+        tablesDbFilterMap.size > 0
+          ? Array.from(tablesDbFilterMap.values())
+          : undefined
 
       const projectData = await queryClient.ensureQueryData(
         projectQueryOptions(projectId),
@@ -67,7 +77,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             page - 1,
             limit,
             search ?? undefined,
-            filterQueries,
+            tablesDbFilterQueries,
           ),
         ),
         // Merged total across product APIs for plan limit check
@@ -107,13 +117,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
               dedicatedDatabasesQueryOptions(projectId),
             )
           : Promise.resolve(),
-        // Unified All Databases list (console.listDatabases)
+        // Unified All Databases list (console.listDatabases) — includes type filters
         profileFeatures.dedicatedDbsSupport
           ? queryClient.ensureQueryData(
               consoleDatabasesQueryOptions(
                 projectId,
                 0,
                 GRID_DEFAULT_PAGE_SIZE,
+                search ?? undefined,
+                filterQueries,
               ),
             )
           : Promise.resolve(),

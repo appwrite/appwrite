@@ -116,10 +116,15 @@ import {
   buildListSearchParams,
   parseListSearch,
   MIN_SEARCH_LENGTH,
-  databasesFilterColumns,
+  getDatabasesFilterColumns,
+  getDatabaseTypeFilterOptions,
+  getSelectedDatabaseTypesFromFilterMap,
+  omitDatabaseTypeFilters,
+  setSelectedDatabaseTypesInFilterMap,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { DatabaseTypeFilterDropdown } from './_components/DatabaseTypeFilterDropdown'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 
 import {
@@ -198,6 +203,34 @@ export function View() {
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
   const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+  const databasesFilterColumns = useMemo(
+    () => getDatabasesFilterColumns(features),
+    [
+      features.dedicatedDbsSupport,
+      features.dedicatedDbsDocumentsDB,
+      features.dedicatedDbsVectorsDB,
+    ],
+  )
+  const databaseTypeFilterOptions = useMemo(
+    () => getDatabaseTypeFilterOptions(features),
+    [
+      features.dedicatedDbsDocumentsDB,
+      features.dedicatedDbsVectorsDB,
+    ],
+  )
+  const selectedDatabaseTypes = useMemo(
+    () => getSelectedDatabaseTypesFromFilterMap(filterMap),
+    [filterQueryString],
+  )
+  // Product TablesDB list has no `type` attribute; keep type filters for All Databases only.
+  const tablesDbFilterMap = useMemo(
+    () => omitDatabaseTypeFilters(filterMap),
+    [filterQueryString],
+  )
+  const tablesDbFilterQueries =
+    tablesDbFilterMap.size > 0
+      ? Array.from(tablesDbFilterMap.values())
+      : undefined
 
   const [searchInput, setSearchInput] = useState('')
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -211,7 +244,9 @@ export function View() {
     useState('')
   const displayedFilterQueries = useMemo(() => {
     if (!displayedFilterQueryString) return undefined
-    const map = queryParamToMap(displayedFilterQueryString)
+    const map = omitDatabaseTypeFilters(
+      queryParamToMap(displayedFilterQueryString),
+    )
     return map.size > 0 ? Array.from(map.values()) : undefined
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
@@ -347,7 +382,7 @@ export function View() {
     requestedPage - 1,
     urlLimit,
     urlSearch ?? undefined,
-    filterQueries,
+    tablesDbFilterQueries,
   )
 
   const {
@@ -365,6 +400,30 @@ export function View() {
     displayedSearch ?? undefined,
     displayedFilterQueries,
   )
+
+  const applyDatabaseTypesFilter = (
+    types: ApiDatabaseType[],
+  ) => {
+    const newMap = setSelectedDatabaseTypesInFilterMap(filterMap, types)
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        if (newMap.size === 0) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
 
   const databasesListErrorMessage = displayedDatabasesError
     ? getErrorMessage(displayedDatabasesError)
@@ -454,8 +513,21 @@ export function View() {
     queryStr: string,
     replaceKey?: CompactFilterKey,
   ) => {
-    const newMap = new Map(filterMap)
-    if (replaceKey) newMap.delete(replaceKey)
+    // Type filters are single-valued in the map (droplist + Filters share one key).
+    const newMap =
+      compactKey.c === 'type'
+        ? omitDatabaseTypeFilters(filterMap)
+        : new Map(filterMap)
+    if (replaceKey) {
+      const existing = [...newMap.keys()].find(
+        (key) =>
+          key.c === replaceKey.c &&
+          key.o === replaceKey.o &&
+          key.v === replaceKey.v,
+      )
+      if (existing) newMap.delete(existing)
+      else newMap.delete(replaceKey)
+    }
     newMap.set(compactKey, queryStr)
     navigate({
       to: '/projects/$projectId/databases/',
@@ -692,36 +764,46 @@ export function View() {
         }
         showFilters={true}
         filterTrigger={
-          <FiltersPopover
-            open={filtersOpen}
-            onOpenChange={setFiltersOpen}
-            columns={databasesFilterColumns}
-            filterMap={filterMap}
-            onRemoveFilter={removeFilter}
-            onClearAll={clearAllFilters}
-            onApplyFilter={applyFilter}
-            resourceLabel="databases"
-            filterScope="databases"
-            onApplyQuery={(queryParam) => {
-              navigate({
-                to: '/projects/$projectId/databases/',
-                params: { projectId: projectId! },
-                search: (prev: Record<string, unknown>) => ({
-                  ...prev,
-                  ...buildListSearchParams({
-                    search: urlSearch,
-                    query: queryParam ?? undefined,
-                    page: 1,
-                    limit: urlLimit,
+          <div className="flex shrink-0 items-center gap-2">
+            {useCreateDatabaseWizard ? (
+              <DatabaseTypeFilterDropdown
+                options={databaseTypeFilterOptions}
+                selectedTypes={selectedDatabaseTypes}
+                onSelectedTypesChange={applyDatabaseTypesFilter}
+              />
+            ) : null}
+            <FiltersPopover
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              columns={databasesFilterColumns}
+              filterMap={filterMap}
+              onRemoveFilter={removeFilter}
+              onClearAll={clearAllFilters}
+              onApplyFilter={applyFilter}
+              resourceLabel="databases"
+              filterScope="databases"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/databases/',
+                  params: { projectId: projectId! },
+                  search: (prev: Record<string, unknown>) => ({
+                    ...prev,
+                    ...buildListSearchParams({
+                      search: urlSearch,
+                      query: queryParam ?? undefined,
+                      page: 1,
+                      limit: urlLimit,
+                    }),
                   }),
-                }),
-                replace: true,
-              })
-            }}
-            teamId={project?.teamId}
-          />
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
+            />
+          </div>
         }
         fullWidthBorder
+        fullWidth
         rightContent={<ViewToggle />}
         contentAfterBorder={
           // Data is prefetched in route loader, only render if data exists
@@ -738,15 +820,20 @@ export function View() {
               })}
               resourceName="databases"
               orgId={project?.teamId}
-              fullWidth={false}
+              fullWidth
             />
           ) : undefined
         }
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="w-full flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {features.dedicatedDbsSupport && projectId ? (
-          <AllDatabasesSection projectId={projectId} viewMode={viewMode} />
+          <AllDatabasesSection
+            projectId={projectId}
+            viewMode={viewMode}
+            search={urlSearch ?? undefined}
+            filterQueries={filterQueries}
+          />
         ) : null}
 
         <div className="mb-4">

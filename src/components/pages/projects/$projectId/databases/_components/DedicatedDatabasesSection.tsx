@@ -193,6 +193,11 @@ function dedicatedStatusVariant(
     case 'provisioning':
     case 'restoring':
     case 'scaling':
+    case 'upgrading':
+    case 'migrating':
+    case 'pausing':
+    case 'resuming':
+    case 'deleting':
       return 'info'
     case 'inactive':
     case 'paused':
@@ -239,6 +244,13 @@ function DedicatedDatabaseCard({
   )
   const status = dedicatedStatusVariant(db.status)
   const statusLabel = localizeResourceStatusLabel(db.status, t)
+  const connections = mockDatabaseConnections(
+    db.$id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0),
+  )
+  const connectionsLabel =
+    connections === 1
+      ? `1 ${t('connection')}`
+      : `${connections.toLocaleString()} ${t('connections')}`
 
   const card = (
     <div
@@ -290,11 +302,8 @@ function DedicatedDatabaseCard({
               </span>
             </span>
           ) : null}
-          <span className="truncate">
-            <span className="text-muted-foreground/80">{t('Tier')}</span>{' '}
-            <span className="font-medium text-foreground">
-              {db.specification || t('Not set')}
-            </span>
+          <span className="truncate text-muted-foreground">
+            {db.specification || t('Not set')}
           </span>
           <span className="truncate">
             <span className="text-muted-foreground/80">{t('Replicas')}</span>{' '}
@@ -302,13 +311,8 @@ function DedicatedDatabaseCard({
               {db.replicas > 0 ? db.replicas : t('None')}
             </span>
           </span>
-          <span className="truncate">
-            <span className="text-muted-foreground/80">{t('Connections')}</span>{' '}
-            <span className="font-medium tabular-nums text-foreground">
-              {mockDatabaseConnections(
-                db.$id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0),
-              )}
-            </span>
+          <span className="truncate tabular-nums text-muted-foreground">
+            {connectionsLabel}
           </span>
         </div>
       </div>

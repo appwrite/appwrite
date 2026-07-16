@@ -46,7 +46,10 @@ function getDefaultStorageUsageDateRange(): DateRange {
   }
 }
 import { PostgresReplicationSyncModePicker } from './PostgresReplicationSyncModePicker'
-import { PostgresHaClusterDiagram } from './PostgresHaClusterDiagram'
+import {
+  DatabaseClusterPreview,
+  clusterNodeStatusesFromDatabaseStatus,
+} from '../../_components/DatabaseClusterPreview'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
 
 function getStorageUsageTone(
@@ -205,7 +208,22 @@ export function PostgresDatabaseReplicasCard({
           </div>
         ) : null}
 
-        <PostgresHaClusterDiagram replicaCount={replicaCount} />
+        <div className="space-y-3">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('Cluster topology')}
+          </p>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <DatabaseClusterPreview
+              replicaCount={replicaCount}
+              nodeStatuses={clusterNodeStatusesFromDatabaseStatus(
+                database.status,
+                replicaCount,
+              )}
+              withSectionDivider={false}
+              interactive
+            />
+          </div>
+        </div>
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button

@@ -95,7 +95,7 @@ export function DatabaseOperationsChartPreview({
         className="flex min-h-0 min-w-0 flex-col"
         style={{ height: DATABASE_CLUSTER_PREVIEW_HEIGHT }}
       >
-        <div className="shrink-0 px-4 pt-2.5 pb-3">
+        <div className="shrink-0 px-4 pt-2.5 pb-16">
           <div className="flex h-5 min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-[12px] font-medium leading-none text-muted-foreground">

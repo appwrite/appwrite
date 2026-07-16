@@ -1,13 +1,31 @@
-import { useMemo } from 'react'
-import { Database } from 'lucide-react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type KeyboardEvent,
+} from 'react'
+import { Database, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { SchemaVisualizerRelationshipEdges } from '@/components/global/shared/SchemaVisualizerRelationshipEdges'
 import type { SchemaVisualizerRelationshipPath } from '@/lib/schema-visualizer-relationship-paths'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  useViewportPanZoom,
+  VIEWPORT_PAN_ZOOM_MAX,
+} from '@/lib/hooks/useViewportPanZoom'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
 /** Mid-card cluster area; taller so node headers + live metric placeholders stay readable. */
 export const DATABASE_CLUSTER_PREVIEW_HEIGHT = 200
+/** Interactive settings viewport (replication HA diagram). */
+export const DATABASE_CLUSTER_INTERACTIVE_HEIGHT = 280
 /** Approximate full-bleed card inner width (no side padding on the diagram). */
 const PREVIEW_FIT_WIDTH = 340
 
@@ -335,8 +353,33 @@ function mockNodeMetrics(nodeIndex: number): {
 
 /** Mock total connections for a cluster card footer until live metrics are wired. */
 export function mockDatabaseConnections(seed = 0): number {
-  const mocks = [24, 18, 12, 31, 9]
+  const mocks = [1, 18, 12, 30, 9]
   return mocks[Math.abs(seed) % mocks.length]!
+}
+
+function fitCompactLayoutToViewport(
+  layout: CompactLayout,
+  canvas: HTMLDivElement,
+  setZoom: (zoom: number) => void,
+  setPan: (pan: { x: number; y: number }) => void,
+) {
+  const canvasWidth = canvas.clientWidth
+  const canvasHeight = canvas.clientHeight
+  if (canvasWidth <= 0 || canvasHeight <= 0) return
+
+  const padding = 48
+  const fitZoom = Math.min(
+    VIEWPORT_PAN_ZOOM_MAX,
+    canvasWidth / (layout.width + padding * 2),
+    canvasHeight / (layout.height + padding * 2),
+  )
+  const centerX = layout.width / 2
+  const centerY = layout.height / 2
+  setZoom(fitZoom)
+  setPan({
+    x: canvasWidth / 2 - centerX * fitZoom,
+    y: canvasHeight / 2 - centerY * fitZoom,
+  })
 }
 
 type DatabaseClusterPreviewProps = {
@@ -349,17 +392,62 @@ type DatabaseClusterPreviewProps = {
   className?: string
   /** When true, wrap with the same card section divider as project request charts. */
   withSectionDivider?: boolean
+  /**
+   * Enable pan/zoom controls (buttons, wheel, drag). Used on replication settings;
+   * leave off for compact list cards.
+   */
+  interactive?: boolean
+}
+
+function ClusterDiagramNodes({
+  layout,
+  statuses,
+  soloPrimary,
+}: {
+  layout: CompactLayout
+  statuses: ClusterNodeStatus[]
+  soloPrimary: boolean
+}) {
+  return (
+    <>
+      <SchemaBlueprintMat density="dense" />
+      <SchemaVisualizerRelationshipEdges
+        paths={layout.paths}
+        extent={{ width: layout.width, height: layout.height }}
+        showArrowHeads={false}
+      />
+      <div className="relative z-20">
+        <CompactClusterNode
+          label={layout.primary.label}
+          node={layout.primary}
+          status={statuses[0] ?? 'active'}
+          emphasized={soloPrimary}
+          metrics={mockNodeMetrics(0)}
+        />
+        {layout.replicas.map((replica, index) => (
+          <CompactClusterNode
+            key={replica.id}
+            label={replica.label}
+            node={replica}
+            status={statuses[index + 1] ?? 'active'}
+            metrics={mockNodeMetrics(index + 1)}
+          />
+        ))}
+      </div>
+    </>
+  )
 }
 
 /**
- * Compact, non-interactive cluster topology for database resource cards.
- * Same visual language as {@link PostgresHaClusterDiagram}, sized for org-style card mid-sections.
+ * Compact cluster topology for database resource cards and replication settings.
+ * Pass `interactive` for pan/zoom on the settings diagram.
  */
 export function DatabaseClusterPreview({
   replicaCount,
   nodeStatuses,
   className,
   withSectionDivider = true,
+  interactive = false,
 }: DatabaseClusterPreviewProps) {
   const t = useT()
   const safeReplicaCount = Math.max(0, Math.floor(replicaCount))
@@ -390,7 +478,161 @@ export function DatabaseClusterPreview({
           safeReplicaCount === 1 ? t('Replica') : t('Replicas')
         }`
 
-  const content = (
+  const hasAutoFocusedRef = useRef(false)
+  const lastReplicaCountRef = useRef(replicaCount)
+  const {
+    canvasRef,
+    zoom,
+    pan,
+    setZoom,
+    setPan,
+    isDragging,
+    zoomPercentage,
+    zoomInDisabled,
+    zoomOutDisabled,
+    bindCanvas,
+    zoomIn,
+    zoomOut,
+  } = useViewportPanZoom()
+
+  const fitToView = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    fitCompactLayoutToViewport(layout, canvas, setZoom, setPan)
+  }, [canvasRef, layout, setPan, setZoom])
+
+  useEffect(() => {
+    if (!interactive) return
+
+    if (lastReplicaCountRef.current !== replicaCount) {
+      hasAutoFocusedRef.current = false
+      lastReplicaCountRef.current = replicaCount
+    }
+    if (hasAutoFocusedRef.current) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const frame = requestAnimationFrame(() => {
+      fitCompactLayoutToViewport(layout, canvas, setZoom, setPan)
+      hasAutoFocusedRef.current = true
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [interactive, layout, replicaCount, canvasRef, setPan, setZoom])
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (!interactive) return
+      const key = event.key
+      if (key === '+' || key === '=') {
+        event.preventDefault()
+        zoomIn()
+      } else if (key === '-' || key === '_') {
+        event.preventDefault()
+        zoomOut()
+      } else if (key === '0') {
+        event.preventDefault()
+        fitToView()
+      }
+    },
+    [fitToView, interactive, zoomIn, zoomOut],
+  )
+
+  const content = interactive ? (
+    <div
+      className={cn('relative min-w-0', className)}
+      style={{
+        height: DATABASE_CLUSTER_INTERACTIVE_HEIGHT,
+        backgroundColor: 'hsl(var(--muted) / 0.3)',
+      }}
+    >
+      <div className="pointer-events-none absolute end-3 top-3 z-30 flex items-center gap-1.5">
+        <div className="pointer-events-auto flex items-center gap-1.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
+                onClick={zoomIn}
+                disabled={zoomInDisabled}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('Zoom in')}</TooltipContent>
+          </Tooltip>
+
+          <div className="flex h-8 min-w-[52px] items-center justify-center rounded-md border border-border bg-card/95 px-2.5 backdrop-blur-sm">
+            <span className="text-[11px] font-medium tabular-nums text-foreground">
+              {zoomPercentage}%
+            </span>
+          </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
+                onClick={zoomOut}
+                disabled={zoomOutDisabled}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('Zoom out')}</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 border-border bg-card/95 p-0 backdrop-blur-sm"
+                onClick={fitToView}
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('Fit to view')}</TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+
+      <div
+        ref={canvasRef}
+        className={cn(
+          'h-full w-full cursor-grab overflow-hidden select-none',
+          isDragging && 'cursor-grabbing',
+        )}
+        role="application"
+        aria-label={ariaLabel}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        {...bindCanvas}
+      >
+        <div
+          className="relative"
+          style={{
+            width: layout.width,
+            height: layout.height,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: '0 0',
+          }}
+        >
+          <ClusterDiagramNodes
+            layout={layout}
+            statuses={resolvedStatuses}
+            soloPrimary={safeReplicaCount === 0}
+          />
+        </div>
+      </div>
+    </div>
+  ) : (
     <div
       className={cn('min-w-0', className)}
       style={{ height: DATABASE_CLUSTER_PREVIEW_HEIGHT }}
@@ -414,30 +656,11 @@ export function DatabaseClusterPreview({
             transformOrigin: 'center center',
           }}
         >
-          <SchemaBlueprintMat density="dense" />
-          <SchemaVisualizerRelationshipEdges
-            paths={layout.paths}
-            extent={{ width: layout.width, height: layout.height }}
-            showArrowHeads={false}
+          <ClusterDiagramNodes
+            layout={layout}
+            statuses={resolvedStatuses}
+            soloPrimary={safeReplicaCount === 0}
           />
-          <div className="relative z-20">
-            <CompactClusterNode
-              label={layout.primary.label}
-              node={layout.primary}
-              status={resolvedStatuses[0] ?? 'active'}
-              emphasized={safeReplicaCount === 0}
-              metrics={mockNodeMetrics(0)}
-            />
-            {layout.replicas.map((replica, index) => (
-              <CompactClusterNode
-                key={replica.id}
-                label={replica.label}
-                node={replica}
-                status={resolvedStatuses[index + 1] ?? 'active'}
-                metrics={mockNodeMetrics(index + 1)}
-              />
-            ))}
-          </div>
         </div>
       </div>
     </div>

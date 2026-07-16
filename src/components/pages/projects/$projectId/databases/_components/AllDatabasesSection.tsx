@@ -67,6 +67,10 @@ type DatabaseWithBackup = {
 type AllDatabasesSectionProps = {
   projectId: string
   viewMode: 'list' | 'grid'
+  /** Header search term (shared URL state). */
+  search?: string
+  /** Appwrite Query strings from FiltersPopover / type droplist. */
+  filterQueries?: string[]
 }
 
 function databaseCardLink(
@@ -84,6 +88,8 @@ function databaseCardLink(
 export function AllDatabasesSection({
   projectId,
   viewMode,
+  search,
+  filterQueries,
 }: AllDatabasesSectionProps) {
   const t = useT()
   const { features } = useConsoleProfile()
@@ -100,7 +106,13 @@ export function AllDatabasesSection({
     isFetching,
     error,
     refetch,
-  } = useProjectConsoleDatabases(projectId, 0, GRID_DEFAULT_PAGE_SIZE)
+  } = useProjectConsoleDatabases(
+    projectId,
+    0,
+    GRID_DEFAULT_PAGE_SIZE,
+    search,
+    filterQueries,
+  )
 
   const { databases: dedicatedDatabases } =
     useProjectDedicatedDatabases(projectId)
@@ -114,6 +126,8 @@ export function AllDatabasesSection({
   }, [dedicatedDatabases])
 
   const errorMessage = error ? getErrorMessage(error) : null
+  const hasActiveFilters =
+    Boolean(search?.trim()) || Boolean(filterQueries?.length)
 
   return (
     <section className="mb-10">
@@ -264,11 +278,19 @@ export function AllDatabasesSection({
         ) : (
           <EmptyState
             icon={Database}
-            title={t('No databases yet')}
-            description={t(
-              'Create this product database from the create database wizard.',
-            )}
-            isEmpty
+            title={
+              hasActiveFilters
+                ? t('No databases match your filters')
+                : t('No databases yet')
+            }
+            description={
+              hasActiveFilters
+                ? t('Try adjusting or clearing filters.')
+                : t(
+                    'Create this product database from the create database wizard.',
+                  )
+            }
+            isEmpty={!hasActiveFilters}
             variant="card"
           />
         )
@@ -306,6 +328,11 @@ export function AllDatabasesSection({
               const connectionSeed = db.$id
                 .split('')
                 .reduce((sum, char) => sum + char.charCodeAt(0), 0)
+              const connections = mockDatabaseConnections(connectionSeed)
+              const connectionsLabel =
+                connections === 1
+                  ? `1 ${t('connection')}`
+                  : `${connections.toLocaleString()} ${t('connections')}`
               const cardLink = databaseCardLink(projectId, db, dedicated)
               return (
                 <DatabaseContextMenu
@@ -370,22 +397,12 @@ export function AllDatabasesSection({
                             apiType={db.databaseType}
                             engine={dedicated?.engine}
                           />
-                          <span className="truncate">
-                            <span className="text-muted-foreground/80">
-                              {t('Tier')}
-                            </span>{' '}
-                            <span className="font-medium text-foreground">
-                              {specification || t('Serverless')}
-                            </span>
+                          <span className="truncate text-muted-foreground">
+                            {specification || t('Serverless')}
                           </span>
                           {isDedicated ? (
-                            <span className="truncate">
-                              <span className="text-muted-foreground/80">
-                                {t('Connections')}
-                              </span>{' '}
-                              <span className="font-medium tabular-nums text-foreground">
-                                {mockDatabaseConnections(connectionSeed)}
-                              </span>
+                            <span className="truncate tabular-nums text-muted-foreground">
+                              {connectionsLabel}
                             </span>
                           ) : null}
                         </div>
@@ -399,11 +416,19 @@ export function AllDatabasesSection({
               <div className="col-span-full">
                 <EmptyState
                   icon={Database}
-                  title={t('No databases yet')}
-                  description={t(
-                    'Create this product database from the create database wizard.',
-                  )}
-                  isEmpty
+                  title={
+                    hasActiveFilters
+                      ? t('No databases match your filters')
+                      : t('No databases yet')
+                  }
+                  description={
+                    hasActiveFilters
+                      ? t('Try adjusting or clearing filters.')
+                      : t(
+                          'Create this product database from the create database wizard.',
+                        )
+                  }
+                  isEmpty={!hasActiveFilters}
                   variant="card"
                 />
               </div>

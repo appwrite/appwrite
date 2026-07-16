@@ -44,6 +44,11 @@ function dedicatedStatusVariant(
     case 'provisioning':
     case 'scaling':
     case 'restoring':
+    case 'upgrading':
+    case 'migrating':
+    case 'pausing':
+    case 'resuming':
+    case 'deleting':
       return 'warning'
     case 'failed':
     case 'deleted':

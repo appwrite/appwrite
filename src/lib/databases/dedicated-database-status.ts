@@ -35,10 +35,20 @@ export function dedicatedDatabaseStatusAlertTitleKey(
   switch (status.trim().toLowerCase()) {
     case 'scaling':
       return 'Database is scaling'
+    case 'upgrading':
+      return 'Database is upgrading'
+    case 'migrating':
+      return 'Database is migrating'
     case 'provisioning':
       return 'Database is provisioning'
     case 'restoring':
       return 'Database is restoring'
+    case 'pausing':
+      return 'Database is pausing'
+    case 'resuming':
+      return 'Database is resuming'
+    case 'deleting':
+      return 'Database is deleting'
     case 'paused':
       return 'Database is paused'
     case 'inactive':
@@ -58,10 +68,20 @@ export function dedicatedDatabaseStatusAlertDescriptionKey(
   switch (status.trim().toLowerCase()) {
     case 'scaling':
       return 'A compute tier change is in progress. Some operations may be temporarily unavailable.'
+    case 'upgrading':
+      return 'A database upgrade is in progress. Some operations may be temporarily unavailable.'
+    case 'migrating':
+      return 'A database migration is in progress. Some operations may be temporarily unavailable.'
     case 'provisioning':
       return 'Dedicated compute is being provisioned for this database.'
     case 'restoring':
       return 'This database is being restored. Some operations may be unavailable until it is ready again.'
+    case 'pausing':
+      return 'This database is being paused. Some operations may be temporarily unavailable.'
+    case 'resuming':
+      return 'This database is resuming. Some operations may be temporarily unavailable.'
+    case 'deleting':
+      return 'This database is being deleted and will no longer be available once the operation completes.'
     case 'paused':
       return 'This database is paused. Resume it in Settings to restore access.'
     case 'inactive':

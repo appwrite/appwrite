@@ -104,7 +104,10 @@ import {
   ProjectListCardMain} from './_components/ProjectListCardContent'
 import { ProjectListCardRequestsChart } from './_components/ProjectListRequestsChart'
 import { ProjectsListTable } from './_components/ProjectsListTable'
-import { LightningCollectorGame } from './_components/LightningCollectorGame'
+import {
+  LightningCollectorGame,
+  LightningCollectorTrigger,
+} from './_components/LightningCollectorGame'
 import { InitOrgPromoBanner } from './_components/InitOrgPromoBanner'
 
 import {
@@ -351,6 +354,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     features.billing && failedInvoicePresence?.hasFailedInvoice === true
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
   const { isDebugModeOpen } = useDebugMode()
+  const [lightningCollectorOpen, setLightningCollectorOpen] = useState(false)
+
+  useEffect(() => {
+    if (!isDebugModeOpen) {
+      setLightningCollectorOpen(false)
+    }
+  }, [isDebugModeOpen])
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -2367,7 +2377,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               <>
                 {activeTab === 'projects' && (
                   <>
-                    {isDebugModeOpen && <LightningCollectorGame />}
+                    {isDebugModeOpen && (
+                      <LightningCollectorGame
+                        open={lightningCollectorOpen}
+                        onOpenChange={setLightningCollectorOpen}
+                      />
+                    )}
                     {/* Error State */}
                     {activeProjectsError && (
                       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -2406,6 +2421,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           />
 
                           <div className="ms-auto flex shrink-0 items-center gap-2">
+                          {isDebugModeOpen && (
+                            <LightningCollectorTrigger
+                              open={lightningCollectorOpen}
+                              onOpenChange={setLightningCollectorOpen}
+                            />
+                          )}
                           {(() => {
                             if (!canCreateProject(access, features)) {
                               return (
