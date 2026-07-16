@@ -45,6 +45,7 @@ class Exception extends \Exception
     public const string GENERAL_SERVICE_DISABLED = 'general_service_disabled';
     public const string GENERAL_UNAUTHORIZED_SCOPE = 'general_unauthorized_scope';
     public const string GENERAL_RATE_LIMIT_EXCEEDED = 'general_rate_limit_exceeded';
+    public const string GENERAL_RESOURCE_LOCKED = 'general_resource_locked';
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
@@ -84,6 +85,7 @@ class Exception extends \Exception
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';
+    public const string USER_EMAIL_NOT_CORPORATE = 'user_email_not_corporate';
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
@@ -106,6 +108,7 @@ class Exception extends \Exception
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
+    public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
     public const string USER_PHONE_ALREADY_VERIFIED = 'user_phone_already_verified';
     public const string USER_DELETION_PROHIBITED = 'user_deletion_prohibited';
@@ -150,6 +153,7 @@ class Exception extends \Exception
     public const string STORAGE_DEVICE_NOT_FOUND = 'storage_device_not_found';
     public const string STORAGE_FILE_EMPTY = 'storage_file_empty';
     public const string STORAGE_FILE_TYPE_UNSUPPORTED = 'storage_file_type_unsupported';
+    public const string STORAGE_IMAGE_RESOLUTION_EXCEEDED = 'storage_image_resolution_exceeded';
     public const string STORAGE_INVALID_FILE_SIZE = 'storage_invalid_file_size';
     public const string STORAGE_INVALID_FILE = 'storage_invalid_file';
     public const string STORAGE_BUCKET_ALREADY_EXISTS = 'storage_bucket_already_exists';

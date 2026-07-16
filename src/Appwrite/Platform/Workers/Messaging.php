@@ -6,8 +6,6 @@ use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Usage\Context as UsageContext;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -16,11 +14,13 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Semaphore;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
+use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
@@ -28,9 +28,11 @@ use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
+use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
+use Utopia\Messaging\Adapter\SMS\Msg91\MetadataParameter;
 use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
@@ -47,14 +49,15 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    private ?Local $localDevice = null;
-
     private ?SMSAdapter $adapter = null;
+
+    private Telemetry $telemetry;
 
     public static function getName(): string
     {
@@ -74,6 +77,7 @@ class Messaging extends Action
             ->inject('dbForProject')
             ->inject('deviceForFiles')
             ->inject('publisherForUsage')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -84,6 +88,7 @@ class Messaging extends Action
      * @param Database $dbForProject
      * @param Device $deviceForFiles
      * @param UsagePublisher $publisherForUsage
+     * @param Telemetry $telemetry
      * @return void
      * @throws \Exception
      */
@@ -93,9 +98,12 @@ class Messaging extends Action
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
-        UsagePublisher $publisherForUsage
+        UsagePublisher $publisherForUsage,
+        Telemetry $telemetry
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+
+        $this->telemetry = $telemetry;
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -130,68 +138,20 @@ class Messaging extends Action
         Document $project,
         UsagePublisher $publisherForUsage
     ): void {
+        $status = $message->getAttribute('status');
+
+        // Idempotency guard: queue redelivery can hand us a message that already finished.
+        if (\in_array($status, [MessageStatus::SENT, MessageStatus::FAILED], true)) {
+            Span::add('message.skipped', 'already_processed');
+            return;
+        }
+
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
         $providerType = $message->getAttribute('providerType');
 
-        /**
-         * @var array<Document> $allTargets
-         */
-        $allTargets = [];
-
-        if (\count($topicIds) > 0) {
-            $topics = $dbForProject->find('topics', [
-                Query::equal('$id', $topicIds),
-                Query::limit(\count($topicIds)),
-            ]);
-            foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), function (Document $target) use ($providerType) {
-                    return $target->getAttribute('providerType') === $providerType;
-                });
-
-                \array_push($allTargets, ...$targets);
-            }
-        }
-
-        if (\count($userIds) > 0) {
-            $limit = 1000;
-            $offset = 0;
-
-            do {
-                $targets = $dbForProject->find('targets', [
-                    Query::equal('userId', $userIds),
-                    Query::select(['providerId', 'identifier']),
-                    Query::equal('providerType', [$providerType]),
-                    Query::limit($limit),
-                    Query::offset($offset),
-                ]);
-
-                \array_push($allTargets, ...$targets);
-                $offset += \count($targets);
-            } while (\count($targets) === $limit);
-        }
-
-        if (\count($targetIds) > 0) {
-            $targets = $dbForProject->find('targets', [
-                Query::select(['providerId', 'identifier']),
-                Query::equal('$id', $targetIds),
-                Query::equal('providerType', [$providerType]),
-                Query::limit(\count($targetIds)),
-            ]);
-
-            \array_push($allTargets, ...$targets);
-        }
-
-        if (empty($allTargets)) {
-            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
-                'status' => MessageStatus::FAILED,
-                'deliveryErrors' => ['No valid recipients found.']
-            ]));
-
-            Span::add('message.skipped', 'no_valid_recipients');
-            return;
-        }
+        Span::add('message.provider_type', $providerType);
 
         $default = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
@@ -209,55 +169,33 @@ class Messaging extends Action
         }
 
         /**
-         * @var array<string, array<string, null>> $identifiers
-         */
-        $identifiers = [];
-
-        /**
-         * @var array<Document> $providers
+         * Resolved providers cached for the lifetime of this job, keyed by provider id.
+         * Seeded with the default provider so most sends never touch the providers collection.
+         *
+         * @var array<string, Document> $providers
          */
         $providers = [
-            $default->getId() => $default
+            $default->getId() => $default,
         ];
 
-        foreach ($allTargets as $target) {
-            $providerId = $target->getAttribute('providerId');
+        $semaphore = new Semaphore(MESSAGE_SEND_CONCURRENCY);
 
-            if (!$providerId) {
-                $providerId = $default->getId();
-            }
+        $deliveredTotal = 0;
+        $failedTotal = 0;
+        $deliveryErrors = [];
+        $hasRecipients = false;
 
-            if ($providerId) {
-                if (!\array_key_exists($providerId, $identifiers)) {
-                    $identifiers[$providerId] = [];
-                }
-                // Use null as value to avoid duplicate keys
-                $identifiers[$providerId][$target->getAttribute('identifier')] = null;
-            }
-        }
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as $page) {
+            /**
+             * @var array<callable> $tasks
+             */
+            $tasks = [];
 
-        /**
-         * @var array<array> $results
-         */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
-            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
-                if (\array_key_exists($providerId, $providers)) {
-                    $provider = $providers[$providerId];
-                } else {
-                    $provider = $dbForProject->getDocument('providers', $providerId);
+            foreach ($page as $providerId => $identifiers) {
+                $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
+                $resolvedProviderType = $provider->getAttribute('type');
 
-                    if ($provider->isEmpty() || !$provider->getAttribute('enabled')) {
-                        $provider = $default;
-                    } else {
-                        $providers[$providerId] = $provider;
-                    }
-                }
-
-                $identifiersForProvider = $identifiers[$providerId];
-
-                $providerType = $provider->getAttribute('type');
-
-                $adapter = match ($providerType) {
+                $adapter = match ($resolvedProviderType) {
                     MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
                     MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
                     MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
@@ -265,107 +203,85 @@ class Messaging extends Action
                 };
 
                 $batches = \array_chunk(
-                    \array_keys($identifiersForProvider),
+                    \array_keys($identifiers),
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
-                    return function () use ($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
-                        $deliveredTotal = 0;
-                        $deliveryErrors = [];
-                        $messageData = clone $message;
-                        $messageData->setAttribute('to', $batch);
+                foreach ($batches as $batch) {
+                    $tasks[] = fn (): array => $semaphore->withLock(
+                        fn (): array => $this->sendBatch(
+                            $batch,
+                            $message,
+                            $provider,
+                            $resolvedProviderType,
+                            $adapter,
+                            $dbForProject,
+                            $deviceForFiles,
+                            $project,
+                            $publisherForUsage
+                        )
+                    );
+                }
+            }
 
-                        $data = match ($providerType) {
-                            MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
-                            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
-                        };
+            // A page can resolve to zero identifiers (e.g. subscribers whose targetInternalId matches no targets
+            // row), so an empty task list must not count as recipients or run batch() for nothing.
+            if (empty($tasks)) {
+                continue;
+            }
 
-                        try {
-                            $response = $adapter->send($data);
-                            $deliveredTotal += (int) $response['deliveredTo'];
-                            foreach ($response['results'] as $result) {
-                                if ($result['status'] === 'failure') {
-                                    $deliveryErrors[] = "Failed sending to target {$result['recipient']} with error: {$result['error']}";
-                                }
+            $hasRecipients = true;
 
-                                // Deleting push targets when token has expired.
-                                if (($result['error'] ??  '') === 'Expired device token') {
-                                    $target = $dbForProject->findOne('targets', [
-                                        Query::equal('identifier', [$result['recipient']])
-                                    ]);
+            /**
+             * @var array<array{delivered: int, recipients: int, errors: array<string>}> $results
+             */
+            $results = batch($tasks);
 
-                                    if (!$target->isEmpty()) {
-                                        $dbForProject->updateDocument(
-                                            'targets',
-                                            $target->getId(),
-                                            $target->setAttribute('expired', true)
-                                        );
-                                    }
-                                }
-                            }
-                        } catch (\Throwable $e) {
-                            $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
-                        } finally {
-                            $errorTotal = \count($deliveryErrors);
-                            $usage = new UsageContext();
-                            $usage
-                                ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
-                                ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
-                                ->addMetric(METRIC_MESSAGES_FAILED, $errorTotal)
-                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), ($deliveredTotal + $errorTotal))
-                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $deliveredTotal)
-                                ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $errorTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal + $errorTotal))
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal);
+            foreach ($results as $result) {
+                $deliveredTotal += $result['delivered'];
+                $failedTotal += $result['recipients'] - $result['delivered'];
 
-                            $publisherForUsage->enqueue(new Usage(
-                                project: $project,
-                                metrics: $usage->getMetrics(),
-                            ));
+                foreach ($result['errors'] as $error) {
+                    if (\count($deliveryErrors) >= MESSAGE_DELIVERY_ERRORS_LIMIT) {
+                        break;
+                    }
 
-                            return [
-                                'deliveredTotal' => $deliveredTotal,
-                                'deliveryErrors' => $deliveryErrors,
-                            ];
-                        }
-                    };
-                }, $batches));
-            };
-        }, \array_keys($identifiers)));
+                    $deliveryErrors[] = $error;
+                }
+            }
+        }
 
-        $results = \array_merge(...$results);
+        if (!$hasRecipients) {
+            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+                'status' => MessageStatus::FAILED,
+                'deliveryErrors' => ['No valid recipients found.']
+            ]));
 
-        $deliveredTotal = 0;
-        $deliveryErrors = [];
-
-        foreach ($results as $result) {
-            $deliveredTotal += $result['deliveredTotal'];
-            $deliveryErrors = \array_merge($deliveryErrors, $result['deliveryErrors']);
+            Span::add('message.skipped', 'no_valid_recipients');
+            return;
         }
 
         if (empty($deliveryErrors) && $deliveredTotal === 0) {
             $deliveryErrors[] = 'Unknown error';
         }
 
+        $hasFailures = $failedTotal > 0 || \count($deliveryErrors) > 0;
+        $message->setAttribute('status', $hasFailures ? MessageStatus::FAILED : MessageStatus::SENT);
         $message->setAttribute('deliveryErrors', $deliveryErrors);
 
-        if (\count($message->getAttribute('deliveryErrors')) > 0) {
-            $message->setAttribute('status', MessageStatus::FAILED);
-        } else {
-            $message->setAttribute('status', MessageStatus::SENT);
-        }
-
         Span::add('message.delivered_total', $deliveredTotal);
-        Span::add('message.errors_total', \count($deliveryErrors));
+        Span::add('message.errors_total', $failedTotal);
 
         $message->removeAttribute('to');
 
         foreach ($providers as $provider) {
             $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
         }
+
+        Span::add('message.providers', \implode(',', \array_unique(\array_map(
+            fn (Document $provider) => $provider->getAttribute('provider'),
+            \array_values($providers)
+        ))));
 
         $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
@@ -410,6 +326,466 @@ class Messaging extends Action
         }
     }
 
+    /**
+     * Stream a message's recipients in bounded pages, grouped by provider and deduplicated by identifier within each page.
+     *
+     * Peak memory is O(MESSAGE_RECIPIENTS_PAGE_SIZE), never O(topic size): topics are walked through the
+     * subscribers collection with cursor pagination rather than reading the topic's `targets` attribute, which
+     * triggers the subQueryTopicTargets filter and loads up to APP_LIMIT_SUBSCRIBERS_SUBQUERY rows at once.
+     *
+     * @param array<string> $topicIds
+     * @param array<string> $userIds
+     * @param array<string> $targetIds
+     * @return \Generator<array<string, array<string, null>>>
+     * @throws \Exception
+     */
+    private function streamRecipients(
+        Database $dbForProject,
+        array $topicIds,
+        array $userIds,
+        array $targetIds,
+        string $providerType,
+        Document $default
+    ): \Generator {
+        if (\count($topicIds) > 0) {
+            $topics = $dbForProject->find('topics', [
+                Query::select(['$sequence']),
+                Query::equal('$id', $topicIds),
+                Query::limit(\count($topicIds)),
+            ]);
+
+            foreach ($topics as $topic) {
+                $cursor = null;
+
+                do {
+                    $queries = [
+                        Query::equal('topicInternalId', [$topic->getSequence()]),
+                        Query::equal('providerType', [$providerType]),
+                        Query::select(['$sequence', 'targetInternalId']),
+                        Query::orderAsc('$sequence'),
+                        Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                    ];
+
+                    if ($cursor !== null) {
+                        $queries[] = Query::cursorAfter($cursor);
+                    }
+
+                    $subscribers = $dbForProject->getAuthorization()->skip(
+                        fn () => $dbForProject->find('subscribers', $queries)
+                    );
+
+                    $count = \count($subscribers);
+
+                    if ($count === 0) {
+                        break;
+                    }
+
+                    $cursor = $subscribers[$count - 1];
+
+                    $targetInternalIds = \array_map(
+                        fn (Document $subscriber) => $subscriber->getAttribute('targetInternalId'),
+                        $subscribers
+                    );
+
+                    $targets = $dbForProject->skipValidation(
+                        fn () => $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->find('targets', [
+                                Query::equal('$sequence', $targetInternalIds),
+                                Query::select(['providerId', 'identifier']),
+                                Query::limit(\count($targetInternalIds)),
+                            ])
+                        )
+                    );
+
+                    yield $this->groupTargetsByProvider($targets, $default);
+                } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+            }
+        }
+
+        if (\count($userIds) > 0) {
+            $cursor = null;
+
+            do {
+                $queries = [
+                    Query::equal('userId', $userIds),
+                    Query::equal('providerType', [$providerType]),
+                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                ];
+
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
+                }
+
+                $targets = $dbForProject->find('targets', $queries);
+                $count = \count($targets);
+
+                if ($count === 0) {
+                    break;
+                }
+
+                $cursor = $targets[$count - 1];
+
+                yield $this->groupTargetsByProvider($targets, $default);
+            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        if (\count($targetIds) > 0) {
+            $cursor = null;
+
+            do {
+                $queries = [
+                    Query::equal('$id', $targetIds),
+                    Query::equal('providerType', [$providerType]),
+                    Query::select(['$sequence', 'providerId', 'identifier']),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(MESSAGE_RECIPIENTS_PAGE_SIZE),
+                ];
+
+                if ($cursor !== null) {
+                    $queries[] = Query::cursorAfter($cursor);
+                }
+
+                $targets = $dbForProject->find('targets', $queries);
+                $count = \count($targets);
+
+                if ($count === 0) {
+                    break;
+                }
+
+                $cursor = $targets[$count - 1];
+
+                yield $this->groupTargetsByProvider($targets, $default);
+            } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+    }
+
+    /**
+     * Group a page of target documents by provider id, deduplicating identifiers within the page.
+     *
+     * @param array<Document> $targets
+     * @return array<string, array<string, null>>
+     */
+    private function groupTargetsByProvider(array $targets, Document $default): array
+    {
+        /**
+         * @var array<string, array<string, null>> $identifiers
+         */
+        $identifiers = [];
+
+        foreach ($targets as $target) {
+            $providerId = $target->getAttribute('providerId') ?: $default->getId();
+
+            if (!\array_key_exists($providerId, $identifiers)) {
+                $identifiers[$providerId] = [];
+            }
+
+            // Null values keep identifiers unique without a second lookup structure.
+            $identifiers[$providerId][$target->getAttribute('identifier')] = null;
+        }
+
+        return $identifiers;
+    }
+
+    /**
+     * Resolve and cache a provider for the lifetime of a send job, falling back to the default provider.
+     *
+     * @param array<string, Document> $providers
+     */
+    private function resolveProvider(
+        Database $dbForProject,
+        string $providerId,
+        array &$providers,
+        Document $default
+    ): Document {
+        if (\array_key_exists($providerId, $providers)) {
+            return $providers[$providerId];
+        }
+
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty() || !$provider->getAttribute('enabled')) {
+            // Cache the fallback under this id too, so a topic full of targets pointing at the same
+            // disabled/missing provider does not re-query the providers collection once per page.
+            $providers[$providerId] = $default;
+
+            return $default;
+        }
+
+        $providers[$providerId] = $provider;
+
+        return $provider;
+    }
+
+    /**
+     * Send a single adapter-sized batch and report delivery counts plus a bounded error list.
+     *
+     * Wraps the provider call in a backoff/retry loop that reacts to provider rate limiting and transient
+     * failures (see {@see retrySend()}). Accounting stays exact: only still-failing recipients are ever
+     * retried, so `delivered` is summed across attempts without double-counting, and `recipients` always
+     * reports the original batch size so the caller's `failed = recipients - delivered` holds.
+     *
+     * @param array<string> $batch
+     * @return array{delivered: int, recipients: int, errors: array<string>}
+     */
+    private function sendBatch(
+        array $batch,
+        Document $message,
+        Document $provider,
+        string $providerType,
+        EmailAdapter|SMSAdapter|PushAdapter $adapter,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        Document $project,
+        UsagePublisher $publisherForUsage
+    ): array {
+        $recipients = \count($batch);
+
+        [
+            'delivered' => $delivered,
+            'errors' => $errors,
+        ] = $this->retrySend($batch, $message, $provider, $providerType, $adapter, $dbForProject, $deviceForFiles, $project);
+
+        $failed = $recipients - $delivered;
+
+        $usage = new UsageContext();
+        $usage
+            ->addMetric(METRIC_MESSAGES, $recipients)
+            ->addMetric(METRIC_MESSAGES_SENT, $delivered)
+            ->addMetric(METRIC_MESSAGES_FAILED, $failed)
+            ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE), $recipients)
+            ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_SENT), $delivered)
+            ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $failed)
+            ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), $recipients)
+            ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $delivered)
+            ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $failed);
+
+        $publisherForUsage->enqueue(new Usage(
+            project: $project,
+            metrics: $usage->getMetrics(),
+        ));
+
+        return [
+            'delivered' => $delivered,
+            'recipients' => $recipients,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Drive a batch through provider sends with exponential backoff, reacting to throttling and transient
+     * errors by retrying only the recipients that are still failing.
+     *
+     * Partitioning per attempt: the provider's per-recipient results are split into delivered (summed into
+     * the running total, never retried) and failures. A failure whose error matches {@see isRetryableError()}
+     * stays pending for the next attempt; any other failure becomes a terminal error immediately. When
+     * `send()` throws, the throw is retryable only if its message matches; otherwise every still-pending
+     * recipient is recorded as terminal. The next attempt rebuilds the provider message with only the pending
+     * recipients in `to`, so an already-delivered recipient is never re-sent. After {@see MESSAGE_SEND_MAX_RETRIES}
+     * attempts, any recipients still pending are flushed to terminal errors.
+     *
+     * Note: provider `Retry-After` hints are not honored — the agnostic adapter {@see \Utopia\Messaging\Response}
+     * exposes only generic per-recipient strings, never a structured retry delay, so we keep the library
+     * adapter-agnostic and rely on exponential backoff alone.
+     *
+     * @param array<string> $batch
+     * @return array{delivered: int, errors: array<string>}
+     */
+    private function retrySend(
+        array $batch,
+        Document $message,
+        Document $provider,
+        string $providerType,
+        EmailAdapter|SMSAdapter|PushAdapter $adapter,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        Document $project
+    ): array {
+        $delivered = 0;
+        $errors = [];
+
+        // Recipients still awaiting a successful (or terminal) outcome; shrinks to only the failing ones each attempt.
+        $pending = $batch;
+
+        for ($attempt = 1; $attempt <= MESSAGE_SEND_MAX_RETRIES; $attempt++) {
+            $hasRetriesLeft = $attempt < MESSAGE_SEND_MAX_RETRIES;
+
+            // Rebuild the provider message scoped to only the still-pending recipients so a partially-delivered
+            // batch never re-sends to recipients that already succeeded on an earlier attempt.
+            $data = $this->buildMessage($pending, $message, $provider, $providerType, $dbForProject, $deviceForFiles, $project);
+
+            $retry = [];
+
+            // The try/catch wraps ONLY the provider send. A whole-batch throw is retryable when transient,
+            // otherwise it records one representative terminal error. The previous behaviour of resetting
+            // $delivered to 0 on a throw is gone — the retry refactor sums delivered across attempts, and the
+            // expired-device-token cleanup below is isolated in its own try so a DB hiccup there can never be
+            // misattributed as a send failure.
+            try {
+                $response = $adapter->send($data);
+            } catch (\Throwable $e) {
+                if ($hasRetriesLeft && $this->isRetryableError($e->getMessage())) {
+                    $retry = $pending;
+                } else {
+                    $this->recordError($errors, 'Failed sending to targets with error: ' . $e->getMessage());
+                }
+
+                $response = null;
+            }
+
+            if ($response !== null) {
+                $delivered += (int) $response['deliveredTo'];
+
+                foreach ($response['results'] as $result) {
+                    if ($result['status'] !== 'failure') {
+                        continue;
+                    }
+
+                    $error = $result['error'] ?? null;
+                    $recipient = $result['recipient'];
+
+                    // Best-effort: deleting push targets when the token has expired. Isolated so a transient DB
+                    // error here never affects delivery accounting or the retry decision below.
+                    if ($error === 'Expired device token') {
+                        try {
+                            $target = $dbForProject->findOne('targets', [
+                                Query::equal('identifier', [$recipient])
+                            ]);
+
+                            if (!$target->isEmpty()) {
+                                $dbForProject->updateDocument(
+                                    'targets',
+                                    $target->getId(),
+                                    $target->setAttribute('expired', true)
+                                );
+                            }
+                        } catch (\Throwable) {
+                            // Best-effort; must not affect accounting or retries.
+                        }
+                    }
+
+                    if ($hasRetriesLeft && $this->isRetryableError($error)) {
+                        $retry[] = $recipient;
+                        continue;
+                    }
+
+                    $this->recordError($errors, "Failed sending to target {$recipient} with error: {$error}");
+                }
+            }
+
+            $pending = $retry;
+
+            if (empty($pending)) {
+                break;
+            }
+
+            // Exponential backoff with jitter; non-blocking under Swoole so sibling sends keep progressing.
+            // Skip a non-positive delay: Swoole\Coroutine::sleep() rejects 0/negative values (which tests
+            // produce by overriding the base delay to 0 for speed), and it would otherwise emit a warning.
+            $delay = $this->retryDelay() * (2 ** ($attempt - 1));
+            $delay += $delay * (\random_int(0, 100) / 1000);
+            if ($delay > 0) {
+                \Swoole\Coroutine::sleep($delay);
+            }
+        }
+
+        return [
+            'delivered' => $delivered,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Append a delivery error while keeping the retained list bounded by {@see MESSAGE_DELIVERY_ERRORS_LIMIT}.
+     *
+     * @param array<string> $errors
+     */
+    private function recordError(array &$errors, string $error): void
+    {
+        if (\count($errors) >= MESSAGE_DELIVERY_ERRORS_LIMIT) {
+            return;
+        }
+
+        $errors[] = $error;
+    }
+
+    /**
+     * Conservatively classify a provider error string as retryable. The agnostic adapter
+     * {@see \Utopia\Messaging\Response} returns only free-form error strings, so string matching is the only
+     * provider-agnostic signal available. The pattern list is intentionally narrow — throttling, rate limits,
+     * quota, service-unavailable and timeout phrasing — so permanent failures (e.g. invalid recipients) are
+     * never retried.
+     */
+    private function isRetryableError(?string $error): bool
+    {
+        if ($error === null || $error === '') {
+            return false;
+        }
+
+        $patterns = [
+            'throttl',
+            'rate exceeded',
+            'rate limit',
+            'too many requests',
+            '429',
+            'quota',
+            'service unavailable',
+            '503',
+            'timed out',
+            'timeout',
+            'temporarily',
+        ];
+
+        $needle = \strtolower($error);
+
+        foreach ($patterns as $pattern) {
+            if (\str_contains($needle, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Base seconds for exponential backoff between send retries. Isolated so tests can override it to keep the
+     * suite instant without touching the production constant.
+     */
+    protected function retryDelay(): float
+    {
+        return MESSAGE_SEND_RETRY_DELAY;
+    }
+
+    /**
+     * Build the provider-specific message for a set of recipients.
+     *
+     * @param array<string> $to
+     */
+    private function buildMessage(
+        array $to,
+        Document $message,
+        Document $provider,
+        string $providerType,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        Document $project
+    ): Email|SMS|Push {
+        $messageData = clone $message;
+        $messageData->setAttribute('to', $to);
+
+        $data = match ($providerType) {
+            MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
+            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
+            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $project),
+            default => throw new \Exception('Provider with the requested ID is of the incorrect type')
+        };
+
+        $data->setOrigin(MESSAGE_SEND_TYPE_EXTERNAL);
+
+        return $data;
+    }
+
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
         if ($this->adapter === null) {
@@ -434,28 +810,28 @@ class Messaging extends Action
         $from = System::getEnv('_APP_SMS_FROM', '');
         Span::add('message.from', $from);
 
-        try {
-            $phoneNumber = PhoneNumberUtil::getInstance()->parse($recipients[0] ?? '');
-            Span::add('message.country_code', $phoneNumber->getCountryCode());
-        } catch (NumberParseException $e) {
-            Span::add('message.country_code', 'unknown');
-        }
+        Span::add('message.country_code', CallingCode::fromPhoneNumber($recipients[0] ?? '') ?? 'unknown');
 
         $sms = new SMS(
             $recipients,
             $message->getAttribute('data')['content'],
             $from
         );
+        $sms->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+
+        // Attach the project ID so the SMS provider's delivery logs and
+        // webhooks can be attributed back to the originating project.
+        $sms->setMetadata([MetadataParameter::UUID->value => $project->getId()]);
 
         $this->adapter->send($sms);
     }
 
 
-    private function getSmsAdapter(Document $provider): ?SMSAdapter
+    protected function getSmsAdapter(Document $provider): ?SMSAdapter
     {
         $credentials = $provider->getAttribute('credentials');
 
-        return match ($provider->getAttribute('provider')) {
+        $adapter = match ($provider->getAttribute('provider')) {
             'mock' => (new Mock('username', 'password'))->setEndpoint('http://request-catcher-sms:5000/'),
             'twilio' => new Twilio(
                 $credentials['accountSid'] ?? '',
@@ -492,14 +868,20 @@ class Messaging extends Action
             ),
             default => null
         };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
     }
 
-    private function getPushAdapter(Document $provider): ?PushAdapter
+    protected function getPushAdapter(Document $provider): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
         $options = $provider->getAttribute('options');
 
-        return match ($provider->getAttribute('provider')) {
+        $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
                 $credentials['authKey'] ?? '',
@@ -511,15 +893,21 @@ class Messaging extends Action
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
         };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
     }
 
-    private function getEmailAdapter(Document $provider): ?EmailAdapter
+    protected function getEmailAdapter(Document $provider): ?EmailAdapter
     {
         $credentials = $provider->getAttribute('credentials', []);
         $options = $provider->getAttribute('options', []);
         $apiKey = $credentials['apiKey'] ?? '';
 
-        return match ($provider->getAttribute('provider')) {
+        $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
                 $credentials['host'] ??  '',
@@ -537,8 +925,20 @@ class Messaging extends Action
             ),
             'sendgrid' => new Sendgrid($apiKey),
             'resend' => new Resend($apiKey),
+            'ses' => new SES(
+                $credentials['accessKey'] ?? '',
+                $credentials['secretKey'] ?? '',
+                $credentials['region'] ?? '',
+                $credentials['sessionToken'] ?? null,
+            ),
             default => null
         };
+
+        if ($adapter !== null) {
+            $adapter->setTelemetry($this->telemetry);
+        }
+
+        return $adapter;
     }
 
     private function buildEmailMessage(
@@ -709,11 +1109,9 @@ class Messaging extends Action
 
     private function getLocalDevice($project): Local
     {
-        if ($this->localDevice === null) {
-            $this->localDevice = new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-        }
-
-        return $this->localDevice;
+        // Not cached: the path is project-scoped and the worker handles
+        // messages from many projects (and coroutines run them concurrently).
+        return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
     }
 
     private function createInternalSMSAdapter(): ?SMSAdapter
@@ -757,6 +1155,7 @@ class Messaging extends Action
         $defaultProvider = $this->createProviderFromDSN($defaultDSN);
         $adapter = $this->getSmsAdapter($defaultProvider);
         $geosms = new GEOSMS($adapter);
+        $geosms->setTelemetry($this->telemetry);
 
         /** @var DSN $localDSN */
         foreach ($localDSNs as $localDSN) {

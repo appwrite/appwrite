@@ -52,6 +52,10 @@ class Server
 
     private const string DEFAULT_IMAGE = 'appwrite-dev';
     public const string DEFAULT_CONTAINER = 'appwrite-installer';
+    private const string COMPOSE_FILE = 'docker-compose.yml';
+    private const string ENV_FILE = '.env';
+    private const string LOCAL_COMPOSE_FILE = 'docker-compose.web-installer.yml';
+    private const string LOCAL_ENV_FILE = '.env.web-installer';
 
     private State $state;
     private array $paths = [];
@@ -114,7 +118,6 @@ class Server
         }
 
         if (isset($opts['docker'])) {
-            $this->printInstallerUrl($host, $port);
             $this->startDockerInstaller($opts);
         }
 
@@ -209,8 +212,13 @@ class Server
         }
 
         $basePath = $config->isLocal() ? '/usr/src/code' : (getcwd() ?: '.');
-        $composePath = $basePath . '/docker-compose.yml';
-        $envPath = $basePath . '/.env';
+        if ($config->isLocal()) {
+            $composePath = $basePath . '/' . self::LOCAL_COMPOSE_FILE;
+            $envPath = $basePath . '/' . self::LOCAL_ENV_FILE;
+        } else {
+            $composePath = $basePath . '/' . self::COMPOSE_FILE;
+            $envPath = $basePath . '/' . self::ENV_FILE;
+        }
 
         if (!file_exists($composePath) && !file_exists($envPath)) {
             return;
@@ -365,9 +373,13 @@ class Server
             '-i',
             '--rm',
             '--name', $container,
+            '--label', 'com.docker.compose.project=appwrite-installer',
+            '--label', 'com.docker.compose.service=appwrite-installer',
+            '--add-host', 'host.docker.internal:host-gateway',
             '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT,
             '--volume', '/var/run/docker.sock:/var/run/docker.sock',
             '--volume', "$volumePath:/usr/src/code:rw",
+            '--volume', "$volumePath:$volumePath:rw",
         ];
         $args[] = '-e';
         $args[] = 'APPWRITE_INSTALLER_CONFIG=' . $configJson;

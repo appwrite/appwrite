@@ -71,7 +71,8 @@ class Executor
         array $variables = [],
         ?string $command = null,
         string $outputDirectory = '',
-        string $runtimeEntrypoint = ''
+        string $runtimeEntrypoint = '',
+        string $cacheKey = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
@@ -95,7 +96,8 @@ class Executor
             'version' => $version,
             'timeout' => $timeout,
             'outputDirectory' => $outputDirectory,
-            'runtimeEntrypoint' => $runtimeEntrypoint
+            'runtimeEntrypoint' => $runtimeEntrypoint,
+            'cacheKey' => $cacheKey
         ];
 
 
@@ -103,8 +105,9 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new ExecutorException($message, $status);
+            $message = \is_string($response['body']) ? $response['body'] : ($response['body']['message'] ?? '');
+            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
+            throw new ExecutorException($message, $status, type: $type);
         }
 
         return $response['body'];
@@ -163,7 +166,8 @@ class Executor
         }
 
         if ($status >= 400) {
-            throw new ExecutorException($message, $status);
+            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
+            throw new ExecutorException($message, $status, type: $type);
         }
 
         return $response['body'];
@@ -246,8 +250,9 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new ExecutorException($message, $status);
+            $message = \is_string($response['body']) ? $response['body'] : ($response['body']['message'] ?? '');
+            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
+            throw new ExecutorException($message, $status, type: $type);
         }
 
         $headers = $response['body']['headers'] ?? [];
@@ -280,8 +285,9 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
-            throw new ExecutorException($message, $status);
+            $message = \is_string($response['body']) ? $response['body'] : ($response['body']['message'] ?? '');
+            $type = \is_array($response['body']) ? ($response['body']['type'] ?? ExecutorException::GENERAL_UNKNOWN) : ExecutorException::GENERAL_UNKNOWN;
+            throw new ExecutorException($message, $status, type: $type);
         }
 
         return $response['body'];

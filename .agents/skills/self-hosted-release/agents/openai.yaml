@@ -1,0 +1,4 @@
+interface:
+  display_name: "Self-Hosted Release"
+  short_description: "Validate Appwrite self-hosted release gates"
+  default_prompt: "Use $self-hosted-release to validate a fresh install and upgrade path for an Appwrite self-hosted release."

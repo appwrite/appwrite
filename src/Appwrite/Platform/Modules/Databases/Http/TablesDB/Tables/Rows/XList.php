@@ -37,6 +37,7 @@ class XList extends DocumentXList
             ->desc('List rows')
             ->groups(['api', 'database'])
             ->label('scope', ['rows.read', 'documents.read'])
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),

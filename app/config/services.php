@@ -105,8 +105,8 @@ return [
         'subtitle' => 'The Health service allows you to both validate and monitor your Appwrite server\'s health.',
         'description' => '/docs/services/health.md',
         'controller' => '', // Uses modules
-        'sdk' => true,
-        'docs' => true,
+        'sdk' => false,
+        'docs' => false,
         'docsUrl' => 'https://appwrite.io/docs/server/health',
         'tests' => false,
         'optional' => true,
@@ -281,6 +281,20 @@ return [
         'icon' => '',
         'platforms' => ['client', 'server', 'console'],
     ],
+    'organization' => [
+        'key' => 'organization',
+        'name' => 'Organization',
+        'subtitle' => 'The Organization service allows you to manage organization-level projects.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
     'migrations' => [
         'key' => 'migrations',
         'name' => 'Migrations',
@@ -308,6 +322,20 @@ return [
         'optional' => true,
         'icon' => '/images/services/messaging.png',
         'platforms' => ['client', 'server', 'console'],
+    ],
+    'notifications' => [
+        'key' => 'notifications',
+        'name' => 'Notifications',
+        'subtitle' => 'The Notifications service allows you to read and manage your Appwrite Console notifications.',
+        'description' => '/docs/services/notifications.md',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => true,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['console'],
     ],
     'advisor' => [
         'key' => 'advisor',

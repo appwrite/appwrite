@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\GraphQL\TablesDB;
 
 use Tests\E2E\Client;
@@ -12,7 +14,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-class DatabaseClientTest extends Scope
+final class DatabaseClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -601,7 +603,7 @@ class DatabaseClientTest extends Scope
         $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
 
-        $this->assertStringContainsString('New Row Name', $row['data']);
+        $this->assertStringContainsString('New Row Name', (string) $row['data']);
     }
 
     /**

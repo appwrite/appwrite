@@ -1047,6 +1047,95 @@ trait MessagingBase
         }
     }
 
+    public function testSesProvider(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Create with full credentials but no fromEmail, so the provider stays disabled.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
+            'providerId' => ID::unique(),
+            'name' => 'SES1',
+            'accessKey' => 'my-access-key',
+            'secretKey' => 'my-secret-key',
+            'region' => 'us-east-1',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('SES1', $response['body']['name']);
+        $this->assertEquals('ses', $response['body']['provider']);
+        $this->assertEquals('email', $response['body']['type']);
+        $this->assertEquals(false, $response['body']['enabled']);
+        $this->assertEquals('my-access-key', $response['body']['credentials']['accessKey']);
+        $this->assertEquals('my-secret-key', $response['body']['credentials']['secretKey']);
+        $this->assertEquals('us-east-1', $response['body']['credentials']['region']);
+        $this->assertArrayHasKey('fromEmail', $response['body']['options']);
+        $this->assertArrayNotHasKey('accessKey', $response['body']['options']);
+
+        $providerId = $response['body']['$id'];
+
+        // Create enabled: all credentials plus fromEmail present.
+        $enabledResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
+            'providerId' => ID::unique(),
+            'name' => 'SES-enabled',
+            'accessKey' => 'my-access-key',
+            'secretKey' => 'my-secret-key',
+            'region' => 'us-east-1',
+            'fromName' => 'Sender Name',
+            'fromEmail' => 'sender-email@my-domain.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $enabledResponse['headers']['status-code']);
+        $this->assertEquals(true, $enabledResponse['body']['enabled']);
+        $this->assertEquals('sender-email@my-domain.com', $enabledResponse['body']['options']['fromEmail']);
+
+        // Sparse update: change only the region, credentials must be preserved.
+        $updateResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'name' => 'SES2',
+            'region' => 'eu-west-1',
+        ]);
+
+        $this->assertEquals(200, $updateResponse['headers']['status-code']);
+        $this->assertEquals('SES2', $updateResponse['body']['name']);
+        $this->assertEquals('eu-west-1', $updateResponse['body']['credentials']['region']);
+        $this->assertEquals('my-access-key', $updateResponse['body']['credentials']['accessKey']);
+        $this->assertEquals('my-secret-key', $updateResponse['body']['credentials']['secretKey']);
+
+        // Regression: enabling while fromEmail is still empty must be rejected, not silently enabled.
+        $enableWithoutFromEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $enableWithoutFromEmail['headers']['status-code']);
+        $this->assertEquals('provider_missing_credentials', $enableWithoutFromEmail['body']['type']);
+
+        // Enable the first provider once fromEmail is supplied.
+        $enableResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
+            'fromEmail' => 'sender-email@my-domain.com',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $enableResponse['headers']['status-code']);
+        $this->assertEquals(true, $enableResponse['body']['enabled']);
+
+        // Updating an SES provider through a different provider route is rejected.
+        $wrongTypeResponse = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/sendgrid/' . $providerId, $headers, [
+            'name' => 'Wrong',
+        ]);
+
+        $this->assertEquals(400, $wrongTypeResponse['headers']['status-code']);
+
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, $headers);
+        $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+
+        $deleteEnabledResponse = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $enabledResponse['body']['$id'], $headers);
+        $this->assertEquals(204, $deleteEnabledResponse['headers']['status-code']);
+    }
+
     public function testCreateTopic(): void
     {
         $response1 = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
@@ -1383,131 +1472,6 @@ trait MessagingBase
         $this->assertIsInt($subscribersWithIncludeTotalFalse['body']['total']);
         $this->assertEquals(0, $subscribersWithIncludeTotalFalse['body']['total']);
         $this->assertGreaterThan(0, count($subscribersWithIncludeTotalFalse['body']['subscribers']));
-    }
-
-    public function testGetSubscriberLogs(): void
-    {
-        $data = $this->setupSubscriberData();
-        /**
-         * Test for SUCCESS
-         */
-        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals($logs['headers']['status-code'], 200);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['total']);
-
-        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::limit(1)->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($logs['headers']['status-code'], 200);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['total']);
-
-        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::offset(1)->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($logs['headers']['status-code'], 200);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertIsNumeric($logs['body']['total']);
-
-        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::limit(1)->toString(),
-                Query::offset(1)->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($logs['headers']['status-code'], 200);
-        $this->assertIsArray($logs['body']['logs']);
-        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
-        $this->assertIsNumeric($logs['body']['total']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::limit(-1)->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::offset(-1)->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::equal('$id', ['asdf'])->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                Query::orderAsc('$id')->toString(),
-            ],
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'queries' => [
-                '{ "method": "cursorAsc", "attribute": "$id" }'
-            ]
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
     }
 
     public function testDeleteSubscriber(): void

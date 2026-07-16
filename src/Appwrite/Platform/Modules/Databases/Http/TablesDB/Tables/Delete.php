@@ -36,6 +36,7 @@ class Delete extends CollectionDelete
             ->label('event', 'databases.[databaseId].tables.[tableId].delete')
             ->label('audits.event', 'table.delete')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: 'tables',

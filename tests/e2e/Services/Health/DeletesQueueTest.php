@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Health;
 
-class DeletesQueueTest extends HealthBase
+final class DeletesQueueTest extends HealthBase
 {
     public function testDeletesQueue(): void
     {

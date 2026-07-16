@@ -10,7 +10,7 @@ use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
 use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -44,22 +44,23 @@ class Create extends CreateDocumentAction
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/vectorsdb/embeddings/text')
-            ->desc('Create Text Embeddings')
+            ->desc('Create text embeddings')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_EMBEDDINGS_TEXT)
             ->label('audits.event', 'embedding.create')
             ->label('audits.resource', 'vectorsdb/embeddings/text')
+            ->label('usage.resource', 'database/embeddings/text')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
                     namespace: 'vectorsDB',
-                    group: $this->getSdkGroup(),
+                    group: 'embeddings',
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
-                    description: '/docs/references/vectorsdb/create-document.md',
+                    description: '/docs/references/vectorsdb/create-text-embeddings.md',
                     auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
@@ -75,7 +76,7 @@ class Create extends CreateDocumentAction
                 )
             ])
             ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
-            ->param('model', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
+            ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList(AppwriteAdapter::MODELS), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
             ->inject('embeddingAgent')
@@ -87,50 +88,43 @@ class Create extends CreateDocumentAction
 
     public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger): void
     {
-        $results = [];
-        $embeddingAgent->getAdapter()->setModel($model);
-        $dimension = $embeddingAgent->getAdapter()->getEmbeddingDimension();
+        $adapter = $embeddingAgent->getAdapter();
+        $adapter->setModel($model);
+        $dimension = $adapter->getEmbeddingDimension();
 
+        $results = [];
         $totalDuration = 0;
         $totalTokens = 0;
         $totalErrors = 0;
-        foreach ($texts as $text) {
-            $embedding = [];
-            $error = '';
+
+        foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
             try {
-                $embedResult = $embeddingAgent->embed($text);
-                $embedding = $embedResult['embedding'];
+                $embedResult = $embeddingAgent->bulkEmbed($batch);
                 $totalDuration += $embedResult['totalDuration'] ?? 0;
                 $totalTokens += $embedResult['tokensProcessed'] ?? 0;
+
+                foreach ($embedResult['embeddings'] as $embedding) {
+                    $results[] = $this->embeddingResult($model, $dimension, $embedding);
+                }
+
+                // Partial success: backend returned fewer embeddings than inputs.
+                // Fill the gap with error results so the response stays 1:1 with texts.
+                $missing = \count($batch) - \count($embedResult['embeddings']);
+                for ($i = 0; $i < $missing; $i++) {
+                    $totalErrors++;
+                    $results[] = $this->embeddingResult($model, $dimension, [], 'Error while generating embedding');
+                }
             } catch (\Exception $e) {
-                $error = 'Error while generating embedding';
-                $totalErrors += 1;
-                if ($logger) {
-                    $log->setNamespace("http");
-                    $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                    $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
-                    $log->setType(Log::TYPE_ERROR);
-                    $log->setMessage($e->getMessage());
+                $totalErrors += \count($batch);
+                $this->logError($e, $model, $project, $log, $logger);
 
-                    $log->addTag('embeddingModel', $model);
-                    $log->addTag('code', $e->getCode());
-                    $log->addTag('projectId', $project->getId());
-
-                    $log->addExtra('file', $e->getFile());
-                    $log->addExtra('line', $e->getLine());
-                    $log->addExtra('trace', $e->getTraceAsString());
-
-                    $logger->addLog($log);
+                // One error result per text in the failed batch.
+                foreach ($batch as $ignored) {
+                    $results[] = $this->embeddingResult($model, $dimension, [], 'Error while generating embedding');
                 }
             }
-
-            $results[] = new Document([
-                'model' => $model,
-                'dimension' => $dimension,
-                'embedding' => $embedding,
-                'error' => $error
-            ]);
         }
+
         $embeddings = new Document([
             'embeddings' => $results,
             'total' => \count($results),
@@ -149,5 +143,43 @@ class Create extends CreateDocumentAction
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION), $totalDuration)
             ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR, $totalErrors)
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_ERROR), $totalErrors);
+    }
+
+    /**
+     * Build a single embedding response document.
+     *
+     * @param float[] $embedding
+     */
+    private function embeddingResult(string $model, int $dimension, array $embedding, string $error = ''): Document
+    {
+        return new Document([
+            'model' => $model,
+            'dimension' => $dimension,
+            'embedding' => $embedding,
+            'error' => $error,
+        ]);
+    }
+
+    private function logError(\Throwable $e, string $model, Document $project, Log $log, ?Logger $logger): void
+    {
+        if ($logger === null) {
+            return;
+        }
+
+        $log->setNamespace('http');
+        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+        $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($e->getMessage());
+
+        $log->addTag('embeddingModel', $model);
+        $log->addTag('code', $e->getCode());
+        $log->addTag('projectId', $project->getId());
+
+        $log->addExtra('file', $e->getFile());
+        $log->addExtra('line', $e->getLine());
+        $log->addExtra('trace', $e->getTraceAsString());
+
+        $logger->addLog($log);
     }
 }
