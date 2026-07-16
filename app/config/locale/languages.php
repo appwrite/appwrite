@@ -719,6 +719,11 @@ return [
         "nativeName" => "Sängö"
     ],
     [
+        "code" => "sgn",
+        "name" => "Sign Language",
+        "nativeName" => "Sign Language"
+    ],
+    [
         "code" => "sh",
         "name" => "Serbo-Croatian",
         "nativeName" => "Srpskohrvatski / Српскохрватски"
@@ -762,11 +767,6 @@ return [
         "code" => "sr",
         "name" => "Serbian",
         "nativeName" => "Српски"
-    ],
-    [
-        "code" => "sgn",
-        "name" => "Sign Language",
-        "nativeName" => "Sign Language"
     ],
     [
         "code" => "ss",
