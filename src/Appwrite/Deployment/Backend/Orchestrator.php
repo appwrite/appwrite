@@ -84,6 +84,7 @@ readonly class Orchestrator extends Backend
 
         $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'status' => 'waiting',
+            'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
         ]));
 
         $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
@@ -165,6 +166,7 @@ readonly class Orchestrator extends Backend
         $command = $deployment->getAttribute('buildCommands', '');
         $env = self::variables($project, $function, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
+            'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
         ] + $output['environment'];
 
         return [
@@ -216,6 +218,31 @@ readonly class Orchestrator extends Backend
     public static function outputDirectory(string $projectId, string $deploymentId): string
     {
         return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}";
+    }
+
+    /**
+     * The build output path on the builds volume, declared at submission.
+     */
+    public static function buildPath(string $projectId, string $deploymentId): string
+    {
+        return static::outputDirectory($projectId, $deploymentId) . '/' . static::artifact();
+    }
+
+    /**
+     * The artifact filename build.sh produces for the configured compression.
+     */
+    public static function artifact(): string
+    {
+        return match (static::compression()) {
+            'none' => 'code.tar',
+            'squashfs' => 'code.sqfs',
+            default => 'code.tar.gz',
+        };
+    }
+
+    protected static function compression(): string
+    {
+        return System::getEnv('_APP_COMPUTE_BUILD_COMPRESSION', 'gzip');
     }
 
     /**
