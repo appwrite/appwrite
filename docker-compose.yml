@@ -1241,7 +1241,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.6.0
+    image: ghcr.io/open-runtimes/orchestrator/jobs-service:0.7.0
     restart: unless-stopped
     user: root
     networks:
@@ -1252,7 +1252,7 @@ services:
       - ORCHESTRATOR_BACKEND=docker
       - ORCHESTRATOR_NETWORK=appwrite
       - ARTIFACT_ENDPOINT=http://orchestrator-jobs:8080
-      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.6.0
+      - JOB_SIDECAR_IMAGE=ghcr.io/open-runtimes/orchestrator/job-sidecar:0.7.0
 
   mariadb:
     image: mariadb:10.11

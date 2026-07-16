@@ -26,24 +26,6 @@ final class VCSGiteaConsoleClientTest extends Scope
         return 'gitea';
     }
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // TODO: Skipped -- intermittent (CI-only, non-reproducible locally)
-        // "No source code found" build failure on the orchestrator jobs
-        // backend. Confirmed via diagnostics that the presigned source URL
-        // and its content are fine (fetched successfully both externally and
-        // from inside the sidecar itself), yet /mnt/code/source doesn't exist
-        // when the build command runs. Looks like a race between the
-        // download+unarchive artifacts and command execution start -- the
-        // OpenRuntimes\Orchestrator\Jobs::create() job spec has no field to
-        // declare that command must wait for artifacts to finish. Likely
-        // affects any VCS/template deployment on _APP_BUILDS_BACKEND=
-        // orchestrator, not just Gitea. Re-enable once root-caused upstream.
-        $this->markTestSkipped('Intermittent orchestrator-backend build race, not a Gitea-specific issue -- see comment above.');
-    }
-
     public function testFunctionRedeploysFromGiteaWebhook(): void
     {
         $token = $this->createGiteaToken();

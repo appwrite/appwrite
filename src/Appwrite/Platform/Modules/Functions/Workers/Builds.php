@@ -536,7 +536,7 @@ class Builds extends Action
                         $resource,
                         $deployment,
                         $providerAdapter->getRepositoryPresignedUrl($cloneOwner, $cloneRepository, $ref),
-                        Backend::sourceSubdirectory($providerAdapter, $cloneRepository, $resource->getAttribute('providerRootDirectory', '')),
+                        $resource->getAttribute('providerRootDirectory', ''),
                     );
 
                     Console::execute('rm -rf ' . \escapeshellarg('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);

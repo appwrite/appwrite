@@ -127,16 +127,16 @@ readonly class Orchestrator extends Backend
 
         // Source artifacts, both ending in /mnt/code/source:
         //  - remote tarball ($source): templates (public codeload URL) and VCS
-        //    (a short-lived presigned URL). The unarchive auto-strips the
-        //    "{repo}-{ref}/" wrapper and, via subdir, extracts just the
-        //    rootDirectory.
-        //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
-        //    over a presigned GET (manual upload / duplicate).
+        //    (a short-lived presigned URL). Git-forge archives wrap the tree in
+        //    a root directory (GitHub "{repo}-{ref}/", Gitea "{repo}/") that
+        //    strip drops; subdir then extracts just the rootDirectory.
+        //  - otherwise: the deployment's uploaded tarball (no wrapper), fetched
+        //    from Appwrite over a presigned GET (manual upload / duplicate).
         if ($source !== null) {
             $subdir = \trim($source['subdir'] ?? '', '/');
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz'),
-                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null),
+                new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true),
                 // Appwrite never sees the remote source (the sidecar fetches it),
                 // so unlike the uploaded-tarball path it can't size it. Stat the
                 // downloaded archive so the orchestrator reports its byte size in
