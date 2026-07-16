@@ -4,9 +4,52 @@ namespace Tests\E2E\Services\Realtime;
 
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 trait RealtimeBase
 {
+    /**
+     * Receive websocket frames until one matches, skipping unrelated frames.
+     *
+     * Realtime channels such as `executions` are project-scoped, so a subscriber
+     * may see intermediate or unrelated frames before the one under test. Some
+     * events (e.g. an async execution's terminal `update`) also arrive only after
+     * substantial latency (worker pickup + runtime cold start + execution timeout),
+     * well beyond a single read timeout. This polls, tolerating both, until $match
+     * returns true or the overall deadline elapses.
+     *
+     * @param callable(array): bool $match
+     */
+    private function receiveUntilEvent(
+        WebSocketClient $client,
+        callable $match,
+        int $timeoutMs = 60000,
+        int $pollMs = 50
+    ): array {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+        $lastMessage = [];
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $message = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                \usleep($pollMs * 1000);
+                continue;
+            }
+
+            if (!\is_array($message)) {
+                continue;
+            }
+
+            $lastMessage = $message;
+            if ($match($message)) {
+                return $message;
+            }
+        }
+
+        $this->fail('Timed out waiting for expected websocket frame. Last frame: ' . \json_encode($lastMessage));
+    }
+
     private function getWebsocket(
         array $channels = [],
         array $headers = [],
