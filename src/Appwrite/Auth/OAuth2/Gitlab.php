@@ -158,6 +158,18 @@ class Gitlab extends OAuth2
     /**
      * @param string $accessToken
      *
+     * @return string
+     */
+    public function getUserSlug(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['username'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
      * @return array
      */
     protected function getUser(string $accessToken): array

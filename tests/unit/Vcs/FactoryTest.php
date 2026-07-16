@@ -89,6 +89,26 @@ final class FactoryTest extends TestCase
         $this->assertSame(['test'], $factory->getProviders());
     }
 
+    public function testFromProviderAppliesEndpointDefault(): void
+    {
+        $entry = [
+            'adapter' => \Utopia\VCS\Adapter\Git\GitLab::class,
+            'variables' => [
+                'endpoint' => ['required' => false, 'envVariable' => '_APP_VCS_TEST_ENDPOINT', 'default' => 'https://gitlab.com'],
+            ],
+        ];
+        $factory = new Factory($this->cache(), ['gitlab' => $entry]);
+
+        $adapter = $factory->fromProvider('gitlab');
+        $property = new \ReflectionProperty($adapter, 'endpoint');
+        $this->assertSame('https://gitlab.com/api/v4', $property->getValue($adapter));
+
+        \putenv('_APP_VCS_TEST_ENDPOINT=https://gitlab.example.com');
+        $adapter = $factory->fromProvider('gitlab');
+        $this->assertSame('https://gitlab.example.com/api/v4', $property->getValue($adapter));
+        \putenv('_APP_VCS_TEST_ENDPOINT');
+    }
+
     public function testGetWebhookSecret(): void
     {
         $factory = new Factory($this->cache(), ['github' => $this->githubEntry()]);

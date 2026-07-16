@@ -57,7 +57,7 @@ class Factory
 
         $adapter = new ($this->registry[$key]['adapter'])($this->cache);
 
-        $endpoint = $this->getEnv($key, 'endpoint');
+        $endpoint = $this->getEnv($key, 'endpoint') ?: ($this->registry[$key]['variables']['endpoint']['default'] ?? '');
         if (!empty($endpoint) && \method_exists($adapter, 'setEndpoint')) {
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
         }
