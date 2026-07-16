@@ -72,8 +72,7 @@ function parseMaxAge(raw: string | null): number | undefined {
  * The SDK types `resource` as a single string, but its client flattens arrays
  * into the indexed repeated params (`resource[0]`, `resource[1]`) the server
  * expects for RFC 8707 resource lists — the reference console relies on the
- * same behavior. Contain the unavoidable cast in this one documented place;
- * the e2e suite asserts the resulting wire format.
+ * same behavior. Contain the unavoidable cast in this one documented place.
  */
 function toResourceParam(resources: string[]): string | undefined {
   if (resources.length === 0) return undefined

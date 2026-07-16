@@ -57,6 +57,7 @@ coverage
 test-results/
 playwright-report/
 e2e/.auth/
+e2e/screenshots/
 
 # Temporary files
 *.tmp
