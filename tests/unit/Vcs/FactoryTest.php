@@ -7,18 +7,21 @@ namespace Tests\Unit\Vcs;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\Factory;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git\GitLab;
 
 final class FactoryTest extends TestCase
 {
     protected function tearDown(): void
     {
         \putenv('_APP_VCS_TEST_TOKEN');
+        \putenv('_APP_VCS_TEST_ENDPOINT');
     }
 
     public function testRegistryEntries(): void
@@ -92,7 +95,7 @@ final class FactoryTest extends TestCase
     public function testFromProviderAppliesEndpointDefault(): void
     {
         $entry = [
-            'adapter' => \Utopia\VCS\Adapter\Git\GitLab::class,
+            'adapter' => GitLab::class,
             'variables' => [
                 'endpoint' => ['required' => false, 'envVariable' => '_APP_VCS_TEST_ENDPOINT', 'default' => 'https://gitlab.com'],
             ],
@@ -100,13 +103,12 @@ final class FactoryTest extends TestCase
         $factory = new Factory($this->cache(), ['gitlab' => $entry]);
 
         $adapter = $factory->fromProvider('gitlab');
-        $property = new \ReflectionProperty($adapter, 'endpoint');
+        $property = new ReflectionProperty($adapter, 'endpoint');
         $this->assertSame('https://gitlab.com/api/v4', $property->getValue($adapter));
 
         \putenv('_APP_VCS_TEST_ENDPOINT=https://gitlab.example.com');
         $adapter = $factory->fromProvider('gitlab');
         $this->assertSame('https://gitlab.example.com/api/v4', $property->getValue($adapter));
-        \putenv('_APP_VCS_TEST_ENDPOINT');
     }
 
     public function testGetWebhookSecret(): void
