@@ -113,7 +113,8 @@ export function OAuth2ResourceSelector({
 
   const summary = useMemo(() => {
     if (isAll) return `${t('All')} ${pluralLabel}`
-    if (specificIds.length === 0) return `${t('No')} ${pluralLabel} ${t('selected')}`
+    if (specificIds.length === 0)
+      return `${t('No')} ${pluralLabel} ${t('selected')}`
     if (specificIds.length <= 2)
       return specificIds.map((id) => labelFor(id).name).join(', ')
     return `${specificIds.length} ${pluralLabel}`
@@ -121,9 +122,9 @@ export function OAuth2ResourceSelector({
   }, [isAll, specificIds, names, pluralLabel])
 
   return (
-    <div className="border-input bg-background rounded-lg border">
+    <div>
       {/* Summary row */}
-      <div className="flex items-center justify-between gap-2 px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
         <div
           className={cn(
             'flex min-w-0 items-center gap-1.5 text-sm',
@@ -147,13 +148,17 @@ export function OAuth2ResourceSelector({
             expanded && 'text-foreground',
           )}
         >
-          {expanded ? <Check className="size-3.5" /> : <Pencil className="size-3.5" />}
+          {expanded ? (
+            <Check className="size-3.5" />
+          ) : (
+            <Pencil className="size-3.5" />
+          )}
           {expanded ? t('Done') : t('Change')}
         </button>
       </div>
 
       {expanded && (
-        <div className="border-input space-y-3 border-t p-3">
+        <div className="space-y-3 pt-1">
           {/* Mode toggle for wildcard grants */}
           {wildcard && (
             <div
@@ -248,7 +253,9 @@ export function OAuth2ResourceSelector({
                         onClick={() => add(r.id)}
                         className="hover:bg-muted flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm"
                       >
-                        <span className="min-w-0 flex-1 truncate">{r.name}</span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {r.name}
+                        </span>
                         {r.region && (
                           <span className="text-muted-foreground bg-muted rounded px-1 text-[0.6rem] uppercase">
                             {r.region}

@@ -9,7 +9,6 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import {
   OAuth2ConsentCard,
   type OAuth2Flow,
@@ -164,105 +163,103 @@ function OAuth2DevicePage() {
   }
 
   return (
-    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-md">
-        {phase === 'loading' && (
-          <div className="flex min-h-64 items-center justify-center">
-            <Loader2 className="text-muted-foreground size-8 animate-spin" />
-          </div>
-        )}
+    <div className="bg-background h-full overflow-y-auto">
+      <div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
+        <div className="w-full max-w-md">
+          {phase === 'loading' && (
+            <div className="flex min-h-64 items-center justify-center">
+              <Loader2 className="text-muted-foreground size-8 animate-spin" />
+            </div>
+          )}
 
-        {phase === 'enter-code' && (
-          <Card className="overflow-hidden p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-xl">
-                  <MonitorSmartphone className="size-6" />
+          {phase === 'enter-code' && (
+            <Card className="overflow-hidden p-6 md:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-xl">
+                    <MonitorSmartphone className="size-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h1 className="text-xl font-semibold tracking-tight">
+                      {hasPrefilledCode
+                        ? t('Confirm your code')
+                        : t('Connect a device')}
+                    </h1>
+                    <p className="text-muted-foreground text-sm">
+                      {hasPrefilledCode
+                        ? t(
+                            'Make sure this matches the code shown on your device, then continue.',
+                          )
+                        : t('Enter the code shown on your device to continue.')}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h1 className="text-xl font-semibold tracking-tight">
-                    {hasPrefilledCode
-                      ? t('Confirm your code')
-                      : t('Connect a device')}
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    {hasPrefilledCode
-                      ? t(
-                          'Make sure this matches the code shown on your device, then continue.',
-                        )
-                      : t('Enter the code shown on your device to continue.')}
+
+                <div className="space-y-3">
+                  <Label htmlFor="user-code">{t('Device code')}</Label>
+                  <Input
+                    id="user-code"
+                    value={code}
+                    onChange={(e) => {
+                      setCode(normalizeUserCode(e.target.value))
+                      setError(null)
+                    }}
+                    placeholder="XXXXXXXX"
+                    autoFocus
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    maxLength={12}
+                    disabled={submitMutation.isPending}
+                    className="text-center font-mono text-2xl uppercase tracking-[0.3em]"
+                  />
+                  {error && <p className="text-destructive text-sm">{error}</p>}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="submit"
+                    variant="brandCta"
+                    className="w-full"
+                    disabled={code.length === 0 || submitMutation.isPending}
+                  >
+                    {submitMutation.isPending ? t('Verifying…') : t('Continue')}
+                  </Button>
+                </div>
+
+                {account && (
+                  <p className="text-muted-foreground text-center text-xs">
+                    {t('Signed in as')}{' '}
+                    <span className="font-medium">
+                      {account.email || account.name}
+                    </span>
+                    .
                   </p>
-                </div>
-              </div>
+                )}
+              </form>
+            </Card>
+          )}
 
-              <div className="space-y-3">
-                <Label htmlFor="user-code">{t('Device code')}</Label>
-                <Input
-                  id="user-code"
-                  value={code}
-                  onChange={(e) => {
-                    setCode(normalizeUserCode(e.target.value))
-                    setError(null)
-                  }}
-                  placeholder="XXXXXXXX"
-                  autoFocus
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  maxLength={12}
-                  disabled={submitMutation.isPending}
-                  className="text-center font-mono text-2xl uppercase tracking-[0.3em]"
-                />
-                {error && <p className="text-destructive text-sm">{error}</p>}
-              </div>
+          {phase === 'consent' && grant && app && (
+            <OAuth2ConsentCard
+              grant={grant}
+              app={app}
+              accountLabel={account?.email || account?.name || undefined}
+              flow={DEVICE_FLOW}
+              onDone={(outcome) =>
+                setPhase(outcome === 'approved' ? 'approved' : 'denied')
+              }
+            />
+          )}
 
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="submit"
-                  variant="brandCta"
-                  className="w-full"
-                  disabled={code.length === 0 || submitMutation.isPending}
-                >
-                  {submitMutation.isPending ? t('Verifying…') : t('Continue')}
-                </Button>
-              </div>
-
-              {account && (
-                <p className="text-muted-foreground text-center text-xs">
-                  {t('Signed in as')}{' '}
-                  <span className="font-medium">
-                    {account.email || account.name}
-                  </span>
-                  .
-                </p>
-              )}
-            </form>
-          </Card>
-        )}
-
-        {phase === 'consent' && grant && app && (
-          <OAuth2ConsentCard
-            grant={grant}
-            app={app}
-            accountLabel={account?.email || account?.name || undefined}
-            flow={DEVICE_FLOW}
-            onDone={(outcome) =>
-              setPhase(outcome === 'approved' ? 'approved' : 'denied')
-            }
-          />
-        )}
-
-        {(phase === 'approved' || phase === 'denied') && (
-          <OAuth2OutcomeCard
-            outcome={phase}
-            flow={DEVICE_FLOW}
-            app={app}
-            accountLabel={account?.email || account?.name || undefined}
-          />
-        )}
-
-        <div className="mt-10 flex justify-center md:mt-16">
-          <AppwriteLogo className="h-6 w-auto" />
+          {(phase === 'approved' || phase === 'denied') && (
+            <OAuth2OutcomeCard
+              outcome={phase}
+              flow={DEVICE_FLOW}
+              app={app}
+              accountLabel={account?.email || account?.name || undefined}
+            />
+          )}
         </div>
       </div>
     </div>
