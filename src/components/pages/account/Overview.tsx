@@ -526,85 +526,79 @@ export function IdentitiesSection({
         </h3>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4">
-        <div className="rounded-lg border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
-                  {t('Provider')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
-                  {t('Email')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  {t('Created At')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                  {t('Expiry Date')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {signInIdentities.map((identity) => (
-                <TableRow key={identity.$id}>
-                  <TableCell>
-                    <Badge
-                      variant="info"
-                      className="text-[10px] shrink-0 gap-1.5 font-medium"
-                    >
-                      <img
-                        src={`/icons/${getProviderIcon(identity.provider)}`}
-                        alt={identity.provider}
-                        className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                        onError={(e) => {
-                          e.currentTarget.src = '/icons/empty.svg'
-                        }}
-                      />
-                      {getProviderName(identity.provider)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-[13px] text-muted-foreground">
-                      {identity.providerEmail || '-'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <DateTooltip
-                      date={new Date(identity.$createdAt)}
-                      className="text-[12px] text-muted-foreground"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {identity.providerAccessTokenExpiry ? (
-                      <DateTooltip
-                        date={new Date(identity.providerAccessTokenExpiry)}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">
-                        -
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => handleDelete(identity.$id)}
-                      disabled={deleteIdentityMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent border-b border-border">
+            <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+              {t('Provider')}
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
+              {t('Email')}
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+              {t('Created At')}
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+              {t('Expiry Date')}
+            </TableHead>
+            <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {signInIdentities.map((identity) => (
+            <TableRow key={identity.$id}>
+              <TableCell className="px-6 py-3">
+                <Badge
+                  variant="info"
+                  className="text-[10px] shrink-0 gap-1.5 font-medium"
+                >
+                  <img
+                    src={`/icons/${getProviderIcon(identity.provider)}`}
+                    alt={identity.provider}
+                    className={`h-3.5 w-3.5 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                    onError={(e) => {
+                      e.currentTarget.src = '/icons/empty.svg'
+                    }}
+                  />
+                  {getProviderName(identity.provider)}
+                </Badge>
+              </TableCell>
+              <TableCell className="px-4 py-3">
+                <span className="text-[13px] text-muted-foreground">
+                  {identity.providerEmail || '-'}
+                </span>
+              </TableCell>
+              <TableCell className="px-4 py-3">
+                <DateTooltip
+                  date={new Date(identity.$createdAt)}
+                  className="text-[12px] text-muted-foreground"
+                />
+              </TableCell>
+              <TableCell className="px-4 py-3">
+                {identity.providerAccessTokenExpiry ? (
+                  <DateTooltip
+                    date={new Date(identity.providerAccessTokenExpiry)}
+                    className="text-[12px] text-muted-foreground"
+                  />
+                ) : (
+                  <span className="text-[12px] text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="px-6 py-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleDelete(identity.$id)}
+                  disabled={deleteIdentityMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

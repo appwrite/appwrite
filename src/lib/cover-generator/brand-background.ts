@@ -174,7 +174,7 @@ export type PrepareCoverIconOptions = {
   insetRatio?: number
   themeFamily?: CoverThemeFamily
   themeId?: CoverThemeId
-  /** Left-align artwork for templates that share an x anchor with text (e.g. showcase-icon). */
+  /** Left-align artwork (vertically centered) for templates that share an x anchor with text. */
   contentAlign?: 'center' | 'left'
 }
 
@@ -206,11 +206,17 @@ export async function prepareCoverIconDataUri(
       : Math.max(1, size - inset * 2)
   const tint = getCoverIconRasterTint(source, options.themeFamily)
 
+  // Left-aligned icons stay flush on the left (for lockups next to text) but are
+  // vertically centered so they sit optically with the title, not top-biased.
+  const leftTopInset = contentAlign === 'left' ? Math.floor(inset / 2) : inset
+  const leftBottomInset = contentAlign === 'left' ? Math.ceil(inset / 2) : inset
+
   let pipeline = sharp(buffer, {
     density: Math.max(96, Math.ceil(inner * 2)),
   }).resize(inner, inner, {
     fit: 'contain',
-    position: contentAlign === 'left' ? 'left top' : 'centre',
+    // 'west' = left + vertically centered (sharp rejects "left centre")
+    position: contentAlign === 'left' ? 'west' : 'centre',
     background: { r: 0, g: 0, b: 0, alpha: 0 },
   })
 
@@ -234,8 +240,8 @@ export async function prepareCoverIconDataUri(
     .extend(
       contentAlign === 'left'
         ? {
-            top: 0,
-            bottom: inset,
+            top: leftTopInset,
+            bottom: leftBottomInset,
             left: 0,
             right: inset,
             background: { r: 0, g: 0, b: 0, alpha: 0 },

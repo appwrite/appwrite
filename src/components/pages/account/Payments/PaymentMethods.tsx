@@ -208,31 +208,29 @@ export function AccountPaymentMethods({
           </div>
         </div>
         <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-4">
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
-                    {t('Card')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                    {t('Cardholder')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                    {t('Expires')}
-                  </TableHead>
-                  {hasPaymentError && (
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                      {t('Status')}
-                    </TableHead>
-                  )}
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Linked To')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
-                </TableRow>
-              </TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
+                {t('Card')}
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                {t('Cardholder')}
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                {t('Expires')}
+              </TableHead>
+              {hasPaymentError && (
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                  {t('Status')}
+                </TableHead>
+              )}
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {t('Linked To')}
+              </TableHead>
+              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
+            </TableRow>
+          </TableHeader>
               <TableBody>
                 {completedPaymentMethods.map((method: Models.PaymentMethod) => {
                   const isExpiringSoon =
@@ -260,7 +258,7 @@ export function AccountPaymentMethods({
                         hasError && 'bg-red-50/50 dark:bg-red-950/10',
                       )}
                     >
-                      <TableCell className="px-4 py-3">
+                      <TableCell className="px-6 py-3">
                         <div className="flex items-center gap-3">
                           <PaymentMethodBrandAvatar brand={method.brand} />
                           <div className="min-w-0">
@@ -360,7 +358,7 @@ export function AccountPaymentMethods({
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="px-4 py-3 text-end">
+                      <TableCell className="px-6 py-3 text-end">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <RowActionsMenuTrigger />
@@ -392,8 +390,6 @@ export function AccountPaymentMethods({
                 })}
               </TableBody>
             </Table>
-          </div>
-        </div>
       </div>
 
       {/* Edit Modal */}

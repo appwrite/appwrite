@@ -15,6 +15,10 @@ import { getCoverTheme } from '@/lib/cover-generator/themes'
 const ROW_CENTER_Y = COVER_HEIGHT / 2
 const TITLE_CHAR_WIDTH_RATIO = 0.58
 const ICON_PLACEHOLDER_RADIUS = 12
+/** Extra space between the icon slot and the title so the lockup does not feel cramped. */
+const ICON_TITLE_GAP_RATIO = 0.45
+/** Nudge the icon up slightly so it optically centers with the title cap height. */
+const ICON_OPTICAL_Y_OFFSET_RATIO = -0.04
 
 function getTitleIconLockupFontSize(title: string): number {
   const text = stripCoverTitleSuffix(title)
@@ -59,7 +63,7 @@ export async function renderTitleIconTemplateSvg(
   const titleLines = titleText ? wrapTextLines(titleText, 18, 2) : []
 
   const iconSize = clampNumber(data.iconSize, 40, 128)
-  const iconTitleGap = Math.round(titleFontSize * 0.3)
+  const iconTitleGap = Math.round(titleFontSize * ICON_TITLE_GAP_RATIO)
   const iconHref = await prepareCoverIconDataUri(data.icon, iconSize, {
     themeFamily,
     themeId,
@@ -71,7 +75,10 @@ export async function renderTitleIconTemplateSvg(
     iconSize + (titleLines.length > 0 ? iconTitleGap + titleWidth : 0)
   const rowStartX = (COVER_WIDTH - rowWidth) / 2
   const iconX = rowStartX
-  const iconY = ROW_CENTER_Y - iconSize / 2
+  const iconY =
+    ROW_CENTER_Y -
+    iconSize / 2 +
+    Math.round(iconSize * ICON_OPTICAL_Y_OFFSET_RATIO)
   const titleX = iconX + iconSize + iconTitleGap
   const titleStartY = getTitleStartLayoutY(
     titleLines.length,

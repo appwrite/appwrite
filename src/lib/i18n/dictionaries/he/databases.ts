@@ -1537,6 +1537,7 @@ export const heDatabasesDictionary: Record<string, string> = {
     'שנו את רמת המחשוב של מסד נתונים זה. שדרוגים מתבצעים ללא השבתה באמצעות rolling cutover.',
   'High availability': 'זמינות גבוהה',
   'Cluster topology': 'טופולוגיית אשכול',
+  Proxy: 'פרוקסי',
   'Primary instance': 'מופע primary',
   Primary: 'Primary',
   'Read replica': 'Read replica',

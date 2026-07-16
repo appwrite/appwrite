@@ -34,14 +34,87 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
 
+function isPrimaryRole(role: string) {
+  return role.trim().toLowerCase() === 'primary'
+}
+
+function isPlaceholderMemberId(id: string) {
+  return id.startsWith('__')
+}
+
+function getMemberId(
+  member: Models.DedicatedDatabaseMember,
+  index: number,
+): string {
+  const rawId =
+    member.$id ||
+    (member as { id?: string }).id ||
+    `${member.role || 'member'}-${index}`
+  return String(rawId)
+}
+
 function sortMembers(
   members: Models.DedicatedDatabaseMember[],
 ): Models.DedicatedDatabaseMember[] {
   return [...members].sort((left, right) => {
-    if (left.role === 'primary') return -1
-    if (right.role === 'primary') return 1
-    return left.$id.localeCompare(right.$id)
+    if (isPrimaryRole(left.role)) return -1
+    if (isPrimaryRole(right.role)) return 1
+    return getMemberId(left, 0).localeCompare(getMemberId(right, 0))
   })
+}
+
+/**
+ * Ensure the table always lists the primary plus every configured replica.
+ * When getReplicas returns a partial members list (common while pods are still
+ * coming up), fill the missing slots so the UI matches the replica count.
+ */
+function expandClusterMembers(
+  members: Models.DedicatedDatabaseMember[],
+  configuredReplicaCount: number,
+): Models.DedicatedDatabaseMember[] {
+  const sorted = sortMembers(members)
+  const primary = sorted.find((member) => isPrimaryRole(member.role))
+  const replicaMembers = sorted.filter((member) => !isPrimaryRole(member.role))
+  const targetReplicas = Math.max(
+    Math.max(0, Math.floor(configuredReplicaCount)),
+    replicaMembers.length,
+  )
+
+  // Members without a primary role: keep API order rather than inventing one.
+  if (!primary && sorted.length > 0) {
+    return sorted
+  }
+
+  const result: Models.DedicatedDatabaseMember[] = []
+
+  if (primary) {
+    result.push(primary)
+  } else if (targetReplicas > 0) {
+    result.push({
+      $id: '__primary__',
+      role: 'primary',
+      status: 'provisioning',
+      lagSeconds: 0,
+    })
+  } else {
+    return []
+  }
+
+  for (let index = 0; index < targetReplicas; index++) {
+    const existing = replicaMembers[index]
+    if (existing) {
+      result.push(existing)
+    } else {
+      result.push({
+        $id: `__replica_${index + 1}__`,
+        role: 'replica',
+        status: 'provisioning',
+        lagSeconds: 0,
+      })
+    }
+  }
+
+  return result
 }
 
 function getMemberStatusVariant(
@@ -76,7 +149,7 @@ function formatLagSeconds(
   lagSeconds: number | null | undefined,
   t: ReturnType<typeof useT>,
 ) {
-  if (role === 'primary') return t('N/A')
+  if (isPrimaryRole(role)) return t('N/A')
   if (lagSeconds == null || !Number.isFinite(lagSeconds)) return t('N/A')
   return t('{seconds}s lag').replace('{seconds}', String(lagSeconds))
 }
@@ -86,7 +159,7 @@ function getReplicaLabel(
   replicaIndex: number,
   t: ReturnType<typeof useT>,
 ) {
-  if (member.role === 'primary') return t('Primary instance')
+  if (isPrimaryRole(member.role)) return t('Primary instance')
   return `${t('Read replica')} ${replicaIndex}`
 }
 
@@ -100,7 +173,7 @@ export function PostgresDatabasePrimaryCard({
   const queryClient = useQueryClient()
   const haEnabled = (database.replicas ?? 0) > 0
   const pollReplicas = database.status !== 'ready'
-  const { members, isLoading, isFetching } = usePostgresDatabaseReplicas(
+  const { replicas, members, isLoading, isFetching } = usePostgresDatabaseReplicas(
     projectId,
     databaseId,
     haEnabled,
@@ -110,9 +183,18 @@ export function PostgresDatabasePrimaryCard({
   const [selectedReplicaId, setSelectedReplicaId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const sortedMembers = useMemo(() => sortMembers(members), [members])
-  const primaryMember = sortedMembers.find((member) => member.role === 'primary')
-  const failoverTargets = sortedMembers.filter((member) => member.role !== 'primary')
+  const configuredReplicaCount = replicas?.replicas ?? database.replicas ?? 0
+  const displayMembers = useMemo(
+    () => expandClusterMembers(members, configuredReplicaCount),
+    [members, configuredReplicaCount],
+  )
+  const primaryMember = displayMembers.find((member) =>
+    isPrimaryRole(member.role),
+  )
+  const failoverTargets = displayMembers.filter(
+    (member) =>
+      !isPrimaryRole(member.role) && !isPlaceholderMemberId(getMemberId(member, 0)),
+  )
 
   useEffect(() => {
     if (!selectedReplicaId) return
@@ -159,7 +241,7 @@ export function PostgresDatabasePrimaryCard({
         : undefined)
 
   const handlePromote = () => {
-    if (!selectedReplicaId) return
+    if (!selectedReplicaId || isPlaceholderMemberId(selectedReplicaId)) return
     failoverMutation.mutate(
       { targetReplicaId: selectedReplicaId },
       {
@@ -192,99 +274,108 @@ export function PostgresDatabasePrimaryCard({
           </p>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          {isLoading && sortedMembers.length === 0 ? (
+        {isLoading && displayMembers.length === 0 ? (
+          <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
               {t('Loading cluster members…')}
             </p>
-          ) : sortedMembers.length === 0 ? (
+          </div>
+        ) : displayMembers.length === 0 ? (
+          <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
               {t('No cluster members are available yet.')}
             </p>
-          ) : (
-            <>
-              <RadioGroup
-                value={selectedReplicaId ?? undefined}
-                onValueChange={setSelectedReplicaId}
-                className="space-y-0"
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-b border-border">
-                      <TableHead className="w-[40px] px-4" />
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t('Instance')}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t('Role')}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t('Status')}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                        {t('Replication lag')}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedMembers.map((member) => {
-                      const isPrimary = member.role === 'primary'
-                      const replicaIndex = isPrimary ? 0 : ++replicaCounter
-                      const label = getReplicaLabel(member, replicaIndex, t)
-                      const statusVariant = getMemberStatusVariant(member.status)
+          </div>
+        ) : (
+          <>
+            <RadioGroup
+              value={selectedReplicaId ?? undefined}
+              onValueChange={setSelectedReplicaId}
+              className="w-full gap-0"
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="w-[40px] px-6 py-3" />
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Instance')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Role')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {t('Status')}
+                    </TableHead>
+                    <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                      {t('Replication lag')}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {displayMembers.map((member, index) => {
+                    const memberId = getMemberId(member, index)
+                    const isPrimary = isPrimaryRole(member.role)
+                    const isPlaceholder = isPlaceholderMemberId(memberId)
+                    const replicaIndex = isPrimary ? 0 : ++replicaCounter
+                    const label = getReplicaLabel(member, replicaIndex, t)
+                    const statusVariant = getMemberStatusVariant(member.status)
+                    const rowDisabled =
+                      writeDisabled || databaseBusy || isPlaceholder
 
-                      return (
-                        <TableRow key={member.$id}>
-                          <TableCell className="px-4 py-3">
-                            {isPrimary ? (
-                              <span className="inline-block size-4" aria-hidden />
-                            ) : (
-                              <RadioGroupItem
-                                value={member.$id}
-                                id={`primary-target-${member.$id}`}
-                                disabled={writeDisabled || databaseBusy}
-                                aria-label={label}
-                              />
+                    return (
+                      <TableRow key={`${member.role}-${memberId}-${index}`}>
+                        <TableCell className="px-6 py-3">
+                          {isPrimary ? (
+                            <span className="inline-block size-4" aria-hidden />
+                          ) : (
+                            <RadioGroupItem
+                              value={memberId}
+                              id={`primary-target-${memberId}`}
+                              disabled={rowDisabled}
+                              aria-label={label}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <Label
+                            htmlFor={
+                              isPrimary ? undefined : `primary-target-${memberId}`
+                            }
+                            className={cn(
+                              'text-[13px] font-medium text-foreground',
+                              !isPrimary && !rowDisabled && 'cursor-pointer',
+                              rowDisabled && !isPrimary && 'cursor-not-allowed',
                             )}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Label
-                              htmlFor={
-                                isPrimary ? undefined : `primary-target-${member.$id}`
-                              }
-                              className={cn(
-                                'text-[13px] font-medium text-foreground',
-                                !isPrimary && 'cursor-pointer',
-                              )}
-                            >
-                              {label}
-                            </Label>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <span className="text-[13px] text-muted-foreground">
-                              {isPrimary ? t('Primary') : t('Read replica')}
-                            </span>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Badge
-                              variant={statusVariant}
-                              className="text-[10px] shrink-0"
-                            >
-                              {formatMemberStatus(member.status, t)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-right">
-                            <span className="text-[13px] tabular-nums text-muted-foreground">
-                              {formatLagSeconds(member.role, member.lagSeconds, t)}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </RadioGroup>
+                          >
+                            {label}
+                          </Label>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <span className="text-[13px] text-muted-foreground">
+                            {isPrimary ? t('Primary') : t('Read replica')}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <Badge
+                            variant={statusVariant}
+                            className="text-[10px] shrink-0"
+                          >
+                            {formatMemberStatus(member.status, t)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-6 py-3 text-right">
+                          <span className="text-[13px] tabular-nums text-muted-foreground">
+                            {formatLagSeconds(member.role, member.lagSeconds, t)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </RadioGroup>
 
+            <div className="space-y-2 px-6 py-3">
               {primaryMember ? (
                 <p className="text-[12px] leading-relaxed text-muted-foreground">
                   {t(
@@ -292,16 +383,16 @@ export function PostgresDatabasePrimaryCard({
                   ).replace('{instance}', getReplicaLabel(primaryMember, 0, t))}
                 </p>
               ) : null}
-            </>
-          )}
 
-          {isFetching && sortedMembers.length > 0 ? (
-            <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              {t('Refreshing cluster members…')}
+              {isFetching && displayMembers.length > 0 ? (
+                <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                  {t('Refreshing cluster members…')}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
+          </>
+        )}
         <div className="px-6 py-4 border-t border-border bg-muted/30">
           <Button
             size="sm"

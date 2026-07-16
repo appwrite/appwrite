@@ -207,119 +207,115 @@ export function AccountBillingAddresses({
           </div>
         </div>
         <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-4">
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Address')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    {t('Linked To')}
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {addresses.map((address: Models.BillingAddress) => {
-                  const linkedOrgs = getLinkedOrganizations(address.$id)
-                  const isLinked = linkedOrgs.length > 0
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {t('Address')}
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {t('Linked To')}
+              </TableHead>
+              <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {addresses.map((address: Models.BillingAddress) => {
+              const linkedOrgs = getLinkedOrganizations(address.$id)
+              const isLinked = linkedOrgs.length > 0
 
-                  return (
-                    <BillingAddressContextMenu
-                      key={address.$id}
-                      address={address}
-                      onUpdate={handleEdit}
-                      onDelete={handleDelete}
-                    >
-                    <TableRow
-                      className="hover:bg-muted/50 transition-colors"
-                    >
-                      <TableCell className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <p className="text-[13px] text-foreground">
-                            {formatAddress(address)}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        {isLinked ? (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ms-2"
+              return (
+                <BillingAddressContextMenu
+                  key={address.$id}
+                  address={address}
+                  onUpdate={handleEdit}
+                  onDelete={handleDelete}
+                >
+                <TableRow
+                  className="hover:bg-muted/50 transition-colors"
+                >
+                  <TableCell className="px-6 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <p className="text-[13px] text-foreground">
+                        {formatAddress(address)}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    {isLinked ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ms-2"
+                          >
+                            <LinkIcon className="me-1.5 h-3.5 w-3.5" />
+                            {linkedOrgs.length}{' '}
+                            {linkedOrgs.length > 1
+                              ? t('organizations')
+                              : t('organization')}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64" align="start">
+                          <div className="space-y-2">
+                            <p className="text-[12px] font-medium text-foreground mb-2">
+                              {t('Linked Organizations')}
+                            </p>
+                            {linkedOrgs.map((org) => (
+                              <Link
+                                key={org.$id}
+                                to="/organizations/$orgId/settings/billing"
+                                params={{ orgId: org.$id }}
+                                className="block rounded-md px-2 py-1.5 text-[12px] text-foreground hover:bg-muted transition-colors"
                               >
-                                <LinkIcon className="me-1.5 h-3.5 w-3.5" />
-                                {linkedOrgs.length}{' '}
-                                {linkedOrgs.length > 1
-                                  ? t('organizations')
-                                  : t('organization')}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64" align="start">
-                              <div className="space-y-2">
-                                <p className="text-[12px] font-medium text-foreground mb-2">
-                                  {t('Linked Organizations')}
-                                </p>
-                                {linkedOrgs.map((org) => (
-                                  <Link
-                                    key={org.$id}
-                                    to="/organizations/$orgId/settings/billing"
-                                    params={{ orgId: org.$id }}
-                                    className="block rounded-md px-2 py-1.5 text-[12px] text-foreground hover:bg-muted transition-colors"
-                                  >
-                                    {org.name}
-                                  </Link>
-                                ))}
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        ) : (
-                          <Badge variant="inactive" className="text-[10px] shrink-0">
-                            {t('Not linked')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem
-                              className="text-[13px]"
-                              onClick={() => handleEdit(address)}
-                            >
-                              <MenuItemContent icon={Pencil}>
-                                {t('Update')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-[13px]"
-                              onClick={() => handleDelete(address)}
-                            >
-                              <MenuItemContent icon={Trash2}>
-                                {t('Delete')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                    </BillingAddressContextMenu>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+                                {org.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      <Badge variant="inactive" className="text-[10px] shrink-0">
+                        {t('Not linked')}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="px-6 py-3 text-end">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <RowActionsMenuTrigger />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          className="text-[13px]"
+                          onClick={() => handleEdit(address)}
+                        >
+                          <MenuItemContent icon={Pencil}>
+                            {t('Update')}
+                          </MenuItemContent>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-[13px]"
+                          onClick={() => handleDelete(address)}
+                        >
+                          <MenuItemContent icon={Trash2}>
+                            {t('Delete')}
+                          </MenuItemContent>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+                </BillingAddressContextMenu>
+              )
+            })}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Add Modal */}

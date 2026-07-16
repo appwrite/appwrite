@@ -5,7 +5,14 @@ import {
   useRef,
   type KeyboardEvent,
 } from 'react'
-import { Database, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
+import {
+  Database,
+  Maximize2,
+  Network,
+  ZoomIn,
+  ZoomOut,
+  type LucideIcon,
+} from 'lucide-react'
 import { SchemaBlueprintMat } from '@/components/global/shared/SchemaBlueprintMat'
 import { SchemaVisualizerRelationshipEdges } from '@/components/global/shared/SchemaVisualizerRelationshipEdges'
 import type { SchemaVisualizerRelationshipPath } from '@/lib/schema-visualizer-relationship-paths'
@@ -26,6 +33,8 @@ import { useT } from '@/lib/i18n/translate'
 export const DATABASE_CLUSTER_PREVIEW_HEIGHT = 200
 /** Interactive settings viewport (replication HA diagram). */
 export const DATABASE_CLUSTER_INTERACTIVE_HEIGHT = 280
+/** Interactive viewport when the connection-pooler proxy row is included. */
+export const DATABASE_CLUSTER_INTERACTIVE_HEIGHT_WITH_PROXY = 340
 /** Approximate full-bleed card inner width (no side padding on the diagram). */
 const PREVIEW_FIT_WIDTH = 340
 
@@ -50,6 +59,66 @@ export type ClusterNodeStatus =
   | 'failed'
   | 'pending'
   | 'unknown'
+
+/** Connection usage shown on the pooler/proxy node. */
+export type DatabaseClusterProxyConnections = {
+  current: number | null
+  max: number | null
+}
+
+/**
+ * Optional connection-pooler node for the cluster topology diagram.
+ * Pass engine-specific labels via `resolveClusterProxyLabel` so MySQL,
+ * Postgres, and Appwrite product DBs can reuse the same diagram.
+ */
+export type DatabaseClusterProxy = {
+  label: string
+  connections?: DatabaseClusterProxyConnections | null
+  status?: ClusterNodeStatus | string | null | undefined
+}
+
+/**
+ * Resolve the connection-pooler label for the cluster topology diagram.
+ * Dedicated engines can show product names (PgDog, ProxySQL). Appwrite
+ * product databases (TablesDB, DocumentsDB, VectorsDB) stay generic.
+ */
+export function resolveClusterProxyLabel(options: {
+  /** Dedicated engine id, e.g. `postgres`, `postgresql`, `mysql`. */
+  engine?: string | null
+  /**
+   * Dedicated `api` field (`tablesdb` / `documentsdb` / `vectorsdb` / `nativedb`).
+   * Product-owned APIs hide vendor proxy names automatically.
+   */
+  api?: string | null
+  /**
+   * When true, hide vendor proxy names and use a generic "Proxy" label.
+   * Prefer passing `api` for Appwrite product databases when available.
+   */
+  hideProxyProductName?: boolean
+  t: (text: string) => string
+}): string {
+  const api = String(options.api ?? '')
+    .trim()
+    .toLowerCase()
+  const isAppwriteProductDb =
+    options.hideProxyProductName === true ||
+    api === 'tablesdb' ||
+    api === 'documentsdb' ||
+    api === 'vectorsdb'
+  if (isAppwriteProductDb) return options.t('Proxy')
+
+  const engine = String(options.engine ?? '')
+    .trim()
+    .toLowerCase()
+  if (
+    engine === 'postgres' ||
+    engine === 'postgresql'
+  ) {
+    return 'PgDog'
+  }
+  if (engine === 'mysql' || engine === 'mariadb') return 'ProxySQL'
+  return options.t('Proxy')
+}
 
 function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
   const normalized = String(status ?? '')
@@ -142,10 +211,15 @@ type DiagramNode = {
 type CompactLayout = {
   width: number
   height: number
+  proxy: DiagramNode | null
   primary: DiagramNode
   replicas: DiagramNode[]
   paths: SchemaVisualizerRelationshipPath[]
 }
+
+type ClusterNodeMetrics =
+  | { kind: 'resource'; cpu: number; memory: number }
+  | { kind: 'connections'; current: number | null; max: number | null }
 
 let measureCanvas: HTMLCanvasElement | null = null
 
@@ -165,10 +239,25 @@ function nodeWidthForLabel(label: string): number {
 }
 
 function buildCompactPaths(
+  proxy: DiagramNode | null,
   primary: DiagramNode,
   replicas: DiagramNode[],
 ): SchemaVisualizerRelationshipPath[] {
-  if (replicas.length === 0) return []
+  const paths: SchemaVisualizerRelationshipPath[] = []
+
+  if (proxy) {
+    const proxyCenterX = proxy.x + proxy.width / 2
+    const proxyBottomY = proxy.y + proxy.height
+    const primaryCenterX = primary.x + primary.width / 2
+    const primaryTopY = primary.y
+    paths.push({
+      d: `M ${proxyCenterX} ${proxyBottomY} L ${primaryCenterX} ${primaryTopY}`,
+      from: { x: proxyCenterX, y: proxyBottomY, side: 'right' },
+      to: { x: primaryCenterX, y: primaryTopY, side: 'left' },
+    })
+  }
+
+  if (replicas.length === 0) return paths
 
   const primaryCenterX = primary.x + primary.width / 2
   const primaryBottomY = primary.y + primary.height
@@ -177,20 +266,19 @@ function buildCompactPaths(
     const replica = replicas[0]
     const replicaCenterX = replica.x + replica.width / 2
     const replicaTopY = replica.y
-    return [
-      {
-        d: `M ${primaryCenterX} ${primaryBottomY} L ${replicaCenterX} ${replicaTopY}`,
-        from: { x: primaryCenterX, y: primaryBottomY, side: 'right' },
-        to: { x: replicaCenterX, y: replicaTopY, side: 'left' },
-      },
-    ]
+    paths.push({
+      d: `M ${primaryCenterX} ${primaryBottomY} L ${replicaCenterX} ${replicaTopY}`,
+      from: { x: primaryCenterX, y: primaryBottomY, side: 'right' },
+      to: { x: replicaCenterX, y: replicaTopY, side: 'left' },
+    })
+    return paths
   }
 
   const branchY = primaryBottomY + VERTICAL_GAP / 2
-  return replicas.map((replica) => {
+  for (const replica of replicas) {
     const replicaCenterX = replica.x + replica.width / 2
     const replicaTopY = replica.y
-    return {
+    paths.push({
       d: [
         `M ${primaryCenterX} ${primaryBottomY}`,
         `L ${primaryCenterX} ${branchY}`,
@@ -199,15 +287,19 @@ function buildCompactPaths(
       ].join(' '),
       from: { x: primaryCenterX, y: primaryBottomY, side: 'right' },
       to: { x: replicaCenterX, y: replicaTopY, side: 'left' },
-    }
-  })
+    })
+  }
+  return paths
 }
 
 function buildCompactLayout(
   primaryLabel: string,
   replicaLabels: string[],
+  proxyLabel?: string | null,
 ): CompactLayout {
+  const hasProxy = Boolean(proxyLabel)
   const isSolo = replicaLabels.length === 0
+  const proxyWidth = hasProxy ? nodeWidthForLabel(proxyLabel!) : 0
   const primaryWidth = nodeWidthForLabel(primaryLabel)
   const replicaWidths = replicaLabels.map((label) => nodeWidthForLabel(label))
   const replicaRowWidth =
@@ -215,27 +307,39 @@ function buildCompactLayout(
       ? replicaWidths.reduce((sum, width) => sum + width, 0) +
         Math.max(0, replicaWidths.length - 1) * HORIZONTAL_GAP
       : 0
-  const clusterWidth = Math.max(primaryWidth, replicaRowWidth)
-  const clusterHeight = isSolo
-    ? NODE_HEIGHT
-    : NODE_HEIGHT + VERTICAL_GAP + NODE_HEIGHT
+  const clusterWidth = Math.max(proxyWidth, primaryWidth, replicaRowWidth)
+  const rowCount = 1 + (hasProxy ? 1 : 0) + (isSolo ? 0 : 1)
+  const clusterHeight =
+    rowCount * NODE_HEIGHT + Math.max(0, rowCount - 1) * VERTICAL_GAP
 
   const width = clusterWidth + CONTENT_PADDING_X * 2
   const height = clusterHeight + CONTENT_PADDING_Y * 2
 
   const clusterStartX = CONTENT_PADDING_X
-  const clusterStartY = CONTENT_PADDING_Y
+  let nextY = CONTENT_PADDING_Y
+
+  const proxy: DiagramNode | null = hasProxy
+    ? {
+        id: 'proxy',
+        label: proxyLabel!,
+        x: clusterStartX + clusterWidth / 2 - proxyWidth / 2,
+        y: nextY,
+        width: proxyWidth,
+        height: NODE_HEIGHT,
+      }
+    : null
+  if (proxy) nextY += NODE_HEIGHT + VERTICAL_GAP
 
   const primary: DiagramNode = {
     id: 'primary',
     label: primaryLabel,
     x: clusterStartX + clusterWidth / 2 - primaryWidth / 2,
-    y: clusterStartY,
+    y: nextY,
     width: primaryWidth,
     height: NODE_HEIGHT,
   }
+  nextY += NODE_HEIGHT + VERTICAL_GAP
 
-  const replicaY = primary.y + NODE_HEIGHT + VERTICAL_GAP
   const replicaStartX = width / 2 - replicaRowWidth / 2
   let replicaX = replicaStartX
   const replicas = replicaLabels.map((label, index) => {
@@ -244,7 +348,7 @@ function buildCompactLayout(
       id: `replica-${index + 1}`,
       label,
       x: replicaX,
-      y: replicaY,
+      y: nextY,
       width: nodeWidth,
       height: NODE_HEIGHT,
     }
@@ -255,9 +359,10 @@ function buildCompactLayout(
   return {
     width,
     height,
+    proxy,
     primary,
     replicas,
-    paths: buildCompactPaths(primary, replicas),
+    paths: buildCompactPaths(proxy, primary, replicas),
   }
 }
 
@@ -266,16 +371,25 @@ function CompactClusterNode({
   node,
   status,
   emphasized,
+  icon: Icon = Database,
   metrics,
 }: {
   label: string
   node: DiagramNode
   status: ClusterNodeStatus
   emphasized?: boolean
-  metrics: { cpu: number; memory: number }
+  icon?: LucideIcon
+  metrics: ClusterNodeMetrics
 }) {
   const t = useT()
   const statusLabel = clusterNodeStatusLabel(status, t)
+
+  const connectionsLabel =
+    metrics.kind === 'connections'
+      ? `${
+          metrics.current == null ? '—' : metrics.current.toLocaleString()
+        } / ${metrics.max == null ? '—' : metrics.max.toLocaleString()}`
+      : null
 
   return (
     <div
@@ -294,7 +408,7 @@ function CompactClusterNode({
           )}
           style={{ minHeight: HEADER_HEIGHT }}
         >
-          <Database
+          <Icon
             className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
             aria-hidden
           />
@@ -314,22 +428,33 @@ function CompactClusterNode({
           className="flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5"
           style={{ minHeight: METRICS_BODY_HEIGHT }}
         >
-          <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-            <span className="text-muted-foreground">{t('CPU')}</span>
-            <span className="font-mono tabular-nums font-medium text-foreground">
-              {metrics.cpu}%
+          {metrics.kind === 'connections' ? (
+            <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+              <span className="text-muted-foreground">{t('Connections')}</span>
+              <span className="font-mono tabular-nums font-medium text-foreground">
+                {connectionsLabel}
+              </span>
             </span>
-          </span>
-          <span
-            className="h-3 w-px shrink-0 bg-border"
-            aria-hidden
-          />
-          <span className="inline-flex items-center gap-1 text-[10px] leading-none">
-            <span className="text-muted-foreground">{t('Memory')}</span>
-            <span className="font-mono tabular-nums font-medium text-foreground">
-              {metrics.memory}%
-            </span>
-          </span>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+                <span className="text-muted-foreground">{t('CPU')}</span>
+                <span className="font-mono tabular-nums font-medium text-foreground">
+                  {metrics.cpu}%
+                </span>
+              </span>
+              <span
+                className="h-3 w-px shrink-0 bg-border"
+                aria-hidden
+              />
+              <span className="inline-flex items-center gap-1 text-[10px] leading-none">
+                <span className="text-muted-foreground">{t('Memory')}</span>
+                <span className="font-mono tabular-nums font-medium text-foreground">
+                  {metrics.memory}%
+                </span>
+              </span>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -389,6 +514,12 @@ type DatabaseClusterPreviewProps = {
    * Falls back to `active` when omitted or shorter than the node list.
    */
   nodeStatuses?: Array<ClusterNodeStatus | string | null | undefined>
+  /**
+   * Optional connection-pooler node above the primary.
+   * Reuse across engines by passing a label from `resolveClusterProxyLabel`
+   * and connection usage for the database tier.
+   */
+  proxy?: DatabaseClusterProxy | null
   className?: string
   /** When true, wrap with the same card section divider as project request charts. */
   withSectionDivider?: boolean
@@ -403,10 +534,12 @@ function ClusterDiagramNodes({
   layout,
   statuses,
   soloPrimary,
+  proxy,
 }: {
   layout: CompactLayout
   statuses: ClusterNodeStatus[]
   soloPrimary: boolean
+  proxy?: DatabaseClusterProxy | null
 }) {
   return (
     <>
@@ -417,12 +550,25 @@ function ClusterDiagramNodes({
         showArrowHeads={false}
       />
       <div className="relative z-20">
+        {layout.proxy ? (
+          <CompactClusterNode
+            label={layout.proxy.label}
+            node={layout.proxy}
+            status={normalizeClusterNodeStatus(proxy?.status ?? 'active')}
+            icon={Network}
+            metrics={{
+              kind: 'connections',
+              current: proxy?.connections?.current ?? null,
+              max: proxy?.connections?.max ?? null,
+            }}
+          />
+        ) : null}
         <CompactClusterNode
           label={layout.primary.label}
           node={layout.primary}
           status={statuses[0] ?? 'active'}
-          emphasized={soloPrimary}
-          metrics={mockNodeMetrics(0)}
+          emphasized={soloPrimary && !layout.proxy}
+          metrics={{ kind: 'resource', ...mockNodeMetrics(0) }}
         />
         {layout.replicas.map((replica, index) => (
           <CompactClusterNode
@@ -430,7 +576,7 @@ function ClusterDiagramNodes({
             label={replica.label}
             node={replica}
             status={statuses[index + 1] ?? 'active'}
-            metrics={mockNodeMetrics(index + 1)}
+            metrics={{ kind: 'resource', ...mockNodeMetrics(index + 1) }}
           />
         ))}
       </div>
@@ -441,10 +587,12 @@ function ClusterDiagramNodes({
 /**
  * Compact cluster topology for database resource cards and replication settings.
  * Pass `interactive` for pan/zoom on the settings diagram.
+ * Pass `proxy` to include the connection-pooler node (reusable across engines).
  */
 export function DatabaseClusterPreview({
   replicaCount,
   nodeStatuses,
+  proxy,
   className,
   withSectionDivider = true,
   interactive = false,
@@ -452,6 +600,7 @@ export function DatabaseClusterPreview({
   const t = useT()
   const safeReplicaCount = Math.max(0, Math.floor(replicaCount))
   const primaryLabel = t('Primary')
+  const proxyLabel = proxy?.label?.trim() || null
   const replicaLabels = useMemo(
     () =>
       Array.from(
@@ -461,8 +610,8 @@ export function DatabaseClusterPreview({
     [safeReplicaCount, t],
   )
   const layout = useMemo(
-    () => buildCompactLayout(primaryLabel, replicaLabels),
-    [primaryLabel, replicaLabels],
+    () => buildCompactLayout(primaryLabel, replicaLabels, proxyLabel),
+    [primaryLabel, replicaLabels, proxyLabel],
   )
   const resolvedStatuses = useMemo(() => {
     const total = 1 + safeReplicaCount
@@ -471,15 +620,27 @@ export function DatabaseClusterPreview({
     )
   }, [nodeStatuses, safeReplicaCount])
 
-  const ariaLabel =
-    safeReplicaCount === 0
-      ? t('Primary')
-      : `${t('Primary')} + ${safeReplicaCount} ${
+  const interactiveHeight = proxyLabel
+    ? DATABASE_CLUSTER_INTERACTIVE_HEIGHT_WITH_PROXY
+    : DATABASE_CLUSTER_INTERACTIVE_HEIGHT
+
+  const ariaLabel = useMemo(() => {
+    const parts: string[] = []
+    if (proxyLabel) parts.push(proxyLabel)
+    parts.push(t('Primary'))
+    if (safeReplicaCount > 0) {
+      parts.push(
+        `${safeReplicaCount} ${
           safeReplicaCount === 1 ? t('Replica') : t('Replicas')
-        }`
+        }`,
+      )
+    }
+    return parts.join(' + ')
+  }, [proxyLabel, safeReplicaCount, t])
 
   const hasAutoFocusedRef = useRef(false)
   const lastReplicaCountRef = useRef(replicaCount)
+  const lastProxyLabelRef = useRef(proxyLabel)
   const {
     canvasRef,
     zoom,
@@ -504,9 +665,13 @@ export function DatabaseClusterPreview({
   useEffect(() => {
     if (!interactive) return
 
-    if (lastReplicaCountRef.current !== replicaCount) {
+    if (
+      lastReplicaCountRef.current !== replicaCount ||
+      lastProxyLabelRef.current !== proxyLabel
+    ) {
       hasAutoFocusedRef.current = false
       lastReplicaCountRef.current = replicaCount
+      lastProxyLabelRef.current = proxyLabel
     }
     if (hasAutoFocusedRef.current) return
 
@@ -518,7 +683,7 @@ export function DatabaseClusterPreview({
       hasAutoFocusedRef.current = true
     })
     return () => cancelAnimationFrame(frame)
-  }, [interactive, layout, replicaCount, canvasRef, setPan, setZoom])
+  }, [interactive, layout, replicaCount, proxyLabel, canvasRef, setPan, setZoom])
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -542,7 +707,7 @@ export function DatabaseClusterPreview({
     <div
       className={cn('relative min-w-0', className)}
       style={{
-        height: DATABASE_CLUSTER_INTERACTIVE_HEIGHT,
+        height: interactiveHeight,
         backgroundColor: 'hsl(var(--muted) / 0.3)',
       }}
     >
@@ -628,6 +793,7 @@ export function DatabaseClusterPreview({
             layout={layout}
             statuses={resolvedStatuses}
             soloPrimary={safeReplicaCount === 0}
+            proxy={proxy}
           />
         </div>
       </div>
@@ -660,6 +826,7 @@ export function DatabaseClusterPreview({
             layout={layout}
             statuses={resolvedStatuses}
             soloPrimary={safeReplicaCount === 0}
+            proxy={proxy}
           />
         </div>
       </div>

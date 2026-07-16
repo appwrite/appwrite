@@ -882,19 +882,18 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 />
               ) : (
                 <>
-                  <div className="rounded-lg border border-border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b border-border">
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
-                            {t('Key')}
-                          </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
-                            {t('Value')}
-                          </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]" />
-                        </TableRow>
-                      </TableHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
+                          {t('Key')}
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
+                          {t('Value')}
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]" />
+                      </TableRow>
+                    </TableHeader>
                       <TableBody>
                         {listVariables.map((variable, index) => {
                           if (isWizard) {
@@ -1144,7 +1143,6 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                         })}
                       </TableBody>
                     </Table>
-                  </div>
 
                   {!isWizard && hasPagination && (
                     <div className="mt-4">

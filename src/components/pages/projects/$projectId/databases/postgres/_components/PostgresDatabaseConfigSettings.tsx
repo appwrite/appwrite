@@ -28,8 +28,14 @@ import {
   MAX_DEDICATED_DB_HA_REPLICA_COUNT,
 } from '@/lib/database-create-pricing'
 import {
+  mapDedicatedDatabaseSpecifications,
+  parseDatabaseMaxConnections,
+} from '@/lib/database-specs'
+import { isPostgresClientBackend } from '@/lib/postgres-metrics'
+import {
   useDatabaseSpecifications,
   useDedicatedDatabaseStorageChart,
+  usePostgresActiveConnections,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
@@ -38,6 +44,13 @@ import { formatCompactBytes } from '@/lib/usage/format-metric'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { PostgresReplicationSyncModePicker } from './PostgresReplicationSyncModePicker'
+import {
+  DatabaseClusterPreview,
+  clusterNodeStatusesFromDatabaseStatus,
+  resolveClusterProxyLabel,
+} from '../../_components/DatabaseClusterPreview'
+import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
 
 function getDefaultStorageUsageDateRange(): DateRange {
   return {
@@ -45,12 +58,6 @@ function getDefaultStorageUsageDateRange(): DateRange {
     to: endOfDay(new Date()),
   }
 }
-import { PostgresReplicationSyncModePicker } from './PostgresReplicationSyncModePicker'
-import {
-  DatabaseClusterPreview,
-  clusterNodeStatusesFromDatabaseStatus,
-} from '../../_components/DatabaseClusterPreview'
-import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
 
 function getStorageUsageTone(
   percentage: number | null,
@@ -85,6 +92,9 @@ export function PostgresDatabaseReplicasCard({
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId)
+  const { connections, isLoading: connectionsLoading } =
+    usePostgresActiveConnections(projectId, databaseId)
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
@@ -98,6 +108,43 @@ export function PostgresDatabaseReplicasCard({
   const replicaOption = useMemo(
     () => getReplicaOption(replicaCount),
     [replicaCount],
+  )
+
+  const maxConnections = useMemo(() => {
+    const specs = mapDedicatedDatabaseSpecifications(
+      specificationsData?.specifications,
+    )
+    const currentSpec = specs.find((spec) => spec.id === database.specification)
+    return parseDatabaseMaxConnections(currentSpec?.connections)
+  }, [database.specification, specificationsData?.specifications])
+
+  const currentConnections = useMemo(
+    () => connections.filter(isPostgresClientBackend).length,
+    [connections],
+  )
+
+  const clusterProxy = useMemo(
+    () => ({
+      label: resolveClusterProxyLabel({
+        engine: database.engine || 'postgres',
+        api: database.api,
+        t,
+      }),
+      connections: {
+        current: connectionsLoading ? null : currentConnections,
+        max: maxConnections,
+      },
+      status: database.status,
+    }),
+    [
+      connectionsLoading,
+      currentConnections,
+      database.api,
+      database.engine,
+      database.status,
+      maxConnections,
+      t,
+    ],
   )
 
   const replicasDirty = replicaCount !== (database.replicas ?? 0)
@@ -219,6 +266,7 @@ export function PostgresDatabaseReplicasCard({
                 database.status,
                 replicaCount,
               )}
+              proxy={clusterProxy}
               withSectionDivider={false}
               interactive
             />
@@ -287,13 +335,11 @@ export function PostgresDatabaseSyncModeCard({
         </p>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4">
-        <PostgresReplicationSyncModePicker
-          syncMode={syncMode}
-          onSyncModeChange={setSyncMode}
-          disabled={writeDisabled}
-        />
-      </div>
+      <PostgresReplicationSyncModePicker
+        syncMode={syncMode}
+        onSyncModeChange={setSyncMode}
+        disabled={writeDisabled}
+      />
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button
           size="sm"

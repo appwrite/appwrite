@@ -328,115 +328,111 @@ export function PostgresDatabaseComputeTierCard({
         </p>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4">
-        <div className="rounded-lg border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Tier')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  CPU
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Memory')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Connections')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
-                  {t('Price')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[120px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {specs.map((spec, index) => {
-                const isCurrent = spec.id === database.specification
-                const locked = spec.comingSoon === true
-                const isDowngrade =
-                  currentSpecIndex >= 0 && index < currentSpecIndex
-                const canUpgrade =
-                  canWrite &&
-                  !locked &&
-                  !isCurrent &&
-                  !isDowngrade &&
-                  (currentSpecIndex < 0 || index > currentSpecIndex)
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+            <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {t('Tier')}
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+              CPU
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {t('Memory')}
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+              {t('Connections')}
+            </TableHead>
+            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end">
+              {t('Price')}
+            </TableHead>
+            <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[120px]" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {specs.map((spec, index) => {
+            const isCurrent = spec.id === database.specification
+            const locked = spec.comingSoon === true
+            const isDowngrade =
+              currentSpecIndex >= 0 && index < currentSpecIndex
+            const canUpgrade =
+              canWrite &&
+              !locked &&
+              !isCurrent &&
+              !isDowngrade &&
+              (currentSpecIndex < 0 || index > currentSpecIndex)
 
-                return (
-                  <TableRow
-                    key={spec.id}
-                    className={cn(
-                      'border-b border-border last:border-b-0',
-                      isCurrent && 'bg-primary/5',
-                    )}
-                  >
-                    <TableCell className="px-4 py-3">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="text-[13px] font-medium text-foreground">
-                          {spec.label}
-                        </span>
-                        {isCurrent ? (
-                          <Badge
-                            variant="success"
-                            className="gap-1 text-[10px] shrink-0"
-                          >
-                            <CheckCircle2 className="h-3 w-3" />
-                            {t('Current')}
-                          </Badge>
-                        ) : null}
-                        {locked ? (
-                          <Badge
-                            variant="inactive"
-                            className="text-[10px] shrink-0"
-                          >
-                            {t('Coming soon')}
-                          </Badge>
-                        ) : null}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                      {spec.cpu}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                      {spec.memory}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px] tabular-nums text-muted-foreground">
-                      {spec.connections}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end text-[13px] font-medium tabular-nums text-foreground">
-                      {spec.price}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      {canUpgrade ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-[12px]"
-                          disabled={updateMutation.isPending}
-                          onClick={() => handleSpecificationUpgrade(spec.id)}
-                        >
-                          {t('Upgrade')}
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+            return (
+              <TableRow
+                key={spec.id}
+                className={cn(
+                  'border-b border-border last:border-b-0',
+                  isCurrent && 'bg-primary/5',
+                )}
+              >
+                <TableCell className="px-6 py-3">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13px] font-medium text-foreground">
+                      {spec.label}
+                    </span>
+                    {isCurrent ? (
+                      <Badge
+                        variant="success"
+                        className="gap-1 text-[10px] shrink-0"
+                      >
+                        <CheckCircle2 className="h-3 w-3" />
+                        {t('Current')}
+                      </Badge>
+                    ) : null}
+                    {locked ? (
+                      <Badge
+                        variant="inactive"
+                        className="text-[10px] shrink-0"
+                      >
+                        {t('Coming soon')}
+                      </Badge>
+                    ) : null}
+                  </span>
+                </TableCell>
+                <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                  {spec.cpu}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                  {spec.memory}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-[13px] tabular-nums text-muted-foreground">
+                  {spec.connections}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-end text-[13px] font-medium tabular-nums text-foreground">
+                  {spec.price}
+                </TableCell>
+                <TableCell className="px-6 py-3 text-end">
+                  {canUpgrade ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={updateMutation.isPending}
+                      onClick={() => handleSpecificationUpgrade(spec.id)}
+                    >
+                      {t('Upgrade')}
+                    </Button>
+                  ) : null}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+      {hasLockedDatabaseSpecifications(specs) ? (
+        <div className="px-6 py-3">
+          <SpecificationsUpgradeNote
+            orgId={project?.teamId}
+            showContactSales
+          />
         </div>
-        {hasLockedDatabaseSpecifications(specs) ? (
-          <div className="mt-3">
-            <SpecificationsUpgradeNote
-              orgId={project?.teamId}
-              showContactSales
-            />
-          </div>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   )
 }

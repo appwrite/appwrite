@@ -286,22 +286,21 @@ export function GitConfigurationCard({
                 </div>
               ) : (
                 <>
-                  <div className="rounded-lg border border-border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b border-border">
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
-                            {t('Owner')}
-                          </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
-                            {t('Created')}
-                          </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
-                            {t('Updated')}
-                          </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
+                          {t('Owner')}
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
+                          {t('Created')}
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
+                          {t('Updated')}
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]" />
+                      </TableRow>
+                    </TableHeader>
                       <TableBody>
                         {installations.map((installation) => {
                           const providerUrl = getProviderUrl(
@@ -379,7 +378,6 @@ export function GitConfigurationCard({
                         })}
                       </TableBody>
                     </Table>
-                  </div>
 
                   {total > limit && (
                     <div className="mt-4">

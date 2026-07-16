@@ -1477,6 +1477,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'このデータベースのコンピュートティアを変更します。アップグレードはローリングカットオーバーでダウンタイムなく適用されます。',
   'High availability': '高可用性',
   'Cluster topology': 'クラスタトポロジ',
+  Proxy: 'プロキシ',
   'Primary instance': 'プライマリインスタンス',
   Primary: 'プライマリ',
   'Read replica': '読み取りレプリカ',
