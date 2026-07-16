@@ -26,12 +26,7 @@ class Get extends Base
 
     protected function createOAuth2(string $callback, array $state): OAuth2
     {
-        // Auth\OAuth2\Gitlab (shared with the "sign in with GitLab" account
-        // flow) reads both the client secret and the endpoint out of a
-        // JSON-encoded appSecret -- there's no separate setEndpoint(). The
-        // login page is opened by the browser, which may reach a self-hosted
-        // GitLab on a different host than the server-side API endpoint (e.g.
-        // Docker); public gitlab.com defaults apply to both.
+        // Auth\OAuth2\Gitlab reads the endpoint out of a JSON-encoded appSecret; no setEndpoint().
         $browserEndpoint = System::getEnv('_APP_VCS_GITLAB_BROWSER_ENDPOINT', System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'));
 
         return new OAuth2Gitlab(
@@ -42,11 +37,7 @@ class Get extends Base
             ]),
             $callback,
             $state,
-            // VCS-specific scopes -- the adapter's own default is just
-            // read_user, enough for a plain "sign in with GitLab". `api`
-            // is required for creating/updating repository webhooks and
-            // merge request notes; GitLab has no finer-grained scope that
-            // covers both.
+            // api is required for webhook/merge-request-note writes; no finer-grained scope covers both.
             [
                 'read_user',
                 'api',

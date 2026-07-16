@@ -34,14 +34,10 @@ return [
     'gitlab' => [
         'adapter' => GitLab::class,
         'variables' => [
-            // Unset endpoint defaults to gitlab.com's public SaaS -- like
-            // GitHub, GitLab is usable out of the box with just client
-            // credentials; self-hosted GitLab instances override this.
+            // Unset defaults to gitlab.com; self-hosted instances override this.
             'endpoint' => ['required' => false, 'envVariable' => '_APP_VCS_GITLAB_ENDPOINT', 'default' => 'https://gitlab.com'],
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],
-            // Appwrite creates repository webhooks directly via the API, so
-            // (like Gitea) a shared secret is always required.
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_WEBHOOK_SECRET'],
         ],
     ],
