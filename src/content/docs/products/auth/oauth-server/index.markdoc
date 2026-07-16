@@ -7,13 +7,6 @@ back: /docs
 
 Your Appwrite project can act as an **OAuth 2.1 and OpenID Connect provider** (OIDC provider). When you enable the OAuth2 server, third-party apps register as clients, send your users to a consent screen you host, and receive tokens your project issues. Your project becomes an identity provider that any standards-compliant OAuth or OIDC library can integrate with: the same way apps offer "Sign in with Google" or "Sign in with GitHub", integrators can offer **Sign in with your product**.
 
-{% only_dark %}
-![OAuth2 server settings in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-settings.avif)
-{% /only_dark %}
-{% only_light %}
-![OAuth2 server settings in the Appwrite Console](/images/docs/oauth-server/oauth2-server-settings.avif)
-{% /only_light %}
-
 # How it works {% #how-it-works %}
 
 {% only_dark %}
@@ -52,7 +45,8 @@ The server follows the OAuth 2.1 security practices: the password and implicit a
 | [RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628) | Device authorization grant, to sign in on input-constrained devices like TVs and remote servers. |
 | [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) | Resource indicators, so a token can be restricted to one of several APIs behind the same provider. |
 | [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517), [RFC 7519](https://datatracker.ietf.org/doc/html/rfc7519), [RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068) | JWT access tokens with an audience, and the JWK Set published at a well-known URL. |
-| [RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126) | Pushed authorization requests, which keep the authorize URL short where it is visible as text, such as in a CLI or an MCP client. |
+| [RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126) | Pushed authorization requests keep authorization URLs short and protect request parameters from exposure or tampering. |
+| [RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207) | Authorization server issuer identification: authorization responses carry an `iss` parameter, so clients can detect mix-up attacks. |
 | [RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396) | [Rich authorization requests](/docs/products/auth/oauth-server/scopes#rich-authorization-requests), structured constraints where a flat scope says too little. |
 | [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html) | The identity layer: ID tokens and the userinfo endpoint. |
 | [OpenID Connect RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html) | The logout endpoint, with per-client post-logout redirect URIs. |

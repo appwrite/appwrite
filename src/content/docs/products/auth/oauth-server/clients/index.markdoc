@@ -21,10 +21,10 @@ Server SDKs matter in exactly two places: [introspecting](/docs/products/auth/oa
 # Confidential and public clients {% #client-types %}
 
 {% only_dark %}
-![Confidential clients hold a secret on a server while public clients rely on PKCE](/images/docs/oauth-server/dark/diagram-clients.avif)
+![Confidential clients exchange the code from their backend with a client secret, while public clients exchange it from the device with PKCE](/images/docs/oauth-server/dark/diagram-clients.avif)
 {% /only_dark %}
 {% only_light %}
-![Confidential clients hold a secret on a server while public clients rely on PKCE](/images/docs/oauth-server/diagram-clients.avif)
+![Confidential clients exchange the code from their backend with a client secret, while public clients exchange it from the device with PKCE](/images/docs/oauth-server/diagram-clients.avif)
 {% /only_light %}
 
 Every client is one of two types, and the difference comes down to a single question: can the app keep a secret?
