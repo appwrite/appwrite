@@ -1,7 +1,6 @@
 import { DatabaseType } from '@appwrite.io/console'
 import {
   Braces,
-  Database,
   Layers,
   Table as TableIcon,
   type LucideIcon,
@@ -40,7 +39,8 @@ export function getDatabaseServiceLucideIcon(
     key === 'legacy' ||
     key === String(DatabaseType.Legacy).toLowerCase()
   ) {
-    return Database
+    // Legacy databases are TablesDB under the current product model.
+    return TableIcon
   }
 
   return null
@@ -52,14 +52,14 @@ export function formatDatabaseServiceLabel(serviceKey: string): string | null {
 
   switch (key) {
     case 'tablesdb':
+    case 'databases':
+    case 'legacy':
+      // Legacy / untyped databases display as TablesDB.
       return 'TablesDB'
     case 'documentsdb':
       return 'DocumentsDB'
     case 'vectorsdb':
       return 'VectorsDB'
-    case 'databases':
-    case 'legacy':
-      return 'Databases'
     default:
       return null
   }

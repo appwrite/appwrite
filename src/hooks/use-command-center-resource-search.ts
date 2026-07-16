@@ -3,7 +3,7 @@ import { useQueries } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import type { User } from '@/lib/utils/mock-data'
 import {
-  databasesQueryOptions,
+  consoleDatabasesQueryOptions,
   usersQueryOptions,
   teamsQueryOptions,
   bucketsQueryOptions,
@@ -72,7 +72,7 @@ export function useCommandCenterResourceSearch({
       switch (kind) {
         case 'database':
           return {
-            ...databasesQueryOptions(pid, 0, limit, search),
+            ...consoleDatabasesQueryOptions(pid, 0, limit, search),
             enabled: baseEnabled,
           }
         case 'user':

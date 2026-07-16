@@ -59,6 +59,7 @@ import {
   isSpreadsheetLikeTableTab,
 } from '../_components/database-sidebar-chrome'
 import { DatabaseSelector } from '../_components/DatabaseSelector'
+import { navigateToDatabaseFromSwitcher } from '@/lib/databases/navigate-to-database-switcher'
 import { TableSelector } from '../_components/TableSelector'
 import {
   DatabaseMonitorHeaderActions,
@@ -897,54 +898,24 @@ export function Workspace({
             createDatabaseDisabledTooltip={createPermissionTooltip}
             createTableDisabled={noCreateTablePermission}
             createTableDisabledTooltip={createPermissionTooltip}
-            onSelect={async (newDatabaseId) => {
-              try {
-                const newDb = await queryClient.ensureQueryData(
-                  databaseQueryOptions(projectId, newDatabaseId),
-                )
-                const nextDbKind = routeKindForDatabase(newDb)
-                // Same query/order as sidebar first page (useProjectTables)
-                const tablesData = await queryClient.ensureQueryData(
-                  tablesQueryOptions(
-                    projectId,
-                    newDatabaseId,
-                    0,
-                    ROWS_DEFAULT_PAGE_SIZE,
-                    undefined,
-                    'asc',
-                    '$createdAt',
-                  ),
-                )
-                const firstTable = (tablesData.tables || [])[0] as
-                  | { $id?: string }
-                  | undefined
-                navigate({
-                  ...dbNavLink(nextDbKind).dataGrid({
-                    projectId,
-                    dbKind: nextDbKind,
-                    databaseId: newDatabaseId,
-                    resourceId: firstTable?.$id ?? '-',
-                  }),
-                })
-              } catch {
-                let nextDbKind: DatabaseRouteKind = DB_KIND
-                try {
-                  const newDb = await queryClient.ensureQueryData(
-                    databaseQueryOptions(projectId, newDatabaseId),
-                  )
-                  nextDbKind = routeKindForDatabase(newDb)
-                } catch {
-                  // keep workspace db kind when type lookup fails
-                }
-                navigate({
-                  ...dbNavLink(nextDbKind).dataGrid({
-                    projectId,
-                    dbKind: nextDbKind,
-                    databaseId: newDatabaseId,
-                    resourceId: '-',
-                  }),
-                })
-              }
+            onSelect={(newDatabaseId, meta) => {
+              if (newDatabaseId === databaseId) return
+              void navigateToDatabaseFromSwitcher({
+                projectId,
+                selection: {
+                  id: newDatabaseId,
+                  apiType: meta?.apiType,
+                  engine: meta?.engine,
+                  product: meta?.product,
+                },
+                navigate: (link) => {
+                  navigate({
+                    to: link.to,
+                    params: link.params,
+                  })
+                },
+                queryClient,
+              })
             }}
             onCreateDatabaseClick={() =>
               useCreateDatabaseWizard
@@ -1521,53 +1492,24 @@ export function Workspace({
                 createDatabaseDisabledTooltip={createPermissionTooltip}
                 createTableDisabled={noCreateTablePermission}
                 createTableDisabledTooltip={createPermissionTooltip}
-                onSelect={async (newDatabaseId) => {
-                  try {
-                    const newDb = await queryClient.ensureQueryData(
-                      databaseQueryOptions(projectId, newDatabaseId),
-                    )
-                    const nextDbKind = routeKindForDatabase(newDb)
-                    const tablesData = await queryClient.ensureQueryData(
-                      tablesQueryOptions(
-                        projectId,
-                        newDatabaseId,
-                        0,
-                        ROWS_DEFAULT_PAGE_SIZE,
-                        undefined,
-                        'asc',
-                        '$createdAt',
-                      ),
-                    )
-                    const firstTable = (tablesData.tables || [])[0] as
-                      | { $id?: string }
-                      | undefined
-                    navigate({
-                      ...dbNavLink(nextDbKind).dataGrid({
-                        projectId,
-                        dbKind: nextDbKind,
-                        databaseId: newDatabaseId,
-                        resourceId: firstTable?.$id ?? '-',
-                      }),
-                    })
-                  } catch {
-                    let nextDbKind: DatabaseRouteKind = DB_KIND
-                    try {
-                      const newDb = await queryClient.ensureQueryData(
-                        databaseQueryOptions(projectId, newDatabaseId),
-                      )
-                      nextDbKind = routeKindForDatabase(newDb)
-                    } catch {
-                      // keep workspace db kind when type lookup fails
-                    }
-                    navigate({
-                      ...dbNavLink(nextDbKind).dataGrid({
-                        projectId,
-                        dbKind: nextDbKind,
-                        databaseId: newDatabaseId,
-                        resourceId: '-',
-                      }),
-                    })
-                  }
+                onSelect={(newDatabaseId, meta) => {
+                  if (newDatabaseId === databaseId) return
+                  void navigateToDatabaseFromSwitcher({
+                    projectId,
+                    selection: {
+                      id: newDatabaseId,
+                      apiType: meta?.apiType,
+                      engine: meta?.engine,
+                      product: meta?.product,
+                    },
+                    navigate: (link) => {
+                      navigate({
+                        to: link.to,
+                        params: link.params,
+                      })
+                    },
+                    queryClient,
+                  })
                 }}
                 onCreateDatabaseClick={() =>
                   useCreateDatabaseWizard

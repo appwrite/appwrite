@@ -742,12 +742,13 @@ export async function fetchProjectConsoleDatabases(
   const searchArg = search?.trim() || undefined
   const queries = [
     ...(filterQueries ?? []),
-    ...(searchArg ? [Query.search('name', searchArg)] : []),
+    ...(searchArg ? [Query.contains('name', searchArg)] : []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
+  // Same `/console/databases` list path used by All Databases.
   const response = await projectSdk.console.listDatabases({ queries })
 
   const databases = (response.databases ?? []).map((db) =>

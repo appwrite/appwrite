@@ -12,9 +12,8 @@ import {
   isMongoEngine,
   isMysqlEngine,
   isPostgresEngine,
-  NATIVE_DATABASE_ENGINE_LABELS,
 } from '@/lib/databases/native-database-engines'
-import { formatDatabaseServiceLabel } from '@/lib/databases/database-service-icons'
+import { getDatabaseTypeDisplayLabel } from '@/lib/databases/database-type-display'
 import { isStoragePlaceholderBucketId } from '@/lib/storage-routes'
 import { getMessageSearchLabel } from './resource-search'
 import type {
@@ -274,20 +273,8 @@ export function getRecentResourceSiteFramework(
 export function formatRecentDatabaseTypeLabel(
   hints: RecentDatabaseIconHints,
 ): string | null {
-  const normalizedEngine = hints.engine?.toLowerCase() ?? ''
-  if (isPostgresEngine(normalizedEngine)) {
-    return NATIVE_DATABASE_ENGINE_LABELS.postgres
-  }
-  if (isMysqlEngine(normalizedEngine)) {
-    return NATIVE_DATABASE_ENGINE_LABELS.mysql
-  }
-  if (isMongoEngine(normalizedEngine)) {
-    return NATIVE_DATABASE_ENGINE_LABELS.mongo
-  }
-  if (hints.apiType) {
-    return formatDatabaseServiceLabel(hints.apiType)
-  }
-  return null
+  if (!hints.apiType && !hints.engine) return null
+  return getDatabaseTypeDisplayLabel(hints.apiType, hints.engine)
 }
 
 export function getRecentResourceBreadcrumbs(entry: RecentResource): string[] {

@@ -1,7 +1,7 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
-import { useSwitchResourceInPlace } from '@/components/global/shared/ResourceTitleSwitcher'
-import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
+import { navigateToDatabaseFromSwitcher } from '@/lib/databases/navigate-to-database-switcher'
 import { DatabaseSelector } from './DatabaseSelector'
 import { useT } from '@/lib/i18n/translate'
 
@@ -9,17 +9,18 @@ type NativeSidebarDatabaseBarProps = {
   projectId: string
   databaseId: string
   databaseName: string
-  nativeEngine: NativeDatabaseEngine
+  /** Kept for call-site compatibility; switcher shows all database types. */
+  nativeEngine?: string
 }
 
 export function NativeSidebarDatabaseBar({
   projectId,
   databaseId,
   databaseName,
-  nativeEngine,
 }: NativeSidebarDatabaseBarProps) {
   const t = useT()
-  const switchResource = useSwitchResourceInPlace()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   return (
     <div className="flex shrink-0 flex-col border-b border-border bg-background">
@@ -39,13 +40,26 @@ export function NativeSidebarDatabaseBar({
       <div className="flex min-w-0 flex-col gap-2 px-2 py-2">
         <DatabaseSelector
           projectId={projectId}
-          mode="native"
-          nativeEngine={nativeEngine}
           value={databaseId}
           selectedName={databaseName}
-          onSelect={(newDatabaseId) => {
+          onSelect={(newDatabaseId, meta) => {
             if (newDatabaseId === databaseId) return
-            switchResource(databaseId, newDatabaseId)
+            void navigateToDatabaseFromSwitcher({
+              projectId,
+              selection: {
+                id: newDatabaseId,
+                apiType: meta?.apiType,
+                engine: meta?.engine,
+                product: meta?.product,
+              },
+              navigate: (link) => {
+                navigate({
+                  to: link.to,
+                  params: link.params,
+                })
+              },
+              queryClient,
+            })
           }}
         />
       </div>

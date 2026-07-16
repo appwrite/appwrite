@@ -33,7 +33,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import {
-  databasesQueryOptions,
+  consoleDatabasesQueryOptions,
   tablesQueryOptions,
   tableRowsQueryOptions,
   tableColumnsQueryOptions,
@@ -143,7 +143,12 @@ export function EventResourceIdSelector({
   }, [open])
 
   const dbQuery = useQuery({
-    ...databasesQueryOptions(projectId, 0, 20, debouncedSearch || undefined),
+    ...consoleDatabasesQueryOptions(
+      projectId,
+      0,
+      20,
+      debouncedSearch || undefined,
+    ),
     enabled: !!projectId && open && type === 'database',
     placeholderData: keepPreviousData,
   })

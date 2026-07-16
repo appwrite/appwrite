@@ -1,46 +1,55 @@
 import { Database } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  formatDatabaseServiceLabel,
-  getDatabaseServiceLucideIcon,
-} from '@/lib/databases/database-service-icons'
+  getDatabaseTypeDisplayLabel,
+  getDatabaseTypeDisplayLucideIcon,
+  resolveDatabaseTypeDisplay,
+  type DatabaseTypeDisplayHints,
+} from '@/lib/databases/database-type-display'
 import {
   MySQLDolphinIcon,
   MongoDbLeafIcon,
   PostgresElephantIcon,
 } from './database-mascot-icons'
 
-type DatabaseTypeIconProps = {
-  /** Appwrite SDK `database.type` */
-  apiType?: string | null
-  /** Dedicated database `engine` (e.g. postgres, mysql) */
-  engine?: string | null
+export { getDatabaseTypeDisplayLabel } from '@/lib/databases/database-type-display'
+
+type DatabaseTypeIconProps = DatabaseTypeDisplayHints & {
   className?: string
 }
 
 function resolveDatabaseTypeIcon({
   apiType,
   engine,
+  product,
   className,
 }: DatabaseTypeIconProps) {
   const iconClass = cn('h-4 w-4 shrink-0 text-muted-foreground', className)
+  const resolved = resolveDatabaseTypeDisplay({ apiType, engine, product })
 
-  const normalizedEngine = engine?.toLowerCase() ?? ''
-  if (normalizedEngine === 'postgres' || normalizedEngine === 'postgresql') {
-    return <PostgresElephantIcon className={iconClass} />
-  }
-  if (normalizedEngine === 'mysql' || normalizedEngine === 'mariadb') {
-    return <MySQLDolphinIcon className={iconClass} />
-  }
-  if (normalizedEngine === 'mongo' || normalizedEngine === 'mongodb') {
-    return <MongoDbLeafIcon className={iconClass} />
+  if (resolved.mode === 'engine') {
+    const normalizedEngine = resolved.key
+    if (
+      normalizedEngine === 'postgres' ||
+      normalizedEngine === 'postgresql'
+    ) {
+      return <PostgresElephantIcon className={iconClass} />
+    }
+    if (normalizedEngine === 'mysql' || normalizedEngine === 'mariadb') {
+      return <MySQLDolphinIcon className={iconClass} />
+    }
+    if (normalizedEngine === 'mongo' || normalizedEngine === 'mongodb') {
+      return <MongoDbLeafIcon className={iconClass} />
+    }
   }
 
-  const normalizedType = String(apiType ?? '').toLowerCase()
-  const databaseServiceIcon = getDatabaseServiceLucideIcon(normalizedType)
-  if (databaseServiceIcon) {
-    const Icon = databaseServiceIcon
-    return <Icon className={iconClass} />
+  const ProductIcon = getDatabaseTypeDisplayLucideIcon({
+    apiType,
+    engine,
+    product,
+  })
+  if (ProductIcon) {
+    return <ProductIcon className={iconClass} />
   }
 
   return <Database className={iconClass} />
@@ -49,32 +58,13 @@ function resolveDatabaseTypeIcon({
 export function DatabaseTypeIcon({
   apiType,
   engine,
+  product,
   className,
 }: DatabaseTypeIconProps) {
-  return resolveDatabaseTypeIcon({ apiType, engine, className })
+  return resolveDatabaseTypeIcon({ apiType, engine, product, className })
 }
 
-function databaseTypeDisplayLabel(
-  apiType?: string | null,
-  engine?: string | null,
-): string {
-  const normalizedEngine = engine?.toLowerCase() ?? ''
-  if (normalizedEngine === 'postgres' || normalizedEngine === 'postgresql') {
-    return 'PostgreSQL'
-  }
-  if (normalizedEngine === 'mysql') return 'MySQL'
-  if (normalizedEngine === 'mariadb') return 'MariaDB'
-  if (normalizedEngine === 'mongo' || normalizedEngine === 'mongodb') {
-    return 'MongoDB'
-  }
-
-  const normalizedType = String(apiType ?? 'tablesdb').toLowerCase()
-  return formatDatabaseServiceLabel(normalizedType) ?? 'TablesDB'
-}
-
-type DatabaseTypeBadgeProps = {
-  apiType?: string | null
-  engine?: string | null
+type DatabaseTypeBadgeProps = DatabaseTypeDisplayHints & {
   className?: string
   /** Hide the text label and show only the icon. */
   iconOnly?: boolean
@@ -87,10 +77,11 @@ type DatabaseTypeBadgeProps = {
 export function DatabaseTypeBadge({
   apiType,
   engine,
+  product,
   className,
   iconOnly = false,
 }: DatabaseTypeBadgeProps) {
-  const label = databaseTypeDisplayLabel(apiType, engine)
+  const label = getDatabaseTypeDisplayLabel(apiType, engine, product)
 
   return (
     <span
@@ -105,6 +96,7 @@ export function DatabaseTypeBadge({
       <DatabaseTypeIcon
         apiType={apiType}
         engine={engine}
+        product={product}
         className="h-3.5 w-3.5"
       />
       {!iconOnly ? (

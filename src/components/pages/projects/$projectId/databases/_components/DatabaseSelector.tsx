@@ -1,14 +1,13 @@
 /**
  * Database Selector
  *
- * Unified searchable dropdown for product databases (TablesDB, DocumentsDB,
- * VectorsDB) and native engines (PostgreSQL, MySQL). Uses debounced search
- * for product databases and client-side search for native engines.
+ * Unified searchable dropdown for every project database: Appwrite products
+ * (TablesDB, DocumentsDB, VectorsDB via console.listDatabases) and native
+ * engines (PostgreSQL, MySQL, MongoDB). Same list is used in every workspace.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronRight, Database, Loader2, Plus, Table2 } from 'lucide-react'
-import { DatabaseTypeIcon } from './DatabaseTypeIcon'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -34,37 +33,30 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-  databasesQueryOptions,
+  consoleDatabasesQueryOptions,
   dedicatedDatabasesQueryOptions,
   databaseQueryOptions,
-  useDatabaseSpecifications,
 } from '@/lib/react-query/hooks'
-import { formatDatabaseServiceLabel } from '@/lib/databases/database-service-icons'
-import {
-  getNativeDatabaseEmptyLabel,
-  matchesNativeEngine,
-  NATIVE_DATABASE_ENGINE_LABELS,
-  type NativeDatabaseEngine,
-} from '@/lib/databases/native-database-engines'
-import { isNativeDedicatedDatabase } from '@/lib/database-routes'
-import {
-  getSpecOptionById,
-  mapDedicatedDatabaseSpecifications,
-  resolveDatabaseSpecSummary,
-  SERVERLESS_DATABASE_SPEC_ID,
-  type SpecOption,
-} from '@/lib/database-specs'
+import type { DatabaseSwitcherSelection } from '@/lib/databases/navigate-to-database-switcher'
+import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import {
+  DatabaseTypeIcon,
+  getDatabaseTypeDisplayLabel,
+} from './DatabaseTypeIcon'
 
 const DEFAULT_LIMIT = 15
 
-type DatabaseSelectorBaseProps = {
+export type DatabaseSelectorProps = {
   projectId: string
   value: string
   selectedName?: string
-  onSelect: (databaseId: string) => void
+  onSelect: (
+    databaseId: string,
+    meta?: DatabaseSwitcherSelection,
+  ) => void
   placeholder?: string
   limit?: number
   triggerClassName?: string
@@ -81,67 +73,9 @@ type DatabaseSelectorBaseProps = {
   createTableDisabledTooltip?: string
 }
 
-type ProductDatabaseSelectorProps = DatabaseSelectorBaseProps & {
-  mode?: 'product'
-  nativeEngine?: never
-}
-
-type NativeDatabaseSelectorProps = DatabaseSelectorBaseProps & {
-  mode: 'native'
-  nativeEngine: NativeDatabaseEngine
-}
-
-export type DatabaseSelectorProps =
-  | ProductDatabaseSelectorProps
-  | NativeDatabaseSelectorProps
-
-type DatabaseSelectorItem = {
-  id: string
+type DatabaseSelectorItem = DatabaseSwitcherSelection & {
   name: string
-  apiType?: string | null
-  engine?: string | null
   specSlug?: string | null
-}
-
-function matchesSpecSearch(
-  query: string,
-  specSlug: string | null | undefined,
-  specs: SpecOption[],
-  getSpecSummary: (slug: string | null | undefined) => string | null,
-): boolean {
-  const specSummary = getSpecSummary(specSlug)?.toLowerCase() ?? ''
-  const spec =
-    specs.find((item) => item.id === specSlug) ??
-    getSpecOptionById(specSlug ?? '')
-  const specSearch = [
-    specSummary,
-    spec?.cpu.toLowerCase(),
-    spec?.memory.toLowerCase(),
-    spec?.label.toLowerCase(),
-  ]
-    .filter(Boolean)
-    .join(' ')
-
-  return specSearch.includes(query)
-}
-
-function getDatabaseTypeLabel(
-  item: Pick<DatabaseSelectorItem, 'apiType' | 'engine'>,
-): string | null {
-  const normalizedEngine = item.engine?.toLowerCase() ?? ''
-  if (
-    normalizedEngine === 'postgres' ||
-    normalizedEngine === 'postgresql'
-  ) {
-    return NATIVE_DATABASE_ENGINE_LABELS.postgres
-  }
-  if (normalizedEngine === 'mysql' || normalizedEngine === 'mariadb') {
-    return NATIVE_DATABASE_ENGINE_LABELS.mysql
-  }
-  if (item.apiType) {
-    return formatDatabaseServiceLabel(item.apiType)
-  }
-  return null
 }
 
 function DatabaseSelectorBreadcrumb({
@@ -149,23 +83,19 @@ function DatabaseSelectorBreadcrumb({
   name,
   translate,
 }: {
-  typeLabel: string | null
+  typeLabel: string
   name: string
   translate: (text: string) => string
 }) {
   return (
     <span className="flex min-w-0 items-center gap-1 text-[13px]">
-      {typeLabel ? (
-        <>
-          <span className="shrink-0 text-muted-foreground">
-            {translate(typeLabel)}
-          </span>
-          <ChevronRight
-            className="h-3 w-3 shrink-0 text-muted-foreground/60"
-            aria-hidden
-          />
-        </>
-      ) : null}
+      <span className="shrink-0 text-muted-foreground">
+        {translate(typeLabel)}
+      </span>
+      <ChevronRight
+        className="h-3 w-3 shrink-0 text-muted-foreground/60"
+        aria-hidden
+      />
       <span className="min-w-0 truncate font-medium text-foreground">{name}</span>
     </span>
   )
@@ -174,8 +104,6 @@ function DatabaseSelectorBreadcrumb({
 export function DatabaseSelector({
   projectId,
   value,
-  mode = 'product',
-  nativeEngine,
   selectedName,
   onSelect,
   placeholder = 'Select database',
@@ -191,8 +119,6 @@ export function DatabaseSelector({
   createTableDisabledTooltip = "You don't have permission to create tables.",
 }: DatabaseSelectorProps) {
   const t = useT()
-  const isNative = mode === 'native'
-  const resolvedNativeEngine = isNative ? nativeEngine : undefined
   const showCreateActions =
     onCreateDatabaseClick != null || onCreateTableClick != null
 
@@ -201,36 +127,27 @@ export function DatabaseSelector({
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
   useEffect(() => {
-    if (isNative) return
     const timer = setTimeout(() => setDebouncedSearch(search), 300)
     return () => clearTimeout(timer)
-  }, [isNative, search])
+  }, [search])
 
   useEffect(() => {
     if (!open) setSearch('')
   }, [open])
 
-  const { data: specificationsData } = useDatabaseSpecifications(projectId)
-
-  const specs = useMemo(
-    () =>
-      mapDedicatedDatabaseSpecifications(specificationsData?.specifications),
-    [specificationsData?.specifications],
-  )
-
-  const getSpecSummary = useCallback(
-    (specSlug: string | null | undefined) =>
-      resolveDatabaseSpecSummary(specs, specSlug),
-    [specs],
-  )
-
-  const { data: productData, isFetching: isProductFetching } = useQuery({
-    ...databasesQueryOptions(projectId, 0, limit, debouncedSearch || undefined),
-    enabled: !!projectId && open && !isNative,
+  const { data: consoleData, isFetching: isConsoleFetching } = useQuery({
+    ...consoleDatabasesQueryOptions(
+      projectId,
+      0,
+      limit,
+      debouncedSearch || undefined,
+    ),
+    enabled: !!projectId && open,
     placeholderData: keepPreviousData,
   })
 
-  const { data: dedicatedData, isFetching: isDedicatedFetching } = useQuery({
+  // Metadata only (engine/spec). List + search always come from console.listDatabases.
+  const { data: dedicatedData } = useQuery({
     ...dedicatedDatabasesQueryOptions(projectId),
     enabled: !!projectId && (open || !!value),
     placeholderData: keepPreviousData,
@@ -238,78 +155,54 @@ export function DatabaseSelector({
 
   const { data: selectedProductDatabase } = useQuery({
     ...databaseQueryOptions(projectId, value),
-    enabled: !!projectId && !!value && !isNative,
+    enabled: !!projectId && !!value,
   })
 
-  const specSlugByDedicatedId = useMemo(() => {
-    const map = new Map<string, string>()
+  const dedicatedById = useMemo(() => {
+    const map = new Map<
+      string,
+      { specSlug: string | null; engine: string | null; api: string | null }
+    >()
     for (const dedicated of dedicatedData?.databases ?? []) {
-      const slug = dedicated.specification?.trim()
-      if (dedicated.$id && slug) {
-        map.set(dedicated.$id, slug)
-      }
+      if (!dedicated.$id) continue
+      map.set(dedicated.$id, {
+        specSlug: dedicated.specification?.trim() || null,
+        engine: dedicated.engine ?? null,
+        api: dedicated.api ?? null,
+      })
     }
     return map
   }, [dedicatedData?.databases])
 
-  const productItems = useMemo((): DatabaseSelectorItem[] => {
-    return (productData?.databases ?? []).map((db) => ({
-      id: db.$id,
-      name: db.name,
-      apiType: db.type,
-      specSlug:
-        specSlugByDedicatedId.get(db.$id) ?? SERVERLESS_DATABASE_SPEC_ID,
-    }))
-  }, [productData?.databases, specSlugByDedicatedId])
-
-  const nativeItems = useMemo((): DatabaseSelectorItem[] => {
-    if (!resolvedNativeEngine) return []
-    return (dedicatedData?.databases ?? [])
-      .filter(
-        (db) =>
-          isNativeDedicatedDatabase(db) &&
-          matchesNativeEngine(db.engine, resolvedNativeEngine),
-      )
-      .map((db) => ({
+  const items = useMemo((): DatabaseSelectorItem[] => {
+    return (consoleData?.databases ?? []).map((db) => {
+      const dedicated = dedicatedById.get(db.$id)
+      return {
         id: db.$id,
         name: db.name,
-        engine: db.engine,
-        specSlug: db.specification ?? null,
-      }))
-  }, [dedicatedData?.databases, resolvedNativeEngine])
-
-  const items = isNative ? nativeItems : productItems
-
-  const filteredItems = useMemo(() => {
-    if (!isNative) return items
-    const query = search.trim().toLowerCase()
-    if (!query) return items
-    return items.filter((item) => {
-      return (
-        item.name.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
-        matchesSpecSearch(query, item.specSlug, specs, getSpecSummary)
-      )
+        apiType: db.type,
+        engine: db.engine ?? dedicated?.engine ?? null,
+        product: db.product ?? dedicated?.api ?? null,
+        specSlug: dedicated?.specSlug ?? SERVERLESS_DATABASE_SPEC_ID,
+      }
     })
-  }, [getSpecSummary, isNative, items, search, specs])
+  }, [consoleData?.databases, dedicatedById])
 
   const selectedItem = value ? items.find((item) => item.id === value) : undefined
+  const selectedDedicated = value ? dedicatedById.get(value) : undefined
 
   const displayName = selectedName || selectedItem?.name || t(placeholder)
 
   const selectedApiType =
     selectedItem?.apiType ?? selectedProductDatabase?.databaseType ?? null
   const selectedEngine =
-    selectedItem?.engine ??
-    (isNative ? (resolvedNativeEngine ?? null) : null)
+    selectedItem?.engine ?? selectedDedicated?.engine ?? null
+  const selectedProduct =
+    selectedItem?.product ?? selectedDedicated?.api ?? null
 
-  const isFetching = isNative ? isDedicatedFetching : isProductFetching
+  const isFetching = isConsoleFetching
 
-  const resolvedEmptyLabel =
-    emptyLabel ??
-    (isNative && resolvedNativeEngine
-      ? t(getNativeDatabaseEmptyLabel(resolvedNativeEngine))
-      : t('No databases found'))
+  const resolvedEmptyLabel = emptyLabel ?? t('No databases found')
 
   const bothCreateDisabled = createDatabaseDisabled && createTableDisabled
   const triggerDisabledTooltip = t(
@@ -333,6 +226,7 @@ export function DatabaseSelector({
             <DatabaseTypeIcon
               apiType={selectedApiType}
               engine={selectedEngine}
+              product={selectedProduct}
             />
             <span
               className={cn(
@@ -369,20 +263,29 @@ export function DatabaseSelector({
             </div>
           </div>
           <CommandList className="max-h-[240px]">
-            {filteredItems.length === 0 && (
+            {items.length === 0 && (
               <CommandEmpty>
                 {isFetching ? '' : t(resolvedEmptyLabel)}
               </CommandEmpty>
             )}
             <CommandGroup>
-              {filteredItems.map((item) => {
-                const typeLabel = getDatabaseTypeLabel(item)
+              {items.map((item) => {
+                const typeLabel = getDatabaseTypeDisplayLabel(
+                  item.apiType,
+                  item.engine,
+                  item.product,
+                )
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => {
-                      onSelect(item.id)
+                      onSelect(item.id, {
+                        id: item.id,
+                        apiType: item.apiType,
+                        engine: item.engine,
+                        product: item.product,
+                      })
                       setOpen(false)
                     }}
                     className={cn(
@@ -393,6 +296,7 @@ export function DatabaseSelector({
                     <DatabaseTypeIcon
                       apiType={item.apiType}
                       engine={item.engine}
+                      product={item.product}
                     />
                     <DatabaseSelectorBreadcrumb
                       typeLabel={typeLabel}

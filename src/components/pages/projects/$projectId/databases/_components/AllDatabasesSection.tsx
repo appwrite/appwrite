@@ -313,6 +313,7 @@ export function AllDatabasesSection({
                         <DatabaseTypeBadge
                           apiType={db.databaseType}
                           engine={dedicatedById.get(db.$id)?.engine}
+                          product={dedicatedById.get(db.$id)?.api}
                         />
                       </TableCell>
                       <TableCell className="px-4 py-3">
@@ -488,6 +489,7 @@ export function AllDatabasesSection({
                           <DatabaseTypeBadge
                             apiType={db.databaseType}
                             engine={dedicated?.engine}
+                            product={dedicated?.api}
                           />
                           <span className="truncate text-muted-foreground">
                             {specification || t('Serverless')}

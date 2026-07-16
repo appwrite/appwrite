@@ -50,7 +50,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { Badge } from '@/components/ui/badge'
 import {
   useProjectsForTeam,
-  useProjectDatabases,
+  useProjectConsoleDatabases,
   useProjectUsers,
   useProjectTeams,
   useProjectBuckets,
@@ -654,7 +654,7 @@ export function CommandCenter({
     )
 
   const { databases: projectDatabases, isLoading: databasesLoading } =
-    useProjectDatabases(
+    useProjectConsoleDatabases(
       isProjectContext &&
         projectId &&
         shouldFetch &&

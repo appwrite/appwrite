@@ -37,7 +37,7 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   bucketsQueryOptions,
-  databasesQueryOptions,
+  consoleDatabasesQueryOptions,
   functionsQueryOptions,
   organizationDomainsQueryOptions,
   providersQueryOptions,
@@ -274,7 +274,7 @@ function useResourceTitleList(
     placeholderData: keepPreviousData,
   })
   const databaseQuery = useQuery({
-    ...databasesQueryOptions(projectId, 0, PICK_LIMIT, search),
+    ...consoleDatabasesQueryOptions(projectId, 0, PICK_LIMIT, search),
     enabled: enabled && kind === 'database' && !!projectId,
     placeholderData: keepPreviousData,
   })
