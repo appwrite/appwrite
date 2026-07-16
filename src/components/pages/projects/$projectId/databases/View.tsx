@@ -379,8 +379,8 @@ export function View() {
   } = useProjectProductDatabases(
     projectId,
     ApiDatabaseType.Tablesdb,
-    requestedPage - 1,
-    urlLimit,
+    features.dedicatedDbsSupport ? 0 : requestedPage - 1,
+    features.dedicatedDbsSupport ? GRID_DEFAULT_PAGE_SIZE : urlLimit,
     urlSearch ?? undefined,
     tablesDbFilterQueries,
   )
@@ -395,10 +395,14 @@ export function View() {
   } = useProjectProductDatabases(
     projectId,
     ApiDatabaseType.Tablesdb,
-    displayedPage - 1,
-    urlLimit,
-    displayedSearch ?? undefined,
-    displayedFilterQueries,
+    features.dedicatedDbsSupport ? 0 : displayedPage - 1,
+    features.dedicatedDbsSupport ? GRID_DEFAULT_PAGE_SIZE : urlLimit,
+    features.dedicatedDbsSupport
+      ? (urlSearch ?? undefined)
+      : (displayedSearch ?? undefined),
+    features.dedicatedDbsSupport
+      ? tablesDbFilterQueries
+      : displayedFilterQueries,
   )
 
   const applyDatabaseTypesFilter = (
@@ -765,13 +769,6 @@ export function View() {
         showFilters={true}
         filterTrigger={
           <div className="flex shrink-0 items-center gap-2">
-            {useCreateDatabaseWizard ? (
-              <DatabaseTypeFilterDropdown
-                options={databaseTypeFilterOptions}
-                selectedTypes={selectedDatabaseTypes}
-                onSelectedTypesChange={applyDatabaseTypesFilter}
-              />
-            ) : null}
             <FiltersPopover
               open={filtersOpen}
               onOpenChange={setFiltersOpen}
@@ -800,6 +797,13 @@ export function View() {
               }}
               teamId={project?.teamId}
             />
+            {useCreateDatabaseWizard ? (
+              <DatabaseTypeFilterDropdown
+                options={databaseTypeFilterOptions}
+                selectedTypes={selectedDatabaseTypes}
+                onSelectedTypesChange={applyDatabaseTypesFilter}
+              />
+            ) : null}
           </div>
         }
         fullWidthBorder
@@ -833,6 +837,10 @@ export function View() {
             viewMode={viewMode}
             search={urlSearch ?? undefined}
             filterQueries={filterQueries}
+            page={urlPage}
+            limit={urlLimit}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           />
         ) : null}
 
@@ -1089,15 +1097,17 @@ export function View() {
                   </TableBody>
                 </Table>
               </div>
-              <Pagination
-                currentPage={displayedPage}
-                totalItems={displayedDatabasesTotal ?? databasesTotal}
-                pageSize={pageSize}
-                pageSizeOptions={[12, 18, 36, 72]}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                itemLabel={t('databases')}
-              />
+              {!features.dedicatedDbsSupport ? (
+                <Pagination
+                  currentPage={displayedPage}
+                  totalItems={displayedDatabasesTotal ?? databasesTotal}
+                  pageSize={pageSize}
+                  pageSizeOptions={[12, 18, 36, 72]}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  itemLabel={t('databases')}
+                />
+              ) : null}
             </>
           ) : (
             <EmptyState
@@ -1216,7 +1226,7 @@ export function View() {
                 </div>
               )}
             </div>
-            {paginatedDatabases.length > 0 && (
+            {paginatedDatabases.length > 0 && !features.dedicatedDbsSupport && (
               <Pagination
                 currentPage={displayedPage}
                 totalItems={displayedDatabasesTotal ?? databasesTotal}
@@ -1551,7 +1561,7 @@ export function DatabaseDetailLayout({
 
           {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$dbKind/$databaseId/db-security"
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings/security"
             params={{ projectId, dbKind: dbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
@@ -1560,7 +1570,7 @@ export function DatabaseDetailLayout({
           </Link>
 
           <Link
-            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings/specification"
             params={{ projectId, dbKind: dbKind, databaseId }}
             hash="card-specification"
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
@@ -1760,7 +1770,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 
           {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$dbKind/$databaseId/db-security"
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings/security"
             params={{ projectId, dbKind: dbKind, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
@@ -1769,7 +1779,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           </Link>
 
           <Link
-            to="/projects/$projectId/databases/$dbKind/$databaseId/settings"
+            to="/projects/$projectId/databases/$dbKind/$databaseId/settings/specification"
             params={{ projectId, dbKind: dbKind, databaseId }}
             hash="card-specification"
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"

@@ -36,8 +36,10 @@ import {
   useDatabaseSpecifications,
   useDedicatedDatabaseStorageChart,
   usePostgresActiveConnections,
+  usePostgresDatabaseReplicas,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
+import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
@@ -47,7 +49,8 @@ import { useT } from '@/lib/i18n/translate'
 import { PostgresReplicationSyncModePicker } from './PostgresReplicationSyncModePicker'
 import {
   DatabaseClusterPreview,
-  clusterNodeStatusesFromDatabaseStatus,
+  clusterNodeStatusesFromMembers,
+  clusterReplicaChangePreview,
   resolveClusterProxyLabel,
 } from '../../_components/DatabaseClusterPreview'
 import type { PostgresDatabaseSettingsCardProps } from './postgres-database-settings-types'
@@ -96,6 +99,15 @@ export function PostgresDatabaseReplicasCard({
   const { connections, isLoading: connectionsLoading } =
     usePostgresActiveConnections(projectId, databaseId)
   const [replicaCount, setReplicaCount] = useState(database.replicas ?? 0)
+  const committedReplicaCount = database.replicas ?? 0
+  const fetchReplicas =
+    committedReplicaCount > 0 || replicaCount > 0 || updateMutation.isPending
+  const { members } = usePostgresDatabaseReplicas(
+    projectId,
+    databaseId,
+    fetchReplicas,
+    fetchReplicas ? 5000 : false,
+  )
   const { writeDisabled, writeTooltip } = useWriteAccess(
     canWrite,
     updateMutation.isPending,
@@ -123,6 +135,34 @@ export function PostgresDatabaseReplicasCard({
     [connections],
   )
 
+  const memberReplicaCount = useMemo(
+    () =>
+      members.filter(
+        (member) =>
+          String(member.role ?? '')
+            .trim()
+            .toLowerCase() !== 'primary',
+      ).length,
+    [members],
+  )
+
+  // Keep still-present pods in the diagram while a removal catches up, and
+  // while the draft count is below the live cluster size before Update.
+  const presentReplicaCount = Math.max(
+    committedReplicaCount,
+    memberReplicaCount,
+  )
+
+  const memberStatuses = useMemo(
+    () =>
+      clusterNodeStatusesFromMembers(
+        members,
+        presentReplicaCount,
+        isDedicatedDatabaseReady(database.status) ? 'active' : database.status,
+      ),
+    [database.status, members, presentReplicaCount],
+  )
+
   const clusterProxy = useMemo(
     () => ({
       label: resolveClusterProxyLabel({
@@ -134,20 +174,30 @@ export function PostgresDatabaseReplicasCard({
         current: connectionsLoading ? null : currentConnections,
         max: maxConnections,
       },
-      status: database.status,
+      status: memberStatuses[0] ?? 'active',
     }),
     [
       connectionsLoading,
       currentConnections,
       database.api,
       database.engine,
-      database.status,
       maxConnections,
+      memberStatuses,
       t,
     ],
   )
 
-  const replicasDirty = replicaCount !== (database.replicas ?? 0)
+  const replicasDirty = replicaCount !== committedReplicaCount
+  const clusterPreview = useMemo(
+    () =>
+      clusterReplicaChangePreview(
+        database.status,
+        presentReplicaCount,
+        replicaCount,
+        memberStatuses,
+      ),
+    [database.status, memberStatuses, presentReplicaCount, replicaCount],
+  )
 
   const handleReplicasUpdate = () => {
     updateMutation.mutate(
@@ -261,11 +311,8 @@ export function PostgresDatabaseReplicasCard({
           </p>
           <div className="overflow-hidden rounded-lg border border-border">
             <DatabaseClusterPreview
-              replicaCount={replicaCount}
-              nodeStatuses={clusterNodeStatusesFromDatabaseStatus(
-                database.status,
-                replicaCount,
-              )}
+              replicaCount={clusterPreview.displayReplicaCount}
+              nodeStatuses={clusterPreview.nodeStatuses}
               proxy={clusterProxy}
               withSectionDivider={false}
               interactive

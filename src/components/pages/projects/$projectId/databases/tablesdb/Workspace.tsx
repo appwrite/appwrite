@@ -11,7 +11,6 @@ import {
   Plus,
   Layers,
   Settings,
-  Lock,
   Table2,
   ChevronLeft,
   ChevronRight,
@@ -75,7 +74,6 @@ import { ExportCsv } from '../_components/ExportCsv'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   canShowTableSecuritySettings,
-  canShowDatabaseSecuritySettings,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMediaMinWidth } from '@/hooks/use-media-min-width'
@@ -171,6 +169,7 @@ export function Workspace({
   tableId,
   activeTab,
   databaseTab,
+  children,
 }: WorkspaceProps) {
   const t = useT()
   const params = useParams({ strict: false })
@@ -354,10 +353,6 @@ export function Workspace({
   const noCreateTablePermission = !tableWriteAccess.canWrite
   const noCreateDbPermission = !adminWriteAccess.canWrite
   const noCreateRowPermission = !rowWriteAccess.canWrite
-  const showDbSecuritySettings = canShowDatabaseSecuritySettings(
-    access,
-    features,
-  )
   const createPermissionTooltip =
     "You don't have permission to perform this action."
 
@@ -1254,19 +1249,6 @@ export function Workspace({
             <span>{t('Monitor')}</span>
           </Link>
         )}
-        {!noCreateDbPermission && (
-          <Link
-            {...dbNav.dbSecurity(tableNavParams)}
-            className={cn(
-              secondarySidebarNavLinkClassName(databaseTab === 'db-security'
-                , 'transition-colors duration-150'),
-            SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
-            )}
-          >
-            <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span>{t('Security')}</span>
-          </Link>
-        )}
         {features.databaseBackups && (
           <DatabaseBackupsNavLink
             projectId={projectId}
@@ -1830,23 +1812,34 @@ export function Workspace({
         }
       />
 
-      <div className={cn('flex-1 min-h-0', 'overflow-y-auto')}>
+      <div
+        className={cn(
+          'flex-1 min-h-0',
+          databaseTab === 'settings' && children
+            ? 'flex flex-col overflow-hidden'
+            : 'overflow-y-auto',
+        )}
+      >
         {isDatabaseLevelView ? (
-          <Overview
-            databaseId={databaseId}
-            activeTab={
-              databaseTab ? DATABASE_TAB_TO_OVERVIEW[databaseTab] : 'tables'
-            }
-            contentOnly
-            monitorEmbed={
-              databaseTab === 'monitor'
-                ? {
-                    dateRange: monitorDateRange,
-                    chartTick: monitorChartTick,
-                  }
-                : undefined
-            }
-          />
+          databaseTab === 'settings' && children ? (
+            children
+          ) : (
+            <Overview
+              databaseId={databaseId}
+              activeTab={
+                databaseTab ? DATABASE_TAB_TO_OVERVIEW[databaseTab] : 'tables'
+              }
+              contentOnly
+              monitorEmbed={
+                databaseTab === 'monitor'
+                  ? {
+                      dateRange: monitorDateRange,
+                      chartTick: monitorChartTick,
+                    }
+                  : undefined
+              }
+            />
+          )
         ) : (
           <>
             {activeTab === 'rows' && selectedTable ? (

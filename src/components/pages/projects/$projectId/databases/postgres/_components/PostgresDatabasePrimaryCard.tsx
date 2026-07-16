@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -173,7 +172,7 @@ export function PostgresDatabasePrimaryCard({
   const queryClient = useQueryClient()
   const haEnabled = (database.replicas ?? 0) > 0
   const pollReplicas = database.status !== 'ready'
-  const { replicas, members, isLoading, isFetching } = usePostgresDatabaseReplicas(
+  const { replicas, members, isLoading } = usePostgresDatabaseReplicas(
     projectId,
     databaseId,
     haEnabled,
@@ -382,13 +381,6 @@ export function PostgresDatabasePrimaryCard({
                     'The current primary is {instance}. Select a read replica and promote it to move write traffic.',
                   ).replace('{instance}', getReplicaLabel(primaryMember, 0, t))}
                 </p>
-              ) : null}
-
-              {isFetching && displayMembers.length > 0 ? (
-                <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                  {t('Refreshing cluster members…')}
-                </div>
               ) : null}
             </div>
           </>

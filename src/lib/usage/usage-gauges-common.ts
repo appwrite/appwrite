@@ -34,6 +34,8 @@ interface ListUsageGaugeGroupsParams {
   queries?: string[]
   resourceId?: string
   resourceType?: string
+  /** Cluster node: 0 = primary, 1+ = replicas. */
+  ordinal?: number
   teamId?: string
 }
 
@@ -52,6 +54,7 @@ async function listUsageGaugeGroupsByMetric(
       queries: params.queries,
       resourceId: params.resourceId,
       resourceType: params.resourceType,
+      ordinal: params.ordinal,
     }) ?? []),
   ]
   const teamId = params.teamId?.trim()
@@ -281,6 +284,7 @@ export async function fetchProjectUsageGaugeChartSeries(
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
   resourceId?: string,
   resourceType?: string,
+  ordinal?: number,
 ): Promise<{
   chartPoints: ProjectUsageChartOverview['chartPoints']
   previousChartPoints: ProjectUsageChartOverview['chartPoints']
@@ -305,6 +309,7 @@ export async function fetchProjectUsageGaugeChartSeries(
       queries,
       resourceId,
       resourceType,
+      ordinal,
     }),
     listUsageGaugeGroupsForMetrics(projectId, metrics, {
       interval: resolvedInterval,
@@ -313,6 +318,7 @@ export async function fetchProjectUsageGaugeChartSeries(
       queries,
       resourceId,
       resourceType,
+      ordinal,
     }),
   ])
 
@@ -345,6 +351,7 @@ export async function fetchProjectUsageGaugesChartOverview(
   logRetentionHours: number = DEFAULT_USAGE_LOG_RETENTION_HOURS,
   resourceId?: string,
   resourceType?: string,
+  ordinal?: number,
 ): Promise<ProjectUsageChartOverview> {
   if (!projectId || metrics.length === 0) {
     return { changePercent: 0, chartPoints: [] }
@@ -360,6 +367,7 @@ export async function fetchProjectUsageGaugesChartOverview(
       logRetentionHours,
       resourceId,
       resourceType,
+      ordinal,
     )
 
   const currentLatest =

@@ -70,12 +70,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
           profileFeatures.nativeDbsMongo)
 
       await Promise.all([
+        // TablesDB product section: when All Databases owns URL pagination, only
+        // prefetch the first page (same pattern as DocumentsDB / VectorsDB sections).
         queryClient.ensureQueryData(
           productDatabasesQueryOptions(
             projectId,
             DatabaseType.Tablesdb,
-            page - 1,
-            limit,
+            profileFeatures.dedicatedDbsSupport ? 0 : page - 1,
+            profileFeatures.dedicatedDbsSupport
+              ? GRID_DEFAULT_PAGE_SIZE
+              : limit,
             search ?? undefined,
             tablesDbFilterQueries,
           ),
@@ -122,8 +126,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
           ? queryClient.ensureQueryData(
               consoleDatabasesQueryOptions(
                 projectId,
-                0,
-                GRID_DEFAULT_PAGE_SIZE,
+                page - 1,
+                limit,
                 search ?? undefined,
                 filterQueries,
               ),

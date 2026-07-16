@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 /**
  * Route-level workspace props and database-level tab ids shared by all
  * database products. No product implementation lives here - only URL/tab
@@ -34,6 +36,8 @@ export interface WorkspaceProps {
     | 'security'
     | 'settings'
   databaseTab?: DatabaseTabId
+  /** Nested settings routes render their shell here instead of Overview. */
+  children?: ReactNode
 }
 
 export const DATABASE_TAB_TO_OVERVIEW: Record<

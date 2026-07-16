@@ -58,6 +58,8 @@ export type ClusterNodeStatus =
   | 'starting'
   | 'failed'
   | 'pending'
+  | 'adding'
+  | 'removing'
   | 'unknown'
 
 /** Connection usage shown on the pooler/proxy node. */
@@ -148,6 +150,8 @@ function normalizeClusterNodeStatus(status?: string | null): ClusterNodeStatus {
   ) {
     return 'pending'
   }
+  if (normalized === 'adding') return 'adding'
+  if (normalized === 'removing') return 'removing'
   return 'unknown'
 }
 
@@ -164,6 +168,86 @@ export function clusterNodeStatusesFromDatabaseStatus(
   return [status, ...Array.from({ length: safeReplicaCount }, () => status)]
 }
 
+/**
+ * Build primary + replica statuses from getReplicas members.
+ * Pads missing replica slots as `provisioning` so the diagram matches the
+ * configured replica count while pods are still coming up.
+ */
+export function clusterNodeStatusesFromMembers(
+  members: Array<{ role?: string | null; status?: string | null }>,
+  replicaCount: number,
+  fallbackStatus?: string | null,
+): ClusterNodeStatus[] {
+  const safeReplicaCount = Math.max(0, Math.floor(replicaCount))
+  const fallback = normalizeClusterNodeStatus(fallbackStatus ?? 'active')
+  const primary = members.find(
+    (member) => String(member.role ?? '').trim().toLowerCase() === 'primary',
+  )
+  const replicas = members.filter(
+    (member) => String(member.role ?? '').trim().toLowerCase() !== 'primary',
+  )
+
+  const statuses: ClusterNodeStatus[] = [
+    normalizeClusterNodeStatus(primary?.status ?? fallback),
+  ]
+
+  for (let index = 0; index < safeReplicaCount; index += 1) {
+    const member = replicas[index]
+    statuses.push(
+      member
+        ? normalizeClusterNodeStatus(member.status)
+        : 'provisioning',
+    )
+  }
+
+  return statuses
+}
+
+/**
+ * Preview cluster topology while editing replica count before save.
+ * Keeps nodes that will be removed visible (marked `removing`) and marks
+ * newly selected replicas as `adding` until the change is confirmed.
+ * When `memberStatuses` is provided, existing nodes keep their live HA status
+ * instead of inheriting the database lifecycle status.
+ */
+export function clusterReplicaChangePreview(
+  databaseStatus: string | null | undefined,
+  committedReplicaCount: number,
+  draftReplicaCount: number,
+  memberStatuses?: Array<ClusterNodeStatus | string | null | undefined> | null,
+): {
+  displayReplicaCount: number
+  nodeStatuses: ClusterNodeStatus[]
+} {
+  const fallback = normalizeClusterNodeStatus(databaseStatus)
+  const committed = Math.max(0, Math.floor(committedReplicaCount))
+  const draft = Math.max(0, Math.floor(draftReplicaCount))
+  const displayReplicaCount = Math.max(committed, draft)
+  const liveStatuses =
+    memberStatuses && memberStatuses.length > 0
+      ? memberStatuses.map((status) => normalizeClusterNodeStatus(status))
+      : null
+
+  const resolveLiveStatus = (index: number): ClusterNodeStatus =>
+    liveStatuses?.[index] ?? fallback
+
+  const nodeStatuses: ClusterNodeStatus[] = [resolveLiveStatus(0)]
+
+  for (let index = 0; index < displayReplicaCount; index += 1) {
+    const exists = index < committed
+    const kept = index < draft
+    if (exists && kept) {
+      nodeStatuses.push(resolveLiveStatus(index + 1))
+    } else if (!exists && kept) {
+      nodeStatuses.push('adding')
+    } else {
+      nodeStatuses.push('removing')
+    }
+  }
+
+  return { displayReplicaCount, nodeStatuses }
+}
+
 function clusterNodeStatusDotClass(status: ClusterNodeStatus): string {
   switch (status) {
     case 'active':
@@ -171,7 +255,10 @@ function clusterNodeStatusDotClass(status: ClusterNodeStatus): string {
     case 'provisioning':
     case 'starting':
     case 'pending':
+    case 'adding':
       return 'bg-amber-500 dark:bg-amber-400'
+    case 'removing':
+      return 'bg-slate-400 dark:bg-slate-500'
     case 'failed':
       return 'bg-red-500 dark:bg-red-400'
     default:
@@ -194,6 +281,10 @@ function clusterNodeStatusLabel(
       return t('Failed')
     case 'pending':
       return t('Pending')
+    case 'adding':
+      return t('Adding')
+    case 'removing':
+      return t('Removing')
     default:
       return t('Unknown')
   }
@@ -383,6 +474,13 @@ function CompactClusterNode({
 }) {
   const t = useT()
   const statusLabel = clusterNodeStatusLabel(status, t)
+  const isPreviewChange = status === 'adding' || status === 'removing'
+  const showStatusBody =
+    isPreviewChange ||
+    status === 'provisioning' ||
+    status === 'starting' ||
+    status === 'pending' ||
+    status === 'failed'
 
   const connectionsLabel =
     metrics.kind === 'connections'
@@ -393,14 +491,26 @@ function CompactClusterNode({
 
   return (
     <div
-      className="absolute select-none"
+      className={cn(
+        'absolute select-none transition-opacity',
+        status === 'removing' && 'opacity-45',
+      )}
       style={{
         left: `${node.x}px`,
         top: `${node.y}px`,
         width: `${node.width}px`,
       }}
     >
-      <div className="overflow-hidden rounded-md border border-border bg-card shadow-sm">
+      <div
+        className={cn(
+          'overflow-hidden rounded-md border bg-card shadow-sm',
+          isPreviewChange
+            ? 'border-dashed border-muted-foreground/55'
+            : 'border-border',
+          status === 'adding' && 'bg-amber-500/5',
+          status === 'removing' && 'bg-muted/40',
+        )}
+      >
         <div
           className={cn(
             'flex items-center gap-1.5 bg-muted/50 px-2',
@@ -412,7 +522,12 @@ function CompactClusterNode({
             className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
             aria-hidden
           />
-          <span className="min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium text-foreground">
+          <span
+            className={cn(
+              'min-w-0 flex-1 whitespace-nowrap text-[11px] font-medium text-foreground',
+              status === 'removing' && 'line-through text-muted-foreground',
+            )}
+          >
             {label}
           </span>
           <span
@@ -428,7 +543,23 @@ function CompactClusterNode({
           className="flex items-center justify-center gap-2 border-t border-border/60 bg-card px-2.5 py-1.5"
           style={{ minHeight: METRICS_BODY_HEIGHT }}
         >
-          {metrics.kind === 'connections' ? (
+          {showStatusBody ? (
+            <span
+              className={cn(
+                'text-[10px] font-medium leading-none',
+                status === 'removing'
+                  ? 'text-muted-foreground'
+                  : status === 'adding' ||
+                      status === 'provisioning' ||
+                      status === 'starting' ||
+                      status === 'pending'
+                    ? 'text-amber-700 dark:text-amber-400'
+                    : 'text-muted-foreground',
+              )}
+            >
+              {statusLabel}
+            </span>
+          ) : metrics.kind === 'connections' ? (
             <span className="inline-flex items-center gap-1 text-[10px] leading-none">
               <span className="text-muted-foreground">{t('Connections')}</span>
               <span className="font-mono tabular-nums font-medium text-foreground">

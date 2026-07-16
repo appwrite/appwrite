@@ -3,11 +3,9 @@ import { cn } from '@/lib/utils'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  Database,
   Plus,
   Layers,
   Table2,
-  CheckCircle2,
   AlertCircle,
   ExternalLink,
   Download,
@@ -27,10 +25,6 @@ import {
   useProject,
   useOrganizationScopes,
   createProjectTable,
-  invalidateDatabaseModel,
-  updateProjectDatabase,
-  deleteProjectDatabase,
-  refetchProjectDatabaseLists,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
@@ -63,19 +57,6 @@ import {
   canShowDatabaseSecuritySettings,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import {
-  formatDedicatedDatabaseRegionUnavailableDescription,
-  projectSupportsDedicatedDatabaseCompute,
-} from '@/lib/databases/dedicated-database-regions'
-import { DedicatedDatabaseRegionUnavailableBadge } from '../_components/DedicatedDatabaseRegionUnavailableCard'
-import {
-  SERVERLESS_DATABASE_SPEC_ID,
-  TABLE_DB_SPEC_OPTIONS,
-  hasLockedDatabaseSpecifications,
-} from '@/lib/database-specs'
-import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
-import { useScrollToCard } from '@/hooks/use-scroll-to-card'
-import type { Models } from '@appwrite.io/console'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
 import { getLocalizedDatabaseConsoleLabels } from '@/lib/database-console-labels'
 
@@ -84,7 +65,6 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import {
@@ -115,9 +95,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 
 import {
   Dialog,
@@ -125,7 +102,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useT } from '@/lib/i18n/translate'
@@ -151,8 +127,6 @@ export interface OverviewProps {
   }
 }
 
-const CURRENT_TIER_ID = SERVERLESS_DATABASE_SPEC_ID
-
 const DB_KIND = 'documentsdb' as const satisfies DatabaseRouteKind
 
 export function Overview({
@@ -170,15 +144,10 @@ export function Overview({
   const queryClient = useQueryClient()
   const location = useLocation()
   const { features } = useConsoleProfile()
-  useScrollToCard()
   const [searchValue, setSearchValue] = useState('')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
-  const [databaseName, setDatabaseName] = useState('')
-  const [enabled, setEnabled] = useState(false)
-  const [deleteConfirmation, setDeleteConfirmation] = useState('')
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
@@ -201,15 +170,6 @@ export function Overview({
   const ContainerListIcon =
     dbLabels.sdkListContainersMethod === 'listCollections' ? Layers : Table2
   const overviewDbNav = useMemo(() => dbNavLink(DB_KIND), [])
-
-  // Update databaseName and enabled when database changes
-  useEffect(() => {
-    if (database) {
-      setDatabaseName(database.name)
-      setEnabled((database as Models.Database).enabled !== false) // Default to true if not specified
-      setDeleteConfirmation('')
-    }
-  }, [database])
 
   // Fetch data for the requested page (triggers load when user changes page)
   const {
@@ -380,113 +340,6 @@ export function Overview({
     }
   }
 
-  // Mutation to update database name
-  const updateDatabaseNameMutation = useMutation({
-    mutationFn: async ({
-      databaseId,
-      name,
-    }: {
-      databaseId: string
-      name: string
-    }) => {
-      // Validate and trim name (1-128 chars)
-      if (!name || typeof name !== 'string') {
-        throw new Error('Name must be a valid string')
-      }
-      const trimmedName = name.trim()
-      if (trimmedName.length < 1) {
-        throw new Error('Name must be at least 1 character')
-      }
-      if (trimmedName.length > 128) {
-        throw new Error('Name must be no longer than 128 characters')
-      }
-
-      // Ensure we have a valid databaseId
-      if (!databaseId || typeof databaseId !== 'string') {
-        throw new Error('Database ID is required')
-      }
-
-      await updateProjectDatabase(projectId, databaseId, {
-        name: trimmedName,
-      })
-    },
-    onSuccess: () => {
-      // Invalidate database query to refetch with updated name
-      invalidateDatabaseModel(projectId, databaseId)
-      queryClient.invalidateQueries({
-        queryKey: ['database', 'project', projectId, databaseId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['databases', 'project', projectId],
-      })
-      toast.success(t('Database name updated successfully'))
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to update database name'))
-    },
-  })
-
-  // Update enabled mutation
-  const updateEnabledMutation = useMutation({
-    mutationFn: async (enabled: boolean) => {
-      if (!projectId || !databaseId || !database)
-        throw new Error('Project ID, Database ID, and Database are required')
-      return await updateProjectDatabase(projectId, databaseId, {
-        name: database.name,
-        enabled,
-      })
-    },
-    onSuccess: () => {
-      toast.success(
-        enabled ? t('Database has been enabled') : t('Database has been disabled'),
-      )
-      invalidateDatabaseModel(projectId, databaseId)
-      queryClient.invalidateQueries({
-        queryKey: ['database', 'project', projectId, databaseId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['databases', 'project', projectId],
-      })
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
-      // Revert to original value on error
-      if (database) {
-        setEnabled((database as Models.Database).enabled !== false)
-      }
-    },
-  })
-
-  const handleEnabledToggle = (checked: boolean) => {
-    setEnabled(checked)
-  }
-
-  // Mutation to delete database
-  const deleteDatabaseMutation = useMutation({
-    mutationFn: async (databaseId: string) => {
-      await deleteProjectDatabase(projectId, databaseId)
-    },
-    onSuccess: async () => {
-      invalidateDatabaseModel(projectId, databaseId)
-      await refetchProjectDatabaseLists(queryClient, projectId)
-      toast.success(t('Database deleted successfully'))
-
-      // Close the dialog and reset confirmation
-      setDeleteDialogOpen(false)
-      setDeleteConfirmation('')
-
-      // Navigate back to databases list
-      navigate({
-        to: '/projects/$projectId/databases',
-        params: { projectId },
-        replace: true,
-      })
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t('Failed to delete database'))
-    },
-  })
-
   const handleBack = () => {
     navigate({
       to: '/projects/$projectId/databases',
@@ -495,8 +348,6 @@ export function Overview({
   }
 
   const { project } = useProject(projectId)
-  const supportsDedicatedDatabaseCompute =
-    projectSupportsDedicatedDatabaseCompute(project?.region)
   const { access } = useOrganizationScopes(project?.teamId)
   const showDbSecuritySettings = canShowDatabaseSecuritySettings(
     access,
@@ -537,7 +388,7 @@ export function Overview({
   useEffect(() => {
     if (
       !showDbSecuritySettings &&
-      (activeTab === 'security' || activeTab === 'settings')
+      (activeTab === 'settings')
     ) {
       navigate({
         to: '/projects/$projectId/databases/$dbKind/$databaseId/',
@@ -580,16 +431,6 @@ export function Overview({
                 id: 'monitor' as const,
                 label: 'Monitor',
                 to: '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
-                params: { projectId, dbKind: DB_KIND, databaseId },
-              },
-            ]
-          : []),
-        ...(showDbSecuritySettings
-          ? [
-              {
-                id: 'security' as const,
-                label: 'Security',
-                to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
                 params: { projectId, dbKind: DB_KIND, databaseId },
               },
             ]
@@ -944,7 +785,7 @@ export function Overview({
                   />
                 </div>
               ) : null}
-              {database && (database as Models.Database).enabled === false ? (
+              {database && database.enabled === false ? (
                 <div className="border-b border-border bg-amber-500/5">
                   <div
                     className={cn(
@@ -1310,418 +1151,6 @@ export function Overview({
               dateRange={monitorDateRange}
               chartTick={monitorChartTick}
             />
-          </div>
-        )}
-
-        {activeTab === 'security' && (
-          <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-            <div className="space-y-6">
-              {/* Permissions */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {t('Permissions')}
-                  </h3>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4">
-                  <p className="text-[13px] text-muted-foreground">
-                    {t(
-                      'Permissions are configured at the collection or document level. You can select the permission model for each collection in its settings. When document level security is enabled, you can also modify permissions per document when updating individual documents.',
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-            <div className="space-y-6">
-              {/* Update Database Name */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {t('Name')}
-                  </h3>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4">
-                  <p className="text-[13px] text-muted-foreground">
-                    {t("Update your database's display name. This will be visible to all organization members.")}
-                  </p>
-                  <Input
-                    value={databaseName}
-                    onChange={(e) => setDatabaseName(e.target.value)}
-                    placeholder={t('Database name')}
-                    className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                  />
-                </div>
-                <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={
-                      !database ||
-                      databaseName === database.name ||
-                      !databaseName.trim() ||
-                      updateDatabaseNameMutation.isPending
-                    }
-                    onClick={() => {
-                      if (
-                        database &&
-                        databaseName.trim() &&
-                        databaseName !== database.name
-                      ) {
-                        updateDatabaseNameMutation.mutate({
-                          databaseId: database.$id,
-                          name: databaseName.trim(),
-                        })
-                      }
-                    }}
-                  >
-                    {t('Update')}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Database Information */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {database.name}
-                  </h3>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        id="toggle"
-                        checked={enabled ?? false}
-                        onCheckedChange={handleEnabledToggle}
-                        disabled={updateEnabledMutation.isPending}
-                      />
-                      <Label
-                        htmlFor="toggle"
-                        className="text-[13px] text-foreground"
-                      >
-                        {enabled ? 'Enabled' : 'Disabled'}
-                      </Label>
-                    </div>
-                  </div>
-                  <div className="mt-4 space-y-1">
-                    <p className="text-[13px] text-muted-foreground">
-                      Database ID:{' '}
-                      <span className="ms-1.5">
-                        <CopyableId id={database.$id} size="sm" />
-                      </span>
-                    </p>
-                    <p className="text-[13px] text-muted-foreground">
-                      Created:{' '}
-                      <DateTooltip
-                        date={database.createdAt}
-                        showFormattedDate
-                        className="text-foreground"
-                      />
-                    </p>
-                    <p className="text-[13px] text-muted-foreground">
-                      Last updated:{' '}
-                      <DateTooltip
-                        date={database.updatedAt || database.createdAt}
-                        showFormattedDate
-                        className="text-foreground"
-                      />
-                    </p>
-                  </div>
-                </div>
-                <div className="px-6 py-4 border-t border-border bg-muted/30">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={
-                      enabled ===
-                        ((database as Models.Database).enabled !== false) ||
-                      updateEnabledMutation.isPending
-                    }
-                    onClick={() => {
-                      if (
-                        enabled !==
-                        ((database as Models.Database).enabled !== false)
-                      ) {
-                        updateEnabledMutation.mutate(enabled)
-                      }
-                    }}
-                  >
-                    {t('Update')}
-                  </Button>
-                </div>
-              </div>
-
-              {features.dedicatedDbsDocumentsDB &&
-                (supportsDedicatedDatabaseCompute ? (
-                <div
-                  data-card-id="specification"
-                  className="rounded-xl border border-border bg-card/50 overflow-hidden"
-                >
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      {t('Specification')}
-                    </h3>
-                    <p className="text-[13px] text-muted-foreground mt-2">
-                      {t('Current tier: Serverless. Dedicated tiers are coming soon.')}
-                    </p>
-                  </div>
-                  <div className="border-t border-border" />
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
-                        <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          {t('Tier')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          CPU
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          {t('Memory')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          {t('Connections')}
-                        </TableHead>
-                        <TableHead className="px-6 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[180px]">
-                          {t('Price')}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {TABLE_DB_SPEC_OPTIONS.map((spec) => {
-                        const isCurrent = spec.id === CURRENT_TIER_ID
-                        const locked = spec.comingSoon === true
-                        return (
-                          <TableRow
-                            key={spec.id}
-                            className={cn(
-                              'border-b border-border last:border-b-0 transition-colors',
-                              isCurrent && 'bg-primary/5',
-                            )}
-                          >
-                            <TableCell className="px-6 py-3">
-                              <span className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[13px] font-medium text-foreground">
-                                  {spec.label}
-                                </span>
-                                {isCurrent && (
-                                  <Badge
-                                    variant="success"
-                                    className="gap-1 text-[10px] shrink-0"
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    {t('Current')}
-                                  </Badge>
-                                )}
-                                {locked && (
-                                  <Badge
-                                    variant="inactive"
-                                    className="text-[10px] shrink-0"
-                                  >
-                                    {t('Coming soon')}
-                                  </Badge>
-                                )}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                              {spec.cpu}
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
-                              {spec.memory}
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-[13px] tabular-nums text-muted-foreground">
-                              {spec.connections}
-                            </TableCell>
-                            <TableCell className="px-6 py-3 text-end">
-                              {locked ? (
-                                <span className="text-[13px] text-muted-foreground">
-                                  {spec.price}
-                                </span>
-                              ) : (
-                                <span className="text-[13px] font-medium tabular-nums text-foreground">
-                                  {spec.price}
-                                </span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                  {hasLockedDatabaseSpecifications(TABLE_DB_SPEC_OPTIONS) && (
-                    <div className="px-6 py-3">
-                      <SpecificationsUpgradeNote
-                        orgId={project?.teamId}
-                        showContactSales
-                      />
-                    </div>
-                  )}
-                </div>
-                ) : (
-                <div
-                  data-card-id="specification"
-                  className="rounded-xl border border-border bg-card/50 overflow-hidden opacity-80"
-                >
-                  <div className="px-6 py-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        {t('Specification')}
-                      </h3>
-                      <DedicatedDatabaseRegionUnavailableBadge />
-                    </div>
-                    <p className="text-[13px] text-muted-foreground mt-2">
-                      {formatDedicatedDatabaseRegionUnavailableDescription(t)}
-                    </p>
-                  </div>
-                </div>
-                ))}
-
-              {/* Delete Database */}
-              <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {t('Delete database')}
-                  </h3>
-                </div>
-                <div className="border-t border-destructive/20" />
-                <div className="px-6 py-4">
-                  <p className="text-[13px] text-muted-foreground">
-                    {dbLabels.deleteDatabaseContainersDescription}
-                  </p>
-
-                  {/* Database Info Summary */}
-                  {database && (
-                    <div className="flex items-center gap-3 mt-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                        <Database className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-medium text-foreground truncate">
-                          {database.name}
-                        </p>
-                        <p className="text-[12px] text-muted-foreground">
-                          {tablesTotal}{' '}
-                          {tablesTotal === 1
-                            ? dbLabels.containerSingular
-                            : dbLabels.containerPlural}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-                  <Dialog
-                    open={deleteDialogOpen}
-                    onOpenChange={setDeleteDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                      >
-                        {t('Delete database')}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-start">
-                        <DialogTitle>{t('Delete Database')}</DialogTitle>
-                        <DialogDescription className="text-[13px] mt-2">
-                          {t('Are you sure you want to delete')}{' '}
-                          {database && (
-                            <span className="font-medium text-foreground">
-                              {database.name}
-                            </span>
-                          )}{' '}
-                          {dbLabels.deleteDatabaseConfirmSuffix}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="border-t border-border" />
-                      <div className="px-6 pb-4 pt-0">
-                        <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
-                          {database && (
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                                <Database className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <p className="text-[13px] font-medium text-foreground">
-                                  {database.name}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {tablesTotal} table
-                                  {tablesTotal !== 1 ? 's' : ''} will be deleted
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <label className="text-[13px] text-muted-foreground">
-                          Type{' '}
-                          {database && (
-                            <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {database.name}
-                            </span>
-                          )}{' '}
-                          to confirm
-                        </label>
-                        <Input
-                          value={deleteConfirmation}
-                          onChange={(e) =>
-                            setDeleteConfirmation(e.target.value)
-                          }
-                          placeholder={t('Enter database name')}
-                          className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
-                        />
-                      </div>
-
-                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => {
-                            setDeleteDialogOpen(false)
-                            setDeleteConfirmation('')
-                          }}
-                        >
-                          {t('Cancel')}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          disabled={
-                            !database ||
-                            deleteConfirmation !== database.name ||
-                            deleteDatabaseMutation.isPending
-                          }
-                          onClick={() => {
-                            if (
-                              database &&
-                              deleteConfirmation === database.name
-                            ) {
-                              deleteDatabaseMutation.mutate(database.$id)
-                            }
-                          }}
-                        >
-                          {t('Delete')}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>

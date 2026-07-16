@@ -1453,6 +1453,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Ready': 'מוכן',
   'Provisioning': 'בהקמה',
   'Starting': 'מתחיל',
+  'Adding': 'בהוספה',
+  'Removing': 'בהסרה',
   'Restoring': 'משחזר',
   'Scaling': 'משנה קנה מידה',
   'Upgrading': 'משדרג',
@@ -1516,8 +1518,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database operations are disabled while the database is in a failed state.':
     'פעולות מסד הנתונים מושבתות כל עוד מסד הנתונים במצב כשל.',
   'Current status': 'סטטוס נוכחי',
-  'A compute tier change is in progress. Some operations may be temporarily unavailable.':
-    'שינוי רמת המחשוב מתבצע. חלק מהפעולות עשויות להיות לא זמינות באופן זמני.',
+  'A compute tier change is in progress. Your cluster remains available during this operation.':
+    'שינוי רמת המחשוב מתבצע. האשכול נשאר זמין במהלך פעולה זו.',
   'Dedicated compute is being provisioned for this database.':
     'מוקצה מחשוב ייעודי עבור מסד נתונים זה.',
   'This database is being restored. Some operations may be unavailable until it is ready again.':

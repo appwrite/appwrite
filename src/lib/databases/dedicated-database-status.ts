@@ -67,7 +67,7 @@ export function dedicatedDatabaseStatusAlertDescriptionKey(
 ): string {
   switch (status.trim().toLowerCase()) {
     case 'scaling':
-      return 'A compute tier change is in progress. Some operations may be temporarily unavailable.'
+      return 'A compute tier change is in progress. Your cluster remains available during this operation.'
     case 'upgrading':
       return 'A database upgrade is in progress. Some operations may be temporarily unavailable.'
     case 'migrating':

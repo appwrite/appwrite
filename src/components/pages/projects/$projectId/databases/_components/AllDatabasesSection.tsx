@@ -16,11 +16,12 @@ import {
   productDatabaseListLink,
 } from '@/lib/database-routes'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { Pagination } from '@/components/global/shared/Pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -71,6 +72,12 @@ type AllDatabasesSectionProps = {
   search?: string
   /** Appwrite Query strings from FiltersPopover / type droplist. */
   filterQueries?: string[]
+  /** 1-indexed page from URL. */
+  page?: number
+  /** Page size from URL. */
+  limit?: number
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
 }
 
 function databaseCardLink(
@@ -90,6 +97,10 @@ export function AllDatabasesSection({
   viewMode,
   search,
   filterQueries,
+  page = 1,
+  limit = GRID_DEFAULT_PAGE_SIZE,
+  onPageChange,
+  onPageSizeChange,
 }: AllDatabasesSectionProps) {
   const t = useT()
   const { features } = useConsoleProfile()
@@ -100,19 +111,78 @@ export function AllDatabasesSection({
     features,
   )
 
+  const [requestedPage, setRequestedPage] = useState(page)
+  const [displayedPage, setDisplayedPage] = useState(page)
+  const [displayedSearch, setDisplayedSearch] = useState(search)
+  const [displayedFilterQueries, setDisplayedFilterQueries] =
+    useState(filterQueries)
+  const [displayedLimit, setDisplayedLimit] = useState(limit)
+
+  useEffect(() => {
+    setRequestedPage((prev) => (prev === page ? prev : page))
+  }, [page])
+
+  useEffect(() => {
+    setDisplayedLimit((prev) => (prev === limit ? prev : limit))
+  }, [limit])
+
+  const filterQueriesKey = filterQueries?.join('\0') ?? ''
+  const displayedFilterQueriesKey = displayedFilterQueries?.join('\0') ?? ''
+
+  const {
+    isLoading: requestedLoading,
+    isFetching: requestedFetching,
+    isFetched: requestedFetched,
+  } = useProjectConsoleDatabases(
+    projectId,
+    requestedPage - 1,
+    limit,
+    search,
+    filterQueries,
+  )
+
   const {
     databases,
-    isLoading,
+    total,
+    isLoading: displayedLoading,
     isFetching,
     error,
     refetch,
   } = useProjectConsoleDatabases(
     projectId,
-    0,
-    GRID_DEFAULT_PAGE_SIZE,
-    search,
-    filterQueries,
+    displayedPage - 1,
+    displayedLimit,
+    displayedSearch,
+    displayedFilterQueries,
   )
+
+  useEffect(() => {
+    if (requestedFetching || requestedLoading || !requestedFetched) return
+    const match =
+      requestedPage === displayedPage &&
+      (search ?? '') === (displayedSearch ?? '') &&
+      filterQueriesKey === displayedFilterQueriesKey &&
+      limit === displayedLimit
+    if (!match) {
+      setDisplayedPage(requestedPage)
+      setDisplayedSearch(search)
+      setDisplayedFilterQueries(filterQueries)
+      setDisplayedLimit(limit)
+    }
+  }, [
+    requestedFetching,
+    requestedLoading,
+    requestedFetched,
+    requestedPage,
+    displayedPage,
+    search,
+    displayedSearch,
+    filterQueriesKey,
+    displayedFilterQueriesKey,
+    filterQueries,
+    limit,
+    displayedLimit,
+  ])
 
   const { databases: dedicatedDatabases } =
     useProjectDedicatedDatabases(projectId)
@@ -128,10 +198,21 @@ export function AllDatabasesSection({
   const errorMessage = error ? getErrorMessage(error) : null
   const hasActiveFilters =
     Boolean(search?.trim()) || Boolean(filterQueries?.length)
+  const showLoading = displayedLoading && databases.length === 0
+  const canPaginate = Boolean(onPageChange && onPageSizeChange)
+  const showPagination = databases.length > 0 && canPaginate
+
+  const handleSectionPageChange = (nextPage: number) => {
+    onPageChange?.(nextPage)
+  }
+
+  const handleSectionPageSizeChange = (nextPageSize: number) => {
+    onPageSizeChange?.(nextPageSize)
+  }
 
   return (
     <section className="mb-10">
-      {isLoading ? (
+      {showLoading ? (
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
           <p className="mt-3 text-[13px] text-muted-foreground">
@@ -274,6 +355,17 @@ export function AllDatabasesSection({
                 </TableBody>
               </Table>
             </div>
+            {showPagination ? (
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={total}
+                pageSize={displayedLimit}
+                pageSizeOptions={[12, 18, 36, 72]}
+                onPageChange={handleSectionPageChange}
+                onPageSizeChange={handleSectionPageSizeChange}
+                itemLabel={t('databases')}
+              />
+            ) : null}
           </>
         ) : (
           <EmptyState
@@ -434,6 +526,17 @@ export function AllDatabasesSection({
               </div>
             ) : null}
           </div>
+          {showPagination ? (
+            <Pagination
+              currentPage={displayedPage}
+              totalItems={total}
+              pageSize={displayedLimit}
+              pageSizeOptions={[12, 18, 36, 72]}
+              onPageChange={handleSectionPageChange}
+              onPageSizeChange={handleSectionPageSizeChange}
+              itemLabel={t('databases')}
+            />
+          ) : null}
         </>
       )}
     </section>

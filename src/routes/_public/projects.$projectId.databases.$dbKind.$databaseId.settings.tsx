@@ -1,6 +1,7 @@
 import { type DatabaseRouteKind } from '@/lib/database-routes'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
+import { DatabaseSettingsLayout } from '@/components/pages/projects/$projectId/databases/settings/DatabaseSettingsLayout'
 import {
   projectQueryOptions,
   databaseQueryOptions,
@@ -44,7 +45,8 @@ export const Route = createFileRoute(
     )
 
     const database = queryClient.getQueryData<{ name?: string }>(
-      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
+      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)
+        .queryKey,
     )
     return { database }
   },
@@ -59,6 +61,8 @@ function DatabaseSettingsPage() {
       tableId="-"
       activeTab="rows"
       databaseTab="settings"
-    />
+    >
+      <DatabaseSettingsLayout />
+    </Workspace>
   )
 }

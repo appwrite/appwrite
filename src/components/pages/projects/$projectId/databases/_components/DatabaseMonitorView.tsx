@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
@@ -26,6 +26,7 @@ import {
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
 import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
+import { DatabaseMonitorNodeSelect } from './DatabaseMonitorNodeSelect'
 import { UsageTimeSeriesChartCard } from '@/components/pages/projects/$projectId/usage/_components/UsageTimeSeriesChartCard'
 import { DatabaseOperationBentoCard } from '@/components/pages/projects/$projectId/usage/_components/DatabaseOperationBentoCard'
 import { UsageBreakdownDrawer } from '@/components/pages/projects/$projectId/usage/_components/UsageBreakdownDrawer'
@@ -151,6 +152,7 @@ export function DatabaseMonitorView({
   const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
     DEFAULT_USAGE_CHART_INTERVAL,
   )
+  const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [breakdownDrawer, setBreakdownDrawer] =
     useState<BreakdownDrawerState | null>(null)
 
@@ -177,6 +179,14 @@ export function DatabaseMonitorView({
     apiSpecId,
   )
   const serverless = isServerlessDatabaseMonitoring(databaseType, specId)
+  const replicaCount = dedicated?.replicas ?? 0
+  const metricsOrdinal = !serverless && replicaCount > 0 ? selectedOrdinal : undefined
+
+  useEffect(() => {
+    if (selectedOrdinal > replicaCount) {
+      setSelectedOrdinal(0)
+    }
+  }, [replicaCount, selectedOrdinal])
 
   const readsQuery = useDatabaseReadsForDatabaseChart(
     projectId,
@@ -211,6 +221,7 @@ export function DatabaseMonitorView({
     dateRange,
     !serverless,
     resolvedInterval,
+    metricsOrdinal,
   )
 
   const resourceBreakdownItems = useMemo(
@@ -311,11 +322,20 @@ export function DatabaseMonitorView({
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[13px] text-muted-foreground">
-                {serverless
-                  ? t('Read and write operations for this database.')
-                  : t('Instance metrics for this dedicated database.')}
-              </p>
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                {!serverless ? (
+                  <DatabaseMonitorNodeSelect
+                    replicaCount={replicaCount}
+                    value={selectedOrdinal}
+                    onValueChange={setSelectedOrdinal}
+                  />
+                ) : null}
+                <p className="text-[13px] text-muted-foreground">
+                  {serverless
+                    ? t('Read and write operations for this database.')
+                    : t('Instance metrics for this dedicated database.')}
+                </p>
+              </div>
               <UsageChartIntervalToggle
                 value={resolvedInterval}
                 onValueChange={setChartInterval}

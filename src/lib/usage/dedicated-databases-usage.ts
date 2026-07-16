@@ -122,6 +122,7 @@ export async function fetchDedicatedDatabaseMetricOverview(
     options?.logRetentionHours,
     options?.resourceId,
     options?.resourceType ?? DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
+    options?.ordinal,
   )
 }
 

@@ -1327,6 +1327,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Ready': '準備完了',
   'Provisioning': 'プロビジョニング中',
   'Starting': '起動中',
+  'Adding': '追加予定',
+  'Removing': '削除予定',
   'Restoring': '復元中',
   'Scaling': 'スケーリング中',
   'Upgrading': 'アップグレード中',
@@ -1456,8 +1458,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database operations are disabled while the database is in a failed state.':
     'データベースが失敗状態のため、データベース操作は無効です。',
   'Current status': '現在のステータス',
-  'A compute tier change is in progress. Some operations may be temporarily unavailable.':
-    'コンピュートティアの変更を実行中です。一部の操作が一時的に利用できない場合があります。',
+  'A compute tier change is in progress. Your cluster remains available during this operation.':
+    'コンピュートティアの変更を実行中です。この操作中もクラスターは利用可能なままです。',
   'Dedicated compute is being provisioned for this database.':
     'このデータベース用の専用コンピュートをプロビジョニングしています。',
   'This database is being restored. Some operations may be unavailable until it is ready again.':

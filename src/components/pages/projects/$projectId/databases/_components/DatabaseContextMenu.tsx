@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -8,6 +9,14 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import {
   Copy,
   Link2,
@@ -21,14 +30,23 @@ import {
   ArrowRightLeft,
   Settings,
   Activity,
+  Trash2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { DatabaseType } from '@appwrite.io/console'
-import { fetchProjectDatabase } from '@/lib/react-query/hooks'
+import {
+  deleteProjectDatabase,
+  fetchProjectDatabase,
+  invalidateDatabaseModel,
+  refetchProjectDatabaseLists,
+} from '@/lib/react-query/hooks'
 import {
   databaseRouteKindFromApiType,
   productDatabaseHomePath,
 } from '@/lib/database-routes'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   buildConsoleUrl,
   copyResourceAsJson,
@@ -64,7 +82,24 @@ export function DatabaseContextMenu({
 }: DatabaseContextMenuProps) {
   const t = useT()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const dbKind = databaseRouteKindFromApiType(database.databaseType)
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await deleteProjectDatabase(projectId, database.$id)
+    },
+    onSuccess: async () => {
+      invalidateDatabaseModel(projectId, database.$id)
+      await refetchProjectDatabaseLists(queryClient, projectId)
+      toast.success(t('Database deleted successfully'))
+      setDeleteDialogOpen(false)
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t('Failed to delete database')))
+    },
+  })
 
   const databaseHref = buildConsoleUrl(
     productDatabaseHomePath(projectId, database.$id, database.databaseType),
@@ -76,7 +111,7 @@ export function DatabaseContextMenu({
       | '/projects/$projectId/databases/$dbKind/$databaseId/'
       | '/projects/$projectId/databases/$dbKind/$databaseId/visualizer'
       | '/projects/$projectId/databases/$dbKind/$databaseId/monitor'
-      | '/projects/$projectId/databases/$dbKind/$databaseId/db-security'
+      | '/projects/$projectId/databases/$dbKind/$databaseId/settings/security'
       | '/projects/$projectId/databases/$dbKind/$databaseId/backups'
       | '/projects/$projectId/databases/$dbKind/$databaseId/export-import'
       | '/projects/$projectId/databases/$dbKind/$databaseId/settings',
@@ -88,138 +123,176 @@ export function DatabaseContextMenu({
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-56">
-        <ContextMenuItem
-          onSelect={() =>
-            navigateToTab('/projects/$projectId/databases/$dbKind/$databaseId/')
-          }
-        >
-          <ContextMenuIcon icon={Table2} />
-          {t('Tables')}
-        </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={() =>
-            navigateToTab(
-              '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
-            )
-          }
-        >
-          <ContextMenuIcon icon={Workflow} />
-          {t('Visualizer')}
-        </ContextMenuItem>
-        {showMonitor && (
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+        <ContextMenuContent className="w-56">
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
+                '/projects/$projectId/databases/$dbKind/$databaseId/',
               )
             }
           >
-            <ContextMenuIcon icon={Activity} />
-            {t('Monitor')}
+            <ContextMenuIcon icon={Table2} />
+            {t('Tables')}
           </ContextMenuItem>
-        )}
-        {showSecuritySettings && (
           <ContextMenuItem
             onSelect={() =>
               navigateToTab(
-                '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
+                '/projects/$projectId/databases/$dbKind/$databaseId/visualizer',
               )
             }
           >
-            <ContextMenuIcon icon={Shield} />
-            {t('Security')}
+            <ContextMenuIcon icon={Workflow} />
+            {t('Visualizer')}
           </ContextMenuItem>
-        )}
-        {showBackups && (
-          <ContextMenuItem
-            onSelect={() =>
-              navigateToTab(
-                '/projects/$projectId/databases/$dbKind/$databaseId/backups',
-              )
-            }
-          >
-            <ContextMenuIcon icon={Archive} />
-            {t('Backups')}
-          </ContextMenuItem>
-        )}
-        <ContextMenuItem
-          onSelect={() =>
-            navigateToTab(
-              '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
-            )
-          }
-        >
-          <ContextMenuIcon icon={ArrowRightLeft} />
-          {t('Export / Import')}
-        </ContextMenuItem>
-        {showSecuritySettings && (
-          <ContextMenuItem
-            onSelect={() =>
-              navigateToTab(
-                '/projects/$projectId/databases/$dbKind/$databaseId/settings',
-              )
-            }
-          >
-            <ContextMenuIcon icon={Settings} />
-            {t('Settings')}
-          </ContextMenuItem>
-        )}
-        <ContextMenuSeparator />
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>
-            <ContextMenuIcon icon={Copy} />
-            {t('Copy')}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent>
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('ID', database.$id)}
-            >
-              <ContextMenuIcon icon={Copy} />
-              {t('Copy ID')}
-            </ContextMenuItem>
-            {hasName && (
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('Name', database.name)}
-              >
-                <ContextMenuIcon icon={Copy} />
-                {t('Copy name')}
-              </ContextMenuItem>
-            )}
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('Link', databaseHref)}
-            >
-              <ContextMenuIcon icon={Link2} />
-              {t('Copy link')}
-            </ContextMenuItem>
+          {showMonitor && (
             <ContextMenuItem
               onSelect={() =>
-                void copyResourceAsJson(() =>
-                  fetchProjectDatabase(
-                    projectId,
-                    database.$id,
-                    databaseRouteKindFromApiType(database.databaseType),
-                  ),
+                navigateToTab(
+                  '/projects/$projectId/databases/$dbKind/$databaseId/monitor',
                 )
               }
             >
-              <ContextMenuIcon icon={FileJson} />
-              {t('Copy as JSON')}
+              <ContextMenuIcon icon={Activity} />
+              {t('Monitor')}
             </ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => openInNewTab(databaseHref)}>
-          <ContextMenuIcon icon={ExternalLink} />
-          {t('Open in new tab')}
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={() => openInNewWindow(databaseHref)}>
-          <ContextMenuIcon icon={Square} />
-          {t('Open in new window')}
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+          )}
+          {showSecuritySettings && (
+            <ContextMenuItem
+              onSelect={() =>
+                navigateToTab(
+                  '/projects/$projectId/databases/$dbKind/$databaseId/settings/security',
+                )
+              }
+            >
+              <ContextMenuIcon icon={Shield} />
+              {t('Security')}
+            </ContextMenuItem>
+          )}
+          {showBackups && (
+            <ContextMenuItem
+              onSelect={() =>
+                navigateToTab(
+                  '/projects/$projectId/databases/$dbKind/$databaseId/backups',
+                )
+              }
+            >
+              <ContextMenuIcon icon={Archive} />
+              {t('Backups')}
+            </ContextMenuItem>
+          )}
+          <ContextMenuItem
+            onSelect={() =>
+              navigateToTab(
+                '/projects/$projectId/databases/$dbKind/$databaseId/export-import',
+              )
+            }
+          >
+            <ContextMenuIcon icon={ArrowRightLeft} />
+            {t('Export / Import')}
+          </ContextMenuItem>
+          {showSecuritySettings && (
+            <ContextMenuItem
+              onSelect={() =>
+                navigateToTab(
+                  '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+                )
+              }
+            >
+              <ContextMenuIcon icon={Settings} />
+              {t('Settings')}
+            </ContextMenuItem>
+          )}
+          <ContextMenuSeparator />
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <ContextMenuIcon icon={Copy} />
+              {t('Copy')}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('ID', database.$id)}
+              >
+                <ContextMenuIcon icon={Copy} />
+                {t('Copy ID')}
+              </ContextMenuItem>
+              {hasName && (
+                <ContextMenuItem
+                  onSelect={() => copyToClipboard('Name', database.name)}
+                >
+                  <ContextMenuIcon icon={Copy} />
+                  {t('Copy name')}
+                </ContextMenuItem>
+              )}
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('Link', databaseHref)}
+              >
+                <ContextMenuIcon icon={Link2} />
+                {t('Copy link')}
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() =>
+                  void copyResourceAsJson(() =>
+                    fetchProjectDatabase(
+                      projectId,
+                      database.$id,
+                      databaseRouteKindFromApiType(database.databaseType),
+                    ),
+                  )
+                }
+              >
+                <ContextMenuIcon icon={FileJson} />
+                {t('Copy as JSON')}
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={() => openInNewTab(databaseHref)}>
+            <ContextMenuIcon icon={ExternalLink} />
+            {t('Open in new tab')}
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => openInNewWindow(databaseHref)}>
+            <ContextMenuIcon icon={Square} />
+            {t('Open in new window')}
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={() => setDeleteDialogOpen(true)}>
+            <ContextMenuIcon icon={Trash2} />
+            {t('Delete')}
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-start">
+            <DialogTitle>{t('Delete database')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t(
+                'Are you sure you want to delete this database? This action cannot be undone.',
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
+              {t('Delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

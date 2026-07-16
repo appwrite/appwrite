@@ -374,6 +374,11 @@ export interface FetchUsageOverviewOptions {
   resourceId?: string
   /** Usage resource type filter (e.g. `dedicatedDatabases`). Sent via queries[]. */
   resourceType?: string
+  /**
+   * Cluster node for multi-node dedicated database gauges.
+   * 0 = primary, 1+ = replicas. Sent as `equal("ordinal", …)`.
+   */
+  ordinal?: number
   /** Plan log retention in hours; defaults to Pro (30 days). */
   logRetentionHours?: number
 }

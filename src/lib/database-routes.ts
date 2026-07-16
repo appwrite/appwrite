@@ -166,7 +166,7 @@ export function dbNavLink(kind: DatabaseRouteKind) {
     },
     dbSecurity(p: DbNavLinkParams) {
       return {
-        to: '/projects/$projectId/databases/$dbKind/$databaseId/db-security',
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings/security',
         params: baseDatabaseOnly(p),
       }
     },
@@ -176,10 +176,10 @@ export function dbNavLink(kind: DatabaseRouteKind) {
         params: baseDatabaseOnly(p),
       }
     },
-    /** Database settings scrolled to the Specification card (`#card-specification`). */
+    /** Database settings Specification sub-page. */
     dbSpecificationSettings(p: DbNavLinkParams) {
       return {
-        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings',
+        to: '/projects/$projectId/databases/$dbKind/$databaseId/settings/specification',
         params: baseDatabaseOnly(p),
         hash: 'card-specification',
       }

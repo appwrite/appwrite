@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   endOfDay,
   formatDistanceToNow,
@@ -73,6 +73,7 @@ import {
 } from '@/lib/usage/chart-interval'
 import { shouldShowUsageChartSkeleton } from '@/lib/usage/usage-chart-loading'
 import { UsageChartIntervalToggle } from '@/components/pages/projects/$projectId/overview/UsageChartIntervalToggle'
+import { DatabaseMonitorNodeSelect } from '../_components/DatabaseMonitorNodeSelect'
 import { PostgresMetricChart } from './_components/PostgresMetricChart'
 import { PostgresMetricRankedList } from './_components/PostgresMetricRankedList'
 import { PostgresMetricKpiCard } from './_components/PostgresMetricKpiCard'
@@ -216,6 +217,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
   const [chartInterval, setChartInterval] = useState<UsageChartInterval>(
     DEFAULT_USAGE_CHART_INTERVAL,
   )
+  const [selectedOrdinal, setSelectedOrdinal] = useState(0)
   const [activeSectionId, setActiveSectionId] = useState('connections')
   const resolvedInterval = useMemo(
     () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
@@ -223,6 +225,15 @@ export function View({ projectId, databaseId }: MonitorProps) {
   )
 
   const { database } = usePostgresDatabase(projectId, databaseId)
+  const replicaCount = database?.replicas ?? 0
+  const metricsOrdinal = replicaCount > 0 ? selectedOrdinal : undefined
+
+  useEffect(() => {
+    if (selectedOrdinal > replicaCount) {
+      setSelectedOrdinal(0)
+    }
+  }, [replicaCount, selectedOrdinal])
+
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
   const specs = useMemo(
     () =>
@@ -267,6 +278,7 @@ export function View({ projectId, databaseId }: MonitorProps) {
     dateRange,
     true,
     resolvedInterval,
+    metricsOrdinal,
   )
 
   const storageLimitGb = useMemo(() => {
@@ -546,6 +558,12 @@ export function View({ projectId, databaseId }: MonitorProps) {
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       <div className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6">
         <div className="flex w-full flex-wrap items-center gap-3">
+          <DatabaseMonitorNodeSelect
+            replicaCount={replicaCount}
+            value={selectedOrdinal}
+            onValueChange={setSelectedOrdinal}
+            className="h-9"
+          />
           {lastRecordedAt ? (
             <span className="text-[12px] text-muted-foreground">
               Updated {formatDistanceToNow(lastRecordedAt, { addSuffix: true })}

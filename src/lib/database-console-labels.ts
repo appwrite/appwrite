@@ -101,6 +101,7 @@ export type DatabaseConsoleLabels = {
   recordsRefreshedSuccess: string
   failedToRefreshRecords: string
   deleteDatabaseContainersDescription: string
+  deleteDatabaseConfirmSuffix: string
   addFirstColumnHint: string
   noIndexesYetTitle: string
   addFirstIndexHint: string

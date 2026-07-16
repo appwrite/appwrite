@@ -73,10 +73,11 @@ const usageQueryOptionsBase = {
   },
 }
 
-/** Keep chart data when date/interval change, but not when switching project/database. */
+/** Keep chart data when date/interval change, but not when switching project/database/node. */
 function keepPreviousDedicatedChartData<T>(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  ordinal?: number,
 ) {
   return (
     previousData: T | undefined,
@@ -88,6 +89,8 @@ function keepPreviousDedicatedChartData<T>(
     const key = previousQuery.queryKey as QueryKey
     const projectIndex = key.indexOf('project')
     const databaseIndex = key.indexOf('database')
+    const ordinalIndex = key.indexOf('ordinal')
+    const expectedOrdinal = ordinal ?? 'all'
     if (
       projectIndex === -1 ||
       databaseIndex === -1 ||
@@ -96,19 +99,27 @@ function keepPreviousDedicatedChartData<T>(
     ) {
       return undefined
     }
+    if (ordinalIndex === -1 || key[ordinalIndex + 1] !== expectedOrdinal) {
+      return undefined
+    }
     return previousData
   }
 }
 
-function dedicatedMetricFetchOptions(databaseId: string): {
+function dedicatedMetricFetchOptions(
+  databaseId: string,
+  ordinal?: number,
+): {
   resourceId: string
   resourceType: typeof DEDICATED_DATABASE_USAGE_RESOURCE_TYPE
   includeBreakdown: false
+  ordinal?: number
 } {
   return {
     resourceId: databaseId,
     resourceType: DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
     includeBreakdown: false,
+    ...(ordinal !== undefined ? { ordinal } : {}),
   }
 }
 
@@ -118,12 +129,17 @@ function dedicatedDatabaseMetricChartQueryOptions(
     projectId: string,
     dateRange: DateRange | undefined,
     interval: UsageChartInterval,
-    options?: { resourceId: string; includeBreakdown?: boolean },
+    options?: {
+      resourceId: string
+      includeBreakdown?: boolean
+      ordinal?: number
+    },
   ) => Promise<DedicatedDatabaseUsageChartOverview>,
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   const { rangeKeyPart, getBounds, refetchOnMountRolling } =
     normalizeDateRangeKey(dateRange)
@@ -138,6 +154,8 @@ function dedicatedDatabaseMetricChartQueryOptions(
       projectId,
       'database',
       databaseId,
+      'ordinal',
+      ordinal ?? 'all',
       rangeKeyPart,
       interval,
     ],
@@ -146,11 +164,15 @@ function dedicatedDatabaseMetricChartQueryOptions(
         projectId!,
         getBounds(),
         interval,
-        dedicatedMetricFetchOptions(databaseId!),
+        dedicatedMetricFetchOptions(databaseId!, ordinal),
       ),
     enabled: !!projectId && !!databaseId,
     ...usageQueryOptionsBase,
-    placeholderData: keepPreviousDedicatedChartData(projectId, databaseId),
+    placeholderData: keepPreviousDedicatedChartData(
+      projectId,
+      databaseId,
+      ordinal,
+    ),
     refetchOnMount: refetchOnMountRolling
       ? 'always'
       : usageQueryOptionsBase.refetchOnMount,
@@ -163,6 +185,7 @@ export function dedicatedDatabaseStorageChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'storage',
@@ -171,6 +194,7 @@ export function dedicatedDatabaseStorageChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -179,6 +203,7 @@ export function dedicatedDatabaseConnectionsChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'connections',
@@ -187,6 +212,7 @@ export function dedicatedDatabaseConnectionsChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -195,6 +221,7 @@ export function dedicatedDatabaseCpuChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'cpu',
@@ -203,6 +230,7 @@ export function dedicatedDatabaseCpuChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -211,6 +239,7 @@ export function dedicatedDatabaseMemoryChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'memory',
@@ -219,6 +248,7 @@ export function dedicatedDatabaseMemoryChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -227,6 +257,7 @@ export function dedicatedDatabaseQpsChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'qps',
@@ -235,6 +266,7 @@ export function dedicatedDatabaseQpsChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -243,6 +275,7 @@ export function dedicatedDatabaseIopsReadChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'iops-read',
@@ -251,6 +284,7 @@ export function dedicatedDatabaseIopsReadChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -259,6 +293,7 @@ export function dedicatedDatabaseIopsWriteChartQueryOptions(
   databaseId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return dedicatedDatabaseMetricChartQueryOptions(
     'iops-write',
@@ -267,6 +302,7 @@ export function dedicatedDatabaseIopsWriteChartQueryOptions(
     databaseId,
     dateRange,
     interval,
+    ordinal,
   )
 }
 
@@ -276,6 +312,7 @@ export function useDedicatedDatabaseStorageChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseStorageChartQueryOptions(
@@ -283,6 +320,7 @@ export function useDedicatedDatabaseStorageChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -294,6 +332,7 @@ export function useDedicatedDatabaseConnectionsChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseConnectionsChartQueryOptions(
@@ -301,6 +340,7 @@ export function useDedicatedDatabaseConnectionsChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -312,6 +352,7 @@ export function useDedicatedDatabaseCpuChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseCpuChartQueryOptions(
@@ -319,6 +360,7 @@ export function useDedicatedDatabaseCpuChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -330,6 +372,7 @@ export function useDedicatedDatabaseMemoryChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseMemoryChartQueryOptions(
@@ -337,6 +380,7 @@ export function useDedicatedDatabaseMemoryChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -348,6 +392,7 @@ export function useDedicatedDatabaseQpsChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseQpsChartQueryOptions(
@@ -355,6 +400,7 @@ export function useDedicatedDatabaseQpsChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -366,6 +412,7 @@ export function useDedicatedDatabaseIopsReadChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseIopsReadChartQueryOptions(
@@ -373,6 +420,7 @@ export function useDedicatedDatabaseIopsReadChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -384,6 +432,7 @@ export function useDedicatedDatabaseIopsWriteChart(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   return useQuery({
     ...dedicatedDatabaseIopsWriteChartQueryOptions(
@@ -391,6 +440,7 @@ export function useDedicatedDatabaseIopsWriteChart(
       databaseId,
       dateRange,
       interval,
+      ordinal,
     ),
     enabled: !!projectId && !!databaseId && enabled,
   })
@@ -402,6 +452,7 @@ export function useDedicatedDatabaseMonitorMetrics(
   dateRange: DateRange | undefined,
   enabled = true,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
+  ordinal?: number,
 ) {
   const storage = useDedicatedDatabaseStorageChart(
     projectId,
@@ -409,6 +460,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
   const connections = useDedicatedDatabaseConnectionsChart(
     projectId,
@@ -416,6 +468,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
   const cpu = useDedicatedDatabaseCpuChart(
     projectId,
@@ -423,6 +476,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
   const memory = useDedicatedDatabaseMemoryChart(
     projectId,
@@ -430,6 +484,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
   const qps = useDedicatedDatabaseQpsChart(
     projectId,
@@ -437,6 +492,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
   const iopsRead = useDedicatedDatabaseIopsReadChart(
     projectId,
@@ -444,6 +500,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
   const iopsWrite = useDedicatedDatabaseIopsWriteChart(
     projectId,
@@ -451,6 +508,7 @@ export function useDedicatedDatabaseMonitorMetrics(
     dateRange,
     enabled,
     interval,
+    ordinal,
   )
 
   const refetchAll = useCallback(async () => {
