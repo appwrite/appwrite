@@ -215,9 +215,9 @@ trait LocaleBase
         $this->assertEquals($response['body']['languages'][125]['name'], 'Sign Language');
         $this->assertEquals($response['body']['languages'][125]['nativeName'], 'Sign Language');
 
-        $this->assertEquals($response['body']['languages'][187]['code'], 'zu');
-        $this->assertEquals($response['body']['languages'][187]['name'], 'Zulu');
-        $this->assertEquals($response['body']['languages'][187]['nativeName'], 'isiZulu');
+        $this->assertEquals($response['body']['languages'][186]['code'], 'zu');
+        $this->assertEquals($response['body']['languages'][186]['name'], 'Zulu');
+        $this->assertEquals($response['body']['languages'][186]['nativeName'], 'isiZulu');
 
         /**
          * Test for FAILURE
