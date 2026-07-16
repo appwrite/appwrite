@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "45de7e539e6f6e6e1b15dc537c97706f",
+    "content-hash": "5b5a81d30b4e59d2067fe1ba000e12e5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5191,16 +5191,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "4.4.1",
+            "version": "4.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "75f36b9db5c957829a3625a91293b164f74faa0d"
+                "reference": "ea623171caeaad2ef600b6c6bd52fd5f76b38486"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/75f36b9db5c957829a3625a91293b164f74faa0d",
-                "reference": "75f36b9db5c957829a3625a91293b164f74faa0d",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/ea623171caeaad2ef600b6c6bd52fd5f76b38486",
+                "reference": "ea623171caeaad2ef600b6c6bd52fd5f76b38486",
                 "shasum": ""
             },
             "require": {
@@ -5234,9 +5234,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/4.4.1"
+                "source": "https://github.com/utopia-php/vcs/tree/4.4.2"
             },
-            "time": "2026-07-08T18:15:35+00:00"
+            "time": "2026-07-14T06:22:41+00:00"
         },
         {
             "name": "utopia-php/websocket",

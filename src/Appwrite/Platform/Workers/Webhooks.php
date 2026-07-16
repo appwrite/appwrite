@@ -304,7 +304,9 @@ class Webhooks extends Action
             $template->setParam('{{url}}', $webhook->getAttribute('url'));
             $template->setParam('{{error}}', 'The server returned ' . $statusCode . ' status code');
             $template->setParam('{{host}}', $protocol . '://' . $consoleHostname);
-            $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
+            $template->setParam('{{path}}', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                ? "/console/project-{$region}-{$projectId}/settings/webhooks/{$webhookId}"
+                : "/projects/{$projectId}/settings/webhooks");
             $template->setParam('{{attempts}}', $attempts);
 
             $publisherForNotifications->enqueue(new NotificationMessage(

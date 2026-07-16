@@ -12,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -53,7 +54,7 @@ class Create extends Base
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.
-                
+
                 Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/functions/templates) to find the template details.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -78,8 +79,8 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('publisherForBuilds')
+            ->inject('vcsFactory')
             ->inject('deployments')
-            ->inject('gitHub')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -100,8 +101,8 @@ class Create extends Base
         Event $queueForEvents,
         Document $project,
         BuildPublisher $publisherForBuilds,
+        VcsFactory $vcsFactory,
         Backend $deployments,
-        GitHub $github,
         Authorization $authorization,
         array $platform
     ) {
@@ -138,7 +139,7 @@ class Create extends Base
                 dbForProject: $dbForProject,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
                 deployments: $deployments,
                 platform: $platform,
@@ -162,10 +163,12 @@ class Create extends Base
         // Templates can pin a version range (e.g. "0.3.*"); codeload only
         // takes a concrete ref, so resolve the range to the highest matching
         // tag (mirrors the executor's `git ls-remote --tags | tail -1`).
+        // Templates are public github.com repositories regardless of the
+        // function's own provider, so this always uses the GitHub adapter.
         $ref = $reference;
         if ($type === GitHub::CLONE_TYPE_TAG && \str_contains($reference, '*')) {
             try {
-                $tags = $github->listTags($owner, $repository, $reference);
+                $tags = $vcsFactory->fromProvider('github')->listTags($owner, $repository, $reference);
                 $ref = \end($tags) ?: $reference;
             } catch (\Throwable) {
                 // Fall back to the raw reference; the build surfaces a bad ref.

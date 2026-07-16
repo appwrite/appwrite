@@ -12,6 +12,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -21,7 +22,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -74,8 +74,8 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
+            ->inject('vcsFactory')
             ->inject('deployments')
-            ->inject('gitHub')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -92,8 +92,8 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
+        VcsFactory $vcsFactory,
         Backend $deployments,
-        GitHub $github,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -118,7 +118,7 @@ class Create extends Base
             dbForProject: $dbForProject,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            github: $github,
+            vcs: $vcsFactory->fromInstallation($installation),
             activate: $activate,
             platform: $platform,
             reference: $reference,
