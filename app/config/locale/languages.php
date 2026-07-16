@@ -764,6 +764,11 @@ return [
         "nativeName" => "Српски"
     ],
     [
+        "code" => "sgn",
+        "name" => "Sign Language",
+        "nativeName" => "Sign Language"
+    ],
+    [
         "code" => "ss",
         "name" => "Swati",
         "nativeName" => "SiSwati"
