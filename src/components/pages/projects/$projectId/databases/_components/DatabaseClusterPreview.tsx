@@ -308,9 +308,37 @@ type CompactLayout = {
   paths: SchemaVisualizerRelationshipPath[]
 }
 
+/** Latest CPU/memory sample for a cluster node (null while loading or unavailable). */
+export type DatabaseClusterNodeResourceMetrics = {
+  cpu: number | null
+  memory: number | null
+}
+
 type ClusterNodeMetrics =
-  | { kind: 'resource'; cpu: number; memory: number }
+  | { kind: 'resource'; cpu: number | null; memory: number | null }
   | { kind: 'connections'; current: number | null; max: number | null }
+
+/**
+ * Fixed-width percent slot sized to the widest value ("100%").
+ * While loading, render a transparent "100%" so width/height never change.
+ */
+const RESOURCE_PERCENT_SLOT_CLASSNAME =
+  'inline-block w-[4ch] shrink-0 text-end font-mono tabular-nums font-medium leading-none'
+
+function ResourcePercentValue({ value }: { value: number | null }) {
+  const ready = value != null && !Number.isNaN(value)
+  return (
+    <span
+      className={cn(
+        RESOURCE_PERCENT_SLOT_CLASSNAME,
+        ready ? 'text-foreground' : 'text-transparent select-none',
+      )}
+      aria-hidden={!ready}
+    >
+      {ready ? `${Math.round(value)}%` : '100%'}
+    </span>
+  )
+}
 
 let measureCanvas: HTMLCanvasElement | null = null
 
@@ -570,9 +598,7 @@ function CompactClusterNode({
             <>
               <span className="inline-flex items-center gap-1 text-[10px] leading-none">
                 <span className="text-muted-foreground">{t('CPU')}</span>
-                <span className="font-mono tabular-nums font-medium text-foreground">
-                  {metrics.cpu}%
-                </span>
+                <ResourcePercentValue value={metrics.cpu} />
               </span>
               <span
                 className="h-3 w-px shrink-0 bg-border"
@@ -580,9 +606,7 @@ function CompactClusterNode({
               />
               <span className="inline-flex items-center gap-1 text-[10px] leading-none">
                 <span className="text-muted-foreground">{t('Memory')}</span>
-                <span className="font-mono tabular-nums font-medium text-foreground">
-                  {metrics.memory}%
-                </span>
+                <ResourcePercentValue value={metrics.memory} />
               </span>
             </>
           )}
@@ -590,27 +614,6 @@ function CompactClusterNode({
       </div>
     </div>
   )
-}
-
-/** Stable mock metrics per node index until live pod metrics are wired. */
-function mockNodeMetrics(nodeIndex: number): {
-  cpu: number
-  memory: number
-} {
-  const mocks = [
-    { cpu: 18, memory: 42 },
-    { cpu: 11, memory: 31 },
-    { cpu: 7, memory: 28 },
-    { cpu: 14, memory: 36 },
-    { cpu: 9, memory: 27 },
-  ]
-  return mocks[nodeIndex % mocks.length]!
-}
-
-/** Mock total connections for a cluster card footer until live metrics are wired. */
-export function mockDatabaseConnections(seed = 0): number {
-  const mocks = [1, 18, 12, 30, 9]
-  return mocks[Math.abs(seed) % mocks.length]!
 }
 
 function fitCompactLayoutToViewport(
@@ -646,6 +649,11 @@ type DatabaseClusterPreviewProps = {
    */
   nodeStatuses?: Array<ClusterNodeStatus | string | null | undefined>
   /**
+   * Latest CPU/memory per node (primary then replicas) from usage gauges.
+   * When omitted, nodes show an unavailable placeholder instead of mock data.
+   */
+  nodeMetrics?: Array<DatabaseClusterNodeResourceMetrics | null | undefined>
+  /**
    * Optional connection-pooler node above the primary.
    * Reuse across engines by passing a label from `resolveClusterProxyLabel`
    * and connection usage for the database tier.
@@ -661,16 +669,25 @@ type DatabaseClusterPreviewProps = {
   interactive?: boolean
 }
 
+function resolveNodeResourceMetrics(
+  nodeMetrics: Array<DatabaseClusterNodeResourceMetrics | null | undefined> | undefined,
+  index: number,
+): DatabaseClusterNodeResourceMetrics {
+  return nodeMetrics?.[index] ?? { cpu: null, memory: null }
+}
+
 function ClusterDiagramNodes({
   layout,
   statuses,
   soloPrimary,
   proxy,
+  nodeMetrics,
 }: {
   layout: CompactLayout
   statuses: ClusterNodeStatus[]
   soloPrimary: boolean
   proxy?: DatabaseClusterProxy | null
+  nodeMetrics?: Array<DatabaseClusterNodeResourceMetrics | null | undefined>
 }) {
   return (
     <>
@@ -699,7 +716,10 @@ function ClusterDiagramNodes({
           node={layout.primary}
           status={statuses[0] ?? 'active'}
           emphasized={soloPrimary && !layout.proxy}
-          metrics={{ kind: 'resource', ...mockNodeMetrics(0) }}
+          metrics={{
+            kind: 'resource',
+            ...resolveNodeResourceMetrics(nodeMetrics, 0),
+          }}
         />
         {layout.replicas.map((replica, index) => (
           <CompactClusterNode
@@ -707,7 +727,10 @@ function ClusterDiagramNodes({
             label={replica.label}
             node={replica}
             status={statuses[index + 1] ?? 'active'}
-            metrics={{ kind: 'resource', ...mockNodeMetrics(index + 1) }}
+            metrics={{
+              kind: 'resource',
+              ...resolveNodeResourceMetrics(nodeMetrics, index + 1),
+            }}
           />
         ))}
       </div>
@@ -723,6 +746,7 @@ function ClusterDiagramNodes({
 export function DatabaseClusterPreview({
   replicaCount,
   nodeStatuses,
+  nodeMetrics,
   proxy,
   className,
   withSectionDivider = true,
@@ -925,6 +949,7 @@ export function DatabaseClusterPreview({
             statuses={resolvedStatuses}
             soloPrimary={safeReplicaCount === 0}
             proxy={proxy}
+            nodeMetrics={nodeMetrics}
           />
         </div>
       </div>
@@ -958,6 +983,7 @@ export function DatabaseClusterPreview({
             statuses={resolvedStatuses}
             soloPrimary={safeReplicaCount === 0}
             proxy={proxy}
+            nodeMetrics={nodeMetrics}
           />
         </div>
       </div>

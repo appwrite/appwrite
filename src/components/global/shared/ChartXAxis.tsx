@@ -30,6 +30,10 @@ type UsageChartXAxisProps = {
   dateRange?: DateRange
   chartInterval?: UsageChartInterval
   variant?: 'overview' | 'full'
+  /**
+   * @deprecated Ignored. The axis is index-based so tooltip/cursor stay aligned
+   * when category labels repeat (e.g. HH:mm across days).
+   */
   dataKey?: string
   tick?: XAxisProps['tick']
   dy?: number
@@ -40,7 +44,6 @@ export function UsageChartXAxis({
   dateRange,
   chartInterval = DEFAULT_USAGE_CHART_INTERVAL,
   variant = 'full',
-  dataKey = 'date',
   tick = CHART_X_AXIS_DEFAULT_TICK,
   dy = CHART_X_AXIS_DEFAULT_DY,
 }: UsageChartXAxisProps) {
@@ -75,7 +78,9 @@ export function UsageChartXAxis({
 
   return (
     <XAxis
-      dataKey={dataKey}
+      // No dataKey: Recharts uses point indices for the category domain and
+      // tooltip activeIndex. Label-based lookup (dataKey="date") returns the
+      // wrong point when labels repeat or padding shifts the active label.
       axisLine={false}
       tickLine={false}
       tick={tick}
@@ -90,6 +95,15 @@ export function UsageChartXAxis({
 type SeriesChartXAxisProps = {
   pointCount: number
   maxTicks?: number
+  /**
+   * Optional tick labels by data index. Prefer this over `dataKey` so the axis
+   * can stay index-based (correct hover/tooltip) while still showing labels.
+   */
+  labels?: readonly string[]
+  /**
+   * @deprecated Prefer `labels`. When set without `labels`, kept for backward
+   * compatibility but can misalign tooltips if values repeat.
+   */
   dataKey?: string
   tick?: XAxisProps['tick']
   dy?: number
@@ -137,7 +151,8 @@ export function UsageChartYAxis({
 export function SeriesChartXAxis({
   pointCount,
   maxTicks = USAGE_CHART_X_AXIS_MAX_TICKS,
-  dataKey = 'date',
+  labels,
+  dataKey: dataKeyProp,
   tick = CHART_X_AXIS_DEFAULT_TICK,
   dy = CHART_X_AXIS_DEFAULT_DY,
   height,
@@ -145,13 +160,25 @@ export function SeriesChartXAxis({
   formatLabel,
 }: SeriesChartXAxisProps) {
   const tickFormatter = useMemo(
-    () => createSeriesChartXAxisTickFormatter(pointCount, maxTicks, formatLabel),
-    [pointCount, maxTicks, formatLabel],
+    () =>
+      createSeriesChartXAxisTickFormatter(
+        pointCount,
+        maxTicks,
+        formatLabel,
+        labels,
+      ),
+    [pointCount, maxTicks, formatLabel, labels],
   )
+
+  // Prefer index-based domain when `labels` is provided so tooltip/cursor use
+  // activeIndex instead of findEntryInArray(label) — which returns the wrong
+  // point when labels repeat (e.g. HH:mm across multiple days).
+  const useIndexDomain = labels != null
+  const dataKey = useIndexDomain ? undefined : (dataKeyProp ?? 'date')
 
   return (
     <XAxis
-      dataKey={dataKey}
+      {...(dataKey != null ? { dataKey } : {})}
       axisLine={false}
       tickLine={false}
       tick={tick}

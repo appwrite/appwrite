@@ -364,7 +364,7 @@ export function AnalyticsTab({}: AnalyticsTabProps) {
             </defs>
             <SeriesChartXAxis
               pointCount={chartData.length}
-              dataKey="time"
+              labels={chartData.map((point) => point.time)}
               tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
               dy={10}
             />

@@ -11,17 +11,19 @@ import {
   type QueryClient,
   type QueryKey,
 } from '@tanstack/react-query'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import type { DateRange } from 'react-day-picker'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
 import {
+  getStableUsageChartDateRange,
   getUsageChartQueryRangeKeyPart,
   resolveUsageChartFetchBounds,
   shouldRefetchUsageChartOnMount,
 } from '@/lib/usage/usage-date-range'
+import { getUsageChartLatestValue } from '@/lib/usage/database-usage'
 import { DEFAULT_STALE_TIME } from './constants'
 import {
   DEDICATED_DATABASE_USAGE_RESOURCE_TYPE,
@@ -796,6 +798,97 @@ export function useRefetchOnMonitorChartTick(
     if (chartTick <= 0) return
     void refetch()
   }, [chartTick, refetch])
+}
+
+/** Per-node CPU/memory for dedicated database list cards (primary + replicas). */
+export type DedicatedDatabaseCardNodeMetrics = {
+  cpu: number | null
+  memory: number | null
+}
+
+/**
+ * Card-sized dedicated metrics: latest CPU/memory per ordinal and connections.
+ * Uses the same usage.listGauges queries as the database monitor page (last 24h).
+ */
+export function useDedicatedDatabaseCardMetrics(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  replicaCount: number,
+  enabled = true,
+) {
+  const dateRange = useMemo(() => getStableUsageChartDateRange(), [])
+  const nodeCount = 1 + Math.max(0, Math.floor(replicaCount))
+  const canFetch = Boolean(projectId && databaseId && enabled)
+  const connectionsOrdinal = replicaCount > 0 ? 0 : undefined
+
+  const connectionsQuery = useDedicatedDatabaseConnectionsChart(
+    projectId,
+    databaseId,
+    dateRange,
+    canFetch,
+    DEFAULT_USAGE_CHART_INTERVAL,
+    connectionsOrdinal,
+  )
+
+  const cpuQueries = useQueries({
+    queries: Array.from({ length: nodeCount }, (_, ordinal) => ({
+      ...dedicatedDatabaseCpuChartQueryOptions(
+        projectId,
+        databaseId,
+        dateRange,
+        DEFAULT_USAGE_CHART_INTERVAL,
+        ordinal,
+      ),
+      enabled: canFetch,
+    })),
+  })
+
+  const memoryQueries = useQueries({
+    queries: Array.from({ length: nodeCount }, (_, ordinal) => ({
+      ...dedicatedDatabaseMemoryChartQueryOptions(
+        projectId,
+        databaseId,
+        dateRange,
+        DEFAULT_USAGE_CHART_INTERVAL,
+        ordinal,
+      ),
+      enabled: canFetch,
+    })),
+  })
+
+  const nodeMetrics: DedicatedDatabaseCardNodeMetrics[] = Array.from(
+    { length: nodeCount },
+    (_, index) => {
+      const cpuPoints = cpuQueries[index]?.data?.chartPoints
+      const memoryPoints = memoryQueries[index]?.data?.chartPoints
+      return {
+        cpu:
+          cpuPoints && cpuPoints.length > 0
+            ? getUsageChartLatestValue(cpuPoints)
+            : null,
+        memory:
+          memoryPoints && memoryPoints.length > 0
+            ? getUsageChartLatestValue(memoryPoints)
+            : null,
+      }
+    },
+  )
+
+  const connectionPoints = connectionsQuery.data?.chartPoints
+  const connections =
+    connectionPoints && connectionPoints.length > 0
+      ? Math.round(getUsageChartLatestValue(connectionPoints))
+      : null
+
+  return {
+    nodeMetrics,
+    connections,
+    isLoading:
+      canFetch &&
+      (connectionsQuery.isLoading ||
+        cpuQueries.some((query) => query.isLoading) ||
+        memoryQueries.some((query) => query.isLoading)),
+  }
 }
 
 export type { UsageEventBreakdownDimension, DatabaseOperationsBreakdownSection }

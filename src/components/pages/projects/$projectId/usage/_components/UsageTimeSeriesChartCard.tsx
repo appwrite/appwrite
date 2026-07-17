@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, type ReactNode } from 'react'
+import type { DateRange } from 'react-day-picker'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
@@ -10,6 +11,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { AlertCircle } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -100,6 +102,9 @@ type UsageTimeSeriesChartCardProps = {
   embedded?: boolean
   className?: string
   docsHref?: string
+  /** Optional overrides when UsageFiltersProvider is not mounted (e.g. DB monitor). */
+  dateRange?: DateRange
+  chartInterval?: UsageChartInterval
 }
 
 export function UsageTimeSeriesChartCard({
@@ -123,9 +128,13 @@ export function UsageTimeSeriesChartCard({
   embedded = false,
   className,
   docsHref,
+  dateRange: dateRangeProp,
+  chartInterval: chartIntervalProp,
 }: UsageTimeSeriesChartCardProps) {
   const t = useT()
   const usageFilters = useOptionalUsageFilters()
+  const dateRange = dateRangeProp ?? usageFilters?.dateRange
+  const chartInterval = chartIntervalProp ?? usageFilters?.chartInterval
   const resolvedQueryError = error ?? queryError
   const resolvedErrorCopy = useMemo(
     () =>
@@ -275,11 +284,12 @@ export function UsageTimeSeriesChartCard({
                 />
                 <UsageChartXAxis
                   points={chartPoints}
-                  dateRange={usageFilters?.dateRange}
-                  chartInterval={usageFilters?.chartInterval}
+                  dateRange={dateRange}
+                  chartInterval={chartInterval}
                 />
                 <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
                 <Tooltip
+                  isAnimationActive={false}
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
                     const data = payload[0].payload as {
@@ -308,6 +318,7 @@ export function UsageTimeSeriesChartCard({
                   strokeWidth={2}
                   fill={`url(#${chartGradientId})`}
                   name={title}
+                  dot={false}
                   {...CHART_ANIMATION_DISABLED}
                 />
               </AreaChart>

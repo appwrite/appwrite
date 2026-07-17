@@ -5,18 +5,18 @@ import {
   useProjectDedicatedDatabases,
   useProject,
   useOrganizationScopes,
+  useDedicatedDatabaseCardMetrics,
 } from '@/lib/react-query/hooks'
 import {
   DatabaseType as ApiDatabaseType,
   type Models,
 } from '@appwrite.io/console'
-import type { Database as DatabaseListItem } from '@/lib/utils/mock-data'
 import {
   dedicatedDatabaseHomeLink,
   productDatabaseListLink,
 } from '@/lib/database-routes'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -42,7 +42,6 @@ import {
 import {
   DatabaseClusterPreview,
   clusterNodeStatusesFromDatabaseStatus,
-  mockDatabaseConnections,
 } from './DatabaseClusterPreview'
 import { DatabaseContextMenu } from './DatabaseContextMenu'
 import { DatabaseOperationsChartPreview } from './DatabaseOperationsChartPreview'
@@ -60,7 +59,7 @@ type DatabaseWithBackup = {
   createdAt?: string
   updatedAt?: string
   hasBackupPolicy?: boolean
-  backupPolicy?: { name?: string }
+  backupPolicy?: unknown
   backupPolicyCount?: number
   databaseType?: ApiDatabaseType
 }
@@ -90,6 +89,223 @@ function databaseCardLink(
     if (dedicatedLink) return dedicatedLink
   }
   return productDatabaseListLink(projectId, db.$id, db.databaseType)
+}
+
+function formatConnectionsLabel(
+  connections: number | null,
+  t: (text: string) => string,
+): string {
+  if (connections == null) return '—'
+  return connections === 1
+    ? `1 ${t('connection')}`
+    : `${connections.toLocaleString()} ${t('connections')}`
+}
+
+function AllDatabasesGridCardShell({
+  projectId,
+  db,
+  dedicated,
+  showDbSecuritySettings,
+  showMonitor,
+  showBackups,
+  midContent,
+  connectionsLabel,
+}: {
+  projectId: string
+  db: DatabaseWithBackup
+  dedicated?: Models.DedicatedDatabase
+  showDbSecuritySettings: boolean
+  showMonitor: boolean
+  showBackups: boolean
+  midContent: ReactNode
+  connectionsLabel?: string
+}) {
+  const t = useT()
+  const cardLink = databaseCardLink(projectId, db, dedicated)
+
+  return (
+    <DatabaseContextMenu
+      projectId={projectId}
+      database={{
+        $id: db.$id,
+        name: db.name,
+        databaseType: db.databaseType,
+      }}
+      showSecuritySettings={showDbSecuritySettings}
+      showMonitor={showMonitor}
+      showBackups={showBackups}
+    >
+      <Link {...cardLink} className="block min-w-0">
+        <div
+          className={cn(
+            RESOURCE_CARD_PADDED_CLASSNAME,
+            RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+            'pb-0',
+          )}
+        >
+          <div className="min-w-0 overflow-hidden">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <h3 className="truncate text-[14px] font-medium text-foreground">
+                {db.name}
+              </h3>
+              {showBackups && !db.hasBackupPolicy ? (
+                <NoBackupPoliciesWarningIcon />
+              ) : null}
+              {db.enabled === false ? (
+                <Badge
+                  variant="error"
+                  className="text-[10px] font-medium shrink-0"
+                >
+                  {t('Disabled')}
+                </Badge>
+              ) : null}
+            </div>
+            <div className="mt-1.5">
+              <CopyableId id={db.$id} size="xs" maxWidth={120} />
+            </div>
+          </div>
+
+          {midContent}
+
+          <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
+              <DatabaseTypeBadge
+                apiType={db.databaseType}
+                engine={dedicated?.engine}
+                product={dedicated?.api}
+              />
+              <span className="truncate text-muted-foreground">
+                {dedicated?.specification || t('Serverless')}
+              </span>
+              {connectionsLabel ? (
+                <span className="truncate tabular-nums text-muted-foreground">
+                  {connectionsLabel}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </Link>
+    </DatabaseContextMenu>
+  )
+}
+
+function AllDatabasesServerlessGridCard({
+  projectId,
+  db,
+  showDbSecuritySettings,
+  showMonitor,
+  showBackups,
+}: {
+  projectId: string
+  db: DatabaseWithBackup
+  showDbSecuritySettings: boolean
+  showMonitor: boolean
+  showBackups: boolean
+}) {
+  return (
+    <AllDatabasesGridCardShell
+      projectId={projectId}
+      db={db}
+      showDbSecuritySettings={showDbSecuritySettings}
+      showMonitor={showMonitor}
+      showBackups={showBackups}
+      midContent={
+        <DatabaseOperationsChartPreview
+          projectId={projectId}
+          databaseId={db.$id}
+          enabled={showMonitor}
+        />
+      }
+    />
+  )
+}
+
+function AllDatabasesDedicatedGridCard({
+  projectId,
+  db,
+  dedicated,
+  showDbSecuritySettings,
+  showMonitor,
+  showBackups,
+}: {
+  projectId: string
+  db: DatabaseWithBackup
+  dedicated: Models.DedicatedDatabase
+  showDbSecuritySettings: boolean
+  showMonitor: boolean
+  showBackups: boolean
+}) {
+  const t = useT()
+  const replicaCount = dedicated.replicas ?? 0
+  const nodeStatuses = clusterNodeStatusesFromDatabaseStatus(
+    dedicated.status ?? (db.enabled === false ? 'failed' : 'ready'),
+    replicaCount,
+  )
+  const { nodeMetrics, connections } = useDedicatedDatabaseCardMetrics(
+    projectId,
+    db.$id,
+    replicaCount,
+    showMonitor,
+  )
+
+  return (
+    <AllDatabasesGridCardShell
+      projectId={projectId}
+      db={db}
+      dedicated={dedicated}
+      showDbSecuritySettings={showDbSecuritySettings}
+      showMonitor={showMonitor}
+      showBackups={showBackups}
+      midContent={
+        <DatabaseClusterPreview
+          replicaCount={replicaCount}
+          nodeStatuses={nodeStatuses}
+          nodeMetrics={nodeMetrics}
+        />
+      }
+      connectionsLabel={formatConnectionsLabel(connections, t)}
+    />
+  )
+}
+
+function AllDatabasesGridCard({
+  projectId,
+  db,
+  dedicated,
+  showDbSecuritySettings,
+  showMonitor,
+  showBackups,
+}: {
+  projectId: string
+  db: DatabaseWithBackup
+  dedicated?: Models.DedicatedDatabase
+  showDbSecuritySettings: boolean
+  showMonitor: boolean
+  showBackups: boolean
+}) {
+  if (dedicated) {
+    return (
+      <AllDatabasesDedicatedGridCard
+        projectId={projectId}
+        db={db}
+        dedicated={dedicated}
+        showDbSecuritySettings={showDbSecuritySettings}
+        showMonitor={showMonitor}
+        showBackups={showBackups}
+      />
+    )
+  }
+
+  return (
+    <AllDatabasesServerlessGridCard
+      projectId={projectId}
+      db={db}
+      showDbSecuritySettings={showDbSecuritySettings}
+      showMonitor={showMonitor}
+      showBackups={showBackups}
+    />
+  )
 }
 
 export function AllDatabasesSection({
@@ -281,7 +497,7 @@ export function AllDatabasesSection({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {databases.map((db: DatabaseWithBackup & DatabaseListItem) => (
+                  {databases.map((db) => (
                     <TableRow
                       key={db.$id}
                       className="cursor-pointer border-b border-border/50 hover:bg-muted/30"
@@ -409,103 +625,17 @@ export function AllDatabasesSection({
             </Alert>
           ) : null}
           <div className={cn(RESOURCE_CARD_GRID_CLASSNAME)}>
-            {databases.map((db: DatabaseWithBackup & DatabaseListItem) => {
-              const dedicated = dedicatedById.get(db.$id)
-              const isDedicated = Boolean(dedicated)
-              const replicaCount = dedicated?.replicas ?? 0
-              const specification = dedicated?.specification
-              const nodeStatuses = clusterNodeStatusesFromDatabaseStatus(
-                dedicated?.status ?? (db.enabled === false ? 'failed' : 'ready'),
-                replicaCount,
-              )
-              const connectionSeed = db.$id
-                .split('')
-                .reduce((sum, char) => sum + char.charCodeAt(0), 0)
-              const connections = mockDatabaseConnections(connectionSeed)
-              const connectionsLabel =
-                connections === 1
-                  ? `1 ${t('connection')}`
-                  : `${connections.toLocaleString()} ${t('connections')}`
-              const cardLink = databaseCardLink(projectId, db, dedicated)
-              return (
-                <DatabaseContextMenu
-                  key={db.$id}
-                  projectId={projectId}
-                  database={{
-                    $id: db.$id,
-                    name: db.name,
-                    databaseType: db.databaseType,
-                  }}
-                  showSecuritySettings={showDbSecuritySettings}
-                  showMonitor={features.usageStats}
-                  showBackups={features.databaseBackups}
-                >
-                  <Link {...cardLink} className="block min-w-0">
-                    <div
-                      className={cn(
-                        RESOURCE_CARD_PADDED_CLASSNAME,
-                        RESOURCE_CARD_INTERACTIVE_CLASSNAME,
-                        'pb-0',
-                      )}
-                    >
-                      <div className="min-w-0 overflow-hidden">
-                          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                            <h3 className="truncate text-[14px] font-medium text-foreground">
-                              {db.name}
-                            </h3>
-                            {features.databaseBackups &&
-                            !db.hasBackupPolicy ? (
-                              <NoBackupPoliciesWarningIcon />
-                            ) : null}
-                            {db.enabled === false ? (
-                              <Badge
-                                variant="error"
-                                className="text-[10px] font-medium shrink-0"
-                              >
-                                {t('Disabled')}
-                              </Badge>
-                            ) : null}
-                          </div>
-                          <div className="mt-1.5">
-                            <CopyableId
-                              id={db.$id}
-                              size="xs"
-                              maxWidth={120}
-                            />
-                          </div>
-                        </div>
-
-                      {isDedicated ? (
-                        <DatabaseClusterPreview
-                          replicaCount={replicaCount}
-                          nodeStatuses={nodeStatuses}
-                        />
-                      ) : (
-                        <DatabaseOperationsChartPreview databaseId={db.$id} />
-                      )}
-
-                      <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] text-muted-foreground">
-                          <DatabaseTypeBadge
-                            apiType={db.databaseType}
-                            engine={dedicated?.engine}
-                            product={dedicated?.api}
-                          />
-                          <span className="truncate text-muted-foreground">
-                            {specification || t('Serverless')}
-                          </span>
-                          {isDedicated ? (
-                            <span className="truncate tabular-nums text-muted-foreground">
-                              {connectionsLabel}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </DatabaseContextMenu>
-              )
-            })}
+            {databases.map((db) => (
+              <AllDatabasesGridCard
+                key={db.$id}
+                projectId={projectId}
+                db={db}
+                dedicated={dedicatedById.get(db.$id)}
+                showDbSecuritySettings={showDbSecuritySettings}
+                showMonitor={features.usageStats}
+                showBackups={features.databaseBackups}
+              />
+            ))}
             {databases.length === 0 ? (
               <div className="col-span-full">
                 <EmptyState

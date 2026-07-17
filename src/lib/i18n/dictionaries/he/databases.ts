@@ -75,6 +75,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Backup ID': 'מזהה גיבוי',
   'Backup ID copied to clipboard': 'מזהה הגיבוי הועתק ללוח',
   'Backup policies have been created': 'כללי מדיניות הגיבוי נוצרו',
+  'Backup policies': 'מדיניות גיבויים',
   'Backup policy has been deleted': 'מדיניות הגיבוי נמחקה',
   'Backups already taken by this policy are kept until their retention expires.': 'גיבויים שכבר נוצרו על ידי מדיניות זו יישמרו עד שתקופת השמירה שלהם תסתיים.',
   'backup selected': 'גיבוי נבחר',
@@ -102,6 +103,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Choose database type': 'בחירת סוג מסד נתונים',
   'Choose a display name and optional custom ID.':
     'בחרו שם תצוגה ומזהה מותאם אישית (אופציונלי).',
+  'Choose when automated backups run for this database. You can change policies later from the Backups tab.':
+    'בחרו מתי ירוצו גיבויים אוטומטיים למסד נתונים זה. אפשר לשנות מדיניות מאוחר יותר בלשונית גיבויים.',
   'Choose file': 'בחירת קובץ',
   'Choose preset policies or create custom backup schedules.': 'בחרו כללי מדיניות מוגדרים מראש או צרו לוחות זמנים מותאמים אישית לגיבוי.',
   'Clear': 'ניקוי',
@@ -203,6 +206,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'צרו עמודות תחילה',
   'Create database': 'יצירת מסד נתונים',
   'Creating database': 'יוצר מסד נתונים',
+  'Creating backup policies': 'יוצר מדיניות גיבויים',
   'Allocating dedicated compute for your database.':
     'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
   'Configuring continuous backups for your database.':
@@ -213,6 +217,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Provisioning compute': 'מספק compute',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
+  'Setting up scheduled backups for your database.':
+    'מגדיר גיבויים מתוזמנים למסד הנתונים שלכם.',
   'Setting up your database': 'מגדיר את מסד הנתונים שלכם',
   'Setting up your database resource.': 'מגדיר את משאב מסד הנתונים שלכם.',
   'Create database or table': 'יצירת מסד נתונים או טבלה',
@@ -301,6 +307,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database analytics': 'אנליטיקת מסד נתונים',
   'Database backup has started': 'גיבוי מסד הנתונים החל',
   'Database created': 'מסד הנתונים נוצר',
+  'Database created, but failed to create backup policies':
+    'מסד הנתונים נוצר, אך יצירת מדיניות הגיבויים נכשלה',
   'Database deleted successfully': 'מסד הנתונים נמחק בהצלחה',
   'Health': 'תקינות',
   'Database ID': 'מזהה מסד נתונים',
@@ -798,6 +806,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'No user tables found in this database.': 'לא נמצאו טבלאות משתמש במסד נתונים זה.',
   'None': 'ללא',
   'Not selected': 'לא נבחר',
+  'Not included': 'לא כלול',
   'Null': 'Null',
   'Nullable': 'מאפשר NULL',
   'Number': 'מספר',

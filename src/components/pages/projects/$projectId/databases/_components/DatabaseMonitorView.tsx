@@ -373,6 +373,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     onOpenBreakdownDrawer={setBreakdownDrawer}
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
 
@@ -403,6 +405,8 @@ export function DatabaseMonitorView({
                     onRetry={() => void refetchMonitor()}
                     onOpenBreakdownDrawer={setBreakdownDrawer}
                     docsHref={DATABASE_READS_AND_WRITES_DOCS_HREF}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
               </>
@@ -429,6 +433,8 @@ export function DatabaseMonitorView({
                     formatTotal={formatDedicatedDatabasePercentTotal}
                     formatValue={formatDedicatedDatabasePercentValue}
                     onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
 
@@ -455,6 +461,8 @@ export function DatabaseMonitorView({
                     formatTotal={formatDedicatedDatabasePercentTotal}
                     formatValue={formatDedicatedDatabasePercentValue}
                     onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
 
@@ -482,6 +490,8 @@ export function DatabaseMonitorView({
                     formatValue={formatDedicatedDatabaseStorageValue}
                     axisFormat="bytes"
                     onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
 
@@ -508,6 +518,8 @@ export function DatabaseMonitorView({
                     formatTotal={formatDedicatedDatabaseCountTotal}
                     formatValue={formatDedicatedDatabaseCountValue}
                     onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
 
@@ -532,6 +544,8 @@ export function DatabaseMonitorView({
                     formatTotal={(value) => value.toFixed(1)}
                     formatValue={(value) => value.toFixed(1)}
                     onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                 </MonitorChartAnchor>
 
@@ -569,6 +583,8 @@ export function DatabaseMonitorView({
                     }
                     formatValue={(value) => value.toFixed(1)}
                     onRetry={() => void refetchMonitor()}
+                    dateRange={dateRange}
+                    chartInterval={resolvedInterval}
                   />
                   {iopsDualPoints.length > 0 ? (
                     <p className="mt-2 text-[12px] text-muted-foreground">

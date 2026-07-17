@@ -2,8 +2,10 @@ import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   productRouteKindQueryOptions,
+  useDedicatedDatabaseCardMetrics,
   useProjectDedicatedDatabases,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   dedicatedDatabaseHomeLink,
   isNativeDedicatedDatabase,
@@ -51,7 +53,10 @@ import {
   DedicatedDatabaseRegionUnavailableBadge,
   DedicatedDatabaseRegionUnavailableCard,
 } from './DedicatedDatabaseRegionUnavailableCard'
-import { DatabaseClusterPreview, clusterNodeStatusesFromDatabaseStatus, mockDatabaseConnections } from './DatabaseClusterPreview'
+import {
+  DatabaseClusterPreview,
+  clusterNodeStatusesFromDatabaseStatus,
+} from './DatabaseClusterPreview'
 import { useT } from '@/lib/i18n/translate'
 import { localizeResourceStatusLabel } from '@/lib/i18n/resource-status-labels'
 import { getStatusColor } from '@/lib/utils/status-badge'
@@ -236,6 +241,7 @@ function DedicatedDatabaseCard({
   showEngineMetadata?: boolean
 }) {
   const t = useT()
+  const { features } = useConsoleProfile()
   const Icon = (icon ?? Cpu) as LucideIcon
   const link = dedicatedDatabaseHomeLink(
     projectId,
@@ -244,13 +250,19 @@ function DedicatedDatabaseCard({
   )
   const status = dedicatedStatusVariant(db.status)
   const statusLabel = localizeResourceStatusLabel(db.status, t)
-  const connections = mockDatabaseConnections(
-    db.$id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0),
+  const replicaCount = db.replicas ?? 0
+  const { nodeMetrics, connections } = useDedicatedDatabaseCardMetrics(
+    projectId,
+    db.$id,
+    replicaCount,
+    features.usageStats,
   )
   const connectionsLabel =
-    connections === 1
-      ? `1 ${t('connection')}`
-      : `${connections.toLocaleString()} ${t('connections')}`
+    connections == null
+      ? '—'
+      : connections === 1
+        ? `1 ${t('connection')}`
+        : `${connections.toLocaleString()} ${t('connections')}`
 
   const card = (
     <div
@@ -285,11 +297,12 @@ function DedicatedDatabaseCard({
       </div>
 
       <DatabaseClusterPreview
-        replicaCount={db.replicas ?? 0}
+        replicaCount={replicaCount}
         nodeStatuses={clusterNodeStatusesFromDatabaseStatus(
           db.status,
-          db.replicas ?? 0,
+          replicaCount,
         )}
+        nodeMetrics={nodeMetrics}
       />
 
       <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>

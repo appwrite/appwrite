@@ -75,6 +75,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup ID': 'バックアップ ID',
   'Backup ID copied to clipboard': 'バックアップ ID をクリップボードにコピーしました',
   'Backup policies have been created': 'バックアップポリシーを作成しました',
+  'Backup policies': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',
@@ -102,6 +103,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Choose database type': 'データベースタイプの選択',
   'Choose a display name and optional custom ID.':
     '表示名とカスタム ID（任意）を設定します。',
+  'Choose when automated backups run for this database. You can change policies later from the Backups tab.':
+    'このデータベースの自動バックアップ実行タイミングを選択します。後から Backups タブでポリシーを変更できます。',
   'Choose file': 'ファイルの選択',
   'Choose preset policies or create custom backup schedules.': 'プリセットポリシーを選択するか、カスタムバックアップスケジュールを作成してください。',
   'Clear': 'クリア',
@@ -203,6 +206,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'まず列を作成',
   'Create database': 'データベースの作成',
   'Creating database': 'データベースを作成中',
+  'Creating backup policies': 'バックアップポリシーを作成中',
   'Allocating dedicated compute for your database.':
     'データベース用の専用コンピュートを割り当てています。',
   'Configuring continuous backups for your database.':
@@ -213,6 +217,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Provisioning compute': 'コンピュートをプロビジョニング中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
+  'Setting up scheduled backups for your database.':
+    'データベースのスケジュールバックアップを設定しています。',
   'Setting up your database': 'データベースをセットアップ中',
   'Setting up your database resource.': 'データベースリソースをセットアップしています。',
   'Create database or table': 'データベースまたはテーブルの作成',
@@ -300,6 +306,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database analytics': 'データベース分析',
   'Database backup has started': 'データベースのバックアップを開始しました',
   'Database created': 'データベースを作成しました',
+  'Database created, but failed to create backup policies':
+    'データベースは作成されましたが、バックアップポリシーの作成に失敗しました',
   'Database deleted successfully': 'データベースを削除しました',
   'Health': 'ヘルス',
   'Database ID': 'データベース ID',
@@ -755,6 +763,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'No user tables found in this database.': 'このデータベースにユーザーテーブルは見つかりませんでした。',
   'None': 'なし',
   'Not selected': '未選択',
+  'Not included': '含まれていません',
   'Null': 'Null',
   'Nullable': 'NULL 許可',
   'Number': '数値',

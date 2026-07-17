@@ -35,6 +35,9 @@ type CreateDatabaseSummaryProps = {
   replicaCount?: number
   pitrEnabled?: boolean
   monthlyCost?: DedicatedDatabaseMonthlyCost | null
+  showBackupPolicies?: boolean
+  backupPoliciesLabel?: string | null
+  backupsEnabled?: boolean
   canCreate: boolean
 }
 
@@ -128,6 +131,9 @@ export function CreateDatabaseSummary({
   replicaCount = 0,
   pitrEnabled = false,
   monthlyCost = null,
+  showBackupPolicies = false,
+  backupPoliciesLabel = null,
+  backupsEnabled,
   canCreate,
 }: CreateDatabaseSummaryProps) {
   const t = useT()
@@ -244,6 +250,18 @@ export function CreateDatabaseSummary({
           <p className="text-[12px] text-muted-foreground">
             {t('Select a compute tier to continue.')}
           </p>
+        )}
+
+        {showBackupPolicies && (
+          <InlineRow label={t('Backup policies')}>
+            {backupsEnabled === false ? (
+              <span className="text-muted-foreground">{t('Not included')}</span>
+            ) : backupPoliciesLabel ? (
+              <span className="font-medium">{backupPoliciesLabel}</span>
+            ) : (
+              <span className="text-muted-foreground">{t('None')}</span>
+            )}
+          </InlineRow>
         )}
       </div>
 

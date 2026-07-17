@@ -1,7 +1,9 @@
 'use client'
 
 import { useId, useMemo } from 'react'
+import type { DateRange } from 'react-day-picker'
 import { useT } from '@/lib/i18n/translate'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import { useCountries } from '@/lib/react-query/hooks'
 import { buildCountryLookups } from '@/lib/locale/country-lookups'
 import type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
@@ -63,6 +65,8 @@ type DatabaseOperationBentoCardProps = {
   onRetry: () => void
   onOpenBreakdownDrawer: (payload: DatabaseBreakdownDrawerPayload) => void
   docsHref?: string
+  dateRange?: DateRange
+  chartInterval?: UsageChartInterval
 }
 
 function breakdownDrawerTitle(
@@ -101,6 +105,8 @@ export function DatabaseOperationBentoCard({
   onRetry,
   onOpenBreakdownDrawer,
   docsHref,
+  dateRange,
+  chartInterval,
 }: DatabaseOperationBentoCardProps) {
   const t = useT()
   const breakdownHeadingId = useId()
@@ -137,6 +143,8 @@ export function DatabaseOperationBentoCard({
         formatValue={formatDatabaseOperationsValue}
         onRetry={onRetry}
         docsHref={docsHref}
+        dateRange={dateRange}
+        chartInterval={chartInterval}
       />
 
       {showBreakdown ? (

@@ -1,6 +1,6 @@
 /**
  * Fullscreen create database wizard: single screen with progressive disclosure.
- * DB type → specifications (table) → name & create.
+ * DB type → name → specifications → dedicated options → backup policies → create.
  */
 
 import { useState, useMemo, useEffect, type Dispatch, type SetStateAction } from 'react'
@@ -13,10 +13,18 @@ import {
 import { CreateDatabaseSummary } from '../_components/CreateDatabaseSummary'
 import { CreateDatabaseDedicatedOptions } from '../_components/CreateDatabaseDedicatedOptions'
 import {
+  BACKUP_POLICY_PRESETS,
+  CreateDatabaseBackupPolicies,
+  type BackupPolicyPresetId,
+} from '../_components/CreateDatabaseBackupPolicies'
+import {
   CreateDatabaseSetupProgress,
   type DatabaseSetupPhase,
   type DatabaseSetupProgressState,
 } from './CreateDatabaseSetupProgress'
+import { sdk } from '@/lib/appwrite/sdk'
+import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
+import { ID, BackupServices, DatabaseType, type Models } from '@appwrite.io/console'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,7 +53,6 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { DatabaseType, type Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import {
   DATABASE_HOME_TO,
@@ -228,6 +235,11 @@ export function CreateDatabaseWizardView() {
   const [specId, setSpecId] = useState<string | null>(null)
   const [haReplicaCount, setHaReplicaCount] = useState(0)
   const [pitrEnabled, setPitrEnabled] = useState(false)
+  const [selectedBackupPresets, setSelectedBackupPresets] = useState<
+    BackupPolicyPresetId[]
+  >([])
+  const [backupPresetsInitialized, setBackupPresetsInitialized] =
+    useState(false)
   const [name, setName] = useState('')
   const [databaseId, setDatabaseId] = useState<string | undefined>(undefined)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -384,6 +396,97 @@ export function CreateDatabaseWizardView() {
     setPitrEnabled(false)
   }, [dbType])
 
+  useEffect(() => {
+    if (backupPresetsInitialized) return
+    if (!features.databaseBackups) {
+      setBackupPresetsInitialized(true)
+      return
+    }
+    // Wait until organization plan has loaded so we can default correctly.
+    if (organizationPlan == null) return
+
+    if (organizationPlan.backupsEnabled) {
+      setSelectedBackupPresets(['daily'])
+    } else {
+      setSelectedBackupPresets([])
+    }
+    setBackupPresetsInitialized(true)
+  }, [
+    backupPresetsInitialized,
+    features.databaseBackups,
+    organizationPlan,
+  ])
+
+  const backupsEnabled = features.databaseBackups
+    ? organizationPlan?.backupsEnabled
+    : undefined
+  const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
+  const showBackupPoliciesSection = Boolean(features.databaseBackups)
+  const backupPoliciesSummaryLabel =
+    selectedBackupPresets.length > 0
+      ? selectedBackupPresets
+          .map((id) => t(BACKUP_POLICY_PRESETS[id].label))
+          .join(', ')
+      : null
+
+  const createBackupPoliciesForDatabase = async (
+    database: Models.Database | Models.DedicatedDatabase,
+  ) => {
+    if (
+      !features.databaseBackups ||
+      organizationPlan?.backupsEnabled !== true ||
+      selectedBackupPresets.length === 0
+    ) {
+      return
+    }
+
+    const projectSdk = sdk.forProject(pid)
+    const policies = selectedBackupPresets.map((presetId) => {
+      const preset = BACKUP_POLICY_PRESETS[presetId]
+      return {
+        policyId: ID.unique(),
+        name: preset.name,
+        schedule: preset.schedule,
+        retention: preset.retention,
+        enabled: true as const,
+      }
+    })
+
+    if (isNativeDatabaseType(dbType)) {
+      const engineService = dedicatedEngineService(
+        projectSdk,
+        nativeDatabaseEngine(dbType),
+      )
+      await Promise.all(
+        policies.map((policy) =>
+          engineService.createBackupPolicy({
+            databaseId: database.$id,
+            policyId: policy.policyId,
+            name: policy.name,
+            schedule: policy.schedule,
+            retention: policy.retention,
+            enabled: policy.enabled,
+          }),
+        ),
+      )
+      return
+    }
+
+    await Promise.all(
+      policies.map((policy) =>
+        projectSdk.backups.createPolicy({
+          policyId: policy.policyId,
+          services: [BackupServices.Databases],
+          retention: policy.retention,
+          schedule: policy.schedule,
+          name: policy.name,
+          resourceId: database.$id,
+          enabled: policy.enabled,
+        }),
+      ),
+    )
+  }
+
   const handleDbTypeSelect = (option: DbTypeChoice) => {
     setDbType(option.id)
     if (isAutoFilledNewDatabaseName(name)) {
@@ -528,6 +631,10 @@ export function CreateDatabaseWizardView() {
     const showProvisioningStep = usesDedicatedCompute
     const showHaStep = haReplicaCount > 0
     const showPitrStep = pitrEnabled
+    const showBackupPoliciesStep =
+      features.databaseBackups &&
+      organizationPlan?.backupsEnabled === true &&
+      selectedBackupPresets.length > 0
 
     track('Form Submitted', {
       surface: 'create_database_wizard',
@@ -543,6 +650,7 @@ export function CreateDatabaseWizardView() {
       showProvisioningStep,
       showHaStep,
       showPitrStep,
+      showBackupPoliciesStep,
     })
     setIsCreating(true)
 
@@ -573,6 +681,17 @@ export function CreateDatabaseWizardView() {
       }
       if (showPitrStep) {
         await advanceSetupPhase(setSetupProgress, 'enabling-backups')
+      }
+      if (showBackupPoliciesStep) {
+        await advanceSetupPhase(setSetupProgress, 'creating-backup-policies')
+        try {
+          await createBackupPoliciesForDatabase(database)
+        } catch (policyError) {
+          toast.error(
+            getErrorMessage(policyError) ||
+              t('Database created, but failed to create backup policies'),
+          )
+        }
       }
 
       await workspaceReadyPromise
@@ -664,6 +783,9 @@ export function CreateDatabaseWizardView() {
           replicaCount={haReplicaCount}
           pitrEnabled={pitrEnabled}
           monthlyCost={monthlyCost}
+          showBackupPolicies={showBackupPoliciesSection && showNameForm}
+          backupPoliciesLabel={backupPoliciesSummaryLabel}
+          backupsEnabled={backupsEnabled}
           canCreate={canCreate}
         />
       }
@@ -971,6 +1093,18 @@ export function CreateDatabaseWizardView() {
               onReplicaCountChange={setHaReplicaCount}
               pitrEnabled={pitrEnabled}
               onPitrEnabledChange={setPitrEnabled}
+            />
+          </section>
+        )}
+
+        {showNameForm && showBackupPoliciesSection && (
+          <section className="pt-6 border-t border-border">
+            <CreateDatabaseBackupPolicies
+              backupsEnabled={backupsEnabled}
+              backupPoliciesLimit={backupPoliciesLimit}
+              selectedPresets={selectedBackupPresets}
+              onSelectedPresetsChange={setSelectedBackupPresets}
+              orgId={project?.teamId}
             />
           </section>
         )}

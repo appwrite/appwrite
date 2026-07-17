@@ -7,6 +7,7 @@ export type DatabaseSetupPhase =
   | 'provisioning'
   | 'configuring-ha'
   | 'enabling-backups'
+  | 'creating-backup-policies'
   | 'complete'
 
 export type DatabaseSetupProgressState = {
@@ -15,6 +16,7 @@ export type DatabaseSetupProgressState = {
   showProvisioningStep: boolean
   showHaStep: boolean
   showPitrStep: boolean
+  showBackupPoliciesStep: boolean
 }
 
 type SetupStep = {
@@ -24,8 +26,13 @@ type SetupStep = {
 }
 
 function buildSteps(state: DatabaseSetupProgressState): SetupStep[] {
-  const { databaseName, showProvisioningStep, showHaStep, showPitrStep } =
-    state
+  const {
+    databaseName,
+    showProvisioningStep,
+    showHaStep,
+    showPitrStep,
+    showBackupPoliciesStep,
+  } = state
 
   const steps: SetupStep[] = [
     {
@@ -58,6 +65,14 @@ function buildSteps(state: DatabaseSetupProgressState): SetupStep[] {
       phase: 'enabling-backups',
       label: 'Enabling point-in-time recovery',
       description: 'Configuring continuous backups for your database.',
+    })
+  }
+
+  if (showBackupPoliciesStep) {
+    steps.push({
+      phase: 'creating-backup-policies',
+      label: 'Creating backup policies',
+      description: 'Setting up scheduled backups for your database.',
     })
   }
 

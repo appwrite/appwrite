@@ -4,6 +4,12 @@ import { DATABASE_CLUSTER_PREVIEW_HEIGHT } from './DatabaseClusterPreview'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import {
+  useDatabaseReadsForDatabaseChart,
+  useDatabaseWritesForDatabaseChart,
+} from '@/lib/react-query/hooks'
+import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { sumUsageChartPoints } from '@/lib/usage/database-usage'
 
 const READ_COLOR = 'var(--chart-brand)'
 const WRITE_COLOR = 'var(--chart-2)'
@@ -12,35 +18,6 @@ type OperationsPoint = {
   index: number
   reads: number
   writes: number
-}
-
-function hashSeed(input: string): number {
-  let hash = 0
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash * 31 + input.charCodeAt(i)) >>> 0
-  }
-  return hash
-}
-
-/**
- * Deterministically pick a few databases to show mock traffic until
- * real read/write metrics are available for every serverless database.
- */
-export function shouldMockServerlessOperations(databaseId: string): boolean {
-  return hashSeed(databaseId) % 3 === 0
-}
-
-function buildMockOperationsSeries(databaseId: string): OperationsPoint[] {
-  const seed = hashSeed(databaseId)
-  return Array.from({ length: 16 }, (_, index) => {
-    const wave = Math.sin((index + seed % 7) / 2.4)
-    const wave2 = Math.cos((index + seed % 5) / 3.1)
-    return {
-      index,
-      reads: Math.max(0, Math.round(42 + wave * 28 + (seed % 11))),
-      writes: Math.max(0, Math.round(18 + wave2 * 12 + (seed % 5))),
-    }
-  })
 }
 
 function buildEmptyOperationsSeries(): OperationsPoint[] {
@@ -52,37 +29,73 @@ function buildEmptyOperationsSeries(): OperationsPoint[] {
 }
 
 type DatabaseOperationsChartPreviewProps = {
+  projectId: string
   databaseId: string
+  /** When false, skip usage API calls (e.g. usageStats profile flag off). */
+  enabled?: boolean
   className?: string
 }
 
 /**
  * Card mid-section for serverless databases: read + write operations sparkline.
- * Uses mock series for a subset of databases until live metrics land.
+ * Uses the same usage.listEvents queries as the database monitor page (last 24h).
  */
 export function DatabaseOperationsChartPreview({
+  projectId,
   databaseId,
+  enabled = true,
   className,
 }: DatabaseOperationsChartPreviewProps) {
   const t = useT()
   const gradientId = useId().replace(/:/g, '')
-  const showMock = shouldMockServerlessOperations(databaseId)
-  const chartData = useMemo(
-    () =>
-      showMock
-        ? buildMockOperationsSeries(databaseId)
-        : buildEmptyOperationsSeries(),
-    [databaseId, showMock],
+  const dateRange = useMemo(() => getStableUsageChartDateRange(), [])
+
+  const readsQuery = useDatabaseReadsForDatabaseChart(
+    projectId,
+    databaseId,
+    dateRange,
+    enabled,
   )
-  const totals = useMemo(() => {
-    return chartData.reduce(
-      (acc, point) => ({
-        reads: acc.reads + point.reads,
-        writes: acc.writes + point.writes,
-      }),
-      { reads: 0, writes: 0 },
+  const writesQuery = useDatabaseWritesForDatabaseChart(
+    projectId,
+    databaseId,
+    dateRange,
+    enabled,
+  )
+
+  const chartData = useMemo((): OperationsPoint[] => {
+    const readsPoints = readsQuery.data?.chartPoints ?? []
+    const writesPoints = writesQuery.data?.chartPoints ?? []
+    if (readsPoints.length === 0 && writesPoints.length === 0) {
+      return buildEmptyOperationsSeries()
+    }
+
+    const writesByTime = new Map(
+      writesPoints.map((point) => [point.day.getTime(), point.total]),
     )
-  }, [chartData])
+    const readsByTime = new Map(
+      readsPoints.map((point) => [point.day.getTime(), point.total]),
+    )
+    const timestamps = [
+      ...new Set([
+        ...readsPoints.map((point) => point.day.getTime()),
+        ...writesPoints.map((point) => point.day.getTime()),
+      ]),
+    ].sort((a, b) => a - b)
+
+    return timestamps.map((timestamp, index) => ({
+      index,
+      reads: readsByTime.get(timestamp) ?? 0,
+      writes: writesByTime.get(timestamp) ?? 0,
+    }))
+  }, [readsQuery.data?.chartPoints, writesQuery.data?.chartPoints])
+
+  const totals = useMemo(() => {
+    return {
+      reads: sumUsageChartPoints(readsQuery.data?.chartPoints ?? []),
+      writes: sumUsageChartPoints(writesQuery.data?.chartPoints ?? []),
+    }
+  }, [readsQuery.data?.chartPoints, writesQuery.data?.chartPoints])
 
   return (
     <div

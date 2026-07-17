@@ -89,6 +89,8 @@ export function createSeriesChartXAxisTickFormatter(
   pointCount: number,
   maxTicks: number = USAGE_CHART_X_AXIS_MAX_TICKS,
   formatLabel?: (value: string, index: number) => string,
+  /** Labels by data index when the X axis is index-based (no category dataKey). */
+  labelsByIndex?: readonly string[],
 ): (value: string, index: number) => string {
   const tickIndexSet = new Set(
     resolveChartXAxisTickIndices(pointCount, maxTicks),
@@ -96,7 +98,8 @@ export function createSeriesChartXAxisTickFormatter(
 
   return (value: string, index: number) => {
     if (!tickIndexSet.has(index)) return ''
-    return formatLabel ? formatLabel(value, index) : value
+    const label = labelsByIndex?.[index] ?? value
+    return formatLabel ? formatLabel(label, index) : label
   }
 }
 

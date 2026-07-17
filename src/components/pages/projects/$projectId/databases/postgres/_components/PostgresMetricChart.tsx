@@ -195,6 +195,10 @@ export function PostgresMetricChart({
       })),
     [data],
   )
+  const xAxisLabels = useMemo(
+    () => chartData.map((point) => point.time),
+    [chartData],
+  )
 
   const yAxisTickFormatter = useCallback(
     (v: number) => formatYAxisTickCompact(v, formatY),
@@ -422,7 +426,7 @@ export function PostgresMetricChart({
                 />
                 <SeriesChartXAxis
                   pointCount={chartData.length}
-                  dataKey="time"
+                  labels={xAxisLabels}
                   tick={{
                     fill: 'currentColor',
                     fontSize: 10,
