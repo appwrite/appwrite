@@ -8,6 +8,7 @@ import {
   getDiagramEdgeOpacity,
   getDiagramEdgeStroke,
 } from '@/lib/diagram-generator/edge-appearance'
+import { getDiagramEdgeLabelMetrics } from '@/lib/diagram-generator/edge-label'
 import type { DiagramEdgeStrokeTone } from '@/lib/diagram-generator/types'
 
 type DiagramEdgesLayerProps = {
@@ -121,22 +122,23 @@ export function DiagramEdgesLayer({
             selected,
             part: 'label',
           })
+          const metrics = getDiagramEdgeLabelMetrics(path.label)
 
           return (
             <g key={path.id} pointerEvents="none" opacity={labelOpacity}>
               <rect
-                x={path.labelX - 36}
-                y={path.labelY - 11}
-                width={72}
-                height={22}
-                rx={11}
+                x={path.labelX - metrics.offsetX}
+                y={path.labelY - metrics.offsetY}
+                width={metrics.width}
+                height={metrics.height}
+                rx={metrics.rx}
                 fill={brand.background}
                 stroke={selected ? brand.brandCta : brand.border}
                 strokeWidth={selected ? 1.5 : 1}
               />
               <text
                 x={path.labelX}
-                y={path.labelY + 4}
+                y={path.labelY + 5}
                 textAnchor="middle"
                 fill={selected ? brand.brandCta : brand.mutedForeground}
                 fontSize={12}

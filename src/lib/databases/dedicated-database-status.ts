@@ -2,6 +2,18 @@ import type { HeaderAlertVariant } from '@/components/global/shared/HeaderAlertB
 
 export const DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS = 5000
 
+/** Statuses that resolve on their own; keep polling until they leave this set. */
+const DEDICATED_DATABASE_TRANSITIONAL_STATUSES = new Set([
+  'provisioning',
+  'scaling',
+  'restoring',
+  'upgrading',
+  'migrating',
+  'pausing',
+  'resuming',
+  'deleting',
+])
+
 export type DedicatedDatabaseStatusBadgeVariant =
   | 'success'
   | 'warning'
@@ -18,7 +30,8 @@ export function isDedicatedDatabaseReady(
 export function shouldPollDedicatedDatabaseStatus(
   status: string | null | undefined,
 ): boolean {
-  return !!status?.trim() && !isDedicatedDatabaseReady(status)
+  const normalized = status?.trim().toLowerCase()
+  return !!normalized && DEDICATED_DATABASE_TRANSITIONAL_STATUSES.has(normalized)
 }
 
 export function dedicatedDatabaseStatusBadgeVariant(

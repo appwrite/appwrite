@@ -206,7 +206,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'צרו עמודות תחילה',
   'Create database': 'יצירת מסד נתונים',
   'Creating database': 'יוצר מסד נתונים',
-  'Creating backup policies': 'יוצר מדיניות גיבויים',
   'Allocating dedicated compute for your database.':
     'מקצה משאבי compute ייעודיים למסד הנתונים שלכם.',
   'Configuring continuous backups for your database.':
@@ -217,8 +216,6 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Provisioning compute': 'מספק compute',
   'Setting up read replicas for failover resilience.':
     'מגדיר read replicas לעמידות ב-failover.',
-  'Setting up scheduled backups for your database.':
-    'מגדיר גיבויים מתוזמנים למסד הנתונים שלכם.',
   'Setting up your database': 'מגדיר את מסד הנתונים שלכם',
   'Setting up your database resource.': 'מגדיר את משאב מסד הנתונים שלכם.',
   'Create database or table': 'יצירת מסד נתונים או טבלה',
@@ -440,6 +437,8 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Enable': 'הפעלה',
   'Enable it in the Settings tab': 'הפעילו זאת בכרטיסיית ההגדרות',
   'Enable PITR': 'הפעלת PITR',
+  'Enabling PITR will incur an additional charge of':
+    'הפעלת PITR תגרור חיוב נוסף של',
   'Enabled': 'מופעל',
   'Encrypted': 'מוצפן',
   'Encrypted string columns require a minimum size of 150.': 'עמודות מחרוזת מוצפנות דורשות גודל מינימלי של 150.',
@@ -1427,6 +1426,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': 'כל replica מחויב ב-',
   'of your compute tier per month.': 'מרמת המחשוב שלכם בחודש.',
   'of your compute tier per month when enabled.': 'מרמת המחשוב שלכם בחודש כשהאפשרות מופעלת.',
+  'of your database price': 'ממחיר מסד הנתונים שלכם',
   'Coming soon in your project region. Available in': 'בקרוב באזור הפרויקט שלכם. זמין ב-',
   'No PostgreSQL databases found': 'לא נמצאו מסדי PostgreSQL',
   'No MySQL databases found': 'לא נמצאו מסדי MySQL',

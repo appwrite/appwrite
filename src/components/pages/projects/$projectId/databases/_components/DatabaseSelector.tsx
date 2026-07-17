@@ -62,6 +62,12 @@ export type DatabaseSelectorProps = {
   limit?: number
   triggerClassName?: string
   emptyLabel?: string
+  /**
+   * When the current selection is a native dedicated DB (PostgreSQL / MySQL /
+   * MongoDB), skip the product `tablesdb` / `documentsdb` / `vectorsdb` lookup.
+   * Those APIs 404 for native IDs and are not needed for icon/label metadata.
+   */
+  selectedIsNative?: boolean
   /** Label for the table/container create action (e.g. Create table vs Create collection) */
   createTableMenuLabel?: string
   onCreateDatabaseClick?: () => void
@@ -119,6 +125,7 @@ export function DatabaseSelector({
   limit = DEFAULT_LIMIT,
   triggerClassName,
   emptyLabel,
+  selectedIsNative = false,
   createTableMenuLabel = 'Create table',
   onCreateDatabaseClick,
   onCreateTableClick,
@@ -162,11 +169,6 @@ export function DatabaseSelector({
     placeholderData: keepPreviousData,
   })
 
-  const { data: selectedProductDatabase } = useQuery({
-    ...databaseQueryOptions(projectId, value),
-    enabled: !!projectId && !!value,
-  })
-
   const dedicatedById = useMemo(() => {
     const map = new Map<
       string,
@@ -189,12 +191,26 @@ export function DatabaseSelector({
     return map
   }, [dedicatedData?.databases])
 
+  const selectedDedicated = value ? dedicatedById.get(value) : undefined
+  // `dedicatedDatabasesQueryOptions` only lists native engines. If the selected
+  // id is in that list (or the caller already said so), never probe product APIs.
+  const skipProductDatabaseLookup =
+    selectedIsNative || Boolean(selectedDedicated)
+
+  const { data: selectedProductDatabase } = useQuery({
+    ...databaseQueryOptions(projectId, value),
+    enabled: !!projectId && !!value && !skipProductDatabaseLookup,
+  })
+
   const items = useMemo((): DatabaseSelectorItem[] => {
     return (consoleData?.databases ?? []).map((db) => {
       const dedicated = dedicatedById.get(db.$id)
       return {
         id: db.$id,
-        name: db.name,
+        // Prefer the live selected name so a rename shows up before the console
+        // list refetch completes.
+        name:
+          db.$id === value && selectedName ? selectedName : db.name,
         apiType: db.type,
         engine: db.engine ?? dedicated?.engine ?? null,
         product: db.product ?? dedicated?.api ?? null,
@@ -202,10 +218,9 @@ export function DatabaseSelector({
         status: dedicated?.status ?? db.status ?? null,
       }
     })
-  }, [consoleData?.databases, dedicatedById])
+  }, [consoleData?.databases, dedicatedById, selectedName, value])
 
   const selectedItem = value ? items.find((item) => item.id === value) : undefined
-  const selectedDedicated = value ? dedicatedById.get(value) : undefined
 
   const displayName = selectedName || selectedItem?.name || t(placeholder)
 

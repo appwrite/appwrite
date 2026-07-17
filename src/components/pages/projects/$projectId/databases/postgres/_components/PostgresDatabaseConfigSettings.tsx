@@ -22,9 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { formatCurrency } from '@/components/pages/organizations/$orgId/billing/utils'
 import { CONTACT_ENTERPRISE_URL } from '@/lib/pricing/constants'
 import {
+  calculateDedicatedDatabaseMonthlyCost,
   DEDICATED_DB_HA_REPLICA_OPTIONS,
+  getDedicatedDatabaseCreatePricing,
   MAX_DEDICATED_DB_HA_REPLICA_COUNT,
 } from '@/lib/database-create-pricing'
 import {
@@ -36,8 +40,10 @@ import {
   useDatabaseSpecifications,
   useDedicatedDatabaseCardMetrics,
   useDedicatedDatabaseStorageChart,
+  useOrganizationPlan,
   usePostgresActiveConnections,
   usePostgresDatabaseReplicas,
+  useProject,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
@@ -578,6 +584,10 @@ export function PostgresDatabasePitrCard({
   canWrite,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { data: specificationsData } = useDatabaseSpecifications(projectId)
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const [pitrEnabled, setPitrEnabled] = useState(database.pitr === true)
   const [pitrRetentionDays, setPitrRetentionDays] = useState(
@@ -587,6 +597,35 @@ export function PostgresDatabasePitrCard({
     canWrite,
     updateMutation.isPending,
   )
+
+  const pricing = useMemo(
+    () =>
+      getDedicatedDatabaseCreatePricing(
+        organizationPlan,
+        specificationsData?.pricing ?? null,
+      ),
+    [organizationPlan, specificationsData?.pricing],
+  )
+
+  const basePriceUsd = useMemo(() => {
+    const specs = mapDedicatedDatabaseSpecifications(
+      specificationsData?.specifications,
+    )
+    return (
+      specs.find((spec) => spec.id === database.specification)?.priceUsd ?? 0
+    )
+  }, [database.specification, specificationsData?.specifications])
+
+  const pitrCost = calculateDedicatedDatabaseMonthlyCost({
+    basePriceUsd,
+    replicaCount: 0,
+    pitrEnabled: true,
+    pricing,
+  }).pitrUsd
+  const pitrRatePercent = Math.round(pricing.pitrRate * 100)
+
+  const showPitrChargeAlert =
+    features.billing && database.pitr !== true && pricing.pitrRate > 0
 
   useEffect(() => {
     setPitrEnabled(database.pitr === true)
@@ -662,6 +701,21 @@ export function PostgresDatabasePitrCard({
               className="h-9 max-w-xs text-[13px]"
             />
           </div>
+        ) : null}
+
+        {showPitrChargeAlert ? (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-[12px]">
+              <p>
+                {t('Enabling PITR will incur an additional charge of')}{' '}
+                <span className="font-medium text-foreground">
+                  {formatCurrency(pitrCost, 'USD')} {t('per month')}
+                </span>{' '}
+                ({pitrRatePercent}% {t('of your database price')}).
+              </p>
+            </AlertDescription>
+          </Alert>
         ) : null}
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">

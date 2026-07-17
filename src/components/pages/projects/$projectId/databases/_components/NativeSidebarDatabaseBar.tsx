@@ -42,6 +42,7 @@ export function NativeSidebarDatabaseBar({
           projectId={projectId}
           value={databaseId}
           selectedName={databaseName}
+          selectedIsNative
           onSelect={(newDatabaseId, meta) => {
             if (newDatabaseId === databaseId) return
             void navigateToDatabaseFromSwitcher({

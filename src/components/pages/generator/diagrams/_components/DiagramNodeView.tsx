@@ -6,6 +6,7 @@ import { CoverHeroBrowserFrame } from '@/components/global/shared/CoverHeroBrows
 import type { DiagramAnchorSide, DiagramNode } from '@/lib/diagram-generator/types'
 import { DIAGRAM_NODE_KIND_LABELS } from '@/lib/diagram-generator/constants'
 import { createDefaultDiagramTable } from '@/lib/diagram-generator/diagram-table'
+import { getDiagramNodeSurfaceColors } from '@/lib/diagram-generator/node-chrome'
 import { getDiagramNodeIconSrc, hasDiagramNodeIcon } from '@/lib/diagram-generator/node-normalize'
 import { getDiagramScreenshotFocus } from '@/lib/diagram-generator/screenshot-focus'
 import { DiagramNodeChrome } from '@/components/pages/generator/diagrams/_components/DiagramNodeChrome'
@@ -163,6 +164,7 @@ export function DiagramNodeView({
     const availableWidth = node.width - chromePadding * 2
     const availableHeight = node.height - chromePadding * 2 - captionBand
     const iconSize = Math.max(24, Math.min(availableWidth, availableHeight))
+    const surface = getDiagramNodeSurfaceColors(brand, themeId)
 
     return (
       <DiagramNodeChrome
@@ -172,8 +174,9 @@ export function DiagramNodeView({
           interactive && 'cursor-pointer',
         )}
         style={{
-          backgroundColor: withAlpha(brand.background, 0.92),
-          borderColor: selected ? brand.brandCta : withAlpha(brand.border, 0.95),
+          backgroundColor: surface.fill,
+          borderColor: selected ? brand.brandCta : surface.stroke,
+          borderWidth: surface.strokeWidth,
           boxShadow: getSelectedChromeShadow(brand, selected),
         }}
       >
@@ -286,6 +289,8 @@ export function DiagramNodeView({
     )
   }
 
+  const surface = getDiagramNodeSurfaceColors(brand, themeId)
+
   return (
     <DiagramNodeChrome
       {...chromeProps}
@@ -294,8 +299,9 @@ export function DiagramNodeView({
         interactive && 'cursor-pointer',
       )}
       style={{
-        backgroundColor: withAlpha(brand.background, 0.92),
-        borderColor: selected ? brand.brandCta : withAlpha(brand.border, 0.95),
+        backgroundColor: surface.fill,
+        borderColor: selected ? brand.brandCta : surface.stroke,
+        borderWidth: surface.strokeWidth,
         boxShadow: selected
           ? `0 2px 8px ${withAlpha(brand.foreground, 0.05)}, 0 0 0 1px ${withAlpha(brand.brandCta, 0.25)}`
           : `0 1px 3px ${withAlpha(brand.foreground, 0.04)}`,

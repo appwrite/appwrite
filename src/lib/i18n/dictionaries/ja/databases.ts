@@ -206,7 +206,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Create columns first': 'まず列を作成',
   'Create database': 'データベースの作成',
   'Creating database': 'データベースを作成中',
-  'Creating backup policies': 'バックアップポリシーを作成中',
   'Allocating dedicated compute for your database.':
     'データベース用の専用コンピュートを割り当てています。',
   'Configuring continuous backups for your database.':
@@ -217,8 +216,6 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Provisioning compute': 'コンピュートをプロビジョニング中',
   'Setting up read replicas for failover resilience.':
     'フェイルオーバー向けにリードレプリカを設定しています。',
-  'Setting up scheduled backups for your database.':
-    'データベースのスケジュールバックアップを設定しています。',
   'Setting up your database': 'データベースをセットアップ中',
   'Setting up your database resource.': 'データベースリソースをセットアップしています。',
   'Create database or table': 'データベースまたはテーブルの作成',
@@ -439,6 +436,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Enable': '有効化',
   'Enable it in the Settings tab': '設定タブで有効にしてください',
   'Enable PITR': 'PITR を有効化',
+  'Enabling PITR will incur an additional charge of':
+    'PITR を有効にすると、追加で',
   'Enabled': '有効',
   'Encrypted': '暗号化済み',
   'Encrypted string columns require a minimum size of 150.': '暗号化された string 列には最小サイズ 150 が必要です。',
@@ -1308,6 +1307,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Each replica is billed at': '各レプリカの課金額',
   'of your compute tier per month.': 'コンピュートティア/月の',
   'of your compute tier per month when enabled.': '有効時のコンピュートティア/月の',
+  'of your database price': 'のデータベース料金',
   'Coming soon in your project region. Available in': 'プロジェクトリージョンでは近日公開予定。利用可能:',
   'No PostgreSQL databases found': 'PostgreSQL データベースが見つかりません',
   'No MySQL databases found': 'MySQL データベースが見つかりません',

@@ -633,7 +633,7 @@ export function CreateDatabaseWizardView() {
     const showProvisioningStep = usesDedicatedCompute
     const showHaStep = haReplicaCount > 0
     const showPitrStep = pitrEnabled
-    const showBackupPoliciesStep =
+    const shouldCreateBackupPolicies =
       features.databaseBackups &&
       planBackupsEnabled === true &&
       selectedBackupPresets.length > 0
@@ -652,7 +652,6 @@ export function CreateDatabaseWizardView() {
       showProvisioningStep,
       showHaStep,
       showPitrStep,
-      showBackupPoliciesStep,
     })
     setIsCreating(true)
 
@@ -684,8 +683,7 @@ export function CreateDatabaseWizardView() {
       if (showPitrStep) {
         await advanceSetupPhase(setSetupProgress, 'enabling-backups')
       }
-      if (showBackupPoliciesStep) {
-        await advanceSetupPhase(setSetupProgress, 'creating-backup-policies')
+      if (shouldCreateBackupPolicies) {
         try {
           await createBackupPoliciesForDatabase(database)
         } catch (policyError) {

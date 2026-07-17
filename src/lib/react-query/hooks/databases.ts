@@ -33,6 +33,10 @@ import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import type { NativeDatabaseEngine } from '@/lib/databases/native-database-engines'
 import { dedicatedEngineService } from '@/lib/databases/dedicated-engine'
 import { requireOperationalDatabase } from '@/lib/databases/dedicated-database-write-lock'
+import {
+  DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS,
+  shouldPollDedicatedDatabaseStatus,
+} from '@/lib/databases/dedicated-database-status'
 import { buildPostgresListSchemasSql } from '@/lib/postgres-sql'
 import {
   normalizePostgresExecutionResult,
@@ -1494,6 +1498,14 @@ export function dedicatedDatabasesQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    refetchInterval: (query) => {
+      const databases = query.state.data?.databases ?? []
+      return databases.some((db) =>
+        shouldPollDedicatedDatabaseStatus(db.status),
+      )
+        ? DEDICATED_DATABASE_STATUS_POLL_INTERVAL_MS
+        : false
+    },
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
