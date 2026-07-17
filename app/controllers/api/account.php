@@ -4645,7 +4645,6 @@ Http::post('/v1/account/targets/push')
         }
 
         $detector = new Detector($request->getUserAgent());
-        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
         $device = $detector->getDevice();
 
@@ -4733,7 +4732,6 @@ Http::put('/v1/account/targets/:targetId/push')
         }
 
         $detector = new Detector($request->getUserAgent());
-        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
         $device = $detector->getDevice();
 

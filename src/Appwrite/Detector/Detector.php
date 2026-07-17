@@ -2,13 +2,13 @@
 
 namespace Appwrite\Detector;
 
-use DeviceDetector\DeviceDetector;
+use Utopia\UserAgent\UserAgent;
 
 class Detector
 {
-    protected $userAgent = '';
+    protected string $userAgent = '';
 
-    protected $detctor;
+    protected ?UserAgent $detector = null;
 
     /**
      * @param string $userAgent
@@ -25,12 +25,12 @@ class Detector
      */
     public function getOS(): array
     {
-        $os = $this->getDetector()->getOs();
+        $os = $this->getDetector()->operatingSystem();
 
         return [
-            'osCode' => (isset($os['short_name'])) ? $os['short_name'] : '',
-            'osName' => (isset($os['name'])) ? $os['name'] : '',
-            'osVersion' => (isset($os['version'])) ? $os['version'] : '',
+            'osCode' => $os->code ?? '',
+            'osName' => $os->name ?? '',
+            'osVersion' => $os->version ?? '',
         ];
     }
 
@@ -44,23 +44,26 @@ class Detector
         if (strpos($this->userAgent, 'AppwriteCLI') !== false) {
             $version = explode(' ', $this->userAgent)[0];
             $version = explode('/', $version)[1];
-            $client = [
-                'type' => 'desktop',
-                'short_name' => 'cli',
-                'name' => 'Appwrite CLI',
-                'version' => $version
+
+            return [
+                'clientType' => 'desktop',
+                'clientCode' => 'cli',
+                'clientName' => 'Appwrite CLI',
+                'clientVersion' => $version,
+                'clientEngine' => '',
+                'clientEngineVersion' => '',
             ];
-        } else {
-            $client = $this->getDetector()->getClient();
         }
 
+        $client = $this->getDetector()->client();
+
         return [
-            'clientType' => (isset($client['type'])) ? $client['type'] : '',
-            'clientCode' => (isset($client['short_name'])) ? $client['short_name'] : '',
-            'clientName' => (isset($client['name'])) ? $client['name'] : '',
-            'clientVersion' => (isset($client['version'])) ? $client['version'] : '',
-            'clientEngine' => (isset($client['engine'])) ? $client['engine'] : '',
-            'clientEngineVersion' => (isset($client['engine_version'])) ? $client['engine_version'] : '',
+            'clientType' => $client->type ?? '',
+            'clientCode' => $client->code ?? '',
+            'clientName' => $client->name ?? '',
+            'clientVersion' => $client->version ?? '',
+            'clientEngine' => $client->engine ?? '',
+            'clientEngineVersion' => $client->engineVersion ?? '',
         ];
     }
 
@@ -71,40 +74,21 @@ class Detector
      */
     public function getDevice(): array
     {
-        $deviceName = $this->getDetector()->getDeviceName();
-        $deviceBrand = $this->getDetector()->getBrandName();
-        $deviceModel = $this->getDetector()->getModel();
+        $device = $this->getDetector()->device();
 
         return [
-            'deviceName' => empty($deviceName) ? null : $deviceName,
-            'deviceBrand' => empty($deviceBrand) ? null : $deviceBrand,
-            'deviceModel' => empty($deviceModel) ? null : $deviceModel,
+            'deviceName' => $device->type,
+            'deviceBrand' => $device->brand,
+            'deviceModel' => $device->model,
         ];
     }
 
     /**
-     * @return DeviceDetector
+     * @return UserAgent
      */
-    protected function getDetector(): DeviceDetector
+    protected function getDetector(): UserAgent
     {
-        if (!$this->detctor) {
-            $this->detctor = new DeviceDetector($this->userAgent);
-            $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            $this->detctor->parse();
-        }
-
-        return $this->detctor;
+        return $this->detector ??= UserAgent::parse($this->userAgent);
     }
 
-    /**
-     * Sets whether to skip bot detection.
-     * It is needed if we want bots to be processed as a simple clients. So we can detect if it is mobile client,
-     * or desktop, or enything else. By default all this information is not retrieved for the bots.
-     *
-     * @param bool $skip
-     */
-    public function skipBotDetection(bool $skip = true): void
-    {
-        $this->getDetector()->skipBotDetection($skip);
-    }
 }

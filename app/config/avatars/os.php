@@ -1,7 +1,7 @@
 <?php
 
 return [
-    // Codes based on: https://github.com/matomo-org/device-detector/blob/master/Parser/Client/Browser.php
+    // Codes based on: https://github.com/utopia-php/user-agent/blob/main/src/UserAgent/Detection/OperatingSystemDetector.php
     'AND' => __DIR__ . '/os/android.png',
     'ATV' => __DIR__ . '/os/apple-tv.png',
     'COS' => __DIR__ . '/os/chrome-os.png',
