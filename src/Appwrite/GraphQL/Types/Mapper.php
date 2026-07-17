@@ -108,6 +108,16 @@ class Mapper
             }
         }
 
+        $hidden = [];
+        $overrides = [];
+        foreach ($method->getParameters() as $sdkParameter) {
+            if ($sdkParameter->getHide()) {
+                $hidden[$sdkParameter->getName()] = true;
+                continue;
+            }
+            $overrides[$sdkParameter->getName()] = $sdkParameter;
+        }
+
         foreach ($models as $model) {
             $type = Mapper::model(\ucfirst($model->getType()));
             $description = $route->getDesc();
@@ -115,36 +125,33 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
-                $sdkParameters = $method->getParameters();
+                if (isset($hidden[$name])) {
+                    continue;
+                }
 
-                if (!empty($sdkParameters)) {
-                    $sdkMethodParameters = [];
-                    foreach ($sdkParameters as $sdkParameter) {
-                        $sdkMethodParameters[$sdkParameter->getName()] = $sdkParameter;
-                    }
+                $override = $overrides[$name] ?? null;
 
-                    if (!\array_key_exists($name, $sdkMethodParameters)) {
-                        continue;
-                    }
-
-                    $optional = $sdkMethodParameters[$name]->getOptional();
-                } else {
-                    $optional = $parameter['optional'];
+                if (!empty($overrides) && $override === null) {
+                    continue;
                 }
 
                 if ($name === 'queries') {
                     $list = true;
                 }
 
+                $optional = $override !== null && $override->hasOptional()
+                    ? $override->getOptional()
+                    : $parameter['optional'];
+
                 $parameterType = Mapper::param(
                     $utopia,
-                    $parameter['validator'],
+                    $override?->getValidator() ?? $parameter['validator'],
                     !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [
                     'type' => $parameterType,
-                    'description' => $parameter['description'],
+                    'description' => $override?->getDescription() ?: $parameter['description'],
                 ];
             }
 
