@@ -41,6 +41,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/auth"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration"
         }
     ],
     "require": {
@@ -83,7 +87,7 @@
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.0",
-        "utopia-php/migration": "1.17.*",
+        "utopia-php/migration": "dev-feat/drop-compound-resource-id#a7e94c86a96fc7cdfff3eae9845270d91f83e7f8 as 1.17.3",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",
