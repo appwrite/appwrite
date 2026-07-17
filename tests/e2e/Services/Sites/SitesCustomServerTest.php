@@ -1373,7 +1373,7 @@ final class SitesCustomServerTest extends Scope
         $this->waitDeploymentReady($siteId, $deploymentId);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
-        $this->assertStringContainsString('Build cache hit.', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Build cache hit.', (string) $deployment['body']['buildLogs']);
 
         $this->cleanupSite($siteId);
     }
@@ -1406,7 +1406,7 @@ final class SitesCustomServerTest extends Scope
         }, 120000, 500);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
-        $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
+        $this->assertStringContainsString('Adapter mismatch', (string) $deployment['body']['buildLogs']);
 
         $this->cleanupSite($siteId);
     }
