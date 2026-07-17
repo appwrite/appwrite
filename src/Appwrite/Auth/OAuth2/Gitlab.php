@@ -194,7 +194,28 @@ class Gitlab extends OAuth2
             $repository['pushed_at'] = $repository['last_activity_at'];
         }
 
+        // Validation errors nest per-field messages (e.g. {"name": ["has already been taken"]})
+        // instead of GitHub/Gitea's plain string, which Create.php string-concatenates as-is.
+        if (isset($repository['message']) && !\is_string($repository['message'])) {
+            $repository['message'] = $this->flattenErrorMessage($repository['message']);
+        }
+
         return $repository;
+    }
+
+    private function flattenErrorMessage(mixed $message): string
+    {
+        if (!\is_array($message)) {
+            return \strval($message);
+        }
+
+        $parts = [];
+        foreach ($message as $field => $errors) {
+            $errors = \is_array($errors) ? \implode(', ', $errors) : $errors;
+            $parts[] = \is_string($field) ? "{$field} {$errors}" : $errors;
+        }
+
+        return \implode('; ', $parts);
     }
 
     /**
