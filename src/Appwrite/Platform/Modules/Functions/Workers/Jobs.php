@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Deployment\Detection;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -71,6 +72,7 @@ class Jobs extends Action
             ->inject('cache')
             ->inject('locks')
             ->inject('platform')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -91,6 +93,7 @@ class Jobs extends Action
         Cache $cache,
         callable $locks,
         array $platform,
+        array $plan,
     ): void {
         $event = JobsMessage::fromArray($message->getPayload());
 
@@ -99,7 +102,7 @@ class Jobs extends Action
             return;
         }
 
-        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $deploymentId): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $deploymentId): void {
             if ($event->id !== '') {
                 $key = 'jobs-event-' . $event->id;
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
@@ -116,10 +119,10 @@ class Jobs extends Action
             $statusBefore = $deployment->getAttribute('status');
 
             $deployment = match ($event->event) {
-                'orchestrator.job.log' => $this->onLog($dbForProject, $deployment, $event->data),
-                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform),
-                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform),
-                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform),
+                'orchestrator.job.log' => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $vcsFactory, $platform),
+                'orchestrator.job.artifact' => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $event->data, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan),
+                'orchestrator.job.exit' => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, (int) ($event->data['exitCode'] ?? 0), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan),
+                'orchestrator.job.complete' => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan),
                 default => $deployment,
             };
 
@@ -144,7 +147,7 @@ class Jobs extends Action
         }, self::LOCK_TIMEOUT);
     }
 
-    private function onLog(Database $dbForProject, Document $deployment, array $data): Document
+    private function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, array $data, VcsFactory $vcsFactory, array $platform): Document
     {
         $lines = $data['lines'] ?? [];
         $chunk = \is_array($lines) ? \implode("\n", $lines) : (string) $lines;
@@ -164,7 +167,13 @@ class Jobs extends Action
             $update['buildStartedAt'] = DateTime::now();
         }
 
-        return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update));
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update));
+
+        if (($update['status'] ?? '') === 'building') {
+            $this->gitAction('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+        }
+
+        return $deployment;
     }
 
     /**
@@ -185,16 +194,16 @@ class Jobs extends Action
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
+        array $plan,
     ): Document {
         if (($data['artifactId'] ?? '') === 'manifest') {
-            // Content arrives JSON-decoded; a failed or unparseable manifest
-            // degrades to an empty listing (detection skipped), never a failed build.
-            $content = ($data['status'] ?? '') === 'success' ? ($data['content'] ?? null) : null;
-            $manifest = \is_array($content) ? $content : \json_decode((string) $content, true);
+            // A failed manifest degrades to an empty listing (detection
+            // skipped), never a failed build.
+            $manifest = ($data['status'] ?? '') === 'success' ? ($data['content'] ?? null) : null;
             $files = \is_array($manifest) ? (array) ($manifest['files'] ?? []) : [];
             $cache->save('jobs-manifest-' . $deployment->getId(), ['files' => \array_values($files)]);
 
-            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform);
+            return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan);
         }
 
         if (($data['artifactId'] ?? '') !== 'sourceSize' || ($data['status'] ?? '') !== 'success') {
@@ -233,6 +242,7 @@ class Jobs extends Action
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
+        array $plan,
     ): Document {
         if ($exitCode !== 0) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, "Build failed with exit code {$exitCode}.", $usage, $publisherForUsage, $publisherForScreenshots, $vcsFactory, $platform);
@@ -240,7 +250,7 @@ class Jobs extends Action
 
         $cache->save('jobs-exit-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan);
     }
 
     /**
@@ -259,10 +269,11 @@ class Jobs extends Action
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
+        array $plan,
     ): Document {
         $cache->save('jobs-complete-' . $deployment->getId(), true);
 
-        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform);
+        return $this->ready($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan);
     }
 
     /**
@@ -281,6 +292,7 @@ class Jobs extends Action
         VcsFactory $vcsFactory,
         Cache $cache,
         array $platform,
+        array $plan,
     ): Document {
         if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'], true)) {
             return $deployment; // already finalized
@@ -312,7 +324,9 @@ class Jobs extends Action
 
         $size = $deviceForBuilds->getFileSize($path);
 
-        $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
+        $limit = isset($plan['buildSize'])
+            ? (int) $plan['buildSize'] * 1000 * 1000
+            : (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
             $deviceForBuilds->delete($path);
 
@@ -431,11 +445,9 @@ class Jobs extends Action
             $this->schedule($dbForProject, $dbForPlatform, $resource);
         }
 
-        // Report the terminal outcome as a VCS commit status (jobs-built VCS
-        // deployments only; best-effort). "pending" at build start is a follow-up.
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $resource->isEmpty()) {
-            $this->gitStatus($vcsFactory, $dbForPlatform, $project, $resource, $deployment, $status === 'ready' ? 'success' : 'failure');
+            $this->gitAction($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -465,45 +477,36 @@ class Jobs extends Action
     }
 
     /**
-     * Post a VCS commit status for a VCS deployment (no-op for non-VCS builds
-     * or silent mode). Best-effort — a failed status update never fails the build.
+     * Report a build state to the VCS provider for a VCS deployment
+     * (best-effort; no-op for non-VCS builds).
      */
-    private function gitStatus(VcsFactory $vcsFactory, Database $dbForPlatform, Document $project, Document $resource, Document $deployment, string $state): void
+    private function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
     {
-        $commitHash = $deployment->getAttribute('providerCommitHash', '');
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
             return;
         }
 
         try {
+            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
             $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-            if ($providerInstallationId === '') {
+            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
                 return;
             }
-            $vcs = $vcsFactory->fromInstallation($installation);
 
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
-            $region = $project->getAttribute('region', 'default');
-            $segment = $resource->getCollection() === 'sites'
-                ? "sites/site-{$resource->getId()}"
-                : "functions/function-{$resource->getId()}";
-            $targetUrl = "{$protocol}://{$hostname}/console/project-{$region}-{$project->getId()}/{$segment}";
-            $message = $state === 'success' ? 'Build succeeded.' : 'Build failed.';
-            $name = $resource->getAttribute('name', '') . ' (' . $project->getAttribute('name', '') . ')';
-
-            $vcs->updateCommitStatus(
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $commitHash,
+            GitAction::run(
+                $status,
+                $vcsFactory->fromInstallation($installation),
+                $deployment->getAttribute('providerCommitHash', ''),
                 $deployment->getAttribute('providerRepositoryOwner', ''),
-                $state,
-                $message,
-                $targetUrl,
-                $name,
+                $deployment->getAttribute('providerRepositoryName', ''),
+                $project,
+                $resource,
+                $deployment,
+                $dbForPlatform,
+                $platform,
             );
         } catch (\Throwable) {
-            // Best-effort; the build outcome stands regardless of the status update.
+            // Best-effort — never fails the build.
         }
     }
 
