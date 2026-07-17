@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d8282e455d647d1132ef9c0340924a1",
+    "content-hash": "de9b7927d2e0c923329b782e737ab716",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4404,12 +4404,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a7e94c86a96fc7cdfff3eae9845270d91f83e7f8"
+                "reference": "7ed62ca2e2279bf30fa2018655e045c59bb5bc3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a7e94c86a96fc7cdfff3eae9845270d91f83e7f8",
-                "reference": "a7e94c86a96fc7cdfff3eae9845270d91f83e7f8",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7ed62ca2e2279bf30fa2018655e045c59bb5bc3d",
+                "reference": "7ed62ca2e2279bf30fa2018655e045c59bb5bc3d",
                 "shasum": ""
             },
             "require": {
@@ -4469,7 +4469,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/feat/drop-compound-resource-id",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-07-17T12:11:07+00:00"
+            "time": "2026-07-17T20:50:27+00:00"
         },
         {
             "name": "utopia-php/mongo",

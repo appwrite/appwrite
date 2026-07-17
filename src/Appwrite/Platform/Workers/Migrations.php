@@ -290,20 +290,20 @@ class Migrations extends Action
                 $projectDB,
                 $queries
             ),
-            CSV::getName() => new CSV(
-                $databaseId,
-                $tableId,
-                $migrationOptions['path'],
-                $this->deviceForMigrations,
-                $this->dbForProject,
-                $getDatabasesDB
+            CSV::getName() => CSV::fromResourceIds(
+                databaseId: $databaseId,
+                tableId: $tableId,
+                filePath: $migrationOptions['path'],
+                device: $this->deviceForMigrations,
+                dbForProject: $this->dbForProject,
+                getDatabasesDB: $getDatabasesDB,
             ),
-            JSON::getName() => new JSON(
-                $databaseId,
-                $tableId,
-                $migrationOptions['path'],
-                $this->deviceForMigrations,
-                $this->dbForProject,
+            JSON::getName() => JSON::fromResourceIds(
+                databaseId: $databaseId,
+                tableId: $tableId,
+                filePath: $migrationOptions['path'],
+                device: $this->deviceForMigrations,
+                dbForProject: $this->dbForProject,
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
@@ -337,25 +337,25 @@ class Migrations extends Action
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
             ),
-            DestinationCSV::getName() => new DestinationCSV(
-                $this->deviceForFiles,
-                $databaseId,
-                $tableId,
-                $options['bucketId'],
-                $migration->getId(),
-                $options['columns'],
-                $options['delimiter'],
-                $options['enclosure'],
-                $options['escape'],
-                $options['header'],
+            DestinationCSV::getName() => DestinationCSV::fromResourceIds(
+                deviceForFiles: $this->deviceForFiles,
+                databaseId: $databaseId,
+                tableId: $tableId,
+                directory: $options['bucketId'],
+                filename: $options['filename'],
+                allowedColumns: $options['columns'],
+                delimiter: $options['delimiter'],
+                enclosure: $options['enclosure'],
+                escape: $options['escape'],
+                includeHeaders: $options['header'],
             ),
-            DestinationJSON::getName() => new DestinationJSON(
-                $this->deviceForFiles,
-                $databaseId,
-                $tableId,
-                $options['bucketId'] ?? 'default',
-                $migration->getId(),
-                $options['columns'] ?? [],
+            DestinationJSON::getName() => DestinationJSON::fromResourceIds(
+                deviceForFiles: $this->deviceForFiles,
+                databaseId: $databaseId,
+                tableId: $tableId,
+                directory: $options['bucketId'] ?? 'default',
+                filename: $options['filename'],
+                allowedColumns: $options['columns'] ?? [],
             ),
             default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
         };
@@ -540,7 +540,8 @@ class Migrations extends Action
                 $migration->setAttribute('stage', 'migrating');
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                $transfer->run(
+                [$rootResourceId, $rootResourceChildId] = $this->resolveResourceIds($migration);
+                $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
                     function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -578,9 +579,9 @@ class Migrations extends Action
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $this->resolveResourceIds($migration)[0],
+                    $rootResourceId,
                     $migration->getAttribute('parentResourceType') ?: $migration->getAttribute('resourceType'),
-                    $this->resolveResourceIds($migration)[1],
+                    $rootResourceChildId,
                 );
 
                 $destination->shutdown();
