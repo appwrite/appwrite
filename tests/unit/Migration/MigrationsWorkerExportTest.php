@@ -121,7 +121,7 @@ final class MigrationsWorkerExportTest extends TestCase
         );
     }
 
-    public function testExportCompletionNormalizesStringUserInternalId(): void
+    public function testExportCompletionNormalizesNumericStringUserInternalId(): void
     {
         $user = new Document([
             '$id' => 'user-id',
@@ -154,6 +154,45 @@ final class MigrationsWorkerExportTest extends TestCase
         $resolved = $worker->resolve($dbForPlatform, new Document([
             '$id' => 'migration-with-string-user',
             'options' => ['userInternalId' => '42'],
+        ]));
+
+        $this->assertSame('user-id', $resolved->getId());
+    }
+
+    public function testExportCompletionPreservesMongoStringUserInternalId(): void
+    {
+        $sequence = '019f70db-a902-7127-96fe-f24d908cea2c';
+        $user = new Document([
+            '$id' => 'user-id',
+            '$sequence' => $sequence,
+        ]);
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform
+            ->expects($this->once())
+            ->method('findOne')
+            ->with(
+                'users',
+                $this->callback(function (array $queries) use ($sequence): bool {
+                    $this->assertCount(1, $queries);
+                    $this->assertInstanceOf(Query::class, $queries[0]);
+                    $this->assertSame([$sequence], $queries[0]->getValues());
+
+                    return true;
+                })
+            )
+            ->willReturn($user);
+
+        $worker = new class () extends Migrations {
+            public function resolve(Database $dbForPlatform, Document $migration): Document
+            {
+                $this->dbForPlatform = $dbForPlatform;
+                return $this->resolveExportUser($migration);
+            }
+        };
+
+        $resolved = $worker->resolve($dbForPlatform, new Document([
+            '$id' => 'migration-with-mongo-user',
+            'options' => ['userInternalId' => $sequence],
         ]));
 
         $this->assertSame('user-id', $resolved->getId());
