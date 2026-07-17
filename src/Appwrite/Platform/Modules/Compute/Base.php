@@ -398,8 +398,10 @@ class Base extends Action
      */
     public static function activateBranchPreviewRule(Document $project, Document $site, Document $deployment, Database $dbForPlatform, string $sitesDomain): void
     {
+        // Template deployments reuse providerBranch for their resolved ref
+        // (tags included), which must not mint a preview domain.
         $branchName = $deployment->getAttribute('providerBranch', '');
-        if (empty($branchName)) {
+        if (empty($branchName) || empty($deployment->getAttribute('installationId'))) {
             return;
         }
 

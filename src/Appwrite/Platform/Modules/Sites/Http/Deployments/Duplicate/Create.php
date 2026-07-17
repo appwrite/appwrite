@@ -178,14 +178,14 @@ class Create extends Action
                 $deployment->getAttribute('providerRootDirectory', ''),
             );
         } else {
-            // Public template repo: providerBranch holds the resolved ref
-            // (branch, tag, or commit — see Deployments/Template/Create).
+            // Public template repo: providerBranch holds the resolved ref,
+            // fetched commit-style since a branch-type clone breaks on tags.
             $deployment = $deployments->createFromRef(
                 $site,
                 $deployment,
                 $owner,
                 $repository,
-                GitHub::CLONE_TYPE_BRANCH,
+                GitHub::CLONE_TYPE_COMMIT,
                 $deployment->getAttribute('providerBranch', ''),
                 $deployment->getAttribute('providerRootDirectory', ''),
             );
