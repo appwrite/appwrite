@@ -26,6 +26,12 @@ describe('getDatabaseTypeDisplayLabel', () => {
     )
   })
 
+  it('treats unified type / api engine names as native', () => {
+    expect(getDatabaseTypeDisplayLabel('postgresql')).toBe('PostgreSQL')
+    expect(getDatabaseTypeDisplayLabel('mysql')).toBe('MySQL')
+    expect(getDatabaseTypeDisplayLabel(null, null, 'mongodb')).toBe('MongoDB')
+  })
+
   it('falls back legacy / missing types to TablesDB', () => {
     expect(getDatabaseTypeDisplayLabel('legacy')).toBe('TablesDB')
     expect(getDatabaseTypeDisplayLabel(null)).toBe('TablesDB')

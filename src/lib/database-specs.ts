@@ -4,7 +4,7 @@
  */
 
 import type { Models } from '@appwrite.io/console'
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import { formatDedicatedMonthlyPrice } from '@/lib/database-create-pricing'
 
 export type SpecOption = {

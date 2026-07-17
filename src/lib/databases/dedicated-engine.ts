@@ -9,7 +9,8 @@
  *
  * Product-owned dedicated DBs pass `api: 'tablesdb' | 'documentsdb' |
  * 'vectorsdb'` on create and are reached through those product APIs under the
- * same database ID. Native DBs use `api: 'nativedb'`.
+ * same database ID. Native (raw) DBs omit `api` on create; the API sets `api`
+ * from the engine (`postgresql` / `mysql` / `mongodb`).
  *
  * Connection credentials are returned inline on `Models.DedicatedDatabase`
  * (`hostname`, `connectionPort`, `connectionUser`, `connectionPassword`,

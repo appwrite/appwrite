@@ -1,4 +1,7 @@
-import { DatabaseProduct, DatabaseType } from '@appwrite.io/console'
+import {
+  DatabaseType,
+  isNativeDatabaseTypeValue,
+} from '@/lib/databases/database-type'
 import {
   formatDatabaseServiceLabel,
   getDatabaseServiceLucideIcon,
@@ -12,13 +15,17 @@ import {
 import type { LucideIcon } from '@/lib/icons'
 
 export type DatabaseTypeDisplayHints = {
-  /** Appwrite SDK `database.type` (tablesdb, documentsdb, vectorsdb, legacy). */
+  /**
+   * Appwrite SDK `database.type`: product API (`tablesdb` / `documentsdb` /
+   * `vectorsdb` / `legacy`) or native engine (`mysql` / `postgresql` /
+   * `mongodb`).
+   */
   apiType?: string | null
   /** Dedicated / native engine (postgresql, mysql, mongodb). */
   engine?: string | null
   /**
-   * Appwrite SDK `database.product` or dedicated `api`
-   * (nativedb, tablesdb, documentsdb, vectorsdb).
+   * Dedicated `api` (or legacy `product`): product API name, engine name for
+   * native DBs, or historical `nativedb`.
    */
   product?: string | null
 }
@@ -31,7 +38,7 @@ function normalizeKey(value: string | null | undefined): string {
 }
 
 function isNativeProduct(product: string): boolean {
-  return product === 'nativedb' || product === String(DatabaseProduct.Nativedb)
+  return isNativeDatabaseTypeValue(product)
 }
 
 function resolveAppwriteProductType(
@@ -79,13 +86,17 @@ export function resolveDatabaseTypeDisplay(
 ): { mode: 'product' | 'engine'; key: string; label: string } {
   const apiType = normalizeKey(hints.apiType)
   const product = normalizeKey(hints.product)
-  const engineLabel = getDatabaseEngineDisplayLabel(hints.engine)
+  const engineFromHints = hints.engine ?? (isNativeDatabaseTypeValue(apiType) ? hints.apiType : null)
+  const engineLabel = getDatabaseEngineDisplayLabel(engineFromHints)
 
   if (isNativeProduct(product)) {
     return {
       mode: 'engine',
-      key: normalizeKey(hints.engine) || 'postgres',
-      label: engineLabel ?? 'PostgreSQL',
+      key: normalizeKey(engineFromHints) || normalizeKey(product) || 'postgres',
+      label:
+        engineLabel ??
+        getDatabaseEngineDisplayLabel(product) ??
+        'PostgreSQL',
     }
   }
 
@@ -98,11 +109,11 @@ export function resolveDatabaseTypeDisplay(
     }
   }
 
-  // No product type: native engines still win over a bare legacy label.
+  // Unified `type` (or dedicated `api`) can itself be a native engine name.
   if (engineLabel) {
     return {
       mode: 'engine',
-      key: normalizeKey(hints.engine),
+      key: normalizeKey(engineFromHints),
       label: engineLabel,
     }
   }

@@ -13,17 +13,8 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import {
-  Query,
-  ID,
-  DatabaseType,
-  DocumentsDBIndexType,
-  TablesDBIndexType,
-  VectorsDBIndexType,
-  OrderBy,
-  RelationshipType,
-  RelationMutate,
-} from '@appwrite.io/console'
+import { Query, ID, DocumentsDBIndexType, TablesDBIndexType, VectorsDBIndexType, OrderBy, RelationshipType, RelationMutate } from '@appwrite.io/console'
+import { DatabaseType, coerceDatabaseType } from '@/lib/databases/database-type'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -305,7 +296,7 @@ function buildProjectDatabaseDetail(db: Models.Database) {
     hasBackupPolicy,
     backupPolicy,
     backupPolicyCount,
-    databaseType: db.type,
+    databaseType: coerceDatabaseType(db.type),
   }
 }
 
@@ -500,7 +491,7 @@ export async function getDatabaseModel(
     })
     if (value?.type) {
       databaseTypeCache.set(key, {
-        value: value.type,
+        value: coerceDatabaseType(value.type),
         expiresAt: Date.now() + DEFAULT_STALE_TIME,
       })
     }
@@ -510,7 +501,7 @@ export async function getDatabaseModel(
   }
 }
 
-function databaseTypeRank(type: DatabaseType | undefined): number {
+function databaseTypeRank(type: string | undefined): number {
   switch (type) {
     case DatabaseType.Documentsdb:
       return 0
@@ -525,12 +516,12 @@ function databaseTypeRank(type: DatabaseType | undefined): number {
 
 function normalizeProductDatabase(
   db: Models.Database,
-  sourceType: DatabaseType,
+  sourceType: DatabaseType | string,
 ): Models.Database {
   return {
     ...db,
     // The probing API is authoritative; `type` on the payload is unreliable.
-    type: sourceType,
+    type: String(sourceType),
   }
 }
 
@@ -1352,13 +1343,13 @@ export async function createNativeDatabase(
   const haReplicaCount = Math.max(0, data.haReplicaCount ?? 0)
   const pitrEnabled = data.pitrEnabled === true
 
+  // Omit `api` for native (raw) databases; the API sets api from the engine.
   return await dedicatedEngineService(projectSdk, data.engine).create({
     databaseId,
     name: data.name.trim(),
     specification: data.specification.trim(),
     replicas: haReplicaCount,
     pitr: pitrEnabled,
-    api: 'nativedb',
   })
 }
 
@@ -3551,7 +3542,7 @@ function mapProjectDatabaseListItems(
       hasBackupPolicy,
       backupPolicy,
       backupPolicyCount,
-      databaseType: db.type,
+      databaseType: coerceDatabaseType(db.type),
     } as Database & {
       enabled: boolean
       createdAt: string

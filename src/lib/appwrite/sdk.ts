@@ -45,6 +45,7 @@ import {
   Usage,
   Webhooks,
   Notifications,
+  Waf,
 } from '@appwrite.io/console'
 import {
   getDebugEndpointBaseUrl,
@@ -488,6 +489,7 @@ const sdkForProjectRaw = {
   tablesDB: new TablesDB(clientProject),
   documentsDB: new DocumentsDB(clientProject),
   vectorsDB: new VectorsDB(clientProject),
+  waf: new Waf(clientProject),
   console: new Console(clientProject), // suggestions API, unified database list
   usage: new Usage(clientProject),
   webhooks: new Webhooks(clientProject),

@@ -1,4 +1,4 @@
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 import { postgresDatabaseHome } from '@/lib/postgres-database-routes'
 
@@ -39,10 +39,17 @@ export function isProductDatabaseTypeEnabled(
 }
 
 export function databaseRouteKindFromApiType(
-  type: DatabaseType | undefined,
+  type: DatabaseType | string | undefined,
 ): DatabaseRouteKind {
-  if (type === DatabaseType.Documentsdb) return 'documentsdb'
-  if (type === DatabaseType.Vectorsdb) return 'vectorsdb'
+  const key = String(type ?? '')
+    .trim()
+    .toLowerCase()
+  if (key === DatabaseType.Documentsdb || key === 'documentsdb') {
+    return 'documentsdb'
+  }
+  if (key === DatabaseType.Vectorsdb || key === 'vectorsdb') {
+    return 'vectorsdb'
+  }
   return 'tablesdb'
 }
 
@@ -219,7 +226,10 @@ export function isProductOwnedDedicatedDatabase(
   return dedicatedApiToRouteKind(db.api ?? '') !== null
 }
 
-/** Native dedicated databases (`api` = nativedb or unset), not product-backed. */
+/**
+ * Native dedicated databases (`api` is an engine name, historical `nativedb`,
+ * or unset), not product-backed.
+ */
 export function isNativeDedicatedDatabase(
   db: Pick<DedicatedDatabaseLinkInput, 'api'>,
 ): boolean {

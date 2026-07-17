@@ -1,4 +1,5 @@
-import { DatabaseType, Query } from '@appwrite.io/console'
+import { Query } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   databaseRouteKindFromApiType,

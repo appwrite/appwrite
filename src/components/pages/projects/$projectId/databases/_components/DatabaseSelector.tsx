@@ -38,6 +38,10 @@ import {
   databaseQueryOptions,
 } from '@/lib/react-query/hooks'
 import type { DatabaseSwitcherSelection } from '@/lib/databases/navigate-to-database-switcher'
+import {
+  engineFromDatabaseTypeValue,
+  productFromDatabaseTypeValue,
+} from '@/lib/databases/database-type'
 import { SERVERLESS_DATABASE_SPEC_ID } from '@/lib/database-specs'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n/translate'
@@ -212,8 +216,14 @@ export function DatabaseSelector({
         name:
           db.$id === value && selectedName ? selectedName : db.name,
         apiType: db.type,
-        engine: db.engine ?? dedicated?.engine ?? null,
-        product: db.product ?? dedicated?.api ?? null,
+        engine:
+          engineFromDatabaseTypeValue(db.type) ??
+          dedicated?.engine ??
+          null,
+        product:
+          productFromDatabaseTypeValue(db.type) ??
+          dedicated?.api ??
+          null,
         specSlug: dedicated?.specSlug ?? SERVERLESS_DATABASE_SPEC_ID,
         status: dedicated?.status ?? db.status ?? null,
       }

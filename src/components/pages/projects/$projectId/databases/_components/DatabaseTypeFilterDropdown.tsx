@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react'
-import { DatabaseType } from '@appwrite.io/console'
+import { DatabaseType } from '@/lib/databases/database-type'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

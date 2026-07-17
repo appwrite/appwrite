@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react'
-import { DatabaseType as ApiDatabaseType } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import { Button } from '@/components/ui/button'
 import {
   useProjectDatabase,

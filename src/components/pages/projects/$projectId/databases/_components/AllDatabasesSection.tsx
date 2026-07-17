@@ -8,10 +8,8 @@ import {
   useDedicatedDatabaseCardMetrics,
   dedicatedBackupPoliciesQueryOptions,
 } from '@/lib/react-query/hooks'
-import {
-  DatabaseType as ApiDatabaseType,
-  type Models,
-} from '@appwrite.io/console'
+import { type Models } from '@appwrite.io/console'
+import { DatabaseType as ApiDatabaseType } from '@/lib/databases/database-type'
 import {
   dedicatedDatabaseHomeLink,
   isNativeDedicatedDatabase,

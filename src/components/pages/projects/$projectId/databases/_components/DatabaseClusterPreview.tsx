@@ -88,7 +88,8 @@ export function resolveClusterProxyLabel(options: {
   /** Dedicated engine id, e.g. `postgres`, `postgresql`, `mysql`. */
   engine?: string | null
   /**
-   * Dedicated `api` field (`tablesdb` / `documentsdb` / `vectorsdb` / `nativedb`).
+   * Dedicated `api` field (`tablesdb` / `documentsdb` / `vectorsdb`, or an
+   * engine name for native databases).
    * Product-owned APIs hide vendor proxy names automatically.
    */
   api?: string | null
