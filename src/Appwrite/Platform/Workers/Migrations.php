@@ -601,6 +601,9 @@ class Migrations extends Action
                 $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
             }
 
+            $destination->success();
+            $source->success();
+
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
@@ -701,8 +704,6 @@ class Migrations extends Action
                             ...$this->resolveResourceIds($migration),
                         );
                     }
-                    $destination?->success();
-                    $source?->success();
                 }
             } finally {
                 $source?->cleanup();
