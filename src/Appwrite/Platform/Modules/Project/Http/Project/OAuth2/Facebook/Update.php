@@ -35,7 +35,7 @@ class Update extends Base
 
     public static function getClientIdParamName(): string
     {
-        return 'Client ID';
+        return 'appId';
     }
 
     public static function getClientSecretParamName(): string
