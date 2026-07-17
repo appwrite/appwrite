@@ -27,7 +27,10 @@ import {
   isFullCalendarDayRange,
   resolveUsageDateBounds,
 } from '@/lib/usage/usage-date-range'
-import { OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT } from '@/lib/usage/breakdown-limits'
+import {
+  OVERVIEW_ENDPOINT_BREAKDOWN_LIMIT,
+  USAGE_API_MAX_LIMIT,
+} from '@/lib/usage/breakdown-limits'
 import { areUsageBreakdownQueriesEnabled } from '@/lib/debug-overrides'
 import { isUsageProjectResourceType } from '@/lib/usage/usage-resource-filters'
 
@@ -337,6 +340,18 @@ export function resolveOverviewUsagePeriod(
   return { from, to, previousFrom, previousTo, interval, comparisonMode }
 }
 
+/**
+ * First half of a filled series. Used when the prior window falls outside log
+ * retention so change % compares the second half to this slice instead of
+ * issuing a second API request for the same buckets.
+ */
+export function getUsageChartFirstHalfPoints(
+  chartPoints: UsageChartPoint[],
+): UsageChartPoint[] {
+  const midIndex = Math.ceil(chartPoints.length / 2)
+  return chartPoints.slice(0, midIndex)
+}
+
 export function sumUsageChartPointsForComparison(
   chartPoints: UsageChartPoint[],
   comparisonMode: UsagePeriodComparisonMode,
@@ -602,28 +617,33 @@ export async function fetchUsageMetricsChartSeriesByMetric(
     previousFrom,
     previousTo,
     interval: resolvedInterval,
+    comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
-  const [currentByMetric, previousByMetric] = await Promise.all([
-    listUsageEventGroupsByMetric(projectId, {
-      metrics,
-      interval: resolvedInterval,
-      startAt: from.toISOString(),
-      endAt: to.toISOString(),
-      queries,
-      resourceId,
-      resourceType,
-    }),
-    listUsageEventGroupsByMetric(projectId, {
-      metrics,
-      interval: resolvedInterval,
-      startAt: previousFrom.toISOString(),
-      endAt: previousTo.toISOString(),
-      queries,
-      resourceId,
-      resourceType,
-    }),
-  ])
+  const currentByMetric = await listUsageEventGroupsByMetric(projectId, {
+    metrics,
+    interval: resolvedInterval,
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+    queries,
+    resourceId,
+    resourceType,
+  })
+
+  // First-half comparison reuses the current series; a second fetch would
+  // request the same buckets we already have.
+  const previousByMetric =
+    comparisonMode === 'prior_window'
+      ? await listUsageEventGroupsByMetric(projectId, {
+          metrics,
+          interval: resolvedInterval,
+          startAt: previousFrom.toISOString(),
+          endAt: previousTo.toISOString(),
+          queries,
+          resourceId,
+          resourceType,
+        })
+      : null
 
   const result = new Map<
     string,
@@ -632,20 +652,24 @@ export async function fetchUsageMetricsChartSeriesByMetric(
 
   for (const metric of metrics) {
     const currentMerged = mergeValuesByTime(currentByMetric.get(metric) ?? [])
-    const previousMerged = mergeValuesByTime(previousByMetric.get(metric) ?? [])
+    const chartPoints = fillChartPointsGaps(
+      currentMerged,
+      from,
+      to,
+      resolvedInterval,
+    )
+    const previousChartPoints =
+      comparisonMode === 'first_half'
+        ? getUsageChartFirstHalfPoints(chartPoints)
+        : fillChartPointsGaps(
+            mergeValuesByTime(previousByMetric?.get(metric) ?? []),
+            previousFrom,
+            previousTo,
+            resolvedInterval,
+          )
     result.set(metric, {
-      chartPoints: fillChartPointsGaps(
-        currentMerged,
-        from,
-        to,
-        resolvedInterval,
-      ),
-      previousChartPoints: fillChartPointsGaps(
-        previousMerged,
-        previousFrom,
-        previousTo,
-        resolvedInterval,
-      ),
+      chartPoints,
+      previousChartPoints,
     })
   }
 
@@ -974,11 +998,15 @@ async function listUsageEventGroupsByMetric(
     dimensions?: string[]
     queries?: string[]
     orderDir?: string
+    limit?: number
   } = {
     metrics: [...params.metrics],
     startAt: params.startAt,
     endAt: params.endAt,
     orderDir: 'asc',
+    // Without an explicit limit, the API default truncates long 1h series
+    // (oldest buckets only when orderDir is asc), leaving the chart zero-filled.
+    limit: USAGE_API_MAX_LIMIT,
   }
 
   if (params.interval) {
@@ -1067,35 +1095,38 @@ export async function fetchProjectUsageChartOverview(
     comparisonMode,
   } = resolveOverviewUsagePeriod(dateRange, interval, logRetentionHours)
 
-  const [currentGroups, previousGroups] = await Promise.all([
-    listUsageEventGroupsForMetrics(projectId, metrics, {
-      interval: resolvedInterval,
-      startAt: from.toISOString(),
-      endAt: to.toISOString(),
-      queries,
-    }),
-    listUsageEventGroupsForMetrics(projectId, metrics, {
-      interval: resolvedInterval,
-      startAt: previousFrom.toISOString(),
-      endAt: previousTo.toISOString(),
-      queries,
-    }),
-  ])
+  const currentGroups = await listUsageEventGroupsForMetrics(projectId, metrics, {
+    interval: resolvedInterval,
+    startAt: from.toISOString(),
+    endAt: to.toISOString(),
+    queries,
+  })
 
-  const currentMerged = mergeValuesByTime(currentGroups)
-  const previousMerged = mergeValuesByTime(previousGroups)
+  const previousGroups =
+    comparisonMode === 'prior_window'
+      ? await listUsageEventGroupsForMetrics(projectId, metrics, {
+          interval: resolvedInterval,
+          startAt: previousFrom.toISOString(),
+          endAt: previousTo.toISOString(),
+          queries,
+        })
+      : []
+
   const chartPoints = fillChartPointsGaps(
-    currentMerged,
+    mergeValuesByTime(currentGroups),
     from,
     to,
     resolvedInterval,
   )
-  const previousChartPoints = fillChartPointsGaps(
-    previousMerged,
-    previousFrom,
-    previousTo,
-    resolvedInterval,
-  )
+  const previousChartPoints =
+    comparisonMode === 'first_half'
+      ? getUsageChartFirstHalfPoints(chartPoints)
+      : fillChartPointsGaps(
+          mergeValuesByTime(previousGroups),
+          previousFrom,
+          previousTo,
+          resolvedInterval,
+        )
 
   return {
     changePercent: computeChangePercent(
