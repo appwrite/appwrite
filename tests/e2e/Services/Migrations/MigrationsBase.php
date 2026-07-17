@@ -3496,8 +3496,10 @@ trait MigrationsBase
 
     /**
      * Import documents from a CSV file.
+     *
+     * @return array{databaseId: string, tableId: string, migrationId: string}
      */
-    public function testCreateCSVImport(): void
+    public function testCreateCSVImport(): array
     {
         // Make a database
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -3799,6 +3801,76 @@ trait MigrationsBase
             $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
             $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
         }, 10_000, 500);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $tableId,
+            'migrationId' => $migration['body']['$id'],
+        ];
+    }
+
+    /**
+     * @param array{databaseId: string, tableId: string, migrationId: string} $data
+     */
+    #[Depends('testCreateCSVImport')]
+    public function testListMigrationsByDatabaseResource(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $query = Query::or([
+            Query::and([
+                Query::equal('resourceId', [$databaseId]),
+                Query::equal('resourceType', [Resource::TYPE_DATABASE]),
+            ]),
+            Query::and([
+                Query::equal('parentResourceId', [$databaseId]),
+                Query::equal('parentResourceType', [Resource::TYPE_DATABASE]),
+            ]),
+            Query::and([
+                Query::equal('destinationResourceId', [$databaseId]),
+                Query::equal('destinationResourceType', [Resource::TYPE_DATABASE]),
+            ]),
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/migrations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                $query->toString(),
+                Query::limit(100)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($data['migrationId'], array_column($response['body']['migrations'], '$id'));
+
+        $migration = null;
+        foreach ($response['body']['migrations'] as $candidate) {
+            if ($candidate['$id'] === $data['migrationId']) {
+                $migration = $candidate;
+                break;
+            }
+        }
+
+        $this->assertNotNull($migration);
+        $this->assertSame($data['tableId'], $migration['resourceId']);
+        $this->assertSame($databaseId, $migration['parentResourceId']);
+        $this->assertSame(Resource::TYPE_DATABASE, $migration['parentResourceType']);
+        $this->assertSame($databaseId, $migration['destinationResourceId']);
+        $this->assertSame(Resource::TYPE_DATABASE, $migration['destinationResourceType']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/migrations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('destinationResourceId', [$databaseId])->toString(),
+                Query::equal('destinationResourceType', [Resource::TYPE_DATABASE])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertContains($data['migrationId'], array_column($response['body']['migrations'], '$id'));
     }
 
     /**

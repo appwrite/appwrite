@@ -22,6 +22,8 @@ final class V27Test extends TestCase
             'parentResourceId' => 'database',
             'parentResourceInternalId' => '10',
             'parentResourceType' => 'database',
+            'destinationResourceId' => 'destination',
+            'destinationResourceType' => 'database',
         ], Response::MODEL_MIGRATION);
 
         $this->assertSame([
@@ -43,6 +45,8 @@ final class V27Test extends TestCase
             'parentResourceId' => '',
             'parentResourceInternalId' => '',
             'parentResourceType' => '',
+            'destinationResourceId' => '',
+            'destinationResourceType' => '',
         ], Response::MODEL_MIGRATION);
 
         $this->assertSame([
@@ -64,6 +68,8 @@ final class V27Test extends TestCase
                 'resourceType' => 'collection',
                 'parentResourceId' => 'database',
                 'parentResourceType' => 'database',
+                'destinationResourceId' => 'destination',
+                'destinationResourceType' => 'database',
             ]],
         ], Response::MODEL_MIGRATION_LIST);
 

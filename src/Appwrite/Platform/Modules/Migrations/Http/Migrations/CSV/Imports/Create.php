@@ -196,6 +196,8 @@ class Create extends Action
             'parentResourceId' => $database->getId(),
             'parentResourceInternalId' => $database->getSequence(),
             'parentResourceType' => $parentResourceType,
+            'destinationResourceId' => $database->getId(),
+            'destinationResourceType' => $parentResourceType,
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],

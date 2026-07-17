@@ -102,6 +102,20 @@ class Migration extends Model
                 'example' => 'database',
                 'array' => false
             ])
+            ->addRule('destinationResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the destination resource created or overwritten by the migration.',
+                'default' => '',
+                'example' => 'databaseId',
+                'array' => false
+            ])
+            ->addRule('destinationResourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of the destination resource created or overwritten by the migration.',
+                'default' => '',
+                'example' => 'database',
+                'array' => false
+            ])
             ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
                 'description' => 'A group of counters that represent the total progress of the migration.',

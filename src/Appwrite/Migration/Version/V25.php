@@ -42,6 +42,8 @@ class V25 extends Migration
             'parentResourceId',
             'parentResourceInternalId',
             'parentResourceType',
+            'destinationResourceId',
+            'destinationResourceType',
         ];
         try {
             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -55,6 +57,8 @@ class V25 extends Migration
             '_key_parentResourceId',
             '_key_parentResourceType',
             '_key_parentResourceInternalId',
+            '_key_destinationResourceId',
+            '_key_destinationResourceType',
         ];
         foreach ($indexes as $index) {
             try {
