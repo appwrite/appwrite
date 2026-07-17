@@ -194,8 +194,6 @@ class Gitlab extends OAuth2
             $repository['pushed_at'] = $repository['last_activity_at'];
         }
 
-        // Validation errors nest per-field messages instead of GitHub/Gitea's plain
-        // string, which Create.php string-concatenates as-is.
         if (isset($repository['message']) && !\is_string($repository['message'])) {
             $repository['message'] = \json_encode($repository['message']);
         }
