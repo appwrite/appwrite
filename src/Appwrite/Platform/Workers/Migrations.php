@@ -904,7 +904,8 @@ class Migrations extends Action
             return new Document([]);
         }
 
-        if (!\is_int($userInternalId) || $userInternalId < 1) {
+        $valid = \is_string($userInternalId) || (\is_int($userInternalId) && $userInternalId > 0);
+        if (!$valid) {
             $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
             Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
             $this->reportError($error, $migration);
