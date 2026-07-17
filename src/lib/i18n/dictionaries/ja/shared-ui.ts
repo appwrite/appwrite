@@ -197,6 +197,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No files match your search': '検索条件に一致するファイルがありません',
   'No functions found': '関数が見つかりません',
   'No functions found.': '関数が見つかりません。',
+  'No sites found': 'サイトが見つかりません',
   'No items found': 'アイテムが見つかりません',
   'No items match your criteria.': '条件に一致するアイテムがありません。',
   'No items yet': 'アイテムはまだありません',

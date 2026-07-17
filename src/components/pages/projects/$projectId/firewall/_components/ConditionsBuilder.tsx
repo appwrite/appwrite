@@ -1,0 +1,432 @@
+import { useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
+import {
+  Fingerprint,
+  Globe2,
+  Plus,
+  Route,
+  Send,
+  Trash2,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react'
+import {
+  FIREWALL_CONDITION_ATTRIBUTES,
+  FIREWALL_HTTP_METHODS,
+  createEmptyConditionDraft,
+  getOperatorsForAttribute,
+  isOperatorAllowedForAttribute,
+  type FirewallConditionAttribute,
+  type FirewallConditionDraft,
+  type FirewallConditionOperator,
+  type FirewallResourceType,
+} from '@/lib/firewall/conditions'
+import {
+  FIREWALL_CREATABLE_ACTIONS,
+  getFirewallActionLabel,
+  type FirewallCreatableAction,
+} from '@/lib/firewall/actions'
+import { useCountries } from '@/lib/react-query/hooks'
+import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n/translate'
+import type { ReactNode } from 'react'
+
+const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
+  ip: Fingerprint,
+  path: Route,
+  method: Send,
+  country: Globe2,
+  userAgent: UserRound,
+}
+
+/** Examples only. Never use bare `/` — it looks like a real value when the field is empty. */
+const PATH_PLACEHOLDERS: Record<FirewallResourceType, string> = {
+  api: 'e.g. /v1/account',
+  functions: 'e.g. /api',
+  sites: 'e.g. /about',
+}
+
+interface ConditionsBuilderProps {
+  conditions: FirewallConditionDraft[]
+  onChange: (
+    next:
+      | FirewallConditionDraft[]
+      | ((prev: FirewallConditionDraft[]) => FirewallConditionDraft[]),
+  ) => void
+  disabled?: boolean
+  resourceType?: FirewallResourceType
+  /** When set, renders the Vercel-style Then action row. */
+  action?: FirewallCreatableAction
+  onActionChange?: (action: FirewallCreatableAction) => void
+  /** When true, shows the Then action but does not allow changing it. */
+  actionReadOnly?: boolean
+  /** Extra fields under the Then action (rate limit / redirect). */
+  actionExtras?: ReactNode
+  className?: string
+}
+
+function RailLabel({ children }: { children: ReactNode }) {
+  return (
+    <span className="relative z-10 bg-card px-1.5 text-[13px] font-semibold leading-none text-foreground">
+      {children}
+    </span>
+  )
+}
+
+function ConditionValueInput({
+  attribute,
+  value,
+  disabled,
+  pathPlaceholder,
+  onChange,
+}: {
+  attribute: FirewallConditionAttribute
+  value: string
+  disabled?: boolean
+  pathPlaceholder: string
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  const { data: countriesData, isLoading: countriesLoading } = useCountries()
+
+  const countryItems = useMemo(
+    () =>
+      (countriesData?.countries ?? []).map((country) => {
+        const code = country.code.toLowerCase()
+        return {
+          value: code,
+          label: country.name,
+          description: code,
+          inlineDescription: true,
+          searchText: `${country.name} ${code} ${country.code}`,
+        }
+      }),
+    [countriesData?.countries],
+  )
+
+  switch (attribute) {
+    case 'method':
+      return (
+        <Select
+          value={value || undefined}
+          disabled={disabled}
+          onValueChange={onChange}
+        >
+          <SelectTrigger className="h-9 w-full">
+            <SelectValue placeholder={t('Select method')} />
+          </SelectTrigger>
+          <SelectContent>
+            {FIREWALL_HTTP_METHODS.map((method) => (
+              <SelectItem key={method} value={method}>
+                {method}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )
+
+    case 'country':
+      return (
+        <SearchableSelect
+          value={value.toLowerCase()}
+          onValueChange={onChange}
+          items={countryItems}
+          placeholder={t('Select a country')}
+          searchPlaceholder={t('Search countries...')}
+          emptyMessage={t('No country found.')}
+          disabled={disabled}
+          isFetching={countriesLoading}
+          triggerClassName="h-9 w-full"
+        />
+      )
+
+    case 'path':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={pathPlaceholder}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'ip':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder="203.0.113.10"
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    case 'userAgent':
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('e.g. curl/8.0')}
+          className="h-9 w-full font-mono text-[13px]"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+
+    default:
+      return (
+        <Input
+          value={value}
+          disabled={disabled}
+          placeholder={t('Value')}
+          className="h-9 w-full"
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )
+  }
+}
+
+export function ConditionsBuilder({
+  conditions,
+  onChange,
+  disabled,
+  resourceType = 'api',
+  action,
+  onActionChange,
+  actionReadOnly = false,
+  actionExtras,
+  className,
+}: ConditionsBuilderProps) {
+  const t = useT()
+  const showThen =
+    action != null && (onActionChange != null || actionReadOnly)
+  const pathPlaceholder = PATH_PLACEHOLDERS[resourceType] ?? 'e.g. /v1/account'
+
+  const updateAt = (index: number, patch: Partial<FirewallConditionDraft>) => {
+    // Functional update so rapid typing never applies against a stale conditions array.
+    onChange((prev) =>
+      prev.map((condition, i) =>
+        i === index ? { ...condition, ...patch } : condition,
+      ),
+    )
+  }
+
+  const setAttribute = (
+    index: number,
+    attribute: FirewallConditionAttribute,
+  ) => {
+    onChange((prev) =>
+      prev.map((condition, i) => {
+        if (i !== index) return condition
+        const nextOperator = isOperatorAllowedForAttribute(
+          attribute,
+          condition.operator,
+        )
+          ? condition.operator
+          : ('equal' as FirewallConditionOperator)
+        return {
+          ...condition,
+          attribute,
+          operator: nextOperator,
+          // Clear value when switching attribute; method/country need discrete picks.
+          value: '',
+        }
+      }),
+    )
+  }
+
+  const removeAt = (index: number) => {
+    onChange((prev) => {
+      if (prev.length <= 1) {
+        return [createEmptyConditionDraft()]
+      }
+      return prev.filter((_, i) => i !== index)
+    })
+  }
+
+  const addCondition = () => {
+    onChange((prev) => [...prev, createEmptyConditionDraft()])
+  }
+
+  return (
+    <div
+      className={cn(
+        'overflow-hidden rounded-xl border border-border bg-card',
+        className,
+      )}
+    >
+      <div className="border-b border-border px-5 py-3.5">
+        <h3 className="text-[14px] font-semibold text-foreground">
+          {t('Configure')}
+        </h3>
+      </div>
+
+      <div className="relative px-5 py-5">
+        <div className="relative grid grid-cols-[3rem_minmax(0,1fr)] gap-x-3 gap-y-3">
+          {/* Rail centered in the label column; labels/+ sit above it with opaque bg */}
+          <div
+            className="pointer-events-none absolute inset-y-0 start-0 w-12"
+            aria-hidden
+          >
+            <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border" />
+          </div>
+          {conditions.map((condition, index) => {
+            const AttributeIcon =
+              ATTRIBUTE_ICONS[condition.attribute] ?? Route
+            const operators = getOperatorsForAttribute(condition.attribute)
+            return (
+              <div key={condition.id} className="contents">
+                <div className="relative z-10 flex items-center justify-center self-center">
+                  <RailLabel>{index === 0 ? t('If') : t('And')}</RailLabel>
+                </div>
+                <div className="rounded-xl border border-border bg-background p-2.5">
+                  <div className="flex items-start gap-2">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Select
+                          value={condition.attribute}
+                          disabled={disabled}
+                          onValueChange={(value) =>
+                            setAttribute(
+                              index,
+                              value as FirewallConditionAttribute,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-9 min-w-0 flex-1">
+                            <span className="flex min-w-0 items-center gap-2">
+                              <AttributeIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              <SelectValue />
+                            </span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FIREWALL_CONDITION_ATTRIBUTES.map((attr) => (
+                              <SelectItem key={attr.value} value={attr.value}>
+                                {t(attr.label)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={condition.operator}
+                          disabled={disabled}
+                          onValueChange={(value) =>
+                            updateAt(index, {
+                              operator: value as FirewallConditionOperator,
+                            })
+                          }
+                        >
+                          <SelectTrigger className="h-9 w-[9.5rem] shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {operators.map((op) => (
+                              <SelectItem key={op.value} value={op.value}>
+                                {t(op.label)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <ConditionValueInput
+                        attribute={condition.attribute}
+                        value={condition.value}
+                        disabled={disabled}
+                        pathPlaceholder={pathPlaceholder}
+                        onChange={(nextValue) =>
+                          updateAt(index, { value: nextValue })
+                        }
+                      />
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 self-center text-muted-foreground hover:text-foreground"
+                      disabled={disabled}
+                      onClick={() => removeAt(index)}
+                      aria-label={t('Remove condition')}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          <div className="relative z-10 flex items-center justify-center self-center">
+            {/* Opaque pad so the rail does not pass through the button */}
+            <span className="bg-card p-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 rounded-md border-border bg-card text-muted-foreground hover:bg-card hover:text-foreground"
+                disabled={disabled}
+                onClick={addCondition}
+                aria-label={t('Add condition')}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </span>
+          </div>
+          <div aria-hidden />
+
+          {showThen ? (
+            <>
+              <div className="relative z-10 flex justify-center self-start pt-2.5">
+                <RailLabel>{t('Then')}</RailLabel>
+              </div>
+              <div className="space-y-3 rounded-xl border border-border bg-background p-2.5">
+                {actionReadOnly ? (
+                  <Input
+                    value={t(getFirewallActionLabel(String(action)))}
+                    disabled
+                    className="h-9 w-full sm:max-w-xs"
+                  />
+                ) : (
+                  <Select
+                    value={action}
+                    disabled={disabled || !onActionChange}
+                    onValueChange={(value) =>
+                      onActionChange?.(value as FirewallCreatableAction)
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-full sm:max-w-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FIREWALL_CREATABLE_ACTIONS.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {t(getFirewallActionLabel(item))}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {actionExtras ? (
+                  <div className="border-t border-border pt-3">
+                    {actionExtras}
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}

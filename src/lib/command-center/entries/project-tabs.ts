@@ -343,8 +343,21 @@ const PROJECT_TABS: CommandEntry[] = [
     label: 'Security · Firewall rules',
     description: 'IP allow/block lists and request rules',
     icon: Shield,
-    keywords: ['firewall', 'rules', 'ip', 'allowlist'],
+    keywords: ['firewall', 'rules', 'ip', 'allowlist', 'deny', 'rate limit'],
+    available: (ctx) => Boolean(ctx.features.firewall),
     to: (ctx) => `/projects/${ctx.projectId}/firewall`,
+  },
+  {
+    id: 'project.create.firewall-rule',
+    scopes: ['project'],
+    kind: 'create',
+    group: 'Security',
+    label: 'Create firewall rule',
+    description: 'Add a Firewall rule for this project',
+    icon: Shield,
+    keywords: ['firewall', 'create', 'rule', 'deny', 'rate limit'],
+    available: (ctx) => Boolean(ctx.features.firewall),
+    to: (ctx) => `/projects/${ctx.projectId}/firewall/create`,
   },
 ]
 

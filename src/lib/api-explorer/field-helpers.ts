@@ -41,6 +41,7 @@ const RESOURCE_ID_PARAM_NAMES: Record<string, ResourceIdType> = {
   key: 'column',
   indexid: 'index',
   functionid: 'function',
+  siteid: 'site',
   teamid: 'team',
   userid: 'user',
   topicid: 'topic',

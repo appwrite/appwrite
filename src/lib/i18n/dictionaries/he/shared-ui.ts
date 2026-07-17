@@ -345,6 +345,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No files match your search': 'אין קבצים התואמים את החיפוש',
   'No functions found': 'לא נמצאו פונקציות',
   'No functions found.': 'לא נמצאו פונקציות.',
+  'No sites found': 'לא נמצאו אתרים',
   'No items found': 'לא נמצאו פריטים',
   'No items match your criteria.': 'אין פריטים התואמים את הקריטריונים.',
   'No items yet': 'אין פריטים עדיין',

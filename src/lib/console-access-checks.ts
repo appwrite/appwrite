@@ -258,6 +258,8 @@ export function canSeeProjectNavItem(
     case 'realtime':
     case 'analytics':
       return access.canSeeProjects
+    case 'firewall':
+      return access.canSeeProjects
     default:
       return true
   }

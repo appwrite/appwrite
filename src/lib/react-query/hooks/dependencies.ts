@@ -13,6 +13,8 @@ export const Dependencies = {
   DOMAINS: ['proxy-rules', 'domains'],
   WEBHOOKS: ['webhooks'],
   WEBHOOK: ['webhook'],
+  FIREWALL_RULES: ['firewall-rules'],
+  FIREWALL_RULE: ['firewall-rule'],
   MIGRATIONS: ['migrations'],
   PROJECT: ['project'],
   FUNCTIONS: ['functions'],
