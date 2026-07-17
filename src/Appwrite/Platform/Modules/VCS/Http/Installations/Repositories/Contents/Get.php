@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\InstallationTokens;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
@@ -51,6 +52,7 @@ class Get extends Action
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to get contents of nested directory', true)
             ->param('providerReference', '', new Text(256, 0), 'Git reference (branch, tag, commit) to get contents from', true)
             ->inject('vcsFactory')
+            ->inject('installationTokens')
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
@@ -62,6 +64,7 @@ class Get extends Action
         string $providerRootDirectory,
         string $providerReference,
         VcsFactory $vcsFactory,
+        InstallationTokens $installationTokens,
         Response $response,
         Database $dbForPlatform
     ) {
@@ -71,6 +74,7 @@ class Get extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform);
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $vcs = $vcsFactory->fromInstallation($installation);
 

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\Installations\Repositories;
 
 use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
+use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -136,7 +137,7 @@ class Create extends Action
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     }
 
-    protected function createOAuth2(string $provider): OAuth2Github|OAuth2Gitea
+    protected function createOAuth2(string $provider): OAuth2Github|OAuth2Gitea|OAuth2Gitlab
     {
         if ($provider === 'github') {
             return new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
@@ -147,6 +148,13 @@ class Create extends Action
             $oauth2->setEndpoint(System::getEnv('_APP_VCS_GITEA_ENDPOINT', ''));
 
             return $oauth2;
+        }
+
+        if ($provider === 'gitlab') {
+            return new OAuth2Gitlab(System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''), \json_encode([
+                'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+                'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
+            ]), "");
         }
 
         throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported VCS provider: ' . $provider);

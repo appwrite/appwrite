@@ -3,13 +3,45 @@
 namespace Appwrite\Vcs;
 
 use Appwrite\Auth\OAuth2;
+use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
+use Appwrite\Auth\OAuth2\Github as OAuth2Github;
+use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\System\System;
 
 class InstallationTokens
 {
+    /**
+     * Refreshes an installation's token, resolving the right OAuth2 client
+     * for its provider. Centralizes the per-provider construction that used
+     * to be duplicated at every call site -- callers just pass the
+     * installation. A no-op for App-based installations (e.g. GitHub App),
+     * since those have no personalAccessTokenExpiry to begin with.
+     */
+    public function refreshForInstallation(Document $installation, Database $dbForPlatform): Document
+    {
+        $provider = $installation->getAttribute('provider', 'github');
+
+        $oauth2 = match ($provider) {
+            'github' => new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), ''),
+            'gitea' => (function () {
+                $oauth2 = new OAuth2Gitea(System::getEnv('_APP_VCS_GITEA_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITEA_CLIENT_SECRET', ''), '');
+                $oauth2->setEndpoint(System::getEnv('_APP_VCS_GITEA_ENDPOINT', ''));
+                return $oauth2;
+            })(),
+            'gitlab' => new OAuth2Gitlab(System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''), \json_encode([
+                'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+                'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
+            ]), ''),
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unsupported VCS provider: ' . $provider),
+        };
+
+        return $this->refresh($installation, $dbForPlatform, $oauth2);
+    }
+
     public function refresh(Document $installation, Database $dbForPlatform, OAuth2 $oauth2, ?Document $identity = null): Document
     {
         $accessToken = $installation->getAttribute('personalAccessToken');
