@@ -33,7 +33,11 @@ final class Pool
                 $sharedTables = \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', '')));
                 break;
             default:
-                return $projectDsn ?? '';
+                if (empty($projectDsn)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Project database DSN is required for {$type} databases");
+                }
+
+                return $projectDsn;
         }
 
         $projectUsesSharedTables = false;
