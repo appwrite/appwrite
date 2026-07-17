@@ -15,11 +15,7 @@ use Utopia\System\System;
 class InstallationTokens
 {
     /**
-     * Refreshes an installation's token, resolving the right OAuth2 client
-     * for its provider. Centralizes the per-provider construction that used
-     * to be duplicated at every call site -- callers just pass the
-     * installation. A no-op for App-based installations (e.g. GitHub App),
-     * since those have no personalAccessTokenExpiry to begin with.
+     * Refreshes an installation's token, resolving the OAuth2 client for its provider.
      */
     public function refreshForInstallation(Document $installation, Database $dbForPlatform): Document
     {

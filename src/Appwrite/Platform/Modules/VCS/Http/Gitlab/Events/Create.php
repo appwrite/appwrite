@@ -101,12 +101,8 @@ class Create extends Action
     }
 
     /**
-     * Resolves the adapter for a repository's installation, refreshing its
-     * OAuth2 token first. A null installation (not a GitLab installation) is
-     * not an error -- the caller silently skips it. A token-refresh/adapter
-     * failure, on the other hand, is pushed onto $errors so the caller can
-     * surface it instead of dropping it silently -- GitLab's webhook delivery
-     * gets a non-2xx response and the failure shows up in its redelivery log.
+     * A refresh/adapter failure is pushed onto $errors instead of swallowed, so the
+     * caller can surface a non-2xx response and GitLab logs it as a failed delivery.
      */
     private function resolveAdapterForRepository(Document $repository, VcsFactory $vcsFactory, InstallationTokens $installationTokens, Database $dbForPlatform, Authorization $authorization, array &$errors): ?Git
     {
