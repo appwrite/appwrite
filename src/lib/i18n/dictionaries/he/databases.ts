@@ -317,6 +317,23 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Database name updated successfully': 'שם מסד הנתונים עודכן בהצלחה',
   'Database not found': 'מסד הנתונים לא נמצא',
   'Database restore initiated': 'שחזור מסד הנתונים החל',
+  'Preparing database restore...': 'מכינים את שחזור מסד הנתונים...',
+  'Restoring database...': 'משחזרים את מסד הנתונים...',
+  'Database restore completed': 'שחזור מסד הנתונים הושלם',
+  'Database restore failed': 'שחזור מסד הנתונים נכשל',
+  'Preparing restore': 'מכינים שחזור',
+  'Your database restore is queued and will start shortly.':
+    'שחזור מסד הנתונים בתור ויתחיל בקרוב.',
+  'Queued': 'בתור',
+  'Restore completed': 'השחזור הושלם',
+  'Your database was restored successfully.': 'מסד הנתונים שוחזר בהצלחה.',
+  'Restore failed': 'השחזור נכשל',
+  'The database restore could not be completed. Try again or contact support.':
+    'לא ניתן היה להשלים את שחזור מסד הנתונים. נסו שוב או פנו לתמיכה.',
+  'Restoring database': 'משחזרים מסד נתונים',
+  'Restoring resources': 'משחזרים משאבים',
+  'Restoring your database from the selected backup.':
+    'משחזרים את מסד הנתונים מהגיבוי שנבחר.',
   'Database password reset': 'סיסמת מסד הנתונים אופסה',
   'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.': 'לשורות במסד הנתונים יש גודל מרבי של 64 KB. עמודות varchar משתמשות ב-4 בייטים לכל תו בתוספת תקורה קטנה. עמודות text, mediumtext ו-longtext משתמשות רק בכ-20 בייטים ללא תלות באורך התוכן.',
   'database selected': 'מסד נתונים נבחר',

@@ -6,6 +6,7 @@ import {
   useProject,
   useOrganizationScopes,
   useDedicatedDatabaseCardMetrics,
+  dedicatedBackupPoliciesQueryOptions,
 } from '@/lib/react-query/hooks'
 import {
   DatabaseType as ApiDatabaseType,
@@ -13,8 +14,10 @@ import {
 } from '@appwrite.io/console'
 import {
   dedicatedDatabaseHomeLink,
+  isNativeDedicatedDatabase,
   productDatabaseListLink,
 } from '@/lib/database-routes'
+import { useQueries } from '@tanstack/react-query'
 import { AlertCircle, Database, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
@@ -64,6 +67,30 @@ type DatabaseWithBackup = {
   databaseType?: ApiDatabaseType
 }
 
+/**
+ * Product DBs expose policies on `console.listDatabases` (`db.policies`).
+ * Native dedicated DBs store policies on the engine API instead; those are
+ * resolved separately and passed via `nativeHasBackupPolicyById`.
+ * Returns `null` while a native policy lookup is still in flight (no warning flash).
+ */
+function resolveHasBackupPolicy(
+  db: DatabaseWithBackup,
+  dedicated: Models.DedicatedDatabase | undefined,
+  nativeHasBackupPolicyById: Map<string, boolean | null>,
+): boolean | null {
+  if (dedicated && isNativeDedicatedDatabase(dedicated)) {
+    return nativeHasBackupPolicyById.get(dedicated.$id) ?? null
+  }
+  return db.hasBackupPolicy ?? false
+}
+
+function shouldShowNoBackupWarning(
+  hasBackupPolicy: boolean | null,
+  showBackups: boolean,
+): boolean {
+  return showBackups && hasBackupPolicy === false
+}
+
 type AllDatabasesSectionProps = {
   projectId: string
   viewMode: 'list' | 'grid'
@@ -108,6 +135,7 @@ function AllDatabasesGridCardShell({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
   midContent,
   connectionsLabel,
 }: {
@@ -117,6 +145,7 @@ function AllDatabasesGridCardShell({
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
   midContent: ReactNode
   connectionsLabel?: string
 }) {
@@ -148,7 +177,7 @@ function AllDatabasesGridCardShell({
               <h3 className="truncate text-[14px] font-medium text-foreground">
                 {db.name}
               </h3>
-              {showBackups && !db.hasBackupPolicy ? (
+              {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
                 <NoBackupPoliciesWarningIcon />
               ) : null}
               {db.enabled === false ? (
@@ -196,12 +225,14 @@ function AllDatabasesServerlessGridCard({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
 }: {
   projectId: string
   db: DatabaseWithBackup
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
 }) {
   return (
     <AllDatabasesGridCardShell
@@ -210,6 +241,7 @@ function AllDatabasesServerlessGridCard({
       showDbSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      hasBackupPolicy={hasBackupPolicy}
       midContent={
         <DatabaseOperationsChartPreview
           projectId={projectId}
@@ -228,6 +260,7 @@ function AllDatabasesDedicatedGridCard({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
 }: {
   projectId: string
   db: DatabaseWithBackup
@@ -235,6 +268,7 @@ function AllDatabasesDedicatedGridCard({
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
 }) {
   const t = useT()
   const replicaCount = dedicated.replicas ?? 0
@@ -244,7 +278,7 @@ function AllDatabasesDedicatedGridCard({
   )
   const { nodeMetrics, connections } = useDedicatedDatabaseCardMetrics(
     projectId,
-    db.$id,
+    dedicated.$id,
     replicaCount,
     showMonitor,
   )
@@ -257,6 +291,7 @@ function AllDatabasesDedicatedGridCard({
       showDbSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      hasBackupPolicy={hasBackupPolicy}
       midContent={
         <DatabaseClusterPreview
           replicaCount={replicaCount}
@@ -276,6 +311,7 @@ function AllDatabasesGridCard({
   showDbSecuritySettings,
   showMonitor,
   showBackups,
+  hasBackupPolicy,
 }: {
   projectId: string
   db: DatabaseWithBackup
@@ -283,6 +319,7 @@ function AllDatabasesGridCard({
   showDbSecuritySettings: boolean
   showMonitor: boolean
   showBackups: boolean
+  hasBackupPolicy: boolean | null
 }) {
   if (dedicated) {
     return (
@@ -293,6 +330,7 @@ function AllDatabasesGridCard({
         showDbSecuritySettings={showDbSecuritySettings}
         showMonitor={showMonitor}
         showBackups={showBackups}
+        hasBackupPolicy={hasBackupPolicy}
       />
     )
   }
@@ -304,6 +342,7 @@ function AllDatabasesGridCard({
       showDbSecuritySettings={showDbSecuritySettings}
       showMonitor={showMonitor}
       showBackups={showBackups}
+      hasBackupPolicy={hasBackupPolicy}
     />
   )
 }
@@ -411,6 +450,44 @@ export function AllDatabasesSection({
     return map
   }, [dedicatedDatabases])
 
+  const nativeDedicatedOnPage = useMemo(() => {
+    const seen = new Set<string>()
+    const items: Models.DedicatedDatabase[] = []
+    for (const db of databases) {
+      const dedicated = dedicatedById.get(db.$id)
+      if (!dedicated || !isNativeDedicatedDatabase(dedicated)) continue
+      if (seen.has(dedicated.$id)) continue
+      seen.add(dedicated.$id)
+      items.push(dedicated)
+    }
+    return items
+  }, [databases, dedicatedById])
+
+  const showBackups = features.databaseBackups
+  const nativeBackupPolicyQueries = useQueries({
+    queries: nativeDedicatedOnPage.map((dedicated) => ({
+      ...dedicatedBackupPoliciesQueryOptions(
+        projectId,
+        dedicated.$id,
+        dedicated.engine,
+      ),
+      enabled: showBackups && !!projectId && !!dedicated.$id,
+    })),
+  })
+
+  const nativeHasBackupPolicyById = useMemo(() => {
+    const map = new Map<string, boolean | null>()
+    nativeDedicatedOnPage.forEach((dedicated, index) => {
+      const query = nativeBackupPolicyQueries[index]
+      if (!query || query.isLoading || query.isPending) {
+        map.set(dedicated.$id, null)
+        return
+      }
+      map.set(dedicated.$id, (query.data?.policies?.length ?? 0) > 0)
+    })
+    return map
+  }, [nativeBackupPolicyQueries, nativeDedicatedOnPage])
+
   const errorMessage = error ? getErrorMessage(error) : null
   const hasActiveFilters =
     Boolean(search?.trim()) || Boolean(filterQueries?.length)
@@ -515,8 +592,14 @@ export function AllDatabasesSection({
                             <p className="truncate text-[13px] font-medium text-foreground group-hover:text-foreground transition-colors">
                               {db.name}
                             </p>
-                            {features.databaseBackups &&
-                            !db.hasBackupPolicy ? (
+                            {shouldShowNoBackupWarning(
+                              resolveHasBackupPolicy(
+                                db,
+                                dedicatedById.get(db.$id),
+                                nativeHasBackupPolicyById,
+                              ),
+                              showBackups,
+                            ) ? (
                               <NoBackupPoliciesWarningIcon />
                             ) : null}
                           </div>
@@ -633,7 +716,12 @@ export function AllDatabasesSection({
                 dedicated={dedicatedById.get(db.$id)}
                 showDbSecuritySettings={showDbSecuritySettings}
                 showMonitor={features.usageStats}
-                showBackups={features.databaseBackups}
+                showBackups={showBackups}
+                hasBackupPolicy={resolveHasBackupPolicy(
+                  db,
+                  dedicatedById.get(db.$id),
+                  nativeHasBackupPolicyById,
+                )}
               />
             ))}
             {databases.length === 0 ? (

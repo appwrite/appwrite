@@ -316,7 +316,24 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Database name updated successfully': 'データベース名を更新しました',
   'Database not found': 'データベースが見つかりません',
   'Database restore initiated': 'データベースの復元を開始しました',
-  'Database password reset': 'データベースパスワードをリセットしました',
+  'Preparing database restore...': 'データベースの復元を準備しています...',
+  'Restoring database...': 'データベースを復元しています...',
+  'Database restore completed': 'データベースの復元が完了しました',
+  'Database restore failed': 'データベースの復元に失敗しました',
+  'Preparing restore': '復元を準備中',
+  'Your database restore is queued and will start shortly.':
+    'データベースの復元はキューに入り、まもなく開始されます。',
+  'Queued': 'キュー待ち',
+  'Restore completed': '復元が完了しました',
+  'Your database was restored successfully.':
+    'データベースが正常に復元されました。',
+  'Restore failed': '復元に失敗しました',
+  'The database restore could not be completed. Try again or contact support.':
+    'データベースの復元を完了できませんでした。再試行するか、サポートにお問い合わせください。',
+  'Restoring database': 'データベースを復元中',
+  'Restoring resources': 'リソースを復元中',
+  'Restoring your database from the selected backup.':
+    '選択したバックアップからデータベースを復元しています。',
   'Database password reset': 'データベースパスワードをリセットしました',
   'Database rows have a maximum size of 64 KB. varchar columns use 4 bytes per character plus a small overhead. text, mediumtext, and longtext columns only use ~20 bytes regardless of content length.': 'データベース行の最大サイズは 64 KB です。varchar 列は文字あたり 4 バイトと小さなオーバーヘッドを使用します。text、mediumtext、longtext 列はコンテンツの長さに関係なく約 20 バイトのみを使用します。',
   'database selected': 'データベースを選択',

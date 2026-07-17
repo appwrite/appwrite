@@ -74,3 +74,36 @@ export function getMigrationProgress(m: Models.Migration): number {
   const pct = (totalDone / total) * 100
   return Math.round(Math.min(100, Math.max(0, pct)))
 }
+
+/**
+ * Migration errors are often JSON strings with { message, resourceName, ... }.
+ * Return a short user-facing message (never raw JSON).
+ */
+export function getMigrationErrorMessage(
+  errors: unknown[] | undefined | null,
+): string | null {
+  if (!errors?.length) return null
+  const error = errors[0]
+  try {
+    const parsed =
+      typeof error === 'string'
+        ? (JSON.parse(error) as Record<string, unknown>)
+        : (error as Record<string, unknown>)
+    if (parsed && typeof parsed === 'object') {
+      if (typeof parsed.message === 'string' && parsed.message.trim()) {
+        return parsed.message.trim()
+      }
+      if (typeof parsed.error === 'string' && parsed.error.trim()) {
+        return parsed.error.trim()
+      }
+    }
+  } catch {
+    // fall through
+  }
+  if (typeof error === 'string' && error.trim()) {
+    // Avoid dumping JSON blobs into the UI
+    if (error.trimStart().startsWith('{')) return null
+    return error
+  }
+  return null
+}

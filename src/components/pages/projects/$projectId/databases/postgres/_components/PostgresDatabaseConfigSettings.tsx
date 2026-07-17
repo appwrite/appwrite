@@ -34,12 +34,14 @@ import {
 import { isPostgresClientBackend } from '@/lib/postgres-metrics'
 import {
   useDatabaseSpecifications,
+  useDedicatedDatabaseCardMetrics,
   useDedicatedDatabaseStorageChart,
   usePostgresActiveConnections,
   usePostgresDatabaseReplicas,
   useUpdatePostgresDatabase,
 } from '@/lib/react-query/hooks'
 import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
 import { getDedicatedDatabaseGaugeHeadline } from '@/lib/usage/dedicated-databases-usage'
 import { formatCompactBytes } from '@/lib/usage/format-metric'
@@ -94,6 +96,7 @@ export function PostgresDatabaseReplicasCard({
   canWrite,
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
   const updateMutation = useUpdatePostgresDatabase(projectId, databaseId)
   const { data: specificationsData } = useDatabaseSpecifications(projectId)
   const { connections, isLoading: connectionsLoading } =
@@ -151,6 +154,13 @@ export function PostgresDatabaseReplicasCard({
   const presentReplicaCount = Math.max(
     committedReplicaCount,
     memberReplicaCount,
+  )
+
+  const { nodeMetrics } = useDedicatedDatabaseCardMetrics(
+    projectId,
+    databaseId,
+    presentReplicaCount,
+    features.usageStats,
   )
 
   const memberStatuses = useMemo(
@@ -313,6 +323,7 @@ export function PostgresDatabaseReplicasCard({
             <DatabaseClusterPreview
               replicaCount={clusterPreview.displayReplicaCount}
               nodeStatuses={clusterPreview.nodeStatuses}
+              nodeMetrics={nodeMetrics}
               proxy={clusterProxy}
               withSectionDivider={false}
               interactive

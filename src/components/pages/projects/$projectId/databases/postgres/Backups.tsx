@@ -177,7 +177,7 @@ export function View({ projectId, databaseId }: ViewProps) {
   const invalidatePolicies = () => {
     queryClient.invalidateQueries({
       queryKey: [
-        'postgres-backup-policies',
+        'dedicated-backup-policies',
         'project',
         projectId,
         databaseId,

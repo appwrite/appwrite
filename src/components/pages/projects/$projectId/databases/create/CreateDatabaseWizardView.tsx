@@ -397,19 +397,18 @@ export function CreateDatabaseWizardView() {
   }, [dbType])
 
   useEffect(() => {
-    if (backupPresetsInitialized) return
     if (!features.databaseBackups) {
-      setBackupPresetsInitialized(true)
+      setSelectedBackupPresets([])
+      setBackupPresetsInitialized(false)
       return
     }
+    if (backupPresetsInitialized) return
     // Wait until organization plan has loaded so we can default correctly.
     if (organizationPlan == null) return
 
-    if (organizationPlan.backupsEnabled) {
-      setSelectedBackupPresets(['daily'])
-    } else {
-      setSelectedBackupPresets([])
-    }
+    setSelectedBackupPresets(
+      organizationPlan.backupsEnabled ? ['daily'] : [],
+    )
     setBackupPresetsInitialized(true)
   }, [
     backupPresetsInitialized,
@@ -417,10 +416,13 @@ export function CreateDatabaseWizardView() {
     organizationPlan,
   ])
 
-  const backupsEnabled = features.databaseBackups
+  // Profile ∩ plan: undefined while plan is loading (when profile supports backups).
+  const planBackupsEnabled = features.databaseBackups
     ? organizationPlan?.backupsEnabled
     : undefined
-  const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
+  const backupPoliciesLimit = features.databaseBackups
+    ? (organizationPlan?.backupPolicies ?? 0)
+    : 0
   const showBackupPoliciesSection = Boolean(features.databaseBackups)
   const backupPoliciesSummaryLabel =
     selectedBackupPresets.length > 0
@@ -434,7 +436,7 @@ export function CreateDatabaseWizardView() {
   ) => {
     if (
       !features.databaseBackups ||
-      organizationPlan?.backupsEnabled !== true ||
+      planBackupsEnabled !== true ||
       selectedBackupPresets.length === 0
     ) {
       return
@@ -633,7 +635,7 @@ export function CreateDatabaseWizardView() {
     const showPitrStep = pitrEnabled
     const showBackupPoliciesStep =
       features.databaseBackups &&
-      organizationPlan?.backupsEnabled === true &&
+      planBackupsEnabled === true &&
       selectedBackupPresets.length > 0
 
     track('Form Submitted', {
@@ -785,7 +787,7 @@ export function CreateDatabaseWizardView() {
           monthlyCost={monthlyCost}
           showBackupPolicies={showBackupPoliciesSection && showNameForm}
           backupPoliciesLabel={backupPoliciesSummaryLabel}
-          backupsEnabled={backupsEnabled}
+          backupsEnabled={planBackupsEnabled}
           canCreate={canCreate}
         />
       }
@@ -1100,7 +1102,7 @@ export function CreateDatabaseWizardView() {
         {showNameForm && showBackupPoliciesSection && (
           <section className="pt-6 border-t border-border">
             <CreateDatabaseBackupPolicies
-              backupsEnabled={backupsEnabled}
+              planBackupsEnabled={planBackupsEnabled}
               backupPoliciesLimit={backupPoliciesLimit}
               selectedPresets={selectedBackupPresets}
               onSelectedPresetsChange={setSelectedBackupPresets}

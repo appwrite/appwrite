@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -35,8 +36,12 @@ export const BACKUP_POLICY_PRESETS: Record<
 }
 
 type CreateDatabaseBackupPoliciesProps = {
-  /** When false, show upgrade warning and disable selection. Omit while plan is loading. */
-  backupsEnabled?: boolean
+  /**
+   * Organization plan `backupsEnabled`. When false and the console profile
+   * supports database backups, an upgrade warning is shown. Omit while the
+   * plan is still loading. Ignored when the profile disables `databaseBackups`.
+   */
+  planBackupsEnabled?: boolean
   /** Plan policy cap. Pro (1) only gets daily; 0 or >1 also get hourly. */
   backupPoliciesLimit?: number
   selectedPresets: BackupPolicyPresetId[]
@@ -45,14 +50,22 @@ type CreateDatabaseBackupPoliciesProps = {
 }
 
 export function CreateDatabaseBackupPolicies({
-  backupsEnabled,
+  planBackupsEnabled,
   backupPoliciesLimit = 0,
   selectedPresets,
   onSelectedPresetsChange,
   orgId,
 }: CreateDatabaseBackupPoliciesProps) {
   const t = useT()
-  const canSelect = backupsEnabled === true
+  const { features } = useConsoleProfile()
+
+  // Console profile gate: hide entirely when backups are not part of this deployment.
+  if (!features.databaseBackups) {
+    return null
+  }
+
+  const canSelect = planBackupsEnabled === true
+  const showUpgradeWarning = planBackupsEnabled === false
   const supportsHourly =
     canSelect && (backupPoliciesLimit === 0 || backupPoliciesLimit > 1)
 
@@ -84,7 +97,7 @@ export function CreateDatabaseBackupPolicies({
           <div className="border-t border-border" />
 
           <div className="px-6 py-4 space-y-3">
-            {backupsEnabled === false && (
+            {showUpgradeWarning && (
               <Alert
                 variant="default"
                 className="border-amber-500/30 bg-amber-500/5"

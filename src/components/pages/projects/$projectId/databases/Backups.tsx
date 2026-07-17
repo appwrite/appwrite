@@ -6,7 +6,12 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
-import { useBackupPolicies, useBackupArchives } from '@/lib/react-query/hooks'
+import {
+  useBackupPolicies,
+  useBackupArchives,
+  useDatabaseRestoreMigrations,
+} from '@/lib/react-query/hooks'
+import { RestoreProgressBanner } from './_components/RestoreProgressBanner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -121,9 +126,15 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const [selectedBackup, setSelectedBackup] =
     useState<Models.BackupArchive | null>(null)
   const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
+  const [sessionRestoreMigrationIds, setSessionRestoreMigrationIds] = useState<
+    string[]
+  >([])
+  const [dismissedRestoreMigrationIds, setDismissedRestoreMigrationIds] =
+    useState<Set<string>>(() => new Set())
 
   // Get project to get teamId for organization plan
   const { project } = useProject(projectId)
+  const region = project?.region
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
@@ -144,6 +155,28 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     backupsPageSize,
     { enabled: backupsEnabled },
   )
+  const { data: restoreMigrations } = useDatabaseRestoreMigrations(
+    projectId,
+    databaseId,
+    { enabled: backupsEnabled },
+  )
+
+  const restoreMigrationIds = (() => {
+    const ids: string[] = []
+    const seen = new Set<string>()
+    for (const restoration of restoreMigrations || []) {
+      const id = restoration.migrationId
+      if (!id || seen.has(id) || dismissedRestoreMigrationIds.has(id)) continue
+      seen.add(id)
+      ids.push(id)
+    }
+    for (const id of sessionRestoreMigrationIds) {
+      if (!id || seen.has(id) || dismissedRestoreMigrationIds.has(id)) continue
+      seen.add(id)
+      ids.push(id)
+    }
+    return ids
+  })()
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
   const archives: Models.BackupArchive[] = archivesData?.archives || []
@@ -327,8 +360,21 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       const projectSdk = sdk.forProject(projectId)
       return projectSdk.backups.createRestoration(params)
     },
-    onSuccess: () => {
+    onSuccess: (restoration) => {
       toast.success(t('Database restore initiated'))
+      if (restoration?.migrationId) {
+        setSessionRestoreMigrationIds((prev) =>
+          prev.includes(restoration.migrationId)
+            ? prev
+            : [...prev, restoration.migrationId],
+        )
+        setDismissedRestoreMigrationIds((prev) => {
+          if (!prev.has(restoration.migrationId)) return prev
+          const next = new Set(prev)
+          next.delete(restoration.migrationId)
+          return next
+        })
+      }
       // Invalidate archives query to refresh backup status
       queryClient.invalidateQueries({
         queryKey: [
@@ -337,13 +383,24 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [
+          'restorations',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
+      })
       setRestoreDialogOpen(false)
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to restore backup'))
-    }})
+    },
+  })
 
   // Format backup size
   const formatSize = (bytes: number | undefined) => {
@@ -456,6 +513,29 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
+      {restoreMigrationIds.length > 0 ? (
+        <div className="mb-6 space-y-2">
+          {restoreMigrationIds.map((migrationId) => (
+            <RestoreProgressBanner
+              key={migrationId}
+              projectId={projectId}
+              databaseId={databaseId}
+              region={region}
+              migrationId={migrationId}
+              onDismiss={() => {
+                setDismissedRestoreMigrationIds((prev) => {
+                  const next = new Set(prev)
+                  next.add(migrationId)
+                  return next
+                })
+                setSessionRestoreMigrationIds((prev) =>
+                  prev.filter((id) => id !== migrationId),
+                )
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
         {/* Policies Section */}
         <div className="lg:col-span-1 flex flex-col">

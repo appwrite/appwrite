@@ -182,19 +182,26 @@ export function useProjectMigrations(
   }
 }
 
+const IN_PROGRESS_MIGRATION_STATUSES = new Set([
+  'pending',
+  'processing',
+  'uploading',
+  'downloading',
+])
+
 /**
- * Hook to get a single migration
- *
- * @param projectId - The project ID
- * @param region - The project region
- * @param migrationId - The migration ID
+ * Query options for a single migration (`migrations.get`).
+ * Polls while the migration is in progress so restore/CSV-style progress stays live
+ * even if a realtime event is missed.
  */
-export function useProjectMigration(
+export function projectMigrationQueryOptions(
   projectId: string | null | undefined,
   region: string | undefined,
   migrationId: string | null | undefined,
+  options?: { pollWhileInProgress?: boolean },
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const pollWhileInProgress = options?.pollWhileInProgress ?? false
+  return queryOptions({
     queryKey: ['migration', 'project', projectId, region, migrationId],
     queryFn: async () => {
       if (!projectId || !migrationId) {
@@ -204,8 +211,37 @@ export function useProjectMigration(
       return await projectSdk.migrations.get({ migrationId })
     },
     enabled: !!projectId && !!migrationId,
-    staleTime: DEFAULT_STALE_TIME,
+    staleTime: pollWhileInProgress ? 0 : DEFAULT_STALE_TIME,
+    refetchInterval: pollWhileInProgress
+      ? (query) => {
+          const status = query.state.data?.status
+          if (status && IN_PROGRESS_MIGRATION_STATUSES.has(status)) {
+            return 2000
+          }
+          return false
+        }
+      : false,
+    refetchOnWindowFocus: false,
   })
+}
+
+/**
+ * Hook to get a single migration
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @param migrationId - The migration ID
+ * @param options.pollWhileInProgress - Poll every 2s while status is in progress
+ */
+export function useProjectMigration(
+  projectId: string | null | undefined,
+  region: string | undefined,
+  migrationId: string | null | undefined,
+  options?: { pollWhileInProgress?: boolean },
+) {
+  const { data, isLoading, error, refetch } = useQuery(
+    projectMigrationQueryOptions(projectId, region, migrationId, options),
+  )
 
   return {
     migration: data || null,
