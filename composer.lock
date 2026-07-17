@@ -3702,16 +3702,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "6.4.3",
+            "version": "6.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d5ebecc2f4518329e3e1c5ded3769638908c78ba"
+                "reference": "a1796fd360d58abcc3bb3e1b615fcebc04ba9100"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d5ebecc2f4518329e3e1c5ded3769638908c78ba",
-                "reference": "d5ebecc2f4518329e3e1c5ded3769638908c78ba",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a1796fd360d58abcc3bb3e1b615fcebc04ba9100",
+                "reference": "a1796fd360d58abcc3bb3e1b615fcebc04ba9100",
                 "shasum": ""
             },
             "require": {
@@ -3756,9 +3756,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/6.4.3"
+                "source": "https://github.com/utopia-php/database/tree/6.4.4"
             },
-            "time": "2026-07-13T13:24:23+00:00"
+            "time": "2026-07-17T08:21:36+00:00"
         },
         {
             "name": "utopia-php/detector",
