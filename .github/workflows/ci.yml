@@ -296,7 +296,6 @@ jobs:
     needs: build
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     steps:
       - name: checkout
@@ -341,18 +340,10 @@ jobs:
 
       - name: Run Unit Tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 5
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/unit
-          command: >-
-            docker compose exec
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/unit
+        run: >-
+          docker compose exec
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/unit
 
   e2e_general:
     name: Tests / E2E / General
@@ -361,7 +352,6 @@ jobs:
     needs: build
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     steps:
       - name: checkout
@@ -411,18 +401,10 @@ jobs:
 
       - name: Run General Tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 5
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/General
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/General
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/General
 
       - name: Failure Logs
         if: failure()
@@ -437,7 +419,6 @@ jobs:
     needs: [build, matrix]
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     strategy:
       fail-fast: false
@@ -518,33 +499,25 @@ jobs:
           done
 
       - name: Run tests
-        timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: ${{ matrix.service.timeout }}
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service.name }}
-          command: |
-            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
+        timeout-minutes: ${{ matrix.service.timeout }}
+        run: |
+          SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service.name }}"
 
-            FUNCTIONAL_FLAG=""
-            if [ "${{ matrix.service.functional }}" = "true" ]; then
-              FUNCTIONAL_FLAG="--functional"
-            fi
+          FUNCTIONAL_FLAG=""
+          if [ "${{ matrix.service.functional }}" = "true" ]; then
+            FUNCTIONAL_FLAG="--functional"
+          fi
 
-            PARATEST_PROCESSES="${{ matrix.service.processes }}"
-            if [ -z "$PARATEST_PROCESSES" ]; then
-              PARATEST_PROCESSES="$(nproc)"
-            fi
+          PARATEST_PROCESSES="${{ matrix.service.processes }}"
+          if [ -z "$PARATEST_PROCESSES" ]; then
+            PARATEST_PROCESSES="$(nproc)"
+          fi
 
-            docker compose exec -T \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
-              -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
-              appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
+          docker compose exec -T \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            -e _TESTS_OAUTH2_GITHUB_CLIENT_ID="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}" \
+            -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET="${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}" \
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service.name }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -559,7 +532,6 @@ jobs:
     needs: [build, matrix]
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     strategy:
       fail-fast: false
@@ -612,18 +584,10 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 5
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -638,7 +602,6 @@ jobs:
     needs: [build, matrix]
     permissions:
       contents: read
-      pull-requests: write
       packages: read
     strategy:
       fail-fast: false
@@ -696,18 +659,10 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 15
-        uses: itznotabug/php-retry@60547503cb2126eddaa082d0999e99cfca2b3856 # v4
-        with:
-          max_attempts: ${{ github.event_name == 'pull_request' && 2 || 1 }}
-          retry_wait_seconds: 60
-          timeout_minutes: 5
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Sites
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
 
       - name: Failure Logs
         if: failure()
