@@ -11,7 +11,7 @@ class Parameter
      * @param string $description
      * @param mixed $default Explicit null overrides a route default with null; leave unset for no override
      * @param Validator|callable|null $validator
-     * @param bool $optional
+     * @param bool|Undefined $optional Leave unset for no override
      * @param bool $hide Omit this parameter from the generated specification while keeping it accepted at runtime
      */
     public function __construct(
@@ -19,7 +19,7 @@ class Parameter
         protected string $description = '',
         protected mixed $default = Undefined::Value,
         protected mixed $validator = null,
-        protected bool $optional = false,
+        protected bool|Undefined $optional = Undefined::Value,
         protected bool $hide = false,
     ) {
     }
@@ -75,7 +75,12 @@ class Parameter
 
     public function getOptional(): bool
     {
-        return $this->optional;
+        return $this->optional === Undefined::Value ? false : $this->optional;
+    }
+
+    public function hasOptional(): bool
+    {
+        return $this->optional !== Undefined::Value;
     }
 
     public function setOptional(bool $optional): static

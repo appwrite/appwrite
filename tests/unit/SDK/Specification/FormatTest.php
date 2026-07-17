@@ -181,7 +181,7 @@ final class FormatTest extends TestCase
             responses: [],
             parameters: [
                 new Parameter('engine', default: null),
-                new Parameter('name', description: 'Overridden description.'),
+                new Parameter('name', description: 'Overridden description.', optional: false),
             ],
         );
 
@@ -203,8 +203,10 @@ final class FormatTest extends TestCase
         $parameters = $format->methodParameters($route, $method);
 
         $this->assertNull($parameters['engine']['default']);
+        $this->assertTrue($parameters['engine']['optional']);
         $this->assertSame('default-name', $parameters['name']['default']);
         $this->assertSame('Overridden description.', $parameters['name']['description']);
+        $this->assertFalse($parameters['name']['optional']);
     }
 
     public function testDeleteRouteOptionalParamsAreQueryParams(): void

@@ -139,10 +139,14 @@ class Mapper
                     $list = true;
                 }
 
+                $optional = $override !== null && $override->hasOptional()
+                    ? $override->getOptional()
+                    : $parameter['optional'];
+
                 $parameterType = Mapper::param(
                     $utopia,
                     $override?->getValidator() ?? $parameter['validator'],
-                    !($override?->getOptional() ?? $parameter['optional']),
+                    !$optional,
                     $parameter['injections']
                 );
                 $params[$name] = [

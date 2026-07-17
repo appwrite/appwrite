@@ -227,6 +227,10 @@ abstract class Format
                 $overrides['default'] = $parameter->getDefault();
             }
 
+            if ($parameter->hasOptional()) {
+                $overrides['optional'] = $parameter->getOptional();
+            }
+
             $parameters[$name] = \array_merge(
                 $parameters[$name] ?? ['optional' => $parameter->getOptional(), 'injections' => []],
                 $overrides,
