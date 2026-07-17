@@ -157,6 +157,8 @@ class V25 extends Migration
 
         $resourceId = (string) $document->getAttribute('resourceId', '');
         $parentResourceId = (string) $document->getAttribute('parentResourceId', '');
+        $parentResourceType = '';
+        $split = false;
 
         if ($parentResourceId === '') {
             if (!\str_contains($resourceId, ':')) {
@@ -169,6 +171,22 @@ class V25 extends Migration
             }
 
             $parentResourceType = (string) $document->getAttribute('resourceType', '');
+            $split = true;
+        }
+
+        if ($resourceId === '') {
+            return $document;
+        }
+
+        $internalIds = $this->resolveInternalIds($parentResourceId, $resourceId, $document->getId());
+        if (
+            $split
+            && (!isset($internalIds['parentResourceInternalId']) || !isset($internalIds['resourceInternalId']))
+        ) {
+            return $document;
+        }
+
+        if ($split) {
             $document
                 ->setAttribute('resourceId', $resourceId)
                 ->setAttribute('resourceType', Resource::TYPE_COLLECTION)
@@ -179,11 +197,6 @@ class V25 extends Migration
             }
         }
 
-        if ($resourceId === '') {
-            return $document;
-        }
-
-        $internalIds = $this->resolveInternalIds($parentResourceId, $resourceId, $document->getId());
         if (
             $document->getAttribute('parentResourceInternalId', '') === ''
             && isset($internalIds['parentResourceInternalId'])

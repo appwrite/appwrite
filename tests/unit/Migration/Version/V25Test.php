@@ -11,7 +11,7 @@ use Utopia\Migration\Resource;
 
 final class V25Test extends TestCase
 {
-    public function testSplitsDeletedResourceWithoutWritingEmptyInternalIds(): void
+    public function testPreservesLegacyResourceWhenInternalIdsCannotBeResolved(): void
     {
         $migration = new class () extends V25 {
             public function __construct()
@@ -38,10 +38,10 @@ final class V25Test extends TestCase
 
         $result = $migration->migrate($document);
 
-        $this->assertSame('collection', $result->getAttribute('resourceId'));
-        $this->assertSame(Resource::TYPE_COLLECTION, $result->getAttribute('resourceType'));
-        $this->assertSame('database', $result->getAttribute('parentResourceId'));
-        $this->assertSame(Resource::TYPE_DATABASE, $result->getAttribute('parentResourceType'));
+        $this->assertSame('database:collection', $result->getAttribute('resourceId'));
+        $this->assertSame(Resource::TYPE_DATABASE, $result->getAttribute('resourceType'));
+        $this->assertNull($result->getAttribute('parentResourceId'));
+        $this->assertNull($result->getAttribute('parentResourceType'));
         $this->assertNull($result->getAttribute('resourceInternalId'));
         $this->assertNull($result->getAttribute('parentResourceInternalId'));
     }
@@ -88,6 +88,18 @@ final class V25Test extends TestCase
         ]);
 
         $migration->migrate($document);
+        $this->assertSame('database:collection', $document->getAttribute('resourceId'));
+        $this->assertSame(Resource::TYPE_DATABASE, $document->getAttribute('resourceType'));
+        $this->assertNull($document->getAttribute('parentResourceId'));
+
+        $migration->setInternalIds([
+            'parentResourceInternalId' => '10',
+        ]);
+        $migration->migrate($document);
+        $this->assertSame('database:collection', $document->getAttribute('resourceId'));
+        $this->assertSame(Resource::TYPE_DATABASE, $document->getAttribute('resourceType'));
+        $this->assertNull($document->getAttribute('parentResourceId'));
+
         $migration->setInternalIds([
             'parentResourceInternalId' => '10',
             'resourceInternalId' => '20',
@@ -98,6 +110,10 @@ final class V25Test extends TestCase
 
         $this->assertSame('10', $document->getAttribute('parentResourceInternalId'));
         $this->assertSame('20', $document->getAttribute('resourceInternalId'));
+        $this->assertSame('collection', $document->getAttribute('resourceId'));
+        $this->assertSame(Resource::TYPE_COLLECTION, $document->getAttribute('resourceType'));
+        $this->assertSame('database', $document->getAttribute('parentResourceId'));
+        $this->assertSame(Resource::TYPE_DATABASE, $document->getAttribute('parentResourceType'));
         $this->assertSame($afterResolution, $document->getArrayCopy());
     }
 }
