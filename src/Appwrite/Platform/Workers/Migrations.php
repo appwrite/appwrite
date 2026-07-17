@@ -596,6 +596,11 @@ class Migrations extends Action
                 return;
             }
 
+            $destinationType = $migration->getAttribute('destination');
+            if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
+                $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+            }
+
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
@@ -635,7 +640,7 @@ class Migrations extends Action
                     $extras['sourceEndpoint'] = $credentials['endpoint'] ?? '';
                 }
 
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), $extras);
+                $this->reportError($th, $migration, $extras);
             }
         } finally {
             try {
@@ -698,18 +703,6 @@ class Migrations extends Action
                     }
                     $destination?->success();
                     $source?->success();
-                }
-                $destination_type = $migration->getAttribute('destination');
-                if ($destination_type === DestinationCSV::getName() || $destination_type === DestinationJSON::getName()) {
-                    try {
-                        $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
-                    } catch (\Throwable $th) {
-                        // The export itself has already completed; sending the completion
-                        // notification is best-effort. A failure here must not escape the
-                        // finally block, where it would mask the migration result and, in a
-                        // shared worker, disrupt other in-flight migrations.
-                        Console::error('Failed to handle data export completion for migration ' . $migration->getId() . ': ' . $th->getMessage());
-                    }
                 }
             } finally {
                 $source?->cleanup();
@@ -787,23 +780,7 @@ class Migrations extends Action
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
-        $userInternalId = $options['userInternalId'] ?? '';
-        if (empty($userInternalId)) {
-            // Exports initiated without a user session (e.g. via an API key) have no
-            // recipient for the completion notification. Skip it: there is nobody to
-            // notify, and querying the integer-only '$sequence' attribute with an empty
-            // value would otherwise throw a query validation error.
-            Console::warning('Skipping export completion notification for migration ' . $migration->getId() . ': no initiating user.');
-            return;
-        }
-
-        $user = $this->dbForPlatform->findOne('users', [
-            Query::equal('$sequence', [$userInternalId])
-        ]);
-
-        if ($user->isEmpty()) {
-            throw new \Exception('User ' . $userInternalId . ' not found');
-        }
+        $user = $this->resolveExportUser($migration);
 
         $bucket = $this->dbForPlatform->getDocument('buckets', $bucketId);
         if ($bucket->isEmpty()) {
@@ -835,7 +812,8 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errors);
                 $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                $this->sendExportEmail(
+                $this->notifyExport(
+                    migration: $migration,
                     success: false,
                     project: $project,
                     user: $user,
@@ -850,11 +828,14 @@ class Migrations extends Action
             }
         }
 
+        $permissions = [];
+        if (!$user->isEmpty()) {
+            $permissions[] = Permission::read(Role::user($user->getId()));
+        }
+
         $this->dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), new Document([
             '$id' => $fileId,
-            '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-            ],
+            '$permissions' => $permissions,
             'bucketId' => $bucket->getId(),
             'bucketInternalId' => $bucket->getSequence(),
             'name' => $filename,
@@ -898,7 +879,8 @@ class Migrations extends Action
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-        $this->sendExportEmail(
+        $this->notifyExport(
+            migration: $migration,
             success: true,
             project: $project,
             user: $user,
@@ -908,6 +890,94 @@ class Migrations extends Action
             exportType: $migration->getAttribute('destination') === DestinationJSON::getName() ? 'JSON' : 'CSV',
             downloadUrl: $downloadUrl
         );
+    }
+
+    protected function resolveExportUser(Document $migration): Document
+    {
+        $userInternalId = $migration->getAttribute('options', [])['userInternalId'] ?? null;
+        if (\is_string($userInternalId) && \ctype_digit($userInternalId)) {
+            $userInternalId = (int) $userInternalId;
+        }
+
+        if ($userInternalId === null || $userInternalId === '') {
+            Console::warning('Finalizing export without a user permission for migration ' . $migration->getId() . ': no initiating user.');
+            return new Document([]);
+        }
+
+        if (!\is_int($userInternalId) || $userInternalId < 1) {
+            $error = new \UnexpectedValueException('Invalid initiating user sequence for export migration.');
+            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
+            $this->reportError($error, $migration);
+            return new Document([]);
+        }
+
+        $user = $this->dbForPlatform->findOne('users', [
+            Query::equal('$sequence', [$userInternalId])
+        ]);
+
+        if ($user->isEmpty()) {
+            $error = new \RuntimeException('Initiating user not found for export migration.');
+            Console::error($error->getMessage() . ' Migration: ' . $migration->getId());
+            $this->reportError($error, $migration);
+        }
+
+        return $user;
+    }
+
+    protected function notifyExport(
+        Document $migration,
+        bool $success,
+        Document $project,
+        Document $user,
+        array $options,
+        MailPublisher $publisherForMails,
+        array $platform,
+        string $exportType = 'CSV',
+        string $downloadUrl = '',
+        float $sizeMB = 0.0,
+    ): void {
+        try {
+            $this->sendExportEmail(
+                success: $success,
+                project: $project,
+                user: $user,
+                options: $options,
+                publisherForMails: $publisherForMails,
+                platform: $platform,
+                exportType: $exportType,
+                downloadUrl: $downloadUrl,
+                sizeMB: $sizeMB,
+            );
+        } catch (\Throwable $error) {
+            Console::error('Failed to send the export notification for migration ' . $migration->getId() . ': ' . $error->getMessage());
+            $this->reportError($error, $migration);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $extras
+     */
+    protected function reportError(\Throwable $error, Document $migration, array $extras = []): void
+    {
+        if (!\is_callable($this->logError)) {
+            return;
+        }
+
+        try {
+            ($this->logError)(
+                $error,
+                'appwrite-worker',
+                'appwrite-queue-' . self::getName(),
+                [
+                    'migrationId' => $migration->getId(),
+                    'source' => $migration->getAttribute('source', ''),
+                    'destination' => $migration->getAttribute('destination', ''),
+                    ...$extras,
+                ]
+            );
+        } catch (\Throwable $loggingError) {
+            Console::error('Failed to report the migration error: ' . $loggingError->getMessage());
+        }
     }
 
     /**
