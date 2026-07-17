@@ -6810,6 +6810,19 @@ trait MigrationsBase
         $this->assertEquals($response['body']['max'], 65);
         $this->assertEquals($response['body']['required'], true);
 
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            foreach (['name', 'age'] as $column) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $column, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('available', $response['body']['status']);
+            }
+        }, 5_000, 500);
+
         // make a bucket, upload a file to it!
         $bucketOne = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
