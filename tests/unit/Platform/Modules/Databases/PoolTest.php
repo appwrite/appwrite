@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Databases;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Pool;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
@@ -53,6 +54,14 @@ final class PoolTest extends TestCase
         $dsn = 'mysql://project?database=appwrite';
 
         $this->assertSame($dsn, Pool::dsn('tablesdb', 'default', $dsn));
+    }
+
+    public function testRejectsEmptyProjectDatabaseForTablesDB(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Project database DSN is required for tablesdb databases');
+
+        Pool::dsn('tablesdb', 'default', null);
     }
 
     public function testSelectsDocumentsDatabasePool(): void
