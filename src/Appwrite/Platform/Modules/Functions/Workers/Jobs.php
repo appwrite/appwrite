@@ -171,9 +171,15 @@ class Jobs extends Action
             $update['buildStartedAt'] = DateTime::now();
         }
 
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($update));
+        // Guarded like finalize: a concurrent cancel appends its own closing
+        // log line, which a blind write here would clobber.
+        $dbForProject->updateDocuments('deployments', new Document($update), [
+            Query::equal('$id', [$deployment->getId()]),
+            Query::notEqual('status', 'canceled'),
+        ]);
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
-        if (($update['status'] ?? '') === 'building') {
+        if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
             $this->gitAction('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
