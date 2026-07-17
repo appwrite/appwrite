@@ -421,10 +421,7 @@ class OpenAPI3 extends Format
 
             $parameterNodes = [];
 
-            $parameters = \array_merge(
-                $route->getParams(),
-                $sdk->getAdditionalParameters(),
-            );
+            $parameters = $this->getMethodParameters($route, $sdk);
 
             foreach ($parameters as $name => $param) { // Set params
                 if (($param['deprecated'] ?? false) === true) {

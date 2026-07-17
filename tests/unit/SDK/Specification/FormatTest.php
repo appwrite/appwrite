@@ -4,6 +4,7 @@ namespace Tests\Unit\SDK\Specification;
 
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
@@ -133,6 +134,37 @@ final class FormatTest extends TestCase
             ['idGenerator' => 'ID.unique'],
             $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['userId']['x-appwrite']
         );
+    }
+
+    public function testMethodParameterOverridesFilterAndReplaceRouteParams(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTestWithOverrides',
+                description: 'Create test.',
+                auth: [],
+                responses: [],
+                parameters: [
+                    new Parameter('engine', hide: true),
+                    new Parameter('name', description: 'Overridden description.'),
+                ],
+            ))
+            ->param('name', '', new Text(128), 'Original description.')
+            ->param('engine', 'mysql', new Text(16), 'Engine.', true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], 0, 'console'))->parse();
+
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertArrayNotHasKey('engine', $properties);
+        $this->assertSame('Overridden description.', $properties['name']['description']);
+        $this->assertSame(['name'], $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['required']);
     }
 
     public function testDeleteRouteOptionalParamsAreQueryParams(): void

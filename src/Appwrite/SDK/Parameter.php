@@ -12,6 +12,7 @@ class Parameter
      * @param mixed|null $default
      * @param Validator|callable|null $validator
      * @param bool $optional
+     * @param bool $hide Omit this parameter from the generated specification while keeping it accepted at runtime
      */
     public function __construct(
         protected string $name,
@@ -19,6 +20,7 @@ class Parameter
         protected mixed $default = null,
         protected mixed $validator = null,
         protected bool $optional = false,
+        protected bool $hide = false,
     ) {
     }
 
@@ -74,6 +76,17 @@ class Parameter
     public function setOptional(bool $optional): static
     {
         $this->optional = $optional;
+        return $this;
+    }
+
+    public function getHide(): bool
+    {
+        return $this->hide;
+    }
+
+    public function setHide(bool $hide): static
+    {
+        $this->hide = $hide;
         return $this;
     }
 }

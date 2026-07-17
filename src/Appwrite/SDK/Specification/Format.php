@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification;
 
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
@@ -194,6 +195,42 @@ abstract class Format
         }
 
         return $resources;
+    }
+
+    /**
+     * Parameters emitted for a method: the route params merged with SDK-only
+     * additions. A method may declare an explicit `parameters` list to
+     * override route params by name — set fields replace the route's, and
+     * `hide: true` drops the param from the spec while the route keeps
+     * accepting it at runtime.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function getMethodParameters(Route $route, Method $method): array
+    {
+        $parameters = \array_merge($route->getParams(), $method->getAdditionalParameters());
+
+        foreach ($method->getParameters() as $parameter) {
+            $name = $parameter->getName();
+
+            if ($parameter->getHide()) {
+                unset($parameters[$name]);
+                continue;
+            }
+
+            $overrides = \array_filter([
+                'description' => $parameter->getDescription() ?: null,
+                'default' => $parameter->getDefault(),
+                'validator' => $parameter->getValidator(),
+            ], fn (mixed $value) => $value !== null);
+
+            $parameters[$name] = \array_merge(
+                $parameters[$name] ?? ['optional' => $parameter->getOptional(), 'injections' => []],
+                $overrides,
+            );
+        }
+
+        return $parameters;
     }
 
     protected function getValidator(array $param): mixed
