@@ -183,7 +183,18 @@ class Gitlab extends OAuth2
             'visibility' => $private ? 'private' : 'public',
         ]));
 
-        return \json_decode($repository, true) ?? [];
+        $repository = \json_decode($repository, true) ?? [];
+
+        // Normalize to the GitHub/Gitea field shape ProviderRepository expects.
+        if (isset($repository['visibility'])) {
+            $repository['private'] = $repository['visibility'] !== 'public';
+        }
+
+        if (isset($repository['last_activity_at'])) {
+            $repository['pushed_at'] = $repository['last_activity_at'];
+        }
+
+        return $repository;
     }
 
     /**
