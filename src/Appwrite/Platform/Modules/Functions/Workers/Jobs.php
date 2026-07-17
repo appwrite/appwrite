@@ -39,6 +39,10 @@ use Utopia\System\System;
  * deployments build in parallel. Callbacks are at-least-once, so events are
  * de-duplicated on the CloudEvent id (inside the lock, so dedup + apply is
  * atomic and a lock timeout retries cleanly).
+ *
+ * Handlers are protected extension points: downstream workers (e.g. cloud)
+ * override finalize() and wrap parent:: — before it for work that must
+ * precede 'ready' (edge distribution), after it for post-activation work.
  */
 class Jobs extends Action
 {
@@ -147,7 +151,7 @@ class Jobs extends Action
         }, self::LOCK_TIMEOUT);
     }
 
-    private function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, array $data, VcsFactory $vcsFactory, array $platform): Document
+    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, array $data, VcsFactory $vcsFactory, array $platform): Document
     {
         $lines = $data['lines'] ?? [];
         $chunk = \is_array($lines) ? \implode("\n", $lines) : (string) $lines;
@@ -181,7 +185,7 @@ class Jobs extends Action
      * the deployment's sourceSize; 'manifest' (site builds) is the output file
      * listing for adapter detection, saved as a marker that joins readiness.
      */
-    private function onArtifact(
+    protected function onArtifact(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -229,7 +233,7 @@ class Jobs extends Action
      * need the manifest. Each leaves a cache marker and re-attempts the join
      * via ready(), so whichever lands last finalizes.
      */
-    private function onExit(
+    protected function onExit(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -257,7 +261,7 @@ class Jobs extends Action
      * The delivery half of the success join — see onExit. Fires once post-job
      * artifacts have run, so the output is already where Appwrite reads it.
      */
-    private function onComplete(
+    protected function onComplete(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -280,7 +284,7 @@ class Jobs extends Action
      * Attempt the success join (see onExit); a no-op until every marker is in.
      * Once joined: adapter detection for sites, size limit, then ready.
      */
-    private function ready(
+    protected function ready(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -343,7 +347,7 @@ class Jobs extends Action
      *
      * @return array{Document, ?string}
      */
-    private function detect(Database $dbForProject, Document $deployment, array $files): array
+    protected function detect(Database $dbForProject, Document $deployment, array $files): array
     {
         $site = empty($files) ? new Document() : $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId'));
         if ($site->isEmpty()) {
@@ -375,7 +379,7 @@ class Jobs extends Action
      * activation, usage and the latestDeployment pointer, mirroring the executor
      * Builds worker.
      */
-    private function finalize(
+    protected function finalize(
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
@@ -480,7 +484,7 @@ class Jobs extends Action
      * Report a build state to the VCS provider for a VCS deployment
      * (best-effort; no-op for non-VCS builds).
      */
-    private function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
+    protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
     {
         if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
             return;
@@ -514,7 +518,7 @@ class Jobs extends Action
      * Point the resource at this deployment (auto-activate). Mirrors the
      * essential activation from the Builds worker.
      */
-    private function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment): void
+    protected function activate(Database $dbForProject, Database $dbForPlatform, Document $project, Document $resource, Document $deployment): void
     {
         $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
             'live' => true,
@@ -543,7 +547,7 @@ class Jobs extends Action
      * deployment. Mirrors the Builds worker so the console reflects the current
      * build status.
      */
-    private function updateLatestDeployment(Database $dbForProject, Document $resource): void
+    protected function updateLatestDeployment(Database $dbForProject, Document $resource): void
     {
         $latest = $dbForProject->findOne('deployments', [
             Query::equal('resourceType', [$resource->getCollection()]),
@@ -570,7 +574,7 @@ class Jobs extends Action
      * deployment. Re-reads the resource so it sees a deploymentId just set by
      * activate().
      */
-    private function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
+    protected function schedule(Database $dbForProject, Database $dbForPlatform, Document $resource): void
     {
         $scheduleId = $resource->getAttribute('scheduleId', '');
         if ($scheduleId === '') {
@@ -595,7 +599,7 @@ class Jobs extends Action
      * update, mirroring the executor Builds worker's fan-out. queueForEvents
      * only builds the event; realtime is triggered separately in action().
      */
-    private function dispatchUpdate(
+    protected function dispatchUpdate(
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -635,7 +639,7 @@ class Jobs extends Action
         return $deployment->getAttribute('resourceType') === 'sites' ? 'siteId' : 'functionId';
     }
 
-    private function truncate(string $logs): string
+    protected function truncate(string $logs): string
     {
         $limit = APP_LOG_LENGTH_LIMIT;
         if (\strlen($logs) <= $limit) {
