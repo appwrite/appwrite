@@ -46,6 +46,7 @@ import {
   DatabaseTypeIcon,
   getDatabaseTypeDisplayLabel,
 } from './DatabaseTypeIcon'
+import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 
 const DEFAULT_LIMIT = 15
 
@@ -76,27 +77,35 @@ export type DatabaseSelectorProps = {
 type DatabaseSelectorItem = DatabaseSwitcherSelection & {
   name: string
   specSlug?: string | null
+  status?: string | null
 }
 
 function DatabaseSelectorBreadcrumb({
   typeLabel,
   name,
+  status,
   translate,
 }: {
   typeLabel: string
   name: string
+  status?: string | null
   translate: (text: string) => string
 }) {
   return (
-    <span className="flex min-w-0 items-center gap-1 text-[13px]">
-      <span className="shrink-0 text-muted-foreground">
-        {translate(typeLabel)}
+    <span className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
+      <span className="flex min-w-0 items-center gap-1">
+        <span className="shrink-0 text-muted-foreground">
+          {translate(typeLabel)}
+        </span>
+        <ChevronRight
+          className="h-3 w-3 shrink-0 text-muted-foreground/60"
+          aria-hidden
+        />
+        <span className="min-w-0 truncate font-medium text-foreground">
+          {name}
+        </span>
       </span>
-      <ChevronRight
-        className="h-3 w-3 shrink-0 text-muted-foreground/60"
-        aria-hidden
-      />
-      <span className="min-w-0 truncate font-medium text-foreground">{name}</span>
+      <DedicatedDatabaseStatusBadge status={status} onlyWhenNotReady />
     </span>
   )
 }
@@ -161,7 +170,12 @@ export function DatabaseSelector({
   const dedicatedById = useMemo(() => {
     const map = new Map<
       string,
-      { specSlug: string | null; engine: string | null; api: string | null }
+      {
+        specSlug: string | null
+        engine: string | null
+        api: string | null
+        status: string | null
+      }
     >()
     for (const dedicated of dedicatedData?.databases ?? []) {
       if (!dedicated.$id) continue
@@ -169,6 +183,7 @@ export function DatabaseSelector({
         specSlug: dedicated.specification?.trim() || null,
         engine: dedicated.engine ?? null,
         api: dedicated.api ?? null,
+        status: dedicated.status ?? null,
       })
     }
     return map
@@ -184,6 +199,7 @@ export function DatabaseSelector({
         engine: db.engine ?? dedicated?.engine ?? null,
         product: db.product ?? dedicated?.api ?? null,
         specSlug: dedicated?.specSlug ?? SERVERLESS_DATABASE_SPEC_ID,
+        status: dedicated?.status ?? db.status ?? null,
       }
     })
   }, [consoleData?.databases, dedicatedById])
@@ -236,6 +252,12 @@ export function DatabaseSelector({
             >
               {displayName}
             </span>
+            <DedicatedDatabaseStatusBadge
+              status={
+                selectedItem?.status ?? selectedDedicated?.status ?? null
+              }
+              onlyWhenNotReady
+            />
           </span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
@@ -301,6 +323,7 @@ export function DatabaseSelector({
                     <DatabaseSelectorBreadcrumb
                       typeLabel={typeLabel}
                       name={item.name}
+                      status={item.status}
                       translate={t}
                     />
                   </button>

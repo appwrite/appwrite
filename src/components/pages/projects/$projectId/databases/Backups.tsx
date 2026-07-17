@@ -10,6 +10,7 @@ import {
   useBackupPolicies,
   useBackupArchives,
   useDatabaseRestoreMigrations,
+  enrichRestorationTargetOptions,
 } from '@/lib/react-query/hooks'
 import { RestoreProgressBanner } from './_components/RestoreProgressBanner'
 import { Button } from '@/components/ui/button'
@@ -126,11 +127,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const [selectedBackup, setSelectedBackup] =
     useState<Models.BackupArchive | null>(null)
   const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
-  const [sessionRestoreMigrationIds, setSessionRestoreMigrationIds] = useState<
-    string[]
+  const [sessionRestorations, setSessionRestorations] = useState<
+    Models.BackupRestoration[]
   >([])
-  const [dismissedRestoreMigrationIds, setDismissedRestoreMigrationIds] =
-    useState<Set<string>>(() => new Set())
 
   // Get project to get teamId for organization plan
   const { project } = useProject(projectId)
@@ -161,21 +160,22 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     { enabled: backupsEnabled },
   )
 
-  const restoreMigrationIds = (() => {
-    const ids: string[] = []
-    const seen = new Set<string>()
-    for (const restoration of restoreMigrations || []) {
+  const visibleRestorations = (() => {
+    const byMigrationId = new Map<string, Models.BackupRestoration>()
+    // Prefer session entries first so enriched target options win over the API copy.
+    for (const restoration of [
+      ...sessionRestorations,
+      ...(restoreMigrations || []),
+    ]) {
       const id = restoration.migrationId
-      if (!id || seen.has(id) || dismissedRestoreMigrationIds.has(id)) continue
-      seen.add(id)
-      ids.push(id)
+      if (!id || byMigrationId.has(id)) continue
+      byMigrationId.set(id, restoration)
     }
-    for (const id of sessionRestoreMigrationIds) {
-      if (!id || seen.has(id) || dismissedRestoreMigrationIds.has(id)) continue
-      seen.add(id)
-      ids.push(id)
-    }
-    return ids
+    return Array.from(byMigrationId.values()).sort((a, b) => {
+      const aTime = Date.parse(a.$createdAt || a.$updatedAt || '') || 0
+      const bTime = Date.parse(b.$createdAt || b.$updatedAt || '') || 0
+      return bTime - aTime
+    })
   })()
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
@@ -354,26 +354,63 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     mutationFn: async (params: {
       archiveId: string
       services: BackupServices[]
+      restoreTo: 'new' | 'same'
       newResourceId?: string
       newResourceName?: string
     }) => {
       const projectSdk = sdk.forProject(projectId)
-      return projectSdk.backups.createRestoration(params)
+      if (params.restoreTo === 'new') {
+        return projectSdk.backups.createRestoration({
+          archiveId: params.archiveId,
+          services: params.services,
+          newResourceId: params.newResourceId,
+          newResourceName: params.newResourceName,
+        })
+      }
+      return projectSdk.backups.createRestoration({
+        archiveId: params.archiveId,
+        services: params.services,
+      })
     },
-    onSuccess: (restoration) => {
+    onSuccess: (restoration, variables) => {
       toast.success(t('Database restore initiated'))
       if (restoration?.migrationId) {
-        setSessionRestoreMigrationIds((prev) =>
-          prev.includes(restoration.migrationId)
-            ? prev
-            : [...prev, restoration.migrationId],
+        const enrichedRestoration = enrichRestorationTargetOptions(
+          restoration,
+          {
+            oldId: databaseId,
+            newId:
+              variables.restoreTo === 'new' ? variables.newResourceId || '' : '',
+            newName:
+              variables.restoreTo === 'new'
+                ? variables.newResourceName || ''
+                : '',
+          },
         )
-        setDismissedRestoreMigrationIds((prev) => {
-          if (!prev.has(restoration.migrationId)) return prev
-          const next = new Set(prev)
-          next.delete(restoration.migrationId)
-          return next
-        })
+        setSessionRestorations((prev) =>
+          prev.some((item) => item.migrationId === restoration.migrationId)
+            ? prev
+            : [enrichedRestoration, ...prev],
+        )
+        queryClient.setQueryData<Models.BackupRestoration[]>(
+          [
+            'restorations',
+            'project',
+            projectId,
+            'database',
+            databaseId,
+            'recent-migrations',
+          ],
+          (previous) => {
+            const list = previous ?? []
+            if (
+              list.some((item) => item.migrationId === restoration.migrationId)
+            ) {
+              return list
+            }
+            return [enrichedRestoration, ...list]
+          },
+        )
       }
       // Invalidate archives query to refresh backup status
       queryClient.invalidateQueries({
@@ -512,30 +549,31 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
-      {restoreMigrationIds.length > 0 ? (
-        <div className="mb-6 space-y-2">
-          {restoreMigrationIds.map((migrationId) => (
-            <RestoreProgressBanner
-              key={migrationId}
-              projectId={projectId}
-              databaseId={databaseId}
-              region={region}
-              migrationId={migrationId}
-              onDismiss={() => {
-                setDismissedRestoreMigrationIds((prev) => {
-                  const next = new Set(prev)
-                  next.add(migrationId)
-                  return next
-                })
-                setSessionRestoreMigrationIds((prev) =>
-                  prev.filter((id) => id !== migrationId),
-                )
-              }}
-            />
-          ))}
-        </div>
+    <div className="w-full">
+      {visibleRestorations.length > 0 ? (
+        <>
+          <div className="mx-auto w-full max-w-7xl mt-4 px-4 sm:mt-6 sm:px-6">
+            <div className="space-y-2">
+              {visibleRestorations.map((restoration) => (
+                <RestoreProgressBanner
+                  key={restoration.migrationId}
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  region={region}
+                  restoration={restoration}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="my-6 w-full border-t border-border" />
+        </>
       ) : null}
+      <div
+        className={cn(
+          'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
+          visibleRestorations.length === 0 && 'mt-4 sm:mt-6',
+        )}
+      >
       <div className="grid gap-6 lg:grid-cols-3 lg:items-stretch">
         {/* Policies Section */}
         <div className="lg:col-span-1 flex flex-col">
@@ -927,6 +965,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Bulk Delete Action Bar */}
@@ -1572,6 +1611,7 @@ interface RestoreBackupDialogProps {
   onSubmit: (params: {
     archiveId: string
     services: BackupServices[]
+    restoreTo: 'new' | 'same'
     newResourceId?: string
     newResourceName?: string
   }) => void
@@ -1606,14 +1646,18 @@ function RestoreBackupDialog({
       onSubmit({
         archiveId: backup.$id,
         services: [BackupServices.Databases],
-        newResourceId: newDatabaseId || undefined,
-        newResourceName: newDatabaseName})
+        restoreTo: 'new',
+        // Always send a concrete ID so Open database can target the new DB
+        newResourceId: newDatabaseId.trim() || ID.unique(),
+        newResourceName: newDatabaseName.trim(),
+      })
     } else {
       if (!confirmSameDbRestore) return
       onSubmit({
         archiveId: backup.$id,
         services: [BackupServices.Databases],
-        newResourceId: databaseId})
+        restoreTo: 'same',
+      })
     }
   }
 

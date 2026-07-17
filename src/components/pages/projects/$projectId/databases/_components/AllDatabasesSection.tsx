@@ -49,9 +49,11 @@ import {
 import { DatabaseContextMenu } from './DatabaseContextMenu'
 import { DatabaseOperationsChartPreview } from './DatabaseOperationsChartPreview'
 import { NoBackupPoliciesWarningIcon } from './DatabaseBackupsNavLink'
+import { DedicatedDatabaseStatusBadge } from './DedicatedDatabaseStatusBadge'
 import { DatabaseTypeBadge } from './DatabaseTypeIcon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canShowDatabaseSecuritySettings } from '@/lib/console-access-checks'
+import { isDedicatedDatabaseReady } from '@/lib/databases/dedicated-database-status'
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 
@@ -180,6 +182,10 @@ function AllDatabasesGridCardShell({
               {shouldShowNoBackupWarning(hasBackupPolicy, showBackups) ? (
                 <NoBackupPoliciesWarningIcon />
               ) : null}
+              <DedicatedDatabaseStatusBadge
+                status={dedicated?.status}
+                onlyWhenNotReady
+              />
               {db.enabled === false ? (
                 <Badge
                   variant="error"
@@ -504,7 +510,7 @@ export function AllDatabasesSection({
   }
 
   return (
-    <section className="mb-10">
+    <section>
       {showLoading ? (
         <div className="rounded-lg border border-border bg-card py-10 text-center">
           <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
@@ -574,7 +580,9 @@ export function AllDatabasesSection({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {databases.map((db) => (
+                  {databases.map((db) => {
+                    const dedicated = dedicatedById.get(db.$id)
+                    return (
                     <TableRow
                       key={db.$id}
                       className="cursor-pointer border-b border-border/50 hover:bg-muted/30"
@@ -584,7 +592,7 @@ export function AllDatabasesSection({
                           {...databaseCardLink(
                             projectId,
                             db,
-                            dedicatedById.get(db.$id),
+                            dedicated,
                           )}
                           className="block min-w-0 group"
                         >
@@ -595,7 +603,7 @@ export function AllDatabasesSection({
                             {shouldShowNoBackupWarning(
                               resolveHasBackupPolicy(
                                 db,
-                                dedicatedById.get(db.$id),
+                                dedicated,
                                 nativeHasBackupPolicyById,
                               ),
                               showBackups,
@@ -611,13 +619,19 @@ export function AllDatabasesSection({
                       <TableCell className="px-4 py-3">
                         <DatabaseTypeBadge
                           apiType={db.databaseType}
-                          engine={dedicatedById.get(db.$id)?.engine}
-                          product={dedicatedById.get(db.$id)?.api}
+                          engine={dedicated?.engine}
+                          product={dedicated?.api}
                         />
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center justify-center">
-                          {db.enabled === false ? (
+                          {dedicated?.status &&
+                          !isDedicatedDatabaseReady(dedicated.status) ? (
+                            <DedicatedDatabaseStatusBadge
+                              status={dedicated.status}
+                              className="text-[11px]"
+                            />
+                          ) : db.enabled === false ? (
                             <Badge
                               variant="error"
                               className="text-[11px] font-medium border px-2 py-0.5"
@@ -651,7 +665,8 @@ export function AllDatabasesSection({
                         />
                       </TableCell>
                     </TableRow>
-                  ))}
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
