@@ -338,7 +338,7 @@ class Migrations extends Action
                 $this->deviceForFiles,
                 $migration->getAttribute('resourceId'),
                 $options['bucketId'],
-                $options['filename'],
+                $migration->getId(),
                 $options['columns'],
                 $options['delimiter'],
                 $options['enclosure'],
@@ -349,7 +349,7 @@ class Migrations extends Action
                 $this->deviceForFiles,
                 $migration->getAttribute('resourceId'),
                 $options['bucketId'] ?? 'default',
-                $options['filename'],
+                $migration->getId(),
                 $options['columns'] ?? [],
             ),
             default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
@@ -748,7 +748,7 @@ class Migrations extends Action
         }
 
         $extension = $migration->getAttribute('destination') === DestinationJSON::getName() ? '.json' : '.csv';
-        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . $extension);
+        $path = $this->deviceForFiles->getPath($bucketId . '/' . $migration->getId() . $extension);
         $size = $this->deviceForFiles->getFileSize($path);
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
@@ -1045,21 +1045,6 @@ class Migrations extends Action
         ));
 
         Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
-    }
-
-    /**
-     * Sanitize a filename to make it filesystem-safe
-     *
-     * @param string $filename
-     * @return string
-     */
-    protected function sanitizeFilename(string $filename): string
-    {
-        // Replace problematic characters with underscores
-        $sanitized = \preg_replace('/[:\/<>"|*?]/', '_', $filename);
-        $sanitized = \preg_replace('/[^\x20-\x7E]/', '_', $sanitized);
-        $sanitized = \trim($sanitized);
-        return empty($sanitized) ? 'export' : $sanitized;
     }
 
     /**

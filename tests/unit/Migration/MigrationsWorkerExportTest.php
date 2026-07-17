@@ -15,12 +15,62 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
+use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Source;
 use Utopia\Storage\Device;
 
 final class MigrationsWorkerExportTest extends TestCase
 {
+    public function testExportDestinationsWriteToMigrationScopedArtifactNames(): void
+    {
+        $worker = new class () extends Migrations {
+            public function destination(Device $deviceForFiles, Document $migration): Destination
+            {
+                $this->deviceForFiles = $deviceForFiles;
+                return $this->processDestination($migration);
+            }
+        };
+        $deviceForFiles = $this->createStub(Device::class);
+        $cases = [
+            [
+                'destination' => DestinationCSV::getName(),
+                'options' => [
+                    'bucketId' => 'default',
+                    'columns' => [],
+                    'delimiter' => ',',
+                    'enclosure' => '"',
+                    'escape' => '"',
+                    'filename' => 'same/name',
+                    'header' => true,
+                ],
+            ],
+            [
+                'destination' => DestinationJSON::getName(),
+                'options' => [
+                    'bucketId' => 'default',
+                    'columns' => [],
+                    'filename' => 'same:name',
+                ],
+            ],
+        ];
+
+        foreach ($cases as $case) {
+            $destination = $worker->destination($deviceForFiles, new Document([
+                '$id' => 'migration-id',
+                'credentials' => [],
+                'destination' => $case['destination'],
+                'options' => $case['options'],
+                'resourceId' => 'database',
+            ]));
+            $property = new \ReflectionProperty($destination, 'outputFile');
+
+            $this->assertSame('migration-id', $property->getValue($destination));
+
+            $destination->cleanUp();
+        }
+    }
+
     public function testExportCompletionFinalizesWithoutInitiatingUser(): void
     {
         $file = null;
@@ -50,11 +100,11 @@ final class MigrationsWorkerExportTest extends TestCase
         $deviceForFiles
             ->expects($this->once())
             ->method('getPath')
-            ->with('default/export.json')
-            ->willReturn('/tmp/export.json');
-        $deviceForFiles->expects($this->once())->method('getFileSize')->with('/tmp/export.json')->willReturn(256);
-        $deviceForFiles->expects($this->once())->method('getFileMimeType')->with('/tmp/export.json')->willReturn('application/json');
-        $deviceForFiles->expects($this->once())->method('getFileHash')->with('/tmp/export.json')->willReturn('signature');
+            ->with('default/migration-without-user.json')
+            ->willReturn('/tmp/migration-without-user.json');
+        $deviceForFiles->expects($this->once())->method('getFileSize')->with('/tmp/migration-without-user.json')->willReturn(256);
+        $deviceForFiles->expects($this->once())->method('getFileMimeType')->with('/tmp/migration-without-user.json')->willReturn('application/json');
+        $deviceForFiles->expects($this->once())->method('getFileHash')->with('/tmp/migration-without-user.json')->willReturn('signature');
 
         $worker = new class () extends Migrations {
             public function complete(
@@ -119,6 +169,128 @@ final class MigrationsWorkerExportTest extends TestCase
             '/v1/storage/buckets/default/files/',
             (string) $migration->getAttribute('options')['downloadUrl']
         );
+    }
+
+    public function testExportCompletionKeepsDisplayNamesButUsesUniquePhysicalPaths(): void
+    {
+        $cases = [
+            ['id' => 'same-name-one', 'name' => 'report'],
+            ['id' => 'same-name-two', 'name' => 'report'],
+            ['id' => 'sanitized-name-one', 'name' => 'sales/2026'],
+            ['id' => 'sanitized-name-two', 'name' => 'sales:2026'],
+        ];
+        $files = [];
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->expects($this->never())->method('findOne');
+        $dbForPlatform
+            ->expects($this->exactly(\count($cases)))
+            ->method('getDocument')
+            ->with('buckets', 'default')
+            ->willReturn(new Document([
+                '$id' => 'default',
+                '$sequence' => 1,
+            ]));
+        $dbForPlatform
+            ->expects($this->exactly(\count($cases)))
+            ->method('createDocument')
+            ->with(
+                'bucket_1',
+                $this->callback(function (Document $document) use (&$files): bool {
+                    $files[] = $document;
+                    return true;
+                })
+            )
+            ->willReturnArgument(1);
+
+        $deviceForFiles = $this->createMock(Device::class);
+        $deviceForFiles
+            ->expects($this->exactly(\count($cases)))
+            ->method('getPath')
+            ->willReturnCallback(static fn (string $path): string => '/tmp/' . \basename($path));
+        $deviceForFiles
+            ->expects($this->exactly(\count($cases)))
+            ->method('getFileSize')
+            ->willReturn(256);
+        $deviceForFiles
+            ->expects($this->exactly(\count($cases)))
+            ->method('getFileMimeType')
+            ->willReturn('application/json');
+        $deviceForFiles
+            ->expects($this->exactly(\count($cases)))
+            ->method('getFileHash')
+            ->willReturnCallback(static fn (string $path): string => 'signature:' . $path);
+
+        $worker = new class () extends Migrations {
+            public function complete(
+                Database $dbForPlatform,
+                Device $deviceForFiles,
+                Document $migration,
+                MailPublisher $publisherForMails,
+                Realtime $queueForRealtime,
+                Authorization $authorization,
+            ): void {
+                $this->dbForPlatform = $dbForPlatform;
+                $this->deviceForFiles = $deviceForFiles;
+                $this->plan = [];
+                $this->handleDataExportComplete(
+                    new Document(['$id' => 'project-id']),
+                    $migration,
+                    $publisherForMails,
+                    $queueForRealtime,
+                    [],
+                    $authorization,
+                );
+            }
+
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
+            {
+                return $migration;
+            }
+        };
+
+        $previousKey = \getenv('_APP_OPENSSL_KEY_V1');
+        $previousDomain = \getenv('_APP_DOMAIN');
+        \putenv('_APP_OPENSSL_KEY_V1=test-key');
+        \putenv('_APP_DOMAIN=example.test');
+
+        try {
+            foreach ($cases as $case) {
+                $migration = new Document([
+                    '$id' => $case['id'],
+                    'destination' => DestinationJSON::getName(),
+                    'options' => [
+                        'filename' => $case['name'],
+                        'notify' => false,
+                        'userInternalId' => '',
+                    ],
+                ]);
+                $worker->complete(
+                    $dbForPlatform,
+                    $deviceForFiles,
+                    $migration,
+                    $this->createStub(MailPublisher::class),
+                    $this->createStub(Realtime::class),
+                    $this->createStub(Authorization::class),
+                );
+
+                $file = $files[\array_key_last($files)];
+                $this->assertSame($case['name'], $file->getAttribute('name'));
+                $this->assertSame('/tmp/' . $case['id'] . '.json', $file->getAttribute('path'));
+                $this->assertSame('signature:/tmp/' . $case['id'] . '.json', $file->getAttribute('signature'));
+                $this->assertStringContainsString(
+                    '/v1/storage/buckets/default/files/' . $file->getId() . '/push',
+                    (string) $migration->getAttribute('options')['downloadUrl']
+                );
+            }
+        } finally {
+            $this->restoreEnvironment('_APP_OPENSSL_KEY_V1', $previousKey);
+            $this->restoreEnvironment('_APP_DOMAIN', $previousDomain);
+        }
+
+        $this->assertCount(\count($cases), \array_unique(\array_map(
+            static fn (Document $file): string => (string) $file->getAttribute('path'),
+            $files,
+        )));
     }
 
     public function testExportCompletionNormalizesNumericStringUserInternalId(): void
