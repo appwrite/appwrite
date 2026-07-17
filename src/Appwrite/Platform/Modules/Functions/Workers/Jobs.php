@@ -299,14 +299,13 @@ class Jobs extends Action
         $function = $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId'));
 
         $logs = $deployment->getAttribute('buildLogs', '');
-        $startedAt = \strtotime($deployment->getAttribute('buildStartedAt', '') ?: 'now') ?: \time();
         $trailer = $success
             ? "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n"
             : "\n" . ($message !== '' ? $message : 'Build failed.') . "\n";
         $update = [
             'status' => $success ? 'ready' : 'failed',
             'buildEndedAt' => DateTime::now(),
-            'buildDuration' => \max(0, \time() - $startedAt),
+            'buildDuration' => $this->duration($deployment),
             'buildLogs' => $this->truncate($logs . $trailer),
         ];
         if ($success) {
@@ -350,6 +349,29 @@ class Jobs extends Action
         }
 
         return $deployment;
+    }
+
+    /**
+     * Elapsed build seconds, rounded up so any finished build reports at least
+     * 1 (mirrors the executor Builds worker). Callbacks arrive out of order, so
+     * buildStartedAt (stamped by the first log callback) can be missing when a
+     * terminal callback finalizes first — fall back to the deployment's
+     * creation time rather than reporting 0.
+     */
+    private function duration(Document $deployment): int
+    {
+        $startedAt = $deployment->getAttribute('buildStartedAt', '') ?: $deployment->getCreatedAt();
+        if (empty($startedAt)) {
+            return 0;
+        }
+
+        try {
+            $started = (float) (new \DateTimeImmutable($startedAt))->format('U.u');
+        } catch (\Exception) {
+            return 0;
+        }
+
+        return (int) \ceil(\max(0.0, \microtime(true) - $started));
     }
 
     /**
