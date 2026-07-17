@@ -43,7 +43,7 @@ const client = new Client()
 const project = new Project(client);
 
 const result = await project.updateOAuth2Server({
-    enabled: false,
+    enabled: true,
     authorizationUrl: 'https://example.com',
     scopes: [], // optional
     authorizationDetailsTypes: [], // optional
@@ -69,7 +69,7 @@ const client = new Client()
 const project = new Project(client);
 
 const result = await project.updateOAuth2Server({
-    enabled: false,
+    enabled: true,
     authorizationUrl: 'https://example.com',
     scopes: [], // optional
     authorizationDetailsTypes: [], // optional
@@ -99,7 +99,7 @@ $client = (new Client())
 $project = new Project($client);
 
 $result = $project->updateOAuth2Server(
-    enabled: false,
+    enabled: true,
     authorizationUrl: 'https://example.com',
     scopes: [], // optional
     authorizationDetailsTypes: [], // optional
@@ -127,7 +127,7 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 project = Project(client)
 
 result: ProjectModel = project.update_o_auth2_server(
-    enabled = False,
+    enabled = True,
     authorization_url = 'https://example.com',
     scopes = [], # optional
     authorization_details_types = [], # optional
@@ -157,7 +157,7 @@ client = Client.new
 project = Project.new(client)
 
 result = project.update_o_auth2_server(
-    enabled: false,
+    enabled: true,
     authorization_url: 'https://example.com',
     scopes: [], # optional
     authorization_details_types: [], # optional
@@ -183,7 +183,7 @@ Client client = Client()
 Project project = Project(client);
 
 Project result = await project.updateOAuth2Server(
-    enabled: false,
+    enabled: true,
     authorizationUrl: 'https://example.com',
     scopes: [], // (optional)
     authorizationDetailsTypes: [], // (optional)
@@ -212,7 +212,7 @@ Client client = new Client()
 Project project = new Project(client);
 
 Project result = await project.UpdateOAuth2Server(
-    enabled: false,
+    enabled: true,
     authorizationUrl: "https://example.com",
     scopes: new List<string>(), // optional
     authorizationDetailsTypes: new List<string>(), // optional
@@ -240,7 +240,7 @@ val client = Client()
 val project = Project(client)
 
 val response = project.updateOAuth2Server(
-    enabled = false,
+    enabled = true,
     authorizationUrl = "https://example.com",
     scopes = listOf(), // optional
     authorizationDetailsTypes = listOf(), // optional
@@ -268,7 +268,7 @@ Client client = new Client()
 Project project = new Project(client);
 
 project.updateOAuth2Server(
-    false, // enabled
+    true, // enabled
     "https://example.com", // authorizationUrl
     List.of(), // scopes (optional)
     List.of(), // authorizationDetailsTypes (optional)
@@ -302,7 +302,7 @@ let client = Client()
 let project = Project(client)
 
 let project = try await project.updateOAuth2Server(
-    enabled: false,
+    enabled: true,
     authorizationUrl: "https://example.com",
     scopes: [], // optional
     authorizationDetailsTypes: [], // optional
@@ -335,7 +335,7 @@ client := client.New(
 service := project.New(client)
 
 response, error := service.UpdateOAuth2Server(
-    false,
+    true,
     "https://example.com",
     project.WithUpdateOAuth2ServerScopes([]string{}),
     project.WithUpdateOAuth2ServerAuthorizationDetailsTypes([]string{}),
@@ -364,7 +364,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let project = Project::new(&client);
 
     let result = project.update_o_auth2_server(
-        false,
+        true,
         "https://example.com",
         Some(vec![]), // optional
         Some(vec![]), // optional
