@@ -108,6 +108,42 @@ final class MigrationsTest extends TestCase
         $this->assertNotContains('persist:completed:finished', $events);
     }
 
+    public function testNullResourceTypeUsesEmptyResourceSelector(): void
+    {
+        $events = [];
+        $source = $this->createSourceMock();
+        $destination = $this->createDestinationMock();
+
+        $destination
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'destination:success';
+            });
+        $source
+            ->expects($this->once())
+            ->method('success')
+            ->willReturnCallback(static function () use (&$events): void {
+                $events[] = 'source:success';
+            });
+        $source->expects($this->never())->method('error');
+        $destination->expects($this->never())->method('error');
+
+        $migration = $this->createMigration(null);
+        $processor = $this->createProcessor($source, $destination, $events);
+
+        $this->process($processor, $migration);
+
+        $this->assertSame('completed', $migration->getAttribute('status'));
+        $this->assertSame([
+            'persist:processing:processing',
+            'persist:processing:migrating',
+            'destination:success',
+            'source:success',
+            'persist:completed:finished',
+        ], $events);
+    }
+
     private function createSourceMock(): Source&MockObject
     {
         $target = $this->createMock(Source::class);
@@ -128,7 +164,7 @@ final class MigrationsTest extends TestCase
         return $target;
     }
 
-    private function createMigration(): Document
+    private function createMigration(?string $resourceType = ''): Document
     {
         return new Document([
             '$id' => 'migration',
@@ -137,7 +173,7 @@ final class MigrationsTest extends TestCase
             'destination' => 'TestDestination',
             'options' => [],
             'resourceId' => '',
-            'resourceType' => '',
+            'resourceType' => $resourceType,
             'resources' => [],
             'source' => 'TestSource',
             'stage' => 'pending',

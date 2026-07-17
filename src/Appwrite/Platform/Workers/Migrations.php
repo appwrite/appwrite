@@ -541,6 +541,10 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 [$rootResourceId, $rootResourceChildId] = $this->resolveResourceIds($migration);
+                $rootResourceType = (string) (
+                    $migration->getAttribute('parentResourceType')
+                    ?: $migration->getAttribute('resourceType')
+                );
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
                     function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
@@ -580,7 +584,7 @@ class Migrations extends Action
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
                     $rootResourceId,
-                    $migration->getAttribute('parentResourceType') ?: $migration->getAttribute('resourceType'),
+                    $rootResourceType,
                     $rootResourceChildId,
                 );
 
