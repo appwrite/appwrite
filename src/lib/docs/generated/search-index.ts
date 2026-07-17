@@ -1532,7 +1532,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     description:
       'Build an end-to-end "Sign in with your product" experience against your Appwrite OAuth2 server, from the consent screen to the token exchange.',
     excerpt:
-      'Once your project\'s OAuth2 server is enabled, other apps can offer "Sign in with your product". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every moving part. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**, the consumer.…',
+      'Once your project\'s OAuth2 server is enabled, other apps can offer "Sign in with your product". This tutorial builds that experience end to end with two small TanStack Start apps, so you can see every part of the flow. What you will build Two apps play the two sides of an OAuth integration: - **TaskFlow**, the provider. It owns the Appwrite project with the OAuth2 server enabled, and it hosts the **consent screen** where its users approve access. - **Vantage**,…',
     breadcrumbs: ['OAuth2 server', 'Steps', 'Sign in with your product'],
   },
   {

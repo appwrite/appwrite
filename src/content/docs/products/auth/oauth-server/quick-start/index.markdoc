@@ -9,8 +9,8 @@ This guide turns your project into an OAuth2 provider and runs one sign-in throu
 
 The examples follow two apps, the same pair the [tutorials](/docs/products/auth/oauth-server/sign-in-with-your-product/step-1) build out in full:
 
-- **TaskFlow** (`http://taskflow.localhost`): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens.
-- **Vantage** (`http://vantage.localhost`): the third-party **consumer**, called the client in OAuth2. It sends users to TaskFlow for authorization and receives tokens after they approve access.
+- **TaskFlow** (`https://taskflow.localhost`): your product and the **OAuth2 provider**, also called the authorization server. It authenticates users, presents the consent screen, and issues tokens.
+- **Vantage** (`https://vantage.localhost`): the third-party **consumer**, called the client in OAuth2. It sends users to TaskFlow for authorization and receives tokens after they approve access.
 
 # Enable the server {% #enable %}
 
@@ -23,7 +23,7 @@ In the Console, open **Auth**, select the **OAuth2 server** tab, and turn on **E
 ![Enabling the OAuth2 server in the Appwrite Console](/images/docs/oauth-server/oauth2-server-settings.avif)
 {% /only_light %}
 
-Set the **Authorization URL** to the page you will host the consent screen on. This is where Appwrite redirects users during authorization, and where you present them the details of the request so they can approve or cancel. Point it at `http://taskflow.localhost/consent`, where TaskFlow will host its consent screen. Nothing needs to run there yet. The `openid`, `profile`, and `email` scopes are always included; add any scopes your custom APIs will support.
+Set the **Authorization URL** to the page you will host the consent screen on. This is where Appwrite redirects users during authorization, and where you present them the details of the request so they can approve or reject. Point it at `https://taskflow.localhost/consent`, where TaskFlow will host its consent screen. Nothing needs to run there yet. The `openid`, `profile`, and `email` scopes are always included; add any scopes your custom APIs will support.
 
 You can also enable and configure the server with a [Server SDK](/docs/sdks#server) using the `updateOAuth2Server` method.
 
@@ -388,7 +388,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Copy the discovery URL {% #discovery %}
 
-Once enabled, the server publishes an OpenID Connect discovery document. Integrators point their OAuth or OIDC library at this URL and it learns every endpoint automatically.
+Once enabled, the server publishes an OpenID Connect discovery document. Integrators point their OAuth or OIDC library at this URL and it learns every endpoint automatically. If the integrating platform supports OIDC sign-in out of the box, this URL is all it needs: it can skip most of the steps below instead of building the flow from scratch.
 
 {% only_dark %}
 ![The OIDC discovery URL in the Appwrite Console](/images/docs/oauth-server/dark/oauth2-server-discovery.avif)
@@ -401,9 +401,9 @@ Open it in a browser to confirm the server is live. It returns JSON describing t
 
 # Register a client {% #register %}
 
-Each app that integrates with your project registers as a client. Here that is Vantage. The **redirect URI** it declares is a URL on Vantage, `http://vantage.localhost/auth/redirect`, where the OAuth2 server sends users back with the authorization code. Any HTTP or HTTPS URL works.
+Each app that integrates with your project registers as a client. Here that is Vantage. The **redirect URI** it declares is a URL on Vantage, `https://vantage.localhost/auth/redirect`, where the OAuth2 server sends users back with the authorization code. For security, redirect URIs must use HTTPS. Loopback addresses like `localhost`, `127.0.0.1`, and `[::1]` are the exception and can use HTTP during development.
 
-Open the **Apps** sub-tab and create a client. Name it `Vantage`, add the redirect URI, and choose a type. Pick **Confidential** for this walkthrough so you get a secret to authenticate the token exchange. Copy the secret when it is shown, because it appears only once.
+Open the **Apps** sub-tab and create a client. Name it `Vantage`, add the redirect URI, and choose a type. Pick **Confidential** for this walkthrough so you get a secret to authenticate the token exchange. Copy the secret when it is shown, because it appears only once. For a mobile or single-page app that cannot hold a secret, pick **Public** instead: the token exchange then uses [PKCE](/docs/products/auth/oauth-server/authorization#pkce) in place of the secret, and the [client types](/docs/products/auth/oauth-server/clients#client-types) comparison shows what else changes.
 
 {% only_dark %}
 ![Creating an OAuth2 client](/images/docs/oauth-server/dark/oauth2-server-create-app.avif)
@@ -427,7 +427,8 @@ const apps = new Apps(client);
 const app = await apps.create({
     appId: ID.unique(),
     name: 'Vantage',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
 });
 ```
 ```client-flutter
@@ -442,7 +443,8 @@ Apps apps = Apps(client);
 App app = await apps.create(
     appId: ID.unique(),
     name: 'Vantage',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
 );
 ```
 ```client-apple
@@ -457,7 +459,8 @@ let apps = Apps(client)
 let app = try await apps.create(
     appId: ID.unique(),
     name: "Vantage",
-    redirectUris: ["http://vantage.localhost/auth/redirect"]
+    redirectUris: ["https://vantage.localhost/auth/redirect"],
+    type: "confidential"
 )
 ```
 ```client-android-kotlin
@@ -474,7 +477,8 @@ val apps = Apps(client)
 val app = apps.create(
     appId = ID.unique(),
     name = "Vantage",
-    redirectUris = listOf("http://vantage.localhost/auth/redirect")
+    redirectUris = listOf("https://vantage.localhost/auth/redirect"),
+    type = "confidential"
 )
 ```
 ```client-android-java
@@ -492,7 +496,7 @@ Apps apps = new Apps(client);
 apps.create(
     ID.unique(), // appId
     "Vantage", // name
-    List.of("http://vantage.localhost/auth/redirect"), // redirectUris
+    List.of("https://vantage.localhost/auth/redirect"), // redirectUris
     null, // description (optional)
     null, // clientUri (optional)
     null, // logoUri (optional)
@@ -506,7 +510,7 @@ apps.create(
     null, // dataDeletionUrl (optional)
     null, // postLogoutRedirectUris (optional)
     null, // enabled (optional)
-    null, // type (optional)
+    "confidential", // type (optional)
     null, // deviceFlow (optional)
     null, // teamId (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -531,7 +535,8 @@ const apps = new Apps(client);
 const app = await apps.create({
     appId: ID.unique(),
     name: 'Vantage',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
 });
 ```
 {% /multicode %}
@@ -552,9 +557,21 @@ const app = await apps.update({
     appId: '<APP_ID>',
     name: 'Vantage',
     description: 'A dashboard that signs in with TaskFlow.',
-    logoUri: 'https://example.com/logo.png',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    clientUri: 'https://vantage.localhost',
+    logoUri: 'https://vantage.localhost/logo.png',
+    privacyPolicyUrl: 'https://vantage.localhost/privacy',
+    termsUrl: 'https://vantage.localhost/terms',
+    contacts: ['security@vantage.localhost'],
+    tagline: 'Product analytics for modern teams',
+    tags: ['analytics', 'productivity'],
+    images: ['https://vantage.localhost/screenshot.png'],
+    supportUrl: 'https://vantage.localhost/support',
+    dataDeletionUrl: 'https://vantage.localhost/data-deletion',
     enabled: true,
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    postLogoutRedirectUris: ['https://vantage.localhost/signed-out'],
+    type: 'confidential',
+    deviceFlow: false,
 });
 ```
 ```client-flutter
@@ -570,9 +587,21 @@ App app = await apps.update(
     appId: '<APP_ID>',
     name: 'Vantage',
     description: 'A dashboard that signs in with TaskFlow.',
-    logoUri: 'https://example.com/logo.png',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    clientUri: 'https://vantage.localhost',
+    logoUri: 'https://vantage.localhost/logo.png',
+    privacyPolicyUrl: 'https://vantage.localhost/privacy',
+    termsUrl: 'https://vantage.localhost/terms',
+    contacts: ['security@vantage.localhost'],
+    tagline: 'Product analytics for modern teams',
+    tags: ['analytics', 'productivity'],
+    images: ['https://vantage.localhost/screenshot.png'],
+    supportUrl: 'https://vantage.localhost/support',
+    dataDeletionUrl: 'https://vantage.localhost/data-deletion',
     enabled: true,
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    postLogoutRedirectUris: ['https://vantage.localhost/signed-out'],
+    type: 'confidential',
+    deviceFlow: false,
 );
 ```
 ```client-apple
@@ -588,9 +617,21 @@ let app = try await apps.update(
     appId: "<APP_ID>",
     name: "Vantage",
     description: "A dashboard that signs in with TaskFlow.",
-    logoUri: "https://example.com/logo.png",
-    redirectUris: ["http://vantage.localhost/auth/redirect"],
-    enabled: true
+    clientUri: "https://vantage.localhost",
+    logoUri: "https://vantage.localhost/logo.png",
+    privacyPolicyUrl: "https://vantage.localhost/privacy",
+    termsUrl: "https://vantage.localhost/terms",
+    contacts: ["security@vantage.localhost"],
+    tagline: "Product analytics for modern teams",
+    tags: ["analytics", "productivity"],
+    images: ["https://vantage.localhost/screenshot.png"],
+    supportUrl: "https://vantage.localhost/support",
+    dataDeletionUrl: "https://vantage.localhost/data-deletion",
+    enabled: true,
+    redirectUris: ["https://vantage.localhost/auth/redirect"],
+    postLogoutRedirectUris: ["https://vantage.localhost/signed-out"],
+    type: "confidential",
+    deviceFlow: false
 )
 ```
 ```client-android-kotlin
@@ -607,9 +648,21 @@ val app = apps.update(
     appId = "<APP_ID>",
     name = "Vantage",
     description = "A dashboard that signs in with TaskFlow.",
-    logoUri = "https://example.com/logo.png",
-    redirectUris = listOf("http://vantage.localhost/auth/redirect"),
-    enabled = true
+    clientUri = "https://vantage.localhost",
+    logoUri = "https://vantage.localhost/logo.png",
+    privacyPolicyUrl = "https://vantage.localhost/privacy",
+    termsUrl = "https://vantage.localhost/terms",
+    contacts = listOf("security@vantage.localhost"),
+    tagline = "Product analytics for modern teams",
+    tags = listOf("analytics", "productivity"),
+    images = listOf("https://vantage.localhost/screenshot.png"),
+    supportUrl = "https://vantage.localhost/support",
+    dataDeletionUrl = "https://vantage.localhost/data-deletion",
+    enabled = true,
+    redirectUris = listOf("https://vantage.localhost/auth/redirect"),
+    postLogoutRedirectUris = listOf("https://vantage.localhost/signed-out"),
+    type = "confidential",
+    deviceFlow = false,
 )
 ```
 ```client-android-java
@@ -626,22 +679,22 @@ Apps apps = new Apps(client);
 apps.update(
     "<APP_ID>", // appId
     "Vantage", // name
-    "A dashboard that signs in with TaskFlow.", // description (optional)
-    null, // clientUri (optional)
-    "https://example.com/logo.png", // logoUri (optional)
-    null, // privacyPolicyUrl (optional)
-    null, // termsUrl (optional)
-    null, // contacts (optional)
-    null, // tagline (optional)
-    null, // tags (optional)
-    null, // images (optional)
-    null, // supportUrl (optional)
-    null, // dataDeletionUrl (optional)
-    true, // enabled (optional)
-    List.of("http://vantage.localhost/auth/redirect"), // redirectUris (optional)
-    null, // postLogoutRedirectUris (optional)
-    null, // type (optional)
-    null, // deviceFlow (optional)
+    "A dashboard that signs in with TaskFlow.", // description
+    "https://vantage.localhost", // clientUri
+    "https://vantage.localhost/logo.png", // logoUri
+    "https://vantage.localhost/privacy", // privacyPolicyUrl
+    "https://vantage.localhost/terms", // termsUrl
+    List.of("security@vantage.localhost"), // contacts
+    "Product analytics for modern teams", // tagline
+    List.of("analytics", "productivity"), // tags
+    List.of("https://vantage.localhost/screenshot.png"), // images
+    "https://vantage.localhost/support", // supportUrl
+    "https://vantage.localhost/data-deletion", // dataDeletionUrl
+    true, // enabled
+    List.of("https://vantage.localhost/auth/redirect"), // redirectUris
+    List.of("https://vantage.localhost/signed-out"), // postLogoutRedirectUris
+    "confidential", // type
+    false, // deviceFlow
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -665,9 +718,21 @@ const app = await apps.update({
     appId: '<APP_ID>',
     name: 'Vantage',
     description: 'A dashboard that signs in with TaskFlow.',
-    logoUri: 'https://example.com/logo.png',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    clientUri: 'https://vantage.localhost',
+    logoUri: 'https://vantage.localhost/logo.png',
+    privacyPolicyUrl: 'https://vantage.localhost/privacy',
+    termsUrl: 'https://vantage.localhost/terms',
+    contacts: ['security@vantage.localhost'],
+    tagline: 'Product analytics for modern teams',
+    tags: ['analytics', 'productivity'],
+    images: ['https://vantage.localhost/screenshot.png'],
+    supportUrl: 'https://vantage.localhost/support',
+    dataDeletionUrl: 'https://vantage.localhost/data-deletion',
     enabled: true,
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    postLogoutRedirectUris: ['https://vantage.localhost/signed-out'],
+    type: 'confidential',
+    deviceFlow: false,
 });
 ```
 {% /multicode %}
@@ -688,27 +753,24 @@ The URL uses TaskFlow's Appwrite API endpoint because its Appwrite project is ac
 ```text
 https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize
     ?client_id=<CLIENT_ID>
-    &redirect_uri=http://vantage.localhost/auth/redirect
+    &redirect_uri=https://vantage.localhost/auth/redirect
     &response_type=code
     &scope=openid profile email
-    &state=<STATE>
 ```
 ```curl
 curl -G 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize' \
   --data-urlencode 'client_id=<CLIENT_ID>' \
-  --data-urlencode 'redirect_uri=http://vantage.localhost/auth/redirect' \
+  --data-urlencode 'redirect_uri=https://vantage.localhost/auth/redirect' \
   --data-urlencode 'response_type=code' \
-  --data-urlencode 'scope=openid profile email' \
-  --data-urlencode 'state=<STATE>'
+  --data-urlencode 'scope=openid profile email'
 ```
 ```hurl
 GET https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/authorize
 [Query]
 client_id: <CLIENT_ID>
-redirect_uri: http://vantage.localhost/auth/redirect
+redirect_uri: https://vantage.localhost/auth/redirect
 response_type: code
 scope: openid profile email
-state: <STATE>
 ```
 {% /multicode %}
 
@@ -717,34 +779,25 @@ Each query parameter tells TaskFlow how to handle the request:
 | Parameter | Meaning |
 | --- | --- |
 | `client_id` | Identifies Vantage as the client requesting access. |
-| `redirect_uri` | Tells TaskFlow where to return the browser after the user approves or cancels. It must match a URI registered for Vantage. |
+| `redirect_uri` | Tells TaskFlow where to return the browser after the user approves or rejects. It must match a URI registered for Vantage. |
 | `response_type=code` | Requests an authorization code. The browser receives this temporary code, then Vantage's server exchanges it for tokens in step 3. |
 | `scope` | Lists the access Vantage is requesting. `openid` starts an OpenID Connect sign-in, while `profile` and `email` request the user's basic profile and email claims. |
-| `state` | Carries a random value created and stored by Vantage. Vantage compares it with the value returned after authorization to confirm the response belongs to the same sign-in request. |
 
 When you open this URL, Appwrite validates the request and checks for an active TaskFlow user session.
 
 ## 2. Review and approve Vantage's request {% #approve-grant %}
 
-After Vantage opens the authorization endpoint:
+When Vantage opens the authorization endpoint for a signed-in user, Appwrite creates a pending authorization request called a **grant**. The grant connects the user, Vantage, the requested scopes, and Vantage's redirect URI. Appwrite then redirects the browser to TaskFlow's **authorization URL**, the consent page, with the `grant_id` in the query string. A complete consent screen uses that grant ID to show what Vantage is asking for and lets the user approve or reject; the [Authorization](/docs/products/auth/oauth-server/authorization#consent) guide shows how to build it.
 
-- **Appwrite creates a grant.** For a signed-in user, Appwrite creates a pending authorization request that connects the user, Vantage, the requested scopes, and Vantage's redirect URI. This pending request is called a grant.
+This quick start does not build TaskFlow's consent screen, so the browser lands on `https://taskflow.localhost/consent` and finds nothing there. That is fine: copy the `grant_id` from the address bar and approve the request manually. If the URL has no `grant_id`, the user has no active TaskFlow session. Sign in a user on the project, then open Vantage's authorization URL again.
 
-- **Appwrite redirects to TaskFlow.** The **authorization endpoint** is the Appwrite Cloud URL Vantage opens. The **authorization URL** is TaskFlow's consent page, where Appwrite sends the browser with a `grant_id`.
-
-- **TaskFlow presents the request.** A complete consent screen uses the grant ID to show that Vantage is asking for the user's profile and email, then lets the user approve or cancel. The [Authorization](/docs/products/auth/oauth-server/authorization#consent) guide shows how to build this screen.
-
-- **Copy the grant ID.** This quick start does not build TaskFlow's consent screen, so the browser lands on `http://taskflow.localhost/consent` and finds nothing there. Copy the `grant_id` from the address bar to continue manually.
-
-- **Sign in if the grant ID is missing.** A URL without a `grant_id` means the user does not have an active TaskFlow session. Sign in a user on the project, then open Vantage's authorization URL again.
-
-- **Approve Vantage's request.** Send the `grant_id` to the approval endpoint using the same TaskFlow user's session. A browser sends the session cookie automatically. From another environment, send the same cookie yourself: it is named `a_session_<PROJECT_ID>` and holds the session token. Use this request:
+Approving needs the same TaskFlow user's session, sent as the `a_session_<PROJECT_ID>` cookie, which holds the session secret. To find its value, open your browser's developer tools on the Network tab, look at any request to Appwrite, such as `GET /v1/account`, and copy the cookie from the request headers. Then send this request:
 
 {% multicode %}
 ```curl
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve' \
   -H 'Content-Type: application/json' \
-  -H 'Cookie: a_session_<PROJECT_ID>=<SESSION_TOKEN>' \
+  -H 'Cookie: a_session_<PROJECT_ID>=<SESSION_SECRET>' \
   -d '{
     "grant_id": "<GRANT_ID>"
   }'
@@ -752,14 +805,14 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve'
 ```hurl
 POST https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve
 Content-Type: application/json
-Cookie: a_session_<PROJECT_ID>=<SESSION_TOKEN>
+Cookie: a_session_<PROJECT_ID>=<SESSION_SECRET>
 {
     "grant_id": "<GRANT_ID>"
 }
 ```
 {% /multicode %}
 
-- **Return to Vantage.** After approval, Appwrite redirects the browser to Vantage's registered redirect URI with an authorization `code` in the query string. Vantage uses this code in the next step.
+After approval, Appwrite redirects the browser to Vantage's registered redirect URI with an authorization `code` in the query string. Vantage uses this code in the next step.
 
 ## 3. Exchange the code for tokens {% #exchange-code %}
 
@@ -772,7 +825,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/token' \
   -d '{
     "grant_type": "authorization_code",
     "code": "<CODE>",
-    "redirect_uri": "http://vantage.localhost/auth/redirect",
+    "redirect_uri": "https://vantage.localhost/auth/redirect",
     "client_id": "<CLIENT_ID>",
     "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
     "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
@@ -784,7 +837,7 @@ Content-Type: application/json
 {
     "grant_type": "authorization_code",
     "code": "<CODE>",
-    "redirect_uri": "http://vantage.localhost/auth/redirect",
+    "redirect_uri": "https://vantage.localhost/auth/redirect",
     "client_id": "<CLIENT_ID>",
     "client_secret": "<SECRET_FOR_CONFIDENTIAL_CLIENTS>",
     "code_verifier": "<PKCE_VERIFIER_FOR_PUBLIC_CLIENTS>"
@@ -833,6 +886,11 @@ Authorization: Bearer <ACCESS_TOKEN>
 See [Tokens](/docs/products/auth/oauth-server/tokens) for token structure, validation, refresh, and revocation.
 
 # Next steps {% #next-steps %}
+
+Enabling the server is half of becoming a provider. Integrators like Vantage rely on TaskFlow for two more things:
+
+- **Documentation** that covers the discovery URL, the available scopes and what they grant, and how to register a client.
+- **A developer platform** on TaskFlow's own website where integrators register and manage their clients with the `apps` service, which the [Clients](/docs/products/auth/oauth-server/clients) page walks through.
 
 {% cards %}
 {% cards_item href="/docs/products/auth/oauth-server/authorization" title="Authorization" %}

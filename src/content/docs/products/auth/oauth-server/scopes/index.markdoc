@@ -329,7 +329,7 @@ For example, after a client requests `tasks.read`, the user might choose one pro
 curl --request POST \
   'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/approve' \
   --header 'Accept: application/json' \
-  --header 'Cookie: a_session_<PROJECT_ID>=<SESSION_TOKEN>' \
+  --header 'Cookie: a_session_<PROJECT_ID>=<SESSION_SECRET>' \
   --form 'grant_id=<GRANT_ID>' \
   --form 'authorization_details=[
     {

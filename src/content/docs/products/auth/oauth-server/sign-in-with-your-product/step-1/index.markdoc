@@ -10,7 +10,7 @@ category: OAuth2 server
 back: /docs/products/auth/oauth-server
 ---
 
-Once your project's [OAuth2 server](/docs/products/auth/oauth-server) is enabled, other apps can offer "Sign in with your product". This tutorial builds that experience end to end with two small [TanStack Start](https://tanstack.com/start) apps, so you can see every moving part.
+Once your project's [OAuth2 server](/docs/products/auth/oauth-server) is enabled, other apps can offer "Sign in with your product". This tutorial builds that experience end to end with two small [TanStack Start](https://tanstack.com/start) apps, so you can see every part of the flow.
 
 # What you will build {% #what-you-will-build %}
 

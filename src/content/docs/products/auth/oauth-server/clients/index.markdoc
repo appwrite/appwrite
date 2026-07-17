@@ -68,7 +68,8 @@ const apps = new Apps(client);
 const app = await apps.create({
     appId: ID.unique(),
     name: 'Custom App',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
 });
 ```
 ```client-flutter
@@ -83,7 +84,8 @@ Apps apps = Apps(client);
 App app = await apps.create(
     appId: ID.unique(),
     name: 'Custom App',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
 );
 ```
 ```client-apple
@@ -98,7 +100,8 @@ let apps = Apps(client)
 let app = try await apps.create(
     appId: ID.unique(),
     name: "Custom App",
-    redirectUris: ["http://vantage.localhost/auth/redirect"]
+    redirectUris: ["https://vantage.localhost/auth/redirect"],
+    type: "confidential"
 )
 ```
 ```client-android-kotlin
@@ -115,7 +118,8 @@ val apps = Apps(client)
 val app = apps.create(
     appId = ID.unique(),
     name = "Custom App",
-    redirectUris = listOf("http://vantage.localhost/auth/redirect")
+    redirectUris = listOf("https://vantage.localhost/auth/redirect"),
+    type = "confidential"
 )
 ```
 ```client-android-java
@@ -133,7 +137,7 @@ Apps apps = new Apps(client);
 apps.create(
     ID.unique(), // appId
     "Custom App", // name
-    List.of("http://vantage.localhost/auth/redirect"), // redirectUris
+    List.of("https://vantage.localhost/auth/redirect"), // redirectUris
     null, // description (optional)
     null, // clientUri (optional)
     null, // logoUri (optional)
@@ -147,7 +151,7 @@ apps.create(
     null, // dataDeletionUrl (optional)
     null, // postLogoutRedirectUris (optional)
     null, // enabled (optional)
-    null, // type (optional)
+    "confidential", // type (optional)
     null, // deviceFlow (optional)
     null, // teamId (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -172,7 +176,8 @@ const apps = new Apps(client);
 const app = await apps.create({
     appId: ID.unique(),
     name: 'Custom App',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    type: 'confidential',
 });
 ```
 {% /multicode %}
@@ -627,11 +632,23 @@ const apps = new Apps(client);
 
 const app = await apps.update({
     appId: '<APP_ID>',
-    name: 'Custom App',
-    description: 'A third-party app that signs in with your product.',
-    logoUri: 'https://example.com/logo.png',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    name: 'Vantage',
+    description: 'A dashboard that signs in with TaskFlow.',
+    clientUri: 'https://vantage.localhost',
+    logoUri: 'https://vantage.localhost/logo.png',
+    privacyPolicyUrl: 'https://vantage.localhost/privacy',
+    termsUrl: 'https://vantage.localhost/terms',
+    contacts: ['security@vantage.localhost'],
+    tagline: 'Product analytics for modern teams',
+    tags: ['analytics', 'productivity'],
+    images: ['https://vantage.localhost/screenshot.png'],
+    supportUrl: 'https://vantage.localhost/support',
+    dataDeletionUrl: 'https://vantage.localhost/data-deletion',
     enabled: true,
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    postLogoutRedirectUris: ['https://vantage.localhost/signed-out'],
+    type: 'confidential',
+    deviceFlow: false,
 });
 ```
 ```client-flutter
@@ -645,11 +662,23 @@ Apps apps = Apps(client);
 
 App app = await apps.update(
     appId: '<APP_ID>',
-    name: 'Custom App',
-    description: 'A third-party app that signs in with your product.',
-    logoUri: 'https://example.com/logo.png',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    name: 'Vantage',
+    description: 'A dashboard that signs in with TaskFlow.',
+    clientUri: 'https://vantage.localhost',
+    logoUri: 'https://vantage.localhost/logo.png',
+    privacyPolicyUrl: 'https://vantage.localhost/privacy',
+    termsUrl: 'https://vantage.localhost/terms',
+    contacts: ['security@vantage.localhost'],
+    tagline: 'Product analytics for modern teams',
+    tags: ['analytics', 'productivity'],
+    images: ['https://vantage.localhost/screenshot.png'],
+    supportUrl: 'https://vantage.localhost/support',
+    dataDeletionUrl: 'https://vantage.localhost/data-deletion',
     enabled: true,
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    postLogoutRedirectUris: ['https://vantage.localhost/signed-out'],
+    type: 'confidential',
+    deviceFlow: false,
 );
 ```
 ```client-apple
@@ -663,11 +692,23 @@ let apps = Apps(client)
 
 let app = try await apps.update(
     appId: "<APP_ID>",
-    name: "Custom App",
-    description: "A third-party app that signs in with your product.",
-    logoUri: "https://example.com/logo.png",
-    redirectUris: ["http://vantage.localhost/auth/redirect"],
-    enabled: true
+    name: "Vantage",
+    description: "A dashboard that signs in with TaskFlow.",
+    clientUri: "https://vantage.localhost",
+    logoUri: "https://vantage.localhost/logo.png",
+    privacyPolicyUrl: "https://vantage.localhost/privacy",
+    termsUrl: "https://vantage.localhost/terms",
+    contacts: ["security@vantage.localhost"],
+    tagline: "Product analytics for modern teams",
+    tags: ["analytics", "productivity"],
+    images: ["https://vantage.localhost/screenshot.png"],
+    supportUrl: "https://vantage.localhost/support",
+    dataDeletionUrl: "https://vantage.localhost/data-deletion",
+    enabled: true,
+    redirectUris: ["https://vantage.localhost/auth/redirect"],
+    postLogoutRedirectUris: ["https://vantage.localhost/signed-out"],
+    type: "confidential",
+    deviceFlow: false
 )
 ```
 ```client-android-kotlin
@@ -682,11 +723,23 @@ val apps = Apps(client)
 
 val app = apps.update(
     appId = "<APP_ID>",
-    name = "Custom App",
-    description = "A third-party app that signs in with your product.",
-    logoUri = "https://example.com/logo.png",
-    redirectUris = listOf("http://vantage.localhost/auth/redirect"),
-    enabled = true
+    name = "Vantage",
+    description = "A dashboard that signs in with TaskFlow.",
+    clientUri = "https://vantage.localhost",
+    logoUri = "https://vantage.localhost/logo.png",
+    privacyPolicyUrl = "https://vantage.localhost/privacy",
+    termsUrl = "https://vantage.localhost/terms",
+    contacts = listOf("security@vantage.localhost"),
+    tagline = "Product analytics for modern teams",
+    tags = listOf("analytics", "productivity"),
+    images = listOf("https://vantage.localhost/screenshot.png"),
+    supportUrl = "https://vantage.localhost/support",
+    dataDeletionUrl = "https://vantage.localhost/data-deletion",
+    enabled = true,
+    redirectUris = listOf("https://vantage.localhost/auth/redirect"),
+    postLogoutRedirectUris = listOf("https://vantage.localhost/signed-out"),
+    type = "confidential",
+    deviceFlow = false,
 )
 ```
 ```client-android-java
@@ -702,23 +755,23 @@ Apps apps = new Apps(client);
 
 apps.update(
     "<APP_ID>", // appId
-    "Custom App", // name
-    "A third-party app that signs in with your product.", // description (optional)
-    null, // clientUri (optional)
-    "https://example.com/logo.png", // logoUri (optional)
-    null, // privacyPolicyUrl (optional)
-    null, // termsUrl (optional)
-    null, // contacts (optional)
-    null, // tagline (optional)
-    null, // tags (optional)
-    null, // images (optional)
-    null, // supportUrl (optional)
-    null, // dataDeletionUrl (optional)
-    true, // enabled (optional)
-    List.of("http://vantage.localhost/auth/redirect"), // redirectUris (optional)
-    null, // postLogoutRedirectUris (optional)
-    null, // type (optional)
-    null, // deviceFlow (optional)
+    "Vantage", // name
+    "A dashboard that signs in with TaskFlow.", // description
+    "https://vantage.localhost", // clientUri
+    "https://vantage.localhost/logo.png", // logoUri
+    "https://vantage.localhost/privacy", // privacyPolicyUrl
+    "https://vantage.localhost/terms", // termsUrl
+    List.of("security@vantage.localhost"), // contacts
+    "Product analytics for modern teams", // tagline
+    List.of("analytics", "productivity"), // tags
+    List.of("https://vantage.localhost/screenshot.png"), // images
+    "https://vantage.localhost/support", // supportUrl
+    "https://vantage.localhost/data-deletion", // dataDeletionUrl
+    true, // enabled
+    List.of("https://vantage.localhost/auth/redirect"), // redirectUris
+    List.of("https://vantage.localhost/signed-out"), // postLogoutRedirectUris
+    "confidential", // type
+    false, // deviceFlow
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -740,11 +793,23 @@ const apps = new Apps(client);
 
 const app = await apps.update({
     appId: '<APP_ID>',
-    name: 'Custom App',
-    description: 'A third-party app that signs in with your product.',
-    logoUri: 'https://example.com/logo.png',
-    redirectUris: ['http://vantage.localhost/auth/redirect'],
+    name: 'Vantage',
+    description: 'A dashboard that signs in with TaskFlow.',
+    clientUri: 'https://vantage.localhost',
+    logoUri: 'https://vantage.localhost/logo.png',
+    privacyPolicyUrl: 'https://vantage.localhost/privacy',
+    termsUrl: 'https://vantage.localhost/terms',
+    contacts: ['security@vantage.localhost'],
+    tagline: 'Product analytics for modern teams',
+    tags: ['analytics', 'productivity'],
+    images: ['https://vantage.localhost/screenshot.png'],
+    supportUrl: 'https://vantage.localhost/support',
+    dataDeletionUrl: 'https://vantage.localhost/data-deletion',
     enabled: true,
+    redirectUris: ['https://vantage.localhost/auth/redirect'],
+    postLogoutRedirectUris: ['https://vantage.localhost/signed-out'],
+    type: 'confidential',
+    deviceFlow: false,
 });
 ```
 {% /multicode %}
@@ -1288,7 +1353,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>/register
   -d '{
     "client_name": "MCP Client",
     "redirect_uris": [
-        "http://vantage.localhost/auth/redirect"
+        "https://vantage.localhost/auth/redirect"
     ],
     "token_endpoint_auth_method": "none"
   }'
@@ -1299,7 +1364,7 @@ Content-Type: application/json
 {
     "client_name": "MCP Client",
     "redirect_uris": [
-        "http://vantage.localhost/auth/redirect"
+        "https://vantage.localhost/auth/redirect"
     ],
     "token_endpoint_auth_method": "none"
 }
@@ -1310,7 +1375,7 @@ Content-Type: application/json
 {
     "client_id": "6a56677caf736a2310a2",
     "client_id_issued_at": 1784047484,
-    "redirect_uris": ["http://vantage.localhost/auth/redirect"],
+    "redirect_uris": ["https://vantage.localhost/auth/redirect"],
     "token_endpoint_auth_method": "none",
     "grant_types": ["authorization_code"],
     "response_types": ["code"],
