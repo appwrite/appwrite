@@ -1,0 +1,219 @@
+---
+layout: tutorial
+title: Build the consent screen
+description: Host the consent screen where your users sign in and approve access.
+step: 5
+---
+
+The consent screen is the page TaskFlow hosts at its authorization URL. When the OAuth2 server sends a user here, the screen signs them in, shows what the client is asking for, and records their decision. All of it runs on TaskFlow's server, carrying the user's Appwrite session.
+
+# Types for the consent card {% #types %}
+
+Create `provider/src/lib/consent-types.ts`. It holds only client-safe values, so the browser can import it:
+
+```ts
+// provider/src/lib/consent-types.ts
+export type Grant = {
+  $id: string
+  appId: string
+  scopes: string[]
+  redirectUri: string
+}
+
+export type ClientApp = { $id: string; name: string; tagline?: string }
+
+// Human-readable labels for the scopes shown on the consent card.
+export const SCOPE_LABELS: Record<string, string> = {
+  openid: 'Confirm your identity',
+  profile: 'See your name and profile details',
+  email: 'See your email address',
+  phone: 'See your phone number',
+}
+```
+
+# The server helpers {% #helpers %}
+
+Create `provider/src/lib/oauth-server.ts`. Every function here calls the OAuth2 server on behalf of the signed-in user. Appwrite returns the user's session token in a cookie on login, and that token is passed as the `X-Appwrite-Session` header on later calls.
+
+```ts
+// provider/src/lib/oauth-server.ts
+import '@tanstack/react-start/server-only'
+import { useSession } from '@tanstack/react-start/server'
+import type { ClientApp, Grant } from './consent-types'
+
+const endpoint = process.env.APPWRITE_ENDPOINT!
+const project = process.env.APPWRITE_PROJECT!
+const issuer = process.env.OAUTH_ISSUER!
+const apiKey = process.env.APPWRITE_API_KEY!
+
+const projectHeaders = { 'X-Appwrite-Project': project }
+
+/** Log a TaskFlow user in and return their Appwrite session token. */
+export async function login(email: string, password: string): Promise<string> {
+  const res = await fetch(`${endpoint}/account/sessions/email`, {
+    method: 'POST',
+    headers: { ...projectHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+    redirect: 'manual',
+  })
+  if (!res.ok) throw new Error('Invalid email or password')
+  const setCookie = res.headers.get('set-cookie') ?? ''
+  const match = setCookie.match(new RegExp(`a_session_${project}=([^;]+)`))
+  if (!match) throw new Error('No session returned')
+  return match[1]
+}
+
+type AuthorizeParams = Record<string, string>
+
+/** Create a grant for the signed-in user, or get a redirect if the OAuth
+ *  server auto-approved a request the user already consented to. */
+export async function authorize(
+  params: AuthorizeParams,
+  sessionToken: string,
+): Promise<{ grantId?: string; redirect?: string }> {
+  const qs = new URLSearchParams(params).toString()
+  const res = await fetch(`${issuer}/authorize?${qs}`, {
+    headers: { ...projectHeaders, 'X-Appwrite-Session': sessionToken },
+    redirect: 'manual',
+  })
+  const location = res.headers.get('location') ?? ''
+  const grantId = new URL(location, endpoint).searchParams.get('grant_id')
+  return grantId ? { grantId } : { redirect: location }
+}
+
+export async function getGrant(grantId: string, sessionToken: string): Promise<Grant> {
+  const res = await fetch(`${issuer}/grants/${grantId}`, {
+    headers: { ...projectHeaders, 'X-Appwrite-Session': sessionToken },
+  })
+  if (!res.ok) throw new Error(`Grant not found: ${res.status}`)
+  return res.json()
+}
+
+/** Read a client's display name for the consent card, using a server-side key. */
+export async function getClientApp(appId: string): Promise<ClientApp> {
+  const res = await fetch(`${endpoint}/apps/${appId}`, {
+    headers: { ...projectHeaders, 'X-Appwrite-Key': apiKey },
+  })
+  if (!res.ok) throw new Error(`App not found: ${res.status}`)
+  return res.json()
+}
+
+/** Approve or reject a grant. The OAuth2 server returns the URL to send the
+ *  user back to, carrying the authorization code (approve) or an error (reject). */
+async function decide(
+  action: 'approve' | 'reject',
+  grantId: string,
+  sessionToken: string,
+): Promise<string> {
+  const res = await fetch(`${issuer}/${action}`, {
+    method: 'POST',
+    headers: {
+      ...projectHeaders,
+      'X-Appwrite-Session': sessionToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ grant_id: grantId }),
+    redirect: 'manual',
+  })
+  const location = res.headers.get('location')
+  if (!location) throw new Error(`${action} failed: ${res.status}`)
+  return location
+}
+
+export const approve = (grantId: string, token: string) => decide('approve', grantId, token)
+export const reject = (grantId: string, token: string) => decide('reject', grantId, token)
+
+type SessionData = { token?: string; email?: string; params?: AuthorizeParams }
+
+/** TaskFlow's own signed session cookie, holding the Appwrite session token. */
+export function taskflowSession() {
+  return useSession<SessionData>({
+    name: 'taskflow_session',
+    password: process.env.SESSION_SECRET!,
+  })
+}
+```
+
+# The consent route {% #route %}
+
+Create `provider/src/routes/oauth.consent.tsx`. The loader decides what to show: the login form if the user is not signed in, or the consent card once they are. It captures the incoming authorize parameters so it can resume the request after login.
+
+```tsx
+// provider/src/routes/oauth.consent.tsx (loader and server functions)
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+import { getRequestUrl } from '@tanstack/react-start/server'
+import {
+  approve, authorize, getClientApp, getGrant, login, reject, taskflowSession,
+} from '../lib/oauth-server'
+import type { ClientApp, Grant } from '../lib/consent-types'
+
+const AUTHORIZE_KEYS = ['client_id', 'redirect_uri', 'response_type', 'scope', 'state', 'nonce']
+
+type ConsentView =
+  | { view: 'login' }
+  | { view: 'consent'; grant: Grant; app: ClientApp; email: string }
+
+const loadConsent = createServerFn().handler(async (): Promise<ConsentView> => {
+  const url = getRequestUrl()
+  const session = await taskflowSession()
+
+  // Capture the authorize request so we can resume it after login.
+  const incoming: Record<string, string> = {}
+  for (const key of AUTHORIZE_KEYS) {
+    const value = url.searchParams.get(key)
+    if (value) incoming[key] = value
+  }
+
+  if (!session.data.token) {
+    if (Object.keys(incoming).length) await session.update({ params: incoming })
+    return { view: 'login' }
+  }
+
+  let grantId = url.searchParams.get('grant_id')
+  if (!grantId) {
+    const params = { ...session.data.params, ...incoming }
+    const result = await authorize(params, session.data.token)
+    if (result.redirect) throw redirect({ href: result.redirect })
+    grantId = result.grantId!
+  }
+
+  const grant = await getGrant(grantId, session.data.token)
+  const app = await getClientApp(grant.appId)
+  return { view: 'consent', grant, app, email: session.data.email ?? '' }
+})
+
+const submitLogin = createServerFn({ method: 'POST' })
+  .validator((d: { email: string; password: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await login(data.email, data.password)
+    const session = await taskflowSession()
+    await session.update({ token, email: data.email })
+  })
+
+const decideGrant = createServerFn({ method: 'POST' })
+  .validator((d: { grantId: string; action: 'approve' | 'reject' }) => d)
+  .handler(async ({ data }) => {
+    const session = await taskflowSession()
+    const act = data.action === 'approve' ? approve : reject
+    const location = await act(data.grantId, session.data.token!)
+    throw redirect({ href: location })
+  })
+
+export const Route = createFileRoute('/oauth/consent')({
+  component: Consent,
+  loader: async () => loadConsent(),
+})
+```
+
+The component renders one of two cards from the loader data. The login form submits `submitLogin` and then calls `router.invalidate()` so the loader re-runs and moves to the consent view. The consent card reads `grant.scopes` and maps them through `SCOPE_LABELS`, and calls `decideGrant` on **Authorize** or **Cancel**. Only the styling is left out here.
+
+# Sign in and approve {% #sign-in %}
+
+![TaskFlow consent screen sign-in form](/images/docs/oauth-server/guide/taskflow-login.avif)
+
+When the OAuth2 server sends a user to the consent screen, they first sign in with their TaskFlow account.
+
+![TaskFlow consent screen showing the requested permissions](/images/docs/oauth-server/guide/taskflow-consent.avif)
+
+The consent card then shows the client's name and exactly what it is asking for. On **Authorize**, the OAuth2 server redirects back to Vantage with an authorization code. Vantage handles it next.
