@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitlab\Events;
 
-use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -18,7 +17,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Span\Span;
-use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 
 class Create extends Action
@@ -119,16 +117,7 @@ class Create extends Action
         }
 
         try {
-            $oauth2 = new OAuth2Gitlab(
-                System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
-                \json_encode([
-                    'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
-                    'endpoint' => System::getEnv('_APP_VCS_GITLAB_ENDPOINT', 'https://gitlab.com'),
-                ]),
-                ''
-            );
-
-            $installation = $installationTokens->refresh($installation, $dbForPlatform, $oauth2);
+            $installation = $installationTokens->refreshForInstallation($installation, $dbForPlatform);
 
             return $vcsFactory->fromInstallation($installation);
         } catch (\Throwable $error) {
