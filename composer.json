@@ -104,7 +104,6 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
-        "mustangostang/spyc": "0.6.*",
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.2.2",
         "open-runtimes/sdk-for-php": "^0.4.0"
