@@ -596,6 +596,9 @@ class Migrations extends Action
                 return;
             }
 
+            $destination->success();
+            $source->success();
+
             $destinationType = $migration->getAttribute('destination');
             if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
                 $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
@@ -701,8 +704,6 @@ class Migrations extends Action
                             ...$this->resolveResourceIds($migration),
                         );
                     }
-                    $destination?->success();
-                    $source?->success();
                 }
             } finally {
                 $source?->cleanup();
