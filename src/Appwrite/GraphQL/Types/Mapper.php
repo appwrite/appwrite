@@ -108,6 +108,16 @@ class Mapper
             }
         }
 
+        $hidden = [];
+        $overrides = [];
+        foreach ($method->getParameters() as $sdkParameter) {
+            if ($sdkParameter->getHide()) {
+                $hidden[$sdkParameter->getName()] = true;
+                continue;
+            }
+            $overrides[$sdkParameter->getName()] = $sdkParameter;
+        }
+
         foreach ($models as $model) {
             $type = Mapper::model(\ucfirst($model->getType()));
             $description = $route->getDesc();
@@ -115,21 +125,14 @@ class Mapper
             $list = false;
 
             foreach ($route->getParams() as $name => $parameter) {
-                $sdkParameters = $method->getParameters();
+                if (isset($hidden[$name])) {
+                    continue;
+                }
 
-                if (!empty($sdkParameters)) {
-                    $sdkMethodParameters = [];
-                    foreach ($sdkParameters as $sdkParameter) {
-                        $sdkMethodParameters[$sdkParameter->getName()] = $sdkParameter;
-                    }
+                $override = $overrides[$name] ?? null;
 
-                    if (!\array_key_exists($name, $sdkMethodParameters)) {
-                        continue;
-                    }
-
-                    $optional = $sdkMethodParameters[$name]->getOptional();
-                } else {
-                    $optional = $parameter['optional'];
+                if (!empty($overrides) && $override === null) {
+                    continue;
                 }
 
                 if ($name === 'queries') {
@@ -138,13 +141,13 @@ class Mapper
 
                 $parameterType = Mapper::param(
                     $utopia,
-                    $parameter['validator'],
-                    !$optional,
+                    $override?->getValidator() ?? $parameter['validator'],
+                    !($override?->getOptional() ?? $parameter['optional']),
                     $parameter['injections']
                 );
                 $params[$name] = [
                     'type' => $parameterType,
-                    'description' => $parameter['description'],
+                    'description' => $override?->getDescription() ?: $parameter['description'],
                 ];
             }
 

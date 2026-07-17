@@ -220,9 +220,12 @@ abstract class Format
 
             $overrides = \array_filter([
                 'description' => $parameter->getDescription() ?: null,
-                'default' => $parameter->getDefault(),
                 'validator' => $parameter->getValidator(),
             ], fn (mixed $value) => $value !== null);
+
+            if ($parameter->hasDefault()) {
+                $overrides['default'] = $parameter->getDefault();
+            }
 
             $parameters[$name] = \array_merge(
                 $parameters[$name] ?? ['optional' => $parameter->getOptional(), 'injections' => []],

@@ -167,6 +167,46 @@ final class FormatTest extends TestCase
         $this->assertSame(['name'], $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['required']);
     }
 
+    public function testMethodParameterNullDefaultOverridesRouteDefault(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'test',
+            group: null,
+            name: 'createTestWithNullDefault',
+            description: 'Create test.',
+            auth: [],
+            responses: [],
+            parameters: [
+                new Parameter('engine', default: null),
+                new Parameter('name', description: 'Overridden description.'),
+            ],
+        );
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->param('name', 'default-name', new Text(128), 'Original description.', true)
+            ->param('engine', 'mysql', new Text(16), 'Engine.', true);
+
+        $format = new class (new Container(), [], [], [], [], 0, 'console') extends OpenAPI3 {
+            /**
+             * @return array<string, array<string, mixed>>
+             */
+            public function methodParameters(Route $route, Method $method): array
+            {
+                return $this->getMethodParameters($route, $method);
+            }
+        };
+
+        $parameters = $format->methodParameters($route, $method);
+
+        $this->assertNull($parameters['engine']['default']);
+        $this->assertSame('default-name', $parameters['name']['default']);
+        $this->assertSame('Overridden description.', $parameters['name']['description']);
+    }
+
     public function testDeleteRouteOptionalParamsAreQueryParams(): void
     {
         Method::$processed = [];
