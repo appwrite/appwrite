@@ -62,9 +62,44 @@ class Migration extends Model
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Id of the resource to migrate.',
+                'description' => 'ID of the resource being migrated.',
                 'default' => '',
-                'example' => 'databaseId:collectionId',
+                'example' => 'collectionId',
+                'array' => false
+            ])
+            ->addRule('resourceInternalId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Internal ID of the resource being migrated.',
+                'default' => '',
+                'example' => '1',
+                'array' => false
+            ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of the resource being migrated.',
+                'default' => '',
+                'example' => 'collection',
+                'array' => false
+            ])
+            ->addRule('parentResourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the parent resource that contains the migrated resource.',
+                'default' => '',
+                'example' => 'databaseId',
+                'array' => false
+            ])
+            ->addRule('parentResourceInternalId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Internal ID of the parent resource that contains the migrated resource.',
+                'default' => '',
+                'example' => '1',
+                'array' => false
+            ])
+            ->addRule('parentResourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of the parent resource that contains the migrated resource.',
+                'default' => '',
+                'example' => 'database',
                 'array' => false
             ])
             ->addRule('statusCounters', [
