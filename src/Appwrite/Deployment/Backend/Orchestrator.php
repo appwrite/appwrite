@@ -24,7 +24,7 @@ use Utopia\System\System;
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
  * sources are fine. The build output and package-manager cache, by default,
  * go on a mounted volume: the builds storage volume is attached to the build
- * worker at its Appwrite path, so build.sh writes code.tar.gz + the cache
+ * worker at its Appwrite path, so build.sh writes its artifact + the cache
  * squashfs straight onto the volume Appwrite already reads. That keeps the
  * multi-hundred-MB output off the (capped) HTTP upload path and out of the
  * Appwrite process. Deployments that need a different strategy (e.g. S3
@@ -82,8 +82,6 @@ readonly class Orchestrator extends Backend
         $deployment = $this->upload($resource, $deployment);
         $this->deactivateOthers($resource, $deployment);
 
-        // Pre-declare buildPath so build.sh writes output straight onto the
-        // mounted builds volume, at the path this deployment expects.
         $deployment = $this->dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
@@ -168,6 +166,7 @@ readonly class Orchestrator extends Backend
         $command = $deployment->getAttribute('buildCommands', '');
         $env = self::variables($project, $function, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
+            'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
         ] + $output['environment'];
 
         return [
@@ -213,13 +212,37 @@ readonly class Orchestrator extends Backend
     }
 
     /**
-     * The build output path on the builds volume. build.sh writes code.tar.gz
-     * into OPEN_RUNTIMES_BUILD_OUTPUT_DIR (this file's directory); pre-computed
-     * so it can be persisted on the deployment before the job is submitted.
+     * The build output directory on the builds volume. The produced artifact's
+     * complete path is discovered and persisted after the job finishes.
+     */
+    public static function outputDirectory(string $projectId, string $deploymentId): string
+    {
+        return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}";
+    }
+
+    /**
+     * The build output path on the builds volume, declared at submission.
      */
     public static function buildPath(string $projectId, string $deploymentId): string
     {
-        return APP_STORAGE_BUILDS . "/app-{$projectId}/{$deploymentId}/code.tar.gz";
+        return static::outputDirectory($projectId, $deploymentId) . '/' . static::artifact();
+    }
+
+    /**
+     * The artifact filename build.sh produces for the configured compression.
+     */
+    public static function artifact(): string
+    {
+        return match (static::compression()) {
+            'none' => 'code.tar',
+            'squashfs' => 'code.sqfs',
+            default => 'code.tar.gz',
+        };
+    }
+
+    protected static function compression(): string
+    {
+        return System::getEnv('_APP_COMPUTE_BUILD_COMPRESSION', 'gzip');
     }
 
     /**
@@ -237,9 +260,9 @@ readonly class Orchestrator extends Backend
     }
 
     /**
-     * Where build.sh's output (code.tar.gz) and package-manager cache
+     * Where build.sh's output artifact and package-manager cache
      * (a squashfs) land, and what the job needs to get them there. The
-     * default mounts the shared builds volume at buildPath()/cachePath();
+     * default mounts the shared builds volume at outputDirectory()/cachePath();
      * build.sh only cares that OPEN_RUNTIMES_BUILD_OUTPUT_DIR/_CACHE_ARTIFACT
      * point somewhere on its local filesystem, volume-backed or not — so a
      * strategy without a shared volume (e.g. S3) instead points them at a
@@ -268,7 +291,7 @@ readonly class Orchestrator extends Backend
             ],
             'artifacts' => [],
             'environment' => [
-                'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => \dirname(static::buildPath($projectId, $deploymentId)),
+                'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
                 'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => static::cachePath($projectId, $cacheKey),
             ],
         ];

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
-use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Jobs as JobsMessage;
@@ -266,8 +265,12 @@ class Jobs extends Action
         Device $deviceForBuilds,
         VcsFactory $vcsFactory,
     ): Document {
-        $path = Orchestrator::buildPath($project->getId(), $deployment->getId());
-        $size = $deviceForBuilds->exists($path) ? $deviceForBuilds->getFileSize($path) : 0;
+        $path = (string) $deployment->getAttribute('buildPath', '');
+        if ($path === '' || ! $deviceForBuilds->exists($path)) {
+            return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $usage, $publisherForUsage, $vcsFactory);
+        }
+
+        $size = $deviceForBuilds->getFileSize($path);
 
         $limit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
         if ($limit !== 0 && $size > $limit) {
