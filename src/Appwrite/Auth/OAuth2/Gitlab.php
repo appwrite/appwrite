@@ -168,6 +168,25 @@ class Gitlab extends OAuth2
     }
 
     /**
+     * @link https://docs.gitlab.com/ee/api/projects.html#create-project
+     *
+     * @param string $accessToken
+     * @param string $repositoryName
+     * @param bool $private
+     *
+     * @return array
+     */
+    public function createRepository(string $accessToken, string $repositoryName, bool $private): array
+    {
+        $repository = $this->request('POST', $this->getEndpoint() . '/api/v4/projects', ['Authorization: Bearer ' . $accessToken, 'Content-Type: application/json'], \json_encode([
+            'name' => $repositoryName,
+            'visibility' => $private ? 'private' : 'public',
+        ]));
+
+        return \json_decode($repository, true) ?? [];
+    }
+
+    /**
      * @param string $accessToken
      *
      * @return array
