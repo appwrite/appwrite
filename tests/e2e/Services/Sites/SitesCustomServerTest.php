@@ -1341,6 +1341,76 @@ final class SitesCustomServerTest extends Scope
     }
 
     #[Retry(count: 3)]
+    public function testAdapterDetectionSSR(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'SSR detection site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true',
+        ]);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('ssr', $site['body']['adapter']);
+        $this->assertEmpty($site['body']['fallbackFile']);
+
+        // A second build of the same site reuses the package-manager cache.
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'false',
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+        $this->waitDeploymentReady($siteId, $deploymentId);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertStringContainsString('Build cache hit.', $deployment['body']['buildLogs']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testAdapterMismatchFailsBuild(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Adapter mismatch site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $deployment = $this->createDeployment($siteId, [
+            'code' => $this->packageSite('astro-static'),
+            'activate' => 'true',
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+
+            $this->assertEquals('failed', $deployment['body']['status']);
+        }, 120000, 500);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertStringContainsString('Adapter mismatch', $deployment['body']['buildLogs']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testCancelDeploymentBuild(): void
     {
         $siteId = $this->setupSite([
