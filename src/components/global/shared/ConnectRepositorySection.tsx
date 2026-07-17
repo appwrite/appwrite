@@ -29,6 +29,7 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { getVcsProvider } from '@/lib/vcs/providers'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -50,11 +51,8 @@ function ProviderIcon({
   provider?: string
   className?: string
 }) {
-  const normalizedProvider = provider?.toLowerCase() || 'github'
-  if (normalizedProvider === 'github') {
-    return <GitHubIcon className={className} />
-  }
-  return <GitHubIcon className={className} />
+  const { Icon } = getVcsProvider(provider)
+  return <Icon className={className} />
 }
 
 export interface ConnectRepositoryValue {

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  Plus,
   ExternalLink,
   XCircle,
   Loader2,
@@ -17,6 +16,11 @@ import {
   useVcsInstallations,
   useDeleteVcsInstallation} from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  GitLabIcon,
+  getVcsProvider,
+  type VcsProviderId,
+} from '@/lib/vcs/providers'
 import {
   menuItemRowClassName,
   MenuItemContent,
@@ -69,6 +73,10 @@ interface GitConfigurationCardProps {
   limit: number
   onPageChange: (page: number) => void
   getGitHubAuthUrl: (mode?: 'create' | 'update') => string
+  getVcsAuthUrl?: (
+    provider?: VcsProviderId,
+    mode?: 'create' | 'update',
+  ) => string
   isSelfHosted?: boolean
   isVcsEnabled?: boolean
 }
@@ -79,9 +87,13 @@ export function GitConfigurationCard({
   limit,
   onPageChange,
   getGitHubAuthUrl,
+  getVcsAuthUrl,
   isSelfHosted = false,
   isVcsEnabled = true}: GitConfigurationCardProps) {
   const t = useT()
+  // Fall back to the GitHub-only helper when a generalized builder isn't provided.
+  const vcsAuthUrl = (provider: VcsProviderId, mode: 'create' | 'update' = 'create') =>
+    getVcsAuthUrl ? getVcsAuthUrl(provider, mode) : getGitHubAuthUrl(mode)
   const { data: installationsData, isLoading } = useVcsInstallations(
     projectId,
     page,
@@ -167,17 +179,12 @@ export function GitConfigurationCard({
   }
 
   const getProviderIcon = (provider: string) => {
-    if (provider === 'github') {
-      return <GitHubIcon className="h-4 w-4" />
-    }
-    return null
+    const { Icon } = getVcsProvider(provider)
+    return <Icon className="h-4 w-4" />
   }
 
   const getProviderUrl = (provider: string, organization: string) => {
-    if (provider === 'github') {
-      return `https://github.com/${organization}`
-    }
-    return null
+    return getVcsProvider(provider).baseUrl(organization)
   }
 
   // Empty State: total === 0 AND (!isSelfHosted OR isVcsEnabled === true)
@@ -204,17 +211,30 @@ export function GitConfigurationCard({
             <p className="mb-4 text-[13px] text-muted-foreground">
               {t('Add an installation to connect repositories')}
             </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-9 text-[13px]"
-              asChild
-            >
-              <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
-                <GitHubIcon className="me-1.5 h-4 w-4" />
-                {t('Connect to GitHub')}
-              </a>
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
+                <a href={vcsAuthUrl('github')} target="_blank" rel="noreferrer">
+                  <GitHubIcon className="me-1.5 h-4 w-4" />
+                  {t('Connect to GitHub')}
+                </a>
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
+                <a href={vcsAuthUrl('gitlab')} target="_blank" rel="noreferrer">
+                  <GitLabIcon className="me-1.5 h-4 w-4" />
+                  {t('Connect to GitLab')}
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -398,17 +418,30 @@ export function GitConfigurationCard({
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-9 text-[13px]"
-            asChild
-          >
-            <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
-              <Plus className="me-1.5 h-4 w-4" />
-              {t('Add installation')}
-            </a>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              asChild
+            >
+              <a href={vcsAuthUrl('github')} target="_blank" rel="noreferrer">
+                <GitHubIcon className="me-1.5 h-4 w-4" />
+                {t('Add GitHub')}
+              </a>
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              asChild
+            >
+              <a href={vcsAuthUrl('gitlab')} target="_blank" rel="noreferrer">
+                <GitLabIcon className="me-1.5 h-4 w-4" />
+                {t('Add GitLab')}
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
 
