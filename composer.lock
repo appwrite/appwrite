@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de6d55bb252b6063fe98964392cbc80a",
+    "content-hash": "7d34a72f2b0cff278cbdcbb7780250cd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4505,16 +4505,16 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "1.3.1",
+            "version": "dev-fix/transport-recovery",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "f6ef5f1cecf80fb0378eda13250d6c14096d7620"
+                "reference": "de1bd94ed5da6dd3ebdc0795e56aed69e4bbea43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/f6ef5f1cecf80fb0378eda13250d6c14096d7620",
-                "reference": "f6ef5f1cecf80fb0378eda13250d6c14096d7620",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/de1bd94ed5da6dd3ebdc0795e56aed69e4bbea43",
+                "reference": "de1bd94ed5da6dd3ebdc0795e56aed69e4bbea43",
                 "shasum": ""
             },
             "require": {
@@ -4536,7 +4536,25 @@
                     "Utopia\\Mongo\\": "src"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse --memory-limit=1G src"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "lint": [
+                    "vendor/bin/pint --test"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4559,10 +4577,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.3.1"
+                "source": "https://github.com/utopia-php/mongo/tree/fix/transport-recovery",
+                "issues": "https://github.com/utopia-php/mongo/issues"
             },
-            "time": "2026-07-14T15:22:52+00:00"
+            "time": "2026-07-18T01:51:36+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -8448,12 +8466,19 @@
             "version": "dev-feat/drop-compound-resource-id",
             "alias": "1.17.3",
             "alias_normalized": "1.17.3.0"
+        },
+        {
+            "package": "utopia-php/mongo",
+            "version": "dev-fix/transport-recovery",
+            "alias": "1.3.1",
+            "alias_normalized": "1.3.1.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/http": 5,
         "utopia-php/migration": 20,
+        "utopia-php/mongo": 20,
         "utopia-php/platform": 5
     },
     "prefer-stable": true,
