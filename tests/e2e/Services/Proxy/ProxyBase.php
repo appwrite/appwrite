@@ -70,6 +70,56 @@ trait ProxyBase
         $this->assertEquals(204, $rule['headers']['status-code']);
     }
 
+    public function testReplaceRuleDomain(): void
+    {
+        $domainA = \uniqid() . '-replace-a.myapp.com';
+        $domainB = \uniqid() . '-replace-b.myapp.com';
+        $domainC = \uniqid() . '-replace-c.myapp.com';
+
+        $created = $this->createAPIRule($domainA);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $ruleId = $created['body']['$id'];
+
+        $replaced = $this->updateRuleDomain($ruleId, $domainB);
+        $this->assertEquals(200, $replaced['headers']['status-code'], \json_encode($replaced));
+        $this->assertEquals($domainB, $replaced['body']['domain']);
+        $this->assertNotEquals($ruleId, $replaced['body']['$id']);
+
+        $oldRule = $this->getRule($ruleId);
+        $this->assertEquals(404, $oldRule['headers']['status-code']);
+
+        $list = $this->listRules([
+            'queries' => [
+                Query::equal('domain', [$domainA])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(0, $list['body']['total']);
+
+        $currentId = $replaced['body']['$id'];
+
+        // Replacing repeatedly must leave exactly one rule for the latest domain.
+        for ($i = 0; $i < 5; $i++) {
+            $nextDomain = \uniqid() . "-replace-{$i}.myapp.com";
+            $replaced = $this->updateRuleDomain($currentId, $nextDomain);
+            $this->assertEquals(200, $replaced['headers']['status-code'], \json_encode($replaced));
+            $this->assertEquals($nextDomain, $replaced['body']['domain']);
+            $currentId = $replaced['body']['$id'];
+        }
+
+        $final = $this->updateRuleDomain($currentId, $domainC);
+        $this->assertEquals(200, $final['headers']['status-code']);
+        $this->assertEquals($domainC, $final['body']['domain']);
+
+        // Idempotent same-domain replace
+        $same = $this->updateRuleDomain($final['body']['$id'], $domainC);
+        $this->assertEquals(200, $same['headers']['status-code']);
+        $this->assertEquals($domainC, $same['body']['domain']);
+        $this->assertEquals($final['body']['$id'], $same['body']['$id']);
+
+        $this->cleanupRule($final['body']['$id']);
+    }
+
     public function testCreateRuleSetup(): void
     {
         $ruleId = $this->setupAPIRule(\uniqid() . '-api2.myapp.com');

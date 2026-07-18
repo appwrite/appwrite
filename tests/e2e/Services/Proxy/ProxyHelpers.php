@@ -98,6 +98,18 @@ trait ProxyHelpers
         return $rule;
     }
 
+    protected function updateRuleDomain(string $ruleId, string $domain): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/domain', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $domain,
+        ]);
+
+        return $rule;
+    }
+
     protected function deleteRule(string $ruleId): mixed
     {
         $rule = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, array_merge([

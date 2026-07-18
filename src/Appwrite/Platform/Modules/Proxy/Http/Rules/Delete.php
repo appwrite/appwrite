@@ -5,16 +5,17 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
 class Delete extends Action
@@ -26,8 +27,10 @@ class Delete extends Action
         return 'deleteRule';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/proxy/rules/:ruleId')
@@ -60,6 +63,7 @@ class Delete extends Action
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
@@ -71,6 +75,7 @@ class Delete extends Action
         DeleteEvent $queueForDeletes,
         Event $queueForEvents,
         Authorization $authorization,
+        UsageContext $usage,
     ) {
         $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
@@ -79,6 +84,8 @@ class Delete extends Action
         }
 
         $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $rule->getId()));
+
+        $this->adjustDomainUsage($usage, $rule, -1);
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)

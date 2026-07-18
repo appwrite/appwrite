@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -79,6 +80,7 @@ class Create extends Action
             ->inject('platform')
             ->inject('log')
             ->inject('authorization')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
@@ -97,6 +99,7 @@ class Create extends Action
         array $platform,
         Log $log,
         Authorization $authorization,
+        UsageContext $usage,
     ) {
 
         $this->validateDomainRestrictions($domain, $platform);
@@ -154,6 +157,8 @@ class Create extends Action
         } catch (Duplicate $e) {
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
+
+        $this->adjustDomainUsage($usage, $rule, 1);
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

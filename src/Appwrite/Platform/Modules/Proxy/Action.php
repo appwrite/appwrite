@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Modules\Proxy;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
@@ -232,5 +234,31 @@ class Action extends PlatformAction
         }
 
         return false;
+    }
+
+    /**
+     * Custom domains (owner='') count toward plan quota; Appwrite-owned auto domains do not.
+     */
+    protected function adjustDomainUsage(\Appwrite\Usage\Context $usage, Document $rule, int $value): void
+    {
+        if ($rule->getAttribute('owner', '') !== '') {
+            return;
+        }
+
+        $usage->addMetric(METRIC_DOMAINS, $value);
+    }
+
+    /**
+     * Authoritative custom-domain count from live rules, never a cached counter.
+     */
+    protected function countCustomDomains(
+        Database $dbForPlatform,
+        Document $project,
+        Authorization $authorization,
+    ): int {
+        return $authorization->skip(fn () => $dbForPlatform->count('rules', [
+            \Utopia\Database\Query::equal('projectInternalId', [$project->getSequence()]),
+            \Utopia\Database\Query::equal('owner', ['']),
+        ]));
     }
 }

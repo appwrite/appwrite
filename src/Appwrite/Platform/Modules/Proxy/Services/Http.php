@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Proxy\Services;
 
 use Appwrite\Platform\Modules\Proxy\Http\Rules\API\Create as CreateAPIRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Delete as DeleteRule;
+use Appwrite\Platform\Modules\Proxy\Http\Rules\Domain\Update as UpdateRuleDomain;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Function\Create as CreateFunctionRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Get as GetRule;
 use Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect\Create as CreateRedirectRule;
@@ -27,5 +28,6 @@ class Http extends Service
         $this->addAction(ListRules::getName(), new ListRules());
         $this->addAction(DeleteRule::getName(), new DeleteRule());
         $this->addAction(UpdateRuleStatus::getName(), new UpdateRuleStatus());
+        $this->addAction(UpdateRuleDomain::getName(), new UpdateRuleDomain());
     }
 }

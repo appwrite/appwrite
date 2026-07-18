@@ -60,6 +60,7 @@ class StatsUsage extends Action
         METRIC_PROVIDERS => true,
         METRIC_TOPICS => true,
         METRIC_KEYS => true,
+        METRIC_DOMAINS => true,
         METRIC_FILES => true,
         METRIC_FILES_STORAGE => true,
         METRIC_DEPLOYMENTS_STORAGE => true,
