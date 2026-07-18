@@ -121,7 +121,7 @@ class Mails extends Action
         if (!empty($preview)) {
             $previewTemplate = Template::fromString($preview);
             foreach ($variables as $key => $value) {
-                $previewTemplate->setParam('{{' . $key . '}}', $value);
+                $previewTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
             }
             // render() will return the subject in <p> tags, so use strip_tags() to remove them
             $preview = \strip_tags($previewTemplate->render());
@@ -140,7 +140,7 @@ class Mails extends Action
 
         $subjectTemplate = Template::fromString($subject);
         foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value);
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());

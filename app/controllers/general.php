@@ -125,7 +125,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             if (\str_ends_with($host, $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
-                $exception->addCTA('Start with this domain', $url);
+                $exception->addCTA('Start with this domain', System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? "{$url}/console" : $url);
                 throw $exception;
             }
         }
@@ -200,7 +200,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/projects/' . $projectId . '/' . $type . '/' . $resourceId);
+            $region = $project->getAttribute('region', 'default');
+            $ctaUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                ? "/console/project-{$region}-{$projectId}/{$type}/{$resourceType}-{$resourceId}"
+                : "/projects/{$projectId}/{$type}/{$resourceId}";
+            $exception->addCTA('View deployments', $url . $ctaUrl);
             throw $exception;
         }
 
@@ -289,7 +293,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
-                    ->redirect($url . '/auth/preview?'
+                    ->redirect($url . (System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root' ? '/console/auth/preview?' : '/auth/preview?')
                         . \http_build_query([
                             'projectId' => $projectId,
                             'origin' => $protocol . '://' . $host,
@@ -346,23 +350,28 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $allowAnyStatus = !\is_null($apiKey) && $apiKey->isDeploymentStatusIgnored();
         if (!$allowAnyStatus && $deployment->getAttribute('status') !== 'ready') {
             $status = $deployment->getAttribute('status');
+            $region = $project->getAttribute('region', 'default');
+            $legacyConsolePaths = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root';
+            $siteUrl = $legacyConsolePaths
+                ? "/console/project-{$region}-{$project->getId()}/sites/site-{$resource->getId()}"
+                : "/projects/{$project->getId()}/sites/{$resource->getId()}";
+            $deploymentUrl = $legacyConsolePaths
+                ? "{$siteUrl}/deployments/deployment-{$deployment->getId()}"
+                : "{$siteUrl}/deployments/{$deployment->getId()}";
 
             switch ($status) {
                 case 'failed':
                     $exception = new AppwriteException(AppwriteException::BUILD_FAILED, view: $errorView);
-                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments/' . $deployment->getId();
-                    $exception->addCTA('View logs', $url . $ctaUrl);
+                    $exception->addCTA('View logs', $url . $deploymentUrl);
                     break;
                 case 'canceled':
                     $exception = new AppwriteException(AppwriteException::BUILD_CANCELED, view: $errorView);
-                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments';
-                    $exception->addCTA('View deployments', $url . $ctaUrl);
+                    $exception->addCTA('View deployments', $url . $siteUrl . '/deployments');
                     break;
                 default:
                     $exception = new AppwriteException(AppwriteException::BUILD_NOT_READY, view: $errorView);
-                    $ctaUrl = '/projects/' . $project->getId() . '/sites/' . $resource->getId() . '/deployments/' . $deployment->getId();
                     $exception->addCTA('Reload', '/');
-                    $exception->addCTA('View logs', $url . $ctaUrl);
+                    $exception->addCTA('View logs', $url . $deploymentUrl);
                     break;
             }
             throw $exception;
@@ -372,7 +381,11 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $permissions = $resource->getAttribute('execute');
             if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
-                $exception->addCTA('View settings', $url . '/projects/' . $project->getId() . '/functions/' . $resource->getId() . '/settings');
+                $region = $project->getAttribute('region', 'default');
+                $ctaUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                    ? "/console/project-{$region}-{$project->getId()}/functions/function-{$resource->getId()}/settings"
+                    : "/projects/{$project->getId()}/functions/{$resource->getId()}/settings";
+                $exception->addCTA('View settings', $url . $ctaUrl);
                 throw $exception;
             }
         }
@@ -539,7 +552,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 'site' => '',
             };
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
 
             $startCommand = $runtime['startCommand'];
             if ($type === 'site') {
@@ -560,7 +572,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
-                default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",
+                default => "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$startCommand\"",
             };
 
             $entrypoint = match ($type) {
