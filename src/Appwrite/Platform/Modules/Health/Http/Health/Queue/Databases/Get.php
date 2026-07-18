@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Databases;
 
-use Appwrite\Event\Database;
+use Appwrite\Event\Publisher\Database;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
+use Utopia\Queue\Queue;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 
@@ -44,15 +45,15 @@ class Get extends Base
             ))
             ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(string $name, int|string $threshold, Database $queueForDatabase, Response $response): void
+    public function action(string $name, int|string $threshold, Database $publisherForDatabase, Response $response): void
     {
         $threshold = (int) $threshold;
-        $size = $queueForDatabase->setQueue($name)->getSize();
+        $size = $publisherForDatabase->getSize(queue: new Queue($name));
 
         $this->assertQueueThreshold($size, $threshold);
 

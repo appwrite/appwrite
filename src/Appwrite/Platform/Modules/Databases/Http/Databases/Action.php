@@ -21,6 +21,41 @@ class Action extends AppwriteAction
         return $this->context;
     }
 
+    /**
+     * Database types this path may operate on. Single source of truth shared by
+     * the list filter ({@see getDatabaseTypeQueryFilters()}) and the by-id guard
+     * ({@see isDatabaseTypeMismatch()}) so they cannot diverge.
+     *
+     * TablesDB is the compatibility successor to the legacy databases API, so it
+     * also serves legacy-typed databases; the other product APIs are scoped to
+     * their own type. Every database carries a non-null `type` (set on create
+     * and backfilled to 'legacy' by migration V23), so null is not represented.
+     *
+     * @return string[]
+     */
+    protected function getAllowedDatabaseTypes(): array
+    {
+        return match ($this->getDatabaseType()) {
+            DATABASE_TYPE_TABLESDB => [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY],
+            default => [$this->getDatabaseType()],
+        };
+    }
+
+    /**
+     * A database resolved by id on a product-DB path must be one of the path's
+     * allowed types; otherwise it is treated as not-found rather than proceeding
+     * to a type-mismatched backend operation that surfaces as an opaque 500. The
+     * legacy /v1/databases API is intentionally not type-guarded.
+     */
+    protected function isDatabaseTypeMismatch(Document $database): bool
+    {
+        if ($this->getDatabaseType() === DATABASE_TYPE_LEGACY) {
+            return false;
+        }
+
+        return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
+    }
+
     public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {

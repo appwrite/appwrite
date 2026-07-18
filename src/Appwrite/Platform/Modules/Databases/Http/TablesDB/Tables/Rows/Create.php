@@ -109,7 +109,7 @@ class Create extends DocumentCreate
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForRealtime')
-            ->inject('queueForFunctions')
+            ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('authorization')

@@ -5,13 +5,11 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Message\Audit;
 use Exception;
 use Throwable;
-use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Queue\Result\Commit;
-use Utopia\Queue\Result\NoCommit;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Audits extends Action
@@ -51,12 +49,11 @@ class Audits extends Action
     /**
      * @param Message $message
      * @param callable(Document): \Utopia\Audit\Audit $getAudit
-     * @return Commit|NoCommit
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      * @throws Structure
      */
-    public function action(Message $message, callable $getAudit): Commit|NoCommit
+    public function action(Message $message, callable $getAudit): void
     {
         $payload = $message->getPayload();
 
@@ -65,8 +62,6 @@ class Audits extends Action
         }
 
         $auditMessage = Audit::fromArray($payload);
-
-        Console::info('Aggregating audit logs');
 
         $event = $auditMessage->event;
 
@@ -91,7 +86,7 @@ class Audits extends Action
         $actorUserEmail = $impersonatorUserId
             ? $user->getAttribute('impersonatorUserEmail', '')
             : $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTOR_TYPE_USER);
 
         // Create event data
         $eventData = [
@@ -100,7 +95,6 @@ class Audits extends Action
             'resource' => $resource,
             'userAgent' => $userAgent,
             'ip' => $ip,
-            'location' => '',
             'data' => [
                 'userId' => $actorUserId,
                 'userName' => $actorUserName,
@@ -127,10 +121,11 @@ class Audits extends Action
                 ];
         }
 
-        if (isset($this->logs[$auditMessage->project->getSequence()])) {
-            $this->logs[$auditMessage->project->getSequence()]['logs'][] = $eventData;
+        $projectSequence = (string) $auditMessage->project->getSequence();
+        if (isset($this->logs[$projectSequence])) {
+            $this->logs[$projectSequence]['logs'][] = $eventData;
         } else {
-            $this->logs[$auditMessage->project->getSequence()] = [
+            $this->logs[$projectSequence] = [
                 'project' => new Document([
                     '$id' => $auditMessage->project->getId(),
                     '$sequence' => $auditMessage->project->getSequence(),
@@ -149,26 +144,28 @@ class Audits extends Action
         }
 
         if (!$shouldProcessBatch) {
-            return new NoCommit();
+            return;
         }
 
+        $projects = 0;
+        $events = 0;
         foreach ($this->logs as $sequence => $projectLogs) {
             try {
-                Console::log('Processing Project "' . $sequence . '" batch with ' . count($projectLogs['logs']) . ' events');
-
-                $projectDocument = $projectLogs['project'];
-                $audit = $getAudit($projectDocument);
+                $audit = $getAudit($projectLogs['project']);
                 $audit->logBatch($projectLogs['logs']);
 
-                Console::success('Audit logs processed successfully');
+                $projects++;
+                $events += count($projectLogs['logs']);
             } catch (Throwable $e) {
-                Console::error('Error processing audit logs for Project "' . $sequence . '": ' . $e->getMessage());
+                Span::add('audits.error', $e->getMessage());
             } finally {
                 unset($this->logs[$sequence]);
             }
         }
 
+        Span::add('audits.projects', $projects);
+        Span::add('audits.count', $events);
+
         $this->lastTriggeredTime = time();
-        return new Commit();
     }
 }

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Usage;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -16,10 +17,10 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Validator\WhiteList;
 
-class Get extends Action
+class Get extends DatabasesAction
 {
     public static function getName(): string
     {
@@ -28,7 +29,7 @@ class Get extends Action
 
     protected $databaseType = DATABASE_TYPE_LEGACY;
 
-    public function setHttpPath(string $path): Action
+    public function setHttpPath(string $path): DatabasesAction
     {
         $this->databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
@@ -36,7 +37,9 @@ class Get extends Action
             default => DATABASE_TYPE_LEGACY,
         };
 
-        return parent::setHttpPath($path);
+        parent::setHttpPath($path);
+
+        return $this;
     }
 
     protected function getMetrics(): array
@@ -93,7 +96,14 @@ class Get extends Action
                 )
             ])
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -104,7 +114,7 @@ class Get extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 

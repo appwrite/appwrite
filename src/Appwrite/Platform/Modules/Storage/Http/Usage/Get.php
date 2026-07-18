@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Storage\Http\Usage;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,7 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -49,7 +50,14 @@ class Get extends Action
                 ]
             ))
             ->param('bucketId', '', new UID(), 'Bucket ID.')
-            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+            ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true, enum: new Enum(
+                name: 'UsageRange',
+                map: [
+                    '24h' => 'Twenty Four Hours',
+                    '30d' => 'Thirty Days',
+                    '90d' => 'Ninety Days',
+                ]
+            ))
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
@@ -7,7 +9,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class TeamsConsoleClientTest extends Scope
+final class TeamsConsoleClientTest extends Scope
 {
     use TeamsBase;
     use TeamsBaseClient;

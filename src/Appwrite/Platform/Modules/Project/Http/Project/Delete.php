@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project;
 
-use Appwrite\Event\Delete as DeleteQueue;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -33,7 +34,6 @@ class Delete extends Action
             ->desc('Delete project')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'project.delete')
             ->label('audits.event', 'project.delete')
             ->label('audits.resource', 'project/{project.$id}')
             ->label('sdk', new Method(
@@ -54,7 +54,7 @@ class Delete extends Action
             ))
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('authorization')
             ->inject('project')
             ->callback($this->action(...));
@@ -63,18 +63,19 @@ class Delete extends Action
     public function action(
         Response $response,
         Database $dbForPlatform,
-        DeleteQueue $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Authorization $authorization,
         Document $project,
     ) {
-        $queueForDeletes
-            ->setProject($project)
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project);
-
         if (!$authorization->skip(fn () => $dbForPlatform->deleteDocument('projects', $project->getId()))) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $project,
+        ));
 
         $response->noContent();
     }

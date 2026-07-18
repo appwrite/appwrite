@@ -12,6 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
@@ -31,7 +32,7 @@ class Update extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/project/auth-methods/:methodId')
             ->httpAlias('/v1/projects/:projectId/auth/:methodId')
-            ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
+            ->desc('Update project auth method status')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'authMethod.[methodId].update')
@@ -53,7 +54,7 @@ class Update extends Action
                 ],
             ))
 
-            ->param('methodId', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method ID. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
+            ->param('methodId', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method ID. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false, enum: new Enum(name: 'ProjectAuthMethodId'))
             ->param('enabled', null, new Boolean(), 'Auth method status.')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -81,6 +82,7 @@ class Update extends Action
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
         ])));
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('methodId', $methodId);
 

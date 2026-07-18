@@ -90,7 +90,7 @@ class Get extends Action
         $disposition = $decoded['disposition'] ?? 'inline';
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
@@ -119,7 +119,7 @@ class Get extends Action
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();

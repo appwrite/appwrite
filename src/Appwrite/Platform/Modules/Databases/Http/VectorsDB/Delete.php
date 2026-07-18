@@ -47,7 +47,7 @@ class Delete extends DatabaseDelete
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('usage')
             ->callback($this->action(...));

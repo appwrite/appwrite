@@ -8,11 +8,12 @@ WORKDIR /usr/local/src/
 COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
-RUN composer install --ignore-platform-reqs --optimize-autoloader \
+RUN composer config source-fallback true && \
+    composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:1.4.1 AS base
+FROM appwrite/base:1.4.3 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -44,6 +45,12 @@ COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
+
+# Add Installer Templates
+COPY ./app/views/install /usr/local/share/appwrite/app/views/install
+COPY ./docker-compose.yml /usr/local/share/appwrite/docker-compose.yml
+COPY ./mongo-init.js /usr/local/share/appwrite/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/local/share/appwrite/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\E2E\Services\Realtime;
 
 use Tests\E2E\Client;
@@ -13,7 +15,7 @@ use Utopia\Database\Query;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
-class RealtimeCustomClientQueryTestWithMessage extends Scope
+final class RealtimeCustomClientQueryTestWithMessage extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -537,7 +539,7 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
         // Invalid payloads are rejected
         $errNonString = $this->sendUnsubscribeMessage($client, [['subscriptionId' => 123]]);
         $this->assertEquals('error', $errNonString['type']);
-        $this->assertStringContainsString('subscriptionId', $errNonString['data']['message']);
+        $this->assertStringContainsString('subscriptionId', (string) $errNonString['data']['message']);
 
         $errEmpty = $this->sendUnsubscribeMessage($client, [['subscriptionId' => '']]);
         $this->assertEquals('error', $errEmpty['type']);
@@ -598,8 +600,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             Query::contains('status', ['active'])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('contains', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('contains', (string) $response['data']['message']);
 
         // Test 2: Invalid query method in nested AND query
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -609,8 +611,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('search', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('search', (string) $response['data']['message']);
 
         // Test 3: Invalid query method in nested OR query
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -620,8 +622,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('between', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('between', (string) $response['data']['message']);
 
         // Test 4: Deeply nested invalid query (AND -> OR -> invalid)
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -634,8 +636,8 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
-        $this->assertStringContainsString('startsWith', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
+        $this->assertStringContainsString('startsWith', (string) $response['data']['message']);
 
         // Test 5: Multiple invalid 'queries' in nested structure
         $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
@@ -648,7 +650,7 @@ class RealtimeCustomClientQueryTestWithMessage extends Scope
             ])->toString(),
         ]);
         $this->assertEquals('error', $response['type']);
-        $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
+        $this->assertStringContainsString('not supported in Realtime queries', (string) $response['data']['message']);
         $this->assertTrue(
             \str_contains($response['data']['message'], 'contains') ||
             \str_contains($response['data']['message'], 'endsWith')

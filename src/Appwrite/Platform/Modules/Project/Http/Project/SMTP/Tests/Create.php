@@ -2,13 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests;
 
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Extend\Exception as Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -63,12 +65,12 @@ class Create extends Action
             ->param('host', '', new Hostname(), 'SMTP server host name', optional: true, deprecated: true) // Backwards compatibility
             ->param('port', null, new Integer(), 'SMTP server port', optional: true, deprecated: true) // Backwards compatibility
             ->param('username', '', new Text(256), 'SMTP server username', optional: true, deprecated: true) // Backwards compatibility
-            ->param('password', '', new Text(256), 'SMTP server password', optional: true, deprecated: true) // Backwards compatibility
+            ->param('password', '', new PasswordFormat(new Text(256)), 'SMTP server password', optional: true, deprecated: true) // Backwards compatibility
             ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', optional: true, deprecated: true) // Backwards compatibility
             ->inject('response')
             ->inject('project')
-            ->inject('queueForMails')
-            ->inject('plan')
+            ->inject('publisherForMails')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -87,8 +89,8 @@ class Create extends Action
         string $paramSecure, // Backwards compatibility
         Response $response,
         Document $project,
-        Mail $queueForMails,
-        array $plan
+        MailPublisher $publisherForMails,
+        array $platform,
     ): void {
         // Backwards compatibility: use inline params if provided, otherwise fall back to project SMTP config.
         // When inline params are provided they are treated as self-contained — project config is ignored
@@ -143,33 +145,39 @@ class Create extends Action
         $template = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-smtp-test.tpl');
         $template
             ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
-            ->setParam('{{replyTo}}', "{$replyToNameDisplay} ({$replyToEmailDisplay})")
-            ->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL)
-            ->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR)
-            ->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER)
-            ->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD)
-            ->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE)
-            ->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL)
-            ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
+            ->setParam('{{replyTo}}', "{$replyToNameDisplay} ({$replyToEmailDisplay})");
 
         foreach ($emails as $email) {
-            $queueForMails
-                ->setSmtpHost($host)
-                ->setSmtpPort($port)
-                ->setSmtpUsername($username)
-                ->setSmtpPassword($password)
-                ->setSmtpSecure($secure)
-                ->setSmtpReplyToEmail($replyToEmail)
-                ->setSmtpReplyToName($replyToName)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName)
-                ->setRecipient($email)
-                ->setName('')
-                ->setBodyTemplate(APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl')
-                ->setBody($template->render())
-                ->setVariables([])
-                ->setSubject($subject)
-                ->trigger();
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $email,
+                subject: $subject,
+                template: MAIL_TEMPLATE_SMTP_TEST,
+                bodyTemplate: APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl',
+                body: $template->render(),
+                smtp: [
+                    'host' => $host,
+                    'port' => $port,
+                    'username' => $username,
+                    'password' => $password,
+                    'secure' => $secure,
+                    'replyToEmail' => $replyToEmail,
+                    'replyToName' => $replyToName,
+                    'senderEmail' => $senderEmail,
+                    'senderName' => $senderName,
+                ],
+                variables: [
+                    'platform' => $platform['platformName'] ?? APP_NAME,
+                    'logoUrl' => $platform['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                    'accentColor' => $platform['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                    'twitter' => $platform['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                    'discord' => $platform['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                    'github' => $platform['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                    'terms' => $platform['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                    'privacy' => $platform['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                ],
+                platform: $platform,
+            ));
         }
 
         $response->noContent();

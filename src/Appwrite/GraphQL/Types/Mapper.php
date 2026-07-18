@@ -254,7 +254,7 @@ class Mapper
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            ? \call_user_func_array($validator, \array_map($utopia->context()->get(...), $injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;

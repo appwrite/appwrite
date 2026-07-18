@@ -2,9 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Domain;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
@@ -78,7 +79,7 @@ class Update extends Action
             ->inject('project')
             ->inject('publisherForCertificates')
             ->inject('queueForEvents')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('log')
@@ -94,7 +95,7 @@ class Update extends Action
         Document $project,
         Certificate $publisherForCertificates,
         Event $queueForEvents,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Database $dbForPlatform,
         array $platform,
         Log $log,
@@ -192,9 +193,11 @@ class Update extends Action
         $this->adjustDomainUsage($usage, $oldRule, -1);
         $this->adjustDomainUsage($usage, $newRule, 1);
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($oldRule);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $oldRule,
+        ));
 
         if ($newRule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(

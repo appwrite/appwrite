@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
@@ -10,7 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
-class KeyTest extends TestCase
+final class KeyTest extends TestCase
 {
     public function testDecode(): void
     {
@@ -22,7 +24,7 @@ class KeyTest extends TestCase
             'collections.read',
             'documents.read',
         ];
-        $roleScopes = Config::getParam('roles', [])[User::ROLE_APPS]['scopes'];
+        $roleScopes = Config::getParam('roles', [])[User::ROLE_KEYS]['scopes'];
         $guestRoleScopes = Config::getParam('roles', [])[User::ROLE_GUESTS]['scopes'];
 
         $key = self::generateKey($projectId, $usage, $scopes);
@@ -33,13 +35,13 @@ class KeyTest extends TestCase
             key: $key,
         );
 
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Ephemeral Key', $decoded->getName());
+        $this->assertSame('Ephemeral Key', $decoded->getName());
 
         // Decode ephemeral key with extras
         $extra = [
@@ -57,14 +59,14 @@ class KeyTest extends TestCase
             user: new Document(),
             key: $key,
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Ephemeral Key', $decoded->getName());
-        $this->assertEquals(['metric123'], $decoded->getDisabledMetrics());
+        $this->assertSame('Ephemeral Key', $decoded->getName());
+        $this->assertSame(['metric123'], $decoded->getDisabledMetrics());
         $this->assertEquals(true, $decoded->getHostnameOverride());
         $this->assertEquals(true, $decoded->isBannerDisabled());
         $this->assertEquals(true, $decoded->isProjectCheckDisabled());
@@ -79,13 +81,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: $invalidKey,
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
+        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertEquals('UNKNOWN', $decoded->getName());
+        $this->assertSame('UNKNOWN', $decoded->getName());
 
         // Decode expired ephemeral key
         $expiredKey = self::generateKey($projectId, $usage, $scopes, maxAge: 1, timestamp: time() - 60);
@@ -96,13 +98,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: $expiredKey,
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
+        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertEquals('UNKNOWN', $decoded->getName());
+        $this->assertSame('UNKNOWN', $decoded->getName());
 
         // Decode standard key
         $scopes = ['custom.write'];
@@ -119,13 +121,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: 'standard_abcd1234',
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_STANDARD, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Standard key', $decoded->getName());
+        $this->assertSame('Standard key', $decoded->getName());
 
         // Decode deprecated standard key
         $scopes = ['custom.write'];
@@ -142,13 +144,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: 'abcd1234',
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_STANDARD, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Standard key', $decoded->getName());
+        $this->assertSame('Standard key', $decoded->getName());
 
         // Decode invalid standard key
         $scopes = ['custom.write'];
@@ -165,13 +167,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: 'standard_efgh5678',
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_STANDARD, $decoded->getType());
+        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertEquals('UNKNOWN', $decoded->getName());
+        $this->assertSame('UNKNOWN', $decoded->getName());
 
         // Decode expired standard key
         $scopes = ['custom.write'];
@@ -190,13 +192,13 @@ class KeyTest extends TestCase
             key: 'standard_abcd1234',
         );
         $this->assertEquals(true, $decoded->isExpired());
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_STANDARD, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_STANDARD, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
-        $this->assertEquals('Standard key', $decoded->getName());
+        $this->assertSame('Standard key', $decoded->getName());
 
         // Decode account key
         $userId = 'user123';
@@ -214,13 +216,13 @@ class KeyTest extends TestCase
             ]]),
             key: 'account_abcd1234',
         );
-        $this->assertEquals('', $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals($userId, $decoded->getUserId());
-        $this->assertEquals(API_KEY_ACCOUNT, $decoded->getType());
-        $this->assertEquals(User::ROLE_USERS, $decoded->getRole());
-        $this->assertEquals($scopes, $decoded->getScopes());
-        $this->assertEquals('Account key', $decoded->getName());
+        $this->assertSame('', $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame($userId, $decoded->getUserId());
+        $this->assertSame(API_KEY_ACCOUNT, $decoded->getType());
+        $this->assertSame(User::ROLE_USERS, $decoded->getRole());
+        $this->assertSame($scopes, $decoded->getScopes());
+        $this->assertSame('Account key', $decoded->getName());
 
         // Decode invalid account key
         $scopes = ['teams.write'];
@@ -237,13 +239,13 @@ class KeyTest extends TestCase
             ]]),
             key: 'account_efgh5678',
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_ACCOUNT, $decoded->getType());
-        $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_ACCOUNT, $decoded->getType());
+        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertEquals('UNKNOWN', $decoded->getName());
+        $this->assertSame('UNKNOWN', $decoded->getName());
 
         // Decode expired account key
         $scopes = ['teams.write'];
@@ -261,13 +263,13 @@ class KeyTest extends TestCase
             key: 'account_abcd1234',
         );
         $this->assertEquals(true, $decoded->isExpired());
-        $this->assertEquals('', $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals($userId, $decoded->getUserId());
-        $this->assertEquals(API_KEY_ACCOUNT, $decoded->getType());
-        $this->assertEquals(User::ROLE_USERS, $decoded->getRole());
-        $this->assertEquals($scopes, $decoded->getScopes());
-        $this->assertEquals('Account key', $decoded->getName());
+        $this->assertSame('', $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame($userId, $decoded->getUserId());
+        $this->assertSame(API_KEY_ACCOUNT, $decoded->getType());
+        $this->assertSame(User::ROLE_USERS, $decoded->getRole());
+        $this->assertSame($scopes, $decoded->getScopes());
+        $this->assertSame('Account key', $decoded->getName());
 
         // Decode organization key
         $teamId = 'team123';
@@ -285,13 +287,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: 'organization_abcd1234',
         );
-        $this->assertEquals('', $decoded->getProjectId());
-        $this->assertEquals($teamId, $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_ORGANIZATION, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
-        $this->assertEquals($scopes, $decoded->getScopes());
-        $this->assertEquals('Organization key', $decoded->getName());
+        $this->assertSame('', $decoded->getProjectId());
+        $this->assertSame($teamId, $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_ORGANIZATION, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
+        $this->assertSame($scopes, $decoded->getScopes());
+        $this->assertSame('Organization key', $decoded->getName());
 
         // Decode invalid organization key
         $scopes = ['projects.write'];
@@ -308,13 +310,13 @@ class KeyTest extends TestCase
             user: new Document(),
             key: 'organization_efgh5678',
         );
-        $this->assertEquals($projectId, $decoded->getProjectId());
-        $this->assertEquals('', $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_ORGANIZATION, $decoded->getType());
-        $this->assertEquals(User::ROLE_GUESTS, $decoded->getRole());
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_ORGANIZATION, $decoded->getType());
+        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
         $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertEquals('UNKNOWN', $decoded->getName());
+        $this->assertSame('UNKNOWN', $decoded->getName());
 
         // Decode expired organization key
         $scopes = ['projects.write'];
@@ -332,13 +334,13 @@ class KeyTest extends TestCase
             key: 'organization_abcd1234',
         );
         $this->assertEquals(true, $decoded->isExpired());
-        $this->assertEquals('', $decoded->getProjectId());
-        $this->assertEquals($teamId, $decoded->getTeamId());
-        $this->assertEquals('', $decoded->getUserId());
-        $this->assertEquals(API_KEY_ORGANIZATION, $decoded->getType());
-        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
-        $this->assertEquals($scopes, $decoded->getScopes());
-        $this->assertEquals('Organization key', $decoded->getName());
+        $this->assertSame('', $decoded->getProjectId());
+        $this->assertSame($teamId, $decoded->getTeamId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_ORGANIZATION, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
+        $this->assertSame($scopes, $decoded->getScopes());
+        $this->assertSame('Organization key', $decoded->getName());
     }
 
     private static function generateKey(

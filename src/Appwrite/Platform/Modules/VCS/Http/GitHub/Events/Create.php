@@ -58,11 +58,11 @@ class Create extends Action
     ) {
         $this->preprocessEvent($request);
 
-        $event = $request->getHeader('x-github-event', '');
+        $event = $request->getHeaderLine('x-github-event', '');
         Span::add('vcs.github.event.name', $event);
 
         $payload = $request->getRawPayload();
-        $signature = $request->getHeader('x-hub-signature-256', '');
+        $signature = $request->getHeaderLine('x-hub-signature-256', '');
         $secretKey = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
         $valid = empty($secretKey) ? true : $github->validateWebhookEvent($payload, $signature, $secretKey);
@@ -133,7 +133,6 @@ class Create extends Action
         callable $getProjectDB,
         array $platform,
     ) {
-        $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
         $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
         $providerBranch = $parsedPayload["branch"] ?? '';
         $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
@@ -164,7 +163,8 @@ class Create extends Action
 
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchDeleted) {
-            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
+            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         }
     }
 
@@ -211,12 +211,19 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
+            $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            $providerAffectedFiles = [
+                ...array_column($prFiles, 'filename'),
+                // Only renamed files include previous_filename; skip missing values from other file changes.
+                ...array_filter(array_column($prFiles, 'previous_filename'))
+            ];
+
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
                 Query::orderDesc('$createdAt')
             ]));
 
-            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup
 

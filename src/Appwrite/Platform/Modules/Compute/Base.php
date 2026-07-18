@@ -139,18 +139,6 @@ class Base extends Action
             'activate' => $activate,
         ]));
 
-        $function = $function
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), new Document([
-            'latestDeploymentId' => $deployment->getId(),
-            'latestDeploymentInternalId' => $deployment->getSequence(),
-            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
-        ]));
-
         $publisherForBuilds->enqueue(new BuildMessage(
             project: $project,
             resource: $function,
@@ -251,18 +239,6 @@ class Base extends Action
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $site->getAttribute('providerRootDirectory', ''),
             'activate' => $activate,
-        ]));
-
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $deployment->getId(),
-            'latestDeploymentInternalId' => $deployment->getSequence(),
-            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
-            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
         ]));
 
         $sitesDomain = $platform['sitesDomain'];

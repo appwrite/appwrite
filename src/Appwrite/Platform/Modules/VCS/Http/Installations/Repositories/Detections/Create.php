@@ -46,6 +46,7 @@ use Utopia\Detector\Detector\Framework;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -91,7 +92,7 @@ class Create extends Action
             ))
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
+            ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
             ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
             ->inject('gitHub')
             ->inject('response')

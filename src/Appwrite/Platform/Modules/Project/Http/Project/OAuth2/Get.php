@@ -10,6 +10,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
 
@@ -86,7 +87,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'])
+            ->param('providerId', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders', [])), true), 'OAuth2 provider key. For example: github, google, apple.', aliases: ['provider'], enum: new Enum(name: 'ProjectOAuthProviderId', exclude: ['mock', 'mock-unverified']))
             ->inject('response')
             ->inject('project')
             ->callback($this->action(...));

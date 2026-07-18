@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -59,7 +61,7 @@ class Delete extends Action
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
             ->callback($this->action(...));
@@ -70,7 +72,7 @@ class Delete extends Action
         string $deploymentId,
         Response $response,
         Database $dbForProject,
-        DeleteEvent $queueForDeletes,
+        DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
         Device $deviceForSites
     ) {
@@ -88,8 +90,16 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+        try {
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
+        } catch (TransactionException) {
+            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+
+            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
@@ -130,9 +140,11 @@ class Delete extends Action
             ->setParam('siteId', $site->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($deployment);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_DOCUMENT,
+            document: $deployment,
+        ));
 
         $response->noContent();
     }

@@ -135,19 +135,7 @@ class Create extends Action
             'status' => 'waiting',
             'buildPath' => '',
             'buildLogs' => '',
-            'type' => $request->getHeader('x-sdk-language') === 'cli' ? 'cli' : 'manual'
-        ]));
-
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+            'type' => $request->getHeaderLine('x-sdk-language') === 'cli' ? 'cli' : 'manual'
         ]));
 
         // Preview deployments for sites

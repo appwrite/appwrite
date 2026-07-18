@@ -37,14 +37,19 @@ class Bus
 
         foreach ($listeners as $listener) {
             $deps = array_map($resolver, $listener->getInjections());
-            Span::init('listener.' . $listener::getName());
-            Span::add('bus.event', $event::class);
+
+            Span::current()?->add('listener.' . $listener::getName() . '.event', $event::class);
+
             try {
                 ($listener->getCallback())($event, ...$deps);
+                Span::current()?->add('listener.' . $listener::getName() . '.success', true);
             } catch (\Throwable $e) {
-                Span::error($e);
-            } finally {
-                Span::current()?->finish();
+                Span::current()?->add('listener.' . $listener::getName() . '.success', false);
+                Span::current()?->add('listener.' . $listener::getName() . '.error.code', $e->getCode());
+                Span::current()?->add('listener.' . $listener::getName() . '.error.message', $e->getMessage());
+                Span::current()?->add('listener.' . $listener::getName() . '.error.line', $e->getLine());
+                Span::current()?->add('listener.' . $listener::getName() . '.error.file', $e->getFile());
+                Span::current()?->add('listener.' . $listener::getName() . '.error.trace', $e->getTraceAsString());
             }
         }
     }

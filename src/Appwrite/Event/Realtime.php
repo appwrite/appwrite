@@ -10,6 +10,8 @@ use Utopia\Database\Exception;
 
 class Realtime extends Event
 {
+    public const CONSOLE_ALLOWLIST = ['presences'];
+
     protected array $subscribers = [];
 
     private Adapter $realtime;

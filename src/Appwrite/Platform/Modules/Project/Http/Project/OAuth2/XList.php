@@ -76,8 +76,13 @@ class XList extends Action
         $actions = Base::getProviderActions();
 
         $documents = [];
-        foreach ($actions as $providerId => $updateClass) {
-            if (!($providers[$providerId]['enabled'] ?? false)) {
+        foreach ($providers as $providerId => $config) {
+            $updateClass = $actions[$providerId] ?? null;
+            if ($updateClass === null) {
+                continue;
+            }
+
+            if (!($config['enabled'] ?? false)) {
                 // Disabled by Appwrite configuration, exclude from response
                 continue;
             }

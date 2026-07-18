@@ -2,9 +2,11 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
@@ -18,7 +20,6 @@ use Utopia\System\System;
 
 class Webhooks extends Action
 {
-    private array $errors = [];
     private const MAX_FILE_SIZE = 5242880; // 5 MB
 
     public static function getName(): string
@@ -36,7 +37,7 @@ class Webhooks extends Action
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
@@ -47,19 +48,16 @@ class Webhooks extends Action
      * @param Message $message
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param UsagePublisher $publisherForUsage
      * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
     {
-        $this->errors = [];
         $payload = $message->getPayload();
-
-
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -71,14 +69,18 @@ class Webhooks extends Action
 
         $log->addTag('projectId', $project->getId());
 
+        $errors = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $publisherForUsage, $plan);
+                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForMails, $publisherForUsage, $plan);
+                if ($error !== null) {
+                    $errors[] = $error;
+                }
             }
         }
 
-        if (!empty($this->errors)) {
-            throw new Exception(\implode(" / \n\n", $this->errors));
+        if (!empty($errors)) {
+            throw new Exception(\implode(" / \n\n", $errors));
         }
     }
 
@@ -89,17 +91,26 @@ class Webhooks extends Action
      * @param Document $user
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param array $plan
-     * @return void
+     * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, array $plan): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, UsagePublisher $publisherForUsage, array $plan): ?string
     {
         if ($webhook->getAttribute('enabled') !== true) {
-            return;
+            return null;
         }
 
         $url = \rawurldecode($webhook->getAttribute('url'));
+
+        if (System::getEnv('_APP_ENV', 'development') === 'production') {
+            $host = \parse_url($url, PHP_URL_HOST) ?? '';
+            $hostnameValidator = new PublicHostname();
+            if (!$hostnameValidator->isValid($host)) {
+                return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
+            }
+        }
+
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
@@ -147,6 +158,8 @@ class Webhooks extends Action
         $curlError = \curl_error($ch);
         $statusCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
+        $error = null;
+
         if (!empty($curlError) || $statusCode >= 400) {
             $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForPlatform->getDocument('webhooks', $webhook->getId());
@@ -171,13 +184,13 @@ class Webhooks extends Action
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $updatePayload['enabled'] = false;
-                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails, $plan);
+                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $publisherForMails, $plan);
             }
 
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
-            $this->errors[] = $logs;
+            $error = $logs;
             $usage = (new UsageContext())
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
                 ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1);
@@ -195,6 +208,8 @@ class Webhooks extends Action
             project: $project,
             metrics: $usage->getMetrics(),
         ));
+
+        return $error;
     }
 
     /**
@@ -203,11 +218,11 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $project
      * @param Database $dbForPlatform
-     * @param Mail $queueForMails
+     * @param MailPublisher $publisherForMails
      * @param array $plan
      * @return void
      */
-    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, Mail $queueForMails, array $plan): void
+    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForPlatform, MailPublisher $publisherForMails, array $plan): void
     {
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
@@ -251,18 +266,17 @@ class Webhooks extends Action
             ->setParam('{{message}}', $template->render())
             ->setParam('{{year}}', date("Y"));
 
-        $queueForMails
-            ->setProject($project)
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body->render());
-
         foreach ($users as $user) {
-            $queueForMails
-                ->setVariables(['user' => $user->getAttribute('name', '')])
-                ->setName($user->getAttribute('name', ''))
-                ->setRecipient($user->getAttribute('email'))
-                ->trigger();
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $user->getAttribute('email'),
+                name: $user->getAttribute('name', ''),
+                subject: $subject,
+                template: MAIL_TEMPLATE_WEBHOOK_FAILED,
+                body: $body->render(),
+                preview: $preview,
+                variables: ['user' => $user->getAttribute('name', '')],
+            ));
         }
     }
 }

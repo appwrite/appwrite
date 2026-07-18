@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
@@ -9,7 +11,7 @@ use Utopia\Database\Document;
 
 require_once __DIR__ . '/../../../app/init.php';
 
-class EventTest extends TestCase
+final class EventTest extends TestCase
 {
     protected ?Event $object = null;
     protected string $queue = '';
@@ -27,17 +29,17 @@ class EventTest extends TestCase
 
     public function testQueue(): void
     {
-        $this->assertEquals($this->queue, $this->object->getQueue());
+        $this->assertSame($this->queue, $this->object->getQueue());
         $this->object->setQueue('demo');
-        $this->assertEquals('demo', $this->object->getQueue());
+        $this->assertSame('demo', $this->object->getQueue());
         $this->object->setQueue($this->queue);
     }
 
     public function testClass(): void
     {
-        $this->assertEquals('TestsV1', $this->object->getClass());
+        $this->assertSame('TestsV1', $this->object->getClass());
         $this->object->setClass('TestsV2');
-        $this->assertEquals('TestsV2', $this->object->getClass());
+        $this->assertSame('TestsV2', $this->object->getClass());
         $this->object->setClass('TestsV1');
     }
 

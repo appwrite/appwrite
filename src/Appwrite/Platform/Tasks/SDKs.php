@@ -7,9 +7,9 @@ use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\ClaudePlugin;
 use Appwrite\SDK\Language\CLI;
+use Appwrite\SDK\Language\CodexPlugin;
 use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
-use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
@@ -23,10 +23,11 @@ use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Rust;
 use Appwrite\SDK\Language\Swift;
+use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\Spec\OpenAPI3;
 use Appwrite\Spec\StaticSpec;
-use Appwrite\Spec\Swagger2;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\DiffCheck\DiffCheck;
@@ -300,14 +301,14 @@ class SDKs extends Action
                 }
 
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
-                $specFormat = $language['spec'] ?? 'swagger2';
+                $specFormat = $language['spec'] ?? 'openapi3';
                 $spec = null;
                 if ($specFormat === 'static') {
                     Console::log('  Using static SDK spec...');
                 } else {
                     Console::log('  Fetching API spec...');
 
-                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
 
                     if (!file_exists($specPath)) {
                         throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
@@ -387,9 +388,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
                             If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
-                    case 'deno':
-                        $config = new Deno();
-                        break;
                     case 'python':
                         $config = new Python();
                         $config->setPipPackage('appwrite');
@@ -406,10 +404,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'react-native':
                         $config = new ReactNative();
                         $config->setNPMPackage('react-native-appwrite');
-                        break;
-                    case 'flutter-dev':
-                        $config = new Flutter();
-                        $config->setPackageName('appwrite_dev');
                         break;
                     case 'dart':
                         $config = new Dart();
@@ -429,6 +423,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dotnet':
                         $cover = '';
                         $config = new DotNet();
+                        break;
+                    case 'unity':
+                        $cover = '';
+                        $config = new Unity();
+                        $config->setPackageName('io.appwrite.unity');
                         break;
                     case 'android':
                         $config = new Android();
@@ -455,6 +454,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'claude-plugin':
                         $config = new ClaudePlugin();
                         break;
+                    case 'codex-plugin':
+                        $config = new CodexPlugin();
+                        break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
@@ -473,7 +475,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             licenseName: 'BSD-3-Clause',
                             licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                         )
-                        : new Swagger2($spec)
+                        : new OpenAPI3($spec)
                 );
 
                 $sdk
@@ -489,7 +491,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
-                    ->setLogo($cover)
+                    ->setCoverImage($cover)
                     ->setURL('https://appwrite.io')
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')

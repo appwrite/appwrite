@@ -120,18 +120,6 @@ class Create extends Action
             'buildLogs' => '',
         ]));
 
-        $function = $function
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), new Document([
-            'latestDeploymentId' => $function->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $function->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $function->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
-        ]));
-
         $publisherForBuilds->enqueue(new BuildMessage(
             project: $project,
             resource: $function,

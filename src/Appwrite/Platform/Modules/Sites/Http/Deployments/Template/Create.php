@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -19,7 +20,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
@@ -69,7 +70,7 @@ class Create extends Base
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
-            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag')
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag', enum: new Enum(name: 'TemplateReferenceType'))
             ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
@@ -181,18 +182,6 @@ class Create extends Base
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'activate' => $activate,
-        ]));
-
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
         ]));
 
         $sitesDomain = $platform['sitesDomain'];

@@ -84,6 +84,7 @@ class Exception extends \Exception
     public const string USER_EMAIL_ALREADY_EXISTS = 'user_email_already_exists';
     public const string USER_EMAIL_DISPOSABLE = 'user_email_disposable';
     public const string USER_EMAIL_FREE = 'user_email_free';
+    public const string USER_EMAIL_NOT_CORPORATE = 'user_email_not_corporate';
     public const string USER_EMAIL_NOT_CANONICAL = 'user_email_not_canonical';
     public const string USER_PASSWORD_MISMATCH = 'user_password_mismatch';
     public const string USER_SESSION_NOT_FOUND = 'user_session_not_found';
@@ -201,6 +202,10 @@ class Exception extends \Exception
 
     /** Log */
     public const string LOG_NOT_FOUND = 'log_not_found';
+
+    /** Presence */
+    public const string PRESENCE_NOT_FOUND = 'presence_not_found';
+    public const string PRESENCE_ALREADY_EXISTS = 'presence_already_exists';
 
     /** Databases */
     public const string DATABASE_NOT_FOUND = 'database_not_found';
@@ -405,6 +410,14 @@ class Exception extends \Exception
     public const string TOKEN_NOT_FOUND = 'token_not_found';
     public const string TOKEN_EXPIRED = 'token_expired';
     public const string TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
+
+    /** Advisor */
+    public const string INSIGHT_NOT_FOUND = 'insight_not_found';
+    public const string INSIGHT_ALREADY_EXISTS = 'insight_already_exists';
+
+    /** Reports */
+    public const string REPORT_NOT_FOUND = 'report_not_found';
+    public const string REPORT_ALREADY_EXISTS = 'report_already_exists';
 
     protected string $type = '';
     protected array $errors = [];

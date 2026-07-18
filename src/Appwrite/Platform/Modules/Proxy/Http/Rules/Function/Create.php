@@ -13,7 +13,6 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -145,11 +144,7 @@ class Create extends Action
             }
         }
 
-        try {
-            $rule = $authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule));
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
         $this->adjustDomainUsage($usage, $rule, 1);
 

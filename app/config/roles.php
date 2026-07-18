@@ -12,6 +12,8 @@ $member = [
     'account',
     'teams.read',
     'teams.write',
+    'presences.read',
+    'presences.write',
     'documents.read',
     'documents.write',
     'rows.read',
@@ -47,6 +49,8 @@ $admins = [
     'buckets.write',
     'users.read',
     'users.write',
+    'presences.read',
+    'presences.write',
     'databases.read',
     'databases.write',
     'collections.read',
@@ -103,6 +107,10 @@ $admins = [
     'tokens.write',
     'schedules.read',
     'schedules.write',
+    'insights.read',
+    'insights.write',
+    'reports.read',
+    'reports.write',
 ];
 
 return [
@@ -142,7 +150,7 @@ return [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    User::ROLE_APPS => [
+    User::ROLE_KEYS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

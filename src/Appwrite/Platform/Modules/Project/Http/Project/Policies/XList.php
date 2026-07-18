@@ -71,9 +71,30 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $policies = $this->getPolicies($project);
+
+        $total = $includeTotal ? \count($policies) : 0;
+
+        $grouped = Query::groupByType($queries);
+        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped['limit'] ?? null;
+
+        $policies = \array_slice($policies, $offset, $limit);
+
+        $response->dynamic(new Document([
+            'policies' => $policies,
+            'total' => $total,
+        ]), Response::MODEL_POLICY_LIST);
+    }
+
+    /**
+     * @return array<Document>
+     */
+    protected function getPolicies(Document $project): array
+    {
         $auths = $project->getAttribute('auths', []);
 
-        $policies = [
+        return [
             new Document([
                 '$id' => 'password-dictionary',
                 'enabled' => $auths['passwordDictionary'] ?? false,
@@ -82,6 +103,15 @@ class XList extends Action
                 '$id' => 'password-history',
                 'total' => $auths['passwordHistory'] ?? 0,
             ]),
+            new Document(\array_merge([
+                'min' => 8,
+                'uppercase' => false,
+                'lowercase' => false,
+                'number' => false,
+                'symbols' => false,
+            ], $auths['passwordStrength'] ?? [], [
+                '$id' => 'password-strength',
+            ])),
             new Document([
                 '$id' => 'password-personal-data',
                 'enabled' => $auths['personalDataCheck'] ?? false,
@@ -115,18 +145,5 @@ class XList extends Action
                 'userMFA' => $auths['membershipsMfa'] ?? false,
             ]),
         ];
-
-        $total = $includeTotal ? \count($policies) : 0;
-
-        $grouped = Query::groupByType($queries);
-        $offset = $grouped['offset'] ?? 0;
-        $limit = $grouped['limit'] ?? null;
-
-        $policies = \array_slice($policies, $offset, $limit);
-
-        $response->dynamic(new Document([
-            'policies' => $policies,
-            'total' => $total,
-        ]), Response::MODEL_POLICY_LIST);
     }
 }

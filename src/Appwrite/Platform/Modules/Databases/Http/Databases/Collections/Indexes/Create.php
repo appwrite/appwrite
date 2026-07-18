@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Database as DatabaseMessage;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -21,6 +22,7 @@ use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
@@ -71,24 +73,24 @@ class Create extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
             ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
-            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL]), 'Index type.')
+            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL]), 'Index type.', enum: new Enum(name: 'DatabasesIndexType'))
             ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'])
-            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
+            ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($db->isEmpty()) {
+        if ($db->isEmpty() || $this->isDatabaseTypeMismatch($db)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -228,20 +230,6 @@ class Create extends Action
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_CREATE_INDEX)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
-            $queueForDatabase
-                ->setCollection($collection)
-                ->setDocument($index);
-        } else {
-            $queueForDatabase
-                ->setTable($collection)
-                ->setRow($index);
-        }
-
         $queueForEvents
             ->setContext('database', $db)
             ->setParam('databaseId', $databaseId)
@@ -249,6 +237,18 @@ class Create extends Action
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        $publisherForDatabase->enqueue(new DatabaseMessage(
+            project: $queueForEvents->getProject(),
+            user: $queueForEvents->getUser(),
+            type: DATABASE_TYPE_CREATE_INDEX,
+            database: $db,
+            collection: $this->isCollectionsAPI() ? $collection : null,
+            document: $this->isCollectionsAPI() ? $index : null,
+            table: $this->isCollectionsAPI() ? null : $collection,
+            row: $this->isCollectionsAPI() ? null : $index,
+            events: Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams()),
+        ));
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

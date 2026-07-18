@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship;
 
-use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Database as DatabasePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Platform\Enum;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
@@ -70,7 +71,7 @@ class Create extends Action
                 Database::RELATION_MANY_TO_ONE,
                 Database::RELATION_MANY_TO_MANY,
                 Database::RELATION_ONE_TO_MANY
-            ], true), 'Relation type')
+            ], true), 'Relation type', enum: new Enum(name: 'RelationshipType'))
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
             ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
             ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
@@ -78,16 +79,16 @@ class Create extends Action
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true), 'Constraints option', true)
+            ], true), 'Constraints option', true, enum: new Enum(name: 'RelationMutate'))
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDatabase')
+            ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
@@ -98,7 +99,7 @@ class Create extends Action
         $twoWayKey ??= $collectionId;
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
@@ -159,7 +160,7 @@ class Create extends Action
                 'twoWayKey' => $twoWayKey,
                 'onDelete' => $onDelete,
             ]
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);
 
         foreach ($attribute->getAttribute('options', []) as $k => $option) {
             $attribute->setAttribute($k, $option);
