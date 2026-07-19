@@ -1301,9 +1301,6 @@ services:
       - /bin/bash
       - /mongo-entrypoint.sh
     healthcheck:
-      # Require replica-set primary (setName === 'rs0'). Docker's first-boot
-      # temporary mongod is a writable standalone; treating that as healthy lets
-      # CI start tests before rs0 has a primary (NotPrimaryNoSecondaryOk flakes).
       test: |
         bash -c "
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
