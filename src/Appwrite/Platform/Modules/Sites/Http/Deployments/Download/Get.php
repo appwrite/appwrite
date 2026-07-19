@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Download;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Validator\WhiteList;
@@ -34,6 +35,7 @@ class Get extends Action
             ->desc('Get deployment download')
             ->groups(['api', 'sites'])
             ->label('scope', 'sites.read')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('resourceType', RESOURCE_TYPE_SITES)
             ->label('sdk', new Method(
                 namespace: 'sites',
@@ -50,11 +52,12 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
+                locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::ANY,
             ))
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
-            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true)
+            ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
             ->inject('response')
             ->inject('request')
             ->inject('dbForProject')
@@ -97,14 +100,19 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        $contentType = $type === 'source' ? 'application/gzip' : 'application/octet-stream';
+        $filename = $type === 'source'
+            ? $deploymentId . '-source.tar.gz'
+            : $deploymentId . '-output-' . \basename($path);
+
         $size = $device->getFileSize($path);
-        $rangeHeader = $request->getHeader('range');
+        $rangeHeader = $request->getHeaderLine('range');
 
         $response
-            ->setContentType('application/gzip')
+            ->setContentType($contentType)
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();

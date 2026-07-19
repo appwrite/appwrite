@@ -41,6 +41,7 @@ class XList extends Action
             ->desc('List files')
             ->groups(['api', 'storage'])
             ->label('scope', 'files.read')
+            ->label('usage.resource', 'bucket/{request.bucketId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
             ->label('sdk', new Method(
                 namespace: 'storage',
@@ -80,7 +81,7 @@ class XList extends Action
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {

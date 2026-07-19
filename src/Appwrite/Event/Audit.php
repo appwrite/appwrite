@@ -12,6 +12,8 @@ class Audit extends Event
     protected string $userAgent = '';
     protected string $ip = '';
     protected string $hostname = '';
+    protected string $sdk = '';
+    protected string $sdkVersion = '';
 
     protected bool $critical = false;
 
@@ -141,6 +143,52 @@ class Audit extends Event
     }
 
     /**
+     * Set SDK name for this audit event.
+     *
+     * @param string $sdk
+     * @return self
+     */
+    public function setSdk(string $sdk): self
+    {
+        $this->sdk = $sdk;
+
+        return $this;
+    }
+
+    /**
+     * Returns the set audit SDK name.
+     *
+     * @return string
+     */
+    public function getSdk(): string
+    {
+        return $this->sdk;
+    }
+
+    /**
+     * Set SDK version for this audit event.
+     *
+     * @param string $sdkVersion
+     * @return self
+     */
+    public function setSdkVersion(string $sdkVersion): self
+    {
+        $this->sdkVersion = $sdkVersion;
+
+        return $this;
+    }
+
+    /**
+     * Returns the set audit SDK version.
+     *
+     * @return string
+     */
+    public function getSdkVersion(): string
+    {
+        return $this->sdkVersion;
+    }
+
+    /**
      * Prepare payload for queue.
      *
      * @return array
@@ -156,7 +204,9 @@ class Audit extends Event
             'ip' => $this->ip,
             'userAgent' => $this->userAgent,
             'event' => $this->event,
-            'hostname' => $this->hostname
+            'hostname' => $this->hostname,
+            'sdk' => $this->sdk,
+            'sdkVersion' => $this->sdkVersion
         ];
     }
 }

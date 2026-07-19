@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Teams;
 
-use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Workers\Deletes;
@@ -55,13 +56,13 @@ class Delete extends Action
             ->inject('response')
             ->inject('getProjectDB')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
+            ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('project')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, DeleteEvent $queueForDeletes, Event $queueForEvents, Document $project)
+    public function action(string $teamId, Response $response, callable $getProjectDB, Database $dbForProject, DeletePublisher $publisherForDeletes, Event $queueForEvents, Document $project)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -79,15 +80,18 @@ class Delete extends Action
 
         // Async delete
         if ($project->getId() === 'console') {
-            $queueForDeletes
-                ->setType(DELETE_TYPE_TEAM_PROJECTS)
-                ->setDocument($team)
-                ->trigger();
+            $publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_TEAM_PROJECTS,
+                document: $team,
+            ));
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($team);
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $project,
+            type: DELETE_TYPE_DOCUMENT,
+            document: $team,
+        ));
 
         $queueForEvents
             ->setParam('teamId', $team->getId())

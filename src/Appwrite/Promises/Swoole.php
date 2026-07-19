@@ -8,7 +8,7 @@ use Utopia\DI\Container;
 
 class Swoole extends Promise
 {
-    private const REQUEST_CONTAINER_CONTEXT_KEY = '__utopia_http_request_container';
+    private const REQUEST_CONTAINER_CONTEXT_KEY = '__utopia__';
 
     public function __construct(?callable $executor = null)
     {

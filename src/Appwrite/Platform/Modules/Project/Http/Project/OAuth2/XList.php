@@ -34,7 +34,7 @@ class XList extends Action
             ->setHttpPath('/v1/project/oauth2')
             ->desc('List project OAuth2 providers')
             ->groups(['api', 'project'])
-            ->label('scope', 'oauth2.read')
+            ->label('scope', 'project.oauth2.read')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'oauth2',
@@ -76,8 +76,13 @@ class XList extends Action
         $actions = Base::getProviderActions();
 
         $documents = [];
-        foreach ($actions as $providerId => $updateClass) {
-            if (!($providers[$providerId]['enabled'] ?? false)) {
+        foreach ($providers as $providerId => $config) {
+            $updateClass = $actions[$providerId] ?? null;
+            if ($updateClass === null) {
+                continue;
+            }
+
+            if (!($config['enabled'] ?? false)) {
                 // Disabled by Appwrite configuration, exclude from response
                 continue;
             }

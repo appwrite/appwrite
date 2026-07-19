@@ -16,6 +16,11 @@ class Realtime extends MessagingAdapter
 {
     public const SUPPORTED_ACTIONS = ['create', 'update', 'upsert', 'delete'];
 
+    // The database family is published under several event prefixes (legacy `databases`
+    // plus the per-type projections). They share the same `databases.<db>.<collections|tables>.<id>…`
+    // shape, so the tail normalizes them to `databases` for consistent metadata + filtering.
+    public const DATABASE_EVENT_PREFIXES = ['databases', 'tablesdb', 'documentsdb', 'vectorsdb'];
+
     // Resources whose channels receive an action-suffixed sibling at publish time.
     // The suffix loop in fromPayload() treats any channel whose last OR second-to-last
     // segment matches an entry here as a candidate for `.{action}` suffixing.
@@ -34,6 +39,7 @@ class Realtime extends MessagingAdapter
         'account',
         'teams',
         'memberships',
+        'presences'
     ];
 
     /**
@@ -44,6 +50,7 @@ class Realtime extends MessagingAdapter
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
+     *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
     public array $connections = [];
 
@@ -146,6 +153,7 @@ class Realtime extends MessagingAdapter
             'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
             'userId' => $userId ?? ($existing['userId'] ?? ''),
             'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
+            'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
         if (\array_key_exists('authorization', $existing)) {
@@ -200,6 +208,74 @@ class Realtime extends MessagingAdapter
         }
 
         return $subscriptions;
+    }
+
+    /**
+     * Dedup delete presence triggers.
+     * Scenario: when client is connected to realtime and a delete call is made throught rest.
+     * If not dedupe then two delete events will get triggered. So remove the presenceIds
+     *
+     * @param string $projectId
+     * @param string $presenceId
+     * @return int Number of connections whose presences map was updated.
+     */
+    public function removePresenceFromConnections(string $projectId, string $presenceId): int
+    {
+        if ($projectId === '' || $presenceId === '') {
+            return 0;
+        }
+
+        $removed = 0;
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) !== $projectId) {
+                continue;
+            }
+            if (!isset($connection['presences'][$presenceId])) {
+                continue;
+            }
+            unset($this->connections[$connectionId]['presences'][$presenceId]);
+            $removed++;
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Returns the presence ID carried by a `presences.{id}.delete` event payload,
+     * or null when the event is not a presence delete.
+     *
+     * @param array $event Decoded pubsub payload produced by self::send().
+     * @return string|null
+     */
+    public static function extractDeletedPresenceId(array $event): ?string
+    {
+        $events = $event['data']['events'] ?? [];
+        if (!\is_array($events)) {
+            return null;
+        }
+
+        $isPresenceDelete = false;
+        foreach ($events as $eventName) {
+            if (
+                \is_string($eventName)
+                && \str_starts_with($eventName, 'presences.')
+                && \str_ends_with($eventName, '.delete')
+            ) {
+                $isPresenceDelete = true;
+                break;
+            }
+        }
+
+        if (!$isPresenceDelete) {
+            return null;
+        }
+
+        $presenceId = $event['data']['payload']['$id'] ?? null;
+        if (!\is_string($presenceId) || $presenceId === '') {
+            return null;
+        }
+
+        return $presenceId;
     }
 
     /**
@@ -427,6 +503,90 @@ class Realtime extends MessagingAdapter
         }
 
         return $receivers;
+    }
+
+    /**
+     *
+     * @param array<string,mixed> $event decoded event published to the `realtime` channel
+     * @return array<string,mixed>
+     */
+    public static function toTailMetadata(array $event): array
+    {
+        $events = $event['data']['events'] ?? [];
+        $name = \is_array($events) ? ($events[0] ?? '') : '';
+        $parts = $name === '' ? [] : \explode('.', $name);
+        $count = \count($parts);
+        $type = $parts[0] ?? null;
+
+        // The database family is published under several prefixes (databases/tablesdb/
+        // documentsdb/vectorsdb). `type` keeps the actual prefix (more informative), but
+        // scope ids are extracted for all of them so databaseId/collectionId filters work
+        // across the whole family.
+        $isDatabaseFamily = \in_array($type, self::DATABASE_EVENT_PREFIXES, true);
+
+        $action = null;
+        if ($count >= 1 && \in_array($parts[$count - 1], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 1];
+        } elseif ($count >= 2 && \in_array($parts[$count - 2], self::SUPPORTED_ACTIONS, true)) {
+            $action = $parts[$count - 2];
+        }
+
+        $payload = $event['data']['payload'] ?? [];
+        if (!\is_array($payload)) {
+            $payload = [];
+        }
+
+        $metadata = [
+            'event'      => $name,
+            'type'       => $type,
+            'action'     => $action,
+            'userId'     => $event['userId'] ?? null,
+            'timestamp'  => $event['data']['timestamp'] ?? null,
+            'resourceId' => $payload['$id'] ?? null,
+        ];
+
+        // Attach only the scope ids that belong to this resource type. Derived from the
+        // (concrete) event name rather than the payload: for a top-level resource event
+        // (e.g. `teams.T.create`) the payload's id lives at $id, not at a teamId field,
+        // so a payload lookup would drop the scope and silently break filters. The event
+        // name encodes the id at every level — parts[1] is the top-level resource id and
+        // parts[3] the collection/table id.
+        $scope = [];
+        if ($isDatabaseFamily) {
+            if (isset($parts[1])) {
+                $scope['databaseId'] = $parts[1];
+            }
+            if (isset($parts[2], $parts[3]) && \in_array($parts[2], ['collections', 'tables'], true)) {
+                $scope['collectionId'] = $parts[3];
+            }
+        } else {
+            switch ($type) {
+                case 'buckets':
+                    if (isset($parts[1])) {
+                        $scope['bucketId'] = $parts[1];
+                    }
+                    break;
+                case 'functions':
+                    if (isset($parts[1])) {
+                        $scope['functionId'] = $parts[1];
+                    }
+                    break;
+                case 'teams':
+                    if (isset($parts[1])) {
+                        $scope['teamId'] = $parts[1];
+                    }
+                    break;
+            }
+        }
+
+        foreach ($scope as $key => $value) {
+            // Skip wildcard/empty segments (defensive: events[0] is concrete, but guard anyway).
+            if ($value !== '' && $value !== '*') {
+                $metadata[$key] = $value;
+            }
+        }
+
+        return $metadata;
     }
 
     /**
@@ -773,6 +933,26 @@ class Realtime extends MessagingAdapter
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
+                break;
+            case 'reports':
+                // Plain report event: `reports.{reportId}.{action}`
+                $channels[] = 'reports';
+                if (isset($parts[1])) {
+                    $channels[] = 'reports.' . $parts[1];
+                }
+                // Nested insight event: `reports.{reportId}.insights.{insightId}.{action}`
+                if (isset($parts[2]) && $parts[2] === 'insights') {
+                    $channels[] = 'reports.' . $parts[1] . '.insights';
+                    if (isset($parts[3])) {
+                        $channels[] = 'reports.' . $parts[1] . '.insights.' . $parts[3];
+                    }
+                }
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'presences':
+                $channels[] = 'presences';
+                $channels[] = 'presences.' . $parts[1];
+                $roles = $payload->getRead();
                 break;
         }
 

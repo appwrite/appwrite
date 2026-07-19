@@ -221,27 +221,33 @@ trait TemplatesBase
     {
         $this->ensureSMTPEnabled();
 
+        $runId = \uniqid();
+        $firstSubject = "First subject {$runId}";
+        $firstBody = "First body {$runId}";
+        $secondSubject = "Second subject {$runId}";
+        $secondBody = "Second body {$runId}";
+
         $first = $this->updateEmailTemplate(
             templateId: 'otpSession',
             locale: 'en',
-            subject: 'First subject',
-            message: 'First body',
+            subject: $firstSubject,
+            message: $firstBody,
         );
         $this->assertSame(200, $first['headers']['status-code']);
 
         $second = $this->updateEmailTemplate(
             templateId: 'otpSession',
             locale: 'en',
-            subject: 'Second subject',
-            message: 'Second body',
+            subject: $secondSubject,
+            message: $secondBody,
         );
         $this->assertSame(200, $second['headers']['status-code']);
-        $this->assertSame('Second subject', $second['body']['subject']);
-        $this->assertSame('Second body', $second['body']['message']);
+        $this->assertSame($secondSubject, $second['body']['subject']);
+        $this->assertSame($secondBody, $second['body']['message']);
 
         $get = $this->getEmailTemplate('otpSession', 'en');
-        $this->assertSame('Second subject', $get['body']['subject']);
-        $this->assertSame('Second body', $get['body']['message']);
+        $this->assertSame($secondSubject, $get['body']['subject']);
+        $this->assertSame($secondBody, $get['body']['message']);
     }
 
     public function testUpdateEmailTemplatePartialAfterSeed(): void
@@ -281,32 +287,36 @@ trait TemplatesBase
     {
         $this->ensureSMTPEnabled();
 
+        $runId = \uniqid();
+        $enSubject = "English subject {$runId}";
+        $frSubject = "Sujet francais {$runId}";
+
         $enUpdate = $this->updateEmailTemplate(
             templateId: 'invitation',
             locale: 'en',
-            subject: 'English subject',
+            subject: $enSubject,
             message: 'English body',
         );
         $this->assertSame(200, $enUpdate['headers']['status-code']);
         $this->assertSame('en', $enUpdate['body']['locale']);
-        $this->assertSame('English subject', $enUpdate['body']['subject']);
+        $this->assertSame($enSubject, $enUpdate['body']['subject']);
 
         $frUpdate = $this->updateEmailTemplate(
             templateId: 'invitation',
             locale: 'fr',
-            subject: 'Sujet francais',
+            subject: $frSubject,
             message: 'Corps francais',
         );
         $this->assertSame(200, $frUpdate['headers']['status-code']);
         $this->assertSame('fr', $frUpdate['body']['locale']);
-        $this->assertSame('Sujet francais', $frUpdate['body']['subject']);
+        $this->assertSame($frSubject, $frUpdate['body']['subject']);
 
         // Locales remain independent.
         $enGet = $this->getEmailTemplate('invitation', 'en');
-        $this->assertSame('English subject', $enGet['body']['subject']);
+        $this->assertSame($enSubject, $enGet['body']['subject']);
 
         $frGet = $this->getEmailTemplate('invitation', 'fr');
-        $this->assertSame('Sujet francais', $frGet['body']['subject']);
+        $this->assertSame($frSubject, $frGet['body']['subject']);
     }
 
     public function testUpdateEmailTemplateResponseModel(): void
@@ -548,6 +558,59 @@ trait TemplatesBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    public function testUpdateEmailTemplateSenderFieldsCanBeCleared(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Step 1: Set a custom en verification template with sender and reply-to fields.
+        $first = $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            subject: 'Verify your email',
+            message: 'Please verify: {{url}}',
+            senderName: 'Custom Sender',
+            senderEmail: 'custom-sender@appwrite.io',
+            replyToName: 'Custom Reply',
+            replyToEmail: 'custom-reply@appwrite.io',
+        );
+        $this->assertSame(200, $first['headers']['status-code']);
+        $this->assertSame('Custom Sender', $first['body']['senderName']);
+        $this->assertSame('custom-sender@appwrite.io', $first['body']['senderEmail']);
+        $this->assertSame('Custom Reply', $first['body']['replyToName']);
+        $this->assertSame('custom-reply@appwrite.io', $first['body']['replyToEmail']);
+
+        // Step 2: GET en verification template and ensure it reflects the custom values.
+        $get = $this->getEmailTemplate('verification', 'en');
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Custom Sender', $get['body']['senderName']);
+        $this->assertSame('custom-sender@appwrite.io', $get['body']['senderEmail']);
+        $this->assertSame('Custom Reply', $get['body']['replyToName']);
+        $this->assertSame('custom-reply@appwrite.io', $get['body']['replyToEmail']);
+
+        // Step 3: Update the same template, clearing sender and reply-to fields to empty strings.
+        $clear = $this->updateEmailTemplate(
+            templateId: 'verification',
+            locale: 'en',
+            senderName: '',
+            senderEmail: '',
+            replyToName: '',
+            replyToEmail: '',
+        );
+        $this->assertSame(200, $clear['headers']['status-code']);
+        $this->assertSame('', $clear['body']['senderName']);
+        $this->assertSame('', $clear['body']['senderEmail']);
+        $this->assertSame('', $clear['body']['replyToName']);
+        $this->assertSame('', $clear['body']['replyToEmail']);
+
+        // Step 4: GET again to confirm the cleared values persist.
+        $getAfter = $this->getEmailTemplate('verification', 'en');
+        $this->assertSame(200, $getAfter['headers']['status-code']);
+        $this->assertSame('', $getAfter['body']['senderName']);
+        $this->assertSame('', $getAfter['body']['senderEmail']);
+        $this->assertSame('', $getAfter['body']['replyToName']);
+        $this->assertSame('', $getAfter['body']['replyToEmail']);
+    }
+
     public function testUpdateEmailTemplateBlockedWhenSMTPDisabled(): void
     {
         // Custom templates only make sense alongside a custom SMTP configuration.
@@ -676,19 +739,21 @@ trait TemplatesBase
         $response = $this->listEmailTemplates();
         $this->assertSame(200, $response['headers']['status-code']);
 
-        $foundEn = false;
-        $foundFr = false;
-        foreach ($response['body']['templates'] as $template) {
-            if ($template['templateId'] === 'recovery' && $template['locale'] === 'en' && $template['subject'] === $enSubject) {
-                $foundEn = true;
-            }
-            if ($template['templateId'] === 'recovery' && $template['locale'] === 'fr' && $template['subject'] === $frSubject) {
-                $foundFr = true;
-            }
-        }
+        $foundEn = \array_filter(
+            $response['body']['templates'],
+            fn ($template) => $template['templateId'] === 'recovery'
+                && $template['locale'] === 'en'
+                && $template['subject'] === $enSubject
+        );
+        $foundFr = \array_filter(
+            $response['body']['templates'],
+            fn ($template) => $template['templateId'] === 'recovery'
+                && $template['locale'] === 'fr'
+                && $template['subject'] === $frSubject
+        );
 
-        $this->assertTrue($foundEn, 'recovery/en must appear in the list');
-        $this->assertTrue($foundFr, 'recovery/fr must appear in the list');
+        $this->assertNotEmpty($foundEn, 'recovery/en must appear in the list');
+        $this->assertNotEmpty($foundFr, 'recovery/fr must appear in the list');
     }
 
     public function testListEmailTemplatesUpdateDoesNotDuplicate(): void
@@ -1145,6 +1210,115 @@ trait TemplatesBase
         }
 
         return $this->client->call(Client::METHOD_PATCH, '/project/templates/email', $headers, $params);
+    }
+
+    // Console email template (default) tests
+
+    public function testGetConsoleEmailTemplate(): void
+    {
+        $response = $this->getConsoleEmailTemplate('verification', 'en');
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('verification', $response['body']['templateId']);
+        $this->assertSame('en', $response['body']['locale']);
+        $this->assertNotEmpty($response['body']['subject']);
+        $this->assertNotEmpty($response['body']['message']);
+        $this->assertSame('', $response['body']['senderName']);
+        $this->assertSame('', $response['body']['senderEmail']);
+        $this->assertSame('', $response['body']['replyToEmail']);
+        $this->assertSame('', $response['body']['replyToName']);
+    }
+
+    public function testGetConsoleEmailTemplateIgnoresCustomOverride(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        // Set a custom override on the project template.
+        $this->updateEmailTemplate(
+            templateId: 'recovery',
+            locale: 'en',
+            subject: 'Custom subject',
+            message: 'Custom message',
+            senderName: 'Custom Sender',
+            senderEmail: 'custom@appwrite.io',
+        );
+
+        // Console endpoint must always return the built-in default, not the override.
+        $response = $this->getConsoleEmailTemplate('recovery', 'en');
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('recovery', $response['body']['templateId']);
+        $this->assertNotSame('Custom subject', $response['body']['subject']);
+        $this->assertSame('', $response['body']['senderName']);
+        $this->assertSame('', $response['body']['senderEmail']);
+    }
+
+    public function testGetConsoleEmailTemplateDefaultLocale(): void
+    {
+        $response = $this->getConsoleEmailTemplate('magicSession');
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('en', $response['body']['locale']);
+        $this->assertNotEmpty($response['body']['subject']);
+    }
+
+    public function testGetConsoleEmailTemplateNonDefaultLocale(): void
+    {
+        $response = $this->getConsoleEmailTemplate('verification', 'fr');
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('verification', $response['body']['templateId']);
+        $this->assertSame('fr', $response['body']['locale']);
+        $this->assertNotEmpty($response['body']['subject']);
+        $this->assertNotEmpty($response['body']['message']);
+    }
+
+    public function testGetConsoleEmailTemplateAllTypes(): void
+    {
+        $types = [
+            'verification',
+            'magicSession',
+            'recovery',
+            'invitation',
+            'mfaChallenge',
+            'sessionAlert',
+            'otpSession',
+        ];
+
+        foreach ($types as $type) {
+            $response = $this->getConsoleEmailTemplate($type, 'en');
+            $this->assertSame(200, $response['headers']['status-code'], "type={$type}");
+            $this->assertNotEmpty($response['body']['subject'], "type={$type} must have subject");
+            $this->assertNotEmpty($response['body']['message'], "type={$type} must have message");
+        }
+    }
+
+    public function testGetConsoleEmailTemplateInvalidTemplateId(): void
+    {
+        $response = $this->getConsoleEmailTemplate('invalidTemplate', 'en');
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testGetConsoleEmailTemplateInvalidLocale(): void
+    {
+        $response = $this->getConsoleEmailTemplate('recovery', 'not-a-locale');
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    protected function getConsoleEmailTemplate(string $templateId, ?string $locale = null): mixed
+    {
+        $params = [];
+        if ($locale !== null) {
+            $params['locale'] = $locale;
+        }
+
+        return $this->client->call(Client::METHOD_GET, '/console/templates/email/' . $templateId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], $params);
     }
 
     protected function ensureSMTPEnabled(): void

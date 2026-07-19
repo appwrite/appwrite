@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
@@ -8,7 +10,7 @@ use Appwrite\Utopia\Response\Filters\V17;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class V17Test extends TestCase
+final class V17Test extends TestCase
 {
     protected Filter $filter;
 
@@ -21,30 +23,28 @@ class V17Test extends TestCase
     {
     }
 
-    public static function projectProvider(): array
+    public static function projectProvider(): \Iterator
     {
-        return [
-            'rename providers' => [
-                [
-                    'oAuthProviders' => [
-                        [
-                            'key' => 'github',
-                            'name' => 'GitHub',
-                            'appId' => 'client_id',
-                            'secret' => 'client_secret',
-                            'enabled' => true,
-                        ],
+        yield 'rename providers' => [
+            [
+                'oAuthProviders' => [
+                    [
+                        'key' => 'github',
+                        'name' => 'GitHub',
+                        'appId' => 'client_id',
+                        'secret' => 'client_secret',
+                        'enabled' => true,
                     ],
                 ],
-                [
-                    'providers' => [
-                        [
-                            'key' => 'github',
-                            'name' => 'GitHub',
-                            'appId' => 'client_id',
-                            'secret' => 'client_secret',
-                            'enabled' => true,
-                        ],
+            ],
+            [
+                'providers' => [
+                    [
+                        'key' => 'github',
+                        'name' => 'GitHub',
+                        'appId' => 'client_id',
+                        'secret' => 'client_secret',
+                        'enabled' => true,
                     ],
                 ],
             ],
@@ -61,16 +61,14 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function userProvider(): array
+    public static function userProvider(): \Iterator
     {
-        return [
-            'remove targets' => [
-                [
-                    'targets' => 'test',
-                    'mfa' => 'test',
-                ],
-                [
-                ],
+        yield 'remove targets' => [
+            [
+                'targets' => 'test',
+                'mfa' => 'test',
+            ],
+            [
             ],
         ];
     }
@@ -85,15 +83,13 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function tokenProvider(): array
+    public static function tokenProvider(): \Iterator
     {
-        return [
-            'remove securityPhrase' => [
-                [
-                    'phrase' => 'Lorum Ipsum',
-                ],
-                [
-                ],
+        yield 'remove securityPhrase' => [
+            [
+                'phrase' => 'Lorum Ipsum',
+            ],
+            [
             ],
         ];
     }
@@ -108,15 +104,13 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function membershipProvider(): array
+    public static function membershipProvider(): \Iterator
     {
-        return [
-            'remove mfa' => [
-                [
-                    'mfa' => 'test',
-                ],
-                [
-                ],
+        yield 'remove mfa' => [
+            [
+                'mfa' => 'test',
+            ],
+            [
             ],
         ];
     }
@@ -131,17 +125,15 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public static function sessionProvider(): array
+    public static function sessionProvider(): \Iterator
     {
-        return [
-            'remove factors and secrets' => [
-                [
-                    'factors' => 'test',
-                    'secret' => 'test',
-                ],
-                [
-                ],
-            ]
+        yield 'remove factors and secrets' => [
+            [
+                'factors' => 'test',
+                'secret' => 'test',
+            ],
+            [
+            ],
         ];
     }
 

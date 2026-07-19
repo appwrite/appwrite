@@ -4,10 +4,6 @@ namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Builds;
 
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Validator\Integer;
@@ -27,20 +23,6 @@ class Get extends Base
             ->desc('Get builds queue')
             ->groups(['api', 'health'])
             ->label('scope', 'health.read')
-            ->label('sdk', new Method(
-                namespace: 'health',
-                group: 'queue',
-                name: 'getQueueBuilds',
-                description: '/docs/references/health/get-queue-builds.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
-                responses: [
-                    new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_QUEUE,
-                    )
-                ],
-                contentType: ContentType::JSON
-            ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('publisherForBuilds')
             ->inject('response')

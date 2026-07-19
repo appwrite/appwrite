@@ -5,16 +5,18 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\NHost;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
@@ -53,13 +55,13 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
+            ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'NHostMigrationResource'))
             ->param('subdomain', '', new Text(512), 'Source\'s Subdomain')
             ->param('region', '', new Text(512), 'Source\'s Region')
             ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret')
             ->param('database', '', new Text(512), 'Source\'s Database Name')
             ->param('username', '', new Text(512), 'Source\'s Database Username')
-            ->param('password', '', new Text(512), 'Source\'s Database Password')
+            ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true)
             ->inject('response')
             ->inject('dbForProject')

@@ -1,1 +1,0 @@
-Get a custom email template for the specified locale and type. This endpoint returns the template content, subject, and other configuration details. 

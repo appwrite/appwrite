@@ -1,16 +1,15 @@
 <?php
-$isUpgrade = $isUpgrade ?? false;
-$lockedDatabase = $lockedDatabase ?? null;
-$vars = $vars ?? [];
-$defaultHttpPort = $defaultHttpPort ?? '80';
-$defaultHttpsPort = $defaultHttpsPort ?? '443';
+$isUpgrade ??= false;
+$lockedDatabase ??= null;
+$vars ??= [];
+$defaultHttpPort ??= '80';
+$defaultHttpsPort ??= '443';
 $defaultAppDomain = $vars['_APP_DOMAIN']['default'] ?? 'localhost';
 $defaultAppDomain = ($defaultAppDomain === 'traefik') ? 'localhost' : $defaultAppDomain;
-$defaultEmailCertificates = $defaultEmailCertificates ?? '';
-$defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
-$lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
-$enabledDatabases = $enabledDatabases ?? ['mongodb', 'mariadb', 'postgresql'];
-$isLocalInstall = $isLocalInstall ?? false;
+$defaultEmailCertificates ??= '';
+$defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'postgresql';
+$enabledDatabases ??= ['postgresql', 'mariadb', 'mongodb'];
+$isLocalInstall ??= false;
 
 
 $cardStep = ($step === 5) ? 4 : $step;
@@ -122,7 +121,9 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
         </div>
         <div class="install-screen" aria-live="polite">
             <div class="install-screen-content">
-                <?php if ($step === 5) { include __DIR__ . '/installer/templates/steps/step-5.phtml'; } ?>
+                <?php if ($step === 5) {
+                    include __DIR__ . '/installer/templates/steps/step-5.phtml';
+                } ?>
             </div>
         </div>
     </main>

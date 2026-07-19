@@ -54,6 +54,11 @@ return [
         'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
         'code' => 429,
     ],
+    Exception::GENERAL_RESOURCE_LOCKED => [
+        'name' => Exception::GENERAL_RESOURCE_LOCKED,
+        'description' => 'The requested resource is currently being modified by another request. Please retry after a brief delay.',
+        'code' => 409,
+    ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
@@ -241,6 +246,11 @@ return [
         'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
         'code' => 400,
     ],
+    Exception::USER_EMAIL_NOT_CORPORATE => [
+        'name' => Exception::USER_EMAIL_NOT_CORPORATE,
+        'description' => 'Only corporate email addresses are allowed. Please use a work email address and try again.',
+        'code' => 400,
+    ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
         'description' => 'Passwords do not match. Please check the password and confirm password.',
@@ -335,6 +345,11 @@ return [
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
+    ],
+    Exception::USER_OAUTH2_PROVIDER_FAILURE => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
+        'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
         'code' => 424,
     ],
     Exception::USER_EMAIL_NOT_VERIFIED => [
@@ -505,6 +520,11 @@ return [
     Exception::STORAGE_FILE_TYPE_UNSUPPORTED => [
         'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
         'description' => 'The given file extension is not supported.',
+        'code' => 400,
+    ],
+    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED => [
+        'name' => Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+        'description' => 'The image resolution exceeds the maximum allowed for processing.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
@@ -723,6 +743,18 @@ return [
         'name' => Exception::LOG_NOT_FOUND,
         'description' => 'Log with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    /** Presence */
+    Exception::PRESENCE_NOT_FOUND => [
+        'name' => Exception::PRESENCE_NOT_FOUND,
+        'description' => 'Presence with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PRESENCE_ALREADY_EXISTS => [
+        'name' => Exception::PRESENCE_ALREADY_EXISTS,
+        'description' => 'Presence with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
 
     /** Databases */
@@ -1452,5 +1484,29 @@ return [
         'name' => Exception::MOCK_NUMBER_LIMIT_EXCEEDED,
         'description' => 'The maximum number of mock phones for this project has been reached.',
         'code' => 400,
+    ],
+
+    /** Advisor */
+    Exception::INSIGHT_NOT_FOUND => [
+        'name' => Exception::INSIGHT_NOT_FOUND,
+        'description' => 'Insight with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::INSIGHT_ALREADY_EXISTS => [
+        'name' => Exception::INSIGHT_ALREADY_EXISTS,
+        'description' => 'Insight with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reports */
+    Exception::REPORT_NOT_FOUND => [
+        'name' => Exception::REPORT_NOT_FOUND,
+        'description' => 'Report with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REPORT_ALREADY_EXISTS => [
+        'name' => Exception::REPORT_ALREADY_EXISTS,
+        'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
 ];

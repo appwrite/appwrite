@@ -50,6 +50,8 @@ class Comment
 
     protected string $statePrefix = '[appwrite]: #';
 
+    protected ?string $tip = null;
+
     /**
      * @var mixed[] $builds
      */
@@ -81,7 +83,14 @@ class Comment
 
     public function generateComment(): string
     {
-        $json = \json_encode($this->builds);
+        if ($this->tip === null) {
+            $this->tip = $this->tips[\array_rand($this->tips)];
+        }
+
+        $json = \json_encode([
+            'builds' => $this->builds,
+            'tip' => $this->tip,
+        ]);
 
         $text = $this->statePrefix . \base64_encode($json) . "\n\n";
 
@@ -152,7 +161,10 @@ class Comment
                     };
 
                     if ($site['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $site['region'] . '-' . $projectId . '/sites/site-' . $siteId . '/deployments/deployment-' . $site['deploymentId'] . ')';
+                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                            ? "{$protocol}://{$hostname}/console/project-{$site['region']}-{$projectId}/sites/site-{$siteId}/deployments/deployment-{$site['deploymentId']}"
+                            : "{$protocol}://{$hostname}/projects/{$projectId}/sites/{$siteId}/deployments/{$site['deploymentId']}";
+                        $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $site['action']['url'] . ')';
                     }
@@ -200,7 +212,10 @@ class Comment
                     };
 
                     if ($function['action']['type'] === 'logs') {
-                        $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $function['region'] . '-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                        $logsUrl = System::getEnv('_APP_CONSOLE_URL_SCHEME', 'legacy') !== 'root'
+                            ? "{$protocol}://{$hostname}/console/project-{$function['region']}-{$projectId}/functions/function-{$functionId}/deployment-{$function['deploymentId']}"
+                            : "{$protocol}://{$hostname}/projects/{$projectId}/functions/{$functionId}/deployments/{$function['deploymentId']}";
+                        $action = "[View Logs]({$logsUrl})";
                     } else {
                         $action = '[Authorize](' . $function['action']['url'] . ')';
                     }
@@ -226,8 +241,7 @@ class Comment
             $i++;
         }
 
-        $tip = $this->tips[array_rand($this->tips)];
-        $text .= "\n<br>\n\n> [!TIP]\n> $tip\n\n";
+        $text .= "\n<br>\n\n> [!TIP]\n> {$this->tip}\n\n";
 
         return $text;
     }
@@ -252,8 +266,15 @@ class Comment
 
         $json = \base64_decode($state);
 
-        $builds = \json_decode($json, true);
-        $this->builds = \is_array($builds) ? $builds : [];
+        $data = \json_decode($json, true);
+
+        if (\is_array($data) && \array_key_exists('builds', $data)) {
+            $this->builds = \is_array($data['builds']) ? $data['builds'] : [];
+            $this->tip = $data['tip'] ?? null;
+        } else {
+            // Backward compatibility with old state format (builds array only)
+            $this->builds = \is_array($data) ? $data : [];
+        }
 
         return $this;
     }

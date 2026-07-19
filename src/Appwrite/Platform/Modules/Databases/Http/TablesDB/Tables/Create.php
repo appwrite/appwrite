@@ -43,6 +43,7 @@ class Create extends CollectionCreate
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'table.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{response.$id}')
+            ->label('usage.resource', 'database/{request.databaseId}/table/{response.$id}')
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: 'tables',

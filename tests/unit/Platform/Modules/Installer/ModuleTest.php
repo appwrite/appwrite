@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Platform\Modules\Installer;
 
 use Appwrite\Platform\Installer\Http\Installer\Complete;
@@ -16,7 +18,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Platform;
 use Utopia\Platform\Service;
 
-class ModuleTest extends TestCase
+final class ModuleTest extends TestCase
 {
     protected ?Module $module = null;
 
@@ -57,10 +59,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerView');
 
-        $this->assertEquals('installerView', View::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_GET, $action->getHttpMethod());
-        $this->assertEquals('/', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerView', View::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_GET, $action->getHttpMethod());
+        $this->assertSame('/', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, ['step', 'partial']);
         $this->assertActionInjects($action, ['request', 'response', 'installerConfig', 'installerPaths']);
     }
@@ -69,10 +71,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerStatus');
 
-        $this->assertEquals('installerStatus', Status::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_GET, $action->getHttpMethod());
-        $this->assertEquals('/install/status', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerStatus', Status::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_GET, $action->getHttpMethod());
+        $this->assertSame('/install/status', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, ['installId']);
         $this->assertActionInjects($action, ['response', 'installerState']);
     }
@@ -81,10 +83,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerValidate');
 
-        $this->assertEquals('installerValidate', Validate::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
-        $this->assertEquals('/install/validate', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerValidate', Validate::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertSame('/install/validate', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionInjects($action, ['request', 'response']);
     }
 
@@ -92,10 +94,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerComplete');
 
-        $this->assertEquals('installerComplete', Complete::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
-        $this->assertEquals('/install/complete', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerComplete', Complete::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertSame('/install/complete', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, ['installId', 'sessionId', 'sessionSecret', 'sessionExpire']);
         $this->assertActionInjects($action, ['request', 'response', 'installerState']);
     }
@@ -104,10 +106,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerShutdown');
 
-        $this->assertEquals('installerShutdown', Shutdown::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
-        $this->assertEquals('/install/shutdown', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerShutdown', Shutdown::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertSame('/install/shutdown', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionInjects($action, ['request', 'response', 'swooleServer']);
     }
 
@@ -115,10 +117,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerReset');
 
-        $this->assertEquals('installerReset', Reset::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
-        $this->assertEquals('/install/reset', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerReset', Reset::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertSame('/install/reset', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, ['installId', 'hard']);
         $this->assertActionInjects($action, ['request', 'response', 'installerState', 'installerConfig']);
     }
@@ -127,10 +129,10 @@ class ModuleTest extends TestCase
     {
         $action = $this->getAction('installerInstall');
 
-        $this->assertEquals('installerInstall', Install::getName());
-        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
-        $this->assertEquals('/install', $action->getHttpPath());
-        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertSame('installerInstall', Install::getName());
+        $this->assertSame(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertSame('/install', $action->getHttpPath());
+        $this->assertSame(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, [
             'appDomain', 'httpPort', 'httpsPort', 'emailCertificates', 'opensslKey',
             'assistantOpenAIKey', 'accountEmail', 'accountPassword', 'database',
@@ -143,8 +145,8 @@ class ModuleTest extends TestCase
     {
         $error = new Error();
 
-        $this->assertEquals('installerError', Error::getName());
-        $this->assertEquals(Action::TYPE_ERROR, $error->getType());
+        $this->assertSame('installerError', Error::getName());
+        $this->assertSame(Action::TYPE_ERROR, $error->getType());
         $this->assertIsCallable($error->getCallback());
     }
 
@@ -216,14 +218,14 @@ class ModuleTest extends TestCase
 
     public function testStaticGetNameValues(): void
     {
-        $this->assertEquals('installerView', View::getName());
-        $this->assertEquals('installerStatus', Status::getName());
-        $this->assertEquals('installerValidate', Validate::getName());
-        $this->assertEquals('installerComplete', Complete::getName());
-        $this->assertEquals('installerShutdown', Shutdown::getName());
-        $this->assertEquals('installerReset', Reset::getName());
-        $this->assertEquals('installerInstall', Install::getName());
-        $this->assertEquals('installerError', Error::getName());
+        $this->assertSame('installerView', View::getName());
+        $this->assertSame('installerStatus', Status::getName());
+        $this->assertSame('installerValidate', Validate::getName());
+        $this->assertSame('installerComplete', Complete::getName());
+        $this->assertSame('installerShutdown', Shutdown::getName());
+        $this->assertSame('installerReset', Reset::getName());
+        $this->assertSame('installerInstall', Install::getName());
+        $this->assertSame('installerError', Error::getName());
     }
 
     public function testActionInstanceTypes(): void
@@ -246,7 +248,7 @@ class ModuleTest extends TestCase
         $getActions = ['installerView', 'installerStatus'];
         foreach ($getActions as $name) {
             $action = $this->getAction($name);
-            $this->assertEquals(
+            $this->assertSame(
                 Action::HTTP_REQUEST_METHOD_GET,
                 $action->getHttpMethod(),
                 "Action '$name' should use GET method"
@@ -259,7 +261,7 @@ class ModuleTest extends TestCase
         $postActions = ['installerValidate', 'installerComplete', 'installerShutdown', 'installerReset', 'installerInstall'];
         foreach ($postActions as $name) {
             $action = $this->getAction($name);
-            $this->assertEquals(
+            $this->assertSame(
                 Action::HTTP_REQUEST_METHOD_POST,
                 $action->getHttpMethod(),
                 "Action '$name' should use POST method"

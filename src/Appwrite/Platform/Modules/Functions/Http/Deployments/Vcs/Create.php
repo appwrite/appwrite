@@ -2,24 +2,26 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Vcs;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 class Create extends Base
 {
@@ -42,6 +44,7 @@ class Create extends Base
             ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'function/{request.functionId}')
+            ->label('usage.resource', 'function/{request.functionId}')
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'deployments',
@@ -61,7 +64,7 @@ class Create extends Base
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             // TODO: Support tag in future
-            ->param('type', '', new WhiteList(['branch', 'commit']), 'Type of reference passed. Allowed values are: branch, commit')
+            ->param('type', '', new WhiteList(['branch', 'commit']), 'Type of reference passed. Allowed values are: branch, commit', enum: new Enum(name: 'VCSReferenceType'))
             ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name, commit hash')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
@@ -71,7 +74,8 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -88,7 +92,8 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
+        Backend $deployments,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -101,6 +106,10 @@ class Create extends Base
 
         $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
 
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
         $deployment = $this->redeployVcsFunction(
             request: $request,
             function: $function,
@@ -109,11 +118,12 @@ class Create extends Base
             dbForProject: $dbForProject,
             publisherForBuilds: $publisherForBuilds,
             template: $template,
-            github: $github,
+            vcs: $vcsFactory->fromInstallation($installation),
             activate: $activate,
             platform: $platform,
             reference: $reference,
-            referenceType: $type
+            referenceType: $type,
+            deployments: $deployments
         );
 
         $queueForEvents

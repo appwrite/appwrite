@@ -41,6 +41,7 @@ class Delete extends DocumentDelete
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
             ->label('audits.event', 'document.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
+            ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)

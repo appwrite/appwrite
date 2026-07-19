@@ -32,6 +32,7 @@ class Get extends CollectionGet
             ->desc('Get table')
             ->groups(['api', 'database'])
             ->label('scope', ['tables.read', 'collections.read'])
+            ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),

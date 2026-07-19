@@ -16,8 +16,6 @@ use Appwrite\Platform\Modules\Storage\Http\Buckets\Files\XList as ListFiles;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Get as GetBucket;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\Update as UpdateBucket;
 use Appwrite\Platform\Modules\Storage\Http\Buckets\XList as ListBuckets;
-use Appwrite\Platform\Modules\Storage\Http\Usage\Get as GetBucketUsage;
-use Appwrite\Platform\Modules\Storage\Http\Usage\XList as ListUsage;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -43,9 +41,5 @@ class Http extends Service
         $this->addAction(GetFileDownload::getName(), new GetFileDownload());
         $this->addAction(GetFileView::getName(), new GetFileView());
         $this->addAction(GetFileForPush::getName(), new GetFileForPush());
-
-        // Usage
-        $this->addAction(ListUsage::getName(), new ListUsage());
-        $this->addAction(GetBucketUsage::getName(), new GetBucketUsage());
     }
 }

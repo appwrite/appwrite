@@ -6,11 +6,13 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -19,13 +21,13 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
-use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -48,6 +50,7 @@ class Create extends Base
             ->label('event', 'sites.[siteId].deployments.[deploymentId].create')
             ->label('audits.event', 'deployment.create')
             ->label('audits.resource', 'site/{request.siteId}')
+            ->label('usage.resource', 'site/{request.siteId}')
             ->label('sdk', new Method(
                 namespace: 'sites',
                 group: 'deployments',
@@ -69,7 +72,7 @@ class Create extends Base
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
-            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag')
+            ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type for the reference provided. Can be commit, branch, or tag', enum: new Enum(name: 'TemplateReferenceType'))
             ->param('reference', '', new Text(128, 0), 'Reference value, can be a commit hash, branch name, or release tag')
             ->param('activate', false, new Boolean(), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
@@ -79,7 +82,7 @@ class Create extends Base
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('publisherForBuilds')
-            ->inject('gitHub')
+            ->inject('vcsFactory')
             ->inject('authorization')
             ->inject('platform')
             ->callback($this->action(...));
@@ -100,7 +103,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         BuildPublisher $publisherForBuilds,
-        GitHub $github,
+        VcsFactory $vcsFactory,
         Authorization $authorization,
         array $platform
     ) {
@@ -133,7 +136,7 @@ class Create extends Base
                 dbForPlatform: $dbForPlatform,
                 publisherForBuilds: $publisherForBuilds,
                 template: $template,
-                github: $github,
+                vcs: $vcsFactory->fromInstallation($installation),
                 activate: $activate,
                 authorization: $authorization,
                 platform: $platform
@@ -176,23 +179,11 @@ class Create extends Base
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,
             'providerBranchUrl' => $branchUrl,
-            'providerBranch' => $type == GitHub::CLONE_TYPE_BRANCH ? $reference : '',
+            'providerBranch' => $type == Git::CLONE_TYPE_BRANCH ? $reference : '',
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
             'type' => 'vcs',
             'activate' => $activate,
-        ]));
-
-        $site = $site
-            ->setAttribute('latestDeploymentId', $deployment->getId())
-            ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-            ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-            ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
-            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
-            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
-            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
         ]));
 
         $sitesDomain = $platform['sitesDomain'];
