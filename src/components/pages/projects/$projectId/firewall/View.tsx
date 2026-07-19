@@ -10,7 +10,6 @@ import {
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
 import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
@@ -25,7 +24,6 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { TrafficOverview } from './TrafficOverview'
 import { RulesList } from './Rules'
-import { FirewallEnabledCard } from './_components/FirewallEnabledCard'
 
 export function View() {
   const t = useT()
@@ -37,7 +35,6 @@ export function View() {
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const { isDebugModeOpen } = useDebugMode()
   const canWrite = canWriteRules(access, features)
 
   // Unfiltered total for plan limit checks (independent of the rules list search).
@@ -135,9 +132,6 @@ export function View() {
         <TrafficOverview />
 
         <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-          {isDebugModeOpen ? (
-            <FirewallEnabledCard projectId={projectId} canWrite={canWrite} />
-          ) : null}
           <RulesList
             projectId={projectId}
             canWrite={canWrite}

@@ -1425,6 +1425,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Firewall',
+                'Show the project Firewall section, routes, rules, analytics, and logs.',
+                'firewall',
+                profileId,
+                features.firewall,
+                { category: 'Auth & security' },
+              ),
+              createProfileFeatureFlagItem(
                 'Project OAuth2 server',
                 profileId === 'cloud'
                   ? 'Project settings OAuth2 authorization server card on overview. Cloud profile only.'

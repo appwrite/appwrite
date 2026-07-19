@@ -286,27 +286,6 @@ export function useDeleteFirewallRule(projectId: string | null | undefined) {
   })
 }
 
-export function useUpdateProjectFirewall(
-  projectId: string | null | undefined,
-) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (enabled: boolean) => {
-      if (!projectId) throw new Error('Project ID is required')
-      return await sdk.forProject(projectId).project.updateWaf({ enabled })
-    },
-    onSuccess: async (project) => {
-      queryClient.setQueryData(['project', projectId], project)
-      await queryClient.refetchQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-        exact: true,
-        type: 'all',
-      })
-    },
-  })
-}
-
 export function firewallRuleImpactQueryOptions(
   projectId: string | null | undefined,
   conditions: FirewallConditionDraft[],

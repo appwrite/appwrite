@@ -158,7 +158,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
-      firewall: true,
+      firewall: false,
     },
   },
   'self-hosted': {
