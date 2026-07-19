@@ -1301,6 +1301,7 @@ services:
       - /bin/bash
       - /mongo-entrypoint.sh
     healthcheck:
+      # replica set 0
       test: |
         bash -c "
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
