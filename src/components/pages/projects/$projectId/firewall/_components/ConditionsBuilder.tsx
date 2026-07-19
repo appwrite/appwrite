@@ -32,6 +32,7 @@ import {
 } from '@/lib/firewall/conditions'
 import {
   FIREWALL_CREATABLE_ACTIONS,
+  getFirewallActionDotClass,
   getFirewallActionLabel,
   type FirewallCreatableAction,
 } from '@/lib/firewall/actions'
@@ -392,11 +393,17 @@ export function ConditionsBuilder({
               </div>
               <div className="space-y-3 rounded-xl border border-border bg-background p-2.5">
                 {actionReadOnly ? (
-                  <Input
-                    value={t(getFirewallActionLabel(String(action)))}
-                    disabled
-                    className="h-9 w-full sm:max-w-xs"
-                  />
+                  <div className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-muted/40 px-3 text-[13px] text-muted-foreground sm:max-w-xs">
+                    <span
+                      className={cn(
+                        'h-2 w-2 shrink-0 rounded-full',
+                        getFirewallActionDotClass(String(action)),
+                      )}
+                    />
+                    <span className="truncate">
+                      {t(getFirewallActionLabel(String(action)))}
+                    </span>
+                  </div>
                 ) : (
                   <Select
                     value={action}
@@ -411,7 +418,15 @@ export function ConditionsBuilder({
                     <SelectContent>
                       {FIREWALL_CREATABLE_ACTIONS.map((item) => (
                         <SelectItem key={item} value={item}>
-                          {t(getFirewallActionLabel(item))}
+                          <span className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                'h-2 w-2 shrink-0 rounded-full',
+                                getFirewallActionDotClass(item),
+                              )}
+                            />
+                            {t(getFirewallActionLabel(item))}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

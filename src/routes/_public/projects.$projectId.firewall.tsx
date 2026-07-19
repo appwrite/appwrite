@@ -3,9 +3,16 @@ import { pageTitle } from '@/lib/utils/page-title'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   firewallRulesQueryOptions,
+  firewallTrafficOverviewQueryOptions,
   fetchProject,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+} from '@/lib/usage/chart-interval'
+import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
 
 export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   head: () => ({ meta: [{ title: pageTitle('Firewall') }] }),
@@ -25,15 +32,41 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
     const { queryClient } = context
     if (!projectId) return
 
-    await queryClient.ensureQueryData({
+    const project = await queryClient.ensureQueryData({
       queryKey: ['project', projectId],
       queryFn: () => fetchProject(projectId),
       staleTime: 5 * 60 * 1000,
     })
 
-    await queryClient.ensureQueryData(
-      firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
+    const plan = project?.teamId
+      ? await queryClient
+          .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+          .catch(() => undefined)
+      : undefined
+
+    const dateRange = getStableUsageChartDateRange()
+    const chartInterval = resolveUsageChartIntervalForRange(
+      DEFAULT_USAGE_CHART_INTERVAL,
+      dateRange,
+      plan,
     )
+
+    await Promise.all([
+      queryClient.ensureQueryData(
+        firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
+      ),
+      queryClient
+        .ensureQueryData(
+          firewallTrafficOverviewQueryOptions(
+            projectId,
+            dateRange,
+            chartInterval,
+          ),
+        )
+        .catch(() => {
+          // Usage metrics are optional; keep the rules list usable if they fail.
+        }),
+    ])
   },
   component: FirewallLayout,
 })

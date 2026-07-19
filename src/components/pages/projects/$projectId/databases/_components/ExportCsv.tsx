@@ -53,6 +53,7 @@ export interface ExportCsvProps {
   databaseId: string
   tableId: string
   dbKind?: DatabaseRouteKind
+  filterQueries?: string[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
@@ -69,6 +70,7 @@ export function ExportCsv({
   databaseId,
   tableId,
   dbKind,
+  filterQueries,
   open,
   onOpenChange,
   onSuccess,
@@ -129,12 +131,19 @@ export function ExportCsv({
     }
   }, [tableId, columnKeys, columnKeys.length])
 
-  const hasActiveFilters = false
+  const hasActiveFilters = (filterQueries?.length ?? 0) > 0
+  const applyFilters = exportWithFilters && hasActiveFilters
   const visibleCount = showMoreColumns
     ? columnKeys.length
     : Math.min(COLUMNS_VISIBLE_COLLAPSED, columnKeys.length)
   const visibleColumns = columnKeys.slice(0, visibleCount)
   const hasMoreColumns = columnKeys.length > COLUMNS_VISIBLE_COLLAPSED
+
+  useEffect(() => {
+    if (!hasActiveFilters && exportWithFilters) {
+      setExportWithFilters(false)
+    }
+  }, [hasActiveFilters, exportWithFilters])
 
   const selectAll = () => setSelectedColumns(new Set(columnKeys))
   const deselectAll = () => setSelectedColumns(new Set())
@@ -156,7 +165,7 @@ export function ExportCsv({
         resourceId,
         filename,
         columns: Array.from(selectedColumns),
-        queries: exportWithFilters ? [] : [],
+        queries: applyFilters ? (filterQueries ?? []) : [],
         delimiter,
         header: includeHeader,
         notify: true,
@@ -299,9 +308,11 @@ export function ExportCsv({
                     {t('Include header row - Column names as the first row.')}
                   </span>
                 </label>
-                <label className="flex items-start gap-2 cursor-pointer">
+                <label
+                  className={`flex items-start gap-2 ${hasActiveFilters ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                >
                   <Checkbox
-                    checked={exportWithFilters}
+                    checked={applyFilters}
                     onCheckedChange={(v) => setExportWithFilters(v === true)}
                     disabled={!hasActiveFilters}
                     className="mt-0.5"

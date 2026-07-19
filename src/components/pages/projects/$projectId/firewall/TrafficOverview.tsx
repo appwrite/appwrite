@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import type { DateRange } from 'react-day-picker'
+import { useParams } from '@tanstack/react-router'
 import {
   Area,
   AreaChart,
@@ -11,18 +11,18 @@ import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
+import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import {
-  USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
-} from '@/lib/usage/chart-layout'
-import {
+  getUsageChartIntervalsForPlan,
   resolveUsageChartIntervalForRange,
-  DEFAULT_USAGE_CHART_INTERVAL,
 } from '@/lib/usage/chart-interval'
 import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
+import { UsageChartIntervalToggle } from '../overview/UsageChartIntervalToggle'
 import {
   OVERVIEW_CHART_HEIGHT,
   overviewChartPanelBodyClass,
@@ -30,16 +30,17 @@ import {
   overviewChartPanelChartFillClass,
 } from '../overview/chart-panel'
 import {
-  buildFirewallTrafficSeries,
-  getDefaultFirewallRange,
-  mockFirewallAnalytics,
-} from '@/lib/firewall/mock-usage'
+  useOrganizationPlan,
+  useProject,
+  useProjectFirewallTrafficOverview,
+} from '@/lib/react-query/hooks'
+import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useT } from '@/lib/i18n/translate'
 
 const SERIES = [
   {
     key: 'requests' as const,
-    label: 'Requests',
+    label: 'Passed',
     color: '#10b981',
     gradientId: 'firewall-requests-fill',
   },
@@ -50,16 +51,16 @@ const SERIES = [
     gradientId: 'firewall-denied-fill',
   },
   {
-    key: 'rateLimited' as const,
-    label: 'Rate limited',
+    key: 'challenged' as const,
+    label: 'Challenged',
     color: 'var(--chart-4)',
-    gradientId: 'firewall-rate-limited-fill',
+    gradientId: 'firewall-challenged-fill',
   },
   {
-    key: 'bypassed' as const,
-    label: 'Bypassed',
-    color: '#3b82f6',
-    gradientId: 'firewall-bypassed-fill',
+    key: 'rateLimited' as const,
+    label: 'Rate limited',
+    color: '#f59e0b',
+    gradientId: 'firewall-rate-limited-fill',
   },
   {
     key: 'redirected' as const,
@@ -115,43 +116,88 @@ function ChartArea({ children }: { children: ReactNode }) {
   )
 }
 
+function changeTrend(change: number): 'up' | 'down' | undefined {
+  if (change > 0) return 'up'
+  if (change < 0) return 'down'
+  return undefined
+}
+
 export function TrafficOverview() {
   const t = useT()
-  const analytics = mockFirewallAnalytics
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(() =>
-    getDefaultFirewallRange(),
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const {
+    dateRange,
+    chartInterval,
+    setDateRange,
+    setChartInterval,
+    refreshRollingDateRange,
+  } = useUsageChartFilters(organizationPlan)
+  const planChartIntervals = useMemo(
+    () => getUsageChartIntervalsForPlan(organizationPlan),
+    [organizationPlan],
+  )
+  const resolvedChartInterval = useMemo(
+    () =>
+      resolveUsageChartIntervalForRange(
+        chartInterval,
+        dateRange,
+        organizationPlan,
+      ),
+    [chartInterval, dateRange, organizationPlan],
   )
 
-  const chartInterval = useMemo(() => {
-    if (!dateRange?.from) return DEFAULT_USAGE_CHART_INTERVAL
-    return resolveUsageChartIntervalForRange(
-      DEFAULT_USAGE_CHART_INTERVAL,
-      dateRange,
-    )
-  }, [dateRange])
+  const { data: overview, refetch } = useProjectFirewallTrafficOverview(
+    projectId,
+    dateRange,
+    resolvedChartInterval,
+  )
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const chartData = useMemo(() => {
-    if (!dateRange?.from) return []
-    const to = dateRange.to ?? dateRange.from
-    return buildFirewallTrafficSeries(dateRange.from, to)
-  }, [dateRange])
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    refreshRollingDateRange()
+    try {
+      await refetch()
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const chartData = overview?.chartPoints ?? []
+  const totalRequests = overview?.totalRequests ?? 0
+  const totalPassed = overview?.totalPassed ?? 0
+  const totalDenied = overview?.totalDenied ?? 0
+  const totalChallenged = overview?.totalChallenged ?? 0
+  const totalRateLimited = overview?.totalRateLimited ?? 0
+  const totalRedirected = overview?.totalRedirected ?? 0
+  const requestsChange = overview?.requestsChange ?? 0
+  const passedChange = overview?.passedChange ?? 0
+  const deniedChange = overview?.deniedChange ?? 0
+  const challengedChange = overview?.challengedChange ?? 0
+  const rateLimitedChange = overview?.rateLimitedChange ?? 0
+  const redirectedChange = overview?.redirectedChange ?? 0
+  const blockRateChange = overview?.blockRateChange ?? 0
 
   const chartPoints = useMemo(
     () => chartData.map((point) => ({ date: point.date, day: point.day })),
     [chartData],
   )
 
+  // Series are stacked, so the axis max is the per-point sum of all series.
   const chartAxisMax = useMemo(
     () =>
       chartData.reduce(
         (max, point) =>
           Math.max(
             max,
-            point.requests,
-            point.denied,
-            point.bypassed,
-            point.rateLimited,
-            point.redirected,
+            point.requests +
+              point.denied +
+              point.challenged +
+              point.rateLimited +
+              point.redirected,
           ),
         0,
       ),
@@ -163,51 +209,88 @@ export function TrafficOverview() {
     [chartAxisMax],
   )
 
-  const denyRate =
-    analytics.totalRequests > 0
-      ? ((analytics.totalDenied / analytics.totalRequests) * 100).toFixed(1)
+  const blockRate =
+    totalRequests > 0
+      ? (((totalDenied + totalRateLimited) / totalRequests) * 100).toFixed(1)
       : '0.0'
+
+  const seriesTotals = useMemo(
+    () =>
+      ({
+        requests: totalPassed,
+        denied: totalDenied,
+        challenged: totalChallenged,
+        rateLimited: totalRateLimited,
+        redirected: totalRedirected,
+      }) satisfies Record<(typeof SERIES)[number]['key'], number>,
+    [
+      totalPassed,
+      totalDenied,
+      totalChallenged,
+      totalRateLimited,
+      totalRedirected,
+    ],
+  )
+
+  // Highest total first (legend / tooltip preference). Recharts stacks
+  // bottom-up, so areas render in reverse of this list.
+  const seriesByValueDesc = useMemo(() => {
+    return [...SERIES].sort((a, b) => {
+      const diff = seriesTotals[b.key] - seriesTotals[a.key]
+      if (diff !== 0) return diff
+      return (
+        SERIES.findIndex((series) => series.key === a.key) -
+        SERIES.findIndex((series) => series.key === b.key)
+      )
+    })
+  }, [seriesTotals])
 
   const metrics = [
     {
-      label: t('Denied'),
-      value: analytics.totalDenied,
-      change: analytics.deniedChange,
-      trend: (analytics.deniedChange > 0 ? 'up' : 'down') as const,
+      label: t('Passed'),
+      value: totalPassed,
+      change: passedChange,
+      trend: changeTrend(passedChange),
     },
     {
-      label: t('Bypassed'),
-      value: analytics.totalBypassed,
-      change: analytics.bypassedChange,
-      trend: (analytics.bypassedChange > 0 ? 'up' : 'down') as const,
+      label: t('Denied'),
+      value: totalDenied,
+      change: deniedChange,
+      trend: changeTrend(deniedChange),
+    },
+    {
+      label: t('Challenged'),
+      value: totalChallenged,
+      change: challengedChange,
+      trend: changeTrend(challengedChange),
     },
     {
       label: t('Rate limited'),
-      value: analytics.totalRateLimited,
-      change: analytics.rateLimitedChange,
-      trend: (analytics.rateLimitedChange > 0 ? 'up' : 'down') as const,
+      value: totalRateLimited,
+      change: rateLimitedChange,
+      trend: changeTrend(rateLimitedChange),
     },
     {
       label: t('Redirected'),
-      value: analytics.totalRedirected,
-      change: analytics.redirectedChange,
-      trend: (analytics.redirectedChange > 0 ? 'up' : 'down') as const,
+      value: totalRedirected,
+      change: redirectedChange,
+      trend: changeTrend(redirectedChange),
     },
     {
-      label: t('Deny rate'),
-      value: `${denyRate}%`,
-      change: analytics.denyRateChange,
-      trend: (analytics.denyRateChange > 0 ? 'up' : 'down') as const,
+      label: t('Block rate'),
+      value: `${blockRate}%`,
+      change: blockRateChange,
+      trend: changeTrend(blockRateChange),
     },
   ]
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="flex flex-col-reverse gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="text-[24px] font-semibold tabular-nums text-foreground">
-              {analytics.totalRequests.toLocaleString()}
+              {totalRequests.toLocaleString()}
             </span>
             <span className="text-[13px] text-muted-foreground">
               {t('requests')}
@@ -215,28 +298,41 @@ export function TrafficOverview() {
             <span
               className={cn(
                 'text-[12px] font-medium tabular-nums',
-                analytics.requestsChange > 0 &&
+                requestsChange > 0 &&
                   'text-emerald-600 dark:text-emerald-400',
-                analytics.requestsChange < 0 &&
+                requestsChange < 0 &&
                   'text-amber-600 dark:text-amber-400',
-                analytics.requestsChange === 0 && 'text-muted-foreground',
+                requestsChange === 0 && 'text-muted-foreground',
               )}
             >
-              {analytics.requestsChange > 0 ? '+' : ''}
-              {analytics.requestsChange}% {t('vs previous period')}
+              {requestsChange > 0 ? '+' : ''}
+              {requestsChange}% {t('vs previous period')}
             </span>
           </div>
         </div>
-        <DateRangePicker
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          className="h-9 shrink-0"
-        />
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <UsageChartIntervalToggle
+            value={resolvedChartInterval}
+            onValueChange={setChartInterval}
+            dateRange={dateRange}
+            allowedIntervals={planChartIntervals}
+            className="h-9"
+          />
+          <DateRangePicker
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            className="h-9 shrink-0"
+          />
+          <RefreshButton
+            onClick={() => void handleRefresh()}
+            isRefreshing={isRefreshing}
+          />
+        </div>
       </div>
 
       <div className="px-4 pb-4 pt-4 sm:px-6">
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {SERIES.map((series) => (
+          {seriesByValueDesc.map((series) => (
             <div key={series.key} className="flex items-center gap-1.5">
               <span
                 className="h-2 w-2 rounded-full"
@@ -289,7 +385,7 @@ export function TrafficOverview() {
               <UsageChartXAxis
                 points={chartPoints}
                 dateRange={dateRange}
-                chartInterval={chartInterval}
+                chartInterval={resolvedChartInterval}
               />
               <UsageChartYAxis
                 tickFormatter={yAxisTickFormatter}
@@ -301,14 +397,45 @@ export function TrafficOverview() {
                   if (!active || !payload?.length) return null
                   const point = payload[0]?.payload as {
                     fullDate?: string
+                    requests?: number
+                    denied?: number
+                    challenged?: number
+                    rateLimited?: number
+                    redirected?: number
                   }
+
+                  const seriesValue = (
+                    entry: (typeof payload)[number],
+                  ): number => {
+                    const key = String(entry.dataKey ?? '')
+                    if (
+                      key === 'requests' ||
+                      key === 'denied' ||
+                      key === 'challenged' ||
+                      key === 'rateLimited' ||
+                      key === 'redirected'
+                    ) {
+                      return Number(point[key] ?? 0)
+                    }
+                    // Stacked areas may pass [y0, y1] as value.
+                    if (Array.isArray(entry.value)) {
+                      const [from, to] = entry.value as [number, number]
+                      return Math.abs(Number(to) - Number(from)) || 0
+                    }
+                    return Number(entry.value ?? 0)
+                  }
+
+                  const sortedPayload = [...payload].sort(
+                    (a, b) => seriesValue(b) - seriesValue(a),
+                  )
+
                   return (
                     <div className="rounded-md border border-border bg-popover px-3 py-2">
                       <p className="mb-1.5 text-[11px] text-muted-foreground">
                         {point.fullDate}
                       </p>
                       <div className="space-y-1">
-                        {payload.map((entry) => (
+                        {sortedPayload.map((entry) => (
                           <div
                             key={String(entry.dataKey)}
                             className="flex items-center justify-between gap-6"
@@ -317,7 +444,7 @@ export function TrafficOverview() {
                               {entry.name}
                             </span>
                             <span className="text-[13px] font-medium tabular-nums text-foreground">
-                              {Number(entry.value ?? 0).toLocaleString()}
+                              {seriesValue(entry).toLocaleString()}
                             </span>
                           </div>
                         ))}
@@ -326,13 +453,18 @@ export function TrafficOverview() {
                   )
                 }}
               />
-              {SERIES.map((series) => (
+              {/* Recharts stacks bottom-up: render lowest totals first so the
+                  highest-value series sits on top (and owns the outer stroke). */}
+              {[...seriesByValueDesc].reverse().map((series) => (
                 <Area
                   key={series.key}
                   type="monotone"
+                  stackId="firewall-traffic"
                   dataKey={series.key}
                   name={t(series.label)}
-                  stroke={series.color}
+                  stroke={
+                    seriesTotals[series.key] > 0 ? series.color : 'transparent'
+                  }
                   strokeWidth={2}
                   fill={`url(#${series.gradientId})`}
                   dot={false}
@@ -344,18 +476,27 @@ export function TrafficOverview() {
         </ChartArea>
       </div>
 
-      <div className="grid grid-cols-2 border-y border-border xl:grid-cols-5">
+      <div className="grid grid-cols-2 border-y border-border sm:grid-cols-3 xl:grid-cols-6">
         {metrics.map((metric, index) => {
-          const isLast = index === metrics.length - 1
+          const count = metrics.length
+          const isLast = index === count - 1
+          const lastRowStartMobile = count - (count % 2 || 2)
+          const lastRowStartSm = count - (count % 3 || 3)
+          const showBottomBorderMobile = index < lastRowStartMobile
+          const showBottomBorderSm = index < lastRowStartSm
+          const showEndBorderMobile = index % 2 === 0 && !isLast
+          const showEndBorderSm = index % 3 !== 2 && !isLast
           return (
             <div
               key={metric.label}
               className={cn(
                 'px-4 py-3 sm:px-6',
-                !isLast && 'border-b border-border xl:border-b-0',
-                index % 2 === 0 && !isLast && 'border-e border-border',
+                showBottomBorderMobile && 'border-b border-border',
+                !showBottomBorderSm && 'sm:border-b-0',
+                'xl:border-b-0',
+                showEndBorderMobile && 'border-e border-border sm:border-e-0',
+                showEndBorderSm && 'sm:border-e sm:border-border xl:border-e-0',
                 !isLast && 'xl:border-e xl:border-border',
-                isLast && 'col-span-2 xl:col-span-1',
               )}
             >
               <MetricTile

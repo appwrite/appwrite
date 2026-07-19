@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
+import { subHours } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import {
   Area,
   AreaChart,
@@ -12,17 +14,30 @@ import {
   UsageChartXAxis,
   UsageChartYAxis,
 } from '@/components/global/shared/ChartXAxis'
-import {
-  USAGE_CHART_MARGIN,
-  USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
-} from '@/lib/usage/chart-layout'
+import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
+import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
-import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+} from '@/lib/usage/chart-interval'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { cn } from '@/lib/utils'
-import { OVERVIEW_CHART_HEIGHT } from '../../overview/chart-panel'
-import { useFirewallRuleImpact } from '@/lib/react-query/hooks'
+import {
+  OVERVIEW_CHART_HEIGHT,
+  overviewChartPanelBodyClass,
+  overviewChartPanelChartAreaClass,
+  overviewChartPanelChartFillClass,
+} from '../../overview/chart-panel'
+
+const IMPACT_CHART_MARGIN = { top: 12, right: 8, left: 0, bottom: 0 } as const
+const IMPACT_CHART_Y_AXIS_WIDTH = 36
+import {
+  useFirewallRuleImpact,
+  useOrganizationPlan,
+  useProject,
+} from '@/lib/react-query/hooks'
 import type {
   FirewallConditionDraft,
   FirewallResourceType,
@@ -35,6 +50,8 @@ import {
 import { useT } from '@/lib/i18n/translate'
 
 const IMPACT_DEBOUNCE_MS = 300
+/** Same green as TrafficOverview requests series. */
+const MATCHED_SERIES_COLOR = '#10b981'
 
 interface RuleImpactPreviewProps {
   conditions: FirewallConditionDraft[]
@@ -51,8 +68,23 @@ export function RuleImpactPreview({
 }: RuleImpactPreviewProps) {
   const t = useT()
   const { projectId } = useParams({ strict: false })
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const [debouncedConditions, setDebouncedConditions] = useState(conditions)
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange>(() => {
+    const to = new Date()
+    return { from: subHours(to, 24), to }
+  })
   const conditionsKey = firewallUsageConditionsKey(conditions)
+  const chartInterval = useMemo(
+    () =>
+      resolveUsageChartIntervalForRange(
+        DEFAULT_USAGE_CHART_INTERVAL,
+        selectedDateRange,
+        organizationPlan,
+      ),
+    [organizationPlan, selectedDateRange],
+  )
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -67,9 +99,11 @@ export function RuleImpactPreview({
     debouncedConditions,
     resourceType,
     resourceId,
+    selectedDateRange,
+    chartInterval,
   )
 
-  const series = impact?.series ?? []
+  const series = useMemo(() => impact?.series ?? [], [impact?.series])
   const dateRange = impact?.dateRange
   const summary = {
     matched: impact?.matched ?? 0,
@@ -109,150 +143,185 @@ export function RuleImpactPreview({
           </div>
           <p className="mt-1 text-[12px] text-muted-foreground">
             {t(
-              'Estimated requests this rule would match over the last 24 hours.',
+              'Estimated requests this rule would match during the selected period.',
             )}
           </p>
         </div>
 
-        <div
-          className={cn(
-            'grid grid-cols-2 gap-3 border-b border-border p-4 transition-opacity duration-200',
-            showSubtleLoading && 'opacity-60',
-          )}
-        >
-          <div className="rounded-lg border border-border bg-muted/20 p-3">
-            <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
-              <Target className="h-3.5 w-3.5" />
-              <span className="text-[11px]">{t('Matched requests')}</span>
+        <div className="space-y-3 border-b border-border p-4">
+          <DateRangePicker
+            dateRange={selectedDateRange}
+            onDateRangeChange={(range) => {
+              if (range?.from) {
+                setSelectedDateRange({
+                  from: range.from,
+                  to: range.to ?? range.from,
+                })
+                return
+              }
+              const to = new Date()
+              setSelectedDateRange({ from: subHours(to, 24), to })
+            }}
+            className="h-8 w-full min-w-0"
+            popoverContentAlign="start"
+          />
+
+          <div
+            className={cn(
+              'grid grid-cols-2 gap-3 transition-opacity duration-200',
+              showSubtleLoading && 'opacity-60',
+            )}
+          >
+            <div className="rounded-lg border border-border bg-muted/20 p-3">
+              <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
+                <Target className="h-3.5 w-3.5" />
+                <span className="text-[11px]">{t('Matched requests')}</span>
+              </div>
+              <p className="text-[18px] font-semibold tabular-nums text-foreground">
+                {isLoading && !impact
+                  ? '—'
+                  : summary.matched.toLocaleString()}
+              </p>
             </div>
-            <p className="text-[18px] font-semibold tabular-nums text-foreground">
-              {isLoading && !impact
-                ? '—'
-                : summary.matched.toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-lg border border-border bg-muted/20 p-3">
-            <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
-              <Activity className="h-3.5 w-3.5" />
-              <span className="text-[11px]">{t('Share of traffic')}</span>
+            <div className="rounded-lg border border-border bg-muted/20 p-3">
+              <div className="mb-1 flex items-center gap-1.5 text-muted-foreground">
+                <Activity className="h-3.5 w-3.5" />
+                <span className="text-[11px]">{t('Share of traffic')}</span>
+              </div>
+              <p className="text-[18px] font-semibold tabular-nums text-foreground">
+                {isLoading && !impact
+                  ? '—'
+                  : `${(summary.rate * 100).toFixed(1)}%`}
+              </p>
             </div>
-            <p className="text-[18px] font-semibold tabular-nums text-foreground">
-              {isLoading && !impact
-                ? '—'
-                : `${(summary.rate * 100).toFixed(1)}%`}
-            </p>
           </div>
         </div>
 
-        <div className="p-4">
+        <div
+          className={cn(
+            'px-2 pb-2 pt-1 transition-opacity duration-200',
+            showSubtleLoading && 'opacity-60',
+          )}
+        >
           <div
-            className={cn(
-              'relative w-full shrink-0 text-muted-foreground transition-opacity duration-200',
-              FORCE_LTR_CLASS,
-              showSubtleLoading && 'opacity-60',
-            )}
+            className={cn(overviewChartPanelBodyClass, FORCE_LTR_CLASS)}
             style={{ height: OVERVIEW_CHART_HEIGHT }}
           >
-            {dateRange && series.length > 0 ? (
-              <ResponsiveContainer {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}>
-                <AreaChart data={series} margin={USAGE_CHART_MARGIN}>
-                  <defs>
-                    <linearGradient
-                      id="firewall-impact-matched"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="var(--chart-brand)"
-                        stopOpacity={0.2}
+            <div className={overviewChartPanelChartAreaClass}>
+              <div className={overviewChartPanelChartFillClass}>
+                {dateRange && series.length > 0 ? (
+                  <ResponsiveContainer
+                    {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
+                    minHeight={OVERVIEW_CHART_HEIGHT}
+                  >
+                    <AreaChart data={series} margin={IMPACT_CHART_MARGIN}>
+                      <defs>
+                        <linearGradient
+                          id="firewall-impact-matched"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor={MATCHED_SERIES_COLOR}
+                            stopOpacity={0.2}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor={MATCHED_SERIES_COLOR}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="hsl(var(--border))"
+                        vertical={false}
                       />
-                      <stop
-                        offset="100%"
-                        stopColor="var(--chart-brand)"
-                        stopOpacity={0}
+                      <UsageChartXAxis
+                        points={chartPoints}
+                        dateRange={dateRange}
+                        chartInterval={chartInterval}
+                        variant="overview"
                       />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                    vertical={false}
-                  />
-                  <UsageChartXAxis
-                    points={chartPoints}
-                    dateRange={dateRange}
-                    chartInterval={DEFAULT_USAGE_CHART_INTERVAL}
-                  />
-                  <UsageChartYAxis tickFormatter={yAxisTickFormatter} />
-                  <Tooltip
-                    isAnimationActive={false}
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null
-                      const point = payload[0]?.payload as {
-                        fullDate?: string
-                        total?: number
-                        matched?: number
-                      }
-                      return (
-                        <div className="rounded-md border border-border bg-popover px-3 py-2">
-                          <p className="mb-1.5 text-[11px] text-muted-foreground">
-                            {point.fullDate}
-                          </p>
-                          <div className="space-y-1">
-                            <div className="flex justify-between gap-6 text-[11px]">
-                              <span className="text-muted-foreground">
-                                {t('Total traffic')}
-                              </span>
-                              <span className="font-medium tabular-nums text-foreground">
-                                {(point.total ?? 0).toLocaleString()}
-                              </span>
+                      <UsageChartYAxis
+                        tickFormatter={yAxisTickFormatter}
+                        width={IMPACT_CHART_Y_AXIS_WIDTH}
+                        domain={[
+                          0,
+                          (dataMax: number) => Math.ceil(dataMax * 1.05) || 1,
+                        ]}
+                      />
+                      <Tooltip
+                        isAnimationActive={false}
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null
+                          const point = payload[0]?.payload as {
+                            fullDate?: string
+                            total?: number
+                            matched?: number
+                          }
+                          return (
+                            <div className="rounded-md border border-border bg-popover px-3 py-2">
+                              <p className="mb-1.5 text-[11px] text-muted-foreground">
+                                {point.fullDate}
+                              </p>
+                              <div className="space-y-1">
+                                <div className="flex justify-between gap-6 text-[11px]">
+                                  <span className="text-muted-foreground">
+                                    {t('Total traffic')}
+                                  </span>
+                                  <span className="font-medium tabular-nums text-foreground">
+                                    {(point.total ?? 0).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between gap-6 text-[11px]">
+                                  <span className="text-muted-foreground">
+                                    {t('Matched by rule')}
+                                  </span>
+                                  <span className="font-medium tabular-nums text-foreground">
+                                    {(point.matched ?? 0).toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex justify-between gap-6 text-[11px]">
-                              <span className="text-muted-foreground">
-                                {t('Matched by rule')}
-                              </span>
-                              <span className="font-medium tabular-nums text-foreground">
-                                {(point.matched ?? 0).toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    name={t('Total traffic')}
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeWidth={1.5}
-                    strokeDasharray="4 4"
-                    fill="transparent"
-                    dot={false}
-                    {...CHART_ANIMATION_DISABLED}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="matched"
-                    name={t('Matched by rule')}
-                    stroke="var(--chart-brand)"
-                    strokeWidth={2}
-                    fill="url(#firewall-impact-matched)"
-                    dot={false}
-                    {...CHART_ANIMATION_DISABLED}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-[12px] text-muted-foreground">
-                {isLoading
-                  ? t('Loading...')
-                  : t('No traffic data for this period')}
+                          )
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="total"
+                        name={t('Total traffic')}
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 4"
+                        fill="transparent"
+                        dot={false}
+                        {...CHART_ANIMATION_DISABLED}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="matched"
+                        name={t('Matched by rule')}
+                        stroke={MATCHED_SERIES_COLOR}
+                        strokeWidth={2}
+                        fill="url(#firewall-impact-matched)"
+                        dot={false}
+                        {...CHART_ANIMATION_DISABLED}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[12px] text-muted-foreground">
+                    {isLoading
+                      ? t('Loading...')
+                      : t('No traffic data for this period')}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

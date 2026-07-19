@@ -183,6 +183,54 @@ function CopyableText({
   )
 }
 
+function RevealableValueInput({
+  id,
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+}: {
+  id: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  autoComplete?: string
+}) {
+  const t = useT()
+  const [revealed, setRevealed] = useState(false)
+
+  useEffect(() => {
+    setRevealed(false)
+  }, [id])
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={revealed ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className="font-mono text-[13px] pe-10"
+      />
+      <button
+        type="button"
+        onClick={() => setRevealed((current) => !current)}
+        className="absolute end-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        aria-label={revealed ? t('Hide value') : t('Show value')}
+        title={revealed ? t('Hide value') : t('Show value')}
+      >
+        {revealed ? (
+          <EyeOff className="h-4 w-4" />
+        ) : (
+          <Eye className="h-4 w-4" />
+        )}
+      </button>
+    </div>
+  )
+}
+
 type VariablesCardSharedProps = {
   title?: string
   emptyTitle?: string
@@ -1239,17 +1287,15 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                     <Label htmlFor={`value-${index}`} className="text-[12px]">
                       {t('Value')} <span className="text-destructive">*</span>
                     </Label>
-                    <Input
+                    <RevealableValueInput
                       id={`value-${index}`}
-                      type="password"
                       value={pair.value}
-                      onChange={(e) => {
+                      onChange={(nextValue) => {
                         const newPairs = [...createPairs]
-                        newPairs[index].value = e.target.value
+                        newPairs[index].value = nextValue
                         setCreatePairs(newPairs)
                       }}
                       placeholder={t('Enter value')}
-                      className="font-mono text-[13px]"
                     />
                   </div>
                 </div>
@@ -1344,16 +1390,18 @@ export function VariablesSettingsCard(props: VariablesSettingsCardProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="update-value" className="text-[13px]">
+                <Label
+                  htmlFor={`update-value-${selectedVar?.$id ?? 'new'}`}
+                  className="text-[13px]"
+                >
                   {t('Value')} <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="update-value"
-                  type="password"
+                <RevealableValueInput
+                  id={`update-value-${selectedVar?.$id ?? 'new'}`}
                   value={updateValue}
-                  onChange={(e) => setUpdateValue(e.target.value)}
+                  onChange={setUpdateValue}
                   placeholder={t('Enter value')}
-                  className="font-mono text-[13px]"
+                  autoComplete="off"
                 />
               </div>
             </div>

@@ -18,7 +18,7 @@ export function RuleActionBadge({
     action === WafRuleAction.Deny
       ? 'error'
       : action === WafRuleAction.Bypass
-        ? 'success'
+        ? 'processing'
         : action === WafRuleAction.RateLimit
           ? 'warning'
           : action === WafRuleAction.Redirect

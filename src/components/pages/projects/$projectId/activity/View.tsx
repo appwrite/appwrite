@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { cn, truncateMiddle } from '@/lib/utils'
@@ -32,6 +32,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -946,38 +947,50 @@ export function View({ projectId }: ViewProps) {
           fullWidth
           showToolbarBottomBorder
         />
+        {/* Plan upgrade notice for free tier */}
+        {isFreePlan && (
+          <div className="border-b border-border bg-amber-500/5">
+            <div className="w-full px-4 py-3 sm:px-6">
+              <Alert
+                variant="default"
+                className="border-amber-500/30 bg-transparent"
+              >
+                <AlertCircle className="h-4 w-4 text-amber-500" />
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                      {t('Limited activity history')}
+                    </AlertTitle>
+                    <AlertDescription className="col-start-2 block min-w-0 truncate whitespace-nowrap text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                      {t('Your plan includes')}{' '}
+                      <span className="font-medium">
+                        {t(activityLogRetentionLabel)}
+                      </span>{' '}
+                      {t('of activity history. Upgrade for longer retention.')}
+                    </AlertDescription>
+                  </div>
+                  {project?.teamId && (
+                    <Button
+                      asChild
+                      size="sm"
+                      className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+                    >
+                      <Link to="/upgrade" search={{ orgId: project.teamId }}>
+                        {t('Upgrade')}
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </Alert>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Activity table + pagination: flex column so only the table body scrolls
           (sticky thead needs its nearest scroll ancestor to be the table area,
           not a parent that also wraps the pagination bar). */}
       <div className="flex flex-1 min-h-0 flex-col">
-        {/* Plan upgrade notice for free tier */}
-        {isFreePlan && (
-          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <div className="flex-1">
-              <p className="text-[13px] font-medium text-amber-800 dark:text-amber-200">
-                {t('Limited activity history')}
-              </p>
-              <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-300">
-                {t('Your plan includes')}{' '}
-                <span className="font-medium">
-                  {t(activityLogRetentionLabel)}
-                </span>{' '}
-                {t('of activity history. Upgrade for longer retention.')}
-              </p>
-            </div>
-            <Button
-              variant="brandCta"
-              size="sm"
-              className="h-7 shrink-0 text-[12px]"
-            >
-              {t('Upgrade')}
-            </Button>
-          </div>
-        )}
-
         {showActivityChart && (
           <div className="shrink-0 pb-4">
             <ActivityLogVolumeChart

@@ -104,6 +104,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Duration:': '所要時間:',
   'Edit manually': '手動で編集',
   'Enter value': '値を入力',
+  'Show value': '値を表示',
+  'Hide value': '値を非表示',
   'Enterprise & 24/7 support': 'エンタープライズおよび24時間365日サポート',
   'Execute function': '関数を実行',
   'Execution ID': '実行 ID',

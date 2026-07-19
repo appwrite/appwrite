@@ -11,8 +11,11 @@ import {
   sumUsageChartPoints,
   type RequestsChartPoint,
 } from '@/lib/usage/requests-events'
-import { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
-import type { FirewallImpactPoint } from '@/lib/firewall/mock-usage'
+import {
+  DEFAULT_USAGE_CHART_INTERVAL,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
+import type { FirewallImpactPoint } from '@/lib/firewall/types'
 
 /** Firewall resourceType → usage.listEvents resourceType. `api` has no usage resourceType. */
 const USAGE_RESOURCE_TYPE: Record<FirewallResourceType, string | null> = {
@@ -195,11 +198,14 @@ export async function fetchFirewallRuleImpact(
     resourceType: FirewallResourceType
     resourceId?: string
     dateRange?: DateRange
+    chartInterval?: UsageChartInterval
   },
 ): Promise<FirewallRuleImpactData> {
   const to = options.dateRange?.to ?? new Date()
   const from = options.dateRange?.from ?? subHours(to, 24)
   const dateRange: DateRange = { from, to }
+  const chartInterval =
+    options.chartInterval ?? DEFAULT_USAGE_CHART_INTERVAL
 
   const conditionQueries = buildFirewallConditionUsageQueries(
     options.conditions,
@@ -223,14 +229,14 @@ export async function fetchFirewallRuleImpact(
     fetchProjectRequestsChartOverview(
       projectId,
       dateRange,
-      DEFAULT_USAGE_CHART_INTERVAL,
+      chartInterval,
       totalQueries.length > 0 ? totalQueries : undefined,
     ),
     hasConditionFilters
       ? fetchProjectRequestsChartOverview(
           projectId,
           dateRange,
-          DEFAULT_USAGE_CHART_INTERVAL,
+          chartInterval,
           matchedQueries,
         )
       : Promise.resolve(null),

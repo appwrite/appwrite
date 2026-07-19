@@ -146,6 +146,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Redirect: 'リダイレクト',
   Denied: '拒否済み',
   Bypassed: 'バイパス済み',
+  Passed: '通過',
   'Rate limited': 'レート制限済み',
   Redirected: 'リダイレクト済み',
   'Define how Firewall should handle matching requests for this project.':
@@ -223,6 +224,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このルールが過去 24 時間に一致したであろうリクエスト数のモック推定です。',
   'Estimated requests this rule would match over the last 24 hours.':
     'このルールが過去 24 時間に一致したであろうリクエスト数の推定です。',
+  'Estimated requests this rule would match during the selected period.':
+    '選択した期間にこのルールが一致したと推定されるリクエスト数です。',
   'No traffic data for this period': 'この期間のトラフィックデータはありません',
   'Matched requests': '一致リクエスト',
   'Share of traffic': 'トラフィック比率',
@@ -1983,6 +1986,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   domains: 'ドメイン',
   functions: '関数',
   sites: 'サイト',
+  'firewall rules': 'ファイアウォールルール',
+  'Firewall rules': 'ファイアウォールルール',
   Downgraded: 'ダウングレード済み',
   Import: 'インポート',
   Memory: 'メモリ',

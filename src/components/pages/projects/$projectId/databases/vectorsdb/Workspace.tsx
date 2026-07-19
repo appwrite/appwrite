@@ -1783,6 +1783,7 @@ export function Workspace({
           databaseId={databaseId}
           tableId={tableId}
           dbKind={DB_KIND}
+          filterQueries={rowsFilterQueries}
           open={exportCsvOpen}
           onOpenChange={setExportCsvOpen}
         />

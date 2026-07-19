@@ -129,6 +129,7 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
     <div className="w-full max-w-sm space-y-2">
       {visible.map((m: Models.Migration) => {
         const isCompleted = m.status === 'completed'
+        const isInProgress = m.status === 'pending' || m.status === 'processing'
         const url = (m.options as { downloadUrl?: string })?.downloadUrl
         const liveCount = getExportedRowCount(m)
         const rowCount =
@@ -165,6 +166,16 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
                       size="sm"
                       className="h-auto p-0 text-[12px]"
                       onClick={() => window.open(url, '_blank')}
+                    >
+                      <Download className="h-3 w-3 me-1" />
+                      {t('Download')}
+                    </Button>
+                  ) : isInProgress ? (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-[12px]"
+                      disabled
                     >
                       <Download className="h-3 w-3 me-1" />
                       {t('Download')}

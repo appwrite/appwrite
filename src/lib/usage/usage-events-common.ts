@@ -835,6 +835,8 @@ export async function fetchProjectUsageMetricsOverview(
   const includeBreakdown =
     options?.includeBreakdown !== false && areUsageBreakdownQueriesEnabled()
   const queries = options?.queries
+  const resourceId = options?.resourceId
+  const resourceType = options?.resourceType
   const logRetentionHours =
     options?.logRetentionHours ?? DEFAULT_USAGE_LOG_RETENTION_HOURS
   const { comparisonMode } = resolveOverviewUsagePeriod(
@@ -851,6 +853,8 @@ export async function fetchProjectUsageMetricsOverview(
       interval,
       queries,
       logRetentionHours,
+      resourceId,
+      resourceType,
     ),
     includeBreakdown && dimensions.length > 0
       ? fetchUsageMetricsBreakdownByMetric(
@@ -860,6 +864,8 @@ export async function fetchProjectUsageMetricsOverview(
           dimensions,
           breakdownLimit,
           queries,
+          resourceId,
+          resourceType,
         )
       : Promise.resolve(new Map<string, UsageTopEndpoint[]>()),
   ])

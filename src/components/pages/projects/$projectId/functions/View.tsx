@@ -10,7 +10,15 @@ import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { ResourceCard, RESOURCE_CARD_GRID_CLASSNAME } from '../shared/ResourceCard'
+import {
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+  RESOURCE_CARD_PADDED_CLASSNAME,
+} from '../shared/ResourceCard'
+import { CopyableId } from '@/components/global/shared/CopyableId'
+import { cn } from '@/lib/utils'
+import { FunctionExecutionsChartPreview } from './_components/FunctionExecutionsChartPreview'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -850,6 +858,9 @@ export function View() {
                     {functions.map((func) => {
                       const activeDeploymentCreatedAt =
                         getActiveDeploymentCreatedAt(func as Models.Function)
+                      const showStatus = resourceHasVisibleStatus(
+                        func as Models.Function,
+                      )
 
                       return (
                         <FunctionContextMenu
@@ -863,46 +874,82 @@ export function View() {
                               projectId: projectId!,
                               functionId: func.$id,
                             }}
+                            className="block min-w-0"
                           >
-                            <ResourceCard
-                              title={func.name || t('Unnamed Function')}
-                              subtitle={t(formatRuntimeLabel(func.runtime || ''))}
-                              resourceId={func.$id}
-                              customIcon={
-                                <RuntimeIcon
-                                  runtime={func.runtime || ''}
-                                  size="md"
-                                  className="h-5 w-5"
-                                />
-                              }
-                              iconColor="bg-muted text-muted-foreground"
-                              metadata={[
-                                ...(resourceHasVisibleStatus(func as Models.Function)
-                                  ? [
-                                      {
-                                        label: '',
-                                        value: (
-                                          <DeploymentResourceStatusBadges
-                                            resource={func as Models.Function}
-                                          />
-                                        ),
-                                      },
-                                    ]
-                                  : []),
-                                {
-                                  label: t('Deployed'),
-                                  value: activeDeploymentCreatedAt ? (
-                                    <DateTooltip
-                                      date={activeDeploymentCreatedAt}
-                                      live
-                                      className="text-[12px] font-medium text-muted-foreground"
+                            <div
+                              className={cn(
+                                RESOURCE_CARD_PADDED_CLASSNAME,
+                                RESOURCE_CARD_INTERACTIVE_CLASSNAME,
+                                'pb-0',
+                              )}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                  <RuntimeIcon
+                                    runtime={func.runtime || ''}
+                                    size="md"
+                                    className="h-5 w-5"
+                                  />
+                                </div>
+                                <div className="min-w-0 flex-1 overflow-hidden">
+                                  <h3 className="truncate text-[14px] font-medium text-foreground">
+                                    {func.name || t('Unnamed Function')}
+                                  </h3>
+                                  <p className="mt-0.5 truncate text-[12px] text-muted-foreground whitespace-nowrap">
+                                    {t(formatRuntimeLabel(func.runtime || ''))}
+                                  </p>
+                                  <div className="mt-1.5">
+                                    <CopyableId
+                                      id={func.$id}
+                                      size="xs"
+                                      maxWidth={120}
                                     />
-                                  ) : (
-                                    t('Never')
-                                  ),
-                                },
-                              ]}
-                            />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <FunctionExecutionsChartPreview
+                                projectId={projectId!}
+                                functionId={func.$id}
+                                enabled={features.usageStats}
+                              />
+
+                              <div
+                                className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}
+                              >
+                                <div className="flex min-w-0 flex-nowrap items-center gap-x-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                  {showStatus ? (
+                                    <>
+                                      <DeploymentResourceStatusBadges
+                                        resource={func as Models.Function}
+                                      />
+                                      <span
+                                        className="shrink-0 text-[10px] text-muted-foreground/40"
+                                        aria-hidden
+                                      >
+                                        ·
+                                      </span>
+                                    </>
+                                  ) : null}
+                                  <div className="flex shrink-0 items-center gap-0.5">
+                                    <span className="text-[12px] text-muted-foreground/70">
+                                      {t('Deployed')}
+                                    </span>
+                                    <span className="text-[12px] font-medium text-muted-foreground">
+                                      {activeDeploymentCreatedAt ? (
+                                        <DateTooltip
+                                          date={activeDeploymentCreatedAt}
+                                          live
+                                          className="text-[12px] font-medium text-muted-foreground"
+                                        />
+                                      ) : (
+                                        t('Never')
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </Link>
                         </FunctionContextMenu>
                       )

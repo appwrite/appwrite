@@ -322,6 +322,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Redirect: 'הפניה',
   Denied: 'נדחו',
   Bypassed: 'עקפו',
+  Passed: 'עברו',
   'Rate limited': 'הוגבלו בקצב',
   Redirected: 'הופנו',
   'Create firewall rule': 'יצירת כלל חומת אש',
@@ -422,6 +423,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הערכה מדומה של בקשות שהכלל הזה היה מתאים ב-24 השעות האחרונות.',
   'Estimated requests this rule would match over the last 24 hours.':
     'הערכת בקשות שהכלל הזה היה מתאים להן ב-24 השעות האחרונות.',
+  'Estimated requests this rule would match during the selected period.':
+    'הערכת בקשות שהכלל הזה היה מתאים להן בתקופה שנבחרה.',
   'No traffic data for this period': 'אין נתוני תעבורה לתקופה זו',
   'Matched requests': 'בקשות תואמות',
   'Share of traffic': 'חלק מהתעבורה',
@@ -1195,6 +1198,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   domains: 'דומיינים',
   functions: 'פונקציות',
   sites: 'אתרים',
+  'firewall rules': 'כללי חומת אש',
+  'Firewall rules': 'כללי חומת אש',
   'Select project': 'בחירת פרויקט',
   'Loading...': 'טוען...',
   'Find Organization...': 'חיפוש ארגון...',

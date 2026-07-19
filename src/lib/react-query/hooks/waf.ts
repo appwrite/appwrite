@@ -25,6 +25,8 @@ import type {
   FirewallConditionDraft,
   FirewallResourceType,
 } from '@/lib/firewall/conditions'
+import type { DateRange } from 'react-day-picker'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 
 export type CreateFirewallRuleInput = {
   ruleId?: string
@@ -76,7 +78,7 @@ export async function fetchFirewallRules(
   }
 
   const queries = [
-    Query.orderAsc('priority'),
+    Query.orderDesc('priority'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -127,6 +129,8 @@ export function firewallRulesQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    // Keep showing the previous list until the new search/page request finishes.
+    placeholderData: keepPreviousData,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -308,9 +312,13 @@ export function firewallRuleImpactQueryOptions(
   conditions: FirewallConditionDraft[],
   resourceType: FirewallResourceType,
   resourceId?: string,
+  dateRange?: DateRange,
+  chartInterval?: UsageChartInterval,
 ) {
   const normalizedResourceId = resourceId?.trim() || undefined
   const conditionSnapshots = buildFirewallUsageConditionSnapshots(conditions)
+  const from = dateRange?.from?.toISOString()
+  const to = dateRange?.to?.toISOString()
 
   return queryOptions({
     queryKey: [
@@ -320,6 +328,9 @@ export function firewallRuleImpactQueryOptions(
       resourceType,
       normalizedResourceId ?? '',
       conditionSnapshots,
+      from ?? '',
+      to ?? '',
+      chartInterval ?? '',
     ] as const,
     queryFn: ({ queryKey }) => {
       const [
@@ -329,6 +340,9 @@ export function firewallRuleImpactQueryOptions(
         impactResourceType,
         impactResourceId,
         impactConditions,
+        impactFrom,
+        impactTo,
+        impactChartInterval,
       ] = queryKey
 
       return fetchFirewallRuleImpact(String(impactProjectId), {
@@ -337,6 +351,15 @@ export function firewallRuleImpactQueryOptions(
         ),
         resourceType: impactResourceType as FirewallResourceType,
         resourceId: impactResourceId ? String(impactResourceId) : undefined,
+        dateRange: impactFrom
+          ? {
+              from: new Date(String(impactFrom)),
+              to: impactTo ? new Date(String(impactTo)) : undefined,
+            }
+          : undefined,
+        chartInterval: impactChartInterval
+          ? (impactChartInterval as UsageChartInterval)
+          : undefined,
       })
     },
     enabled: !!projectId,
@@ -354,6 +377,8 @@ export function useFirewallRuleImpact(
   conditions: FirewallConditionDraft[],
   resourceType: FirewallResourceType,
   resourceId?: string,
+  dateRange?: DateRange,
+  chartInterval?: UsageChartInterval,
 ) {
   const { data, isLoading, isFetching, error } = useQuery(
     firewallRuleImpactQueryOptions(
@@ -361,6 +386,8 @@ export function useFirewallRuleImpact(
       conditions,
       resourceType,
       resourceId,
+      dateRange,
+      chartInterval,
     ),
   )
 

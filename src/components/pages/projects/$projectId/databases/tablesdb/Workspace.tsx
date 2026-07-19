@@ -1925,6 +1925,7 @@ export function Workspace({
             projectId={projectId}
             databaseId={databaseId}
             tableId={tableId}
+            filterQueries={rowsFilterQueries}
             open={exportCsvOpen}
             onOpenChange={setExportCsvOpen}
           />

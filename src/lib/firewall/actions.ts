@@ -45,6 +45,24 @@ export function getFirewallActionDescription(action: string): string {
   }
 }
 
+/** Solid dot colors aligned with `RuleActionBadge` status variants. */
+export function getFirewallActionDotClass(action: string): string {
+  switch (action) {
+    case WafRuleAction.Deny:
+      return 'bg-red-500'
+    case WafRuleAction.Bypass:
+      return 'bg-blue-500'
+    case WafRuleAction.RateLimit:
+      return 'bg-amber-500'
+    case WafRuleAction.Redirect:
+      return 'bg-slate-500'
+    case WafRuleAction.Challenge:
+      return 'bg-blue-500'
+    default:
+      return 'bg-muted-foreground'
+  }
+}
+
 export function isRateLimitRule(
   rule: Models.WafRule,
 ): rule is Models.WafRuleRateLimit {

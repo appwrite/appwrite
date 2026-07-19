@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Copy,
   ExternalLink,
@@ -73,7 +73,13 @@ import {
   openInNewWindow,
 } from '@/lib/utils/context-menu'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import {
+  SERVICE_HEADER_CONTAINER,
+  serviceHeaderIconOnlyButton,
+  serviceHeaderShowLabel,
+} from '../shared/service-header-container'
 import { RuleActionBadge } from './_components/RuleActionBadge'
 import { RuleContextMenu } from './_components/RuleContextMenu'
 import { UpdateRule } from './_components/UpdateRule'
@@ -83,9 +89,19 @@ interface RulesListProps {
   projectId: string
   canWrite: boolean
   onCreate: () => void
+  /** When true, create is disabled (plan limit or missing permission). */
+  createDisabled?: boolean
+  /** Tooltip when create is disabled. */
+  createDisabledTooltip?: string
 }
 
-export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
+export function RulesList({
+  projectId,
+  canWrite,
+  onCreate,
+  createDisabled = false,
+  createDisabledTooltip,
+}: RulesListProps) {
   const t = useT()
   const [searchValue, setSearchValue] = useState('')
   const { rules, isLoading, isFetching } = useFirewallRules(
@@ -98,32 +114,15 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
   const [editingRule, setEditingRule] = useState<Models.WafRule | null>(null)
   const [deletingRule, setDeletingRule] = useState<Models.WafRule | null>(null)
   const [togglingRuleId, setTogglingRuleId] = useState<string | null>(null)
-  const noCreatePermission = !canWrite
-  const createPermissionTooltip = noCreatePermission
-    ? t("You don't have permission to create firewall rules.")
-    : undefined
   const noWritePermissionTooltip = !canWrite
     ? t("You don't have permission to update firewall rules.")
     : undefined
-
-  const filteredRules = useMemo(() => {
-    if (!searchValue.trim()) return rules
-    const searchLower = searchValue.toLowerCase()
-    return rules.filter((rule) => {
-      const conditions = parseFirewallConditions(rule.conditions)
-        .map(formatConditionSummary)
-        .join(' ')
-        .toLowerCase()
-      return (
-        rule.name.toLowerCase().includes(searchLower) ||
-        rule.description?.toLowerCase().includes(searchLower) ||
-        String(rule.action).toLowerCase().includes(searchLower) ||
-        rule.resourceType?.toLowerCase().includes(searchLower) ||
-        rule.resourceId?.toLowerCase().includes(searchLower) ||
-        conditions.includes(searchLower)
-      )
-    })
-  }, [rules, searchValue])
+  const resolvedCreateDisabled = createDisabled || !canWrite
+  const resolvedCreateDisabledTooltip =
+    createDisabledTooltip ??
+    (!canWrite
+      ? t("You don't have permission to create firewall rules.")
+      : t("You've reached the limit for this resource on your plan"))
 
   const handleToggleEnabled = async (rule: Models.WafRule) => {
     const nextEnabled = !rule.enabled
@@ -163,7 +162,18 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
 
   const firewallHref = buildConsoleUrl(`/projects/${projectId}/firewall`)
 
-  const createButton = noCreatePermission ? (
+  const createButtonClassName = cn(
+    serviceHeaderIconOnlyButton,
+    'text-[13px] font-medium',
+  )
+  const createButtonLabel = (
+    <>
+      <span className={serviceHeaderShowLabel}>{t('Create rule')}</span>
+      <span className="sr-only @[640px]:hidden">{t('Create rule')}</span>
+    </>
+  )
+
+  const createButton = resolvedCreateDisabled ? (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -172,16 +182,16 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
               variant="brandCta"
               size="sm"
               disabled
-              className="h-9 text-[13px] font-medium"
+              className={createButtonClassName}
               aria-label={t('Create rule')}
             >
               <Plus className="h-4 w-4 shrink-0" />
-              {t('Create rule')}
+              {createButtonLabel}
             </Button>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          <p>{createPermissionTooltip}</p>
+          <p>{resolvedCreateDisabledTooltip}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -190,29 +200,38 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
       variant="brandCta"
       size="sm"
       onClick={onCreate}
-      className="h-9 text-[13px] font-medium"
+      className={createButtonClassName}
       aria-label={t('Create rule')}
     >
       <Plus className="h-4 w-4 shrink-0" />
-      {t('Create rule')}
+      {createButtonLabel}
     </Button>
+  )
+
+  const toolbarRow = (
+    <div
+      className={cn(
+        SERVICE_HEADER_CONTAINER,
+        'flex min-w-0 flex-nowrap items-center justify-between gap-2 @[640px]:gap-3',
+      )}
+    >
+      <div className="relative min-w-0 w-full max-w-xs flex-1 shrink @[520px]:w-64 @[520px]:max-w-none @[520px]:flex-none @[520px]:shrink-0">
+        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder={t('Search rules...')}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
+        />
+      </div>
+      {createButton}
+    </div>
   )
 
   if (isLoading && rules.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={t('Search rules...')}
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-          {createButton}
-        </div>
+        {toolbarRow}
         <div className="rounded-xl border border-border bg-card/50">
           <div className="divide-y divide-border">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -237,20 +256,9 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('Search rules...')}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
-        {createButton}
-      </div>
+      {toolbarRow}
 
-      {filteredRules.length === 0 ? (
+      {rules.length === 0 ? (
         <EmptyState
           icon={Shield}
           title={searchValue ? undefined : t('No firewall rules')}
@@ -274,7 +282,7 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[88px]">
                   {t('Status')}
                 </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider max-w-[240px]">
                   {t('Rule')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -296,7 +304,7 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRules.map((rule) => {
+              {rules.map((rule) => {
                 const conditions = parseFirewallConditions(rule.conditions)
                 const rateLimit = getRuleRateLimit(rule)
                 const redirect = getRuleRedirect(rule)
@@ -355,13 +363,19 @@ export function RulesList({ projectId, canWrite, onCreate }: RulesListProps) {
                           statusSwitch
                         )}
                       </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-[13px] font-medium text-foreground truncate">
+                      <TableCell className="max-w-[240px] px-4 py-3">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span
+                            className="truncate text-[13px] font-medium text-foreground"
+                            title={rule.name}
+                          >
                             {rule.name}
                           </span>
                           {rule.description ? (
-                            <span className="text-[12px] text-muted-foreground line-clamp-1">
+                            <span
+                              className="truncate text-[12px] text-muted-foreground"
+                              title={rule.description}
+                            >
                               {rule.description}
                             </span>
                           ) : null}
