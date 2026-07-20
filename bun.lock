@@ -151,9 +151,9 @@
 
     "@ai-sdk/react": ["@ai-sdk/react@3.0.200", "", { "dependencies": { "@ai-sdk/provider-utils": "4.0.27", "ai": "6.0.198", "swr": "^2.2.5", "throttleit": "2.1.0" }, "peerDependencies": { "react": "^18 || ~19.0.1 || ~19.1.2 || ^19.2.1" } }, "sha512-OzO/raYhgzQo5iVDRJYNCrlDj0gMmS8TBlOdGtZo5Elzl5unGEVQrtn0zjP3u4sFiKflr6D2En+qeeBMUzPZDA=="],
 
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@fec9abb", { "dependencies": { "json-bigint": "1.0.0" } }],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@fec9abb", { "dependencies": { "json-bigint": "1.0.0" } }, "sha512-y7KOjiz7qoJkdqMAisNrBOcaW+W8Xh/GBVvbM1Tkfh/V3behmUx1Xp6Ts+K1SSQY5b/DHtqs7gGBsmOWWeXF+g=="],
 
-    "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#570c9de", {}, "appwrite-specs-570c9de"],
+    "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#570c9de", {}, "appwrite-specs-570c9de", "sha512-uCN5IxBBCxQ7mAkR25dY7IEDHt13oUctFEJd5EYRRqi+X/KIUZxo2LpnMQiH2nBJli/Inf8dm/stXhkK40kRZw=="],
 
     "@asamuzakjp/css-color": ["@asamuzakjp/css-color@3.2.0", "", { "dependencies": { "@csstools/css-calc": "^2.1.3", "@csstools/css-color-parser": "^3.0.9", "@csstools/css-parser-algorithms": "^3.0.4", "@csstools/css-tokenizer": "^3.0.3", "lru-cache": "^10.4.3" } }, "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="],
 

@@ -24,6 +24,7 @@ import {
   FIREWALL_HTTP_METHODS,
   createEmptyConditionDraft,
   getOperatorsForAttribute,
+  isNoValueOperator,
   isOperatorAllowedForAttribute,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
@@ -340,15 +341,17 @@ export function ConditionsBuilder({
                         </Select>
                       </div>
 
-                      <ConditionValueInput
-                        attribute={condition.attribute}
-                        value={condition.value}
-                        disabled={disabled}
-                        pathPlaceholder={pathPlaceholder}
-                        onChange={(nextValue) =>
-                          updateAt(index, { value: nextValue })
-                        }
-                      />
+                      {isNoValueOperator(condition.operator) ? null : (
+                        <ConditionValueInput
+                          attribute={condition.attribute}
+                          value={condition.value}
+                          disabled={disabled}
+                          pathPlaceholder={pathPlaceholder}
+                          onChange={(nextValue) =>
+                            updateAt(index, { value: nextValue })
+                          }
+                        />
+                      )}
                     </div>
 
                     <Button
