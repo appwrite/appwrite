@@ -342,7 +342,7 @@ class Migrations extends Action
                 databaseId: $databaseId,
                 tableId: $tableId,
                 directory: $options['bucketId'],
-                filename: $options['filename'],
+                filename: $migration->getId(),
                 allowedColumns: $options['columns'],
                 delimiter: $options['delimiter'],
                 enclosure: $options['enclosure'],
@@ -354,7 +354,7 @@ class Migrations extends Action
                 databaseId: $databaseId,
                 tableId: $tableId,
                 directory: $options['bucketId'] ?? 'default',
-                filename: $options['filename'],
+                filename: $migration->getId(),
                 allowedColumns: $options['columns'] ?? [],
             ),
             default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
@@ -540,11 +540,7 @@ class Migrations extends Action
                 $migration->setAttribute('stage', 'migrating');
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                [$rootResourceId, $rootResourceChildId] = $this->resolveResourceIds($migration);
-                $rootResourceType = (string) (
-                    $migration->getAttribute('parentResourceType')
-                    ?: $migration->getAttribute('resourceType')
-                );
+                $context = $this->resolveResourceContext($migration);
                 $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
                     function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
@@ -583,9 +579,12 @@ class Migrations extends Action
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $rootResourceId,
-                    $rootResourceType,
-                    $rootResourceChildId,
+                    resourceId: $context['resourceId'],
+                    resourceInternalId: $context['resourceInternalId'],
+                    resourceType: $context['resourceType'],
+                    parentResourceId: $context['parentResourceId'],
+                    parentResourceInternalId: $context['parentResourceInternalId'],
+                    parentResourceType: $context['parentResourceType'],
                 );
 
                 $destination->shutdown();
@@ -730,38 +729,43 @@ class Migrations extends Action
         return ($this->getDatabasesDB)($database);
     }
 
-    /**
-     * Resolve [rootResourceId, rootResourceChildId] from a migration document.
-     *
-     * Returns the root resource ID (e.g. databaseId for CSV/JSON or backup
-     * migrations) and an optional child filter under that root (the
-     * collection/table ID for CSV/JSON migrations). Three input shapes:
-     *
-     *  - 1.9.4 CSV/JSON migration: parentResourceId is set to the root,
-     *    resourceId is the leaf. Returns [parent, leaf].
-     *  - Pre-1.9.4 CSV/JSON migration (V25 not yet run, queue drain after
-     *    upgrade, restored backup): resourceId is the composite
-     *    "{databaseId}:{tableId}", parentResourceId is empty. Split it.
-     *  - Single-root migration (Backup, full Appwrite/Supabase/Firebase/
-     *    NHost imports): resourceId is the root resource ID with no leaf.
-     *    Returns [root, ''].
-     *
-     * @return array{0: string, 1: string}
-     */
+    /** @return array{0: string, 1: string} */
     protected function resolveResourceIds(Document $migration): array
     {
-        $parent = (string) $migration->getAttribute('parentResourceId', '');
-        $resource = (string) $migration->getAttribute('resourceId', '');
+        $context = $this->resolveResourceContext($migration);
 
-        if ($parent !== '') {
-            return [$parent, $resource];
+        if ($context['parentResourceId'] !== '') {
+            return [$context['parentResourceId'], $context['resourceId']];
         }
 
-        if (\str_contains($resource, ':')) {
-            return \explode(':', $resource, 2);
+        return [$context['resourceId'], ''];
+    }
+
+    /**
+     * @return array{resourceId: string, resourceInternalId: string, resourceType: string, parentResourceId: string, parentResourceInternalId: string, parentResourceType: string}
+     */
+    protected function resolveResourceContext(Document $migration): array
+    {
+        $context = [
+            'resourceId' => (string) $migration->getAttribute('resourceId', ''),
+            'resourceInternalId' => (string) $migration->getAttribute('resourceInternalId', ''),
+            'resourceType' => (string) $migration->getAttribute('resourceType', ''),
+            'parentResourceId' => (string) $migration->getAttribute('parentResourceId', ''),
+            'parentResourceInternalId' => (string) $migration->getAttribute('parentResourceInternalId', ''),
+            'parentResourceType' => (string) $migration->getAttribute('parentResourceType', ''),
+        ];
+
+        if (
+            $context['parentResourceId'] === ''
+            && \array_key_exists($context['resourceType'], Resource::DATABASE_TYPE_RESOURCE_MAP)
+            && \str_contains($context['resourceId'], ':')
+        ) {
+            [$context['parentResourceId'], $context['resourceId']] = \explode(':', $context['resourceId'], 2);
+            $context['parentResourceType'] = $context['resourceType'];
+            $context['resourceType'] = Resource::TYPE_COLLECTION;
         }
 
-        return [$resource, ''];
+        return $context;
     }
 
     /**

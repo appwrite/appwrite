@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Destination;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -142,6 +143,47 @@ final class MigrationsTest extends TestCase
             'source:success',
             'persist:completed:finished',
         ], $events);
+    }
+
+    public function testResourceContextUsesCanonicalRelationFields(): void
+    {
+        $worker = new class () extends Migrations {
+            /**
+             * @return array{resourceId: string, resourceInternalId: string, resourceType: string, parentResourceId: string, parentResourceInternalId: string, parentResourceType: string}
+             */
+            public function context(Document $migration): array
+            {
+                return $this->resolveResourceContext($migration);
+            }
+        };
+
+        $this->assertSame([
+            'resourceId' => 'table-a',
+            'resourceInternalId' => '201',
+            'resourceType' => Resource::TYPE_COLLECTION,
+            'parentResourceId' => 'database-a',
+            'parentResourceInternalId' => '101',
+            'parentResourceType' => Resource::TYPE_DATABASE,
+        ], $worker->context(new Document([
+            'resourceId' => 'table-a',
+            'resourceInternalId' => '201',
+            'resourceType' => Resource::TYPE_COLLECTION,
+            'parentResourceId' => 'database-a',
+            'parentResourceInternalId' => '101',
+            'parentResourceType' => Resource::TYPE_DATABASE,
+        ])));
+
+        $this->assertSame([
+            'resourceId' => 'table-a',
+            'resourceInternalId' => '',
+            'resourceType' => Resource::TYPE_COLLECTION,
+            'parentResourceId' => 'database-a',
+            'parentResourceInternalId' => '',
+            'parentResourceType' => Resource::TYPE_DATABASE,
+        ], $worker->context(new Document([
+            'resourceId' => 'database-a:table-a',
+            'resourceType' => Resource::TYPE_DATABASE,
+        ])));
     }
 
     private function createSourceMock(): Source&MockObject
