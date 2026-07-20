@@ -919,7 +919,7 @@ Http::init()
             if (version_compare($requestFormat, '1.9.5', '<')) {
                 $request->addFilter(new RequestV26());
             }
-            if (version_compare($requestFormat, '2.0.0', '<')) {
+            if (version_compare($requestFormat, '1.9.6', '<')) {
                 $request->addFilter(new RequestV27());
             }
         }
@@ -946,7 +946,7 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
-            if (version_compare($responseFormat, '2.0.0', '<')) {
+            if (version_compare($responseFormat, '1.9.6', '<')) {
                 $response->addFilter(new ResponseV27());
             }
             if (version_compare($responseFormat, '1.9.5', '<')) {

@@ -6,7 +6,7 @@ use Appwrite\Utopia\Request\Filter;
 
 class V27 extends Filter
 {
-    // Convert 1.9.5 params to 2.0.0
+    // Convert 1.9.5 params to 1.9.6
     public function parse(array $content, string $model): array
     {
         return match ($model) {

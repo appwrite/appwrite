@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Filters;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 
-// Convert 2.0.0 Data format to 1.9.5 format
+// Convert 1.9.6 Data format to 1.9.5 format
 class V27 extends Filter
 {
     public function parse(array $content, string $model): array
