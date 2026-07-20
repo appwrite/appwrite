@@ -82,29 +82,41 @@ export const FIREWALL_HTTP_METHODS = [
 
 export type FirewallHttpMethod = (typeof FIREWALL_HTTP_METHODS)[number]
 
-/**
- * Attributes backed by a fixed enum. Only `method` — mirrors usage, where
- * `method` is an enum column (equal / not equal / is empty / is not empty) while
- * `country` is a free-text string column with the full operator set.
- */
-const DISCRETE_VALUE_ATTRIBUTES = new Set<FirewallConditionAttribute>([
-  'method',
-])
+/** Free-text attributes get the full usage `listEvents` operator set. */
+const FREE_TEXT_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
+  'equal',
+  'notEqual',
+  'contains',
+  'startsWith',
+  'endsWith',
+  'isNull',
+  'isNotNull',
+]
 
 /**
- * Operators available for a given attribute.
- * Enum-backed attributes (method) drop the text-matching operators
- * (contains / starts with / ends with) since they filter on a fixed value.
+ * Operators offered per attribute. All values also exist in usage `listEvents`
+ * so affected-traffic estimates stay accurate.
+ * - Free text (ip / path / userAgent): full set.
+ * - `method`: enum-backed, equality + presence only (no text matching).
+ * - `country`: picker-backed, kept to the basic set (equal / not equal / contains).
  */
+const OPERATORS_BY_ATTRIBUTE: Record<
+  FirewallConditionAttribute,
+  ReadonlyArray<FirewallConditionOperator>
+> = {
+  ip: FREE_TEXT_OPERATORS,
+  path: FREE_TEXT_OPERATORS,
+  userAgent: FREE_TEXT_OPERATORS,
+  method: ['equal', 'notEqual', 'isNull', 'isNotNull'],
+  country: ['equal', 'notEqual', 'contains'],
+}
+
+/** Operators available for a given attribute (display order is preserved). */
 export function getOperatorsForAttribute(
   attribute: FirewallConditionAttribute,
 ): ReadonlyArray<FirewallConditionOperatorDef> {
-  if (DISCRETE_VALUE_ATTRIBUTES.has(attribute)) {
-    return FIREWALL_CONDITION_OPERATORS.filter(
-      (op) => !TEXT_MATCH_OPERATORS.has(op.value),
-    )
-  }
-  return FIREWALL_CONDITION_OPERATORS
+  const allowed = new Set(OPERATORS_BY_ATTRIBUTE[attribute])
+  return FIREWALL_CONDITION_OPERATORS.filter((op) => allowed.has(op.value))
 }
 
 export function isOperatorAllowedForAttribute(
@@ -134,6 +146,25 @@ export function createEmptyConditionDraft(): FirewallConditionDraft {
     operator: 'equal',
     value: '',
   }
+}
+
+/**
+ * A draft is complete when it will actually serialize into a query:
+ * no-value operators (is empty / is not empty) always do; every other
+ * operator needs a non-empty value. Incomplete drafts are silently dropped
+ * by `serializeFirewallConditions`, so callers should block submit on them.
+ */
+export function isConditionDraftComplete(
+  draft: FirewallConditionDraft,
+): boolean {
+  return isNoValueOperator(draft.operator) || draft.value.trim().length > 0
+}
+
+/** True when every condition would serialize (nothing gets silently dropped). */
+export function areFirewallConditionsComplete(
+  drafts: FirewallConditionDraft[],
+): boolean {
+  return drafts.every(isConditionDraftComplete)
 }
 
 function buildQueryString(draft: FirewallConditionDraft): string | null {
