@@ -188,10 +188,8 @@ return function (Container $container): void {
         return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
 
-    // Workers only ever build functions on the jobs-service backend (sites
-    // always build on the executor via the Builds worker directly), so
-    // unlike the HTTP-side 'deployments' resource this doesn't need to pick
-    // a backend per-request.
+    // Only the Builds worker uses this, handing template-into-repo pushes to
+    // the jobs-service when _APP_BUILDS_BACKEND=orchestrator — no backend switch.
     $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
         return new Orchestrator($jobs, $dbForProject, $project, $platform);
     }, ['jobs', 'dbForProject', 'project', 'platform']);

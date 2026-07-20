@@ -15,6 +15,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
@@ -61,6 +62,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('deployments')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -71,6 +73,7 @@ class Update extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Backend $deployments,
+        callable $locks,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -92,22 +95,35 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
+        // Write under the Jobs worker's per-deployment lock: its handlers
+        // read-modify-write buildLogs, and an unserialized cancel write here
+        // loses the closing log line to an in-flight append.
+        $cancel = function () use ($dbForProject, $deployment, $duration, $deployments) {
+            try {
+                return $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+            } catch (TransactionException) {
+                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+
+                if ($deployment->isEmpty()) {
+                    throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+                }
+
+                if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
+                    throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
+                }
+
+                if ($deployment->getAttribute('status') !== 'canceled') {
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
+                }
+
+                return $deployment;
+            }
+        };
+
         try {
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
-        } catch (TransactionException) {
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-
-            if ($deployment->isEmpty()) {
-                throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-            }
-
-            if (\in_array($deployment->getAttribute('status'), ['ready', 'failed'])) {
-                throw new Exception(Exception::BUILD_ALREADY_COMPLETED);
-            }
-
-            if ($deployment->getAttribute('status') !== 'canceled') {
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document($this->cancel($deployment, $duration, $deployments instanceof Orchestrator)));
-            }
+            $deployment = $locks('jobs-deployment:' . $deploymentId, 30, $cancel, 10.0);
+        } catch (Contention) {
+            $deployment = $cancel();
         }
 
         // Best-effort cleanup — the deployment is already marked 'canceled'.
