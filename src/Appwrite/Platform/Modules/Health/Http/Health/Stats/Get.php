@@ -2,12 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Stats;
 
+use Appwrite\Utopia\Bytes;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Local;
 
 class Get extends Action
 {
@@ -37,13 +38,19 @@ class Get extends Action
     {
         $cache = $register->get('cache');
 
+        $localDevice = $deviceForFiles instanceof Device\Telemetry ? $deviceForFiles->getDevice() : $deviceForFiles;
+
         $cacheStats = $cache->info();
 
         $response->json([
-            'storage' => [
-                'used' => Storage::human($deviceForFiles->getDirectorySize($deviceForFiles->getRoot() . '/')),
-                'partitionTotal' => Storage::human($deviceForFiles->getPartitionTotalSpace()),
-                'partitionFree' => Storage::human($deviceForFiles->getPartitionFreeSpace()),
+            'storage' => $localDevice instanceof Local ? [
+                'used' => Bytes::human($localDevice->getDirectorySize($localDevice->getRoot() . '/')),
+                'partitionTotal' => Bytes::human($localDevice->getPartitionTotalSpace()),
+                'partitionFree' => Bytes::human($localDevice->getPartitionFreeSpace()),
+            ] : [
+                'used' => Bytes::human(-1),
+                'partitionTotal' => Bytes::human(-1),
+                'partitionFree' => Bytes::human(-1),
             ],
             'cache' => [
                 'uptime' => $cacheStats['uptime_in_seconds'] ?? 0,

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Utopia\Bytes;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -19,7 +20,6 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Validator\IP;
 
@@ -276,7 +276,7 @@ class Doctor extends Action
             $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
             / $device->getPartitionTotalSpace()) * 100;
 
-            $message = $key . ' Volume has ' . Storage::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
+            $message = $key . ' Volume has ' . Bytes::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
 
             if ($percentage < 80) {
                 Console::success('🟢 ' . $message);

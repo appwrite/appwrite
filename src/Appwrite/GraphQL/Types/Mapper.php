@@ -351,7 +351,7 @@ class Mapper
             case \Utopia\Validator\JSON::class:
                 $type = Types::json();
                 break;
-            case \Utopia\Storage\Validator\File::class:
+            case \Appwrite\Utopia\Request\Validator\File::class:
                 $type = Types::inputFile();
                 break;
         }

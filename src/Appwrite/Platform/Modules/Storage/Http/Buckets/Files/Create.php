@@ -13,6 +13,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -33,8 +34,7 @@ use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
-use Utopia\Storage\Validator\File;
+use Utopia\Storage\DeviceType;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
@@ -354,7 +354,7 @@ class Create extends Action
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalizeUpload($path, $chunks, $metadata);
 
-                if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
+                if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(
                         System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                         (int) System::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
@@ -510,7 +510,11 @@ class Create extends Action
         };
 
         try {
-            $chunksUploaded = $deviceForFiles->uploadChunk($fileTmpName, $path, $chunk, $chunks, $metadata);
+            $fileData = \file_get_contents($fileTmpName);
+            if ($fileData === false) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading uploaded file');
+            }
+            $chunksUploaded = $deviceForFiles->uploadChunk($fileData, $path, $chunk, $chunks, $metadata);
 
             if (empty($chunksUploaded)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
