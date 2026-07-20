@@ -43,7 +43,7 @@ export type FirewallConditionAttribute =
  */
 export const FIREWALL_CONDITION_OPERATORS = [
   { value: 'equal', label: 'Equals' },
-  { value: 'notEqual', label: 'Does not equal' },
+  { value: 'notEqual', label: 'Not equal' },
   { value: 'contains', label: 'Contains' },
   { value: 'startsWith', label: 'Starts with' },
   { value: 'endsWith', label: 'Ends with' },
@@ -190,7 +190,7 @@ function buildQueryString(draft: FirewallConditionDraft): string | null {
 
   const raw = draft.value.trim()
   if (!raw) return null
-  const value = draft.attribute === 'country' ? raw.toLowerCase() : raw
+  const value = draft.attribute === 'country' ? raw.toUpperCase() : raw
 
   switch (draft.operator) {
     case 'equal':
@@ -303,7 +303,7 @@ export function draftsFromParsedConditions(
 
     const rawValue = item.values[0] ?? ''
     const value =
-      attribute === 'country' ? rawValue.toLowerCase() : rawValue
+      attribute === 'country' ? rawValue.toUpperCase() : rawValue
 
     return {
       id: `cond_${Math.random().toString(36).slice(2, 10)}`,

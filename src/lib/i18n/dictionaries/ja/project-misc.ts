@@ -205,7 +205,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Select function': 'Function を選択',
   'Select site': 'サイトを選択',
   Equals: '等しい',
-  'Does not equal': '等しくない',
+  'Not equal': '等しくない',
   Contains: '含む',
   equals: '等しい',
   'does not equal': '等しくない',

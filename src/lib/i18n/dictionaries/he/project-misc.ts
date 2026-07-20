@@ -393,7 +393,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Select function': 'בחרו פונקציה',
   'Select site': 'בחרו אתר',
   Equals: 'שווה ל-',
-  'Does not equal': 'שונה מ-',
+  'Not equal': 'שונה מ-',
   Contains: 'מכיל',
   equals: 'שווה ל-',
   'does not equal': 'שונה מ-',
