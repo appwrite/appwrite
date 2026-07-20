@@ -1306,7 +1306,7 @@ services:
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
             try {
               const hello = db.adminCommand({hello: 1});
-              if (hello.isWritablePrimary) {
+              if (hello.isWritablePrimary && hello.setName === 'rs0') {
                 quit(0);
               }
             } catch (e) {}
