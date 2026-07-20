@@ -45,10 +45,6 @@
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/migration"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/mongo"
         }
     ],
     "require": {
@@ -92,7 +88,7 @@
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.0",
         "utopia-php/migration": "dev-feat/drop-compound-resource-id#7ed62ca2e2279bf30fa2018655e045c59bb5bc3d as 1.17.3",
-        "utopia-php/mongo": "dev-fix/transport-recovery#de1bd94ed5da6dd3ebdc0795e56aed69e4bbea43 as 1.3.1",
+        "utopia-php/mongo": "^1.3.2",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",
