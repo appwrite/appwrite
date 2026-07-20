@@ -63,6 +63,12 @@ export function isNoValueOperator(operator: FirewallConditionOperator): boolean 
   return NO_VALUE_OPERATORS.has(operator)
 }
 
+export function isTextMatchOperator(
+  operator: FirewallConditionOperator,
+): boolean {
+  return TEXT_MATCH_OPERATORS.has(operator)
+}
+
 /** HTTP methods selectable for the method condition attribute. */
 export const FIREWALL_HTTP_METHODS = [
   'GET',
@@ -76,16 +82,19 @@ export const FIREWALL_HTTP_METHODS = [
 
 export type FirewallHttpMethod = (typeof FIREWALL_HTTP_METHODS)[number]
 
-/** Attributes that use discrete selection (not free text). */
+/**
+ * Attributes backed by a fixed enum. Only `method` — mirrors usage, where
+ * `method` is an enum column (equal / not equal / is empty / is not empty) while
+ * `country` is a free-text string column with the full operator set.
+ */
 const DISCRETE_VALUE_ATTRIBUTES = new Set<FirewallConditionAttribute>([
   'method',
-  'country',
 ])
 
 /**
  * Operators available for a given attribute.
- * Method and country are select-backed, so text-matching operators
- * (contains / starts with / ends with) don't apply.
+ * Enum-backed attributes (method) drop the text-matching operators
+ * (contains / starts with / ends with) since they filter on a fixed value.
  */
 export function getOperatorsForAttribute(
   attribute: FirewallConditionAttribute,

@@ -26,6 +26,7 @@ import {
   getOperatorsForAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
+  isTextMatchOperator,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
   type FirewallConditionOperator,
@@ -86,12 +87,14 @@ function RailLabel({ children }: { children: ReactNode }) {
 
 function ConditionValueInput({
   attribute,
+  operator,
   value,
   disabled,
   pathPlaceholder,
   onChange,
 }: {
   attribute: FirewallConditionAttribute
+  operator: FirewallConditionOperator
   value: string
   disabled?: boolean
   pathPlaceholder: string
@@ -137,6 +140,19 @@ function ConditionValueInput({
       )
 
     case 'country':
+      // Text-match operators need a free-text value; a country picker can only
+      // express an exact code, matching usage where country is a string column.
+      if (isTextMatchOperator(operator)) {
+        return (
+          <Input
+            value={value}
+            disabled={disabled}
+            placeholder={t('e.g. us')}
+            className="h-9 w-full font-mono text-[13px]"
+            onChange={(e) => onChange(e.target.value)}
+          />
+        )
+      }
       return (
         <SearchableSelect
           value={value.toLowerCase()}
@@ -344,6 +360,7 @@ export function ConditionsBuilder({
                       {isNoValueOperator(condition.operator) ? null : (
                         <ConditionValueInput
                           attribute={condition.attribute}
+                          operator={condition.operator}
                           value={condition.value}
                           disabled={disabled}
                           pathPlaceholder={pathPlaceholder}
