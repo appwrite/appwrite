@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -19,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
@@ -113,6 +115,8 @@ class Update extends Base
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
             ->inject('executor')
+            ->inject('authorization')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -151,6 +155,8 @@ class Update extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
+        Authorization $authorization,
+        Backend $deployments,
         array $platform
     ) {
         if (!empty($adapter)) {
@@ -331,7 +337,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform);
+            $this->redeployVcsSite($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $authorization, $deployments, $platform);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());
