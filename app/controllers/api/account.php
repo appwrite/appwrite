@@ -11,7 +11,6 @@ use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
-use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -67,6 +66,7 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
+use Utopia\UserAgent\UserAgent;
 use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
@@ -122,7 +122,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $user->setAttributes($userFromRequest->getArrayCopy());
 
     $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-    $detector = new Detector($request->getUserAgent('UNKNOWN'));
+    $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
     $sessionSecret = $proofForToken->generate();
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
@@ -186,9 +186,20 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $providerCredentials,
-        $detector->getOS(),
-        $detector->getClient(),
-        $detector->getDevice()
+        [
+            'osCode' => $userAgent->operatingSystem()->code ?? '',
+            'osName' => $userAgent->operatingSystem()->name ?? '',
+            'osVersion' => $userAgent->operatingSystem()->version ?? '',
+            'clientType' => $userAgent->client()->type ?? '',
+            'clientCode' => $userAgent->client()->code ?? '',
+            'clientName' => $userAgent->client()->name ?? '',
+            'clientVersion' => $userAgent->client()->version ?? '',
+            'clientEngine' => $userAgent->client()->engine ?? '',
+            'clientEngineVersion' => $userAgent->client()->engineVersion ?? '',
+            'deviceName' => $userAgent->device()->type,
+            'deviceBrand' => $userAgent->device()->brand,
+            'deviceModel' => $userAgent->device()->model,
+        ]
     ));
 
     if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_OAUTH2) {
@@ -994,7 +1005,7 @@ Http::post('/v1/account/sessions/email')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
         $session = new Document(array_merge(
             [
@@ -1022,9 +1033,20 @@ Http::post('/v1/account/sessions/email')
                 'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
-            $detector->getOS(),
-            $detector->getClient(),
-            $detector->getDevice()
+            [
+                'osCode' => $userAgent->operatingSystem()->code ?? '',
+                'osName' => $userAgent->operatingSystem()->name ?? '',
+                'osVersion' => $userAgent->operatingSystem()->version ?? '',
+                'clientType' => $userAgent->client()->type ?? '',
+                'clientCode' => $userAgent->client()->code ?? '',
+                'clientName' => $userAgent->client()->name ?? '',
+                'clientVersion' => $userAgent->client()->version ?? '',
+                'clientEngine' => $userAgent->client()->engine ?? '',
+                'clientEngineVersion' => $userAgent->client()->engineVersion ?? '',
+                'deviceName' => $userAgent->device()->type,
+                'deviceBrand' => $userAgent->device()->brand,
+                'deviceModel' => $userAgent->device()->model,
+            ]
         ));
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -1179,7 +1201,7 @@ Http::post('/v1/account/sessions/anonymous')
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
 
         $session = new Document(array_merge(
@@ -1207,9 +1229,20 @@ Http::post('/v1/account/sessions/anonymous')
                 'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
-            $detector->getOS(),
-            $detector->getClient(),
-            $detector->getDevice()
+            [
+                'osCode' => $userAgent->operatingSystem()->code ?? '',
+                'osName' => $userAgent->operatingSystem()->name ?? '',
+                'osVersion' => $userAgent->operatingSystem()->version ?? '',
+                'clientType' => $userAgent->client()->type ?? '',
+                'clientCode' => $userAgent->client()->code ?? '',
+                'clientName' => $userAgent->client()->name ?? '',
+                'clientVersion' => $userAgent->client()->version ?? '',
+                'clientEngine' => $userAgent->client()->engine ?? '',
+                'clientEngineVersion' => $userAgent->client()->engineVersion ?? '',
+                'deviceName' => $userAgent->device()->type,
+                'deviceBrand' => $userAgent->device()->brand,
+                'deviceModel' => $userAgent->device()->model,
+            ]
         ));
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -2017,7 +2050,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             // If the `token` param is not set, we persist the session in a cookie
         } else {
-            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
             $secret = $proofForToken->generate();
 
             $session = new Document(array_merge([
@@ -2047,7 +2080,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'connectionOrganization' => $geoRecord->getConnectionOrganization(),
                 'isp' => $geoRecord->getIsp(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
-            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            ], [
+                'osCode' => $userAgent->operatingSystem()->code ?? '',
+                'osName' => $userAgent->operatingSystem()->name ?? '',
+                'osVersion' => $userAgent->operatingSystem()->version ?? '',
+                'clientType' => $userAgent->client()->type ?? '',
+                'clientCode' => $userAgent->client()->code ?? '',
+                'clientName' => $userAgent->client()->name ?? '',
+                'clientVersion' => $userAgent->client()->version ?? '',
+                'clientEngine' => $userAgent->client()->engine ?? '',
+                'clientEngineVersion' => $userAgent->client()->engineVersion ?? '',
+                'deviceName' => $userAgent->device()->type,
+                'deviceBrand' => $userAgent->device()->brand,
+                'deviceModel' => $userAgent->device()->model,
+            ]));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
@@ -2414,10 +2460,7 @@ Http::post('/v1/account/tokens/magic-url')
             $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ??
             $project->getAttribute('templates', [])['email.magicSession-' . $locale->fallback] ?? [];
 
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $agentOs = $detector->getOS();
-        $agentClient = $detector->getClient();
-        $agentDevice = $detector->getDevice();
+        $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
@@ -2506,9 +2549,9 @@ Http::post('/v1/account/tokens/magic-url')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'redirect' => $url,
-            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
-            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'agentDevice' => $userAgent->device()->brand ?? 'UNKNOWN',
+            'agentClient' => $userAgent->client()->name ?? 'UNKNOWN',
+            'agentOs' => $userAgent->operatingSystem()->name ?? 'UNKNOWN',
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
@@ -2750,10 +2793,7 @@ Http::post('/v1/account/tokens/email')
 
         $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $agentOs = $detector->getOS();
-        $agentClient = $detector->getClient();
-        $agentDevice = $detector->getDevice();
+        $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
         $message
@@ -2841,9 +2881,9 @@ Http::post('/v1/account/tokens/email')
             'user' => $user->getAttribute('name'),
             'project' => $projectName,
             'otp' => $tokenSecret,
-            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
-            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'agentDevice' => $userAgent->device()->brand ?? 'UNKNOWN',
+            'agentClient' => $userAgent->client()->name ?? 'UNKNOWN',
+            'agentOs' => $userAgent->operatingSystem()->name ?? 'UNKNOWN',
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
@@ -4644,10 +4684,7 @@ Http::post('/v1/account/targets/push')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $detector = new Detector($request->getUserAgent());
-        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-        $device = $detector->getDevice();
+        $userAgent = UserAgent::parse($request->getUserAgent());
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
@@ -4668,7 +4705,7 @@ Http::post('/v1/account/targets/push')
                 'sessionId' => $session->getId(),
                 'sessionInternalId' => $session->getSequence(),
                 'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+                'name' => ($userAgent->device()->brand ?? '') . ' ' . ($userAgent->device()->model ?? '')
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4732,12 +4769,9 @@ Http::put('/v1/account/targets/:targetId/push')
                 ->setAttribute('expired', false);
         }
 
-        $detector = new Detector($request->getUserAgent());
-        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+        $userAgent = UserAgent::parse($request->getUserAgent());
 
-        $device = $detector->getDevice();
-
-        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
+        $target->setAttribute('name', ($userAgent->device()->brand ?? '') . ' ' . ($userAgent->device()->model ?? ''));
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
             'identifier' => $target->getAttribute('identifier'),

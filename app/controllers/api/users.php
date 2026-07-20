@@ -11,7 +11,6 @@ use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Deletes\Identities as DeleteIdentities;
 use Appwrite\Deletes\Targets as DeleteTargets;
-use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -62,6 +61,7 @@ use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Enum;
 use Utopia\System\System;
+use Utopia\UserAgent\UserAgent;
 use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
@@ -2300,7 +2300,7 @@ Http::post('/v1/users/:userId/sessions')
         }
 
         $secret = $proofForToken->generate();
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
@@ -2317,9 +2317,20 @@ Http::post('/v1/users/:userId/sessions')
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => $expire,
             ],
-            $detector->getOS(),
-            $detector->getClient(),
-            $detector->getDevice()
+            [
+                'osCode' => $userAgent->operatingSystem()->code ?? '',
+                'osName' => $userAgent->operatingSystem()->name ?? '',
+                'osVersion' => $userAgent->operatingSystem()->version ?? '',
+                'clientType' => $userAgent->client()->type ?? '',
+                'clientCode' => $userAgent->client()->code ?? '',
+                'clientName' => $userAgent->client()->name ?? '',
+                'clientVersion' => $userAgent->client()->version ?? '',
+                'clientEngine' => $userAgent->client()->engine ?? '',
+                'clientEngineVersion' => $userAgent->client()->engineVersion ?? '',
+                'deviceName' => $userAgent->device()->type,
+                'deviceBrand' => $userAgent->device()->brand,
+                'deviceModel' => $userAgent->device()->model,
+            ]
         ));
 
         $session->setAttribute('$permissions', [

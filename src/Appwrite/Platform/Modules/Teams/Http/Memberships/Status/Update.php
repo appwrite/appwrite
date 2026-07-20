@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
-use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Locale\GeoRecord;
@@ -24,6 +23,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\UserAgent\UserAgent;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -132,7 +132,7 @@ class Update extends Action
         if (!$hasSession) {
             $authorization->addRole(Role::user($targetUser->getId())->toString());
 
-            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
@@ -153,7 +153,20 @@ class Update extends Action
                 'factors' => ['email'],
                 'countryCode' => \strtolower($geoRecord->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
-            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+            ], [
+                'osCode' => $userAgent->operatingSystem()->code ?? '',
+                'osName' => $userAgent->operatingSystem()->name ?? '',
+                'osVersion' => $userAgent->operatingSystem()->version ?? '',
+                'clientType' => $userAgent->client()->type ?? '',
+                'clientCode' => $userAgent->client()->code ?? '',
+                'clientName' => $userAgent->client()->name ?? '',
+                'clientVersion' => $userAgent->client()->version ?? '',
+                'clientEngine' => $userAgent->client()->engine ?? '',
+                'clientEngineVersion' => $userAgent->client()->engineVersion ?? '',
+                'deviceName' => $userAgent->device()->type,
+                'deviceBrand' => $userAgent->device()->brand,
+                'deviceModel' => $userAgent->device()->model,
+            ]));
 
             $session = $dbForProject->createDocument('sessions', $session);
 

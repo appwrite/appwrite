@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\MFA\Type;
-use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
@@ -33,6 +32,7 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
+use Utopia\UserAgent\UserAgent;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -228,10 +228,7 @@ class Create extends Action
 
                 $bodyTemplate = $templatesPath . '/' . $smtpBaseTemplate . '.tpl';
 
-                $detector = new Detector($request->getUserAgent('UNKNOWN'));
-                $agentOs = $detector->getOS();
-                $agentClient = $detector->getClient();
-                $agentDevice = $detector->getDevice();
+                $userAgent = UserAgent::parse($request->getUserAgent('UNKNOWN'));
 
                 $message = Template::fromFile($templatesPath . '/email-mfa-challenge.tpl');
                 $message
@@ -307,9 +304,9 @@ class Create extends Action
                     'user' => $user->getAttribute('name'),
                     'project' => $projectName,
                     'otp' => $code,
-                    'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
-                    'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+                    'agentDevice' => $userAgent->device()->brand ?? 'UNKNOWN',
+                    'agentClient' => $userAgent->client()->name ?? 'UNKNOWN',
+                    'agentOs' => $userAgent->operatingSystem()->name ?? 'UNKNOWN',
                 ];
 
                 if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {

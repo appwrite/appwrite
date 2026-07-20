@@ -1,7 +1,7 @@
 <?php
 
 return [
-    // Codes based on: https://github.com/matomo-org/device-detector/blob/master/Parser/Client/Browser.php
+    // Codes based on: https://github.com/utopia-php/user-agent/blob/main/src/UserAgent/Detection/ClientDetector.php
     'aa' => ['name' => 'Avant Browser', 'path' => __DIR__ . '/browsers/avant.png'],
     'an' => ['name' => 'Android WebView Beta', 'path' => __DIR__ . '/browsers/android-webview-beta.png'],
     'ch' => ['name' => 'Google Chrome', 'path' => __DIR__ . '/browsers/chrome.png'],
