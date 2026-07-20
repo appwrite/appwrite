@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5748e1f0a2a6b943979fd57679d8842c",
+    "content-hash": "03dcb53f5e57936fbdd7fd9a2b87fbad",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4596,16 +4596,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "1.1.0",
+            "version": "1.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "fd5aa7e89685ffc74f9dff3d23c270ef30c7bbf3"
+                "reference": "13346168ca7097d9b220872a017c9ad8c5dac62f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/fd5aa7e89685ffc74f9dff3d23c270ef30c7bbf3",
-                "reference": "fd5aa7e89685ffc74f9dff3d23c270ef30c7bbf3",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/13346168ca7097d9b220872a017c9ad8c5dac62f",
+                "reference": "13346168ca7097d9b220872a017c9ad8c5dac62f",
                 "shasum": ""
             },
             "require": {
@@ -4616,10 +4616,7 @@
                 "swoole/ide-helper": "6.*"
             },
             "suggest": {
-                "ext-mongodb": "Needed to support MongoDB database pools",
-                "ext-pdo": "Needed to support MariaDB, MySQL or SQLite database pools",
-                "ext-redis": "Needed to support Redis cache pools",
-                "ext-swoole": "Needed to support Swoole based pool adapter"
+                "ext-swoole": "Required to use the Swoole pool adapter"
             },
             "type": "library",
             "autoload": {
@@ -4646,9 +4643,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/1.1.0"
+                "source": "https://github.com/utopia-php/pools/tree/1.0.9"
             },
-            "time": "2026-07-17T10:19:09+00:00"
+            "time": "2026-06-26T10:48:18+00:00"
         },
         {
             "name": "utopia-php/preloader",

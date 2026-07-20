@@ -85,7 +85,7 @@
         "utopia-php/messaging": "^2.0",
         "utopia-php/migration": "1.17.*",
         "utopia-php/platform": "^1.0@RC",
-        "utopia-php/pools": "1.*",
+        "utopia-php/pools": "1.0.9",
         "utopia-php/span": "3.0.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "^0.22",
