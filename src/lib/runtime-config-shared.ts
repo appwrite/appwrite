@@ -40,6 +40,25 @@ function readEnvValue(env: EnvRecord, key: string): string {
   return (env[key] ?? '').toString().trim()
 }
 
+export function isSelfHostedConsoleProfile(consoleProfile: string): boolean {
+  return (
+    consoleProfile.toLowerCase().trim().replace(/\s+/g, '-') === 'self-hosted'
+  )
+}
+
+export function shouldWarnAboutMissingAppwriteEndpoint(
+  config: Pick<RuntimeConfig, 'appwriteEndpoint' | 'consoleProfile'>,
+  sameOriginFallback: string,
+): boolean {
+  return (
+    !config.appwriteEndpoint &&
+    !(
+      isSelfHostedConsoleProfile(config.consoleProfile) &&
+      ['1', 'true'].includes(sameOriginFallback.toLowerCase().trim())
+    )
+  )
+}
+
 /**
  * Read the Appwrite API endpoint from env. Accepts VITE_APPWRITE_ENDPOINT (primary),
  * APPWRITE_ENDPOINT, and PUBLIC_APPWRITE_ENDPOINT so Helm/runtime configs that use
@@ -62,8 +81,7 @@ export function resolveAppwriteEndpointFallback(
   consoleProfile: string,
   location?: { protocol: string; host: string },
 ): string {
-  const normalized = consoleProfile.toLowerCase().trim().replace(/\s+/g, '-')
-  if (normalized === 'self-hosted' && location) {
+  if (isSelfHostedConsoleProfile(consoleProfile) && location) {
     return `${location.protocol}//${location.host}/v1`
   }
   return DEFAULT_CLOUD_APPWRITE_ENDPOINT

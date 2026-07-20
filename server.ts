@@ -73,6 +73,7 @@ import {
   injectRuntimeConfigIntoHtml,
   readRuntimeConfigFromEnv,
   serializeRuntimeConfig,
+  shouldWarnAboutMissingAppwriteEndpoint,
 } from './src/lib/runtime-config-shared.ts'
 import {
   applyNoIndexResponseHeaders,
@@ -147,7 +148,12 @@ const log = {
   },
 }
 
-if (!RUNTIME_CONFIG.appwriteEndpoint) {
+if (
+  shouldWarnAboutMissingAppwriteEndpoint(
+    RUNTIME_CONFIG,
+    process.env.APPWRITE_ENDPOINT_SAME_ORIGIN ?? '',
+  )
+) {
   log.warning(
     'VITE_APPWRITE_ENDPOINT (or APPWRITE_ENDPOINT) is not set; the browser will use the cloud default or the current host for self-hosted.',
   )
