@@ -225,12 +225,13 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:0.3.24
+    image: appwrite/new:0.3.32
     restart: unless-stopped
     networks:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - APPWRITE_ENDPOINT_SAME_ORIGIN=true
       - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
@@ -1306,7 +1307,7 @@ services:
           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
             try {
               const hello = db.adminCommand({hello: 1});
-              if (hello.isWritablePrimary) {
+              if (hello.isWritablePrimary && hello.setName === 'rs0') {
                 quit(0);
               }
             } catch (e) {}
