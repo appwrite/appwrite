@@ -51,8 +51,12 @@ const KNOWN_CLIENTS: KnownOAuthClientMatcher[] = [
     iconPath: '/icons/apps/claude.svg',
     // Claude.ai / Desktop / mobile custom connectors register as "claudeai"
     // with a fixed HTTPS callback (claude.com variant is documented too).
+    // The domain pattern also covers CIMD documents hosted on claude.ai.
     namePattern: /^(claude|claudeai|claude\.ai)$/i,
-    uriPatterns: [/^https:\/\/(www\.)?claude\.(ai|com)\/api\/mcp\/auth_callback/i],
+    uriPatterns: [
+      /^https:\/\/(www\.)?claude\.(ai|com)\/api\/mcp\/auth_callback/i,
+      /^https:\/\/(www\.)?(claude|anthropic)\.(ai|com)\/[^?#]*/i,
+    ],
   },
   {
     id: 'opencode',
@@ -124,24 +128,33 @@ const KNOWN_CLIENTS: KnownOAuthClientMatcher[] = [
   },
 ]
 
-function collectAppUris(app: Models.App): string[] {
-  const uris = [...(app.redirectUris ?? [])]
-  if (app.clientUri) uris.push(app.clientUri)
+function collectAppUris(
+  app: Models.App | null,
+  cimdUrl?: string | null,
+): string[] {
+  const uris = [...(app?.redirectUris ?? [])]
+  if (app?.clientUri) uris.push(app.clientUri)
+  // The CIMD URL is where the client's metadata document is hosted, so it
+  // corroborates identity the same way a client/redirect URI does.
+  if (cimdUrl) uris.push(cimdUrl)
   return uris
 }
 
 /**
- * Match a registered OAuth2 app against the known-client registry.
- * Returns null when nothing matches; callers then fall back to the app's
- * own logoUri or the generic placeholder.
+ * Match an OAuth2 client against the known-client registry. Works for
+ * registered apps (DCR or console-created) and URL-form CIMD clients —
+ * pass the consent's `cimdUrl` when available so the document host can
+ * corroborate the name match. Returns null when nothing matches; callers
+ * then fall back to the app's own logoUri or the generic placeholder.
  */
 export function matchKnownOAuthClient(
-  app: Models.App,
+  app: Models.App | null,
+  cimdUrl?: string | null,
 ): KnownOAuthClient | null {
-  const name = app.name?.trim() ?? ''
+  const name = app?.name?.trim() ?? ''
   if (!name) return null
 
-  const uris = collectAppUris(app)
+  const uris = collectAppUris(app, cimdUrl)
 
   for (const client of KNOWN_CLIENTS) {
     if (!client.namePattern.test(name)) continue

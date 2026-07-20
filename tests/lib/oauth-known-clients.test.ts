@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { Models } from '@appwrite.io/console'
 import { matchKnownOAuthClient } from '@/lib/oauth-known-clients'
-import { groupConnectedApps } from '@/lib/react-query/hooks/account-applications'
+import {
+  groupConnectedApps,
+  type AccountConnectedApp,
+} from '@/lib/react-query/hooks/account-applications'
 
 function makeApp(overrides: Partial<Models.App>): Models.App {
   return {
@@ -33,21 +36,48 @@ function makeApp(overrides: Partial<Models.App>): Models.App {
   }
 }
 
-function makeIdentity(overrides: Partial<Models.Identity>): Models.Identity {
+function makeConsent(
+  overrides: Partial<Models.Oauth2Consent>,
+): Models.Oauth2Consent {
   return {
-    $id: 'identity-id',
+    $id: 'consent-id',
     $createdAt: '2026-07-01T00:00:00.000+00:00',
     $updatedAt: '2026-07-01T00:00:00.000+00:00',
     userId: 'user',
-    provider: 'oauth2:app-id',
-    providerUid: '',
-    providerEmail: '',
-    providerAccessToken: '',
-    providerAccessTokenExpiry: '',
-    providerRefreshToken: '',
+    appId: 'app-id',
+    cimdUrl: '',
     scopes: [],
+    resources: [],
+    authorizationDetails: '[]',
+    expire: '',
     ...overrides,
-  } as Models.Identity
+  }
+}
+
+function makeConnectedApp({
+  consentId,
+  createdAt,
+  appId,
+  cimdUrl,
+  app,
+}: {
+  consentId: string
+  createdAt?: string
+  appId?: string
+  cimdUrl?: string
+  app: Models.App | null
+}): AccountConnectedApp {
+  return {
+    consent: makeConsent({
+      $id: consentId,
+      $createdAt: createdAt ?? '2026-07-01T00:00:00.000+00:00',
+      appId: appId ?? '',
+      cimdUrl: cimdUrl ?? '',
+    }),
+    clientId: appId || cimdUrl || '',
+    cimdUrl: cimdUrl || null,
+    app,
+  }
 }
 
 describe('matchKnownOAuthClient', () => {
@@ -90,6 +120,30 @@ describe('matchKnownOAuthClient', () => {
     expect(matchKnownOAuthClient(app)?.id).toBe('opencode')
   })
 
+  it('accepts the CIMD URL as corroboration for a resolved CIMD client', () => {
+    const app = makeApp({ name: 'Claude' })
+    expect(
+      matchKnownOAuthClient(app, 'https://claude.ai/.well-known/client.json')
+        ?.id,
+    ).toBe('claude')
+  })
+
+  it('rejects a CIMD client whose document host does not corroborate the name', () => {
+    const app = makeApp({
+      name: 'Claude',
+      redirectUris: ['https://evil.example.com/callback'],
+    })
+    expect(
+      matchKnownOAuthClient(app, 'https://evil.example.com/client.json'),
+    ).toBeNull()
+  })
+
+  it('returns null without resolved metadata even when a CIMD URL is present', () => {
+    expect(
+      matchKnownOAuthClient(null, 'https://claude.ai/.well-known/client.json'),
+    ).toBeNull()
+  })
+
   it('returns null for unknown clients', () => {
     const app = makeApp({ name: 'Some Random App' })
     expect(matchKnownOAuthClient(app)).toBeNull()
@@ -106,30 +160,28 @@ describe('groupConnectedApps', () => {
 
   it('groups duplicate DCR registrations and sorts newest first', () => {
     const grants = [
-      {
-        identity: makeIdentity({
-          $id: 'i1',
-          $createdAt: '2026-07-01T00:00:00.000+00:00',
-        }),
+      makeConnectedApp({
+        consentId: 'c1',
+        createdAt: '2026-07-01T00:00:00.000+00:00',
         appId: 'a1',
         app: claudeApp('a1'),
-      },
-      {
-        identity: makeIdentity({
-          $id: 'i2',
-          $createdAt: '2026-07-10T00:00:00.000+00:00',
-        }),
+      }),
+      makeConnectedApp({
+        consentId: 'c2',
+        createdAt: '2026-07-10T00:00:00.000+00:00',
         appId: 'a2',
         app: claudeApp('a2'),
-      },
-      {
-        identity: makeIdentity({
-          $id: 'i3',
-          $createdAt: '2026-07-05T00:00:00.000+00:00',
-        }),
+      }),
+      makeConnectedApp({
+        consentId: 'c3',
+        createdAt: '2026-07-05T00:00:00.000+00:00',
         appId: 'a3',
-        app: makeApp({ $id: 'a3', name: 'Cursor', logoUri: 'https://cursor.com/logo.png' }),
-      },
+        app: makeApp({
+          $id: 'a3',
+          name: 'Cursor',
+          logoUri: 'https://cursor.com/logo.png',
+        }),
+      }),
     ]
 
     const groups = groupConnectedApps(grants)
@@ -137,7 +189,7 @@ describe('groupConnectedApps', () => {
 
     // Groups ordered by most recent authorization.
     expect(groups[0].displayName).toBe('Claude Code (appwrite)')
-    expect(groups[0].grants.map((g) => g.identity.$id)).toEqual(['i2', 'i1'])
+    expect(groups[0].grants.map((g) => g.consent.$id)).toEqual(['c2', 'c1'])
     expect(groups[0].latestAuthorizedAt).toBe('2026-07-10T00:00:00.000+00:00')
     expect(groups[0].knownClient?.id).toBe('claude-code')
 
@@ -147,8 +199,8 @@ describe('groupConnectedApps', () => {
 
   it('keeps unresolved apps as their own rows keyed by app ID', () => {
     const grants = [
-      { identity: makeIdentity({ $id: 'i1' }), appId: 'x1', app: null },
-      { identity: makeIdentity({ $id: 'i2' }), appId: 'x2', app: null },
+      makeConnectedApp({ consentId: 'c1', appId: 'x1', app: null }),
+      makeConnectedApp({ consentId: 'c2', appId: 'x2', app: null }),
     ]
     const groups = groupConnectedApps(grants)
     expect(groups).toHaveLength(2)
@@ -157,19 +209,82 @@ describe('groupConnectedApps', () => {
 
   it('groups same-name apps even without a known-client match', () => {
     const grants = [
-      {
-        identity: makeIdentity({ $id: 'i1' }),
+      makeConnectedApp({
+        consentId: 'c1',
         appId: 'b1',
         app: makeApp({ $id: 'b1', name: 'My MCP Tool' }),
-      },
-      {
-        identity: makeIdentity({ $id: 'i2' }),
+      }),
+      makeConnectedApp({
+        consentId: 'c2',
         appId: 'b2',
         app: makeApp({ $id: 'b2', name: 'my mcp tool ' }),
-      },
+      }),
     ]
     const groups = groupConnectedApps(grants)
     expect(groups).toHaveLength(1)
     expect(groups[0].grants).toHaveLength(2)
+  })
+
+  it('keys CIMD consents by their URL and falls back to the host as display name', () => {
+    const grants = [
+      makeConnectedApp({
+        consentId: 'c1',
+        cimdUrl: 'https://tool.example.com/oauth/client.json',
+        app: null,
+      }),
+      makeConnectedApp({
+        consentId: 'c2',
+        cimdUrl: 'https://other.example.com/client.json',
+        app: makeApp({ $id: '', name: 'Other Tool' }),
+      }),
+    ]
+    const groups = groupConnectedApps(grants)
+    expect(groups).toHaveLength(2)
+    expect(groups[0].key).toBe('cimd:https://tool.example.com/oauth/client.json')
+    expect(groups[0].displayName).toBe('tool.example.com')
+    expect(groups[1].displayName).toBe('Other Tool')
+  })
+
+  it('does not merge a CIMD client with a registered app of the same name', () => {
+    const grants = [
+      makeConnectedApp({
+        consentId: 'c1',
+        cimdUrl: 'https://tool.example.com/client.json',
+        app: makeApp({ $id: '', name: 'My MCP Tool' }),
+      }),
+      makeConnectedApp({
+        consentId: 'c2',
+        appId: 'b1',
+        app: makeApp({ $id: 'b1', name: 'My MCP Tool' }),
+      }),
+    ]
+    const groups = groupConnectedApps(grants)
+    expect(groups).toHaveLength(2)
+  })
+
+  it('keeps distinct CIMD URLs separate even when they match the same known client', () => {
+    // Two different metadata documents on claude.ai both resolve to the
+    // canonical "Claude" client, but they are distinct clients and must not
+    // share a revoke-all row.
+    const grants = [
+      makeConnectedApp({
+        consentId: 'c1',
+        cimdUrl: 'https://claude.ai/mcp/one/client.json',
+        app: makeApp({ $id: '', name: 'Claude' }),
+      }),
+      makeConnectedApp({
+        consentId: 'c2',
+        cimdUrl: 'https://claude.ai/mcp/two/client.json',
+        app: makeApp({ $id: '', name: 'Claude' }),
+      }),
+    ]
+    const groups = groupConnectedApps(grants)
+    expect(groups).toHaveLength(2)
+    // Known-client matching still drives display (icon + canonical name).
+    expect(groups.every((g) => g.knownClient?.id === 'claude')).toBe(true)
+    expect(groups.map((g) => g.key).sort()).toEqual([
+      'cimd:https://claude.ai/mcp/one/client.json',
+      'cimd:https://claude.ai/mcp/two/client.json',
+    ])
   })
 })
