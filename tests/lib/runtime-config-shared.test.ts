@@ -18,30 +18,51 @@ describe('isSelfHostedConsoleProfile', () => {
 })
 
 describe('shouldWarnAboutMissingAppwriteEndpoint', () => {
-  it('does not warn when self-hosted uses same-origin discovery', () => {
+  it('does not warn when self-hosted explicitly uses same-origin discovery', () => {
     expect(
-      shouldWarnAboutMissingAppwriteEndpoint({
-        appwriteEndpoint: '',
-        consoleProfile: 'self-hosted',
-      }),
+      shouldWarnAboutMissingAppwriteEndpoint(
+        {
+          appwriteEndpoint: '',
+          consoleProfile: 'self-hosted',
+        },
+        'true',
+      ),
     ).toBe(false)
+  })
+
+  it('warns when self-hosted has not opted into same-origin discovery', () => {
+    expect(
+      shouldWarnAboutMissingAppwriteEndpoint(
+        {
+          appwriteEndpoint: '',
+          consoleProfile: 'self-hosted',
+        },
+        '',
+      ),
+    ).toBe(true)
   })
 
   it('warns when cloud has no configured endpoint', () => {
     expect(
-      shouldWarnAboutMissingAppwriteEndpoint({
-        appwriteEndpoint: '',
-        consoleProfile: 'cloud',
-      }),
+      shouldWarnAboutMissingAppwriteEndpoint(
+        {
+          appwriteEndpoint: '',
+          consoleProfile: 'cloud',
+        },
+        '',
+      ),
     ).toBe(true)
   })
 
   it('does not warn when an endpoint is configured', () => {
     expect(
-      shouldWarnAboutMissingAppwriteEndpoint({
-        appwriteEndpoint: 'https://cloud.appwrite.io/v1',
-        consoleProfile: 'cloud',
-      }),
+      shouldWarnAboutMissingAppwriteEndpoint(
+        {
+          appwriteEndpoint: 'https://cloud.appwrite.io/v1',
+          consoleProfile: 'cloud',
+        },
+        '',
+      ),
     ).toBe(false)
   })
 })

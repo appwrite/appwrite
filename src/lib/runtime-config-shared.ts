@@ -48,10 +48,14 @@ export function isSelfHostedConsoleProfile(consoleProfile: string): boolean {
 
 export function shouldWarnAboutMissingAppwriteEndpoint(
   config: Pick<RuntimeConfig, 'appwriteEndpoint' | 'consoleProfile'>,
+  sameOriginFallback: string,
 ): boolean {
   return (
     !config.appwriteEndpoint &&
-    !isSelfHostedConsoleProfile(config.consoleProfile)
+    !(
+      isSelfHostedConsoleProfile(config.consoleProfile) &&
+      ['1', 'true'].includes(sameOriginFallback.toLowerCase().trim())
+    )
   )
 }
 
