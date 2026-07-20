@@ -5,6 +5,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
+use Appwrite\Deployment\Backend;
 use Appwrite\Deployment\Backend\Executor as ExecutorBackend;
 use Appwrite\Deployment\Backend\Orchestrator;
 use Appwrite\Event\Context\Audit as AuditContext;
@@ -196,11 +197,14 @@ return function (Container $context): void {
         $publisher,
         new Queue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME), 'utopia-queue', Event::FUNCTIONS_QUEUE_TTL)
     ), ['publisher']);
-    $context->set('deployments', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Database $dbForProject, Document $project, Executor $executor, array $platform) {
-        return System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
+    // Builds a Backend bound to a given project — webhook handlers resolve
+    // their tenant projects mid-request, after this container is initialized.
+    $context->set('deploymentsFactory', function (BuildPublisher $publisherForBuilds, Jobs $jobs, Executor $executor, array $platform) {
+        return fn (Database $dbForProject, Document $project): Backend => System::getEnv('_APP_BUILDS_BACKEND', 'executor') === 'orchestrator'
             ? new Orchestrator($jobs, $dbForProject, $project, $platform)
             : new ExecutorBackend($publisherForBuilds, $dbForProject, $project, $executor, $platform);
-    }, ['publisherForBuilds', 'jobs', 'dbForProject', 'project', 'executor', 'platform']);
+    }, ['publisherForBuilds', 'jobs', 'executor', 'platform']);
+    $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
     $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
         $pools,

@@ -2,9 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
-use Appwrite\Deployment\Backend;
-use Appwrite\Event\Message\Build as BuildMessage;
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
@@ -47,10 +44,9 @@ trait Deployment
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
-        ?Backend $deployments = null,
+        callable $deploymentsFactory,
     ) {
         $errors = [];
         $provider = $vcs->getName();
@@ -393,37 +389,15 @@ trait Deployment
                     'activate' => $activate,
                 ]);
 
-                // Build function deployments through $deployments (executor
-                // or jobs-service, decided by _APP_BUILDS_BACKEND) when the
-                // caller opts in. Sites always stay on the executor.
-                if ($deployments !== null && $resourceCollection === 'functions') {
-                    $deployment = $authorization->skip(fn () => $deployments
-                        ->forProject($dbForProject, $project)
-                        ->createFromUrl(
-                            $resource,
-                            $deployment,
-                            $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
-                            $resource->getAttribute('providerRootDirectory', ''),
-                        ));
-                } else {
-                    $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::any()),
-                            Permission::update(Role::any()),
-                            Permission::delete(Role::any()),
-                        ],
-                        ...$deployment->getArrayCopy(),
-                        'status' => 'waiting',
-                    ])));
-
-                    $publisherForBuilds->enqueue(new BuildMessage(
-                        project: $project,
-                        resource: $resource,
-                        deployment: $deployment,
-                        type: BUILD_TYPE_DEPLOYMENT,
-                        platform: $platform,
+                // The Backend is built per repository: a webhook fans out to
+                // many tenant projects, each with its own database.
+                $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
+                    ->createFromUrl(
+                        $resource,
+                        $deployment,
+                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                        $resource->getAttribute('providerRootDirectory', ''),
                     ));
-                }
 
                 if ($resource->getCollection() === 'sites') {
                     $projectId = $project->getId();

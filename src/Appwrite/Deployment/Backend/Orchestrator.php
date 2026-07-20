@@ -40,7 +40,7 @@ use Utopia\System\System;
  */
 readonly class Orchestrator extends Backend
 {
-    final public function __construct(
+    public function __construct(
         private Jobs $jobs,
         Database $dbForProject,
         Document $project,
@@ -49,10 +49,6 @@ readonly class Orchestrator extends Backend
         parent::__construct($dbForProject, $project);
     }
 
-    public function forProject(Database $dbForProject, Document $project): static
-    {
-        return new static($this->jobs, $dbForProject, $project, $this->platform);
-    }
 
     public function createFromUpload(Document $resource, Document $deployment): Document
     {

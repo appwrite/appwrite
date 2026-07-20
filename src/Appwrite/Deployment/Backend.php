@@ -25,11 +25,6 @@ abstract readonly class Backend
     }
 
     /**
-     * Return a backend bound to a project resolved after request initialization.
-     */
-    abstract public function forProject(Database $dbForProject, Document $project): static;
-
-    /**
      * Saves chunked-upload progress onto the deployment — source path/size,
      * chunk counters, metadata. Never triggers a build; call createFromUpload()
      * once the upload is complete. Pass a single `Document` carrying every field
