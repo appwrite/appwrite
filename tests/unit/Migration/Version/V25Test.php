@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Migration\Version;
 
-use Appwrite\Migration\Version\V26;
+use Appwrite\Migration\Version\V25;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
 use Utopia\Migration\Resource;
 
-final class V26Test extends TestCase
+final class V25Test extends TestCase
 {
     public function testPreservesLegacyResourceWhenInternalIdsCannotBeResolved(): void
     {
-        $migration = new class () extends V26 {
+        $migration = new class () extends V25 {
             public function __construct()
             {
             }
@@ -50,7 +50,7 @@ final class V26Test extends TestCase
 
     public function testRerunResolvesMissingInternalIdsIdempotently(): void
     {
-        $migration = new class () extends V26 {
+        $migration = new class () extends V25 {
             /**
              * @var array{parentResourceInternalId?: string, resourceInternalId?: string}
              */
@@ -123,7 +123,7 @@ final class V26Test extends TestCase
 
     public function testRejectsResourcesCreatedAfterMigration(): void
     {
-        $migration = new class () extends V26 {
+        $migration = new class () extends V25 {
             public function __construct()
             {
             }
