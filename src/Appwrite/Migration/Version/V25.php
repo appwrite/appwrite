@@ -200,13 +200,13 @@ class V25 extends Migration
         }
 
         if (
-            $document->getAttribute('parentResourceInternalId', '') === ''
+            (string) $document->getAttribute('parentResourceInternalId', '') === ''
             && isset($internalIds['parentResourceInternalId'])
         ) {
             $document->setAttribute('parentResourceInternalId', $internalIds['parentResourceInternalId']);
         }
         if (
-            $document->getAttribute('resourceInternalId', '') === ''
+            (string) $document->getAttribute('resourceInternalId', '') === ''
             && isset($internalIds['resourceInternalId'])
         ) {
             $document->setAttribute('resourceInternalId', $internalIds['resourceInternalId']);

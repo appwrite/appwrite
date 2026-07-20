@@ -33,7 +33,9 @@ final class V25Test extends TestCase
             '$id' => 'migration',
             '$collection' => 'migrations',
             'resourceId' => 'database:collection',
+            'resourceInternalId' => null,
             'resourceType' => Resource::TYPE_DATABASE,
+            'parentResourceInternalId' => null,
         ]);
 
         $result = $migration->migrate($document);
@@ -84,7 +86,9 @@ final class V25Test extends TestCase
             '$id' => 'migration',
             '$collection' => 'migrations',
             'resourceId' => 'database:collection',
+            'resourceInternalId' => null,
             'resourceType' => Resource::TYPE_DATABASE,
+            'parentResourceInternalId' => null,
         ]);
 
         $migration->migrate($document);
