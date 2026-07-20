@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f007708a2c4301c72ae22feadcad6c8f",
+    "content-hash": "f1d913d8ccc683139c24d76d7d697e97",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1147,16 +1147,16 @@
         },
         {
             "name": "open-runtimes/sdk-for-php",
-            "version": "0.6.0",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/sdk-for-php.git",
-                "reference": "17776aeee6321a05e83ab2704e410f8fd8ffd9cf"
+                "reference": "ad80f366bdb0ec79ff22a58efc657d8f1a4154a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/17776aeee6321a05e83ab2704e410f8fd8ffd9cf",
-                "reference": "17776aeee6321a05e83ab2704e410f8fd8ffd9cf",
+                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/ad80f366bdb0ec79ff22a58efc657d8f1a4154a2",
+                "reference": "ad80f366bdb0ec79ff22a58efc657d8f1a4154a2",
                 "shasum": ""
             },
             "require": {
@@ -1184,9 +1184,9 @@
             "description": "PHP SDK for the Open Runtimes orchestrator Jobs API.",
             "support": {
                 "issues": "https://github.com/open-runtimes/sdk-for-php/issues",
-                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.6.0"
+                "source": "https://github.com/open-runtimes/sdk-for-php/tree/0.7.0"
             },
-            "time": "2026-07-17T09:11:17+00:00"
+            "time": "2026-07-20T14:46:08+00:00"
         },
         {
             "name": "open-telemetry/api",
