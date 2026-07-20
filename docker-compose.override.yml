@@ -1,4 +1,8 @@
 services:
+  appwrite-console:
+    environment:
+      - VITE_APPWRITE_ENDPOINT=http://localhost/v1
+
   appwrite:
     build:
       context: .
