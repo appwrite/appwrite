@@ -74,6 +74,48 @@ final class BuildsTest extends TestCase
         $this->assertSame("\n./index.html\n./server/entry.mjs\n", $result['detectionLogs']);
     }
 
+    public function testSplitSiteDetectionLogsKeepsLogsWhenDetectionBlockWasTruncated(): void
+    {
+        $result = $this->callBuilds(
+            'splitSiteDetectionLogs',
+            "before\n{APPWRITE_DETECTION_SEPARATOR_START}\n./index.html\n"
+        );
+
+        $this->assertSame("before\n", $result['logs']);
+        $this->assertSame('', $result['detectionLogs']);
+    }
+
+    public function testExtractSiteDetectionLogsCollectsCompleteBlockAcrossChunks(): void
+    {
+        $insideSeparation = false;
+        $pendingDetectionLogs = '';
+        $detectionLogs = '';
+
+        $visibleLogs = $this->callBuildsByRef('extractSiteDetectionLogs', [
+            "before\n{APPWRITE_DETECTION_SEPARATOR_START}\n./index.html\n",
+            &$insideSeparation,
+            &$pendingDetectionLogs,
+            &$detectionLogs,
+        ]);
+
+        $this->assertSame("before\n", $visibleLogs);
+        $this->assertTrue($insideSeparation);
+        $this->assertSame("\n./index.html\n", $pendingDetectionLogs);
+        $this->assertSame('', $detectionLogs);
+
+        $visibleLogs = $this->callBuildsByRef('extractSiteDetectionLogs', [
+            "./server/entry.mjs\n{APPWRITE_DETECTION_SEPARATOR_END}\nafter\n",
+            &$insideSeparation,
+            &$pendingDetectionLogs,
+            &$detectionLogs,
+        ]);
+
+        $this->assertSame("\nafter\n", $visibleLogs);
+        $this->assertFalse($insideSeparation);
+        $this->assertSame('', $pendingDetectionLogs);
+        $this->assertSame("\n./index.html\n./server/entry.mjs\n", $detectionLogs);
+    }
+
     public function testDetectSiteRenderingFindsStaticFallbackFile(): void
     {
         $detection = $this->callBuilds('detectSiteRendering', 'other', "./main.html\n");
@@ -167,5 +209,10 @@ final class BuildsTest extends TestCase
     private function callBuilds(string $method, mixed ...$arguments): mixed
     {
         return (new ReflectionMethod($this->builds, $method))->invoke($this->builds, ...$arguments);
+    }
+
+    private function callBuildsByRef(string $method, array $arguments): mixed
+    {
+        return (new ReflectionMethod($this->builds, $method))->invokeArgs($this->builds, $arguments);
     }
 }
