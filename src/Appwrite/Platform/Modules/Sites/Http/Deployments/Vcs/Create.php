@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Vcs;
 
+use Appwrite\Deployment\Backend;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -76,6 +77,7 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('authorization')
+            ->inject('deployments')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -94,6 +96,7 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Authorization $authorization,
+        Backend $deployments,
         array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -122,6 +125,7 @@ class Create extends Base
             vcs: $vcsFactory->fromInstallation($installation),
             activate: $activate,
             authorization: $authorization,
+            deployments: $deployments,
             reference: $reference,
             referenceType: $type,
             platform: $platform

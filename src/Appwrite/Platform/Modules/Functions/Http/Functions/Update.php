@@ -329,7 +329,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $platform, deployments: $deployments);
+            $this->redeployVcsFunction($request, $function, $project, $installation, $dbForProject, $publisherForBuilds, new Document(), $vcsFactory->fromInstallation($installation), true, $deployments, $platform);
         }
 
         // Inform scheduler if function is still active
