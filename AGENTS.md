@@ -1314,7 +1314,7 @@ Console uses **team** (organization) and **user** (account) preferences to store
 ### Key format
 
 - **Pattern**: `console.<feature>.<optionalSubKey>`
-- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `account.organization` (user-level).
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `organization` (preferred org on account prefs).
 - **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
 
 ### Value format
@@ -1329,9 +1329,12 @@ Console uses **team** (organization) and **user** (account) preferences to store
 
 ### Adding a new setting
 
-1. Define the key (and max length/format) in code (e.g. `src/lib/team-prefs-keys.ts`).
+1. Define the key (and max length/format) in code (e.g. `src/lib/user-prefs-keys.ts` or `src/lib/team-prefs-keys.ts`).
 2. Provide `parse*` / `build*` helpers that read from `prefs[key]` and return a merged `prefs` object for updates.
-3. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+3. Register the key in `src/lib/prefs-catalog.ts` (`PREFS_CATALOG`) with scope, description, and category so the debug Prefs panel can classify it as known (green) vs unknown (red).
+4. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+
+**Catalog**: `src/lib/prefs-catalog.ts` is the single enumeration of managed account/team preference keys. Exact keys and dynamic prefixes (e.g. `console.savedFilters.<scope>`) both belong there. The debug menu Prefs structured view reads from this catalog.
 
 ### User prefs: saved filter presets
 

@@ -57,6 +57,7 @@ export const hePricingDictionary: Record<string, string> = {
   '2 (Shared resources)': '2 (משאבים משותפים)',
   '2 GB': '2 GB',
   '2 per project': '2 לפרויקט',
+  '50 per project': '50 לפרויקט',
   '2-core (dedicated)': '2 ליבות (ייעודי)',
   '2-core (shared)': '2 ליבות (משותף)',
   '200,000 monthly active users': '200,000 משתמשים פעילים חודשיים',
@@ -117,6 +118,7 @@ export const hePricingDictionary: Record<string, string> = {
   'Fewer systems to integrate, secure, and maintain':
     'פחות מערכות לשלב, לאבטח ולתחזק',
   'Firewall': 'Firewall',
+  'Firewall rules': 'כללי חומת אש',
   'Fixed monthly compute tiers with reserved CPU, memory, and connections. See Database pricing for tier details and add-ons.':
     'רמות מחשוב חודשיות קבועות עם CPU, זיכרון וחיבורים שמורים. לפרטי רמות ותוספות, ראו תמחור מסדי נתונים.',
   'Free projects are paused after 1 week of inactivity. Limit of 2 projects.':

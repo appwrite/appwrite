@@ -116,6 +116,7 @@ import {
   useProjectTableIndexes,
   fetchConsoleAccount,
   syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
 } from '@/lib/react-query/hooks'
 import {
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
@@ -3620,9 +3621,7 @@ export function RowsSpreadsheet({
           tableId,
           pruned,
         )
-        const updatedAccount = await sdk.forConsole.account.updatePrefs({
-          prefs,
-        })
+        const updatedAccount = await updateAccountPrefs(prefs)
         syncConsoleAccountAfterMutation(queryClient, {
           apiResult: updatedAccount,
         })
@@ -7333,13 +7332,13 @@ export function TableSettings({
           databaseId,
           tableId,
         )
-        const updatedAccount = await sdk.forConsole.account.updatePrefs({
-          prefs: deleteTablesDbRowsListColumnsFromPrefs(
+        const updatedAccount = await updateAccountPrefs(
+          deleteTablesDbRowsListColumnsFromPrefs(
             prefsAfterWidths,
             databaseId,
             tableId,
           ),
-        })
+        )
         syncConsoleAccountAfterMutation(queryClient, {
           apiResult: updatedAccount,
         })

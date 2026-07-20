@@ -33,6 +33,7 @@ import {
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { CookieConsentProvider } from '@/components/global/providers/CookieConsent'
+import { CommunitySupportPromptProvider } from '@/components/global/providers/CommunitySupportPromptProvider'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
@@ -476,6 +477,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                               </PromoBannerProvider>
                             </DocsPreviewProvider>
                           )}
+                          <ClientOnly>
+                            <CommunitySupportPromptProvider />
+                          </ClientOnly>
                         </ConsoleRightPaneProvider>
                       </DebugModeProvider>
                     </SentryContextProvider>

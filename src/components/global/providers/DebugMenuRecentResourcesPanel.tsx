@@ -11,7 +11,11 @@ import {
   getRecentResourceSiteFramework,
   type RecentResource,
 } from '@/lib/command-center'
-import { RECENT_RESOURCES_STORAGE_KEY } from '@/lib/command-center/recent-resources'
+import {
+  RECENT_RESOURCES_MAX_SHOWN,
+  RECENT_RESOURCES_MAX_STORED,
+  RECENT_RESOURCES_STORAGE_KEY,
+} from '@/lib/command-center/recent-resources'
 
 function formatViewedAt(viewedAt: number): string {
   return new Date(viewedAt).toLocaleString()
@@ -89,9 +93,27 @@ export function DebugMenuRecentResourcesPanel() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 px-3 py-2.5 text-[11px]">
-        <span className="text-[var(--network-globe-edge)]/80">Entries</span>
-        <span className="font-medium text-foreground">{resources.length}</span>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 px-3 py-2.5 text-[11px]">
+          <span className="text-[var(--network-globe-edge)]/80">Entries</span>
+          <span className="font-medium text-foreground">{resources.length}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 px-3 py-2.5 text-[11px]">
+          <span className="text-[var(--network-globe-edge)]/80">
+            Max stored
+          </span>
+          <span className="font-medium text-foreground">
+            {RECENT_RESOURCES_MAX_STORED}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40 px-3 py-2.5 text-[11px]">
+          <span className="text-[var(--network-globe-edge)]/80">
+            Max shown
+          </span>
+          <span className="font-medium text-foreground">
+            {RECENT_RESOURCES_MAX_SHOWN}
+          </span>
+        </div>
       </div>
 
       {resources.length === 0 ? (

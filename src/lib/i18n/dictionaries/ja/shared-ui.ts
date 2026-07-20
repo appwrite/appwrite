@@ -157,6 +157,35 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Invalid JSON format': '無効な JSON 形式です',
   'Invalid format': '無効な形式です',
   'Join 24k+ developers': '24,000人以上の開発者に参加',
+  'Skip for now': '今はスキップ',
+  'Help other Appwriters on Discord and grow with the community.':
+    'Discord で他の Appwriters を助け、コミュニティと一緒に成長しましょう。',
+  'Star us on GitHub': 'GitHub でスターする',
+  'A star helps more developers discover Appwrite.':
+    'スターがあると、より多くの開発者が Appwrite を見つけやすくなります。',
+  'Spread the word on X': 'X で広める',
+  'Tell others what you are building with Appwrite.':
+    'Appwrite で作っていることをほかの人に伝えましょう。',
+  'Write content': 'コンテンツを書く',
+  'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
+    '開発者が Appwrite を発見できるブログ、動画、チュートリアルを公開しましょう。',
+  'Build integrations': 'インテグレーションを作る',
+  'Connect Appwrite to the tools your stack already uses.':
+    'すでにお使いのスタックのツールに Appwrite をつなげましょう。',
+  'A note from the team': 'チームからのメッセージ',
+  'Hey,': 'こんにちは。',
+  'Sorry to interrupt. We know you came here to build, not to read a message from us.':
+    '作業の途中で失礼します。ここに来たのは開発のためで、私たちのメッセージを読むためではないことは分かっています。',
+  'We are a product-obsessed team. Our job is to make Appwrite something you love building on. The part we cannot do alone is spreading the word and welcoming the next wave of developers.':
+    '私たちはプロダクトにこだわるチームです。Appwrite を、開発の基盤として愛されるものにすること。一人ではできないのは、次の開発者への広がりと歓迎です。',
+  'If you have a minute, here is how you can help. If not, skip and get back to work.':
+    '少し時間があれば、次のような形で応援できます。なければスキップして作業に戻ってください。',
+  'Write something true to your experience, or start from one of these examples.':
+    'ご自身の体験に沿って書くか、下の例から始めてください。',
+  'Try another example': '別の例を試す',
+  'Share message': '共有メッセージ',
+  'Spread the word': '広める',
+  'Thank you for building with us.': '一緒に作ってくれてありがとう。',
   'Just now': 'たった今',
   'Ago relative time': '前',
   'In relative time': '後',

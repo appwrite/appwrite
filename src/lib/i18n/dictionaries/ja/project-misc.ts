@@ -126,6 +126,17 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search logs...': 'ログを検索...',
   'Create rule': 'ルールの作成',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'No API firewall rules': 'API のファイアウォールルールがありません',
+  'No function firewall rules': 'Functions のファイアウォールルールがありません',
+  'No site firewall rules': 'サイトのファイアウォールルールがありません',
+  'Create a firewall rule for your project API to protect it from malicious requests.':
+    '悪意のあるリクエストから保護するため、プロジェクト API 向けのファイアウォールルールを作成してください。',
+  'Create a firewall rule scoped to a function to control how it handles requests.':
+    'リクエストの扱いを制御するため、Function 向けのファイアウォールルールを作成してください。',
+  'Create a firewall rule scoped to a site to control how it handles requests.':
+    'リクエストの扱いを制御するため、サイト向けのファイアウォールルールを作成してください。',
+  'Firewall rule scope': 'ファイアウォールルールの対象',
+  API: 'API',
   'Firewall protection': 'Firewall 保護',
   'Firewall is evaluating rules against incoming traffic for this project.':
     'このプロジェクトの受信トラフィックに対して Firewall がルールを評価しています。',
@@ -1608,6 +1619,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "The full key value isn't shown here. Find this key in the API keys list to view and copy it.": '完全なキー値はここには表示されません。表示してコピーするには、API キー一覧でこのキーを見つけてください。',
   'Select the scopes this API key will have access to.': 'この API キーがアクセスできるスコープを選択してください。',
   'Connect this project, then complete each product area - one clear action at a time.': 'このプロジェクトを接続し、各プロダクト領域を 1 つずつ明確なアクションで完了しましょう。',
+  "We're focused on building a product Appwriters love. The best way we grow is when the community helps spread the word.":
+    '私たちは Appwriters に愛されるプロダクトづくりに集中しています。成長の最善の道は、コミュニティが口コミで広めてくれることです。',
   'Register where your app runs and add API credentials so your code can call Appwrite.': 'アプリの実行場所を登録し、コードから Appwrite を呼び出せるように API 認証情報を追加します。',
   "Map your app's hostname or bundle ID so the SDK can reach this project.": 'SDK がこのプロジェクトに到達できるように、アプリのホスト名またはバンドル ID を紐付けます。',
   'Add a scoped secret for servers and CI; client apps use sessions instead.': 'サーバーと CI 用にスコープ付きシークレットを追加します。クライアントアプリでは代わりにセッションを使用します。',
@@ -1649,6 +1662,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Checklist complete. You\\u2019ve got this.': 'チェックリストが完了しました。準備は万端です。',
   'You did it - your stack is ready when you are.': '完了です。準備ができ次第、このスタックを使い始められます。',
   'All green - now go make something people love.': 'すべて完了です。ユーザーに愛されるものを作りましょう。',
+  'You\u2019re ready - and the community helps Appwrite grow.':
+    '準備は整いました。コミュニティが Appwrite の成長を支えています。',
   'Turn your ideas into functional products with the most complete AI builder ever made.': 'これまでで最も充実した AI ビルダーで、アイデアを実用的なプロダクトに変えましょう。',
   'Organize and discover recipes with AI suggestions': 'AI の提案でレシピを整理して見つける',
   'Kanban-style project management with automations': '自動化付きのカンバン形式プロジェクト管理',

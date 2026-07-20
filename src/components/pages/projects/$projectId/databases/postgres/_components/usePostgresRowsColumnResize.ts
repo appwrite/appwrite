@@ -11,8 +11,8 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
   fetchConsoleAccount,
   syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
 } from '@/lib/react-query/hooks/auth'
-import { sdk } from '@/lib/appwrite/sdk'
 import {
   getDatabaseTableRowColumnWidthsFromPrefs,
   mergeDatabaseTableRowColumnWidthsTableIntoPrefs,
@@ -164,7 +164,7 @@ export function usePostgresRowsColumnResize(
           tableId,
           pruned,
         )
-        const updatedAccount = await sdk.forConsole.account.updatePrefs({ prefs })
+        const updatedAccount = await updateAccountPrefs(prefs)
         syncConsoleAccountAfterMutation(queryClient, {
           apiResult: updatedAccount,
         })

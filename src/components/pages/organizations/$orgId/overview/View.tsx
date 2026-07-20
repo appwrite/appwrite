@@ -67,6 +67,7 @@ import {
   useUpdateMembershipRole,
   useRemoveTeamMember,
   syncConsoleAccountAfterMutation,
+  updateAccountPrefs,
   mapProjectToListItem,
   useProjectListPlatforms,
   useProjectListRequestsUsage,
@@ -1064,10 +1065,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       const accountPrefs = (
         account as { prefs?: Record<string, unknown> } | null | undefined
       )?.prefs
-      return await sdk.forConsole.account.updatePrefs({
-        prefs: {
-          ...accountPrefs,
-          organization: orgId}})
+      return await updateAccountPrefs({
+        ...accountPrefs,
+        organization: orgId,
+      })
     },
     onMutate: (orgId) => {
       queryClient.setQueriesData<{ prefs?: Record<string, unknown> }>(

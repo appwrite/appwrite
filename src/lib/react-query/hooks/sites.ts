@@ -94,7 +94,7 @@ export async function fetchProjectSite(
   return await projectSdk.sites.get({ siteId })
 }
 
-/** Fetch up to 8 sites by ID in a single list call (overview compute breakdown). */
+/** Fetch sites by ID in a single list call. */
 export async function fetchProjectSitesByIds(
   projectId: string,
   siteIds: string[],
@@ -105,7 +105,7 @@ export async function fetchProjectSitesByIds(
 
   const validIds = [
     ...new Set(siteIds.filter((id) => typeof id === 'string' && id.trim())),
-  ].slice(0, 8)
+  ]
   if (validIds.length === 0) {
     return { sites: [] }
   }

@@ -52,6 +52,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
     )
 
     await Promise.all([
+      // Default rules tab (API) + unfiltered total for plan limit checks.
+      queryClient.ensureQueryData(
+        firewallRulesQueryOptions(
+          projectId,
+          0,
+          DEFAULT_PAGE_SIZE,
+          undefined,
+          'api',
+        ),
+      ),
       queryClient.ensureQueryData(
         firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
       ),

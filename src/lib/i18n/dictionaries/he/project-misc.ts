@@ -77,6 +77,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Connect your app first.': 'חברו את האפליקציה שלכם תחילה.',
   'Connect this project, then complete each product area - one clear action at a time.':
     'חברו את הפרויקט הזה, ואז השלימו כל תחום מוצר, פעולה ברורה אחת בכל פעם.',
+  "We're focused on building a product Appwriters love. The best way we grow is when the community helps spread the word.":
+    'אנחנו מתמקדים בבניית מוצר ש-Appwriters אוהבים. הדרך הטובה ביותר שלנו לצמוח היא כשהקהילה עוזרת לספר עלינו.',
   Breakdown: 'פירוט',
   'Go to dashboard': 'מעבר ללוח הבקרה',
   Skipped: 'דולג',
@@ -230,6 +232,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'עשיתם זאת, הסטאק שלכם מוכן כשאתם מוכנים.',
   'All green - now go make something people love.':
     'הכול ירוק, עכשיו לכו ליצור משהו שאנשים יאהבו.',
+  'You\u2019re ready - and the community helps Appwrite grow.':
+    'אתם מוכנים, והקהילה עוזרת ל-Appwrite לצמוח.',
 
   // Imagine
   'Build something real': 'בנו משהו אמיתי',
@@ -278,8 +282,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to update firewall settings.":
     'אין לכם הרשאה לעדכן הגדרות חומת אש.',
   'No firewall rules': 'אין כללי חומת אש',
+  'No API firewall rules': 'אין כללי חומת אש ל-API',
+  'No function firewall rules': 'אין כללי חומת אש לפונקציות',
+  'No site firewall rules': 'אין כללי חומת אש לאתרים',
   'Create your first firewall rule to protect your project from malicious requests.':
     'צרו את כלל חומת האש הראשון שלכם כדי להגן על הפרויקט מפני בקשות זדוניות.',
+  'Create a firewall rule for your project API to protect it from malicious requests.':
+    'צרו כלל חומת אש ל-API של הפרויקט כדי להגן עליו מפני בקשות זדוניות.',
+  'Create a firewall rule scoped to a function to control how it handles requests.':
+    'צרו כלל חומת אש לפונקציה כדי לשלוט באופן הטיפול בבקשות אליה.',
+  'Create a firewall rule scoped to a site to control how it handles requests.':
+    'צרו כלל חומת אש לאתר כדי לשלוט באופן הטיפול בבקשות אליו.',
+  'Firewall rule scope': 'היקף כלל חומת האש',
+  API: 'API',
   'Firewall protection': 'הגנת חומת אש',
   'Firewall is evaluating rules against incoming traffic for this project.':
     'חומת האש מעריכה כללים מול תעבורה נכנסת לפרויקט זה.',

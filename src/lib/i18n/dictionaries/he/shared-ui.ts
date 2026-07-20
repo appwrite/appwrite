@@ -277,6 +277,35 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
+  'Skip for now': 'דילוג לעכשיו',
+  'Help other Appwriters on Discord and grow with the community.':
+    'עזרו ל-Appwriters אחרים ב-Discord וצמחו יחד עם הקהילה.',
+  'Star us on GitHub': 'תנו לנו כוכב ב-GitHub',
+  'A star helps more developers discover Appwrite.':
+    'כוכב עוזר ליותר מפתחים לגלות את Appwrite.',
+  'Spread the word on X': 'שתפו ב-X',
+  'Tell others what you are building with Appwrite.':
+    'ספרו לאחרים מה אתם בונים עם Appwrite.',
+  'Write content': 'כתיבת תוכן',
+  'Publish blogs, videos, or tutorials that help developers discover Appwrite.':
+    'פרסמו בלוגים, סרטונים או מדריכים שעוזרים למפתחים לגלות את Appwrite.',
+  'Build integrations': 'בניית אינטגרציות',
+  'Connect Appwrite to the tools your stack already uses.':
+    'חברו את Appwrite לכלים שכבר נמצאים בסטאק שלכם.',
+  'A note from the team': 'הערה מהצוות',
+  'Hey,': 'היי,',
+  'Sorry to interrupt. We know you came here to build, not to read a message from us.':
+    'סליחה על ההפרעה. אנחנו יודעים שבאתם לכאן כדי לבנות, לא כדי לקרוא הודעה מאיתנו.',
+  'We are a product-obsessed team. Our job is to make Appwrite something you love building on. The part we cannot do alone is spreading the word and welcoming the next wave of developers.':
+    'אנחנו צוות אובססיבי למוצר. התפקיד שלנו הוא להפוך את Appwrite למשהו שתאהבו לבנות עליו. את מה שאי אפשר לעשות לבד, הפצה וקבלת המפתחים הבאים, אנחנו צריכים אתכם.',
+  'If you have a minute, here is how you can help. If not, skip and get back to work.':
+    'אם יש לכם דקה, כך אפשר לעזור. אם לא, דלגו וחזרו לעבודה.',
+  'Write something true to your experience, or start from one of these examples.':
+    'כתבו משהו אמיתי מהחוויה שלכם, או התחילו מאחת הדוגמאות האלה.',
+  'Try another example': 'דוגמה אחרת',
+  'Share message': 'הודעה לשיתוף',
+  'Spread the word': 'הפיצו את הבשורה',
+  'Thank you for building with us.': 'תודה שאתם בונים איתנו.',
   'Just now': 'הרגע',
   'Ago relative time': 'לפני',
   'In relative time': 'בעוד',

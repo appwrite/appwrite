@@ -3,7 +3,7 @@ import { useParams } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AppwriteException } from '@appwrite.io/console'
 import type { editor } from 'monaco-editor'
-import { Loader2, Search, X } from 'lucide-react'
+import { Loader2, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
 import {
@@ -15,6 +15,12 @@ import {
   useConsoleTeam,
   useProject,
 } from '@/lib/react-query/hooks'
+import {
+  classifyPrefs,
+  summarizePrefsClassification,
+  type ClassifiedPrefEntry,
+  type PrefsRuntimeScope,
+} from '@/lib/prefs-catalog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -80,6 +86,24 @@ function getMatchingPrefKeys(
   }
 }
 
+function filterClassifiedPrefs(
+  entries: ClassifiedPrefEntry[],
+  query: string,
+): ClassifiedPrefEntry[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return entries
+  return entries.filter((entry) => {
+    const description = entry.catalog?.description?.toLowerCase() ?? ''
+    const category = entry.catalog?.category?.toLowerCase() ?? ''
+    return (
+      entry.key.toLowerCase().includes(q) ||
+      entry.preview.toLowerCase().includes(q) ||
+      description.includes(q) ||
+      category.includes(q)
+    )
+  })
+}
+
 function scrollEditorToPrefKey(
   editorInstance: editor.IStandaloneCodeEditor | null,
   key: string,
@@ -104,12 +128,14 @@ function PrefsSearchBar({
   matches,
   onSelectKey,
   disabled,
+  showMatchList,
 }: {
   value: string
   onChange: (value: string) => void
   matches: PrefSearchMatch[]
   onSelectKey: (key: string) => void
   disabled?: boolean
+  showMatchList?: boolean
 }) {
   const trimmed = value.trim()
 
@@ -121,7 +147,7 @@ function PrefsSearchBar({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
-          placeholder="Search keys or values..."
+          placeholder="Search keys, values, or descriptions..."
           className="h-8 border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40 ps-8 pe-8 text-[12px] text-foreground placeholder:text-[var(--network-globe-edge)]/50"
         />
         {value && (
@@ -136,7 +162,7 @@ function PrefsSearchBar({
           </button>
         )}
       </div>
-      {trimmed ? (
+      {showMatchList && trimmed ? (
         <div className="max-h-[min(24dvh,160px)] overflow-y-auto rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_20%,var(--border))] bg-muted/40">
           {matches.length === 0 ? (
             <p className="px-2.5 py-2 text-[11px] text-[var(--network-globe-edge)]/70">
@@ -169,6 +195,101 @@ function PrefsSearchBar({
   )
 }
 
+function StructuredPrefsList({
+  entries,
+  disabled,
+  onDeleteKey,
+}: {
+  entries: ClassifiedPrefEntry[]
+  disabled?: boolean
+  onDeleteKey: (key: string) => void
+}) {
+  if (entries.length === 0) {
+    return (
+      <p className="px-3 py-4 text-center text-[11px] text-[var(--network-globe-edge)]/70">
+        No preferences stored.
+      </p>
+    )
+  }
+
+  let lastCategory: string | null = null
+
+  return (
+    <div className="max-h-[min(48dvh,420px)] space-y-1 overflow-y-auto overscroll-contain">
+      {entries.map((entry) => {
+        const category = entry.known
+          ? (entry.catalog?.category ?? 'Known')
+          : 'Unknown'
+        const showCategory = category !== lastCategory
+        lastCategory = category
+
+        return (
+          <div key={entry.key}>
+            {showCategory ? (
+              <div className="sticky top-0 z-[1] bg-[color-mix(in_srgb,var(--background)_92%,transparent)] px-2 pb-1 pt-2 backdrop-blur-sm">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--network-globe-edge)]/70">
+                  {category}
+                </span>
+              </div>
+            ) : null}
+            <div
+              className={cn(
+                'rounded-lg border px-3 py-2.5',
+                entry.known
+                  ? 'border-emerald-500/25 bg-emerald-500/5'
+                  : 'border-red-500/30 bg-red-500/5',
+              )}
+            >
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <code
+                      className={cn(
+                        'break-all text-[11px] font-medium',
+                        entry.known ? 'text-emerald-300' : 'text-red-300',
+                      )}
+                    >
+                      {entry.key}
+                    </code>
+                    {entry.catalog?.legacy ? (
+                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-amber-200/90">
+                        Legacy
+                      </span>
+                    ) : null}
+                    {!entry.known ? (
+                      <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-red-200/90">
+                        Unknown
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="text-[11px] leading-snug text-[var(--network-globe-edge)]/85">
+                    {entry.catalog?.description ??
+                      'Not registered in the prefs catalog. Safe to remove if unused.'}
+                  </p>
+                  <p className="break-all font-mono text-[10px] text-[var(--network-globe-edge)]/65">
+                    {entry.preview || '(empty)'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 shrink-0 p-0 text-[var(--network-globe-edge)]/70 hover:bg-[color-mix(in_srgb,var(--network-globe-edge)_12%,transparent)] hover:text-foreground"
+                  disabled={disabled}
+                  aria-label={`Delete ${entry.key}`}
+                  onClick={() => onDeleteKey(entry.key)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 const tabListClass =
   'grid h-9 w-full grid-cols-2 gap-0 rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/50 p-[3px] text-[var(--network-globe-edge)]/90'
 
@@ -177,6 +298,11 @@ const tabTriggerClass =
 
 const editorShellClass =
   'min-h-[min(42dvh,320px)] flex-1 overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/40'
+
+const structuredShellClass =
+  'min-h-[min(42dvh,320px)] rounded-lg border border-[color-mix(in_srgb,var(--network-globe-edge)_25%,var(--border))] bg-muted/30 p-2'
+
+type PrefsViewMode = 'structured' | 'json'
 
 export function DebugMenuPrefsPanel() {
   const queryClient = useQueryClient()
@@ -226,10 +352,55 @@ export function DebugMenuPrefsPanel() {
   const [teamDraft, setTeamDraft] = useState('')
   const [accountSearch, setAccountSearch] = useState('')
   const [teamSearch, setTeamSearch] = useState('')
+  const [accountView, setAccountView] = useState<PrefsViewMode>('structured')
+  const [teamView, setTeamView] = useState<PrefsViewMode>('structured')
   const [accountBusy, setAccountBusy] = useState(false)
   const [teamBusy, setTeamBusy] = useState(false)
   const accountEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const teamEditorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+
+  const accountPrefsObject = useMemo(() => {
+    try {
+      return accountDraft ? parsePrefsJson(accountDraft) : {}
+    } catch {
+      return (account?.prefs as Record<string, unknown> | undefined) ?? {}
+    }
+  }, [accountDraft, account?.prefs])
+
+  const teamPrefsObject = useMemo(() => {
+    try {
+      return teamDraft ? parsePrefsJson(teamDraft) : {}
+    } catch {
+      return (team?.prefs as Record<string, unknown> | undefined) ?? {}
+    }
+  }, [teamDraft, team?.prefs])
+
+  const accountClassified = useMemo(
+    () => classifyPrefs(accountPrefsObject, 'account'),
+    [accountPrefsObject],
+  )
+  const teamClassified = useMemo(
+    () => classifyPrefs(teamPrefsObject, 'team'),
+    [teamPrefsObject],
+  )
+
+  const accountFiltered = useMemo(
+    () => filterClassifiedPrefs(accountClassified, accountSearch),
+    [accountClassified, accountSearch],
+  )
+  const teamFiltered = useMemo(
+    () => filterClassifiedPrefs(teamClassified, teamSearch),
+    [teamClassified, teamSearch],
+  )
+
+  const accountSummary = useMemo(
+    () => summarizePrefsClassification(accountClassified),
+    [accountClassified],
+  )
+  const teamSummary = useMemo(
+    () => summarizePrefsClassification(teamClassified),
+    [teamClassified],
+  )
 
   const accountSearchMatches = useMemo(
     () => getMatchingPrefKeys(accountDraft, accountSearch),
@@ -417,40 +588,48 @@ export function DebugMenuPrefsPanel() {
     }
   }
 
-  const deleteAccountKey = async () => {
-    const key = window.prompt('Account prefs: key to remove')?.trim()
-    if (!key) return
-    setAccountBusy(true)
-    try {
-      const base = parsePrefsJson(accountDraft)
-      if (!(key in base)) {
-        toast.error(`Key "${key}" is not in the current draft`)
-        return
-      }
-      const rest = { ...base }
-      delete rest[key]
-      await updateAccountPrefs(rest)
-      invalidateAccount()
-      await refetchAccount()
-      setAccountDraft(stringifyPrefs(rest))
-      toast.success(`Removed "${key}"`)
-    } catch (e) {
-      const msg =
-        e instanceof AppwriteException
-          ? e.message
-          : e instanceof Error
-            ? e.message
-            : 'Failed'
-      toast.error(msg)
-    } finally {
-      setAccountBusy(false)
+  const deletePrefKey = async (
+    scope: PrefsRuntimeScope,
+    key: string,
+    confirmPrompt = true,
+  ) => {
+    if (scope === 'team' && !resolvedTeamId) return
+    if (
+      confirmPrompt &&
+      !window.confirm(`Remove preference key "${key}"?`)
+    ) {
+      return
     }
-  }
 
-  const deleteTeamKey = async () => {
-    if (!resolvedTeamId) return
-    const key = window.prompt('Team prefs: key to remove')?.trim()
-    if (!key) return
+    if (scope === 'account') {
+      setAccountBusy(true)
+      try {
+        const base = parsePrefsJson(accountDraft)
+        if (!(key in base)) {
+          toast.error(`Key "${key}" is not in the current draft`)
+          return
+        }
+        const rest = { ...base }
+        delete rest[key]
+        await updateAccountPrefs(rest)
+        invalidateAccount()
+        await refetchAccount()
+        setAccountDraft(stringifyPrefs(rest))
+        toast.success(`Removed "${key}"`)
+      } catch (e) {
+        const msg =
+          e instanceof AppwriteException
+            ? e.message
+            : e instanceof Error
+              ? e.message
+              : 'Failed'
+        toast.error(msg)
+      } finally {
+        setAccountBusy(false)
+      }
+      return
+    }
+
     setTeamBusy(true)
     try {
       const base = parsePrefsJson(teamDraft)
@@ -460,7 +639,7 @@ export function DebugMenuPrefsPanel() {
       }
       const rest = { ...base }
       delete rest[key]
-      await updateConsoleTeamPrefs(resolvedTeamId, rest)
+      await updateConsoleTeamPrefs(resolvedTeamId!, rest)
       invalidateTeam()
       await refetchTeam()
       setTeamDraft(stringifyPrefs(rest))
@@ -476,6 +655,19 @@ export function DebugMenuPrefsPanel() {
     } finally {
       setTeamBusy(false)
     }
+  }
+
+  const deleteAccountKey = async () => {
+    const key = window.prompt('Account prefs: key to remove')?.trim()
+    if (!key) return
+    await deletePrefKey('account', key, false)
+  }
+
+  const deleteTeamKey = async () => {
+    if (!resolvedTeamId) return
+    const key = window.prompt('Team prefs: key to remove')?.trim()
+    if (!key) return
+    await deletePrefKey('team', key, false)
   }
 
   const setAccountKey = async () => {
@@ -553,22 +745,25 @@ export function DebugMenuPrefsPanel() {
   return (
     <div className="flex flex-col gap-3 px-1" aria-label="User and team preferences">
       <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/90">
-        Edits call the Console API directly. Use{' '}
-        <span className="font-medium text-foreground">Apply</span> after editing
-        JSON, or the helpers below. Team scope uses the organization in the URL
-        when present, otherwise the current project&apos;s team.
+        Structured view classifies keys against{' '}
+        <code className="rounded bg-muted/50 px-1 text-[10px] text-foreground/90">
+          prefs-catalog
+        </code>
+        . Known keys are green; unknown keys are red. JSON remains available for
+        bulk edits. Team scope uses the organization in the URL when present,
+        otherwise the current project&apos;s team.
       </p>
 
       <Tabs defaultValue="account" className="gap-3">
         <TabsList className={tabListClass}>
           <TabsTrigger value="account" className={tabTriggerClass}>
-            Account prefs
+            Account
             {accountLoading && (
               <Loader2 className="ms-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
             )}
           </TabsTrigger>
           <TabsTrigger value="team" className={tabTriggerClass}>
-            Team prefs
+            Team
             {resolvedTeamId && teamLoading && (
               <Loader2 className="ms-1 h-3 w-3 shrink-0 animate-spin text-[var(--network-globe-edge)]" />
             )}
@@ -587,29 +782,65 @@ export function DebugMenuPrefsPanel() {
           {accountErrMsg && (
             <p className="text-[11px] text-amber-300/90">{accountErrMsg}</p>
           )}
+          <div className="flex items-center justify-between gap-2">
+            <Tabs
+              value={accountView}
+              onValueChange={(value) =>
+                setAccountView(value as PrefsViewMode)
+              }
+              className="w-full max-w-[220px]"
+            >
+              <TabsList className={cn(tabListClass, 'h-8')}>
+                <TabsTrigger value="structured" className={cn(tabTriggerClass, 'text-[11px]')}>
+                  Structured
+                </TabsTrigger>
+                <TabsTrigger value="json" className={cn(tabTriggerClass, 'text-[11px]')}>
+                  JSON
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <p className="shrink-0 text-[10px] text-[var(--network-globe-edge)]/75">
+              <span className="text-emerald-300">{accountSummary.known} known</span>
+              {' · '}
+              <span className="text-red-300">{accountSummary.unknown} unknown</span>
+            </p>
+          </div>
           <PrefsSearchBar
             value={accountSearch}
             onChange={setAccountSearch}
             matches={accountSearchMatches}
-            onSelectKey={(key) =>
-              scrollEditorToPrefKey(accountEditorRef.current, key)
-            }
+            onSelectKey={(key) => {
+              if (accountView === 'json') {
+                scrollEditorToPrefKey(accountEditorRef.current, key)
+              }
+            }}
+            showMatchList={accountView === 'json'}
             disabled={accountLoading || accountBusy || !account}
           />
-          <div className={cn(editorShellClass, 'flex flex-col')}>
-            <CodeEditor
-              modelPath="debug-menu/prefs/account.json"
-              language="json"
-              value={accountDraft}
-              onChange={setAccountDraft}
-              onEditorMount={handleAccountEditorMount}
-              readOnly={accountLoading || accountBusy || !account}
-              minimap={false}
-              lineNumbers="on"
-              height="min(42dvh, 320px)"
-              className="min-h-0 flex-1 rounded-none border-0 bg-transparent"
-            />
-          </div>
+          {accountView === 'structured' ? (
+            <div className={structuredShellClass}>
+              <StructuredPrefsList
+                entries={accountFiltered}
+                disabled={accountLoading || accountBusy || !account}
+                onDeleteKey={(key) => void deletePrefKey('account', key)}
+              />
+            </div>
+          ) : (
+            <div className={cn(editorShellClass, 'flex flex-col')}>
+              <CodeEditor
+                modelPath="debug-menu/prefs/account.json"
+                language="json"
+                value={accountDraft}
+                onChange={setAccountDraft}
+                onEditorMount={handleAccountEditorMount}
+                readOnly={accountLoading || accountBusy || !account}
+                minimap={false}
+                lineNumbers="on"
+                height="min(42dvh, 320px)"
+                className="min-h-0 flex-1 rounded-none border-0 bg-transparent"
+              />
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -631,15 +862,17 @@ export function DebugMenuPrefsPanel() {
             >
               Copy
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              className="h-8 text-[11px]"
-              disabled={accountLoading || accountBusy || !account}
-              onClick={() => void applyAccountPrefs()}
-            >
-              Apply
-            </Button>
+            {accountView === 'json' ? (
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 text-[11px]"
+                disabled={accountLoading || accountBusy || !account}
+                onClick={() => void applyAccountPrefs()}
+              >
+                Apply
+              </Button>
+            ) : null}
             <Button
               type="button"
               size="sm"
@@ -691,29 +924,73 @@ export function DebugMenuPrefsPanel() {
               {teamErrMsg && (
                 <p className="text-[11px] text-amber-300/90">{teamErrMsg}</p>
               )}
+              <div className="flex items-center justify-between gap-2">
+                <Tabs
+                  value={teamView}
+                  onValueChange={(value) => setTeamView(value as PrefsViewMode)}
+                  className="w-full max-w-[220px]"
+                >
+                  <TabsList className={cn(tabListClass, 'h-8')}>
+                    <TabsTrigger
+                      value="structured"
+                      className={cn(tabTriggerClass, 'text-[11px]')}
+                    >
+                      Structured
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="json"
+                      className={cn(tabTriggerClass, 'text-[11px]')}
+                    >
+                      JSON
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <p className="shrink-0 text-[10px] text-[var(--network-globe-edge)]/75">
+                  <span className="text-emerald-300">
+                    {teamSummary.known} known
+                  </span>
+                  {' · '}
+                  <span className="text-red-300">
+                    {teamSummary.unknown} unknown
+                  </span>
+                </p>
+              </div>
               <PrefsSearchBar
                 value={teamSearch}
                 onChange={setTeamSearch}
                 matches={teamSearchMatches}
-                onSelectKey={(key) =>
-                  scrollEditorToPrefKey(teamEditorRef.current, key)
-                }
+                onSelectKey={(key) => {
+                  if (teamView === 'json') {
+                    scrollEditorToPrefKey(teamEditorRef.current, key)
+                  }
+                }}
+                showMatchList={teamView === 'json'}
                 disabled={teamLoading || teamBusy || !team}
               />
-              <div className={cn(editorShellClass, 'flex flex-col')}>
-                <CodeEditor
-                  modelPath="debug-menu/prefs/team.json"
-                  language="json"
-                  value={teamDraft}
-                  onChange={setTeamDraft}
-                  onEditorMount={handleTeamEditorMount}
-                  readOnly={teamLoading || teamBusy || !team}
-                  minimap={false}
-                  lineNumbers="on"
-                  height="min(42dvh, 320px)"
-                  className="min-h-0 flex-1 rounded-none border-0 bg-transparent"
-                />
-              </div>
+              {teamView === 'structured' ? (
+                <div className={structuredShellClass}>
+                  <StructuredPrefsList
+                    entries={teamFiltered}
+                    disabled={teamLoading || teamBusy || !team}
+                    onDeleteKey={(key) => void deletePrefKey('team', key)}
+                  />
+                </div>
+              ) : (
+                <div className={cn(editorShellClass, 'flex flex-col')}>
+                  <CodeEditor
+                    modelPath="debug-menu/prefs/team.json"
+                    language="json"
+                    value={teamDraft}
+                    onChange={setTeamDraft}
+                    onEditorMount={handleTeamEditorMount}
+                    readOnly={teamLoading || teamBusy || !team}
+                    minimap={false}
+                    lineNumbers="on"
+                    height="min(42dvh, 320px)"
+                    className="min-h-0 flex-1 rounded-none border-0 bg-transparent"
+                  />
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
@@ -735,15 +1012,17 @@ export function DebugMenuPrefsPanel() {
                 >
                   Copy
                 </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-8 text-[11px]"
-                  disabled={teamLoading || teamBusy || !team}
-                  onClick={() => void applyTeamPrefs()}
-                >
-                  Apply
-                </Button>
+                {teamView === 'json' ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 text-[11px]"
+                    disabled={teamLoading || teamBusy || !team}
+                    onClick={() => void applyTeamPrefs()}
+                  >
+                    Apply
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
                   size="sm"

@@ -42,6 +42,45 @@ import type { DateRange } from 'react-day-picker'
 
 export type UserPrefs = Record<string, unknown>
 
+/**
+ * Preferred organization ID for post-auth redirects and console context.
+ * Value: organization (team) ID string.
+ */
+export const USER_PREFS_KEY_ORGANIZATION = 'organization'
+
+/**
+ * Comma-separated feature IDs the user has dismissed (coming-soon curtains).
+ * Value: string (legacy array format may still appear until rewritten).
+ */
+export const USER_PREFS_KEY_FEATURE_NOTIFICATIONS = 'featureNotifications'
+
+/**
+ * Appwrite `account.updatePrefs` only accepts a flat object of string, number,
+ * or boolean values. Nested objects/arrays (legacy keys like `console` and
+ * `notificationPrefs` from the old Svelte console) cause a 400:
+ * "Invalid `prefs` param: Value must be a valid object."
+ *
+ * Call this before every write. Dropping invalid keys permanently clears them
+ * from prefs (safe: this console stores structured data as JSON strings).
+ */
+export function sanitizeAccountPrefsForWrite(
+  prefs: Record<string, unknown>,
+): Record<string, string | number | boolean> {
+  const out: Record<string, string | number | boolean> = {}
+  for (const [key, value] of Object.entries(prefs)) {
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      // Appwrite rejects NaN / Infinity as preference values.
+      if (typeof value === 'number' && !Number.isFinite(value)) continue
+      out[key] = value
+    }
+  }
+  return out
+}
+
 /** Max number of saved filter presets per view scope */
 export const MAX_SAVED_FILTERS_PER_SCOPE = 20
 
@@ -2379,6 +2418,78 @@ export { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-refer
 /** Full key: `console.buildNotifications.optedOut` - user dismissed the enable prompt. */
 export const USER_PREFS_KEY_BUILD_NOTIFICATIONS_OPTED_OUT =
   'console.buildNotifications.optedOut'
+
+// ---------------------------------------------------------------------------
+// Community support prompt (account prefs)
+// ---------------------------------------------------------------------------
+
+/**
+ * Full key: `console.communitySupport` - JSON state for the skippable
+ * community-support wizard (unique active days, show count, last shown, action).
+ */
+export const USER_PREFS_KEY_COMMUNITY_SUPPORT = 'console.communitySupport'
+
+export type CommunitySupportPrefs = {
+  uniqueDayCount: number
+  lastActiveDay: string | null
+  /** How many times the wizard was presented to this user. */
+  shownCount: number
+  lastShownAt: string | null
+  actionTakenAt: string | null
+  actionId: string | null
+}
+
+export const EMPTY_COMMUNITY_SUPPORT_PREFS: CommunitySupportPrefs = {
+  uniqueDayCount: 0,
+  lastActiveDay: null,
+  shownCount: 0,
+  lastShownAt: null,
+  actionTakenAt: null,
+  actionId: null,
+}
+
+function parseNonNegativeInt(value: unknown): number {
+  return typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= 0
+    ? Math.floor(value)
+    : 0
+}
+
+export function parseCommunitySupportPrefs(
+  prefs: UserPrefs | null | undefined,
+): CommunitySupportPrefs {
+  const raw = prefs?.[USER_PREFS_KEY_COMMUNITY_SUPPORT]
+  if (typeof raw !== 'string' || !raw.trim()) {
+    return { ...EMPTY_COMMUNITY_SUPPORT_PREFS }
+  }
+  try {
+    const parsed = JSON.parse(raw) as Partial<CommunitySupportPrefs>
+    return {
+      uniqueDayCount: parseNonNegativeInt(parsed.uniqueDayCount),
+      lastActiveDay:
+        typeof parsed.lastActiveDay === 'string' ? parsed.lastActiveDay : null,
+      shownCount: parseNonNegativeInt(parsed.shownCount),
+      lastShownAt:
+        typeof parsed.lastShownAt === 'string' ? parsed.lastShownAt : null,
+      actionTakenAt:
+        typeof parsed.actionTakenAt === 'string' ? parsed.actionTakenAt : null,
+      actionId: typeof parsed.actionId === 'string' ? parsed.actionId : null,
+    }
+  } catch {
+    return { ...EMPTY_COMMUNITY_SUPPORT_PREFS }
+  }
+}
+
+export function mergeCommunitySupportPrefsIntoPrefs(
+  prefs: UserPrefs,
+  value: CommunitySupportPrefs,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_COMMUNITY_SUPPORT]: JSON.stringify(value),
+  }
+}
 
 /** @deprecated Migrated to account prefs; cleared after first sync. */
 export const LEGACY_LOCAL_STORAGE_BUILD_NOTIFICATIONS_OPTED_OUT =

@@ -114,6 +114,8 @@ import {
   readLegacyBuildNotificationsOptedOutFromLocalStorage,
   readLegacyCliShellHeightFromLocalStorage,
   readLegacyStorageFilesTablePaneWidthFromLocalStorage,
+  sanitizeAccountPrefsForWrite,
+  USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import {
@@ -1160,10 +1162,13 @@ export function useAccountSessions() {
 // ============================================================================
 
 /**
- * Mutation function to update account preferences
+ * Mutation function to update account preferences.
+ * Sanitizes nested/legacy values so Appwrite does not 400 on write.
  */
 export async function updateAccountPrefs(prefs: Record<string, unknown>) {
-  return await sdk.forConsole.account.updatePrefs({ prefs })
+  return await sdk.forConsole.account.updatePrefs({
+    prefs: sanitizeAccountPrefsForWrite(prefs),
+  })
 }
 
 /**
@@ -1211,7 +1216,8 @@ export function useToggleFeatureNotification() {
       }
 
       // Get current feature notifications (handle both string and legacy array formats)
-      const currentNotificationsRaw = account.prefs?.featureNotifications
+      const currentNotificationsRaw =
+        account.prefs?.[USER_PREFS_KEY_FEATURE_NOTIFICATIONS]
 
       // Parse into an array, handling different data types
       let currentNotifications: string[] = []
@@ -1235,7 +1241,7 @@ export function useToggleFeatureNotification() {
       // Update preferences with the new string
       const updatedPrefs = {
         ...account.prefs,
-        featureNotifications: updatedNotificationsStr,
+        [USER_PREFS_KEY_FEATURE_NOTIFICATIONS]: updatedNotificationsStr,
       }
 
       return await updateAccountPrefs(updatedPrefs)

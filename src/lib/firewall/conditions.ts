@@ -10,6 +10,20 @@ export const FIREWALL_RESOURCE_TYPES = [
 export type FirewallResourceType =
   (typeof FIREWALL_RESOURCE_TYPES)[number]['value']
 
+export function isFirewallResourceType(
+  value: unknown,
+): value is FirewallResourceType {
+  return (
+    value === 'api' || value === 'functions' || value === 'sites'
+  )
+}
+
+export function parseFirewallResourceTypeSearch(
+  value: unknown,
+): FirewallResourceType | undefined {
+  return isFirewallResourceType(value) ? value : undefined
+}
+
 /** Condition attributes shown in the rule builder. */
 export const FIREWALL_CONDITION_ATTRIBUTES = [
   { value: 'ip', label: 'IP address' },

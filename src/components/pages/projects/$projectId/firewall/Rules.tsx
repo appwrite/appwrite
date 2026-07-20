@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
+  ArrowUpRight,
   Copy,
   ExternalLink,
   FileJson,
@@ -47,11 +49,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchFirewallRule,
+  useFirewallResourceNames,
   useFirewallRules,
   useUpdateFirewallRule,
 } from '@/lib/react-query/hooks'
@@ -64,6 +68,7 @@ import {
   FIREWALL_RESOURCE_TYPES,
   formatConditionSummary,
   parseFirewallConditions,
+  type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
   buildConsoleUrl,
@@ -85,9 +90,65 @@ import { RuleContextMenu } from './_components/RuleContextMenu'
 import { UpdateRule } from './_components/UpdateRule'
 import { DeleteRule } from './_components/DeleteRule'
 
+const SCOPE_TOGGLE_ITEM_CLASS =
+  'h-8 flex-none px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
+
+type RuleResourceGroup = {
+  resourceId: string
+  rules: Models.WafRule[]
+}
+
+function groupRulesByResourceId(rules: Models.WafRule[]): RuleResourceGroup[] {
+  const groups = new Map<string, Models.WafRule[]>()
+
+  for (const rule of rules) {
+    const resourceId = rule.resourceId?.trim() || ''
+    const existing = groups.get(resourceId)
+    if (existing) {
+      existing.push(rule)
+    } else {
+      groups.set(resourceId, [rule])
+    }
+  }
+
+  return Array.from(groups.entries()).map(([resourceId, groupRules]) => ({
+    resourceId,
+    rules: groupRules,
+  }))
+}
+
+function emptyCopyForScope(scope: FirewallResourceType): {
+  title: string
+  description: string
+} {
+  switch (scope) {
+    case 'functions':
+      return {
+        title: 'No function firewall rules',
+        description:
+          'Create a firewall rule scoped to a function to control how it handles requests.',
+      }
+    case 'sites':
+      return {
+        title: 'No site firewall rules',
+        description:
+          'Create a firewall rule scoped to a site to control how it handles requests.',
+      }
+    case 'api':
+    default:
+      return {
+        title: 'No API firewall rules',
+        description:
+          'Create a firewall rule for your project API to protect it from malicious requests.',
+      }
+  }
+}
+
 interface RulesListProps {
   projectId: string
   canWrite: boolean
+  resourceScope: FirewallResourceType
+  onResourceScopeChange: (resourceScope: FirewallResourceType) => void
   onCreate: () => void
   /** When true, create is disabled (plan limit or missing permission). */
   createDisabled?: boolean
@@ -98,6 +159,8 @@ interface RulesListProps {
 export function RulesList({
   projectId,
   canWrite,
+  resourceScope,
+  onResourceScopeChange,
   onCreate,
   createDisabled = false,
   createDisabledTooltip,
@@ -109,6 +172,22 @@ export function RulesList({
     0,
     DEFAULT_PAGE_SIZE,
     searchValue,
+    resourceScope,
+  )
+  // Drop keepPreviousData leftovers from another scope while the filtered query loads.
+  const scopedRules = rules.filter(
+    (rule) => (rule.resourceType || 'api') === resourceScope,
+  )
+  const resourceIds =
+    resourceScope === 'api'
+      ? []
+      : scopedRules
+          .map((rule) => rule.resourceId?.trim() || '')
+          .filter(Boolean)
+  const { names: resourceNames } = useFirewallResourceNames(
+    projectId,
+    resourceScope === 'api' ? null : resourceScope,
+    resourceIds,
   )
   const updateMutation = useUpdateFirewallRule(projectId)
   const [editingRule, setEditingRule] = useState<Models.WafRule | null>(null)
@@ -123,6 +202,9 @@ export function RulesList({
     (!canWrite
       ? t("You don't have permission to create firewall rules.")
       : t("You've reached the limit for this resource on your plan"))
+  const emptyCopy = emptyCopyForScope(resourceScope)
+  const groupedRules =
+    resourceScope === 'api' ? null : groupRulesByResourceId(scopedRules)
 
   const handleToggleEnabled = async (rule: Models.WafRule) => {
     const nextEnabled = !rule.enabled
@@ -155,10 +237,6 @@ export function RulesList({
       setTogglingRuleId(null)
     }
   }
-
-  const resourceLabel = (resourceType: string) =>
-    FIREWALL_RESOURCE_TYPES.find((item) => item.value === resourceType)
-      ?.label ?? resourceType
 
   const firewallHref = buildConsoleUrl(`/projects/${projectId}/firewall`)
 
@@ -208,27 +286,284 @@ export function RulesList({
     </Button>
   )
 
+  const scopeSwitcher = (
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      size="sm"
+      value={resourceScope}
+      onValueChange={(next) => {
+        if (!next) return
+        if (
+          FIREWALL_RESOURCE_TYPES.some((option) => option.value === next)
+        ) {
+          onResourceScopeChange(next as FirewallResourceType)
+        }
+      }}
+      className="h-8 w-fit shrink-0"
+      aria-label={t('Firewall rule scope')}
+    >
+      {FIREWALL_RESOURCE_TYPES.map((option) => (
+        <ToggleGroupItem
+          key={option.value}
+          value={option.value}
+          className={SCOPE_TOGGLE_ITEM_CLASS}
+        >
+          {t(option.label)}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  )
+
   const toolbarRow = (
     <div
       className={cn(
         SERVICE_HEADER_CONTAINER,
-        'flex min-w-0 flex-nowrap items-center justify-between gap-2 @[640px]:gap-3',
+        'flex min-w-0 flex-col gap-2 @[640px]:flex-row @[640px]:flex-nowrap @[640px]:items-center @[640px]:justify-between @[640px]:gap-3',
       )}
     >
-      <div className="relative min-w-0 w-full max-w-xs flex-1 shrink @[520px]:w-64 @[520px]:max-w-none @[520px]:flex-none @[520px]:shrink-0">
-        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder={t('Search rules...')}
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
-        />
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        {scopeSwitcher}
+        <div className="relative min-w-0 w-full max-w-xs flex-1 shrink sm:w-64 sm:max-w-none sm:flex-none sm:shrink-0">
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t('Search rules...')}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
+          />
+        </div>
       </div>
       {createButton}
     </div>
   )
 
-  if (isLoading && rules.length === 0) {
+  const renderRuleRow = (rule: Models.WafRule) => {
+    const conditions = parseFirewallConditions(rule.conditions)
+    const rateLimit = getRuleRateLimit(rule)
+    const redirect = getRuleRedirect(rule)
+    const isToggling = togglingRuleId === rule.$id
+    const toggleDisabled =
+      !canWrite || isToggling || updateMutation.isPending
+
+    const statusSwitch = (
+      <Switch
+        checked={rule.enabled}
+        disabled={toggleDisabled}
+        onCheckedChange={() => handleToggleEnabled(rule)}
+        aria-label={rule.enabled ? t('Disable rule') : t('Enable rule')}
+      />
+    )
+
+    return (
+      <RuleContextMenu
+        key={rule.$id}
+        projectId={projectId}
+        rule={rule}
+        canWrite={canWrite}
+        togglePending={isToggling}
+        onUpdate={setEditingRule}
+        onToggleEnabled={handleToggleEnabled}
+        onDelete={setDeletingRule}
+      >
+        <TableRow
+          className={
+            isFetching ? 'cursor-pointer opacity-80' : 'cursor-pointer'
+          }
+          onClick={() => setEditingRule(rule)}
+        >
+          <TableCell
+            className="px-4 py-3"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {!canWrite ? (
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">{statusSwitch}</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>{noWritePermissionTooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              statusSwitch
+            )}
+          </TableCell>
+          <TableCell className="max-w-[240px] px-4 py-3">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span
+                className="truncate text-[13px] font-medium text-foreground"
+                title={rule.name}
+              >
+                {rule.name}
+              </span>
+              {rule.description ? (
+                <span
+                  className="truncate text-[12px] text-muted-foreground"
+                  title={rule.description}
+                >
+                  {rule.description}
+                </span>
+              ) : null}
+            </div>
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <div className="flex flex-col gap-1">
+              <RuleActionBadge action={String(rule.action)} />
+              {rateLimit ? (
+                <span className="text-[11px] text-muted-foreground">
+                  {rateLimit.limit}/{rateLimit.interval}s
+                </span>
+              ) : null}
+              {redirect ? (
+                <span className="text-[11px] text-muted-foreground truncate max-w-[160px]">
+                  {redirect.statusCode} → {redirect.location}
+                </span>
+              ) : null}
+            </div>
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <span className="text-[12px] font-mono text-muted-foreground">
+              {rule.priority}
+            </span>
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <div className="flex flex-col gap-0.5 max-w-[220px]">
+              {conditions.length === 0 ? (
+                <span className="text-[12px] text-muted-foreground">
+                  {t('All requests')}
+                </span>
+              ) : (
+                conditions.slice(0, 2).map((condition, index) => (
+                  <span
+                    key={`${rule.$id}-cond-${index}`}
+                    className="text-[11px] text-muted-foreground truncate"
+                  >
+                    {formatConditionSummary(condition)}
+                  </span>
+                ))
+              )}
+              {conditions.length > 2 ? (
+                <span className="text-[11px] text-muted-foreground">
+                  +{conditions.length - 2} {t('more')}
+                </span>
+              ) : null}
+            </div>
+          </TableCell>
+          <TableCell className="px-4 py-3">
+            <DateTooltip
+              date={rule.$updatedAt}
+              className="text-[12px] text-muted-foreground"
+            />
+          </TableCell>
+          <TableCell className="px-4 py-3 text-right">
+            <div
+              className="flex justify-end"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <RowActionsMenuTrigger />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    disabled={!canWrite}
+                    onClick={() => setEditingRule(rule)}
+                  >
+                    <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!canWrite || isToggling}
+                    onClick={() => handleToggleEnabled(rule)}
+                  >
+                    <MenuItemContent
+                      icon={rule.enabled ? ToggleLeft : ToggleRight}
+                    >
+                      {rule.enabled ? t('Disable') : t('Enable')}
+                    </MenuItemContent>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <MenuItemIcon icon={Copy} />
+                      {t('Copy')}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={() => void copyToClipboard('ID', rule.$id)}
+                      >
+                        <MenuItemContent icon={Copy}>
+                          {t('Copy ID')}
+                        </MenuItemContent>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          void copyToClipboard('Name', rule.name)
+                        }
+                      >
+                        <MenuItemContent icon={Copy}>
+                          {t('Copy name')}
+                        </MenuItemContent>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          void copyToClipboard('Link', firewallHref)
+                        }
+                      >
+                        <MenuItemContent icon={Link2}>
+                          {t('Copy link')}
+                        </MenuItemContent>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          void copyResourceAsJson(
+                            () => fetchFirewallRule(projectId, rule.$id),
+                            { fallback: rule },
+                          )
+                        }
+                      >
+                        <MenuItemContent icon={FileJson}>
+                          {t('Copy as JSON')}
+                        </MenuItemContent>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => openInNewTab(firewallHref)}
+                  >
+                    <MenuItemContent icon={ExternalLink}>
+                      {t('Open in new tab')}
+                    </MenuItemContent>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => openInNewWindow(firewallHref)}
+                  >
+                    <MenuItemContent icon={Square}>
+                      {t('Open in new window')}
+                    </MenuItemContent>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={!canWrite}
+                    onClick={() => setDeletingRule(rule)}
+                  >
+                    <MenuItemContent icon={Trash2}>
+                      {t('Delete')}
+                    </MenuItemContent>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </TableCell>
+        </TableRow>
+      </RuleContextMenu>
+    )
+  }
+
+  if (isLoading && scopedRules.length === 0) {
     return (
       <div className="space-y-4">
         {toolbarRow}
@@ -258,17 +593,11 @@ export function RulesList({
     <div className="space-y-4">
       {toolbarRow}
 
-      {rules.length === 0 ? (
+      {scopedRules.length === 0 ? (
         <EmptyState
           icon={Shield}
-          title={searchValue ? undefined : t('No firewall rules')}
-          description={
-            searchValue
-              ? undefined
-              : t(
-                  'Create your first firewall rule to protect your project from malicious requests.',
-                )
-          }
+          title={searchValue ? undefined : t(emptyCopy.title)}
+          description={searchValue ? undefined : t(emptyCopy.description)}
           isEmpty={!searchValue}
           hasFilters={!!searchValue}
           variant="card"
@@ -289,9 +618,6 @@ export function RulesList({
                   {t('Action')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Resource type')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   {t('Priority')}
                 </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -304,262 +630,61 @@ export function RulesList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rules.map((rule) => {
-                const conditions = parseFirewallConditions(rule.conditions)
-                const rateLimit = getRuleRateLimit(rule)
-                const redirect = getRuleRedirect(rule)
-                const isToggling = togglingRuleId === rule.$id
-                const toggleDisabled =
-                  !canWrite || isToggling || updateMutation.isPending
-
-                const statusSwitch = (
-                  <Switch
-                    checked={rule.enabled}
-                    disabled={toggleDisabled}
-                    onCheckedChange={() => handleToggleEnabled(rule)}
-                    aria-label={
-                      rule.enabled ? t('Disable rule') : t('Enable rule')
-                    }
-                  />
-                )
-
-                return (
-                  <RuleContextMenu
-                    key={rule.$id}
-                    projectId={projectId}
-                    rule={rule}
-                    canWrite={canWrite}
-                    togglePending={isToggling}
-                    onUpdate={setEditingRule}
-                    onToggleEnabled={handleToggleEnabled}
-                    onDelete={setDeletingRule}
-                  >
-                    <TableRow
-                      className={
-                        isFetching
-                          ? 'cursor-pointer opacity-80'
-                          : 'cursor-pointer'
-                      }
-                      onClick={() => setEditingRule(rule)}
-                    >
-                      <TableCell
-                        className="px-4 py-3"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        {!canWrite ? (
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="inline-flex">
-                                  {statusSwitch}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <p>{noWritePermissionTooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          statusSwitch
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[240px] px-4 py-3">
-                        <div className="flex min-w-0 flex-col gap-0.5">
-                          <span
-                            className="truncate text-[13px] font-medium text-foreground"
-                            title={rule.name}
-                          >
-                            {rule.name}
-                          </span>
-                          {rule.description ? (
-                            <span
-                              className="truncate text-[12px] text-muted-foreground"
-                              title={rule.description}
-                            >
-                              {rule.description}
-                            </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          <RuleActionBadge action={String(rule.action)} />
-                          {rateLimit ? (
-                            <span className="text-[11px] text-muted-foreground">
-                              {rateLimit.limit}/{rateLimit.interval}s
-                            </span>
-                          ) : null}
-                          {redirect ? (
-                            <span className="text-[11px] text-muted-foreground truncate max-w-[160px]">
-                              {redirect.statusCode} → {redirect.location}
-                            </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-[13px] text-foreground">
-                            {t(resourceLabel(rule.resourceType || 'api'))}
-                          </span>
-                          {rule.resourceId ? (
-                            <span className="text-[11px] font-mono text-muted-foreground truncate max-w-[140px]">
-                              {rule.resourceId}
-                            </span>
-                          ) : (
-                            <span className="text-[11px] text-muted-foreground">
-                              {t('Project-wide')}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <span className="text-[12px] font-mono text-muted-foreground">
-                          {rule.priority}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex flex-col gap-0.5 max-w-[220px]">
-                          {conditions.length === 0 ? (
-                            <span className="text-[12px] text-muted-foreground">
-                              {t('All requests')}
-                            </span>
-                          ) : (
-                            conditions.slice(0, 2).map((condition, index) => (
-                              <span
-                                key={`${rule.$id}-cond-${index}`}
-                                className="text-[11px] text-muted-foreground truncate"
-                              >
-                                {formatConditionSummary(condition)}
-                              </span>
-                            ))
-                          )}
-                          {conditions.length > 2 ? (
-                            <span className="text-[11px] text-muted-foreground">
-                              +{conditions.length - 2} {t('more')}
-                            </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <DateTooltip
-                          date={rule.$updatedAt}
-                          className="text-[12px] text-muted-foreground"
-                        />
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
-                        <div
-                          className="flex justify-end"
-                          onClick={(event) => event.stopPropagation()}
+              {groupedRules
+                ? groupedRules.map((group) => {
+                    const resourceName = !group.resourceId
+                      ? t('Project-wide')
+                      : resourceNames[group.resourceId] || group.resourceId
+                    const resourceLink =
+                      group.resourceId && resourceScope === 'functions' ? (
+                        <Link
+                          to="/projects/$projectId/functions/$functionId"
+                          params={{
+                            projectId,
+                            functionId: group.resourceId,
+                          }}
+                          className="group/resource inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] font-semibold text-foreground hover:underline"
                         >
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              disabled={!canWrite}
-                              onClick={() => setEditingRule(rule)}
-                            >
-                              <MenuItemContent icon={Pencil}>
-                                {t('Update')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={!canWrite || isToggling}
-                              onClick={() => handleToggleEnabled(rule)}
-                            >
-                              <MenuItemContent
-                                icon={
-                                  rule.enabled ? ToggleLeft : ToggleRight
-                                }
-                              >
-                                {rule.enabled ? t('Disable') : t('Enable')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                <MenuItemIcon icon={Copy} />
-                                {t('Copy')}
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    void copyToClipboard('ID', rule.$id)
-                                  }
-                                >
-                                  <MenuItemContent icon={Copy}>
-                                    {t('Copy ID')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    void copyToClipboard('Name', rule.name)
-                                  }
-                                >
-                                  <MenuItemContent icon={Copy}>
-                                    {t('Copy name')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    void copyToClipboard('Link', firewallHref)
-                                  }
-                                >
-                                  <MenuItemContent icon={Link2}>
-                                    {t('Copy link')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    void copyResourceAsJson(
-                                      () =>
-                                        fetchFirewallRule(
-                                          projectId,
-                                          rule.$id,
-                                        ),
-                                      { fallback: rule },
-                                    )
-                                  }
-                                >
-                                  <MenuItemContent icon={FileJson}>
-                                    {t('Copy as JSON')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => openInNewTab(firewallHref)}
-                            >
-                              <MenuItemContent icon={ExternalLink}>
-                                {t('Open in new tab')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => openInNewWindow(firewallHref)}
-                            >
-                              <MenuItemContent icon={Square}>
-                                {t('Open in new window')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              disabled={!canWrite}
-                              onClick={() => setDeletingRule(rule)}
-                            >
-                              <MenuItemContent icon={Trash2}>
-                                {t('Delete')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  </RuleContextMenu>
-                )
-              })}
+                          <span className="truncate">{resourceName}</span>
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60 transition-opacity group-hover/resource:opacity-100" />
+                        </Link>
+                      ) : group.resourceId && resourceScope === 'sites' ? (
+                        <Link
+                          to="/projects/$projectId/sites/$siteId"
+                          params={{
+                            projectId,
+                            siteId: group.resourceId,
+                          }}
+                          className="group/resource inline-flex min-w-0 max-w-full items-center gap-1 text-[13px] font-semibold text-foreground hover:underline"
+                        >
+                          <span className="truncate">{resourceName}</span>
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-60 transition-opacity group-hover/resource:opacity-100" />
+                        </Link>
+                      ) : (
+                        <span className="truncate text-[13px] font-semibold text-foreground">
+                          {resourceName}
+                        </span>
+                      )
+
+                    return (
+                      <Fragment key={`group-${group.resourceId || 'none'}`}>
+                        <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+                          <TableCell colSpan={7} className="px-4 py-2.5">
+                            <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+                              {resourceLink}
+                              {group.resourceId ? (
+                                <span className="truncate font-mono text-[11px] text-muted-foreground">
+                                  {group.resourceId}
+                                </span>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {group.rules.map((rule) => renderRuleRow(rule))}
+                      </Fragment>
+                    )
+                  })
+                : scopedRules.map((rule) => renderRuleRow(rule))}
             </TableBody>
           </Table>
         </div>

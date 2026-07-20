@@ -27,6 +27,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
+import { Route } from '@/routes/_public/projects.$projectId.firewall.create'
 
 const RESOURCE_TYPE_META: Record<
   FirewallResourceType,
@@ -64,14 +65,17 @@ export function View() {
   const t = useT()
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
+  const { resourceType: initialResourceType = 'api' } = Route.useSearch()
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
-  const [form, setForm] = useState(DEFAULT_FORM)
+  const [form, setForm] = useState({
+    ...DEFAULT_FORM,
+    resourceType: initialResourceType,
+  })
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>([
     createEmptyConditionDraft(),
   ])
 
-  const fallbackPath = `/projects/${projectId}/firewall`
   const needsResourceId = form.resourceType !== 'api'
   const canSubmit =
     form.name.trim().length > 0 &&
@@ -82,11 +86,16 @@ export function View() {
     (form.action !== WafRuleAction.Redirect ||
       (form.location.trim().length > 0 && form.statusCode > 0))
 
-  const handleClose = () => {
+  const navigateToRules = (resourceType: FirewallResourceType = 'api') => {
     navigate({
       to: '/projects/$projectId/firewall',
       params: { projectId: projectId! },
+      search: { resourceType },
     })
+  }
+
+  const handleClose = () => {
+    navigateToRules(initialResourceType)
   }
 
   const handleSubmit = async () => {
@@ -108,7 +117,7 @@ export function View() {
         statusCode: form.statusCode,
       })
       toast.success(t('Firewall rule created'))
-      handleClose()
+      navigateToRules(form.resourceType)
     } catch (error) {
       toast.error(
         getErrorMessage(error as Error, t('Failed to create firewall rule')),
@@ -191,7 +200,7 @@ export function View() {
   return (
     <WizardLayout
       title={t('Create firewall rule')}
-      fallbackPath={fallbackPath}
+      onClose={handleClose}
       fullscreen
       footerAlign="right"
       sidebar={
