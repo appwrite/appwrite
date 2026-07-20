@@ -192,7 +192,7 @@ class Migrations extends Action
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
-        $resourceId = $migration->getAttribute('resourceId');
+        [$databaseId, $tableId] = $this->resolveResourceIds($migration);
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
         /** @var Database|null $projectDB */
@@ -290,18 +290,20 @@ class Migrations extends Action
                 $projectDB,
                 $queries
             ),
-            CSV::getName() => new CSV(
-                $resourceId,
-                $migrationOptions['path'],
-                $this->deviceForMigrations,
-                $this->dbForProject,
-                $getDatabasesDB
+            CSV::getName() => CSV::fromResourceIds(
+                databaseId: $databaseId,
+                tableId: $tableId,
+                filePath: $migrationOptions['path'],
+                device: $this->deviceForMigrations,
+                dbForProject: $this->dbForProject,
+                getDatabasesDB: $getDatabasesDB,
             ),
-            JSON::getName() => new JSON(
-                $resourceId,
-                $migrationOptions['path'],
-                $this->deviceForMigrations,
-                $this->dbForProject,
+            JSON::getName() => JSON::fromResourceIds(
+                databaseId: $databaseId,
+                tableId: $tableId,
+                filePath: $migrationOptions['path'],
+                device: $this->deviceForMigrations,
+                dbForProject: $this->dbForProject,
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
@@ -320,6 +322,7 @@ class Migrations extends Action
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
         $credentials = $migration->getAttribute('credentials');
+        [$databaseId, $tableId] = $this->resolveResourceIds($migration);
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -334,23 +337,25 @@ class Migrations extends Action
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
             ),
-            DestinationCSV::getName() => new DestinationCSV(
-                $this->deviceForFiles,
-                $migration->getAttribute('resourceId'),
-                $options['bucketId'],
-                $migration->getId(),
-                $options['columns'],
-                $options['delimiter'],
-                $options['enclosure'],
-                $options['escape'],
-                $options['header'],
+            DestinationCSV::getName() => DestinationCSV::fromResourceIds(
+                deviceForFiles: $this->deviceForFiles,
+                databaseId: $databaseId,
+                tableId: $tableId,
+                directory: $options['bucketId'],
+                filename: $migration->getId(),
+                allowedColumns: $options['columns'],
+                delimiter: $options['delimiter'],
+                enclosure: $options['enclosure'],
+                escape: $options['escape'],
+                includeHeaders: $options['header'],
             ),
-            DestinationJSON::getName() => new DestinationJSON(
-                $this->deviceForFiles,
-                $migration->getAttribute('resourceId'),
-                $options['bucketId'] ?? 'default',
-                $migration->getId(),
-                $options['columns'] ?? [],
+            DestinationJSON::getName() => DestinationJSON::fromResourceIds(
+                deviceForFiles: $this->deviceForFiles,
+                databaseId: $databaseId,
+                tableId: $tableId,
+                directory: $options['bucketId'] ?? 'default',
+                filename: $migration->getId(),
+                allowedColumns: $options['columns'] ?? [],
             ),
             default => throw new Exception(Exception::MIGRATION_DESTINATION_TYPE_INVALID),
         };
@@ -535,7 +540,8 @@ class Migrations extends Action
                 $migration->setAttribute('stage', 'migrating');
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                $transfer->run(
+                $context = $this->resolveResourceContext($migration);
+                $transfer->runWithResourceSelector(
                     $migration->getAttribute('resources'),
                     function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -573,8 +579,12 @@ class Migrations extends Action
                         }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
-                    $migration->getAttribute('resourceId'),
-                    $migration->getAttribute('resourceType')
+                    resourceId: $context['resourceId'],
+                    resourceInternalId: $context['resourceInternalId'],
+                    resourceType: $context['resourceType'],
+                    parentResourceId: $context['parentResourceId'],
+                    parentResourceInternalId: $context['parentResourceInternalId'],
+                    parentResourceType: $context['parentResourceType'],
                 );
 
                 $destination->shutdown();
@@ -589,6 +599,9 @@ class Migrations extends Action
                 $migration->setAttribute('stage', 'finished');
                 return;
             }
+
+            $destination->success();
+            $source->success();
 
             $destinationType = $migration->getAttribute('destination');
             if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
@@ -692,11 +705,9 @@ class Migrations extends Action
                             $publisherForUsage,
                             $migration->getAttribute('source'),
                             $authorization,
-                            $migration->getAttribute('resourceId')
+                            ...$this->resolveResourceIds($migration),
                         );
                     }
-                    $destination?->success();
-                    $source?->success();
                 }
             } finally {
                 $source?->cleanup();
@@ -716,6 +727,45 @@ class Migrations extends Action
         }
 
         return ($this->getDatabasesDB)($database);
+    }
+
+    /** @return array{0: string, 1: string} */
+    protected function resolveResourceIds(Document $migration): array
+    {
+        $context = $this->resolveResourceContext($migration);
+
+        if ($context['parentResourceId'] !== '') {
+            return [$context['parentResourceId'], $context['resourceId']];
+        }
+
+        return [$context['resourceId'], ''];
+    }
+
+    /**
+     * @return array{resourceId: string, resourceInternalId: string, resourceType: string, parentResourceId: string, parentResourceInternalId: string, parentResourceType: string}
+     */
+    protected function resolveResourceContext(Document $migration): array
+    {
+        $context = [
+            'resourceId' => (string) $migration->getAttribute('resourceId', ''),
+            'resourceInternalId' => (string) $migration->getAttribute('resourceInternalId', ''),
+            'resourceType' => (string) $migration->getAttribute('resourceType', ''),
+            'parentResourceId' => (string) $migration->getAttribute('parentResourceId', ''),
+            'parentResourceInternalId' => (string) $migration->getAttribute('parentResourceInternalId', ''),
+            'parentResourceType' => (string) $migration->getAttribute('parentResourceType', ''),
+        ];
+
+        if (
+            $context['parentResourceId'] === ''
+            && \array_key_exists($context['resourceType'], Resource::DATABASE_TYPE_RESOURCE_MAP)
+            && \str_contains($context['resourceId'], ':')
+        ) {
+            [$context['parentResourceId'], $context['resourceId']] = \explode(':', $context['resourceId'], 2);
+            $context['parentResourceType'] = $context['resourceType'];
+            $context['resourceType'] = Resource::TYPE_COLLECTION;
+        }
+
+        return $context;
     }
 
     /**
@@ -1074,7 +1124,7 @@ class Migrations extends Action
         return $errors;
     }
 
-    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $resourceId)
+    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $parentResourceId, ?string $resourceId)
     {
         $resourceName = $resources['name'];
         $count = $resources['count'];
@@ -1082,9 +1132,20 @@ class Migrations extends Action
         $tableInternalId = $resources['tableId'];
 
         if ($source === CSV::getName()) {
-            [$databaseId, $tableId] = explode(':', $resourceId);
-            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $databaseId));
-            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $tableId));
+            if (empty($parentResourceId) || empty($resourceId)) {
+                Console::warning("Skipping CSV migration usage stats: missing parent/leaf resource ID (parent: '{$parentResourceId}', leaf: '{$resourceId}')");
+                return;
+            }
+            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $parentResourceId));
+            if ($database->isEmpty()) {
+                Console::warning("Skipping CSV migration usage stats: database '{$parentResourceId}' not found");
+                return;
+            }
+            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $resourceId));
+            if ($table->isEmpty()) {
+                Console::warning("Skipping CSV migration usage stats: collection '{$resourceId}' not found in database '{$parentResourceId}'");
+                return;
+            }
             $databaseInternalId = (int) $database->getSequence();
             $tableInternalId = (int) $table->getSequence();
         }
