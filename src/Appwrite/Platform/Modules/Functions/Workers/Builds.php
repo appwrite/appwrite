@@ -34,6 +34,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
+use Utopia\Detector\Detection\Rendering as RenderingDetection;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
@@ -1429,15 +1430,23 @@ class Builds extends Action
         $files = \array_map(\trim(...), $files);
         $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files);
 
+        Console::info('[Detection] Framework: ' . $framework);
+        Console::info('[Detection] Files: ' . \implode(', ', $files));
+
         $detector = new Rendering($framework);
         foreach ($files as $file) {
             $detector->addInput($file);
         }
 
-        return $detector
+        /** @var RenderingDetection $result */
+        $result = $detector
             ->addOption(new SSR())
             ->addOption(new XStatic())
             ->detect();
+
+        Console::info('[Detection] Result: ' . $result->getName());
+
+        return $result;
     }
 
     /**
