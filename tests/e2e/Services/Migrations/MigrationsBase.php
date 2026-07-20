@@ -3855,8 +3855,10 @@ trait MigrationsBase
         $this->assertNotNull($migration);
         $this->assertSame($data['tableId'], $migration['resourceId']);
         $this->assertSame($databaseId, $migration['parentResourceId']);
+        $this->assertNotSame('', $migration['parentResourceInternalId']);
         $this->assertSame(Resource::TYPE_DATABASE, $migration['parentResourceType']);
         $this->assertSame($databaseId, $migration['destinationResourceId']);
+        $this->assertSame($migration['parentResourceInternalId'], $migration['destinationResourceInternalId']);
         $this->assertSame(Resource::TYPE_DATABASE, $migration['destinationResourceType']);
 
         $response = $this->client->call(Client::METHOD_GET, '/migrations', array_merge([
@@ -3864,7 +3866,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('destinationResourceId', [$databaseId])->toString(),
+                Query::equal('destinationResourceInternalId', [$migration['destinationResourceInternalId']])->toString(),
                 Query::equal('destinationResourceType', [Resource::TYPE_DATABASE])->toString(),
             ],
         ]);

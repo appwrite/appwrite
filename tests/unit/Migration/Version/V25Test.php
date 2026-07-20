@@ -24,7 +24,7 @@ final class V25Test extends TestCase
             }
 
             #[\Override]
-            protected function resolveInternalIds(string $parentResourceId, string $resourceId, string $migrationId): array
+            protected function resolveInternalIds(string $parentResourceId, string $resourceId, Document $migration): array
             {
                 return [];
             }
@@ -75,7 +75,7 @@ final class V25Test extends TestCase
              * @return array{parentResourceInternalId?: string, resourceInternalId?: string}
              */
             #[\Override]
-            protected function resolveInternalIds(string $parentResourceId, string $resourceId, string $migrationId): array
+            protected function resolveInternalIds(string $parentResourceId, string $resourceId, Document $migration): array
             {
                 return $this->internalIds;
             }
@@ -115,5 +115,30 @@ final class V25Test extends TestCase
         $this->assertSame('database', $document->getAttribute('parentResourceId'));
         $this->assertSame(Resource::TYPE_DATABASE, $document->getAttribute('parentResourceType'));
         $this->assertSame($afterResolution, $document->getArrayCopy());
+    }
+
+    public function testRejectsResourcesCreatedAfterMigration(): void
+    {
+        $migration = new class () extends V25 {
+            public function __construct()
+            {
+            }
+
+            public function isCandidate(Document $resource, Document $migration): bool
+            {
+                return $this->predatesMigration($resource, $migration);
+            }
+        };
+        $document = new Document([
+            '$createdAt' => '2026-01-02T00:00:00.000+00:00',
+        ]);
+
+        $this->assertTrue($migration->isCandidate(new Document([
+            '$createdAt' => '2026-01-01T00:00:00.000+00:00',
+        ]), $document));
+        $this->assertFalse($migration->isCandidate(new Document([
+            '$createdAt' => '2026-01-03T00:00:00.000+00:00',
+        ]), $document));
+        $this->assertFalse($migration->isCandidate(new Document(), $document));
     }
 }

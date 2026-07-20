@@ -117,6 +117,7 @@ class V25 extends Migration
                             'parentResourceInternalId',
                             'parentResourceType',
                             'destinationResourceId',
+                            'destinationResourceInternalId',
                             'destinationResourceType',
                         ];
                         try {
@@ -132,6 +133,7 @@ class V25 extends Migration
                             '_key_parentResourceType',
                             '_key_parentResourceInternalId',
                             '_key_destinationResourceId',
+                            '_key_destinationResourceInternalId',
                             '_key_destinationResourceType',
                         ];
                         foreach ($indexes as $index) {
@@ -178,7 +180,7 @@ class V25 extends Migration
             return $document;
         }
 
-        $internalIds = $this->resolveInternalIds($parentResourceId, $resourceId, $document->getId());
+        $internalIds = $this->resolveInternalIds($parentResourceId, $resourceId, $document);
         if (
             $split
             && (!isset($internalIds['parentResourceInternalId']) || !isset($internalIds['resourceInternalId']))
@@ -216,15 +218,19 @@ class V25 extends Migration
     /**
      * @return array{parentResourceInternalId?: string, resourceInternalId?: string}
      */
-    protected function resolveInternalIds(string $parentResourceId, string $resourceId, string $migrationId): array
+    protected function resolveInternalIds(string $parentResourceId, string $resourceId, Document $migration): array
     {
         try {
             $database = $this->dbForProject->getDocument('databases', $parentResourceId);
-            if ($database->isEmpty() || $database->getSequence() === '') {
+            if (
+                $database->isEmpty()
+                || $database->getSequence() === ''
+                || !$this->predatesMigration($database, $migration)
+            ) {
                 return [];
             }
         } catch (Throwable $th) {
-            Console::warning("Failed to resolve parent internal ID for migration {$migrationId}: {$th->getMessage()}");
+            Console::warning("Failed to resolve parent internal ID for migration {$migration->getId()}: {$th->getMessage()}");
             return [];
         }
 
@@ -234,13 +240,33 @@ class V25 extends Migration
 
         try {
             $resource = $this->dbForProject->getDocument('database_' . $database->getSequence(), $resourceId);
-            if (!$resource->isEmpty() && $resource->getSequence() !== '') {
+            if (
+                !$resource->isEmpty()
+                && $resource->getSequence() !== ''
+                && $this->predatesMigration($resource, $migration)
+            ) {
                 $internalIds['resourceInternalId'] = (string) $resource->getSequence();
             }
         } catch (Throwable $th) {
-            Console::warning("Failed to resolve resource internal ID for migration {$migrationId}: {$th->getMessage()}");
+            Console::warning("Failed to resolve resource internal ID for migration {$migration->getId()}: {$th->getMessage()}");
         }
 
         return $internalIds;
+    }
+
+    /**
+     * A resource created after the migration is a reused public ID, not the
+     * generation the historical migration operated on.
+     */
+    protected function predatesMigration(Document $resource, Document $migration): bool
+    {
+        $resourceCreatedAt = \strtotime($resource->getCreatedAt());
+        $migrationCreatedAt = \strtotime($migration->getCreatedAt());
+
+        if ($resourceCreatedAt === false || $migrationCreatedAt === false) {
+            return false;
+        }
+
+        return $resourceCreatedAt <= $migrationCreatedAt;
     }
 }

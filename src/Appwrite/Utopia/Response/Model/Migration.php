@@ -109,6 +109,13 @@ class Migration extends Model
                 'example' => 'databaseId',
                 'array' => false
             ])
+            ->addRule('destinationResourceInternalId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Internal ID of the destination resource created or overwritten by the migration.',
+                'default' => '',
+                'example' => '1',
+                'array' => false
+            ])
             ->addRule('destinationResourceType', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Type of the destination resource created or overwritten by the migration.',

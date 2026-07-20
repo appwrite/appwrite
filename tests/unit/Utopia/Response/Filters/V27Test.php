@@ -23,6 +23,7 @@ final class V27Test extends TestCase
             'parentResourceInternalId' => '10',
             'parentResourceType' => 'database',
             'destinationResourceId' => 'destination',
+            'destinationResourceInternalId' => '30',
             'destinationResourceType' => 'database',
         ], Response::MODEL_MIGRATION);
 
@@ -46,6 +47,7 @@ final class V27Test extends TestCase
             'parentResourceInternalId' => '',
             'parentResourceType' => '',
             'destinationResourceId' => '',
+            'destinationResourceInternalId' => '',
             'destinationResourceType' => '',
         ], Response::MODEL_MIGRATION);
 
@@ -69,6 +71,7 @@ final class V27Test extends TestCase
                 'parentResourceId' => 'database',
                 'parentResourceType' => 'database',
                 'destinationResourceId' => 'destination',
+                'destinationResourceInternalId' => '30',
                 'destinationResourceType' => 'database',
             ]],
         ], Response::MODEL_MIGRATION_LIST);

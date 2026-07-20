@@ -36,6 +36,7 @@ class V27 extends Filter
         unset($content['parentResourceInternalId']);
         unset($content['parentResourceType']);
         unset($content['destinationResourceId']);
+        unset($content['destinationResourceInternalId']);
         unset($content['destinationResourceType']);
 
         return $content;
