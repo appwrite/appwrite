@@ -397,12 +397,14 @@ trait Deployment
                 // or jobs-service, decided by _APP_BUILDS_BACKEND) when the
                 // caller opts in. Sites always stay on the executor.
                 if ($deployments !== null && $resourceCollection === 'functions') {
-                    $deployment = $authorization->skip(fn () => $deployments->createFromUrl(
-                        $resource,
-                        $deployment,
-                        $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
-                        $resource->getAttribute('providerRootDirectory', ''),
-                    ));
+                    $deployment = $authorization->skip(fn () => $deployments
+                        ->forProject($dbForProject, $project)
+                        ->createFromUrl(
+                            $resource,
+                            $deployment,
+                            $vcs->getRepositoryPresignedUrl($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash),
+                            $resource->getAttribute('providerRootDirectory', ''),
+                        ));
                 } else {
                     $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
                         '$permissions' => [

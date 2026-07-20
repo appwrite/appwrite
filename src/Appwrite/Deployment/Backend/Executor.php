@@ -11,7 +11,7 @@ use Utopia\Database\Document;
 
 readonly class Executor extends Backend
 {
-    public function __construct(
+    final public function __construct(
         private BuildPublisher $publisherForBuilds,
         Database $dbForProject,
         Document $project,
@@ -19,6 +19,11 @@ readonly class Executor extends Backend
         private array $platform,
     ) {
         parent::__construct($dbForProject, $project);
+    }
+
+    public function forProject(Database $dbForProject, Document $project): static
+    {
+        return new static($this->publisherForBuilds, $dbForProject, $project, $this->executor, $this->platform);
     }
 
     public function createFromUpload(Document $resource, Document $deployment): Document
