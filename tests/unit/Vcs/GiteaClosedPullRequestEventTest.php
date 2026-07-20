@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Vcs;
 
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Platform\Modules\VCS\Http\Gitea\Events\Create;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
@@ -65,7 +64,6 @@ final class GiteaClosedPullRequestEventTest extends TestCase
                 return true;
             }));
 
-        $publisherForBuilds = $this->createStub(BuildPublisher::class);
         $vcsFactory = $this->createStub(VcsFactory::class);
         $installationTokens = $this->createStub(InstallationTokens::class);
 
@@ -74,7 +72,7 @@ final class GiteaClosedPullRequestEventTest extends TestCase
             'repositoryId' => '5',
             'pullRequestNumber' => 5,
             'external' => true,
-        ], $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $publisherForBuilds, fn () => null, []);
+        ], $vcsFactory, $installationTokens, $dbForPlatform, $authorization, fn () => null, [], fn () => null);
     }
 
     private function callHandler(string $method, mixed ...$arguments): mixed
