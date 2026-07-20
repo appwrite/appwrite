@@ -25,6 +25,7 @@ import {
 } from '@/lib/firewall/actions'
 import {
   FIREWALL_RESOURCE_TYPES,
+  areFirewallConditionsComplete,
   createEmptyConditionDraft,
   draftsFromParsedConditions,
   parseFirewallConditions,
@@ -91,6 +92,7 @@ export function UpdateRule({
   const canSubmit =
     name.trim().length > 0 &&
     (!needsResourceId || resourceId.trim().length > 0) &&
+    areFirewallConditionsComplete(conditions) &&
     (action !== WafRuleAction.RateLimit || (limit > 0 && interval > 0)) &&
     (action !== WafRuleAction.Redirect ||
       (location.trim().length > 0 && statusCode > 0))

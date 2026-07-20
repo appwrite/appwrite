@@ -17,6 +17,7 @@ import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import { type FirewallCreatableAction } from '@/lib/firewall/actions'
 import {
   FIREWALL_RESOURCE_TYPES,
+  areFirewallConditionsComplete,
   createEmptyConditionDraft,
   serializeFirewallConditions,
   type FirewallConditionDraft,
@@ -75,6 +76,7 @@ export function View() {
   const canSubmit =
     form.name.trim().length > 0 &&
     (!needsResourceId || form.resourceId.trim().length > 0) &&
+    areFirewallConditionsComplete(conditions) &&
     (form.action !== WafRuleAction.RateLimit ||
       (form.limit > 0 && form.interval > 0)) &&
     (form.action !== WafRuleAction.Redirect ||

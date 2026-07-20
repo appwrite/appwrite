@@ -22,14 +22,52 @@ export const FIREWALL_CONDITION_ATTRIBUTES = [
 export type FirewallConditionAttribute =
   (typeof FIREWALL_CONDITION_ATTRIBUTES)[number]['value']
 
+/**
+ * Operators mirror the usage `listEvents` filter operators so rule conditions
+ * and affected-traffic estimations speak the same language.
+ * `isNull` / `isNotNull` take no value.
+ */
 export const FIREWALL_CONDITION_OPERATORS = [
   { value: 'equal', label: 'Equals' },
   { value: 'notEqual', label: 'Does not equal' },
   { value: 'contains', label: 'Contains' },
+  { value: 'startsWith', label: 'Starts with' },
+  { value: 'endsWith', label: 'Ends with' },
+  { value: 'isNull', label: 'Is empty', noValue: true },
+  { value: 'isNotNull', label: 'Is not empty', noValue: true },
 ] as const
 
 export type FirewallConditionOperator =
   (typeof FIREWALL_CONDITION_OPERATORS)[number]['value']
+
+export type FirewallConditionOperatorDef = {
+  value: FirewallConditionOperator
+  label: string
+  noValue?: boolean
+}
+
+/** Operators that filter on the value being absent — no value input is shown. */
+const NO_VALUE_OPERATORS = new Set<FirewallConditionOperator>([
+  'isNull',
+  'isNotNull',
+])
+
+/** Text-matching operators only apply to free-text attributes. */
+const TEXT_MATCH_OPERATORS = new Set<FirewallConditionOperator>([
+  'contains',
+  'startsWith',
+  'endsWith',
+])
+
+export function isNoValueOperator(operator: FirewallConditionOperator): boolean {
+  return NO_VALUE_OPERATORS.has(operator)
+}
+
+export function isTextMatchOperator(
+  operator: FirewallConditionOperator,
+): boolean {
+  return TEXT_MATCH_OPERATORS.has(operator)
+}
 
 /** HTTP methods selectable for the method condition attribute. */
 export const FIREWALL_HTTP_METHODS = [
@@ -44,25 +82,41 @@ export const FIREWALL_HTTP_METHODS = [
 
 export type FirewallHttpMethod = (typeof FIREWALL_HTTP_METHODS)[number]
 
-/** Attributes that use discrete selection (not free text). */
-const EQUALITY_ONLY_ATTRIBUTES = new Set<FirewallConditionAttribute>([
-  'method',
-  'country',
-])
+/** Free-text attributes get the full usage `listEvents` operator set. */
+const FREE_TEXT_OPERATORS: ReadonlyArray<FirewallConditionOperator> = [
+  'equal',
+  'notEqual',
+  'contains',
+  'startsWith',
+  'endsWith',
+  'isNull',
+  'isNotNull',
+]
 
 /**
- * Operators available for a given attribute.
- * Method and country only support equality (select-backed values).
+ * Operators offered per attribute. All values also exist in usage `listEvents`
+ * so affected-traffic estimates stay accurate.
+ * - Free text (ip / path / userAgent): full set.
+ * - `method`: enum-backed, equality + presence only (no text matching).
+ * - `country`: picker-backed, kept to the basic set (equal / not equal / contains).
  */
+const OPERATORS_BY_ATTRIBUTE: Record<
+  FirewallConditionAttribute,
+  ReadonlyArray<FirewallConditionOperator>
+> = {
+  ip: FREE_TEXT_OPERATORS,
+  path: FREE_TEXT_OPERATORS,
+  userAgent: FREE_TEXT_OPERATORS,
+  method: ['equal', 'notEqual', 'isNull', 'isNotNull'],
+  country: ['equal', 'notEqual', 'contains'],
+}
+
+/** Operators available for a given attribute (display order is preserved). */
 export function getOperatorsForAttribute(
   attribute: FirewallConditionAttribute,
-): ReadonlyArray<{ value: FirewallConditionOperator; label: string }> {
-  if (EQUALITY_ONLY_ATTRIBUTES.has(attribute)) {
-    return FIREWALL_CONDITION_OPERATORS.filter(
-      (op) => op.value === 'equal' || op.value === 'notEqual',
-    )
-  }
-  return FIREWALL_CONDITION_OPERATORS
+): ReadonlyArray<FirewallConditionOperatorDef> {
+  const allowed = new Set(OPERATORS_BY_ATTRIBUTE[attribute])
+  return FIREWALL_CONDITION_OPERATORS.filter((op) => allowed.has(op.value))
 }
 
 export function isOperatorAllowedForAttribute(
@@ -94,7 +148,32 @@ export function createEmptyConditionDraft(): FirewallConditionDraft {
   }
 }
 
+/**
+ * A draft is complete when it will actually serialize into a query:
+ * no-value operators (is empty / is not empty) always do; every other
+ * operator needs a non-empty value. Incomplete drafts are silently dropped
+ * by `serializeFirewallConditions`, so callers should block submit on them.
+ */
+export function isConditionDraftComplete(
+  draft: FirewallConditionDraft,
+): boolean {
+  return isNoValueOperator(draft.operator) || draft.value.trim().length > 0
+}
+
+/** True when every condition would serialize (nothing gets silently dropped). */
+export function areFirewallConditionsComplete(
+  drafts: FirewallConditionDraft[],
+): boolean {
+  return drafts.every(isConditionDraftComplete)
+}
+
 function buildQueryString(draft: FirewallConditionDraft): string | null {
+  if (isNoValueOperator(draft.operator)) {
+    return draft.operator === 'isNotNull'
+      ? Query.isNotNull(draft.attribute)
+      : Query.isNull(draft.attribute)
+  }
+
   const raw = draft.value.trim()
   if (!raw) return null
   const value = draft.attribute === 'country' ? raw.toLowerCase() : raw
@@ -106,6 +185,10 @@ function buildQueryString(draft: FirewallConditionDraft): string | null {
       return Query.notEqual(draft.attribute, value)
     case 'contains':
       return Query.contains(draft.attribute, value)
+    case 'startsWith':
+      return Query.startsWith(draft.attribute, value)
+    case 'endsWith':
+      return Query.endsWith(draft.attribute, value)
     default:
       return Query.equal(draft.attribute, value)
   }

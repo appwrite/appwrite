@@ -3,6 +3,7 @@ import { subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
+  isNoValueOperator,
   type FirewallConditionDraft,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
@@ -53,23 +54,37 @@ export function buildFirewallConditionUsageQueries(
   const queries: string[] = []
 
   for (const draft of conditions) {
-    const value = draft.value.trim()
-    if (value.length === 0) continue
-
     const attribute = toUsageAttribute(draft.attribute)
     if (!attribute) continue
 
-    switch (draft.operator) {
-      case 'notEqual':
-        queries.push(Query.notEqual(attribute, value))
-        break
-      case 'contains':
-        queries.push(Query.contains(attribute, value))
-        break
-      case 'equal':
-      default:
-        queries.push(Query.equal(attribute, value))
-        break
+    if (isNoValueOperator(draft.operator)) {
+      queries.push(
+        draft.operator === 'isNotNull'
+          ? Query.isNotNull(attribute)
+          : Query.isNull(attribute),
+      )
+    } else {
+      const value = draft.value.trim()
+      if (value.length === 0) continue
+
+      switch (draft.operator) {
+        case 'notEqual':
+          queries.push(Query.notEqual(attribute, value))
+          break
+        case 'contains':
+          queries.push(Query.contains(attribute, value))
+          break
+        case 'startsWith':
+          queries.push(Query.startsWith(attribute, value))
+          break
+        case 'endsWith':
+          queries.push(Query.endsWith(attribute, value))
+          break
+        case 'equal':
+        default:
+          queries.push(Query.equal(attribute, value))
+          break
+      }
     }
 
     // usage.listEvents allows up to 10 queries; leave room for resource filters
@@ -130,7 +145,8 @@ export function buildFirewallUsageConditionSnapshots(
   const snapshots: FirewallUsageConditionSnapshot[] = []
   for (const draft of conditions) {
     const value = draft.value.trim()
-    if (value.length === 0) continue
+    // No-value operators (is empty / is not empty) contribute without a value.
+    if (value.length === 0 && !isNoValueOperator(draft.operator)) continue
     snapshots.push({
       attribute: draft.attribute,
       operator: draft.operator,
