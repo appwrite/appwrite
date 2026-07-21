@@ -28,7 +28,10 @@ class Get extends Base
     {
         return new OAuth2Gitlab(
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
-            System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+            \json_encode([
+                'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+                'endpoint' => 'https://gitlab.com',
+            ]),
             $callback
         );
     }

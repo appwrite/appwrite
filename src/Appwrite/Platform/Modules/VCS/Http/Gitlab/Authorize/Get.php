@@ -26,9 +26,13 @@ class Get extends Base
 
     protected function createOAuth2(string $callback, array $state): OAuth2
     {
+        // Auth\OAuth2\Gitlab reads the endpoint out of a JSON-encoded appSecret; no setEndpoint().
         return new OAuth2Gitlab(
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
-            System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+            \json_encode([
+                'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+                'endpoint' => 'https://gitlab.com',
+            ]),
             $callback,
             $state,
             // api is required for webhook/merge-request-note writes; no finer-grained scope covers both.

@@ -12,13 +12,19 @@ use Utopia\System\System;
 class Gitlab extends OAuth2 implements EnvOAuth2
 {
     /**
-     * Only official gitlab.com is supported -- fixed, not configurable.
+     * This class is shared with the "Sign in with GitLab" account-login
+     * OAuth2 provider, which stores its secret as JSON
+     * ({"clientSecret": "...", "endpoint": "..."}) to support self-hosted
+     * GitLab per-project. The VCS flow only supports official gitlab.com,
+     * but still encodes to that same JSON shape so getAppSecret()/getEndpoint()
+     * stay correct for both consumers.
      */
-    protected const ENDPOINT = 'https://gitlab.com';
-
     public static function fromEnv(): OAuth2&EnvOAuth2
     {
-        return new self(System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''), '');
+        return new self(System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''), \json_encode([
+            'clientSecret' => System::getEnv('_APP_VCS_GITLAB_CLIENT_SECRET', ''),
+            'endpoint' => 'https://gitlab.com',
+        ]), '');
     }
 
     /**
@@ -73,7 +79,7 @@ class Gitlab extends OAuth2 implements EnvOAuth2
                 $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getAppSecret()['clientSecret'],
                     'redirect_uri' => $this->callback,
                     'grant_type' => 'authorization_code'
                 ])
@@ -95,7 +101,7 @@ class Gitlab extends OAuth2 implements EnvOAuth2
             $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getAppSecret()['clientSecret'],
                 'grant_type' => 'refresh_token'
             ])
         ), true);
@@ -228,8 +234,32 @@ class Gitlab extends OAuth2 implements EnvOAuth2
         return $this->user;
     }
 
+    /**
+     * Decode the JSON stored in appSecret
+     *
+     * @return array
+     */
+    protected function getAppSecret(): array
+    {
+        try {
+            $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $th) {
+            throw new \Exception('Invalid secret');
+        }
+        return $secret;
+    }
+
+    /**
+     * Extracts the endpoint from the JSON stored in appSecret. Defaults to
+     * gitlab.com as a fallback.
+     *
+     * @return string
+     */
     protected function getEndpoint(): string
     {
-        return self::ENDPOINT;
+        $defaultEndpoint = 'https://gitlab.com';
+        $secret = $this->getAppSecret();
+        $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
+        return empty($endpoint) ? $defaultEndpoint : $endpoint;
     }
 }
