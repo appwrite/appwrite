@@ -33,7 +33,7 @@ final class FactoryTest extends TestCase
 
         foreach ($registry as $key => $entry) {
             $this->assertTrue(\is_subclass_of($entry['adapter'], Git::class), "Adapter for '{$key}' must extend Git");
-            $this->assertTrue(\is_a($entry['oauth2'], EnvOAuth2::class, true), "OAuth2 client for '{$key}' must implement EnvOAuth2");
+            $this->assertContains(EnvOAuth2::class, \class_implements($entry['oauth2']) ?: [], "OAuth2 client for '{$key}' must implement EnvOAuth2");
             $this->assertNotEmpty($entry['variables'], "Variables missing for '{$key}'");
             foreach ($entry['variables'] as $name => $variable) {
                 $this->assertStringStartsWith('_APP_VCS_', $variable['envVariable'] ?? '', "Env variable for '{$name}' missing or invalid for '{$key}'");
