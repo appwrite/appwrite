@@ -43,6 +43,13 @@ class Create extends Action
             ->label('event', 'rules.[ruleId].create')
             ->label('audits.event', 'rule.create')
             ->label('audits.resource', 'rule/{response.$id}')
+            ->label('audits.payload', true)
+            ->label('audits.payload.allowList', [
+                'domain', 'type', 'region', 'trigger', // Generic config
+                'deploymentId', 'deploymentInternalId', // Deployment congif
+                'deploymentResourceInternalId', 'deploymentResourceId', 'deploymentResourceType', // Site / Function config
+                'redirectUrl', 'redirectStatusCode', // Redirect config
+            ])
             ->label('sdk', new Method(
                 namespace: 'proxy',
                 group: 'rules',
