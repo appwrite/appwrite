@@ -197,10 +197,14 @@ class Webhooks extends Action
                 ->setResourceInternalId((string) $webhook->getSequence())
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1);
         } else {
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
-                'attempts' => 0,
-            ]));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            if ($webhook->getAttribute('attempts', 0) > 0) {
+                $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
+                    'attempts' => 0,
+                ]));
+
+                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+            }
+
             $usage = (new UsageContext())
                 ->setResource('webhook')
                 ->setResourceInternalId((string) $webhook->getSequence())
