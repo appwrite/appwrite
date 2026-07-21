@@ -23,12 +23,15 @@ use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
+use Psr\Http\Client\ClientInterface;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Client;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Decorator\Retry;
+use Utopia\Client\Pool as ClientPool;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Document;
@@ -36,7 +39,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool as ConnectionsPool;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -48,6 +53,7 @@ use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\S3\RetryStrategy;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
@@ -257,6 +263,27 @@ $container->set('timelimit', fn (\Redis $redis) => fn (string $key, int $limit, 
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
+/**
+ * Shared PSR-18 client for the S3-family devices: a lazy pool of keep-alive
+ * connections. Concurrent coroutines borrow a connection exclusively for the
+ * duration of each request, and connections persist between borrows so the
+ * TCP/TLS handshake is paid per connection instead of per request.
+ */
+function getStorageClient(): ClientInterface
+{
+    static $client = null;
+
+    return $client ??= new ClientPool(new ConnectionsPool(
+        pool: new Stack(),
+        name: 's3',
+        size: 16,
+        init: fn (): Client => new Client(new Retry(
+            new CurlAdapter()->withConnectionReuse()->withTimeout(0.0),
+            new RetryStrategy(),
+        )),
+    ));
+}
+
 function getDevice(string $root, string $connection = ''): Device
 {
     $connection = ! empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
@@ -286,19 +313,19 @@ function getDevice(string $root, string $connection = ''): Device
                 if (! empty($url)) {
                     $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
 
-                    return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
+                    return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl, client: getStorageClient());
                 } else {
-                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl, client: getStorageClient());
                 }
                 // no break
             case DeviceType::DoSpaces:
-                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl, client: getStorageClient());
             case DeviceType::Backblaze:
-                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl, client: getStorageClient());
             case DeviceType::Linode:
-                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl, client: getStorageClient());
             case DeviceType::Wasabi:
-                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl, client: getStorageClient());
             case DeviceType::Local:
             default:
                 return new Local($root);
@@ -315,9 +342,9 @@ function getDevice(string $root, string $connection = ''): Device
                 if (! empty($s3EndpointUrl)) {
                     $bucketRoot = (! empty($s3Bucket) ? "{$s3Bucket}/" : '') . \ltrim($root, '/');
 
-                    return new S3($bucketRoot, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl);
+                    return new S3($bucketRoot, $s3AccessKey, $s3SecretKey, $s3EndpointUrl, $s3Region, $s3Acl, client: getStorageClient());
                 } else {
-                    return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+                    return new AWS($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl, client: getStorageClient());
                 }
                 // no break
             case DeviceType::DoSpaces:
@@ -326,7 +353,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $doSpacesRegion = System::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
                 $doSpacesBucket = System::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = Acl::Private;
-                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl, client: getStorageClient());
             case DeviceType::Backblaze:
                 $backblazeAccessKey = System::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
                 $backblazeSecretKey = System::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
@@ -334,7 +361,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $backblazeBucket = System::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
                 $backblazeAcl = Acl::Private;
 
-                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl, client: getStorageClient());
             case DeviceType::Linode:
                 $linodeAccessKey = System::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
                 $linodeSecretKey = System::getEnv('_APP_STORAGE_LINODE_SECRET', '');
@@ -342,7 +369,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $linodeBucket = System::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
                 $linodeAcl = Acl::Private;
 
-                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl, client: getStorageClient());
             case DeviceType::Wasabi:
                 $wasabiAccessKey = System::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
                 $wasabiSecretKey = System::getEnv('_APP_STORAGE_WASABI_SECRET', '');
@@ -350,7 +377,7 @@ function getDevice(string $root, string $connection = ''): Device
                 $wasabiBucket = System::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
                 $wasabiAcl = Acl::Private;
 
-                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl, client: getStorageClient());
             case DeviceType::Local:
             default:
                 return new Local($root);
