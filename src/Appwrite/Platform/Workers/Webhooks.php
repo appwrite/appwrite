@@ -193,16 +193,18 @@ class Webhooks extends Action
 
             $error = $logs;
             $usage = (new UsageContext())
-                ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1);
+                ->setResource('webhook')
+                ->setResourceInternalId((string) $webhook->getSequence())
+                ->addMetric(METRIC_WEBHOOKS_FAILED, 1);
         } else {
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
                 'attempts' => 0,
             ]));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
             $usage = (new UsageContext())
-                ->addMetric(METRIC_WEBHOOKS_SENT, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_SENT), 1);
+                ->setResource('webhook')
+                ->setResourceInternalId((string) $webhook->getSequence())
+                ->addMetric(METRIC_WEBHOOKS_SENT, 1);
         }
 
         $publisherForUsage->enqueue(new UsageMessage(
