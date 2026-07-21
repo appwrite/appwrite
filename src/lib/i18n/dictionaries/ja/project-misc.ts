@@ -125,6 +125,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'ルールを検索...',
   'Search logs...': 'ログを検索...',
   'Create rule': 'ルールの作成',
+  'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
   'No API firewall rules': 'API のファイアウォールルールがありません',
   'No function firewall rules': 'Functions のファイアウォールルールがありません',

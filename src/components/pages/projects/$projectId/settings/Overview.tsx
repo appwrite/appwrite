@@ -78,6 +78,7 @@ import {
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useScrollToCard } from '@/hooks/use-scroll-to-card'
 import { useT } from '@/lib/i18n/translate'
 
@@ -200,6 +201,7 @@ export function ProjectSettingsOverview({
   const t = useT()
   const { features } = useConsoleProfile()
   const supportsMultiRegion = features.multiRegion
+  const supportsMultiTenancy = features.multiTenancy
   const navigate = useNavigate()
   useScrollToCard()
   const queryClient = useQueryClient()
@@ -555,6 +557,11 @@ export function ProjectSettingsOverview({
   // Mutation to transfer project
   const transferProjectMutation = useMutation({
     mutationFn: async (teamId: string) => {
+      if (!getActiveProfileFeatures().multiTenancy) {
+        throw new Error(
+          'This console profile does not support transferring between organizations',
+        )
+      }
       await sdk.forConsole.projects.updateTeam({ projectId, teamId })
     },
     onSuccess: async (_, teamId) => {
@@ -1069,15 +1076,17 @@ export function ProjectSettingsOverview({
           {/* MCP Server Section */}
           <MCPSection projectName={project.name} />
 
-          {/* Change Organization Section */}
-          <ChangeOrganizationSection
-            project={project}
-            organizations={organizations}
-            organizationsLoading={organizationsLoading}
-            selectedOrgId={selectedOrgId}
-            onOrgChange={setSelectedOrgId}
-            onTransfer={transferProjectMutation}
-          />
+          {/* Change Organization Section (cloud multi-tenancy only) */}
+          {supportsMultiTenancy && (
+            <ChangeOrganizationSection
+              project={project}
+              organizations={organizations}
+              organizationsLoading={organizationsLoading}
+              selectedOrgId={selectedOrgId}
+              onOrgChange={setSelectedOrgId}
+              onTransfer={transferProjectMutation}
+            />
+          )}
 
           {/* Delete Project Section */}
           <DeleteProjectSection

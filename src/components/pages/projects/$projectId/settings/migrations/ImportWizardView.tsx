@@ -129,7 +129,8 @@ export function ImportWizardView() {
   const pid = projectId as string
   const { project } = useProject(pid)
   const region = project?.region
-  const { isCloud } = useConsoleProfile()
+  const { isCloud, features } = useConsoleProfile()
+  const supportsMultiTenancy = features.multiTenancy
 
   const [step, setStep] = useState(1)
   const [provider, setProvider] = useState<ImportProvider | null>(null)
@@ -512,52 +513,56 @@ export function ImportWizardView() {
               </button>
             ))}
           </div>
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center" aria-hidden>
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-background px-3 text-[12px] font-medium text-muted-foreground">
-                {t('Or')}
-              </span>
-            </div>
-          </div>
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <ArrowRightLeft className="h-5 w-5" />
+          {supportsMultiTenancy && (
+            <>
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center" aria-hidden>
+                  <div className="w-full border-t border-border" />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {t('Transfer between organizations')}
-                  </h3>
-                  <p className="text-[13px] text-muted-foreground mt-2">
-                    {t(
-                      'Move this project to another organization in your account. Ownership updates immediately; no data is imported.',
-                    )}
-                  </p>
+                <div className="relative flex justify-center">
+                  <span className="bg-background px-3 text-[12px] font-medium text-muted-foreground">
+                    {t('Or')}
+                  </span>
                 </div>
               </div>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4 bg-muted/30">
-              <Button
-                type="button"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={() =>
-                  navigate({
-                    to: '/projects/$projectId/settings',
-                    params: { projectId: pid },
-                    hash: 'card-transfer-project',
-                  })
-                }
-              >
-                {t('Transfer project')}
-              </Button>
-            </div>
-          </div>
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <ArrowRightLeft className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        {t('Transfer between organizations')}
+                      </h3>
+                      <p className="text-[13px] text-muted-foreground mt-2">
+                        {t(
+                          'Move this project to another organization in your account. Ownership updates immediately; no data is imported.',
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-t border-border" />
+                <div className="px-6 py-4 bg-muted/30">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    onClick={() =>
+                      navigate({
+                        to: '/projects/$projectId/settings',
+                        params: { projectId: pid },
+                        hash: 'card-transfer-project',
+                      })
+                    }
+                  >
+                    {t('Transfer project')}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 

@@ -275,6 +275,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search rules...': 'חיפוש כללים...',
   'Search logs...': 'חיפוש בלוגים...',
   'Create rule': 'יצירת כלל',
+  'Apply as firewall rule': 'החלה ככלל חומת אש',
   "You don't have permission to create firewall rules.":
     'אין לכם הרשאה ליצור כללי חומת אש.',
   "You don't have permission to update firewall rules.":

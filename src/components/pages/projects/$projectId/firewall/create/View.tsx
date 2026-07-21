@@ -23,11 +23,25 @@ import {
   type FirewallConditionDraft,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
+import { draftsFromUsageFilterMap } from '@/lib/firewall/usage'
+import { queryParamToMap } from '@/lib/table-filters'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.firewall.create'
+
+function initialConditionsFromSearch(
+  query: string | undefined,
+): FirewallConditionDraft[] {
+  if (!query) return [createEmptyConditionDraft()]
+  return (
+    draftsFromUsageFilterMap(queryParamToMap(query)) ?? [
+      createEmptyConditionDraft(),
+    ]
+  )
+}
+
 
 const RESOURCE_TYPE_META: Record<
   FirewallResourceType,
@@ -65,16 +79,19 @@ export function View() {
   const t = useT()
   const navigate = useNavigate()
   const { projectId } = useParams({ strict: false })
-  const { resourceType: initialResourceType = 'api' } = Route.useSearch()
+  const {
+    resourceType: initialResourceType = 'api',
+    query: initialQuery,
+  } = Route.useSearch()
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
   const [form, setForm] = useState({
     ...DEFAULT_FORM,
     resourceType: initialResourceType,
   })
-  const [conditions, setConditions] = useState<FirewallConditionDraft[]>([
-    createEmptyConditionDraft(),
-  ])
+  const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
+    initialConditionsFromSearch(initialQuery),
+  )
 
   const needsResourceId = form.resourceType !== 'api'
   const canSubmit =

@@ -3,8 +3,12 @@ import { subHours } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import {
+  FIREWALL_CONDITION_OPERATORS,
   isNoValueOperator,
+  isOperatorAllowedForAttribute,
+  type FirewallConditionAttribute,
   type FirewallConditionDraft,
+  type FirewallConditionOperator,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
@@ -17,6 +21,7 @@ import {
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
 import type { FirewallImpactPoint } from '@/lib/firewall/types'
+import type { CompactFilterKey, FilterMap } from '@/lib/table-filters'
 
 /** Firewall resourceType → usage.listEvents resourceType. `api` has no usage resourceType. */
 const USAGE_RESOURCE_TYPE: Record<FirewallResourceType, string | null> = {
@@ -41,6 +46,85 @@ function toUsageAttribute(attribute: string): string | null {
     default:
       return null
   }
+}
+
+/**
+ * Usage filter attributes that exist 1:1 as firewall condition attributes.
+ * `userAgent` is a firewall-only attribute (usage uses `clientName` instead),
+ * so it is intentionally excluded from this reverse mapping.
+ */
+function toFirewallConditionAttribute(
+  attribute: string,
+): FirewallConditionAttribute | null {
+  switch (attribute) {
+    case 'ip':
+    case 'path':
+    case 'method':
+    case 'country':
+      return attribute
+    default:
+      return null
+  }
+}
+
+function isFirewallConditionOperator(
+  operator: string,
+): operator is FirewallConditionOperator {
+  return FIREWALL_CONDITION_OPERATORS.some((op) => op.value === operator)
+}
+
+function compactFilterValue(key: CompactFilterKey): string {
+  if (key.v == null) return ''
+  if (Array.isArray(key.v)) return String(key.v[0] ?? '')
+  return String(key.v)
+}
+
+/**
+ * True when every applied usage filter can become a firewall condition
+ * (same attribute + an operator allowed for that attribute on firewall rules).
+ * Requires at least one filter.
+ */
+export function canApplyUsageFiltersAsFirewallRule(
+  filterMap: FilterMap,
+): boolean {
+  if (filterMap.size === 0) return false
+
+  for (const key of filterMap.keys()) {
+    const attribute = toFirewallConditionAttribute(String(key.c))
+    if (!attribute) return false
+    if (!isFirewallConditionOperator(key.o)) return false
+    if (!isOperatorAllowedForAttribute(attribute, key.o)) return false
+    if (!isNoValueOperator(key.o) && compactFilterValue(key).trim().length === 0) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * Convert usage FiltersPopover state into firewall condition drafts.
+ * Returns null when any filter cannot be represented as a firewall condition.
+ */
+export function draftsFromUsageFilterMap(
+  filterMap: FilterMap,
+): FirewallConditionDraft[] | null {
+  if (!canApplyUsageFiltersAsFirewallRule(filterMap)) return null
+
+  return Array.from(filterMap.keys()).map((key) => {
+    const attribute = toFirewallConditionAttribute(String(key.c))!
+    const operator = key.o as FirewallConditionOperator
+    const rawValue = compactFilterValue(key).trim()
+    const value =
+      attribute === 'country' ? rawValue.toUpperCase() : rawValue
+
+    return {
+      id: `cond_${Math.random().toString(36).slice(2, 10)}`,
+      attribute,
+      operator,
+      value,
+    }
+  })
 }
 
 /**
