@@ -9,6 +9,7 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Migration\Resource;
 
 class V25 extends Migration
 {
@@ -19,6 +20,9 @@ class V25 extends Migration
     {
         Console::info('Migrating collections');
         $this->migrateCollections();
+
+        Console::info('Migrating documents');
+        $this->forEachDocument($this->migrateDocument(...));
     }
 
     /**
@@ -104,7 +108,165 @@ class V25 extends Migration
                         }
                     }
                     break;
+
+                case 'migrations':
+                    if ($collectionType === 'projects') {
+                        $attributes = [
+                            'resourceInternalId',
+                            'parentResourceId',
+                            'parentResourceInternalId',
+                            'parentResourceType',
+                            'destinationResourceId',
+                            'destinationResourceInternalId',
+                            'destinationResourceType',
+                        ];
+                        try {
+                            $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                        } catch (Throwable $th) {
+                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        $indexes = [
+                            '_key_resourceType',
+                            '_key_resourceInternalId',
+                            '_key_parentResourceId',
+                            '_key_parentResourceType',
+                            '_key_parentResourceInternalId',
+                            '_key_destinationResourceId',
+                            '_key_destinationResourceInternalId',
+                            '_key_destinationResourceType',
+                        ];
+                        foreach ($indexes as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
             }
         }
+    }
+
+    protected function migrateDocument(Document $document): Document
+    {
+        if ($document->getCollection() !== 'migrations') {
+            return $document;
+        }
+
+        $resourceId = (string) $document->getAttribute('resourceId', '');
+        $parentResourceId = (string) $document->getAttribute('parentResourceId', '');
+        $parentResourceType = '';
+        $split = false;
+
+        if ($parentResourceId === '') {
+            if (!\str_contains($resourceId, ':')) {
+                return $document;
+            }
+
+            [$parentResourceId, $resourceId] = \explode(':', $resourceId, 2);
+            if ($parentResourceId === '' || $resourceId === '') {
+                return $document;
+            }
+
+            $parentResourceType = (string) $document->getAttribute('resourceType', '');
+            $split = true;
+        }
+
+        if ($resourceId === '') {
+            return $document;
+        }
+
+        $internalIds = $this->resolveInternalIds($parentResourceId, $resourceId, $document);
+        if (
+            $split
+            && (!isset($internalIds['parentResourceInternalId']) || !isset($internalIds['resourceInternalId']))
+        ) {
+            return $document;
+        }
+
+        if ($split) {
+            $document
+                ->setAttribute('resourceId', $resourceId)
+                ->setAttribute('resourceType', Resource::TYPE_COLLECTION)
+                ->setAttribute('parentResourceId', $parentResourceId);
+
+            if ($parentResourceType !== '') {
+                $document->setAttribute('parentResourceType', $parentResourceType);
+            }
+        }
+
+        if (
+            (string) $document->getAttribute('parentResourceInternalId', '') === ''
+            && isset($internalIds['parentResourceInternalId'])
+        ) {
+            $document->setAttribute('parentResourceInternalId', $internalIds['parentResourceInternalId']);
+        }
+        if (
+            (string) $document->getAttribute('resourceInternalId', '') === ''
+            && isset($internalIds['resourceInternalId'])
+        ) {
+            $document->setAttribute('resourceInternalId', $internalIds['resourceInternalId']);
+        }
+
+        return $document;
+    }
+
+    /**
+     * @return array{parentResourceInternalId?: string, resourceInternalId?: string}
+     */
+    protected function resolveInternalIds(string $parentResourceId, string $resourceId, Document $migration): array
+    {
+        try {
+            $database = $this->dbForProject->getDocument('databases', $parentResourceId);
+            if (
+                $database->isEmpty()
+                || $database->getSequence() === ''
+                || !$this->predatesMigration($database, $migration)
+            ) {
+                return [];
+            }
+        } catch (Throwable $th) {
+            Console::warning("Failed to resolve parent internal ID for migration {$migration->getId()}: {$th->getMessage()}");
+            return [];
+        }
+
+        $internalIds = [
+            'parentResourceInternalId' => (string) $database->getSequence(),
+        ];
+
+        try {
+            $resource = $this->dbForProject->getDocument('database_' . $database->getSequence(), $resourceId);
+            if (
+                !$resource->isEmpty()
+                && $resource->getSequence() !== ''
+                && $this->predatesMigration($resource, $migration)
+            ) {
+                $internalIds['resourceInternalId'] = (string) $resource->getSequence();
+            }
+        } catch (Throwable $th) {
+            Console::warning("Failed to resolve resource internal ID for migration {$migration->getId()}: {$th->getMessage()}");
+        }
+
+        return $internalIds;
+    }
+
+    /**
+     * A resource created after the migration is a reused public ID, not the
+     * generation the historical migration operated on.
+     */
+    protected function predatesMigration(Document $resource, Document $migration): bool
+    {
+        $resourceCreatedAt = \strtotime($resource->getCreatedAt());
+        $migrationCreatedAt = \strtotime($migration->getCreatedAt());
+
+        if ($resourceCreatedAt === false || $migrationCreatedAt === false) {
+            return false;
+        }
+
+        return $resourceCreatedAt <= $migrationCreatedAt;
     }
 }

@@ -34,6 +34,7 @@ use Appwrite\Utopia\Request\Filters\V23 as RequestV23;
 use Appwrite\Utopia\Request\Filters\V24 as RequestV24;
 use Appwrite\Utopia\Request\Filters\V25 as RequestV25;
 use Appwrite\Utopia\Request\Filters\V26 as RequestV26;
+use Appwrite\Utopia\Request\Filters\V27 as RequestV27;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -46,6 +47,7 @@ use Appwrite\Utopia\Response\Filters\V23 as ResponseV23;
 use Appwrite\Utopia\Response\Filters\V24 as ResponseV24;
 use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
 use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
+use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -552,7 +554,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 'site' => '',
             };
             $source = $deployment->getAttribute('buildPath', '');
-            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
 
             $startCommand = $runtime['startCommand'];
             if ($type === 'site') {
@@ -573,7 +574,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
-                default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",
+                default => "cp /tmp/code.* /mnt/code/ && nohup helpers/start.sh \"$startCommand\"",
             };
 
             $entrypoint = match ($type) {
@@ -918,6 +919,9 @@ Http::init()
             if (version_compare($requestFormat, '1.9.5', '<')) {
                 $request->addFilter(new RequestV26());
             }
+            if (version_compare($requestFormat, '2.0.0', '<')) {
+                $request->addFilter(new RequestV27());
+            }
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
@@ -942,6 +946,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.0.0', '<')) {
+                $response->addFilter(new ResponseV27());
+            }
             if (version_compare($responseFormat, '1.9.5', '<')) {
                 $response->addFilter(new ResponseV26());
             }

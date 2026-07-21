@@ -83,7 +83,7 @@
         "utopia-php/lock": "0.2.*",
         "utopia-php/logger": "0.8.*",
         "utopia-php/messaging": "^2.0",
-        "utopia-php/migration": "1.17.*",
+        "utopia-php/migration": "^1.18.0",
         "utopia-php/platform": "^1.0@RC",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "3.0.*",
@@ -106,7 +106,7 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/client": "^0.2.2",
-        "open-runtimes/sdk-for-php": "^0.4.0"
+        "open-runtimes/sdk-for-php": "0.6.* || 0.7.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",

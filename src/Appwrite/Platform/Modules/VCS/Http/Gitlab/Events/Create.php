@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Gitlab\Events;
 
-use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -45,7 +44,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('getProjectDB')
-            ->inject('publisherForBuilds')
+            ->inject('deploymentsFactory')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -59,7 +58,7 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         callable $getProjectDB,
-        BuildPublisher $publisherForBuilds,
+        callable $deploymentsFactory,
         array $platform
     ) {
         $vcs = $vcsFactory->fromProvider('gitlab');
@@ -81,8 +80,8 @@ class Create extends Action
         $parsedPayload = $vcs->getEvent($event, $payload);
 
         match ($event) {
-            'Push Hook' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
-            'Merge Request Hook' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform),
+            'Push Hook' => $this->handlePushEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
+            'Merge Request Hook' => $this->handlePullRequestEvent($parsedPayload, $vcsFactory, $installationTokens, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory),
             default => null,
         };
 
@@ -131,9 +130,9 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
+        callable $deploymentsFactory,
     ) {
         $providerBranchDeleted = $parsedPayload['branchDeleted'] ?? false;
         $providerBranch = $parsedPayload['branch'] ?? '';
@@ -174,7 +173,7 @@ class Create extends Action
 
             $providerInstallationId = $repository->getAttribute('installationId', '');
 
-            $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+            $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
         }
 
         if (!empty($errors)) {
@@ -188,9 +187,9 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Database $dbForPlatform,
         Authorization $authorization,
-        BuildPublisher $publisherForBuilds,
         callable $getProjectDB,
         array $platform,
+        callable $deploymentsFactory,
     ) {
         $action = $parsedPayload['action'] ?? '';
 
@@ -247,7 +246,7 @@ class Create extends Action
                     ...array_filter(array_column($prFiles, 'previous_filename')),
                 ];
 
-                $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $publisherForBuilds, $getProjectDB, $platform);
+                $this->createGitDeployments($adapter, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $getProjectDB, $platform, $deploymentsFactory);
             }
 
             if (!empty($errors)) {

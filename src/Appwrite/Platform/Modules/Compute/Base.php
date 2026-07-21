@@ -68,7 +68,7 @@ class Base extends Action
         return $allowedSpecifications[0];
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, array $platform = [], string $referenceType = 'branch', string $reference = '', ?Backend $deployments = null): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Backend $deployments, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -144,13 +144,12 @@ class Base extends Action
             'activate' => $activate,
         ]);
 
-        // Build a plain (non-template) VCS function deployment through
-        // $deployments (executor or jobs-service, decided by
-        // _APP_BUILDS_BACKEND) when the caller opts in. Sites stay on the
-        // executor; template-into-repo pushes go through the Builds worker
-        // (which does the git write, then hands the build to the
-        // jobs-service itself when on orchestrator).
-        if ($deployments !== null && $function->getCollection() === 'functions' && $template->isEmpty()) {
+        // Build a plain (non-template) VCS deployment through $deployments
+        // (executor or jobs-service, decided by _APP_BUILDS_BACKEND).
+        // Template-into-repo pushes go through the Builds worker (which does
+        // the git write, then hands the build to the jobs-service itself
+        // when on orchestrator).
+        if ($template->isEmpty()) {
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
             $deployment = $deployments->createFromUrl(
                 $function,
@@ -182,7 +181,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Backend $deployments, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -369,16 +368,91 @@ class Base extends Action
 
         $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
-        $publisherForBuilds->enqueue(new BuildMessage(
-            project: $project,
-            resource: $site,
-            deployment: $deployment,
-            type: BUILD_TYPE_DEPLOYMENT,
-            template: $template,
-            platform: $platform,
-        ));
+        // Plain VCS deployments build through $deployments; template-into-repo
+        // pushes go through the Builds worker (same split as redeployVcsFunction).
+        if ($template->isEmpty()) {
+            $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
+            $deployment = $deployments->createFromUrl(
+                $site,
+                $deployment,
+                $vcs->getRepositoryPresignedUrl($owner, $repositoryName, $ref),
+                $site->getAttribute('providerRootDirectory', ''),
+            );
+        } else {
+            $publisherForBuilds->enqueue(new BuildMessage(
+                project: $project,
+                resource: $site,
+                deployment: $deployment,
+                type: BUILD_TYPE_DEPLOYMENT,
+                template: $template,
+                platform: $platform,
+            ));
+        }
 
         return $deployment;
+    }
+
+    /**
+     * Create or repoint the site's branch-preview rule — and any manual rules
+     * pinned to the branch — at a successfully built deployment.
+     */
+    public static function activateBranchPreviewRule(Document $project, Document $site, Document $deployment, Database $dbForPlatform, string $sitesDomain): void
+    {
+        // Template deployments reuse providerBranch for their resolved ref
+        // (tags included), which must not mint a preview domain.
+        $branchName = $deployment->getAttribute('providerBranch', '');
+        if (empty($branchName) || empty($deployment->getAttribute('installationId'))) {
+            return;
+        }
+
+        $domain = (new BranchDomainFilter())->apply([
+            'branch' => $branchName,
+            'resourceId' => $site->getId(),
+            'projectId' => $project->getId(),
+            'sitesDomain' => $sitesDomain,
+        ]);
+        $ruleId = md5($domain);
+
+        try {
+            $dbForPlatform->createDocument('rules', new Document([
+                '$id' => $ruleId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getSequence(),
+                'domain' => $domain,
+                'type' => 'deployment',
+                'trigger' => 'deployment',
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+                'deploymentResourceType' => 'site',
+                'deploymentResourceId' => $site->getId(),
+                'deploymentResourceInternalId' => $site->getSequence(),
+                'deploymentVcsProviderBranch' => $branchName,
+                'status' => 'verified',
+                'certificateId' => '',
+                'search' => implode(' ', [$ruleId, $domain]),
+                'owner' => 'Appwrite',
+                'region' => $project->getAttribute('region'),
+            ]));
+        } catch (Duplicate) {
+            $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+        }
+
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+            $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+        }, [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
+            Query::equal('deploymentResourceType', ['site']),
+            Query::equal('deploymentVcsProviderBranch', [$branchName]),
+            Query::equal('trigger', ['manual']),
+        ]);
     }
 
     /**
