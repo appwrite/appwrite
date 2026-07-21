@@ -331,8 +331,6 @@ const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
 const METRIC_DATABASES_STORAGE = 'databases.storage';
 const METRIC_DOCUMENTS = 'documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
 const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
 const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
 
@@ -341,8 +339,6 @@ const METRIC_DATABASES_DOCUMENTSDB = 'documentsdb.databases';
 const METRIC_COLLECTIONS_DOCUMENTSDB = 'documentsdb.collections';
 const METRIC_DATABASES_STORAGE_DOCUMENTSDB = 'documentsdb.databases.storage';
 const METRIC_DOCUMENTS_DOCUMENTSDB = 'documentsdb.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
 const METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB  = 'documentsdb.databases.operations.reads';
 const METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB  = 'documentsdb.databases.operations.writes';
 
@@ -351,8 +347,6 @@ const METRIC_DATABASES_VECTORSDB = 'vectorsdb.databases';
 const METRIC_COLLECTIONS_VECTORSDB = 'vectorsdb.collections';
 const METRIC_DATABASES_STORAGE_VECTORSDB = 'vectorsdb.databases.storage';
 const METRIC_DOCUMENTS_VECTORSDB = 'vectorsdb.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORSDB = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORSDB = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
 const METRIC_DATABASES_OPERATIONS_READS_VECTORSDB  = 'vectorsdb.databases.operations.reads';
 const METRIC_DATABASES_OPERATIONS_WRITES_VECTORSDB  = 'vectorsdb.databases.operations.writes';
 const METRIC_EMBEDDINGS_TEXT = 'embeddings.text';
