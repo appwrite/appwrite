@@ -731,31 +731,7 @@ return function (Container $context): void {
             $dbForProject->getCache()->purge($cacheKey);
         };
 
-        /**
-         * Prefix metrics with database type when applicable.
-         * Avoids prefixing for legacy and tablesdb types to preserve historical metrics.
-         */
-        $getDatabaseTypePrefixedMetric = function (string $databaseType, string $metric): string {
-            if (
-                $databaseType === '' ||
-                $databaseType === DATABASE_TYPE_LEGACY ||
-                $databaseType === DATABASE_TYPE_TABLESDB
-            ) {
-                return $metric;
-            }
-
-            return $databaseType . '.' . $metric;
-        };
-
-        // Determine database type from request path, similar to api.php
-        $path = $request->getURI();
-        $databaseType = match (true) {
-            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
-            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
-            default => '',
-        };
-
-        $usageDatabaseListener = function (string $event, Document $document, UsageContext $usage) use ($getDatabaseTypePrefixedMetric, $databaseType) {
+        $usageDatabaseListener = function (string $event, Document $document, UsageContext $usage) {
             $value = 1;
 
             switch ($event) {
@@ -776,16 +752,6 @@ return function (Container $context): void {
             switch (true) {
                 case $document->getCollection() === 'sessions': // sessions
                     $usage->addMetric(METRIC_SESSIONS, $value); // per project
-                    break;
-                case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): // documents
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId = $parts[1] ?? 0;
-                    $collectionInternalId = $parts[3] ?? 0;
-                    $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
-                    $usage
-                        ->setResource('database')
-                        ->setResourceInternalId((string) $databaseInternalId)
-                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
                     break;
                 case $document->getCollection() === 'deployments':
                     $resourceType = $document->getAttribute('resourceType');
@@ -1184,45 +1150,9 @@ return function (Container $context): void {
                 $database->setTimeout($timeout);
             }
 
-            // Register database event listeners for usage stats collection
-            $documentsMetric = METRIC_DOCUMENTS;
-            $databaseIdCollectionIdDocumentsMetric = METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
-            if ($databaseType !== DATABASE_TYPE_LEGACY && $databaseType !== DATABASE_TYPE_TABLESDB) {
-                $documentsMetric = $databaseType . '.' . $documentsMetric;
-                $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
-            }
-
-            $emitDocumentsUsage = function (Document $document, int $value) use ($usage, $documentsMetric, $databaseIdCollectionIdDocumentsMetric): void {
-                if (! str_starts_with($document->getCollection(), 'database_') || ! str_contains($document->getCollection(), '_collection_')) {
-                    return;
-                }
-
-                $parts = explode('_', $document->getCollection());
-                $databaseInternalId   = $parts[1] ?? 0;
-                $collectionInternalId = $parts[3] ?? 0;
-                $usage
-                    ->setResource('database')
-                    ->setResourceInternalId((string) $databaseInternalId)
-                    ->addMetric($documentsMetric, $value)  // per project
-                    ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-            };
-
-            $database
-                ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
-                    $emitDocumentsUsage($document, 1);
-                })
-                ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
-                    $emitDocumentsUsage($document, -1);
-                })
-                ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
-                    $emitDocumentsUsage($document, $document->getAttribute('modified', 0));
-                })
-                ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
-                    $emitDocumentsUsage($document, -1 * $document->getAttribute('modified', 0));
-                })
-                ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($emitDocumentsUsage) {
-                    $emitDocumentsUsage($document, $document->getAttribute('created', 0));
-                });
+            // Document counts and per-collection storage are produced by the
+            // StatsResources full-count as ClickHouse gauges (broken down by
+            // resourceId/resourceType), so no per-event usage emission here.
 
             return $database;
         };
